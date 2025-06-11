@@ -225,7 +225,7 @@ export class MinimalDirective implements OnDestroy {
  *
  * **Default:** English `en`
  *
- * **Available:**
+ * **Available Langs:**
  *
  * * English: `en`
  * * Spanish: `es`

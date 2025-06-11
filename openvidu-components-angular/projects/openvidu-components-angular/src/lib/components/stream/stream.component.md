@@ -17,7 +17,7 @@ With the following directives you can modify the default User Interface with the
 <!-- start-dynamic-api-directives-content -->
 | **Parameter** | **Type** | **Reference** | 
 |:--------------------------------: | :-------: | :---------------------------------------------: |
-| **displayParticipantName** | `boolean` | [StreamDisplayParticipantNameDirective](../directives/StreamDisplayParticipantNameDirective.html) |
 | **displayAudioDetection** | `boolean` | [StreamDisplayAudioDetectionDirective](../directives/StreamDisplayAudioDetectionDirective.html) |
+| **displayParticipantName** | `boolean` | [StreamDisplayParticipantNameDirective](../directives/StreamDisplayParticipantNameDirective.html) |
 | **videoControls** | `boolean` | [StreamVideoControlsDirective](../directives/StreamVideoControlsDirective.html) |
 <!-- end-dynamic-api-directives-content -->

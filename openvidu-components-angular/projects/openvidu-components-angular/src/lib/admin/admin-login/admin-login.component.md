@@ -6,4 +6,5 @@ With the following directives you can modify the default User Interface with the
 | **Parameter** | **Type** | **Reference** | 
 |:--------------------------------: | :-------: | :---------------------------------------------: |
 | **error** | `any` | [AdminLoginErrorDirective](../directives/AdminLoginErrorDirective.html) |
+| **navbarTitle** | `any` | [AdminLoginTitleDirective](../directives/AdminLoginTitleDirective.html) |
 <!-- end-dynamic-api-directives-content -->

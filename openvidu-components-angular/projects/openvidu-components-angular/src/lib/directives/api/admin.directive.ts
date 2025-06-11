@@ -59,12 +59,12 @@ export class AdminDashboardRecordingsListDirective implements AfterViewInit, OnD
 })
 export class AdminDashboardTitleDirective implements AfterViewInit, OnDestroy {
 
-	@Input() set navbarTitle(value: any) {
+	@Input() set navbarTitle(value: string) {
 		this.navbarTitleValue = value;
 		this.update(this.navbarTitleValue);
 	}
 
-	navbarTitleValue: any = null;
+	navbarTitleValue: string = 'OpenVidu Dashboard';
 
 	constructor(public elementRef: ElementRef, private libService: OpenViduComponentsConfigService) {}
 
@@ -75,7 +75,7 @@ export class AdminDashboardTitleDirective implements AfterViewInit, OnDestroy {
 		this.clear();
 	}
 	clear() {
-		this.navbarTitleValue = null;
+		this.navbarTitleValue = 'OpenVidu Dashboard';
 		this.update(null);
 	}
 

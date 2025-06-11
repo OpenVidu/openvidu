@@ -4,6 +4,6 @@ With the following directives you can modify the default User Interface with the
 <!-- start-dynamic-api-directives-content -->
 | **Parameter** | **Type** | **Reference** | 
 |:--------------------------------: | :-------: | :---------------------------------------------: |
-| **recordingActivity** | `boolean` | [ActivitiesPanelRecordingActivityDirective](../directives/ActivitiesPanelRecordingActivityDirective.html) |
 | **broadcastingActivity** | `boolean` | [ActivitiesPanelBroadcastingActivityDirective](../directives/ActivitiesPanelBroadcastingActivityDirective.html) |
+| **recordingActivity** | `boolean` | [ActivitiesPanelRecordingActivityDirective](../directives/ActivitiesPanelRecordingActivityDirective.html) |
 <!-- end-dynamic-api-directives-content -->

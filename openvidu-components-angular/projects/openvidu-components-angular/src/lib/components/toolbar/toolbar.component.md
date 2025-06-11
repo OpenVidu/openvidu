@@ -25,16 +25,18 @@ With the following directives you can modify the default User Interface with the
 <!-- start-dynamic-api-directives-content -->
 | **Parameter** | **Type** | **Reference** | 
 |:--------------------------------: | :-------: | :---------------------------------------------: |
-| **screenshareButton** | `boolean` | [ToolbarScreenshareButtonDirective](../directives/ToolbarScreenshareButtonDirective.html) |
-| **recordingButton** | `boolean` | [ToolbarRecordingButtonDirective](../directives/ToolbarRecordingButtonDirective.html) |
-| **broadcastingButton** | `boolean` | [ToolbarBroadcastingButtonDirective](../directives/ToolbarBroadcastingButtonDirective.html) |
-| **fullscreenButton** | `boolean` | [ToolbarFullscreenButtonDirective](../directives/ToolbarFullscreenButtonDirective.html) |
-| **backgroundEffectsButton** | `boolean` | [ToolbarBackgroundEffectsButtonDirective](../directives/ToolbarBackgroundEffectsButtonDirective.html) |
-| **settingsButton** | `boolean` | [ToolbarSettingsButtonDirective](../directives/ToolbarSettingsButtonDirective.html) |
-| **leaveButton** | `boolean` | [ToolbarLeaveButtonDirective](../directives/ToolbarLeaveButtonDirective.html) |
-| **participantsPanelButton** | `boolean` | [ToolbarParticipantsPanelButtonDirective](../directives/ToolbarParticipantsPanelButtonDirective.html) |
-| **chatPanelButton** | `boolean` | [ToolbarChatPanelButtonDirective](../directives/ToolbarChatPanelButtonDirective.html) |
 | **activitiesPanelButton** | `boolean` | [ToolbarActivitiesPanelButtonDirective](../directives/ToolbarActivitiesPanelButtonDirective.html) |
-| **displayRoomName** | `boolean` | [ToolbarDisplayRoomNameDirective](../directives/ToolbarDisplayRoomNameDirective.html) |
+| **backgroundEffectsButton** | `boolean` | [ToolbarBackgroundEffectsButtonDirective](../directives/ToolbarBackgroundEffectsButtonDirective.html) |
+| **broadcastingButton** | `boolean` | [ToolbarBroadcastingButtonDirective](../directives/ToolbarBroadcastingButtonDirective.html) |
+| **cameraButton** | `boolean` | [ToolbarCameraButtonDirective](../directives/ToolbarCameraButtonDirective.html) |
+| **chatPanelButton** | `boolean` | [ToolbarChatPanelButtonDirective](../directives/ToolbarChatPanelButtonDirective.html) |
 | **displayLogo** | `boolean` | [ToolbarDisplayLogoDirective](../directives/ToolbarDisplayLogoDirective.html) |
+| **displayRoomName** | `boolean` | [ToolbarDisplayRoomNameDirective](../directives/ToolbarDisplayRoomNameDirective.html) |
+| **fullscreenButton** | `boolean` | [ToolbarFullscreenButtonDirective](../directives/ToolbarFullscreenButtonDirective.html) |
+| **leaveButton** | `boolean` | [ToolbarLeaveButtonDirective](../directives/ToolbarLeaveButtonDirective.html) |
+| **microphoneButton** | `boolean` | [ToolbarMicrophoneButtonDirective](../directives/ToolbarMicrophoneButtonDirective.html) |
+| **participantsPanelButton** | `boolean` | [ToolbarParticipantsPanelButtonDirective](../directives/ToolbarParticipantsPanelButtonDirective.html) |
+| **recordingButton** | `boolean` | [ToolbarRecordingButtonDirective](../directives/ToolbarRecordingButtonDirective.html) |
+| **screenshareButton** | `boolean` | [ToolbarScreenshareButtonDirective](../directives/ToolbarScreenshareButtonDirective.html) |
+| **settingsButton** | `boolean` | [ToolbarSettingsButtonDirective](../directives/ToolbarSettingsButtonDirective.html) |
 <!-- end-dynamic-api-directives-content -->
