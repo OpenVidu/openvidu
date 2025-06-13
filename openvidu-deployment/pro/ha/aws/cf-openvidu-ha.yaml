@@ -416,6 +416,7 @@ Metadata:
 
 Conditions:
   TurnTLSIsEnabled: !Or [!Not [!Equals [!Ref TurnDomainName, ""]], !Not [!Equals [!Ref TurnCertificateARN, ""]]]
+  TurnTLSIsNotEnabled: !Or [!Equals [!Ref TurnDomainName, ""], !Equals [!Ref TurnCertificateARN, ""]]
   CreateRecordingsBucket: !Equals [!Ref S3AppDataBucketName, ""]
   CreateClusterDataBucket: !Equals [!Ref S3ClusterDataBucketName, ""]
 
@@ -2104,12 +2105,23 @@ Resources:
 
   OpenViduLoadBalancerTurnTLSToMediaNodeIngressSG:
     Type: AWS::EC2::SecurityGroupIngress
+    Condition: TurnTLSIsEnabled
     Properties:
       GroupId: !Ref OpenViduMediaNodeSG
       IpProtocol: tcp
       FromPort: 5349
       ToPort: 5349
       SourceSecurityGroupId: !Ref OpenViduTurnTLSLoadBalancerSG
+
+  OpenViduLoadBalancerTurnTLSMasterNodeToMediaNodeIngressSG:
+    Type: AWS::EC2::SecurityGroupIngress
+    Condition: "TurnTLSIsNotEnabled"
+    Properties:
+      GroupId: !Ref OpenViduMediaNodeSG
+      IpProtocol: tcp
+      FromPort: 5349
+      ToPort: 5349
+      SourceSecurityGroupId: !Ref OpenViduMasterNodeSG
 
   OpenViduLoadBalancerTurnTLSToMediaNodeHealthCheckSG:
     Type: AWS::EC2::SecurityGroupIngress
