@@ -1752,7 +1752,6 @@ Resources:
 
   OpenViduMasterNodeTurnTLSToMediaNodeIngressSG:
     Type: AWS::EC2::SecurityGroupIngress
-    Condition: TurnTLSIsEnabled
     Properties:
       GroupId: !Ref OpenViduMediaNodeSG
       IpProtocol: tcp
