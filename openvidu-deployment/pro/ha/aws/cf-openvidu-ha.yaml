@@ -416,9 +416,24 @@ Metadata:
 
 Conditions:
   TurnTLSIsEnabled: !Or [!Not [!Equals [!Ref TurnDomainName, ""]], !Not [!Equals [!Ref TurnCertificateARN, ""]]]
-  TurnTLSIsNotEnabled: !Or [!Equals [!Ref TurnDomainName, ""], !Equals [!Ref TurnCertificateARN, ""]]
   CreateRecordingsBucket: !Equals [!Ref S3AppDataBucketName, ""]
   CreateClusterDataBucket: !Equals [!Ref S3ClusterDataBucketName, ""]
+  # ---
+  # Experimental TURN TLS with main domain
+  ExperimentalTurnTLSWithMainDomain:
+    Fn::Not:
+      - Fn::Equals:
+          - !Ref AdditionalInstallFlags
+          - !Select [0, !Split ["--experimental-turn-tls-with-main-domain", !Ref AdditionalInstallFlags]]
+  NotExperimentalTurnTLSWithMainDomain:
+    Fn::Or:
+      - Fn::Equals:
+          - !Ref AdditionalInstallFlags
+          - !Select [0, !Split ["--experimental-turn-tls-with-main-domain", !Ref AdditionalInstallFlags]]
+      - Fn::Equals:
+          - !Ref AdditionalInstallFlags
+          - ""
+  # ---
 
 Resources:
 
@@ -2113,16 +2128,6 @@ Resources:
       ToPort: 5349
       SourceSecurityGroupId: !Ref OpenViduTurnTLSLoadBalancerSG
 
-  OpenViduLoadBalancerTurnTLSMasterNodeToMediaNodeIngressSG:
-    Type: AWS::EC2::SecurityGroupIngress
-    Condition: "TurnTLSIsNotEnabled"
-    Properties:
-      GroupId: !Ref OpenViduMediaNodeSG
-      IpProtocol: tcp
-      FromPort: 5349
-      ToPort: 5349
-      SourceSecurityGroupId: !Ref OpenViduMasterNodeSG
-
   OpenViduLoadBalancerTurnTLSToMediaNodeHealthCheckSG:
     Type: AWS::EC2::SecurityGroupIngress
     Condition: TurnTLSIsEnabled
@@ -2151,6 +2156,29 @@ Resources:
       FromPort: 8080
       ToPort: 8080
       SourceSecurityGroupId: !Ref OpenViduMasterNodeSG
+
+  # ---
+  # Experimental TURN TLS with main domain
+  OpenViduTurnTLSMasterNodeToMediaNodeIngressSG:
+    Type: AWS::EC2::SecurityGroupIngress
+    Condition: ExperimentalTurnTLSWithMainDomain
+    Properties:
+      GroupId: !Ref OpenViduMediaNodeSG
+      IpProtocol: tcp
+      FromPort: 5349
+      ToPort: 5349
+      SourceSecurityGroupId: !Ref OpenViduMasterNodeSG
+
+  OpenViduTurnTLSLoadBalancerToMediaNodeIngressSG:
+    Type: AWS::EC2::SecurityGroupIngress
+    Condition: ExperimentalTurnTLSWithMainDomain
+    Properties:
+      GroupId: !Ref OpenViduMasterNodeSG
+      IpProtocol: tcp
+      FromPort: 443
+      ToPort: 443
+      SourceSecurityGroupId: !Ref OpenViduLoadBalancerSG
+  # ---
 
   OpenViduLoadBalancerSG:
     Type: AWS::EC2::SecurityGroup
@@ -2242,6 +2270,7 @@ Resources:
 
   OpenViduMasterNodeListener:
     Type: 'AWS::ElasticLoadBalancingV2::Listener'
+    Condition: NotExperimentalTurnTLSWithMainDomain
     Properties:
       DefaultActions:
         - Type: forward
@@ -2251,6 +2280,22 @@ Resources:
       Protocol: TLS
       Certificates:
         - CertificateArn: !Ref OpenViduCertificateARN
+
+  # ---
+  # Experimental TURN TLS with main domain
+  OpenViduMasterNodeWithTurnTLSListener:
+    Type: 'AWS::ElasticLoadBalancingV2::Listener'
+    Condition: ExperimentalTurnTLSWithMainDomain
+    Properties:
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref OpenViduMasterNodeWithTurnTLSTG
+      LoadBalancerArn: !Ref LoadBalancer
+      Port: 443
+      Protocol: TLS
+      Certificates:
+        - CertificateArn: !Ref OpenViduCertificateARN
+  # ---
 
   OpenViduRTMPMediaNodeListener:
     Type: 'AWS::ElasticLoadBalancingV2::Listener'
@@ -2279,6 +2324,7 @@ Resources:
 
   OpenViduMasterNodeTG:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Condition: NotExperimentalTurnTLSWithMainDomain
     Properties:
       Name:
         Fn::Join:
@@ -2311,6 +2357,45 @@ Resources:
       Tags:
         - Key: Name
           Value: !Sub ${AWS::StackName} - OpenVidu HA - Master Target Group
+
+  # ---
+  # Experimental TURN TLS with main domain
+  OpenViduMasterNodeWithTurnTLSTG:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Condition: ExperimentalTurnTLSWithMainDomain
+    Properties:
+      Name:
+        Fn::Join:
+          # Generate a not too long and unique target id
+          # Getting a unique identifier from the stack id
+          - ''
+          - - OVTurnTLSMaster-
+            - !Select [4, !Split ['-', !Select [2, !Split ['/', !Ref AWS::StackId]]]]
+      TargetType: instance
+      Targets:
+        - Id: !Ref OpenViduMasterNode1
+        - Id: !Ref OpenViduMasterNode2
+        - Id: !Ref OpenViduMasterNode3
+        - Id: !Ref OpenViduMasterNode4
+      VpcId: !Ref OpenViduVPC
+      Port: 443
+      Protocol: TCP
+      Matcher:
+        HttpCode: '200'
+      HealthCheckIntervalSeconds: 10
+      HealthCheckPath: /health/caddy
+      HealthCheckProtocol: HTTP
+      HealthCheckPort: '7880'
+      HealthCheckTimeoutSeconds: 5
+      HealthyThresholdCount: 3
+      UnhealthyThresholdCount: 4
+      TargetGroupAttributes:
+        - Key: deregistration_delay.timeout_seconds
+          Value: 60
+      Tags:
+        - Key: Name
+          Value: !Sub ${AWS::StackName} - OpenVidu HA - TURN TLS Master Target Group
+  # ---
 
   OpenViduMediaNodeRTMPTG:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
