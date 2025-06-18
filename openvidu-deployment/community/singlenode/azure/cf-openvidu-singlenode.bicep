@@ -159,6 +159,8 @@ param adminUsername string
 @secure()
 param adminSshKey object
 
+param additionalInstallFlags string = ''
+
 /*------------------------------------------- VARIABLES AND VALIDATIONS -------------------------------------------*/
 
 //Condition for ipValid if is filled
@@ -263,6 +265,7 @@ var stringInterpolationParams = {
   turnOwnPublicCertificate: turnOwnPublicCertificate
   turnOwnPrivateCertificate: turnOwnPrivateCertificate
   keyVaultName: keyVaultName
+  additionalInstallFlags: additionalInstallFlags
 }
 
 var installScriptTemplate = '''
@@ -333,6 +336,18 @@ COMMON_ARGS=(
   "--livekit-api-key=$LIVEKIT_API_KEY"
   "--livekit-api-secret=$LIVEKIT_API_SECRET"
 )
+
+# Include additional installer flags provided by the user
+if [[ "${additionalInstallFlags}" != "" ]]; then
+  IFS=',' read -ra EXTRA_FLAGS <<< "${additionalInstallFlags}"
+  for extra_flag in "${EXTRA_FLAGS[@]}"; do
+    # Trim whitespace around each flag
+    extra_flag="$(echo -e "${extra_flag}" | sed -e 's/^[ \t]*//' -e 's/[ \t]*$//')"
+    if [[ "$extra_flag" != "" ]]; then
+      COMMON_ARGS+=("$extra_flag")
+    fi
+  done
+fi
 
 # Turn with TLS
 if [[ "${turnDomainName}" != '' ]]; then

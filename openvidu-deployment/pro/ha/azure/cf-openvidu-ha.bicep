@@ -296,6 +296,8 @@ param maxNumberOfMediaNodes int = 5
 @description('Target CPU percentage to scale up or down')
 param scaleTargetCPU int = 50
 
+param additionalInstallFlags string = ''
+
 /*------------------------------------------- VARIABLES AND VALIDATIONS -------------------------------------------*/
 
 var masterNodeVMSettings = {
@@ -436,6 +438,7 @@ var stringInterpolationParamsMaster1 = {
   rtcEngine: rtcEngine
   keyVaultName: keyVaultName
   masterNodeNum: '1'
+  additionalInstallFlags: additionalInstallFlags
 }
 
 var stringInterpolationParamsMaster2 = {
@@ -452,6 +455,7 @@ var stringInterpolationParamsMaster2 = {
   rtcEngine: rtcEngine
   keyVaultName: keyVaultName
   masterNodeNum: '2'
+  additionalInstallFlags: additionalInstallFlags
 }
 
 var stringInterpolationParamsMaster3 = {
@@ -468,6 +472,7 @@ var stringInterpolationParamsMaster3 = {
   rtcEngine: rtcEngine
   keyVaultName: keyVaultName
   masterNodeNum: '3'
+  additionalInstallFlags: additionalInstallFlags
 }
 
 var stringInterpolationParamsMaster4 = {
@@ -484,6 +489,7 @@ var stringInterpolationParamsMaster4 = {
   rtcEngine: rtcEngine
   keyVaultName: keyVaultName
   masterNodeNum: '4'
+  additionalInstallFlags: additionalInstallFlags
 }
 
 var installScriptTemplateMaster = '''
@@ -661,6 +667,18 @@ COMMON_ARGS=(
   "--livekit-api-key=$LIVEKIT_API_KEY"
   "--livekit-api-secret=$LIVEKIT_API_SECRET"
 )
+
+# Include additional installer flags provided by the user
+if [[ "${additionalInstallFlags}" != "" ]]; then
+  IFS=',' read -ra EXTRA_FLAGS <<< "${additionalInstallFlags}"
+  for extra_flag in "${EXTRA_FLAGS[@]}"; do
+    # Trim whitespace around each flag
+    extra_flag="$(echo -e "${extra_flag}" | sed -e 's/^[ \t]*//' -e 's/[ \t]*$//')"
+    if [[ "$extra_flag" != "" ]]; then
+      COMMON_ARGS+=("$extra_flag")
+    fi
+  done
+fi
 
 if [[ $LIVEKIT_TURN_DOMAIN_NAME != "" ]]; then
   COMMON_ARGS+=("--turn-domain-name=$LIVEKIT_TURN_DOMAIN_NAME")

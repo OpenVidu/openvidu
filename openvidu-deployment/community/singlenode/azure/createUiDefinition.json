@@ -286,6 +286,28 @@
                     ]
                 },
                 {
+                    "name": "FLAGS",
+                    "label": "(Optional) Additional Install Flags",
+                    "elements": [
+                        {
+                            "name": "additionalInstallFlags",
+                            "type": "Microsoft.Common.TextBox",
+                            "label": "Additional Install Flags",
+                            "subLabel": "Additional optional flags to pass to the OpenVidu installer (comma-separated, e.g., \"--flag1=value, --flag2\")",
+                            "defaultValue": "",
+                            "toolTip": "",
+                            "constraints": {
+                                "required": false,
+                                "regex": "^[A-Za-z0-9, =_.\\-]*$",
+                                "validationMessage": "Must be a comma-separated list of flags (for example, --flag=value, --bool-flag)",
+                                "validations": []
+                            },
+                            "infoMessages": [],
+                            "visible": true
+                        }
+                    ]
+                },
+                {
                     "name": "parameters TURN",
                     "label": "(Optional) TURN server configuration with TLS",
                     "elements": [
@@ -370,7 +392,8 @@
                 "adminUsername": "[steps('parameters INSTANCE').adminUsername]",
                 "adminSshKey": "[steps('parameters INSTANCE').adminSshKey]",
                 "storageAccountName": "[steps('parameters STORAGE').storageAccountName]",
-                "containerName": "[steps('parameters STORAGE').containerName]"
+                "containerName": "[steps('parameters STORAGE').containerName]",
+                "additionalInstallFlags": "[steps('FLAGS').additionalInstallFlags]"
             }
         }
     }

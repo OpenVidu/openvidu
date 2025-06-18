@@ -293,6 +293,8 @@ param maxNumberOfMediaNodes int = 5
 @description('Target CPU percentage to scale up or down')
 param scaleTargetCPU int = 50
 
+param additionalInstallFlags string = ''
+
 /*------------------------------------------- VARIABLES AND VALIDATIONS -------------------------------------------*/
 
 var isEmptyIp = publicIpAddressObject.newOrExistingOrNone == 'none'
@@ -420,6 +422,7 @@ var stringInterpolationParamsMaster = {
   openviduLicense: openviduLicense
   rtcEngine: rtcEngine
   keyVaultName: keyVaultName
+  additionalInstallFlags: additionalInstallFlags
 }
 
 var installScriptTemplateMaster = '''
@@ -530,6 +533,17 @@ COMMON_ARGS=(
   "--livekit-api-secret=$LIVEKIT_API_SECRET"
 )
 
+# Include additional installer flags provided by the user
+if [[ "${additionalInstallFlags}" != "" ]]; then
+  IFS=',' read -ra EXTRA_FLAGS <<< "${additionalInstallFlags}"
+  for extra_flag in "${EXTRA_FLAGS[@]}"; do
+    # Trim whitespace around each flag
+    extra_flag="$(echo -e "${extra_flag}" | sed -e 's/^[ \t]*//' -e 's/[ \t]*$//')"
+    if [[ "$extra_flag" != "" ]]; then
+      COMMON_ARGS+=("$extra_flag")
+    fi
+  done
+fi
 
 # Turn with TLS
 if [[ "${turnDomainName}" != '' ]]; then
