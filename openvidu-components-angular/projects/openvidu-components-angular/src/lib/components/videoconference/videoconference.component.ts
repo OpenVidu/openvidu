@@ -413,11 +413,14 @@ export class VideoconferenceComponent implements OnDestroy, AfterViewInit {
 	 * @internal
 	 */
 	ngAfterViewInit() {
-		//Add material icons to the page
-		const link = document.createElement('link');
-		link.href = 'https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined&icon_names=background_replace,keep_off';
-		link.rel = 'stylesheet';
-		document.head.appendChild(link);
+		//Add material icons to the page if not already present
+		const existingLink = document.querySelector('link[href*="Material+Symbols+Outlined"]');
+		if (!existingLink) {
+			const link = document.createElement('link');
+			link.href = 'https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined&icon_names=background_replace,keep_off';
+			link.rel = 'stylesheet';
+			document.head.appendChild(link);
+		}
 		if (this.externalToolbar) {
 			this.log.d('Setting EXTERNAL TOOLBAR');
 			this.openviduAngularToolbarTemplate = this.externalToolbar.template;
