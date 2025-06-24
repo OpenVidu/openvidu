@@ -43,7 +43,6 @@ export class RecordingService {
 	setRecordingStarted(recordingInfo?: RecordingInfo, startTimestamp?: number) {
 		// Register the start timestamp of the recording
 		// to calculate the elapsed time
-		debugger;
 		this.recordingStartTimestamp = recordingInfo?.startedAt || Date.now();
 
 		// Initialize the recording elapsed time
