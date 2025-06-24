@@ -28,9 +28,11 @@ import {
   RoomOptions,
   ScreenShareCaptureOptions,
   SubscriptionError,
+  TextStreamReader,
   Track,
   TrackPublication,
   TrackPublishOptions,
+  TranscriptionSegment,
 } from 'livekit-client';
 import { ParticipantPermission } from 'livekit-server-sdk';
 import {
@@ -47,10 +49,10 @@ import PCTransport from 'livekit-client/dist/src/room/PCTransport';
 import { InfoDialogComponent } from '../dialogs/info-dialog/info-dialog.component';
 
 @Component({
-    selector: 'app-openvidu-instance',
-    templateUrl: './openvidu-instance.component.html',
-    styleUrls: ['./openvidu-instance.component.css'],
-    standalone: false
+  selector: 'app-openvidu-instance',
+  templateUrl: './openvidu-instance.component.html',
+  styleUrls: ['./openvidu-instance.component.css'],
+  standalone: false,
 })
 export class OpenviduInstanceComponent {
   @Input()
@@ -262,7 +264,11 @@ export class OpenviduInstanceComponent {
       this.room?.removeAllListeners(RoomEvent.Disconnected);
       if (this.roomEvents.get(RoomEvent.Disconnected)) {
         this.room!.on(RoomEvent.Disconnected, (reason?: DisconnectReason) => {
-          this.updateEventList(RoomEvent.Disconnected, {}, `Reason: ${reason ? DisconnectReason[reason] : reason}`);
+          this.updateEventList(
+            RoomEvent.Disconnected,
+            {},
+            `Reason: ${reason ? DisconnectReason[reason] : reason}`
+          );
         });
       }
     }
@@ -423,7 +429,9 @@ export class OpenviduInstanceComponent {
             this.updateEventList(
               RoomEvent.TrackSubscriptionFailed,
               { trackSid, participant },
-              `${participant.identity} (${trackSid}). Reason: ${reason ? SubscriptionError[reason] : reason}`
+              `${participant.identity} (${trackSid}). Reason: ${
+                reason ? SubscriptionError[reason] : reason
+              }`
             );
           }
         );
@@ -1008,6 +1016,33 @@ export class OpenviduInstanceComponent {
         );
       }
     }
+
+    if (
+      firstTime ||
+      this.roomEvents.get(RoomEvent.TranscriptionReceived) !==
+        oldValues.get(RoomEvent.TranscriptionReceived)
+    ) {
+      this.room?.unregisterTextStreamHandler('lk.transcription');
+      if (this.roomEvents.get(RoomEvent.TranscriptionReceived)) {
+        this.room?.registerTextStreamHandler(
+          'lk.transcription',
+          async (reader: TextStreamReader, participantInfo) => {
+            const message = await reader.readAll();
+            const isFinal =
+              reader.info.attributes!['lk.transcription_final'] === 'true';
+            if (isFinal) {
+              this.updateEventList(
+                RoomEvent.TranscriptionReceived,
+                { participant: participantInfo.identity, message },
+                `${participantInfo.identity} ${
+                  isFinal ? 'said' : 'is saying'
+                }: ${message}`
+              );
+            }
+          }
+        );
+      }
+    }
   }
 
   updateEventList(
@@ -1164,7 +1199,7 @@ export class OpenviduInstanceComponent {
         title: 'PCTransports info',
         updateFunction,
       },
-      minWidth: '50vh'
+      minWidth: '50vh',
     });
   }
 
