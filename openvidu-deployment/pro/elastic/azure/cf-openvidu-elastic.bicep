@@ -1178,9 +1178,13 @@ if [ -x "$(command -v docker)" ]; then
   docker container kill --signal=SIGQUIT openvidu || true
   docker container kill --signal=SIGQUIT ingress || true
   docker container kill --signal=SIGQUIT egress || true
+  for agent_container in $(docker ps --filter "label=openvidu-agent=true" --format '{{.Names}}'); do
+    docker container kill --signal=SIGQUIT "$agent_container"
+  done
 
-  # Wait for running containers to not be openvidu, ingress or egress
-  while [ $(docker inspect -f '{{.State.Running}}' openvidu 2>/dev/null) == "true" ] || \
+  # Wait for running containers to not be openvidu, ingress, egress or an openvidu agent
+  while [ $(docker ps --filter "label=openvidu-agent=true" -q | wc -l) -gt 0 ] || \
+        [ $(docker inspect -f '{{.State.Running}}' openvidu 2>/dev/null) == "true" ] || \
         [ $(docker inspect -f '{{.State.Running}}' ingress 2>/dev/null) == "true" ] || \
         [ $(docker inspect -f '{{.State.Running}}' egress 2>/dev/null) == "true" ]; do
     echo "Waiting for containers to stop..."
