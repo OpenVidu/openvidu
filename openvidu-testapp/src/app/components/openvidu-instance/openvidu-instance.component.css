@@ -76,8 +76,12 @@ mat-expansion-panel {
     margin-right: 0 !important;
 }
 
-.room-event {
+.RoomEvent {
     background: #beefd5 !important;
+}
+
+.RoomEvent-InterimTranscription {
+    background: #ffbf83 !important;
 }
 
 mat-expansion-panel-header {

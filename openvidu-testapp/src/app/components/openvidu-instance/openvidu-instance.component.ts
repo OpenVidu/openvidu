@@ -32,7 +32,6 @@ import {
   Track,
   TrackPublication,
   TrackPublishOptions,
-  TranscriptionSegment,
 } from 'livekit-client';
 import { ParticipantPermission } from 'livekit-server-sdk';
 import {
@@ -1030,15 +1029,16 @@ export class OpenviduInstanceComponent {
             const message = await reader.readAll();
             const isFinal =
               reader.info.attributes!['lk.transcription_final'] === 'true';
-            if (isFinal) {
-              this.updateEventList(
-                RoomEvent.TranscriptionReceived,
-                { participant: participantInfo.identity, message },
-                `${participantInfo.identity} ${
-                  isFinal ? 'said' : 'is saying'
-                }: ${message}`
-              );
-            }
+            this.updateEventList(
+              isFinal
+                ? ('finalTranscription' as any)
+                : ('interimTranscription' as any),
+              { participant: participantInfo.identity, message },
+              `${participantInfo.identity} ${
+                isFinal ? 'said' : 'is saying'
+              }: ${message}`,
+              isFinal ? 'RoomEvent' : 'RoomEvent-InterimTranscription'
+            );
           }
         );
       }
@@ -1048,11 +1048,12 @@ export class OpenviduInstanceComponent {
   updateEventList(
     eventType: RoomEvent,
     eventContent: any,
-    eventDescription: string
+    eventDescription: string,
+    eventCategory = 'RoomEvent'
   ) {
     const event: TestAppEvent = {
       eventType,
-      eventCategory: 'RoomEvent',
+      eventCategory: eventCategory as any,
       eventContent,
       eventDescription,
     };

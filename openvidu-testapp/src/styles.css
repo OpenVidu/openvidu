@@ -41,15 +41,19 @@ ul {
   word-break: break-all;
 }
 
-.room-event .mat-expansion-panel-body {
+.RoomEvent .mat-expansion-panel-body {
   border-color: #beefd5;
 }
 
-.participant-event .mat-expansion-panel-body {
+.RoomEvent-InterimTranscription .mat-expansion-panel-body {
+  border-color: #ffbf83;
+}
+
+.ParticipantEvent .mat-expansion-panel-body {
   border-color: #d0ebf1;
 }
 
-.track-event .mat-expansion-panel-body {
+.TrackEvent .mat-expansion-panel-body {
   border-color: #ede3bb;
 }
 

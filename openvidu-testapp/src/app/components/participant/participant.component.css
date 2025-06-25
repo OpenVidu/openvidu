@@ -70,11 +70,11 @@ mat-expansion-panel {
     margin-right: 0 !important;
 }
 
-.participant-event {
+.ParticipantEvent {
     background: #d0ebf1 !important;
 }
 
-.track-event {
+.TrackEvent {
     background: #ede3bb !important;
 }
 

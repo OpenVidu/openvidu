@@ -4,7 +4,7 @@ import { Subject } from 'rxjs';
 
 export interface TestAppEvent {
     eventType: RoomEvent | ParticipantEvent | TrackEvent;
-    eventCategory: 'RoomEvent' | 'ParticipantEvent' | 'TrackEvent';
+    eventCategory: 'RoomEvent' | 'RoomEvent-InterimTranscription' | 'ParticipantEvent' | 'TrackEvent';
     eventContent: any;
     eventDescription: string;
 }

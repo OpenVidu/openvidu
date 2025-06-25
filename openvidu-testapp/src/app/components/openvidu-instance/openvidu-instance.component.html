@@ -73,8 +73,7 @@
                 <div class="event-list-flex">
                     <div class="event-list scroll-custom">
                         <mat-accordion [attr.id]="'room-events-' + room.localParticipant.identity">
-                            <mat-expansion-panel *ngFor="let event of events"
-                                [ngClass]="event.eventCategory === 'RoomEvent' ? 'room-event' : (event.eventCategory === 'ParticipantEvent' ? 'participant-event' : 'track-event')">
+                            <mat-expansion-panel *ngFor="let event of events" [ngClass]="event.eventCategory">
                                 <mat-expansion-panel-header
                                     [ngClass]="event.eventType + '-' + room.localParticipant.identity"
                                     [collapsedHeight]="'20px'" [expandedHeight]="'20px'">
