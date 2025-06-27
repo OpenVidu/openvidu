@@ -5,7 +5,7 @@
     "outDir": "../../dist/openvidu-angular",
     "module": "esnext",
     "moduleResolution": "node",
-    "lib": ["ES2020", "dom"],
+    "lib": ["ES2021", "dom"],
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "declaration": true,
