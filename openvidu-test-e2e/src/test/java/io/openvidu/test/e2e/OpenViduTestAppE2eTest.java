@@ -17,6 +17,7 @@
 
 package io.openvidu.test.e2e;
 
+import java.time.Duration;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -44,6 +45,7 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.Keys;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.WebDriverWait;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import com.google.common.collect.ImmutableList;
@@ -1508,6 +1510,102 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 	}
 
 	@Test
+	@DisplayName("Egress")
+	void egressTest() throws Exception {
+		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
+
+		log.info("Egress test");
+
+		this.addPublisherSubscriber(user, true, true);
+
+		user.getDriver().findElement(By.cssSelector(".connect-btn")).sendKeys(Keys.ENTER);
+		user.getEventManager().waitUntilEventReaches("localTrackPublished", "RoomEvent", 2);
+
+		user.getDriver().findElement(By.cssSelector("#room-api-btn-0")).click();
+		Thread.sleep(300);
+
+		// Room composite
+		this.egressTestByType(user, "room-composite");
+
+		// Track composite
+		this.egressTestByType(user, "track-composite");
+
+		// Track
+		this.egressTestByType(user, "track");
+	}
+
+	private void egressTestByType(OpenViduTestappUser user, String egressType) throws Exception {
+		user.getEventManager().clearAllCurrentEvents();
+		user.getDriver().findElement(By.id("egress-id-field")).clear();
+		if ("track".equals(egressType)) {
+			user.getDriver().findElement(By.id("audio-track-id-field"))
+					.sendKeys(Keys.chord(Keys.CONTROL, "a", Keys.DELETE));
+		}
+
+		user.getDriver().findElement(By.cssSelector("#start-" + egressType + "-egress-api-btn")).click();
+		user.getEventManager().waitUntilEventReaches("recordingStatusChanged", "RoomEvent", 1);
+
+		WebElement egressIdField = user.getDriver().findElement(By.id("egress-id-field"));
+		WebDriverWait wait = new WebDriverWait(user.getDriver(), Duration.ofSeconds(10));
+		wait.until(ExpectedConditions.textToBePresentInElementValue(egressIdField, "EG_"));
+		String egressId = egressIdField.getDomProperty("value");
+
+		this.waitUntilEgressStatus(user, egressId, "EGRESS_ACTIVE", 10000);
+
+		user.getDriver().findElement(By.cssSelector("#stop-egress-api-btn")).click();
+
+		this.waitUntilEgressStatus(user, egressId, "EGRESS_COMPLETE", 5000);
+
+		user.getEventManager().waitUntilEventReaches("recordingStatusChanged", "RoomEvent", 2);
+	}
+
+	private void waitUntilEgressStatus(OpenViduTestappUser user, String egressId, String egressStatus,
+			int timeoutMillis) {
+		final int intervalWait = 250;
+		final int MAX_ITERATIONS = timeoutMillis / intervalWait;
+		int iteration = 0;
+		boolean egressActive = false;
+
+		while (!egressActive && iteration < MAX_ITERATIONS) {
+			iteration++;
+			try {
+				user.getDriver().findElement(By.cssSelector("#list-egress-api-btn")).click();
+				String textareaContent = user.getDriver().findElement(By.cssSelector("#api-response-text-area"))
+						.getDomProperty("value");
+				JsonArray egressArray = JsonParser.parseString(textareaContent).getAsJsonArray();
+
+				// Find the egress object with the matching egressId
+				JsonObject targetEgress = null;
+				for (int i = 0; i < egressArray.size(); i++) {
+					JsonObject egress = egressArray.get(i).getAsJsonObject();
+					if (egressId.equals(egress.get("egressId").getAsString())) {
+						targetEgress = egress;
+						break;
+					}
+				}
+
+				if (targetEgress != null && egressStatus.equals(targetEgress.get("status").getAsString())) {
+					egressActive = true;
+				}
+			} catch (Exception e) {
+				// Continue polling if there's an exception
+			}
+
+			if (!egressActive) {
+				try {
+					Thread.sleep(intervalWait);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+
+		if (!egressActive) {
+			Assertions.fail("Timeout waiting for egress '" + egressId + "' to reach status '" + egressStatus + "'");
+		}
+	}
+
+	@Test
 	@DisplayName("Ingress VP8 Simulcast Chrome")
 	// TODO: remove tag when not forcing VP8 no-simulcast in ingress with mediasoup
 	@OnlyPion
@@ -1916,7 +2014,8 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 	@Test
 	@DisplayName("RTSP ingress AAC")
-	@Disabled // Audio ingress is flaky, only works if the ingress inmediately connects to the RTSP server
+	@Disabled // Audio ingress is flaky, only works if the ingress inmediately connects to the
+				// RTSP server
 	void rtspIngressAACTest() throws Exception {
 		log.info("RTSP ingress AAC");
 		String rtspUri = startRtspServer(null, "AAC");
@@ -1925,7 +2024,8 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 	@Test
 	@DisplayName("RTSP ingress MP3")
-	@Disabled // Audio ingress is flaky, only works if the ingress inmediately connects to the RTSP server
+	@Disabled // Audio ingress is flaky, only works if the ingress inmediately connects to the
+				// RTSP server
 	void rtspIngressMP3Test() throws Exception {
 		log.info("RTSP ingress MP3");
 		String rtspUri = startRtspServer(null, "MP3");
@@ -1934,7 +2034,8 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 	@Test
 	@DisplayName("RTSP ingress OPUS")
-	@Disabled // Audio ingress is flaky, only works if the ingress inmediately connects to the RTSP server
+	@Disabled // Audio ingress is flaky, only works if the ingress inmediately connects to the
+				// RTSP server
 	void rtspIngressOPUSTest() throws Exception {
 		log.info("RTSP ingress OPUS");
 		String rtspUri = startRtspServer(null, "OPUS");
@@ -1943,7 +2044,8 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 	@Test
 	@DisplayName("RTSP ingress G711")
-	@Disabled // Audio ingress is flaky, only works if the ingress inmediately connects to the RTSP server
+	@Disabled // Audio ingress is flaky, only works if the ingress inmediately connects to the
+				// RTSP server
 	void rtspIngressG711Test() throws Exception {
 		log.info("RTSP ingress G711");
 		String rtspUri = startRtspServer(null, "G711");
@@ -2413,7 +2515,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 	}
 
 	private void openInfoDialog(OpenViduTestappUser user, WebElement video) {
-		String videoId = video.getAttribute("id");
+		String videoId = video.getDomProperty("id");
 		// Open the track info dialog if required
 		if (!user.getDriver().findElements(By.cssSelector("app-info-dialog")).isEmpty()) {
 			// Dialog already opened
