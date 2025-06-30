@@ -20,6 +20,7 @@ import {
 })
 export class OptionsDialogComponent {
   roomOptions?: RoomOptions;
+  forceRelay = false;
   createLocalTracksOptions?: CreateLocalTracksOptions;
   shareScreen = false;
   screenShareCaptureOptions?: ScreenShareCaptureOptions;
@@ -47,6 +48,7 @@ export class OptionsDialogComponent {
     @Inject(MAT_DIALOG_DATA)
     public data: {
       roomOptions?: RoomOptions;
+      forceRelay: boolean;
       createLocalTracksOptions?: CreateLocalTracksOptions;
       shareScreen: boolean;
       screenShareCaptureOptions?: ScreenShareCaptureOptions;
@@ -57,6 +59,7 @@ export class OptionsDialogComponent {
     }
   ) {
     this.roomOptions = data.roomOptions;
+    this.forceRelay = data.forceRelay;
     this.createLocalTracksOptions = data.createLocalTracksOptions;
     this.shareScreen = data.shareScreen;
     this.screenShareCaptureOptions = data.screenShareCaptureOptions;
@@ -135,6 +138,7 @@ export class OptionsDialogComponent {
     }
     this.dialogRef.close({
       roomOptions: this.roomOptions,
+      forceRelay: this.forceRelay,
       createLocalTracksOptions: this.createLocalTracksOptions,
       screenShareCaptureOptions: this.screenShareCaptureOptions,
       trackPublishOptions: this.trackPublishOptions,

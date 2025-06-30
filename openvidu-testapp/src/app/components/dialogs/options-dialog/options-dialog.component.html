@@ -3,12 +3,13 @@
   <mat-dialog-content>
     <mat-divider *ngIf="roomOptions"></mat-divider>
     <div *ngIf="roomOptions">
-      <label><a href="https://docs.livekit.io/client-sdk-js/interfaces/RoomOptions.html" target="_blank">RoomOptions</a></label><br>
+      <label><a href="https://docs.livekit.io/client-sdk-js/interfaces/RoomOptions.html" target="_blank">RoomOptions</a></label> / <label><a href="https://docs.livekit.io/client-sdk-js/interfaces/RoomConnectOptions.html" target="_blank">RoomConnectOptions</a></label><br>
       <mat-checkbox id="room-adaptiveStream" [(ngModel)]="roomOptions.adaptiveStream">adaptiveStream</mat-checkbox>
       <mat-checkbox id="room-dynacast" [(ngModel)]="roomOptions.dynacast">dynacast</mat-checkbox>
       <mat-checkbox id="room-disconnectOnPageLeave" [(ngModel)]="roomOptions.disconnectOnPageLeave">disconnectOnPageLeave</mat-checkbox>
       <mat-checkbox id="room-stopLocalTrackOnUnpublish" [(ngModel)]="roomOptions.stopLocalTrackOnUnpublish">stopLocalTrackOnUnpublish</mat-checkbox>
       <mat-checkbox id="room-webAudioMix" [(ngModel)]="roomOptions.webAudioMix">webAudioMix</mat-checkbox>
+      <mat-checkbox id="room-forceRelay" [(ngModel)]="forceRelay">Force relay candidates</mat-checkbox>
     </div>
     <mat-divider *ngIf="createLocalTracksOptions"></mat-divider>
     <div *ngIf="createLocalTracksOptions">

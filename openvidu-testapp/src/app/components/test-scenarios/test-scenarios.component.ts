@@ -39,10 +39,10 @@ export interface User {
 }
 
 @Component({
-    selector: 'app-test-scenarios',
-    templateUrl: './test-scenarios.component.html',
-    styleUrls: ['./test-scenarios.component.css'],
-    standalone: false
+  selector: 'app-test-scenarios',
+  templateUrl: './test-scenarios.component.html',
+  styleUrls: ['./test-scenarios.component.css'],
+  standalone: false,
 })
 export class TestScenariosComponent implements OnInit, OnDestroy {
   fixedRoomId = 'SCENARIO_TEST';
@@ -286,6 +286,8 @@ export class TestScenariosComponent implements OnInit, OnDestroy {
     const dialogRef = this.dialog.open(OptionsDialogComponent, {
       data: {
         roomOptions: this.roomOptions,
+        forceRelay:
+          this.roomConnectOptions.rtcConfig?.iceTransportPolicy === 'relay',
         createLocalTracksOptions: this.createLocalTracksOptions,
         shareScreen: false,
         trackPublishOptions: this.trackPublishOptions,
@@ -297,6 +299,9 @@ export class TestScenariosComponent implements OnInit, OnDestroy {
         return;
       }
       this.roomOptions = result.roomOptions;
+      this.roomConnectOptions.rtcConfig = {
+        iceTransportPolicy: result.forceRelay ? 'relay' : 'all',
+      };
       this.createLocalTracksOptions = result.createLocalTracksOptions;
       this.trackPublishOptions = result.trackPublishOptions;
     });

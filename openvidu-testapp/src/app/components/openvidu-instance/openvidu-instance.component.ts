@@ -80,6 +80,9 @@ export class OpenviduInstanceComponent {
   };
   roomConnectOptions: RoomConnectOptions = {
     autoSubscribe: false,
+    rtcConfig: {
+      iceTransportPolicy: 'all',
+    },
   };
   createLocalTracksOptions: CreateLocalTracksOptions = {
     audio: true,
@@ -1083,6 +1086,7 @@ export class OpenviduInstanceComponent {
     const dialogRef = this.dialog.open(OptionsDialogComponent, {
       data: {
         roomOptions: this.roomOptions,
+        forceRelay: this.roomConnectOptions.rtcConfig!.iceTransportPolicy === 'relay',
         createLocalTracksOptions: this.createLocalTracksOptions,
         shareScreen: true,
         screenShareCaptureOptions: this.screenShareCaptureOptions,
@@ -1092,6 +1096,8 @@ export class OpenviduInstanceComponent {
     dialogRef.afterClosed().subscribe((result) => {
       if (!!result) {
         this.roomOptions = result.roomOptions;
+        this.roomConnectOptions.rtcConfig!.iceTransportPolicy =
+          result.forceRelay ? 'relay' : 'all';
         this.createLocalTracksOptions = result.createLocalTracksOptions;
         this.screenShareCaptureOptions = result.screenShareCaptureOptions;
         this.trackPublishOptions = result.trackPublishOptions;
