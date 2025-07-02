@@ -215,8 +215,8 @@ export class TestScenariosComponent implements OnInit, OnDestroy {
             this.updateEventList(RoomEvent.ParticipantConnected);
           });
 
-          room.on(RoomEvent.ParticipantConnected, () => {
-            this.updateEventList(RoomEvent.ParticipantConnected);
+          room.on(RoomEvent.ParticipantActive, () => {
+            this.updateEventList(RoomEvent.ParticipantActive);
           });
 
           room.on(

@@ -330,6 +330,26 @@ export class OpenviduInstanceComponent {
 
     if (
       firstTime ||
+      this.roomEvents.get(RoomEvent.ParticipantActive) !==
+        oldValues.get(RoomEvent.ParticipantActive)
+    ) {
+      this.room?.removeAllListeners(RoomEvent.ParticipantActive);
+      if (this.roomEvents.get(RoomEvent.ParticipantActive)) {
+        this.room!.on(
+          RoomEvent.ParticipantActive,
+          (participant: Participant) => {
+            this.updateEventList(
+              RoomEvent.ParticipantActive,
+              { participant },
+              participant.identity
+            );
+          }
+        );
+      }
+    }
+
+    if (
+      firstTime ||
       this.roomEvents.get(RoomEvent.ParticipantDisconnected) !==
         oldValues.get(RoomEvent.ParticipantDisconnected)
     ) {
@@ -1086,7 +1106,8 @@ export class OpenviduInstanceComponent {
     const dialogRef = this.dialog.open(OptionsDialogComponent, {
       data: {
         roomOptions: this.roomOptions,
-        forceRelay: this.roomConnectOptions.rtcConfig!.iceTransportPolicy === 'relay',
+        forceRelay:
+          this.roomConnectOptions.rtcConfig!.iceTransportPolicy === 'relay',
         createLocalTracksOptions: this.createLocalTracksOptions,
         shareScreen: true,
         screenShareCaptureOptions: this.screenShareCaptureOptions,
