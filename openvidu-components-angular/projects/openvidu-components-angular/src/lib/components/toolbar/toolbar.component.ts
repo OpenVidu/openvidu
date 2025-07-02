@@ -98,7 +98,7 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 
 	/**
 	 * This event is emitted when the room has been disconnected.
-	 *  @deprecated Use {@link onParticipantLeft} instead.
+	 *  @deprecated Use {@link ToolbarComponent.onParticipantLeft} instead.
 	 */
 	@Output() onRoomDisconnected: EventEmitter<void> = new EventEmitter<void>();
 
