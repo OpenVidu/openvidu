@@ -17,6 +17,9 @@
 
 package io.openvidu.test.e2e;
 
+import java.io.IOException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
 import java.util.AbstractMap;
 import java.util.ArrayList;
@@ -54,6 +57,16 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
+import io.minio.ListObjectsArgs;
+import io.minio.MinioClient;
+import io.minio.Result;
+import io.minio.errors.ErrorResponseException;
+import io.minio.errors.InsufficientDataException;
+import io.minio.errors.InternalException;
+import io.minio.errors.InvalidResponseException;
+import io.minio.errors.ServerException;
+import io.minio.errors.XmlParserException;
+import io.minio.messages.Item;
 import io.openvidu.test.e2e.annotations.OnlyMediasoup;
 import io.openvidu.test.e2e.annotations.OnlyPion;
 import livekit.LivekitIngress.IngressInfo;
@@ -1538,6 +1551,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 	private void egressTestByType(OpenViduTestappUser user, String egressType) throws Exception {
 		user.getEventManager().clearAllCurrentEvents();
+
 		user.getDriver().findElement(By.id("egress-id-field")).clear();
 		if ("track".equals(egressType)) {
 			user.getDriver().findElement(By.id("audio-track-id-field"))
@@ -1545,7 +1559,12 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		}
 
 		user.getDriver().findElement(By.cssSelector("#start-" + egressType + "-egress-api-btn")).click();
-		user.getEventManager().waitUntilEventReaches("recordingStatusChanged", "RoomEvent", 1);
+
+		// TODO: UNCOMMENT WHEN MEDIASOUP IS ABLE TO MANAGE ABRUPT
+		// CONNECTIONSTATECHANGED DISOCONNECTED/FAILED
+		// https://mediasoup.discourse.group/t/mediasoup-3-13-20-released-with-server-side-ice-consent-check-and-a-critical-fix/5864
+		// user.getEventManager().waitUntilEventReaches("recordingStatusChanged",
+		// "RoomEvent", 1);
 
 		WebElement egressIdField = user.getDriver().findElement(By.id("egress-id-field"));
 		WebDriverWait wait = new WebDriverWait(user.getDriver(), Duration.ofSeconds(10));
@@ -1554,19 +1573,28 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 		this.waitUntilEgressStatus(user, egressId, "EGRESS_ACTIVE", 10000);
 
+		Thread.sleep(1000);
+
 		user.getDriver().findElement(By.cssSelector("#stop-egress-api-btn")).click();
 
-		this.waitUntilEgressStatus(user, egressId, "EGRESS_COMPLETE", 5000);
+		JsonObject egress = this.waitUntilEgressStatus(user, egressId, "EGRESS_COMPLETE", 10000);
 
-		user.getEventManager().waitUntilEventReaches("recordingStatusChanged", "RoomEvent", 2);
+		this.checkRecordingInBucket(egress);
+
+		// TODO: UNCOMMENT WHEN MEDIASOUP IS ABLE TO MANAGE ABRUPT
+		// CONNECTIONSTATECHANGED DISOCONNECTED/FAILED
+		// https://mediasoup.discourse.group/t/mediasoup-3-13-20-released-with-server-side-ice-consent-check-and-a-critical-fix/5864
+		// user.getEventManager().waitUntilEventReaches("recordingStatusChanged",
+		// "RoomEvent", 2);
 	}
 
-	private void waitUntilEgressStatus(OpenViduTestappUser user, String egressId, String egressStatus,
+	private JsonObject waitUntilEgressStatus(OpenViduTestappUser user, String egressId, String egressStatus,
 			int timeoutMillis) {
 		final int intervalWait = 250;
 		final int MAX_ITERATIONS = timeoutMillis / intervalWait;
 		int iteration = 0;
 		boolean egressActive = false;
+		JsonObject egressObject = null;
 
 		while (!egressActive && iteration < MAX_ITERATIONS) {
 			iteration++;
@@ -1579,9 +1607,9 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 				// Find the egress object with the matching egressId
 				JsonObject targetEgress = null;
 				for (int i = 0; i < egressArray.size(); i++) {
-					JsonObject egress = egressArray.get(i).getAsJsonObject();
-					if (egressId.equals(egress.get("egressId").getAsString())) {
-						targetEgress = egress;
+					egressObject = egressArray.get(i).getAsJsonObject();
+					if (egressId.equals(egressObject.get("egressId").getAsString())) {
+						targetEgress = egressObject;
 						break;
 					}
 				}
@@ -1604,6 +1632,41 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 		if (!egressActive) {
 			Assertions.fail("Timeout waiting for egress '" + egressId + "' to reach status '" + egressStatus + "'");
+		}
+		return egressObject;
+	}
+
+	private void checkRecordingInBucket(JsonObject egress) {
+		MinioClient minioClient = MinioClient.builder().endpoint("localhost", 9000, false)
+				.credentials("minioadmin", "minioadmin").build();
+		Iterable<Result<Item>> results = minioClient
+				.listObjects(ListObjectsArgs.builder().bucket("openvidu-appdata").build());
+		final boolean[] metadataFound = { false };
+		final boolean[] videoFound = { false };
+		results.forEach(result -> {
+			Item object = null;
+			try {
+				object = result.get();
+			} catch (InvalidKeyException | ErrorResponseException | IllegalArgumentException | InsufficientDataException
+					| InternalException | InvalidResponseException | NoSuchAlgorithmException | ServerException
+					| XmlParserException | IOException e) {
+				e.printStackTrace();
+				Assertions.fail("Error accessing Minio object");
+			}
+			String expectedFileName = egress.get("egressId").getAsString() + ".json";
+			if (expectedFileName.equals(object.objectName())) {
+				metadataFound[0] = true;
+			}
+			expectedFileName = egress.get("file").getAsJsonObject().get("filename").getAsString();
+			if (expectedFileName.equals(object.objectName())) {
+				videoFound[0] = true;
+			}
+		});
+		if (!metadataFound[0]) {
+			Assertions.fail("Recording metadata file not found in Minio");
+		}
+		if (!videoFound[0]) {
+			Assertions.fail("Recording media file not found in Minio");
 		}
 	}
 

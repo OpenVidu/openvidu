@@ -59,6 +59,7 @@
 		<version.dockerjava>3.4.1</version.dockerjava>
 		<version.stringsimilarity>2.0.0</version.stringsimilarity>
 		<version.openvidu-test-browsers>1.1.0</version.openvidu-test-browsers>
+		<version.minio>8.5.17</version.minio>
 	</properties>
 
 	<build>
@@ -121,6 +122,11 @@
 			<groupId>info.debatty</groupId>
 			<artifactId>java-string-similarity</artifactId>
 			<version>${version.stringsimilarity}</version>
+		</dependency>
+		<dependency>
+			<groupId>io.minio</groupId>
+			<artifactId>minio</artifactId>
+			<version>${version.minio}</version>
 		</dependency>
 	</dependencies>
 
