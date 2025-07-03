@@ -160,7 +160,7 @@ Resources:
 
           def handler(event, context):
             try:
-              response = boto3.client('ec2').describe_images(Filters=[
+              response = boto3.client('ec2').describe_images(IncludeDeprecated=True, Filters=[
                 {'Name': 'name', 'Values': [event['ResourceProperties']['Name']]},
                 {'Name': 'owner-alias', 'Values': ['amazon']}
               ])

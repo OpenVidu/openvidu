@@ -1028,7 +1028,7 @@ Resources:
 
           def copy_ami_operation(source_image_id, source_region, new_ami_name, ec2_client):
             own_ami_filter = [{ 'Name': 'name', 'Values': [new_ami_name] }]
-            amis_response = ec2_client.describe_images(Filters=own_ami_filter)
+            amis_response = ec2_client.describe_images(IncludeDeprecated=True, Filters=own_ami_filter)
             if (len(amis_response['Images']) == 1):
               # If AMI exists, don't copy
               return amis_response['Images'][0]['ImageId']
@@ -1059,9 +1059,9 @@ Resources:
             public_ami_master_node_filter = [{ 'Name': 'image-id', 'Values': [ source_image_id_master_node ] }]
             public_ami_media_node_filter = [{ 'Name': 'image-id', 'Values': [ source_image_id_media_node ] }]
 
-            response = ec2_client_ov.describe_images(Filters=public_ami_master_node_filter)
+            response = ec2_client_ov.describe_images(IncludeDeprecated=True, Filters=public_ami_master_node_filter)
             new_ami_name_master_node = "[ OpenVidu PRO Master Node AMI Copy ] - " + response['Images'][0]['Name']
-            response = ec2_client_ov.describe_images(Filters=public_ami_media_node_filter)
+            response = ec2_client_ov.describe_images(IncludeDeprecated=True, Filters=public_ami_media_node_filter)
             new_ami_name_media_node = "[ OpenVidu PRO/ENTERPRISE Media Node AMI Copy ] - " + response['Images'][0]['Name']
 
             # Copy master node AMI and media node AMI

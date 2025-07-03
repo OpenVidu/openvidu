@@ -501,11 +501,11 @@ Resources:
               # Get original ami name
               public_ami_filter = [{ 'Name': 'image-id', 'Values': [ source_image_id ] }]
 
-              response = ec2_client_ov.describe_images(Filters=public_ami_filter)
+              response = ec2_client_ov.describe_images(IncludeDeprecated=True, Filters=public_ami_filter)
               new_ami_name= "[ OpenVidu CE AMI Copy ] - " + response['Images'][0]['Name']
 
               own_ami_filter = [{ 'Name': 'name', 'Values': [new_ami_name] }]
-              response = ec2_client.describe_images(Filters=own_ami_filter)
+              response = ec2_client.describe_images(IncludeDeprecated=True, Filters=own_ami_filter)
               if (len(response['Images']) == 1):
                   # If AMI exists, don't copy
                   new_images.append(response['Images'][0]['ImageId'])
