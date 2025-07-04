@@ -21,7 +21,7 @@ export enum RecordingOutputMode {
 export interface RecordingStatusInfo {
 	status: RecordingStatus;
 	recordingList: RecordingInfo[];
-	recordingElapsedTime?: Date;
+	startedAt?: Date;
 	error?: string;
 }
 

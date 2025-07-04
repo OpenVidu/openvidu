@@ -700,7 +700,7 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 
 	private subscribeToRecordingStatus() {
 		this.recordingSubscription = this.recordingService.recordingStatusObs.subscribe((event: RecordingStatusInfo) => {
-			const { status, recordingElapsedTime } = event;
+			const { status, startedAt } = event;
 			this.recordingStatus = status;
 			if (status === RecordingStatus.STARTED) {
 				this.startedRecording = event.recordingList.find((rec) => rec.status === RecordingStatus.STARTED);
@@ -708,8 +708,8 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 				this.startedRecording = undefined;
 			}
 
-			if (recordingElapsedTime) {
-				this.recordingTime = recordingElapsedTime;
+			if (startedAt) {
+				this.recordingTime = startedAt;
 			}
 			this.cd.markForCheck();
 		});

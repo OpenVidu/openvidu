@@ -20,7 +20,7 @@ export class RecordingService {
 	private recordingStatus = <BehaviorSubject<RecordingStatusInfo>>new BehaviorSubject({
 		status: RecordingStatus.STOPPED,
 		recordingList: [] as RecordingInfo[],
-		recordingElapsedTime: new Date(0, 0, 0, 0, 0, 0)
+		startedAt: new Date(0, 0, 0, 0, 0, 0)
 	});
 	private log: ILogger;
 
@@ -41,12 +41,9 @@ export class RecordingService {
 	 * @internal
 	 */
 	setRecordingStarted(recordingInfo?: RecordingInfo, startTimestamp?: number) {
-		// Register the start timestamp of the recording
-		// to calculate the elapsed time
-		this.recordingStartTimestamp = recordingInfo?.startedAt || Date.now();
-
-		// Initialize the recording elapsed time
-		this.startRecordingTimer();
+		// Determine the actual start timestamp of the recording
+		// Priority: startTimestamp parameter > recordingInfo.startedAt > current time
+		this.recordingStartTimestamp = startTimestamp || recordingInfo?.startedAt || Date.now();
 
 		const { recordingList } = this.recordingStatus.getValue();
 		let updatedRecordingList = [...recordingList];
@@ -61,17 +58,22 @@ export class RecordingService {
 				updatedRecordingList = [recordingInfo, ...updatedRecordingList];
 			}
 		}
+
+		// Calculate the elapsed time based on the actual start timestamp
 		const recordingElapsedTime = new Date(0, 0, 0, 0, 0, 0);
-		if (startTimestamp) {
-			const elapsedSeconds = Math.floor((Date.now() - startTimestamp) / 1000);
-			recordingElapsedTime.setSeconds(elapsedSeconds);
+		if (this.recordingStartTimestamp) {
+			const elapsedSeconds = Math.floor((Date.now() - this.recordingStartTimestamp) / 1000);
+			recordingElapsedTime.setSeconds(Math.max(0, elapsedSeconds)); // Ensure non-negative
 		}
 
 		this.updateStatus({
 			status: RecordingStatus.STARTED,
 			recordingList: updatedRecordingList,
-			recordingElapsedTime
+			startedAt: recordingElapsedTime
 		});
+
+		// Start the timer after updating the initial state
+		this.startRecordingTimer();
 	}
 
 	/**
@@ -96,7 +98,7 @@ export class RecordingService {
 		this.updateStatus({
 			status: RecordingStatus.STOPPED,
 			recordingList: updatedRecordingList,
-			recordingElapsedTime: new Date(0, 0, 0, 0, 0, 0)
+			startedAt: new Date(0, 0, 0, 0, 0, 0)
 		});
 
 		this.recordingStartTimestamp = null;
@@ -107,11 +109,11 @@ export class RecordingService {
 	 * The `started` stastus will be updated automatically when the recording is actually started.
 	 */
 	setRecordingStarting() {
-		const { recordingList, recordingElapsedTime } = this.recordingStatus.getValue();
+		const { recordingList, startedAt } = this.recordingStatus.getValue();
 		this.updateStatus({
 			status: RecordingStatus.STARTING,
 			recordingList,
-			recordingElapsedTime
+			startedAt
 		});
 	}
 
@@ -121,11 +123,11 @@ export class RecordingService {
 	 */
 	setRecordingFailed(error: string) {
 		this.stopRecordingTimer();
-		const { recordingElapsedTime, recordingList } = this.recordingStatus.getValue();
+		const { startedAt, recordingList } = this.recordingStatus.getValue();
 		const statusInfo: RecordingStatusInfo = {
 			status: RecordingStatus.FAILED,
 			recordingList,
-			recordingElapsedTime,
+			startedAt,
 			error
 		};
 		this.updateStatus(statusInfo);
@@ -136,12 +138,12 @@ export class RecordingService {
 	 * The `stopped` stastus will be updated automatically when the recording is actually stopped.
 	 */
 	setRecordingStopping() {
-		const { recordingElapsedTime, recordingList } = this.recordingStatus.getValue();
+		const { startedAt, recordingList } = this.recordingStatus.getValue();
 
 		this.updateStatus({
 			status: RecordingStatus.STOPPING,
 			recordingList,
-			recordingElapsedTime
+			startedAt
 		});
 	}
 
@@ -199,14 +201,14 @@ export class RecordingService {
 	 * @internal
 	 */
 	deleteRecording(recording: RecordingInfo) {
-		const { recordingList, status, recordingElapsedTime } = this.recordingStatus.getValue();
+		const { recordingList, status, startedAt } = this.recordingStatus.getValue();
 		const updatedList = recordingList.filter((item) => item.id !== recording.id);
 
 		if (updatedList.length !== recordingList.length) {
 			this.updateStatus({
 				status,
 				recordingList: updatedList,
-				recordingElapsedTime
+				startedAt
 			});
 			return true;
 		}
@@ -219,11 +221,11 @@ export class RecordingService {
 	 * @internal
 	 */
 	setRecordingList(recordings: RecordingInfo[]) {
-		const { status, recordingElapsedTime, error } = this.recordingStatus.getValue();
+		const { status, startedAt, error } = this.recordingStatus.getValue();
 		this.updateStatus({
 			status,
 			recordingList: recordings,
-			recordingElapsedTime,
+			startedAt,
 			error
 		});
 	}
@@ -233,19 +235,21 @@ export class RecordingService {
 	 * @param status {@link RecordingStatus}
 	 */
 	private updateStatus(statusInfo: RecordingStatusInfo) {
-		const { status, recordingList, error, recordingElapsedTime } = statusInfo;
+		const { status, recordingList, error, startedAt } = statusInfo;
 		this.recordingStatus.next({
 			status,
 			recordingList,
-			recordingElapsedTime,
+			startedAt,
 			error
 		});
 	}
 
 	private startRecordingTimer() {
+		// Don't override the timestamp if it's already set correctly
 		if (this.recordingStartTimestamp === null) {
 			this.recordingStartTimestamp = Date.now();
 		}
+
 		if (this.recordingTimeInterval) {
 			clearInterval(this.recordingTimeInterval);
 		}
@@ -253,29 +257,29 @@ export class RecordingService {
 		this.recordingTimeInterval = setInterval(() => {
 			if (!this.recordingStartTimestamp) return;
 
-			let { recordingElapsedTime } = this.recordingStatus.getValue();
-			if (recordingElapsedTime) {
-				// Calculamos con precisión el tiempo transcurrido
-				const elapsedSeconds = Math.floor((Date.now() - this.recordingStartTimestamp) / 1000);
-				const updatedElapsedTime = new Date(0, 0, 0, 0, 0, 0);
-				updatedElapsedTime.setSeconds(elapsedSeconds);
+			// Calculate elapsed time based on the actual recording start timestamp
+			const elapsedSeconds = Math.floor((Date.now() - this.recordingStartTimestamp) / 1000);
+			const startedAt = new Date(0, 0, 0, 0, 0, 0);
+			startedAt.setSeconds(Math.max(0, elapsedSeconds)); // Ensure non-negative
 
-				const { recordingList, status } = this.recordingStatus.getValue();
-				this.updateStatus({
-					status,
-					recordingList,
-					recordingElapsedTime: updatedElapsedTime
-				});
-			}
+			const { recordingList, status } = this.recordingStatus.getValue();
+			this.updateStatus({
+				status,
+				recordingList,
+				startedAt
+			});
 		}, 1000);
 	}
 
 	private stopRecordingTimer() {
-		clearInterval(this.recordingTimeInterval);
+		if (this.recordingTimeInterval) {
+			clearInterval(this.recordingTimeInterval);
+		}
 		const { recordingList, status, error } = this.recordingStatus.getValue();
 		const statusInfo: RecordingStatusInfo = {
 			status,
 			recordingList,
+			startedAt: new Date(0, 0, 0, 0, 0, 0), // Reset elapsed time when stopped
 			error
 		};
 		this.updateStatus(statusInfo);
