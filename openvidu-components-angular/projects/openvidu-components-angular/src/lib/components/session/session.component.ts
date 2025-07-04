@@ -204,6 +204,7 @@ export class SessionComponent implements OnInit, OnDestroy {
 		// this.subscribeToParticipantNameChanged();
 		this.subscribeToDataMessage();
 		this.subscribeToReconnection();
+		this.subscribeToVirtualBackground();
 
 		if (this.libService.isRecordingEnabled()) {
 			// this.subscribeToRecordingEvents();
@@ -537,6 +538,17 @@ export class SessionComponent implements OnInit, OnDestroy {
 					this.translateService.translate(messageErrorKey),
 					this.translateService.translate(descriptionErrorKey)
 				);
+			}
+		});
+	}
+
+	private subscribeToVirtualBackground() {
+		this.libService.backgroundEffectsButton$.subscribe(async (enable) => {
+			if (!enable && this.backgroundService.isBackgroundApplied()) {
+				await this.backgroundService.removeBackground();
+				if (this.panelService.isBackgroundEffectsPanelOpened()) {
+					this.panelService.closePanel();
+				}
 			}
 		});
 	}
