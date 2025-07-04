@@ -1,16 +1,16 @@
 import { NgModule } from '@angular/core';
 import { ActivitiesPanelBroadcastingActivityDirective, ActivitiesPanelRecordingActivityDirective } from './activities-panel.directive';
 import {
-	AdminLoginErrorDirective,
 	AdminDashboardRecordingsListDirective,
-	AdminLoginTitleDirective,
-	AdminDashboardTitleDirective
+	AdminDashboardTitleDirective,
+	AdminLoginErrorDirective,
+	AdminLoginTitleDirective
 } from './admin.directive';
 import {
-	LayoutRemoteParticipantsDirective,
 	FallbackLogoDirective,
-	ToolbarBrandingLogoDirective,
-	PrejoinDisplayParticipantName
+	LayoutRemoteParticipantsDirective,
+	PrejoinDisplayParticipantName,
+	ToolbarBrandingLogoDirective
 } from './internals.directive';
 import { ParticipantPanelItemMuteButtonDirective } from './participant-panel-item.directive';
 import {
@@ -20,21 +20,21 @@ import {
 } from './stream.directive';
 import {
 	ToolbarActivitiesPanelButtonDirective,
+	ToolbarAdditionalButtonsPossitionDirective,
 	ToolbarBackgroundEffectsButtonDirective,
 	ToolbarBroadcastingButtonDirective,
+	ToolbarCameraButtonDirective,
 	// ToolbarCaptionsButtonDirective,
 	ToolbarChatPanelButtonDirective,
 	ToolbarDisplayLogoDirective,
 	ToolbarDisplayRoomNameDirective,
 	ToolbarFullscreenButtonDirective,
 	ToolbarLeaveButtonDirective,
+	ToolbarMicrophoneButtonDirective,
 	ToolbarParticipantsPanelButtonDirective,
 	ToolbarRecordingButtonDirective,
 	ToolbarScreenshareButtonDirective,
-	ToolbarSettingsButtonDirective,
-	ToolbarAdditionalButtonsPossitionDirective,
-	ToolbarCameraButtonDirective,
-	ToolbarMicrophoneButtonDirective
+	ToolbarSettingsButtonDirective
 } from './toolbar.directive';
 import {
 	AudioEnabledDirective,
@@ -47,6 +47,7 @@ import {
 	ParticipantNameDirective,
 	PrejoinDirective,
 	RecordingStreamBaseUrlDirective,
+	ShowDisconnectionDialogDirective,
 	TokenDirective,
 	TokenErrorDirective,
 	VideoEnabledDirective
@@ -65,6 +66,7 @@ const directives = [
 	PrejoinDisplayParticipantName,
 	VideoEnabledDirective,
 	AudioEnabledDirective,
+	ShowDisconnectionDialogDirective,
 	RecordingStreamBaseUrlDirective,
 	ToolbarCameraButtonDirective,
 	ToolbarMicrophoneButtonDirective,
