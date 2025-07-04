@@ -33,6 +33,9 @@ export class OpenViduComponentsConfigService {
 	private audioEnabled = <BehaviorSubject<boolean>>new BehaviorSubject(true);
 	audioEnabled$: Observable<boolean>;
 
+	private showDisconnectionDialog = <BehaviorSubject<boolean>>new BehaviorSubject(true);
+	showDisconnectionDialog$: Observable<boolean>;
+
 	private recordingStreamBaseUrl = <BehaviorSubject<string>>new BehaviorSubject('call/api/recordings');
 	recordingStreamBaseUrl$: Observable<string>;
 
@@ -216,6 +219,14 @@ export class OpenViduComponentsConfigService {
 
 	isAudioEnabled(): boolean {
 		return this.audioEnabled.getValue();
+	}
+
+	getShowDisconnectionDialog(): boolean {
+		return this.showDisconnectionDialog.getValue();
+	}
+
+	setShowDisconnectionDialog(showDisconnectionDialog: boolean) {
+		this.showDisconnectionDialog.next(showDisconnectionDialog);
 	}
 
 	setRecordingStreamBaseUrl(recordingStreamBaseUrl: string) {

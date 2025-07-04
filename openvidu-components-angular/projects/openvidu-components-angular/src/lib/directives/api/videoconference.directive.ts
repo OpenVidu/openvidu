@@ -737,6 +737,60 @@ export class AudioEnabledDirective implements OnDestroy {
 }
 
 /**
+ * The **showDisconnectionDialog** directive allows to show/hide the disconnection dialog when the local participant is disconnected from the room.
+ *
+ * It is only available for {@link VideoconferenceComponent}.
+ *
+ * Default: `true`
+ *
+ * @example
+ * <ov-videoconference [showDisconnectionDialog]="false"></ov-videoconference>
+ */
+@Directive({
+	selector: 'ov-videoconference[showDisconnectionDialog]',
+	standalone: false
+})
+export class ShowDisconnectionDialogDirective implements OnDestroy {
+	/**
+	 * @ignore
+	 */
+	@Input() set showDisconnectionDialog(value: boolean) {
+		this.update(value);
+	}
+
+	/**
+	 * @ignore
+	 */
+	constructor(
+		public elementRef: ElementRef,
+		private libService: OpenViduComponentsConfigService
+	) {}
+
+	/**
+	 * @ignore
+	 */
+	ngOnDestroy(): void {
+		this.clear();
+	}
+
+	/**
+	 * @ignore
+	 */
+	clear() {
+		this.update(true);
+	}
+
+	/**
+	 * @ignore
+	 */
+	update(value: boolean) {
+		if (this.libService.getShowDisconnectionDialog() !== value) {
+			this.libService.setShowDisconnectionDialog(value);
+		}
+	}
+}
+
+/**
  * The **recordingStreamBaseUrl** directive sets the base URL for retrieving recording streams.
  * The complete request URL is dynamically constructed by concatenating the supplied URL, the
  * internally managed recordingId, and the `/media` segment.

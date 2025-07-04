@@ -532,7 +532,7 @@ export class SessionComponent implements OnInit, OnDestroy {
 			this.log.d('Participant disconnected', participantLeftEvent);
 			this.onParticipantLeft.emit(participantLeftEvent);
 			this.onRoomDisconnected.emit();
-			if (descriptionErrorKey) {
+			if (this.libService.getShowDisconnectionDialog() && descriptionErrorKey) {
 				this.actionService.openDialog(
 					this.translateService.translate(messageErrorKey),
 					this.translateService.translate(descriptionErrorKey)
