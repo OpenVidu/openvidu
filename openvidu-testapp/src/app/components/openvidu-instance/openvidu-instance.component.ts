@@ -1205,17 +1205,23 @@ export class OpenviduInstanceComponent {
       const sub: PCTransport = this.getSubscriberPC()!;
       return JSON.stringify(
         {
-          publisher: {
-            connectedAddress: await pub.getConnectedAddress(),
-            connectionState: pub.getConnectionState(),
-            iceConnectionState: pub.getICEConnectionState(),
-            signallingState: pub.getSignallingState(),
+          PCTransports: {
+            publisher: {
+              connectedAddress: await pub.getConnectedAddress(),
+              connectionState: pub.getConnectionState(),
+              iceConnectionState: pub.getICEConnectionState(),
+              signallingState: pub.getSignallingState(),
+            },
+            subscriber: {
+              connectedAddress: await sub.getConnectedAddress(),
+              connectionState: sub.getConnectionState(),
+              iceConnectionState: sub.getICEConnectionState(),
+              signallingState: sub.getSignallingState(),
+            },
           },
-          subscriber: {
-            connectedAddress: await sub.getConnectedAddress(),
-            connectionState: sub.getConnectionState(),
-            iceConnectionState: sub.getICEConnectionState(),
-            signallingState: sub.getSignallingState(),
+          RTCIceCandidateStats: {
+            publisher: await this.getPublisherRTCIceCandidateStats(),
+            subscriber: await this.getSubscriberRTCIceCandidateStats(),
           },
         },
         null,
@@ -1237,5 +1243,57 @@ export class OpenviduInstanceComponent {
 
   getSubscriberPC(): PCTransport | undefined {
     return this.room?.localParticipant.engine.pcManager?.subscriber;
+  }
+
+  async getPublisherRTCIceCandidateStats() {
+    return this.getRTCIceCandidateStats(this.getPublisherPC()!);
+  }
+
+  async getSubscriberRTCIceCandidateStats() {
+    return this.getRTCIceCandidateStats(this.getSubscriberPC()!);
+  }
+
+  async getRTCIceCandidateStats(pcTransport: PCTransport) {
+    return new Promise(async (resolve) => {
+      let selectedCandidatePairId: string = '';
+      const stats: any = await new Promise((res) => {
+        const reports_stats: any[] = [];
+        pcTransport.getStats().then((stats: any) => {
+          stats.forEach((report: any) => {
+            if (report.type === 'transport') {
+              if (report.selectedCandidatePairId) {
+                selectedCandidatePairId = report.selectedCandidatePairId;
+              }
+            }
+            if (report.type === 'candidate-pair') {
+              console.log('Candidate Pair Report:', report);
+              const report_stats_object = {
+                report: report,
+                stats: stats,
+              };
+              reports_stats.push(report_stats_object);
+            }
+          });
+          return res(reports_stats);
+        });
+      });
+      const selectedCandidates = [] as any[];
+      for (const report_stats_object of stats) {
+        if (report_stats_object.report.id === selectedCandidatePairId) {
+          selectedCandidates.push(
+            report_stats_object.stats.get(
+              report_stats_object.report.localCandidateId
+            )
+          );
+          console.log(
+            'Selected Candidate:',
+            report_stats_object.stats.get(
+              report_stats_object.report.localCandidateId
+            )
+          );
+        }
+      }
+      return resolve(selectedCandidates);
+    });
   }
 }
