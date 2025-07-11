@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.36.1.42791",
-      "templateHash": "12381993962421618724"
+      "templateHash": "12302733880284242788"
     }
   },
   "parameters": {
@@ -593,22 +593,6 @@
               ],
               "access": "Allow",
               "priority": 180,
-              "direction": "Inbound"
-            }
-          },
-          {
-            "name": "WebRTC_traffic_TCP",
-            "properties": {
-              "protocol": "Tcp",
-              "sourceAddressPrefix": "*",
-              "sourcePortRange": "*",
-              "destinationAddressPrefix": "*",
-              "destinationPortRanges": [
-                "50000",
-                "60000"
-              ],
-              "access": "Allow",
-              "priority": 190,
               "direction": "Inbound"
             }
           }

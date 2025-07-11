@@ -1080,22 +1080,6 @@ resource webServerSecurityGroup 'Microsoft.Network/networkSecurityGroups@2023-11
           direction: 'Inbound'
         }
       }
-      {
-        name: 'WebRTC_traffic_TCP'
-        properties: {
-          protocol: 'Tcp'
-          sourceAddressPrefix: '*'
-          sourcePortRange: '*'
-          destinationAddressPrefix: '*'
-          destinationPortRanges: [
-            '50000'
-            '60000'
-          ]
-          access: 'Allow'
-          priority: 190
-          direction: 'Inbound'
-        }
-      }
     ]
   }
 }

@@ -1728,6 +1728,14 @@ Resources:
           FromPort: 443
           ToPort: 443
           CidrIpv6: ::/0
+        - IpProtocol: tcp
+          FromPort: 7881
+          ToPort: 7881
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 7881
+          ToPort: 7881
+          CidrIpv6: ::/0
         - IpProtocol: udp
           FromPort: 7885
           ToPort: 7885
@@ -1741,6 +1749,14 @@ Resources:
           ToPort: 60000
           CidrIp: 0.0.0.0/0
         - IpProtocol: udp
+          FromPort: 50000
+          ToPort: 60000
+          CidrIpv6: ::/0
+        - IpProtocol: tcp
+          FromPort: 50000
+          ToPort: 60000
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
           FromPort: 50000
           ToPort: 60000
           CidrIpv6: ::/0
