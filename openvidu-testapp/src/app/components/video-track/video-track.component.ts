@@ -11,10 +11,10 @@ import { TestFeedService } from 'src/app/services/test-feed.service';
 import { InfoDialogComponent } from '../dialogs/info-dialog/info-dialog.component';
 
 @Component({
-    selector: 'app-video-track',
-    templateUrl: './video-track.component.html',
-    styleUrls: ['./video-track.component.css'],
-    standalone: false
+  selector: 'app-video-track',
+  templateUrl: './video-track.component.html',
+  styleUrls: ['./video-track.component.css'],
+  standalone: false,
 })
 export class VideoTrackComponent extends TrackComponent {
   muteVideoIcon: string = 'videocam';
@@ -96,6 +96,7 @@ export class VideoTrackComponent extends TrackComponent {
         title: 'Video Track Layers Info',
         subtitle: this.finalElementRefId,
         updateFunction,
+        updateInterval: 700,
       },
     });
   }

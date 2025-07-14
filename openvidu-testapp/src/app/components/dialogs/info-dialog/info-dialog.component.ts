@@ -4,15 +4,16 @@ import { take } from 'rxjs/operators';
 import { MAT_DIALOG_DATA } from '@angular/material/dialog';
 
 @Component({
-    selector: 'app-info-dialog',
-    templateUrl: './info-dialog.component.html',
-    styleUrls: ['./info-dialog.component.css'],
-    standalone: false
+  selector: 'app-info-dialog',
+  templateUrl: './info-dialog.component.html',
+  styleUrls: ['./info-dialog.component.css'],
+  standalone: false,
 })
 export class InfoDialogComponent implements OnDestroy {
   title: string;
   subtitle: string;
   updateFunction: () => Promise<string>;
+  updateInterval: number;
 
   textAreaValue: string;
 
@@ -26,17 +27,22 @@ export class InfoDialogComponent implements OnDestroy {
       title: string;
       subtitle: string;
       updateFunction: () => Promise<string>;
+      updateInterval: number;
     },
     private _ngZone: NgZone
   ) {
     this.title = data.title;
     this.subtitle = data.subtitle;
     this.updateFunction = data.updateFunction;
+    this.updateInterval = data.updateInterval;
 
     this.updateValue();
-    this.interval = setInterval(() => {
-      this.updateValue();
-    }, 700);
+
+    if (this.updateInterval) {
+      this.interval = setInterval(() => {
+        this.updateValue();
+      }, this.updateInterval);
+    }
 
     // this.publisher
     //   .getSenders()
