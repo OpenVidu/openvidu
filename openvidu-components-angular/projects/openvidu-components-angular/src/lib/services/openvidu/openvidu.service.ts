@@ -64,6 +64,12 @@ export class OpenViduService {
 	 * @internal
 	 */
 	initRoom(): void {
+		// If room already exists, don't recreate it
+		if (this.room) {
+			this.log.d('Room already initialized, skipping re-initialization');
+			return;
+		}
+
 		const videoDeviceId = this.deviceService.getCameraSelected()?.device ?? undefined;
 		const audioDeviceId = this.deviceService.getMicrophoneSelected()?.device ?? undefined;
 		const roomOptions: RoomOptions = {
@@ -88,6 +94,7 @@ export class OpenViduService {
 			disconnectOnPageLeave: true
 		};
 		this.room = new Room(roomOptions);
+		this.log.d('Room initialized successfully');
 	}
 
 	/**
@@ -130,10 +137,18 @@ export class OpenViduService {
 	 */
 	getRoom(): Room {
 		if (!this.room) {
-			this.log.e('Room is not initialized');
-			throw new Error('Room is not initialized');
+			this.log.e('Room is not initialized. Make sure token is set before accessing the room.');
+			throw new Error('Room is not initialized. Make sure token is set before accessing the room.');
 		}
 		return this.room;
+	}
+
+	/**
+	 * Checks if room is initialized without throwing an error
+	 * @returns true if room is initialized, false otherwise
+	 */
+	isRoomInitialized(): boolean {
+		return !!this.room;
 	}
 
 	/**
@@ -170,6 +185,13 @@ export class OpenViduService {
 		if (!this.livekitUrl) {
 			this.log.e('LiveKit URL is not defined. Please, check the livekitUrl parameter of the VideoConferenceComponent');
 			throw new Error('Livekit URL is not defined');
+		}
+
+		// Initialize room if it doesn't exist yet
+		// This ensures that getRoom() won't fail if token is set before onTokenRequested
+		if (!this.room) {
+			this.log.d('Room not initialized yet, initializing room due to token assignment');
+			this.initRoom();
 		}
 		// return this.room.prepareConnection(this.livekitUrl, this.livekitToken);
 	}

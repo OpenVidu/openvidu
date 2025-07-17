@@ -189,7 +189,29 @@ export class SessionComponent implements OnInit, OnDestroy {
 
 	async ngOnInit() {
 		this.shouldDisconnectRoomWhenComponentIsDestroyed = true;
-		this.room = this.openviduService.getRoom();
+
+		// Check if room is available before proceeding
+		if (!this.openviduService.isRoomInitialized()) {
+			this.log.e('Room is not initialized when SessionComponent starts. This indicates a timing issue.');
+			this.actionService.openDialog(
+				this.translateService.translate('ERRORS.SESSION'),
+				'Room is not ready. Please ensure the token is properly configured.'
+			);
+			return;
+		}
+
+		// Get room instance
+		try {
+			this.room = this.openviduService.getRoom();
+			this.log.d('Room successfully obtained for SessionComponent');
+		} catch (error) {
+			this.log.e('Unexpected error getting room:', error);
+			this.actionService.openDialog(
+				this.translateService.translate('ERRORS.SESSION'),
+				'Failed to get room instance: ' + (error?.message || error)
+			);
+			return;
+		}
 
 		// this.subscribeToCaptionLanguage();
 		this.subcribeToActiveSpeakersChanged();
