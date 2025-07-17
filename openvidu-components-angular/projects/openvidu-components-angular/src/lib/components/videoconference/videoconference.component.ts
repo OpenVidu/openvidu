@@ -413,6 +413,15 @@ export class VideoconferenceComponent implements OnDestroy, AfterViewInit {
 	 * @internal
 	 */
 	ngAfterViewInit() {
+		this.addMaterialIconsIfNeeded();
+		this.setupTemplates();
+		this.deviceSrv.initializeDevices().then(() => (this.loading = false));
+	}
+
+	/**
+	 * @internal
+	 */
+	private addMaterialIconsIfNeeded(): void {
 		//Add material icons to the page if not already present
 		const existingLink = document.querySelector('link[href*="Material+Symbols+Outlined"]');
 		if (!existingLink) {
@@ -421,86 +430,154 @@ export class VideoconferenceComponent implements OnDestroy, AfterViewInit {
 			link.rel = 'stylesheet';
 			document.head.appendChild(link);
 		}
+	}
+
+	/**
+	 * @internal
+	 */
+	private setupTemplates(): void {
+		this.setupToolbarTemplate();
+		this.setupPanelTemplate();
+		this.setupLayoutTemplate();
+	}
+
+	/**
+	 * @internal
+	 */
+	private setupToolbarTemplate(): void {
 		if (this.externalToolbar) {
 			this.log.d('Setting EXTERNAL TOOLBAR');
 			this.openviduAngularToolbarTemplate = this.externalToolbar.template;
 		} else {
-			this.log.d('Setting  DEFAULT TOOLBAR');
-			if (this.externalToolbarAdditionalButtons) {
-				this.log.d('Setting EXTERNAL TOOLBAR ADDITIONAL BUTTONS');
-				this.openviduAngularToolbarAdditionalButtonsTemplate = this.externalToolbarAdditionalButtons.template;
-			}
-			if (this.externalToolbarAdditionalPanelButtons) {
-				this.log.d('Setting EXTERNAL TOOLBAR ADDITIONAL PANEL BUTTONS');
-				this.openviduAngularToolbarAdditionalPanelButtonsTemplate = this.externalToolbarAdditionalPanelButtons.template;
-			}
+			this.log.d('Setting DEFAULT TOOLBAR');
+			this.setupToolbarAdditionalButtons();
 			this.openviduAngularToolbarTemplate = this.defaultToolbarTemplate;
 		}
+	}
 
+	/**
+	 * @internal
+	 */
+	private setupToolbarAdditionalButtons(): void {
+		if (this.externalToolbarAdditionalButtons) {
+			this.log.d('Setting EXTERNAL TOOLBAR ADDITIONAL BUTTONS');
+			this.openviduAngularToolbarAdditionalButtonsTemplate = this.externalToolbarAdditionalButtons.template;
+		}
+		if (this.externalToolbarAdditionalPanelButtons) {
+			this.log.d('Setting EXTERNAL TOOLBAR ADDITIONAL PANEL BUTTONS');
+			this.openviduAngularToolbarAdditionalPanelButtonsTemplate = this.externalToolbarAdditionalPanelButtons.template;
+		}
+	}
+
+	/**
+	 * @internal
+	 */
+	private setupPanelTemplate(): void {
 		if (this.externalPanel) {
 			this.log.d('Setting EXTERNAL PANEL');
 			this.openviduAngularPanelTemplate = this.externalPanel.template;
 		} else {
 			this.log.d('Setting DEFAULT PANEL');
-
-			if (this.externalParticipantsPanel) {
-				this.openviduAngularParticipantsPanelTemplate = this.externalParticipantsPanel.template;
-				this.log.d('Setting EXTERNAL PARTICIPANTS PANEL');
-			} else {
-				this.log.d('Setting DEFAULT PARTICIPANTS PANEL');
-				if (this.externalParticipantPanelItem) {
-					this.log.d('Setting EXTERNAL P ITEM');
-					this.openviduAngularParticipantPanelItemTemplate = this.externalParticipantPanelItem.template;
-				} else {
-					if (this.externalParticipantPanelItemElements) {
-						this.log.d('Setting EXTERNAL PARTICIPANT PANEL ITEM ELEMENT');
-						this.openviduAngularParticipantPanelItemElementsTemplate = this.externalParticipantPanelItemElements.template;
-					}
-					this.openviduAngularParticipantPanelItemTemplate = this.defaultParticipantPanelItemTemplate;
-					this.log.d('Setting DEFAULT P ITEM');
-				}
-				this.openviduAngularParticipantsPanelTemplate = this.defaultParticipantsPanelTemplate;
-			}
-
-			if (this.externalChatPanel) {
-				this.log.d('Setting EXTERNAL CHAT PANEL');
-				this.openviduAngularChatPanelTemplate = this.externalChatPanel.template;
-			} else {
-				this.log.d('Setting DEFAULT CHAT PANEL');
-				this.openviduAngularChatPanelTemplate = this.defaultChatPanelTemplate;
-			}
-
-			if (this.externalActivitiesPanel) {
-				this.log.d('Setting EXTERNAL ACTIVITIES PANEL');
-				this.openviduAngularActivitiesPanelTemplate = this.externalActivitiesPanel.template;
-			} else {
-				this.log.d('Setting DEFAULT ACTIVITIES PANEL');
-				this.openviduAngularActivitiesPanelTemplate = this.defaultActivitiesPanelTemplate;
-			}
-
-			if (this.externalAdditionalPanels) {
-				this.log.d('Setting EXTERNAL ADDITIONAL PANELS');
-				this.openviduAngularAdditionalPanelsTemplate = this.externalAdditionalPanels.template;
-			}
+			this.setupParticipantsPanel();
+			this.setupChatPanel();
+			this.setupActivitiesPanel();
+			this.setupAdditionalPanels();
 			this.openviduAngularPanelTemplate = this.defaultPanelTemplate;
 		}
+	}
 
+	/**
+	 * @internal
+	 */
+	private setupParticipantsPanel(): void {
+		if (this.externalParticipantsPanel) {
+			this.openviduAngularParticipantsPanelTemplate = this.externalParticipantsPanel.template;
+			this.log.d('Setting EXTERNAL PARTICIPANTS PANEL');
+		} else {
+			this.log.d('Setting DEFAULT PARTICIPANTS PANEL');
+			this.setupParticipantPanelItem();
+			this.openviduAngularParticipantsPanelTemplate = this.defaultParticipantsPanelTemplate;
+		}
+	}
+
+	/**
+	 * @internal
+	 */
+	private setupParticipantPanelItem(): void {
+		if (this.externalParticipantPanelItem) {
+			this.log.d('Setting EXTERNAL P ITEM');
+			this.openviduAngularParticipantPanelItemTemplate = this.externalParticipantPanelItem.template;
+		} else {
+			if (this.externalParticipantPanelItemElements) {
+				this.log.d('Setting EXTERNAL PARTICIPANT PANEL ITEM ELEMENT');
+				this.openviduAngularParticipantPanelItemElementsTemplate = this.externalParticipantPanelItemElements.template;
+			}
+			this.openviduAngularParticipantPanelItemTemplate = this.defaultParticipantPanelItemTemplate;
+			this.log.d('Setting DEFAULT P ITEM');
+		}
+	}
+
+	/**
+	 * @internal
+	 */
+	private setupChatPanel(): void {
+		if (this.externalChatPanel) {
+			this.log.d('Setting EXTERNAL CHAT PANEL');
+			this.openviduAngularChatPanelTemplate = this.externalChatPanel.template;
+		} else {
+			this.log.d('Setting DEFAULT CHAT PANEL');
+			this.openviduAngularChatPanelTemplate = this.defaultChatPanelTemplate;
+		}
+	}
+
+	/**
+	 * @internal
+	 */
+	private setupActivitiesPanel(): void {
+		if (this.externalActivitiesPanel) {
+			this.log.d('Setting EXTERNAL ACTIVITIES PANEL');
+			this.openviduAngularActivitiesPanelTemplate = this.externalActivitiesPanel.template;
+		} else {
+			this.log.d('Setting DEFAULT ACTIVITIES PANEL');
+			this.openviduAngularActivitiesPanelTemplate = this.defaultActivitiesPanelTemplate;
+		}
+	}
+
+	/**
+	 * @internal
+	 */
+	private setupAdditionalPanels(): void {
+		if (this.externalAdditionalPanels) {
+			this.log.d('Setting EXTERNAL ADDITIONAL PANELS');
+			this.openviduAngularAdditionalPanelsTemplate = this.externalAdditionalPanels.template;
+		}
+	}
+
+	/**
+	 * @internal
+	 */
+	private setupLayoutTemplate(): void {
 		if (this.externalLayout) {
 			this.log.d('Setting EXTERNAL LAYOUT');
 			this.openviduAngularLayoutTemplate = this.externalLayout.template;
 		} else {
-			this.log.d('Setting DEAFULT LAYOUT');
-
-			if (this.externalStream) {
-				this.log.d('Setting EXTERNAL STREAM');
-				this.openviduAngularStreamTemplate = this.externalStream.template;
-			} else {
-				this.log.d('Setting DEFAULT STREAM');
-				this.openviduAngularStreamTemplate = this.defaultStreamTemplate;
-			}
+			this.log.d('Setting DEFAULT LAYOUT');
+			this.setupStreamTemplate();
 			this.openviduAngularLayoutTemplate = this.defaultLayoutTemplate;
 		}
-		this.deviceSrv.initializeDevices().then(() => (this.loading = false));
+	}
+
+	/**
+	 * @internal
+	 */
+	private setupStreamTemplate(): void {
+		if (this.externalStream) {
+			this.log.d('Setting EXTERNAL STREAM');
+			this.openviduAngularStreamTemplate = this.externalStream.template;
+		} else {
+			this.log.d('Setting DEFAULT STREAM');
+			this.openviduAngularStreamTemplate = this.defaultStreamTemplate;
+		}
 	}
 
 	/**
