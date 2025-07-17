@@ -12,7 +12,7 @@ import {
 	TemplateRef,
 	ViewChild
 } from '@angular/core';
-import { fromEvent, skip, Subscription } from 'rxjs';
+import { fromEvent, skip, Subject, takeUntil } from 'rxjs';
 import { ChatService } from '../../services/chat/chat.service';
 import { DocumentService } from '../../services/document/document.service';
 import { PanelService } from '../../services/panel/panel.service';
@@ -340,30 +340,7 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 	recordingTime: Date;
 
 	private log: ILogger;
-	private minimalSub: Subscription;
-	private panelTogglingSubscription: Subscription;
-	private chatMessagesSubscription: Subscription;
-	private localParticipantSubscription: Subscription;
-	private cameraButtonSub: Subscription;
-	private microphoneButtonSub: Subscription;
-	private screenshareButtonSub: Subscription;
-	private fullscreenButtonSub: Subscription;
-	private backgroundEffectsButtonSub: Subscription;
-	private leaveButtonSub: Subscription;
-	private recordingButtonSub: Subscription;
-	private broadcastingButtonSub: Subscription;
-	private recordingSubscription: Subscription;
-	private broadcastingSubscription: Subscription;
-	private activitiesPanelButtonSub: Subscription;
-	private participantsPanelButtonSub: Subscription;
-	private chatPanelButtonSub: Subscription;
-	private displayLogoSub: Subscription;
-	private brandingLogoSub: Subscription;
-	private displayRoomNameSub: Subscription;
-	private settingsButtonSub: Subscription;
-	private captionsSubs: Subscription;
-	private additionalButtonsPositionSub: Subscription;
-	private fullscreenChangeSubscription: Subscription;
+	private destroy$ = new Subject<void>();
 	private currentWindowHeight = window.innerHeight;
 
 	/**
@@ -437,30 +414,8 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 
 	ngOnDestroy(): void {
 		this.panelService.clear();
-		if (this.panelTogglingSubscription) this.panelTogglingSubscription.unsubscribe();
-		if (this.chatMessagesSubscription) this.chatMessagesSubscription.unsubscribe();
-		if (this.localParticipantSubscription) this.localParticipantSubscription.unsubscribe();
-		if (this.cameraButtonSub) this.cameraButtonSub.unsubscribe();
-		if (this.microphoneButtonSub) this.microphoneButtonSub.unsubscribe();
-		if (this.screenshareButtonSub) this.screenshareButtonSub.unsubscribe();
-		if (this.fullscreenButtonSub) this.fullscreenButtonSub.unsubscribe();
-		if (this.backgroundEffectsButtonSub) this.backgroundEffectsButtonSub.unsubscribe();
-		if (this.leaveButtonSub) this.leaveButtonSub.unsubscribe();
-		if (this.recordingButtonSub) this.recordingButtonSub.unsubscribe();
-		if (this.broadcastingButtonSub) this.broadcastingButtonSub.unsubscribe();
-		if (this.participantsPanelButtonSub) this.participantsPanelButtonSub.unsubscribe();
-		if (this.chatPanelButtonSub) this.chatPanelButtonSub.unsubscribe();
-		if (this.displayLogoSub) this.displayLogoSub.unsubscribe();
-		if (this.brandingLogoSub) this.brandingLogoSub.unsubscribe();
-		if (this.displayRoomNameSub) this.displayRoomNameSub.unsubscribe();
-		if (this.minimalSub) this.minimalSub.unsubscribe();
-		if (this.activitiesPanelButtonSub) this.activitiesPanelButtonSub.unsubscribe();
-		if (this.recordingSubscription) this.recordingSubscription.unsubscribe();
-		if (this.broadcastingSubscription) this.broadcastingSubscription.unsubscribe();
-		if (this.settingsButtonSub) this.settingsButtonSub.unsubscribe();
-		if (this.captionsSubs) this.captionsSubs.unsubscribe();
-		if (this.fullscreenChangeSubscription) this.fullscreenChangeSubscription.unsubscribe();
-		if (this.additionalButtonsPositionSub) this.additionalButtonsPositionSub.unsubscribe();
+		this.destroy$.next();
+		this.destroy$.complete();
 		this.isFullscreenActive = false;
 		this.cdkOverlayService.setSelector('body');
 	}
@@ -647,7 +602,7 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 	}
 
 	private subscribeToFullscreenChanged() {
-		this.fullscreenChangeSubscription = fromEvent(document, 'fullscreenchange').subscribe(() => {
+		fromEvent(document, 'fullscreenchange').pipe(takeUntil(this.destroy$)).subscribe(() => {
 			const isFullscreen = Boolean(document.fullscreenElement);
 			if (isFullscreen) {
 				this.cdkOverlayService.setSelector('#session-container');
@@ -661,7 +616,7 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 	}
 
 	private subscribeToMenuToggling() {
-		this.panelTogglingSubscription = this.panelService.panelStatusObs.subscribe((ev: PanelStatusInfo) => {
+		this.panelService.panelStatusObs.pipe(takeUntil(this.destroy$)).subscribe((ev: PanelStatusInfo) => {
 			this.isChatOpened = ev.isOpened && ev.panelType === PanelType.CHAT;
 			this.isParticipantsOpened = ev.isOpened && ev.panelType === PanelType.PARTICIPANTS;
 			this.isActivitiesOpened = ev.isOpened && ev.panelType === PanelType.ACTIVITIES;
@@ -673,7 +628,7 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 	}
 
 	private subscribeToChatMessages() {
-		this.chatMessagesSubscription = this.chatService.messagesObs.pipe(skip(1)).subscribe((messages) => {
+		this.chatService.messagesObs.pipe(skip(1), takeUntil(this.destroy$)).subscribe((messages) => {
 			if (!this.panelService.isChatPanelOpened()) {
 				this.unreadMessages++;
 			}
@@ -682,7 +637,7 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 		});
 	}
 	private subscribeToUserMediaProperties() {
-		this.localParticipantSubscription = this.participantService.localParticipant$.subscribe((p: ParticipantModel | undefined) => {
+		this.participantService.localParticipant$.pipe(takeUntil(this.destroy$)).subscribe((p: ParticipantModel | undefined) => {
 			if (p) {
 				if (this.isCameraEnabled !== p.isCameraEnabled) {
 					this.onVideoEnabledChanged.emit(p.isCameraEnabled);
@@ -706,7 +661,7 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 	}
 
 	private subscribeToRecordingStatus() {
-		this.recordingSubscription = this.recordingService.recordingStatusObs.subscribe((event: RecordingStatusInfo) => {
+		this.recordingService.recordingStatusObs.pipe(takeUntil(this.destroy$)).subscribe((event: RecordingStatusInfo) => {
 			const { status, startedAt } = event;
 			this.recordingStatus = status;
 			if (status === RecordingStatus.STARTED) {
@@ -723,7 +678,7 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 	}
 
 	private subscribeToBroadcastingStatus() {
-		this.broadcastingSubscription = this.broadcastingService.broadcastingStatusObs.subscribe((ev: BroadcastingStatusInfo) => {
+		this.broadcastingService.broadcastingStatusObs.pipe(takeUntil(this.destroy$)).subscribe((ev: BroadcastingStatusInfo) => {
 			if (!!ev) {
 				this.broadcastingStatus = ev.status;
 				this.broadcastingId = ev.broadcastingId;
@@ -733,85 +688,85 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 	}
 
 	private subscribeToToolbarDirectives() {
-		this.minimalSub = this.libService.minimal$.subscribe((value: boolean) => {
+		this.libService.minimal$.pipe(takeUntil(this.destroy$)).subscribe((value: boolean) => {
 			this.isMinimal = value;
 			this.cd.markForCheck();
 		});
-		this.brandingLogoSub = this.libService.brandingLogo$.subscribe((value: string) => {
+		this.libService.brandingLogo$.pipe(takeUntil(this.destroy$)).subscribe((value: string) => {
 			this.brandingLogo = value;
 			this.cd.markForCheck();
 		});
-		this.cameraButtonSub = this.libService.cameraButton$.subscribe((value: boolean) => {
+		this.libService.cameraButton$.pipe(takeUntil(this.destroy$)).subscribe((value: boolean) => {
 			this.showCameraButton = value;
 			this.cd.markForCheck();
 		});
-		this.microphoneButtonSub = this.libService.microphoneButton$.subscribe((value: boolean) => {
+		this.libService.microphoneButton$.pipe(takeUntil(this.destroy$)).subscribe((value: boolean) => {
 			this.showMicrophoneButton = value;
 			this.cd.markForCheck();
 		});
-		this.screenshareButtonSub = this.libService.screenshareButton$.subscribe((value: boolean) => {
+		this.libService.screenshareButton$.pipe(takeUntil(this.destroy$)).subscribe((value: boolean) => {
 			this.showScreenshareButton = value && !this.platformService.isMobile();
 			this.cd.markForCheck();
 		});
-		this.fullscreenButtonSub = this.libService.fullscreenButton$.subscribe((value: boolean) => {
+		this.libService.fullscreenButton$.pipe(takeUntil(this.destroy$)).subscribe((value: boolean) => {
 			this.showFullscreenButton = value;
 			this.checkDisplayMoreOptions();
 			this.cd.markForCheck();
 		});
-		this.leaveButtonSub = this.libService.leaveButton$.subscribe((value: boolean) => {
+		this.libService.leaveButton$.pipe(takeUntil(this.destroy$)).subscribe((value: boolean) => {
 			this.showLeaveButton = value;
 			this.cd.markForCheck();
 		});
 
-		this.recordingButtonSub = this.libService.recordingButton$.subscribe((value: boolean) => {
+		this.libService.recordingButton$.pipe(takeUntil(this.destroy$)).subscribe((value: boolean) => {
 			this.showRecordingButton = value;
 			this.checkDisplayMoreOptions();
 			this.cd.markForCheck();
 		});
 
-		this.broadcastingButtonSub = this.libService.broadcastingButton$.subscribe((value: boolean) => {
+		this.libService.broadcastingButton$.pipe(takeUntil(this.destroy$)).subscribe((value: boolean) => {
 			this.showBroadcastingButton = value;
 			this.checkDisplayMoreOptions();
 			this.cd.markForCheck();
 		});
 
-		this.settingsButtonSub = this.libService.toolbarSettingsButton$.subscribe((value: boolean) => {
+		this.libService.toolbarSettingsButton$.pipe(takeUntil(this.destroy$)).subscribe((value: boolean) => {
 			this.showSettingsButton = value;
 			this.checkDisplayMoreOptions();
 			this.cd.markForCheck();
 		});
-		this.chatPanelButtonSub = this.libService.chatPanelButton$.subscribe((value: boolean) => {
+		this.libService.chatPanelButton$.pipe(takeUntil(this.destroy$)).subscribe((value: boolean) => {
 			this.showChatPanelButton = value;
 			this.cd.markForCheck();
 		});
-		this.participantsPanelButtonSub = this.libService.participantsPanelButton$.subscribe((value: boolean) => {
+		this.libService.participantsPanelButton$.pipe(takeUntil(this.destroy$)).subscribe((value: boolean) => {
 			this.showParticipantsPanelButton = value;
 			this.cd.markForCheck();
 		});
-		this.activitiesPanelButtonSub = this.libService.activitiesPanelButton$.subscribe((value: boolean) => {
+		this.libService.activitiesPanelButton$.pipe(takeUntil(this.destroy$)).subscribe((value: boolean) => {
 			this.showActivitiesPanelButton = value;
 			this.cd.markForCheck();
 		});
-		this.backgroundEffectsButtonSub = this.libService.backgroundEffectsButton$.subscribe((value: boolean) => {
+		this.libService.backgroundEffectsButton$.pipe(takeUntil(this.destroy$)).subscribe((value: boolean) => {
 			this.showBackgroundEffectsButton = value;
 			this.checkDisplayMoreOptions();
 			this.cd.markForCheck();
 		});
-		this.displayLogoSub = this.libService.displayLogo$.subscribe((value: boolean) => {
+		this.libService.displayLogo$.pipe(takeUntil(this.destroy$)).subscribe((value: boolean) => {
 			this.showLogo = value;
 			this.cd.markForCheck();
 		});
 
-		this.displayRoomNameSub = this.libService.displayRoomName$.subscribe((value: boolean) => {
+		this.libService.displayRoomName$.pipe(takeUntil(this.destroy$)).subscribe((value: boolean) => {
 			this.showSessionName = value;
 			this.cd.markForCheck();
 		});
-		this.captionsSubs = this.libService.captionsButton$.subscribe((value: boolean) => {
+		this.libService.captionsButton$.pipe(takeUntil(this.destroy$)).subscribe((value: boolean) => {
 			this.showCaptionsButton = value;
 			this.cd.markForCheck();
 		});
 
-		this.additionalButtonsPositionSub = this.libService.toolbarAdditionalButtonsPosition$.subscribe(
+		this.libService.toolbarAdditionalButtonsPosition$.pipe(takeUntil(this.destroy$)).subscribe(
 			(value: ToolbarAdditionalButtonsPosition) => {
 				// Using Promise.resolve() to defer change detection until the next microtask.
 				// This ensures that Angular's change detection has the latest value before updating the view.
@@ -827,7 +782,7 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 	}
 
 	private subscribeToCaptionsToggling() {
-		this.captionsSubs = this.layoutService.captionsTogglingObs.subscribe((value: boolean) => {
+		this.layoutService.captionsTogglingObs.pipe(takeUntil(this.destroy$)).subscribe((value: boolean) => {
 			this.captionsEnabled = value;
 			this.cd.markForCheck();
 		});

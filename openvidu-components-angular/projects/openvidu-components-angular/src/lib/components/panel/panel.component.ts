@@ -8,7 +8,7 @@ import {
 	Output,
 	TemplateRef
 } from '@angular/core';
-import { skip, Subscription } from 'rxjs';
+import { skip, Subject, takeUntil } from 'rxjs';
 import {
 	ActivitiesPanelDirective,
 	AdditionalPanelsDirective,
@@ -195,7 +195,7 @@ export class PanelComponent implements OnInit {
 	 * @internal
 	 */
 	isExternalPanelOpened: boolean;
-	private panelSubscription: Subscription;
+	private destroy$ = new Subject<void>();
 
 	private panelEmitersHandler: Map<
 		PanelType,
@@ -226,11 +226,12 @@ export class PanelComponent implements OnInit {
 	ngOnDestroy() {
 		this.isChatPanelOpened = false;
 		this.isParticipantsPanelOpened = false;
-		if (this.panelSubscription) this.panelSubscription.unsubscribe();
+		this.destroy$.next();
+		this.destroy$.complete();
 	}
 
 	private subscribeToPanelToggling() {
-		this.panelSubscription = this.panelService.panelStatusObs.pipe(skip(1)).subscribe((ev: PanelStatusInfo) => {
+		this.panelService.panelStatusObs.pipe(skip(1), takeUntil(this.destroy$)).subscribe((ev: PanelStatusInfo) => {
 			this.isChatPanelOpened = ev.isOpened && ev.panelType === PanelType.CHAT;
 			this.isParticipantsPanelOpened = ev.isOpened && ev.panelType === PanelType.PARTICIPANTS;
 			this.isBackgroundEffectsPanelOpened = ev.isOpened && ev.panelType === PanelType.BACKGROUND_EFFECTS;

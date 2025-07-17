@@ -9,7 +9,7 @@ import {
 	OnInit,
 	Output
 } from '@angular/core';
-import { Subscription } from 'rxjs';
+import { Subject, takeUntil } from 'rxjs';
 import { ILogger } from '../../models/logger.model';
 import { CdkOverlayService } from '../../services/cdk-overlay/cdk-overlay.service';
 import { OpenViduComponentsConfigService } from '../../services/config/directive-config.service';
@@ -61,11 +61,7 @@ export class PreJoinComponent implements OnInit, OnDestroy {
 	audioTrack: LocalTrack | undefined;
 	private tracks: LocalTrack[];
 	private log: ILogger;
-	private cameraButtonSub: Subscription;
-	private microphoneButtonSub: Subscription;
-	private minimalSub: Subscription;
-	private displayLogoSub: Subscription;
-	private displayParticipantNameSub: Subscription;
+	private destroy$ = new Subject<void>();
 	private shouldRemoveTracksWhenComponentIsDestroyed: boolean = true;
 
 	@HostListener('window:resize')
@@ -99,12 +95,9 @@ export class PreJoinComponent implements OnInit, OnDestroy {
 	// }
 
 	async ngOnDestroy() {
+		this.destroy$.next();
+		this.destroy$.complete();
 		this.cdkSrv.setSelector('body');
-		if (this.minimalSub) this.minimalSub.unsubscribe();
-		if (this.cameraButtonSub) this.cameraButtonSub.unsubscribe();
-		if (this.microphoneButtonSub) this.microphoneButtonSub.unsubscribe();
-		if (this.displayLogoSub) this.displayLogoSub.unsubscribe();
-		if (this.displayParticipantNameSub) this.displayParticipantNameSub.unsubscribe();
 
 		if (this.shouldRemoveTracksWhenComponentIsDestroyed) {
 			this.tracks.forEach((track) => {
@@ -154,32 +147,49 @@ export class PreJoinComponent implements OnInit, OnDestroy {
 	}
 
 	private subscribeToPrejoinDirectives() {
-		this.minimalSub = this.libService.minimal$.subscribe((value: boolean) => {
-			this.isMinimal = value;
-			this.changeDetector.markForCheck();
-		});
-		this.cameraButtonSub = this.libService.cameraButton$.subscribe((value: boolean) => {
-			this.showCameraButton = value;
-			this.changeDetector.markForCheck();
-		});
-		this.microphoneButtonSub = this.libService.microphoneButton$.subscribe((value: boolean) => {
-			this.showMicrophoneButton = value;
-			this.changeDetector.markForCheck();
-		});
-		this.displayLogoSub = this.libService.displayLogo$.subscribe((value: boolean) => {
-			this.showLogo = value;
-			this.changeDetector.markForCheck();
-		});
-		this.libService.participantName$.subscribe((value: string) => {
-			if (value) {
-				this.participantName = value;
+		this.libService.minimal$
+			.pipe(takeUntil(this.destroy$))
+			.subscribe((value: boolean) => {
+				this.isMinimal = value;
 				this.changeDetector.markForCheck();
-			}
-		});
-		this.displayParticipantNameSub = this.libService.prejoinDisplayParticipantName$.subscribe((value: boolean) => {
-			this.showParticipantName = value;
-			this.changeDetector.markForCheck();
-		});
+			});
+
+		this.libService.cameraButton$
+			.pipe(takeUntil(this.destroy$))
+			.subscribe((value: boolean) => {
+				this.showCameraButton = value;
+				this.changeDetector.markForCheck();
+			});
+
+		this.libService.microphoneButton$
+			.pipe(takeUntil(this.destroy$))
+			.subscribe((value: boolean) => {
+				this.showMicrophoneButton = value;
+				this.changeDetector.markForCheck();
+			});
+
+		this.libService.displayLogo$
+			.pipe(takeUntil(this.destroy$))
+			.subscribe((value: boolean) => {
+				this.showLogo = value;
+				this.changeDetector.markForCheck();
+			});
+
+		this.libService.participantName$
+			.pipe(takeUntil(this.destroy$))
+			.subscribe((value: string) => {
+				if (value) {
+					this.participantName = value;
+					this.changeDetector.markForCheck();
+				}
+			});
+
+		this.libService.prejoinDisplayParticipantName$
+			.pipe(takeUntil(this.destroy$))
+			.subscribe((value: boolean) => {
+				this.showParticipantName = value;
+				this.changeDetector.markForCheck();
+			});
 	}
 
 	async videoEnabledChanged(enabled: boolean) {

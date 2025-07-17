@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
-import { Subscription } from 'rxjs';
+import { Subject, takeUntil } from 'rxjs';
 import {
 	BroadcastingStartRequestedEvent,
 	BroadcastingStatus,
@@ -76,7 +76,7 @@ export class BroadcastingActivityComponent implements OnInit {
 	 */
 	isPanelOpened: boolean = false;
 
-	private broadcastingSub: Subscription;
+	private destroy$ = new Subject<void>();
 
 	/**
 	 * @internal
@@ -99,7 +99,8 @@ export class BroadcastingActivityComponent implements OnInit {
 	 * @internal
 	 */
 	ngOnDestroy() {
-		if (this.broadcastingSub) this.broadcastingSub.unsubscribe();
+		this.destroy$.next();
+		this.destroy$.complete();
 	}
 
 	/**
@@ -147,7 +148,7 @@ export class BroadcastingActivityComponent implements OnInit {
 	}
 
 	private subscribeToBroadcastingStatus() {
-		this.broadcastingSub = this.broadcastingService.broadcastingStatusObs.subscribe((event: BroadcastingStatusInfo | undefined) => {
+		this.broadcastingService.broadcastingStatusObs.pipe(takeUntil(this.destroy$)).subscribe((event: BroadcastingStatusInfo | undefined) => {
 			if (!!event) {
 				const { status, broadcastingId, error } = event;
 				this.broadcastingStatus = status;

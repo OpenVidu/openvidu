@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, OnInit, Output } from '@angular/core';
-import { Subscription } from 'rxjs';
+import { Subject, takeUntil } from 'rxjs';
 import { PanelStatusInfo, PanelType } from '../../../models/panel.model';
 import { OpenViduComponentsConfigService } from '../../../services/config/directive-config.service';
 import { PanelService } from '../../../services/panel/panel.service';
@@ -80,9 +80,7 @@ export class ActivitiesPanelComponent implements OnInit {
 	 * @internal
 	 */
 	showBroadcastingActivity: boolean = true;
-	private panelSubscription: Subscription;
-	private recordingActivitySub: Subscription;
-	private broadcastingActivitySub: Subscription;
+	private destroy$ = new Subject<void>();
 
 	/**
 	 * @internal
@@ -105,9 +103,8 @@ export class ActivitiesPanelComponent implements OnInit {
 	 * @internal
 	 */
 	ngOnDestroy() {
-		if (this.panelSubscription) this.panelSubscription.unsubscribe();
-		if (this.recordingActivitySub) this.recordingActivitySub.unsubscribe();
-		if (this.broadcastingActivitySub) this.broadcastingActivitySub.unsubscribe();
+		this.destroy$.next();
+		this.destroy$.complete();
 	}
 
 	/**
@@ -118,7 +115,7 @@ export class ActivitiesPanelComponent implements OnInit {
 	}
 
 	private subscribeToPanelToggling() {
-		this.panelSubscription = this.panelService.panelStatusObs.subscribe((ev: PanelStatusInfo) => {
+		this.panelService.panelStatusObs.pipe(takeUntil(this.destroy$)).subscribe((ev: PanelStatusInfo) => {
 			if (ev.panelType === PanelType.ACTIVITIES && !!ev.subOptionType) {
 				this.expandedPanel = ev.subOptionType;
 			}
@@ -126,12 +123,12 @@ export class ActivitiesPanelComponent implements OnInit {
 	}
 
 	private subscribeToActivitiesPanelDirective() {
-		this.recordingActivitySub = this.libService.recordingActivity$.subscribe((value: boolean) => {
+		this.libService.recordingActivity$.pipe(takeUntil(this.destroy$)).subscribe((value: boolean) => {
 			this.showRecordingActivity = value;
 			this.cd.markForCheck();
 		});
 
-		this.broadcastingActivitySub = this.libService.broadcastingActivity$.subscribe((value: boolean) => {
+		this.libService.broadcastingActivity$.pipe(takeUntil(this.destroy$)).subscribe((value: boolean) => {
 			this.showBroadcastingActivity = value;
 			this.cd.markForCheck();
 		});

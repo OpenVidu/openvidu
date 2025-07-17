@@ -1,6 +1,6 @@
 import { Component, ElementRef, Input, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { MatMenuPanel, MatMenuTrigger } from '@angular/material/menu';
-import { Subscription } from 'rxjs';
+import { Subject, takeUntil } from 'rxjs';
 import { CdkOverlayService } from '../../services/cdk-overlay/cdk-overlay.service';
 import { OpenViduComponentsConfigService } from '../../services/config/directive-config.service';
 import { LayoutService } from '../../services/layout/layout.service';
@@ -92,10 +92,7 @@ export class StreamComponent implements OnInit, OnDestroy {
 	}
 
 	private _streamContainer: ElementRef;
-	private minimalSub: Subscription;
-	private displayParticipantNameSub: Subscription;
-	private displayAudioDetectionSub: Subscription;
-	private videoControlsSub: Subscription;
+	private destroy$ = new Subject<void>();
 	private readonly HOVER_TIMEOUT = 3000;
 
 	/**
@@ -113,11 +110,9 @@ export class StreamComponent implements OnInit, OnDestroy {
 	}
 
 	ngOnDestroy() {
+		this.destroy$.next();
+		this.destroy$.complete();
 		this.cdkSrv.setSelector('body');
-		if (this.videoControlsSub) this.videoControlsSub.unsubscribe();
-		if (this.displayAudioDetectionSub) this.displayAudioDetectionSub.unsubscribe();
-		if (this.displayParticipantNameSub) this.displayParticipantNameSub.unsubscribe();
-		if (this.minimalSub) this.minimalSub.unsubscribe();
 	}
 
 	/**
@@ -183,20 +178,31 @@ export class StreamComponent implements OnInit, OnDestroy {
 	}
 
 	private subscribeToStreamDirectives() {
-		this.minimalSub = this.libService.minimal$.subscribe((value: boolean) => {
-			this.isMinimal = value;
-		});
-		this.displayParticipantNameSub = this.libService.displayParticipantName$.subscribe((value: boolean) => {
-			this.showParticipantName = value;
-			// this.cd.markForCheck();
-		});
-		this.displayAudioDetectionSub = this.libService.displayAudioDetection$.subscribe((value: boolean) => {
-			this.showAudioDetection = value;
-			// this.cd.markForCheck();
-		});
-		this.videoControlsSub = this.libService.streamVideoControls$.subscribe((value: boolean) => {
-			this.showVideoControls = value;
-			// this.cd.markForCheck();
-		});
+		this.libService.minimal$
+			.pipe(takeUntil(this.destroy$))
+			.subscribe((value: boolean) => {
+				this.isMinimal = value;
+			});
+
+		this.libService.displayParticipantName$
+			.pipe(takeUntil(this.destroy$))
+			.subscribe((value: boolean) => {
+				this.showParticipantName = value;
+				// this.cd.markForCheck();
+			});
+
+		this.libService.displayAudioDetection$
+			.pipe(takeUntil(this.destroy$))
+			.subscribe((value: boolean) => {
+				this.showAudioDetection = value;
+				// this.cd.markForCheck();
+			});
+
+		this.libService.streamVideoControls$
+			.pipe(takeUntil(this.destroy$))
+			.subscribe((value: boolean) => {
+				this.showVideoControls = value;
+				// this.cd.markForCheck();
+			});
 	}
 }

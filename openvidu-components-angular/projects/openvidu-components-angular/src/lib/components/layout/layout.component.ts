@@ -11,7 +11,7 @@ import {
 	ViewChild,
 	ViewContainerRef
 } from '@angular/core';
-import { combineLatest, map, Subscription } from 'rxjs';
+import { combineLatest, map, Subject, takeUntil } from 'rxjs';
 import { StreamDirective } from '../../directives/template/openvidu-components-angular.directive';
 import { ParticipantTrackPublication, ParticipantModel } from '../../models/participant.model';
 import { LayoutService } from '../../services/layout/layout.service';
@@ -72,11 +72,8 @@ export class LayoutComponent implements OnInit, OnDestroy, AfterViewInit {
 	 */
 	captionsEnabled = true;
 
-	private localParticipantSubs: Subscription;
-	private remoteParticipantsSubs: Subscription;
-	private captionsSubs: Subscription;
+	private destroy$ = new Subject<void>();
 	private resizeObserver: ResizeObserver;
-	private cdkSubscription: Subscription;
 	private resizeTimeout: NodeJS.Timeout;
 	private videoIsAtRight: boolean = false;
 	private lastLayoutWidth: number = 0;
@@ -107,13 +104,11 @@ export class LayoutComponent implements OnInit, OnDestroy, AfterViewInit {
 	}
 
 	ngOnDestroy() {
+		this.destroy$.next();
+		this.destroy$.complete();
 		this.localParticipant = undefined;
 		this.remoteParticipants = [];
 		this.resizeObserver?.disconnect();
-		this.localParticipantSubs?.unsubscribe();
-		this.remoteParticipantsSubs?.unsubscribe();
-		this.captionsSubs?.unsubscribe();
-		this.cdkSubscription?.unsubscribe();
 		this.layoutService.clear();
 	}
 
@@ -127,33 +122,38 @@ export class LayoutComponent implements OnInit, OnDestroy, AfterViewInit {
 	}
 
 	private subscribeToCaptions() {
-		this.captionsSubs = this.layoutService.captionsTogglingObs.subscribe((value: boolean) => {
-			this.captionsEnabled = value;
-			this.cd.markForCheck();
-			this.layoutService.update();
-		});
+		this.layoutService.captionsTogglingObs
+			.pipe(takeUntil(this.destroy$))
+			.subscribe((value: boolean) => {
+				this.captionsEnabled = value;
+				this.cd.markForCheck();
+				this.layoutService.update();
+			});
 	}
 
 	private subscribeToParticipants() {
-		this.localParticipantSubs = this.participantService.localParticipant$.subscribe((p) => {
-			if (p) {
-				this.localParticipant = p;
-				if (!this.localParticipant?.isMinimized) {
-					this.videoIsAtRight = false;
+		this.participantService.localParticipant$
+			.pipe(takeUntil(this.destroy$))
+			.subscribe((p) => {
+				if (p) {
+					this.localParticipant = p;
+					if (!this.localParticipant?.isMinimized) {
+						this.videoIsAtRight = false;
+					}
+					this.layoutService.update();
+					this.cd.markForCheck();
 				}
-				this.layoutService.update();
-				this.cd.markForCheck();
-			}
-		});
+			});
 
-		this.remoteParticipantsSubs = combineLatest([
+		combineLatest([
 			this.participantService.remoteParticipants$,
 			this.directiveService.layoutRemoteParticipants$
 		])
 			.pipe(
 				map(([serviceParticipants, directiveParticipants]) =>
 					directiveParticipants !== undefined ? directiveParticipants : serviceParticipants
-				)
+				),
+				takeUntil(this.destroy$)
 			)
 			.subscribe((participants) => {
 				this.remoteParticipants = participants;
@@ -218,7 +218,10 @@ export class LayoutComponent implements OnInit, OnDestroy, AfterViewInit {
 				this.videoIsAtRight = false;
 			}
 		};
-		this.cdkSubscription = this.cdkDrag.released.subscribe(handler);
+
+		this.cdkDrag.released
+			.pipe(takeUntil(this.destroy$))
+			.subscribe(handler);
 
 		if (this.globalService.isProduction()) return;
 		// Just for allow E2E testing with drag and drop

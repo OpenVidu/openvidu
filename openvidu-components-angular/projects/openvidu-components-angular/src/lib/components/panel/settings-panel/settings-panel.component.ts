@@ -1,5 +1,5 @@
 import { Component, EventEmitter, OnInit, Output } from '@angular/core';
-import { Subscription } from 'rxjs';
+import { Subject, takeUntil } from 'rxjs';
 import { PanelStatusInfo, PanelSettingsOptions, PanelType } from '../../../models/panel.model';
 import { OpenViduComponentsConfigService } from '../../../services/config/directive-config.service';
 import { PanelService } from '../../../services/panel/panel.service';
@@ -27,11 +27,8 @@ export class SettingsPanelComponent implements OnInit {
 	showCameraButton: boolean = true;
 	showMicrophoneButton: boolean = true;
 	showCaptions: boolean = true;
-	panelSubscription: Subscription;
 	isMobile: boolean = false;
-	private cameraButtonSub: Subscription;
-	private microphoneButtonSub: Subscription;
-	private captionsSubs: Subscription;
+	private destroy$ = new Subject<void>();
 	constructor(
 		private panelService: PanelService,
 		private platformService: PlatformService,
@@ -44,10 +41,8 @@ export class SettingsPanelComponent implements OnInit {
 	}
 
 	ngOnDestroy() {
-		if (this.panelSubscription) this.panelSubscription.unsubscribe();
-		if (this.cameraButtonSub) this.cameraButtonSub.unsubscribe();
-		if (this.microphoneButtonSub) this.microphoneButtonSub.unsubscribe();
-		if (this.captionsSubs) this.captionsSubs.unsubscribe();
+		this.destroy$.next();
+		this.destroy$.complete();
 	}
 
 	close() {
@@ -58,13 +53,13 @@ export class SettingsPanelComponent implements OnInit {
 	}
 
 	private subscribeToDirectives() {
-		this.cameraButtonSub = this.libService.cameraButton$.subscribe((value: boolean) => (this.showCameraButton = value));
-		this.microphoneButtonSub = this.libService.microphoneButton$.subscribe((value: boolean) => (this.showMicrophoneButton = value));
-		this.captionsSubs = this.libService.captionsButton$.subscribe((value: boolean) => (this.showCaptions = value));
+		this.libService.cameraButton$.pipe(takeUntil(this.destroy$)).subscribe((value: boolean) => (this.showCameraButton = value));
+		this.libService.microphoneButton$.pipe(takeUntil(this.destroy$)).subscribe((value: boolean) => (this.showMicrophoneButton = value));
+		this.libService.captionsButton$.pipe(takeUntil(this.destroy$)).subscribe((value: boolean) => (this.showCaptions = value));
 	}
 
 	private subscribeToPanelToggling() {
-		this.panelSubscription = this.panelService.panelStatusObs.subscribe((ev: PanelStatusInfo) => {
+		this.panelService.panelStatusObs.pipe(takeUntil(this.destroy$)).subscribe((ev: PanelStatusInfo) => {
 			if (ev.panelType === PanelType.SETTINGS && !!ev.subOptionType) {
 				this.selectedOption = ev.subOptionType as PanelSettingsOptions;
 			}

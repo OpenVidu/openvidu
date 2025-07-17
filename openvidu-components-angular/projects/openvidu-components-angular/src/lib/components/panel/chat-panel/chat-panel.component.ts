@@ -1,5 +1,5 @@
 import { AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, OnInit, ViewChild } from '@angular/core';
-import { Subscription } from 'rxjs';
+import { Subject, takeUntil } from 'rxjs';
 import { ChatMessage } from '../../../models/chat.model';
 import { PanelType } from '../../../models/panel.model';
 import { ChatService } from '../../../services/chat/chat.service';
@@ -34,7 +34,7 @@ export class ChatPanelComponent implements OnInit, AfterViewInit {
 	 */
 	messageList: ChatMessage[] = [];
 
-	private chatMessageSubscription: Subscription;
+	private destroy$ = new Subject<void>();
 
 	/**
 	 * @ignore
@@ -66,7 +66,8 @@ export class ChatPanelComponent implements OnInit, AfterViewInit {
 	 * @ignore
 	 */
 	ngOnDestroy(): void {
-		if (this.chatMessageSubscription) this.chatMessageSubscription.unsubscribe();
+		this.destroy$.next();
+		this.destroy$.complete();
 	}
 
 	/**
@@ -109,7 +110,7 @@ export class ChatPanelComponent implements OnInit, AfterViewInit {
 	}
 
 	private subscribeToMessages() {
-		this.chatMessageSubscription = this.chatService.messagesObs.subscribe((messages: ChatMessage[]) => {
+		this.chatService.messagesObs.pipe(takeUntil(this.destroy$)).subscribe((messages: ChatMessage[]) => {
 			this.messageList = messages;
 			if (this.panelService.isChatPanelOpened()) {
 				this.scrollToBottom();

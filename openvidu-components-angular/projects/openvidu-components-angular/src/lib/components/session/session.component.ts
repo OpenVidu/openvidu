@@ -16,7 +16,7 @@ import {
 import { ILogger } from '../../models/logger.model';
 import { animate, style, transition, trigger } from '@angular/animations';
 import { MatDrawerContainer, MatSidenav } from '@angular/material/sidenav';
-import { skip, Subscription } from 'rxjs';
+import { skip, Subject, takeUntil } from 'rxjs';
 import { SidenavMode } from '../../models/layout.model';
 import { PanelStatusInfo, PanelType } from '../../models/panel.model';
 import { DataTopic } from '../../models/data-topic.model';
@@ -105,10 +105,8 @@ export class SessionComponent implements OnInit, OnDestroy {
 
 	private shouldDisconnectRoomWhenComponentIsDestroyed: boolean = true;
 	private readonly SIDENAV_WIDTH_LIMIT_MODE = 790;
-	private menuSubscription: Subscription;
-	private layoutWidthSubscription: Subscription;
+	private destroy$ = new Subject<void>();
 	private updateLayoutInterval: NodeJS.Timeout;
-	private captionLanguageSubscription: Subscription;
 	private log: ILogger;
 
 	constructor(
@@ -238,8 +236,8 @@ export class SessionComponent implements OnInit, OnDestroy {
 		if (this.room) this.room.removeAllListeners();
 		this.participantService.clear();
 		// this.room = undefined;
-		if (this.menuSubscription) this.menuSubscription.unsubscribe();
-		if (this.layoutWidthSubscription) this.layoutWidthSubscription.unsubscribe();
+		this.destroy$.next();
+		this.destroy$.complete();
 		// 	if (this.captionLanguageSubscription) this.captionLanguageSubscription.unsubscribe();
 	}
 
@@ -269,7 +267,7 @@ export class SessionComponent implements OnInit, OnDestroy {
 			this.startUpdateLayoutInterval();
 		});
 
-		this.menuSubscription = this.panelService.panelStatusObs.pipe(skip(1)).subscribe((ev: PanelStatusInfo) => {
+		this.panelService.panelStatusObs.pipe(skip(1), takeUntil(this.destroy$)).subscribe((ev: PanelStatusInfo) => {
 			if (this.sideMenu) {
 				this.settingsPanelOpened = ev.isOpened && ev.panelType === PanelType.SETTINGS;
 
@@ -288,7 +286,7 @@ export class SessionComponent implements OnInit, OnDestroy {
 	}
 
 	private subscribeToLayoutWidth() {
-		this.layoutWidthSubscription = this.layoutService.layoutWidthObs.subscribe((width) => {
+		this.layoutService.layoutWidthObs.pipe(takeUntil(this.destroy$)).subscribe((width) => {
 			this.sidenavMode = width <= this.SIDENAV_WIDTH_LIMIT_MODE ? SidenavMode.OVER : SidenavMode.SIDE;
 		});
 	}

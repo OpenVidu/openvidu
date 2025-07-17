@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
-import { Subscription } from 'rxjs';
+import { Subject, takeUntil } from 'rxjs';
 import {
 	RecordingDeleteRequestedEvent,
 	RecordingDownloadClickedEvent,
@@ -109,8 +109,7 @@ export class RecordingActivityComponent implements OnInit {
 	 */
 	mouseHovering: boolean = false;
 	private log: ILogger;
-	private recordingStatusSubscription: Subscription;
-	private tracksSubscription: Subscription;
+	private destroy$ = new Subject<void>();
 
 	/**
 	 * @internal
@@ -138,8 +137,8 @@ export class RecordingActivityComponent implements OnInit {
 	 * @internal
 	 */
 	ngOnDestroy() {
-		if (this.recordingStatusSubscription) this.recordingStatusSubscription.unsubscribe();
-		if (this.tracksSubscription) this.tracksSubscription.unsubscribe();
+		this.destroy$.next();
+		this.destroy$.complete();
 	}
 
 	/**
@@ -242,7 +241,7 @@ export class RecordingActivityComponent implements OnInit {
 	}
 
 	private subscribeToRecordingStatus() {
-		this.recordingStatusSubscription = this.recordingService.recordingStatusObs.subscribe((event: RecordingStatusInfo) => {
+		this.recordingService.recordingStatusObs.pipe(takeUntil(this.destroy$)).subscribe((event: RecordingStatusInfo) => {
 			const { status, recordingList, error } = event;
 			this.recordingStatus = status;
 			this.recordingList = recordingList;
@@ -258,7 +257,7 @@ export class RecordingActivityComponent implements OnInit {
 	private subscribeToTracksChanges() {
 		this.hasRoomTracksPublished = this.openviduService.hasRoomTracksPublished();
 
-		this.tracksSubscription = this.participantService.localParticipant$.subscribe(() => {
+		this.participantService.localParticipant$.pipe(takeUntil(this.destroy$)).subscribe(() => {
 			const newValue = this.openviduService.hasRoomTracksPublished();
 			if (this.hasRoomTracksPublished !== newValue) {
 				this.hasRoomTracksPublished = newValue;
@@ -266,7 +265,7 @@ export class RecordingActivityComponent implements OnInit {
 			}
 		});
 
-		this.participantService.remoteParticipants$.subscribe(() => {
+		this.participantService.remoteParticipants$.pipe(takeUntil(this.destroy$)).subscribe(() => {
 			const newValue = this.openviduService.hasRoomTracksPublished();
 			if (this.hasRoomTracksPublished !== newValue) {
 				this.hasRoomTracksPublished = newValue;

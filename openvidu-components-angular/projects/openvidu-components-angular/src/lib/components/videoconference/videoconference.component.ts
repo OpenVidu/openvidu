@@ -1,6 +1,6 @@
 import { animate, style, transition, trigger } from '@angular/animations';
 import { AfterViewInit, Component, ContentChild, EventEmitter, OnDestroy, Output, TemplateRef, ViewChild } from '@angular/core';
-import { Subscription, filter, skip, take } from 'rxjs';
+import { Subject, filter, skip, take, takeUntil } from 'rxjs';
 import {
 	ActivitiesPanelDirective,
 	AdditionalPanelsDirective,
@@ -379,10 +379,8 @@ export class VideoconferenceComponent implements OnDestroy, AfterViewInit {
 	 * @internal
 	 */
 	_tokenError: any;
-	private prejoinSub: Subscription;
-	private tokenSub: Subscription;
-	private tokenErrorSub: Subscription;
-	private participantNameSub: Subscription;
+
+	private destroy$ = new Subject<void>();
 	private log: ILogger;
 	private latestParticipantName: string | undefined;
 
@@ -402,10 +400,8 @@ export class VideoconferenceComponent implements OnDestroy, AfterViewInit {
 	}
 
 	ngOnDestroy() {
-		if (this.prejoinSub) this.prejoinSub.unsubscribe();
-		if (this.participantNameSub) this.participantNameSub.unsubscribe();
-		if (this.tokenSub) this.tokenSub.unsubscribe();
-		if (this.tokenErrorSub) this.tokenErrorSub.unsubscribe();
+		this.destroy$.next();
+		this.destroy$.complete();
 		this.deviceSrv.clear();
 	}
 
@@ -599,79 +595,91 @@ export class VideoconferenceComponent implements OnDestroy, AfterViewInit {
 	}
 
 	private subscribeToVideconferenceDirectives() {
-		this.tokenSub = this.libService.token$.pipe(skip(1)).subscribe((token: string) => {
-			try {
-				if (!token) {
-					this.log.e('Token is empty');
-					return;
-				}
+		this.libService.token$
+			.pipe(
+				skip(1),
+				takeUntil(this.destroy$)
+			)
+			.subscribe((token: string) => {
+				try {
+					if (!token) {
+						this.log.e('Token is empty');
+						return;
+					}
 
-				const livekitUrl = this.libService.getLivekitUrl();
-				this.openviduService.initializeAndSetToken(token, livekitUrl);
-				this.log.d('Token has been successfully set. Room is ready to join');
-				this.isRoomReady = true;
-				this.showPrejoin = false;
-			} catch (error) {
-				this.log.e('Error trying to set token', error);
+					const livekitUrl = this.libService.getLivekitUrl();
+					this.openviduService.initializeAndSetToken(token, livekitUrl);
+					this.log.d('Token has been successfully set. Room is ready to join');
+					this.isRoomReady = true;
+					this.showPrejoin = false;
+				} catch (error) {
+					this.log.e('Error trying to set token', error);
+					this._tokenError = error;
+				}
+			});
+
+		this.libService.tokenError$
+			.pipe(takeUntil(this.destroy$))
+			.subscribe((error: any) => {
+				if (!error) return;
+
+				this.log.e('Token error received', error);
 				this._tokenError = error;
-			}
-		});
 
-		this.tokenErrorSub = this.libService.tokenError$.subscribe((error: any) => {
-			if (!error) return;
-
-			this.log.e('Token error received', error);
-			this._tokenError = error;
-
-			if (!this.showPrejoin) {
-				this.actionService.openDialog(error.name, error.message, false);
-			}
-		});
-		this.prejoinSub = this.libService.prejoin$.subscribe((value: boolean) => {
-			this.showPrejoin = value;
-			if (!this.showPrejoin) {
-				// Emit token ready if the prejoin page won't be shown
-
-				// Ensure we have a participant name before proceeding with the join
-				this.log.d('Prejoin page is hidden, checking participant name');
-				// Check if we have a participant name already
-				if (this.latestParticipantName) {
-					// We have a name, proceed immediately
-					this._onReadyToJoin();
-				} else {
-					// No name yet - set up a one-time subscription to wait for it
-					const waitForNameSub = this.libService.participantName$
-						.pipe(
-							filter((name) => !!name),
-							take(1)
-						)
-						.subscribe(() => {
-							// Now we have the name in latestParticipantName
-							this._onReadyToJoin();
-						});
-					// Add safety timeout in case name never arrives
-					setTimeout(() => {
-						if (!this.latestParticipantName) {
-							this.log.w('No participant name received after timeout, proceeding anyway');
-							waitForNameSub.unsubscribe();
-							const storedName = this.storageSrv.getParticipantName();
-							if (storedName) {
-								this.latestParticipantName = storedName;
-								this.libService.setParticipantName(storedName);
-							}
-							this._onReadyToJoin();
-						}
-					}, 1000);
+				if (!this.showPrejoin) {
+					this.actionService.openDialog(error.name, error.message, false);
 				}
-			}
-			// this.cd.markForCheck();
-		});
+			});
 
-		this.participantNameSub = this.libService.participantName$.subscribe((name: string) => {
-			if (name) {
-				this.latestParticipantName = name;
-				this.storageSrv.setParticipantName(name);
-			}
-		});
+		this.libService.prejoin$
+			.pipe(takeUntil(this.destroy$))
+			.subscribe((value: boolean) => {
+				this.showPrejoin = value;
+				if (!this.showPrejoin) {
+					// Emit token ready if the prejoin page won't be shown
+
+					// Ensure we have a participant name before proceeding with the join
+					this.log.d('Prejoin page is hidden, checking participant name');
+					// Check if we have a participant name already
+					if (this.latestParticipantName) {
+						// We have a name, proceed immediately
+						this._onReadyToJoin();
+					} else {
+						// No name yet - set up a one-time subscription to wait for it
+						this.libService.participantName$
+							.pipe(
+								filter((name) => !!name),
+								take(1),
+								takeUntil(this.destroy$)
+							)
+							.subscribe(() => {
+								// Now we have the name in latestParticipantName
+								this._onReadyToJoin();
+							});
+						// Add safety timeout in case name never arrives
+						setTimeout(() => {
+							if (!this.latestParticipantName) {
+								this.log.w('No participant name received after timeout, proceeding anyway');
+								const storedName = this.storageSrv.getParticipantName();
+								if (storedName) {
+									this.latestParticipantName = storedName;
+									this.libService.setParticipantName(storedName);
+								}
+								this._onReadyToJoin();
+							}
+						}, 1000);
+					}
+				}
+				// this.cd.markForCheck();
+			});
+
+		this.libService.participantName$
+			.pipe(takeUntil(this.destroy$))
+			.subscribe((name: string) => {
+				if (name) {
+					this.latestParticipantName = name;
+					this.storageSrv.setParticipantName(name);
+				}
+			});
 	}
 }
