@@ -55,7 +55,8 @@
 		"LEAVE": "离开会议",
 		"PARTICIPANTS": "参与者",
 		"CHAT": "聊天",
-		"ACTIVITIES": "活动"
+		"ACTIVITIES": "活动",
+		"NO_TRACKS_PUBLISHED": "请分享音频或视频以开始录制。"
 	},
 	"STREAM": {
 		"SETTINGS": "设置",
@@ -124,7 +125,8 @@
 			"DELETE_QUESTION": "您确定要删除录音吗",
 			"DOWNLOAD": "下载",
 			"RECORDINGS": "录制",
-			"NO_MODERATOR": "只有主持人可以开始录音"
+			"NO_MODERATOR": "只有主持人可以开始录音",
+			"NO_TRACKS_PUBLISHED": "请分享音频或视频以开始录制。"
 		},
 		"STREAMING": {
 			"TITLE": "直播",

@@ -72,6 +72,50 @@
 		text-align: center;
 	}
 
+	.recording-placeholder {
+		display: flex;
+		justify-content: center;
+		margin-bottom: 20px;
+	}
+
+	.recording-placeholder-img {
+		max-width: 100%;
+		height: auto;
+		border-radius: 8px;
+	}
+
+	.empty-state {
+		margin-bottom: 20px;
+	}
+
+	.recording-status-messages {
+		margin-top: 10px;
+	}
+
+	.recording-error-container {
+		display: flex;
+		flex-direction: column;
+		gap: 10px;
+		margin-top: 10px;
+	}
+
+	.recording-list-container {
+		margin-top: 10px;
+	}
+
+	.recording-actions {
+		display: flex;
+		gap: 5px;
+	}
+
+	.action-button {
+		transition: all 0.2s ease;
+
+		&:hover {
+			transform: scale(1.1);
+		}
+	}
+
 	.recording-message {
 		color: var(--ov-text-surface-color);
 	}
@@ -79,6 +123,11 @@
 	.recording-error {
 		color: var(--ov-error-color);
 		font-weight: 600;
+	}
+	.disable-recording-btn {
+		background-color: var(--ov-secondary-action-color) !important;
+		color: var(--ov-text-surface-color) !important;
+		cursor: not-allowed !important;
 	}
 	.recording-name {
 		font-size: 14px;
@@ -104,6 +153,11 @@
 		width: 100%;
 		background-color: var(--ov-primary-action-color);
 		color: var(--ov-secondary-action-color);
+	}
+
+	.start-recording-button-container {
+		width: 100%;
+		display: inline-block;
 	}
 
 	#stop-recording-btn {

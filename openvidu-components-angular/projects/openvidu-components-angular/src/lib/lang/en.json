@@ -55,7 +55,8 @@
 		"LEAVE": "Leave the room",
 		"PARTICIPANTS": "Participants",
 		"CHAT": "Chat",
-		"ACTIVITIES": "Activities"
+		"ACTIVITIES": "Activities",
+		"NO_TRACKS_PUBLISHED": "Share audio or video to start recording."
 	},
 	"STREAM": {
 		"SETTINGS": "Settings",
@@ -124,7 +125,8 @@
 			"DELETE_QUESTION": "Are you sure you want to delete the recording?",
 			"DOWNLOAD": "Download",
 			"RECORDINGS": "RECORDINGS",
-			"NO_MODERATOR": "Only the MODERATOR can start the recording"
+			"NO_MODERATOR": "Only the MODERATOR can start the recording",
+			"NO_TRACKS_PUBLISHED": "Share audio or video to start recording."
 		},
 		"STREAMING": {
 			"TITLE": "Streaming",

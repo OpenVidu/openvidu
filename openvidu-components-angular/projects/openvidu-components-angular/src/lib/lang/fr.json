@@ -55,7 +55,8 @@
 		"LEAVE": "Quitter la salle",
 		"PARTICIPANTS": "Participants",
 		"CHAT": "Chat",
-		"ACTIVITES": "Activités"
+		"ACTIVITES": "Activités",
+		"NO_TRACKS_PUBLISHED": "Partagez de l’audio ou de la vidéo pour commencer l’enregistrement."
 	},
 	"STREAM": {
 		"SETTINGS": "Paramètres",
@@ -124,7 +125,8 @@
 			"DELETE_QUESTION": "Voulez-vous vraiment supprimer l'enregistrement ?",
 			"DOWNLOAD": "Télécharger",
 			"RECORDINGS": "ENREGISTREMENTS",
-			"NO_MODERATOR": "Seul le MODERATEUR peut lancer l'enregistrement"
+			"NO_MODERATOR": "Seul le MODERATEUR peut lancer l'enregistrement",
+			"NO_TRACKS_PUBLISHED": "Partagez de l’audio ou de la vidéo pour commencer l’enregistrement."
 		},
 		"STREAMING": {
 			"TITLE": "Streaming",

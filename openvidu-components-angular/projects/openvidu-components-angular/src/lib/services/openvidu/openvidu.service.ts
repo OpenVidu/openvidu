@@ -151,6 +151,14 @@ export class OpenViduService {
 		return this.room?.state === ConnectionState.Connected;
 	}
 
+	hasRoomTracksPublished(): boolean {
+		const { localParticipant, remoteParticipants } = this.getRoom();
+		const localTracks = localParticipant.getTrackPublications();
+		const remoteTracks = Array.from(remoteParticipants.values()).flatMap((p) => p.getTrackPublications());
+
+		return localTracks.length > 0 || remoteTracks.length > 0;
+	}
+
 	/**
 	 * @internal
 	 */

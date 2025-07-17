@@ -55,7 +55,8 @@
 		"LEAVE": "Abbandona la stanza",
 		"PARTICIPANTS": "Partecipanti",
 		"CHAT": "Chat",
-		"ACTIVITIES": "Attività"
+		"ACTIVITIES": "Attività",
+		"NO_TRACKS_PUBLISHED": "Condividi audio o video per iniziare la registrazione."
 	},
 	"STREAM": {
 		"SETTINGS": "Impostazioni",
@@ -124,7 +125,8 @@
 			"DELETE_QUESTION": "Sei sicuro di voler eliminare la registrazione?",
 			"DOWNLOAD": "Scarica",
 			"RECORDINGS": "REGISTRAZIONI",
-			"NO_MODERATOR": "Solo il MODERATORE può avviare la registrazione"
+			"NO_MODERATOR": "Solo il MODERATORE può avviare la registrazione",
+			"NO_TRACKS_PUBLISHED": "Condividi audio o video per iniziare la registrazione."
 		},
 		"STREAMING": {
 			"TITLE": "Streaming",

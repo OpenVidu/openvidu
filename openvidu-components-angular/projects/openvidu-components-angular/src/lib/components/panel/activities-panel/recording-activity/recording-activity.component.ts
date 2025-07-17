@@ -137,6 +137,13 @@ export class RecordingActivityComponent implements OnInit {
 	/**
 	 * @internal
 	 */
+	get hasRoomTracksPublished(): boolean {
+		return this.openviduService.hasRoomTracksPublished();
+	}
+
+	/**
+	 * @internal
+	 */
 	setPanelOpened(value: boolean) {
 		this.isPanelOpened = value;
 	}

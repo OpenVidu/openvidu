@@ -466,6 +466,13 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 	}
 
 	/**
+	 * @internal
+	 */
+	get hasRoomTracksPublished(): boolean {
+		return this.openviduService.hasRoomTracksPublished();
+	}
+
+	/**
 	 * @ignore
 	 */
 	async toggleMicrophone() {

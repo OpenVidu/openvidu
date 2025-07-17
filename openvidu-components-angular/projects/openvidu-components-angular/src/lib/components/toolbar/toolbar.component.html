@@ -120,7 +120,12 @@
 				*ngIf="!isMinimal && showRecordingButton"
 				mat-menu-item
 				id="recording-btn"
-				[disabled]="recordingStatus === _recordingStatus.STARTING || recordingStatus === _recordingStatus.STOPPING"
+				[disabled]="
+					recordingStatus === _recordingStatus.STARTING ||
+					recordingStatus === _recordingStatus.STOPPING ||
+					!hasRoomTracksPublished
+				"
+				[matTooltip]="!hasRoomTracksPublished ? ('TOOLBAR.NO_TRACKS_PUBLISHED' | translate) : ''"
 				(click)="toggleRecording()"
 			>
 				<mat-icon color="warn">radio_button_checked</mat-icon>

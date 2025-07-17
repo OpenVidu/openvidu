@@ -55,7 +55,8 @@
 		"LEAVE": "ルームを終了する",
 		"PARTICIPANTS": "参加者",
 		"CHAT": "チャット",
-		"ACTIVITIES": "アクティビティ"
+		"ACTIVITIES": "アクティビティ",
+		"NO_TRACKS_PUBLISHED": "録音を開始するには、音声または動画を共有してください。"
 	},
 	"STREAM": {
 		"SETTINGS": "設定",
@@ -124,7 +125,8 @@
 			"DELETE_QUESTION": "録画を削除してもよろしいですか",
 			"DOWNLOAD": "保存",
 			"RECORDINGS": "録画",
-			"NO_MODERATOR": "録画を開始できるのは、モデレーターのみです"
+			"NO_MODERATOR": "録画を開始できるのは、モデレーターのみです",
+			"NO_TRACKS_PUBLISHED": "録音を開始するには、音声または動画を共有してください。"
 		},
 		"STREAMING": {
 			"TITLE": "ストリーミング",

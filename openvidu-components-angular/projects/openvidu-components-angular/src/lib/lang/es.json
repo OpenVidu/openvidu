@@ -55,7 +55,8 @@
 		"LEAVE": "Salir de la sala",
 		"PARTICIPANTS": "Participantes",
 		"CHAT": "Chat",
-		"ACTIVITIES": "Actividades"
+		"ACTIVITIES": "Actividades",
+		"NO_TRACKS_PUBLISHED": "Comparte audio o video para poder empezar a grabar."
 	},
 	"STREAM": {
 		"SETTINGS": "Ajustes",
@@ -124,7 +125,8 @@
 			"DELETE_QUESTION": "¿Estás seguro/a de que deseas borrar la grabación?",
 			"DOWNLOAD": "Descargar",
 			"RECORDINGS": "GRABACIONES",
-			"NO_MODERATOR": "Sólo el MODERADOR puede iniciar la grabación"
+			"NO_MODERATOR": "Sólo el MODERADOR puede iniciar la grabación",
+			"NO_TRACKS_PUBLISHED": "Comparte audio o video para poder empezar a grabar."
 		},
 		"STREAMING": {
 			"TITLE": "Streaming",

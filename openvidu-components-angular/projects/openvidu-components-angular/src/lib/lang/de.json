@@ -55,7 +55,8 @@
 		"LEAVE": "Die Raum verlassen",
 		"PARTICIPANTS": "Teilnehmer",
 		"CHAT": "Chat",
-		"ACTIVITIES": "Aktivitäten"
+		"ACTIVITIES": "Aktivitäten",
+		"NO_TRACKS_PUBLISHED": "Teile Audio oder Video, um mit der Aufnahme zu beginnen."
 	},
 	"STREAM": {
 		"SETTINGS": "Einstellungen",
@@ -124,7 +125,8 @@
 			"DELETE_QUESTION": "Möchten Sie die Aufzeichnung wirklich löschen?",
 			"DOWNLOAD": "Download",
 			"RECORDINGS": "AUFZEICHNUNGEN",
-			"NO_MODERATOR": "Nur der MODERATOR kann die Aufzeichnung starten"
+			"NO_MODERATOR": "Nur der MODERATOR kann die Aufzeichnung starten",
+			"NO_TRACKS_PUBLISHED": "Teile Audio oder Video, um mit der Aufnahme zu beginnen."
 		},
 		"STREAMING": {
 			"TITLE": "Streaming",

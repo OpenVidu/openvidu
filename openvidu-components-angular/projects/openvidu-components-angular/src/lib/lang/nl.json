@@ -55,7 +55,8 @@
 		"LEAVE": "Verlaat de kamer",
 		"PARTICIPANTS": "Deelnemers",
 		"CHAT": "Chat",
-		"ACTIVITIES": "Activiteiten"
+		"ACTIVITIES": "Activiteiten",
+		"NO_TRACKS_PUBLISHED": "Deel audio of video om met opnemen te beginnen."
 	},
 	"STREAM": {
 		"SETTINGS": "Instellingen",
@@ -124,7 +125,8 @@
 			"DELETE_QUESTION": "Weet je zeker dat je de opname wilt verwijderen?",
 			"DOWNLOAD": "Downloaden",
 			"RECORDINGS": "OPNAME",
-			"NO_MODERATOR": "Alleen de MOEDERATOR kan de opname starten"
+			"NO_MODERATOR": "Alleen de MOEDERATOR kan de opname starten",
+			"NO_TRACKS_PUBLISHED": "Deel audio of video om met opnemen te beginnen."
 		},
 		"STREAMING": {
 			"TITLE": "Streaming",
