@@ -5,15 +5,20 @@
 	</div>
 
 	<div [@inOutAnimation] id="pre-join-container" *ngIf="showPrejoin && !loading">
-		<ov-pre-join
-			[error]="_tokenError"
-			(onReadyToJoin)="_onReadyToJoin()"
-			(onVideoDeviceChanged)="onVideoDeviceChanged.emit($event)"
-			(onVideoEnabledChanged)="onVideoEnabledChanged.emit($event)"
-			(onAudioDeviceChanged)="onAudioDeviceChanged.emit($event)"
-			(onAudioEnabledChanged)="onAudioEnabledChanged.emit($event)"
-			(onLangChanged)="onLangChanged.emit($event)"
-		></ov-pre-join>
+		<ng-container *ngIf="openviduAngularPreJoinTemplate; else defaultPreJoin">
+			<ng-container *ngTemplateOutlet="openviduAngularPreJoinTemplate"></ng-container>
+		</ng-container>
+		<ng-template #defaultPreJoin>
+			<ov-pre-join
+				[error]="_tokenError"
+				(onReadyToJoin)="_onReadyToJoin()"
+				(onVideoDeviceChanged)="onVideoDeviceChanged.emit($event)"
+				(onVideoEnabledChanged)="onVideoEnabledChanged.emit($event)"
+				(onAudioDeviceChanged)="onAudioDeviceChanged.emit($event)"
+				(onAudioEnabledChanged)="onAudioEnabledChanged.emit($event)"
+				(onLangChanged)="onLangChanged.emit($event)"
+			></ov-pre-join>
+		</ng-template>
 	</div>
 
 	<div id="spinner" *ngIf="!loading && error">

@@ -10,6 +10,7 @@ import {
 	ParticipantPanelItemDirective,
 	ParticipantPanelItemElementsDirective,
 	ParticipantsPanelDirective,
+	PreJoinDirective,
 	StreamDirective,
 	ToolbarAdditionalButtonsDirective,
 	ToolbarAdditionalPanelButtonsDirective,
@@ -114,6 +115,12 @@ export class VideoconferenceComponent implements OnDestroy, AfterViewInit {
 	 */
 	@ContentChild(StreamDirective) externalStream: StreamDirective;
 
+	// *** PreJoin ***
+	/**
+	 * @internal
+	 */
+	@ContentChild(PreJoinDirective) externalPreJoin: PreJoinDirective;
+
 	/**
 	 * @internal
 	 */
@@ -198,6 +205,10 @@ export class VideoconferenceComponent implements OnDestroy, AfterViewInit {
 	 * @internal
 	 */
 	openviduAngularStreamTemplate: TemplateRef<any>;
+	/**
+	 * @internal
+	 */
+	openviduAngularPreJoinTemplate: TemplateRef<any>;
 
 	/**
 	 * Provides event notifications that fire when the local participant is ready to join to the room.
@@ -435,6 +446,7 @@ export class VideoconferenceComponent implements OnDestroy, AfterViewInit {
 		this.setupToolbarTemplate();
 		this.setupPanelTemplate();
 		this.setupLayoutTemplate();
+		this.setupPreJoinTemplate();
 	}
 
 	/**
@@ -573,6 +585,19 @@ export class VideoconferenceComponent implements OnDestroy, AfterViewInit {
 		} else {
 			this.log.d('Setting DEFAULT STREAM');
 			this.openviduAngularStreamTemplate = this.defaultStreamTemplate;
+		}
+	}
+
+	/**
+	 * @internal
+	 */
+	private setupPreJoinTemplate(): void {
+		if (this.externalPreJoin) {
+			this.log.d('Setting EXTERNAL PREJOIN');
+			this.openviduAngularPreJoinTemplate = this.externalPreJoin.template;
+		} else {
+			this.log.d('Setting DEFAULT PREJOIN');
+			// Keep the default behavior - no template is set
 		}
 	}
 
