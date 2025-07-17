@@ -102,9 +102,15 @@ export class RecordingActivityComponent implements OnInit {
 	/**
 	 * @internal
 	 */
+	hasRoomTracksPublished: boolean = false;
+
+	/**
+	 * @internal
+	 */
 	mouseHovering: boolean = false;
 	private log: ILogger;
 	private recordingStatusSubscription: Subscription;
+	private tracksSubscription: Subscription;
 
 	/**
 	 * @internal
@@ -125,6 +131,7 @@ export class RecordingActivityComponent implements OnInit {
 	 */
 	ngOnInit(): void {
 		this.subscribeToRecordingStatus();
+		this.subscribeToTracksChanges();
 	}
 
 	/**
@@ -132,13 +139,14 @@ export class RecordingActivityComponent implements OnInit {
 	 */
 	ngOnDestroy() {
 		if (this.recordingStatusSubscription) this.recordingStatusSubscription.unsubscribe();
+		if (this.tracksSubscription) this.tracksSubscription.unsubscribe();
 	}
 
 	/**
 	 * @internal
 	 */
-	get hasRoomTracksPublished(): boolean {
-		return this.openviduService.hasRoomTracksPublished();
+	trackByRecordingId(index: number, recording: RecordingInfo): string | undefined {
+		return recording.id;
 	}
 
 	/**
@@ -244,6 +252,26 @@ export class RecordingActivityComponent implements OnInit {
 				this.oldRecordingStatus = this.recordingStatus;
 			}
 			this.cd.markForCheck();
+		});
+	}
+
+	private subscribeToTracksChanges() {
+		this.hasRoomTracksPublished = this.openviduService.hasRoomTracksPublished();
+
+		this.tracksSubscription = this.participantService.localParticipant$.subscribe(() => {
+			const newValue = this.openviduService.hasRoomTracksPublished();
+			if (this.hasRoomTracksPublished !== newValue) {
+				this.hasRoomTracksPublished = newValue;
+				this.cd.markForCheck();
+			}
+		});
+
+		this.participantService.remoteParticipants$.subscribe(() => {
+			const newValue = this.openviduService.hasRoomTracksPublished();
+			if (this.hasRoomTracksPublished !== newValue) {
+				this.hasRoomTracksPublished = newValue;
+				this.cd.markForCheck();
+			}
 		});
 	}
 }
