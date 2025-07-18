@@ -271,10 +271,9 @@ Resources:
           "GRAFANA_ADMIN_PASSWORD": "none",
           "LIVEKIT_API_KEY": "none",
           "LIVEKIT_API_SECRET": "none",
-          "DEFAULT_APP_USERNAME": "none",
-          "DEFAULT_APP_PASSWORD": "none",
-          "DEFAULT_APP_ADMIN_USERNAME": "none",
-          "DEFAULT_APP_ADMIN_PASSWORD": "none",
+          "MEET_ADMIN_USER": "none",
+          "MEET_ADMIN_SECRET": "none",
+          "MEET_API_KEY": "none",
           "ENABLED_MODULES": "none"
         }
 
@@ -410,11 +409,10 @@ Resources:
                 DASHBOARD_ADMIN_PASSWORD="$(/usr/local/bin/store_secret.sh generate DASHBOARD_ADMIN_PASSWORD)"
                 GRAFANA_ADMIN_USERNAME="$(/usr/local/bin/store_secret.sh save GRAFANA_ADMIN_USERNAME "grafanaadmin")"
                 GRAFANA_ADMIN_PASSWORD="$(/usr/local/bin/store_secret.sh generate GRAFANA_ADMIN_PASSWORD)"
-                DEFAULT_APP_USERNAME="$(/usr/local/bin/store_secret.sh save DEFAULT_APP_USERNAME "calluser")"
-                DEFAULT_APP_PASSWORD="$(/usr/local/bin/store_secret.sh generate DEFAULT_APP_PASSWORD)"
-                DEFAULT_APP_ADMIN_USERNAME="$(/usr/local/bin/store_secret.sh save DEFAULT_APP_ADMIN_USERNAME "calladmin")"
-                DEFAULT_APP_ADMIN_PASSWORD="$(/usr/local/bin/store_secret.sh generate DEFAULT_APP_ADMIN_PASSWORD)"
-                ENABLED_MODULES="$(/usr/local/bin/store_secret.sh save ENABLED_MODULES "observability,app")"
+                MEET_ADMIN_USER="$(/usr/local/bin/store_secret.sh save MEET_ADMIN_USER "meetadmin")"
+                MEET_ADMIN_SECRET="$(/usr/local/bin/store_secret.sh generate MEET_ADMIN_SECRET)"
+                MEET_API_KEY="$(/usr/local/bin/store_secret.sh generate MEET_API_KEY)"
+                ENABLED_MODULES="$(/usr/local/bin/store_secret.sh save ENABLED_MODULES "observability,openviduMeet")"
                 LIVEKIT_API_KEY="$(/usr/local/bin/store_secret.sh generate LIVEKIT_API_KEY "API" 12)"
                 LIVEKIT_API_SECRET="$(/usr/local/bin/store_secret.sh generate LIVEKIT_API_SECRET)"
 
@@ -439,10 +437,9 @@ Resources:
                   "--dashboard-admin-password=$DASHBOARD_ADMIN_PASSWORD"
                   "--grafana-admin-user=$GRAFANA_ADMIN_USERNAME"
                   "--grafana-admin-password=$GRAFANA_ADMIN_PASSWORD"
-                  "--default-app-user=$DEFAULT_APP_USERNAME"
-                  "--default-app-password=$DEFAULT_APP_PASSWORD"
-                  "--default-app-admin-user=$DEFAULT_APP_ADMIN_USERNAME"
-                  "--default-app-admin-password=$DEFAULT_APP_ADMIN_PASSWORD"
+                  "--meet-admin-user=$MEET_ADMIN_USER"
+                  "--meet-admin-password=$MEET_ADMIN_SECRET"
+                  "--meet-api-key=$MEET_API_KEY"
                   "--livekit-api-key=$LIVEKIT_API_KEY"
                   "--livekit-api-secret=$LIVEKIT_API_SECRET"
                 )
@@ -638,10 +635,9 @@ Resources:
                 sed -i "s/GRAFANA_ADMIN_PASSWORD=.*/GRAFANA_ADMIN_PASSWORD=$(echo $SHARED_SECRET | jq -r .GRAFANA_ADMIN_PASSWORD)/" "${!CONFIG_DIR}/openvidu.env"
                 sed -i "s/LIVEKIT_API_KEY=.*/LIVEKIT_API_KEY=$(echo $SHARED_SECRET | jq -r .LIVEKIT_API_KEY)/" "${!CONFIG_DIR}/openvidu.env"
                 sed -i "s/LIVEKIT_API_SECRET=.*/LIVEKIT_API_SECRET=$(echo $SHARED_SECRET | jq -r .LIVEKIT_API_SECRET)/" "${!CONFIG_DIR}/openvidu.env"
-                sed -i "s/CALL_USER=.*/CALL_USER=$(echo $SHARED_SECRET | jq -r .DEFAULT_APP_USERNAME)/" "${!CONFIG_DIR}/app.env"
-                sed -i "s/CALL_SECRET=.*/CALL_SECRET=$(echo $SHARED_SECRET | jq -r .DEFAULT_APP_PASSWORD)/" "${!CONFIG_DIR}/app.env"
-                sed -i "s/CALL_ADMIN_USER=.*/CALL_ADMIN_USER=$(echo $SHARED_SECRET | jq -r .DEFAULT_APP_ADMIN_USERNAME)/" "${!CONFIG_DIR}/app.env"
-                sed -i "s/CALL_ADMIN_SECRET=.*/CALL_ADMIN_SECRET=$(echo $SHARED_SECRET | jq -r .DEFAULT_APP_ADMIN_PASSWORD)/" "${!CONFIG_DIR}/app.env"
+                sed -i "s/MEET_ADMIN_USER=.*/MEET_ADMIN_USER=$(echo $SHARED_SECRET | jq -r .MEET_ADMIN_USER)/" "${!CONFIG_DIR}/meet.env"
+                sed -i "s/MEET_ADMIN_SECRET=.*/MEET_ADMIN_SECRET=$(echo $SHARED_SECRET | jq -r .MEET_ADMIN_SECRET)/" "${!CONFIG_DIR}/meet.env"
+                sed -i "s/MEET_API_KEY=.*/MEET_API_KEY=$(echo $SHARED_SECRET | jq -r .MEET_API_KEY)/" "${!CONFIG_DIR}/meet.env"
                 sed -i "s/ENABLED_MODULES=.*/ENABLED_MODULES=$(echo $SHARED_SECRET | jq -r .ENABLED_MODULES)/" "${!CONFIG_DIR}/openvidu.env"
 
                 # Update URLs in secret
@@ -692,10 +688,9 @@ Resources:
                 SHARED_SECRET="$(echo "$SHARED_SECRET" | jq '. + {"GRAFANA_ADMIN_PASSWORD": "'"$(/usr/local/bin/get_value_from_config.sh GRAFANA_ADMIN_PASSWORD "${!CONFIG_DIR}/openvidu.env")"'"}')"
                 SHARED_SECRET="$(echo "$SHARED_SECRET" | jq '. + {"LIVEKIT_API_KEY": "'"$(/usr/local/bin/get_value_from_config.sh LIVEKIT_API_KEY "${!CONFIG_DIR}/openvidu.env")"'"}')"
                 SHARED_SECRET="$(echo "$SHARED_SECRET" | jq '. + {"LIVEKIT_API_SECRET": "'"$(/usr/local/bin/get_value_from_config.sh LIVEKIT_API_SECRET "${!CONFIG_DIR}/openvidu.env")"'"}')"
-                SHARED_SECRET="$(echo "$SHARED_SECRET" | jq '. + {"DEFAULT_APP_USERNAME": "'"$(/usr/local/bin/get_value_from_config.sh CALL_USER "${!CONFIG_DIR}/app.env")"'"}')"
-                SHARED_SECRET="$(echo "$SHARED_SECRET" | jq '. + {"DEFAULT_APP_PASSWORD": "'"$(/usr/local/bin/get_value_from_config.sh CALL_SECRET "${!CONFIG_DIR}/app.env")"'"}')"
-                SHARED_SECRET="$(echo "$SHARED_SECRET" | jq '. + {"DEFAULT_APP_ADMIN_USERNAME": "'"$(/usr/local/bin/get_value_from_config.sh CALL_ADMIN_USER "${!CONFIG_DIR}/app.env")"'"}')"
-                SHARED_SECRET="$(echo "$SHARED_SECRET" | jq '. + {"DEFAULT_APP_ADMIN_PASSWORD": "'"$(/usr/local/bin/get_value_from_config.sh CALL_ADMIN_SECRET "${!CONFIG_DIR}/app.env")"'"}')"
+                SHARED_SECRET="$(echo "$SHARED_SECRET" | jq '. + {"MEET_ADMIN_USER": "'"$(/usr/local/bin/get_value_from_config.sh MEET_ADMIN_USER "${!CONFIG_DIR}/meet.env")"'"}')"
+                SHARED_SECRET="$(echo "$SHARED_SECRET" | jq '. + {"MEET_ADMIN_SECRET": "'"$(/usr/local/bin/get_value_from_config.sh MEET_ADMIN_SECRET "${!CONFIG_DIR}/meet.env")"'"}')"
+                SHARED_SECRET="$(echo "$SHARED_SECRET" | jq '. + {"MEET_API_KEY": "'"$(/usr/local/bin/get_value_from_config.sh MEET_API_KEY "${!CONFIG_DIR}/meet.env")"'"}')"
                 SHARED_SECRET="$(echo "$SHARED_SECRET" | jq '. + {"ENABLED_MODULES": "'"$(/usr/local/bin/get_value_from_config.sh ENABLED_MODULES "${!CONFIG_DIR}/openvidu.env")"'"}')"
 
                 # Update shared secret
