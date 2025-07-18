@@ -69,6 +69,7 @@
 		(onRecordingStartRequested)="onRecordingStartRequested.emit($event)"
 		(onRecordingStopRequested)="onRecordingStopRequested.emit($event)"
 		(onBroadcastingStopRequested)="onBroadcastingStopRequested.emit($event)"
+		(onViewRecordingsClicked)="onViewRecordingsClicked.emit()"
 	>
 		<ng-template #toolbarAdditionalButtons>
 			<ng-container *ngTemplateOutlet="openviduAngularToolbarAdditionalButtonsTemplate"></ng-container>
@@ -133,6 +134,8 @@
 		(onRecordingDeleteRequested)="onRecordingDeleteRequested.emit($event)"
 		(onRecordingDownloadClicked)="onRecordingDownloadClicked.emit($event)"
 		(onRecordingPlayClicked)="onRecordingPlayClicked.emit($event)"
+		(onViewRecordingClicked)="onViewRecordingClicked.emit($event)"
+		(onViewRecordingsClicked)="onViewRecordingsClicked.emit()"
 		(onBroadcastingStartRequested)="onBroadcastingStartRequested.emit($event)"
 		(onBroadcastingStopRequested)="onBroadcastingStopRequested.emit($event)"
 	></ov-activities-panel>

@@ -10,7 +10,10 @@ import {
 	FallbackLogoDirective,
 	LayoutRemoteParticipantsDirective,
 	PrejoinDisplayParticipantName,
-	ToolbarBrandingLogoDirective
+	ToolbarBrandingLogoDirective,
+	ToolbarViewRecordingsButtonDirective,
+	RecordingActivityReadOnlyDirective,
+	RecordingActivityShowControlsDirective
 } from './internals.directive';
 import { ParticipantPanelItemMuteButtonDirective } from './participant-panel-item.directive';
 import {
@@ -65,6 +68,8 @@ const directives = [
 	PrejoinDirective,
 	PrejoinDisplayParticipantName,
 	VideoEnabledDirective,
+	RecordingActivityReadOnlyDirective,
+	RecordingActivityShowControlsDirective,
 	AudioEnabledDirective,
 	ShowDisconnectionDialogDirective,
 	RecordingStreamBaseUrlDirective,
@@ -84,6 +89,7 @@ const directives = [
 	ToolbarDisplayLogoDirective,
 	ToolbarSettingsButtonDirective,
 	ToolbarAdditionalButtonsPossitionDirective,
+	ToolbarViewRecordingsButtonDirective,
 	StreamDisplayParticipantNameDirective,
 	StreamDisplayAudioDetectionDirective,
 	StreamVideoControlsDirective,

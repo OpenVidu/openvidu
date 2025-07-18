@@ -27,7 +27,10 @@
 					<mat-icon class="blink" *ngIf="recordingStatus === recStatusEnum.STARTED">radio_button_checked</mat-icon>
 				</div>
 				<h3 matListItemTitle class="activity-title">{{ 'PANEL.RECORDING.TITLE' | translate }}</h3>
-				<p matListItemLine class="activity-subtitle">{{ 'PANEL.RECORDING.SUBTITLE' | translate }}</p>
+
+				<p matListItemLine class="activity-subtitle">
+					{{ isReadOnlyMode ? ('PANEL.RECORDING.VIEW_ONLY_SUBTITLE' | translate) : ('PANEL.RECORDING.SUBTITLE' | translate) }}
+				</p>
 				<div class="activity-action-buttons" matListItemMeta>
 					<div
 						id="recording-status"
@@ -56,53 +59,85 @@
 
 			<!-- Empty state content -->
 			<div *ngIf="recordingList.length === 0" class="empty-state">
-				<h2 class="recording-title">{{ 'PANEL.RECORDING.CONTENT_TITLE' | translate }}</h2>
-				<span class="recording-subtitle">{{ 'PANEL.RECORDING.CONTENT_SUBTITLE' | translate }}</span>
+				<h2 class="recording-title">
+					{{
+						isReadOnlyMode
+							? ('PANEL.RECORDING.VIEW_ONLY_CONTENT_TITLE' | translate)
+							: ('PANEL.RECORDING.CONTENT_TITLE' | translate)
+					}}
+				</h2>
+				<span class="recording-subtitle">
+					{{
+						isReadOnlyMode
+							? recordingList.length === 0
+								? ('PANEL.RECORDING.NO_RECORDINGS_AVAILABLE' | translate)
+								: ('PANEL.RECORDING.VIEW_ONLY_CONTENT_SUBTITLE' | translate)
+							: ('PANEL.RECORDING.CONTENT_SUBTITLE' | translate)
+					}}
+				</span>
 			</div>
 
 			<!-- Recording control buttons -->
-			<div class="item recording-action-buttons">
-				<!-- Stop recording button -->
-				<button *ngIf="recordingAlive" mat-flat-button id="stop-recording-btn" (click)="stopRecording()">
-					<span>{{ 'TOOLBAR.STOP_RECORDING' | translate }}</span>
-				</button>
-
-				<!-- Start recording button -->
-				<div
-					*ngIf="recordingStatus === recStatusEnum.STOPPED"
-					[matTooltip]="!hasRoomTracksPublished ? ('PANEL.RECORDING.NO_TRACKS_PUBLISHED' | translate) : ''"
-					[matTooltipDisabled]="hasRoomTracksPublished"
-					class="start-recording-button-container"
-				>
-					<button
-						[disabled]="!hasRoomTracksPublished"
-						[ngClass]="{ 'disable-recording-btn': !hasRoomTracksPublished }"
-						mat-flat-button
-						id="start-recording-btn"
-						(click)="startRecording()"
-					>
-						<span>{{ 'TOOLBAR.START_RECORDING' | translate }}</span>
+			@if (!isReadOnlyMode) {
+				<div class="item recording-action-buttons">
+					<!-- Stop recording button -->
+					<button *ngIf="recordingAlive" mat-flat-button id="stop-recording-btn" (click)="stopRecording()">
+						<span>{{ 'TOOLBAR.STOP_RECORDING' | translate }}</span>
 					</button>
-				</div>
 
-				<!-- Recording status messages -->
-				<div class="recording-status-messages">
-					<span *ngIf="recordingStatus === recStatusEnum.STARTING" class="recording-message">
-						{{ 'PANEL.RECORDING.STARTING' | translate }}
-					</span>
-
-					<span *ngIf="recordingStatus === recStatusEnum.STOPPING" class="recording-message">
-						{{ 'PANEL.RECORDING.STOPPING' | translate }}
-					</span>
-
-					<div *ngIf="recordingStatus === recStatusEnum.FAILED" class="recording-error-container">
-						<span class="recording-error">Message: {{ recordingError }}</span>
-						<button mat-flat-button id="reset-recording-status-btn" (click)="resetStatus()">
-							<span>{{ 'PANEL.RECORDING.ACCEPT' | translate }}</span>
+					<!-- Start recording button -->
+					<div
+						*ngIf="recordingStatus === recStatusEnum.STOPPED"
+						[matTooltip]="!hasRoomTracksPublished ? ('PANEL.RECORDING.NO_TRACKS_PUBLISHED' | translate) : ''"
+						[matTooltipDisabled]="hasRoomTracksPublished"
+						class="start-recording-button-container"
+					>
+						<button
+							[disabled]="!hasRoomTracksPublished"
+							[ngClass]="{ 'disable-recording-btn': !hasRoomTracksPublished }"
+							mat-flat-button
+							id="start-recording-btn"
+							(click)="startRecording()"
+						>
+							<span>{{ 'TOOLBAR.START_RECORDING' | translate }}</span>
 						</button>
 					</div>
+
+					<!-- View all recordings button -->
+					<div class="item recording-action-buttons">
+						<button mat-flat-button id="view-recordings-btn" (click)="viewAllRecordings()" class="view-recordings-button">
+							<span>{{ 'TOOLBAR.VIEW_RECORDINGS' | translate }}</span>
+							<mat-icon class="external-link-icon">open_in_new</mat-icon>
+						</button>
+					</div>
+
+					<!-- Recording status messages -->
+					<div class="recording-status-messages">
+						<span *ngIf="recordingStatus === recStatusEnum.STARTING" class="recording-message">
+							{{ 'PANEL.RECORDING.STARTING' | translate }}
+						</span>
+
+						<span *ngIf="recordingStatus === recStatusEnum.STOPPING" class="recording-message">
+							{{ 'PANEL.RECORDING.STOPPING' | translate }}
+						</span>
+
+						<div *ngIf="recordingStatus === recStatusEnum.FAILED" class="recording-error-container">
+							<span class="recording-error">Message: {{ recordingError }}</span>
+							<button mat-flat-button id="reset-recording-status-btn" (click)="resetStatus()">
+								<span>{{ 'PANEL.RECORDING.ACCEPT' | translate }}</span>
+							</button>
+						</div>
+					</div>
 				</div>
-			</div>
+			} @else {
+				<!-- View all recordings button -->
+				<div class="item recording-action-buttons">
+					<button mat-flat-button id="view-recordings-btn" (click)="viewAllRecordings()" class="view-recordings-button">
+						<span>{{ 'TOOLBAR.VIEW_RECORDINGS' | translate }}</span>
+						<mat-icon class="external-link-icon">open_in_new</mat-icon>
+					</button>
+				</div>
+			}
 		</div>
 		<mat-divider *ngIf="recordingList.length > 0"></mat-divider>
 
@@ -139,37 +174,72 @@
 					</div>
 
 					<!-- Recording action buttons -->
-					<div *ngIf="recording.status !== recStatusEnum.STARTED" id="recording-action-buttons" class="recording-actions">
-						<button
-							mat-icon-button
-							(click)="play(recording)"
-							id="play-recording-btn"
-							matTooltip="{{ 'PANEL.RECORDING.PLAY' | translate }}"
-							class="action-button play-button"
-						>
-							<mat-icon>play_arrow</mat-icon>
-						</button>
+					@if (!isReadOnlyMode) {
+						<div *ngIf="recording.status !== recStatusEnum.STARTED" id="recording-action-buttons" class="recording-actions">
+							<button
+								*ngIf="showControls.play"
+								mat-icon-button
+								(click)="play(recording)"
+								id="play-recording-btn"
+								matTooltip="{{ 'PANEL.RECORDING.PLAY' | translate }}"
+								class="action-button play-button"
+							>
+								<mat-icon>play_arrow</mat-icon>
+							</button>
 
-						<button
-							mat-icon-button
-							(click)="download(recording)"
-							id="download-recording-btn"
-							matTooltip="{{ 'PANEL.RECORDING.DOWNLOAD' | translate }}"
-							class="action-button download-button"
-						>
-							<mat-icon>download</mat-icon>
-						</button>
+							@if (showControls.externalView) {
+								<div
+									*ngIf="recording.status !== recStatusEnum.STARTED"
+									id="recording-action-buttons"
+									class="recording-actions"
+								>
+									<button
+										mat-icon-button
+										(click)="onViewRecordingClicked.emit(recording.id)"
+										id="watch-recording-btn"
+										matTooltip="{{ 'PANEL.RECORDING.WATCH' | translate }}"
+										class="action-button watch-button"
+									>
+										<mat-icon>open_in_new</mat-icon>
+									</button>
+								</div>
+							}
 
-						<button
-							mat-icon-button
-							(click)="deleteRecording(recording)"
-							id="delete-recording-btn"
-							matTooltip="{{ 'PANEL.RECORDING.DELETE' | translate }}"
-							class="action-button delete-button"
-						>
-							<mat-icon>delete</mat-icon>
-						</button>
-					</div>
+							<button
+								*ngIf="showControls.download"
+								mat-icon-button
+								(click)="download(recording)"
+								id="download-recording-btn"
+								matTooltip="{{ 'PANEL.RECORDING.DOWNLOAD' | translate }}"
+								class="action-button download-button"
+							>
+								<mat-icon>download</mat-icon>
+							</button>
+
+							<button
+								*ngIf="showControls.delete"
+								mat-icon-button
+								(click)="deleteRecording(recording)"
+								id="delete-recording-btn"
+								matTooltip="{{ 'PANEL.RECORDING.DELETE' | translate }}"
+								class="action-button delete-button"
+							>
+								<mat-icon>delete</mat-icon>
+							</button>
+						</div>
+					} @else {
+						<div *ngIf="recording.status !== recStatusEnum.STARTED" id="recording-action-buttons" class="recording-actions">
+							<button
+								mat-icon-button
+								(click)="onViewRecordingClicked.emit(recording.id)"
+								id="watch-recording-btn"
+								matTooltip="{{ 'PANEL.RECORDING.WATCH' | translate }}"
+								class="action-button watch-button"
+							>
+								<mat-icon>open_in_new</mat-icon>
+							</button>
+						</div>
+					}
 				</mat-list-item>
 			</mat-list>
 		</div>

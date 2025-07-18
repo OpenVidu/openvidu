@@ -56,7 +56,8 @@
 		"PARTICIPANTS": "Participants",
 		"CHAT": "Chat",
 		"ACTIVITIES": "Activities",
-		"NO_TRACKS_PUBLISHED": "Share audio or video to start recording."
+		"NO_TRACKS_PUBLISHED": "Share audio or video to start recording.",
+		"VIEW_RECORDINGS": "View recordings"
 	},
 	"STREAM": {
 		"SETTINGS": "Settings",
@@ -115,6 +116,13 @@
 			"SUBTITLE": "Record your meeting for posterity",
 			"CONTENT_TITLE": "Record your video call",
 			"CONTENT_SUBTITLE": "When recording has finished you will be able to download it with ease",
+			"VIEW_ONLY_TITLE": "Available recordings",
+			"VIEW_ONLY_SUBTITLE": "View and access room recordings",
+			"VIEW_ONLY_CONTENT_TITLE": "Video call recordings",
+			"VIEW_ONLY_CONTENT_SUBTITLE": "Here you can access all available recordings",
+			"VIEW": "View",
+			"WATCH": "Watch",
+			"ACCESS": "Access",
 			"STARTING": "Starting recording",
 			"STOPPING": "Stopping recording",
 			"IN_PROGRESS": "Recording in progress ...",
@@ -126,7 +134,9 @@
 			"DOWNLOAD": "Download",
 			"RECORDINGS": "RECORDINGS",
 			"NO_MODERATOR": "Only the MODERATOR can start the recording",
-			"NO_TRACKS_PUBLISHED": "Share audio or video to start recording."
+			"NO_TRACKS_PUBLISHED": "Share audio or video to start recording.",
+			"NO_RECORDINGS_AVAILABLE": "No recordings available at this time",
+			"BROWSE_RECORDINGS": "Browse saved recordings"
 		},
 		"STREAMING": {
 			"TITLE": "Streaming",

@@ -56,7 +56,8 @@
 		"PARTICIPANTS": "Participants",
 		"CHAT": "Chat",
 		"ACTIVITES": "Activités",
-		"NO_TRACKS_PUBLISHED": "Partagez de l’audio ou de la vidéo pour commencer l’enregistrement."
+		"NO_TRACKS_PUBLISHED": "Partagez de l’audio ou de la vidéo pour commencer l’enregistrement.",
+		"VIEW_RECORDINGS": "Voir les enregistrements"
 	},
 	"STREAM": {
 		"SETTINGS": "Paramètres",
@@ -115,6 +116,10 @@
 			"SUBTITLE": "Enregistrez votre réunion pour la postérité",
 			"CONTENT_TITLE": "Enregistrez votre appel vidéo",
 			"CONTENT_SUBTITLE": "Une fois l'enregistrement terminé, vous pourrez le télécharger facilement",
+			"VIEW_ONLY_SUBTITLE": "Visualisez et accédez aux enregistrements de la salle",
+			"VIEW_ONLY_CONTENT_TITLE": "Enregistrements d'appel vidéo",
+			"VIEW_ONLY_CONTENT_SUBTITLE": "Ici vous pouvez accéder à tous les enregistrements disponibles",
+			"WATCH": "Regarder",
 			"STARTING": "Début de l'enregistrement",
 			"STOPPING": "Arrêt de l'enregistrement",
 			"IN_PROGRESS": "Enregistrement en cours",
@@ -126,7 +131,8 @@
 			"DOWNLOAD": "Télécharger",
 			"RECORDINGS": "ENREGISTREMENTS",
 			"NO_MODERATOR": "Seul le MODERATEUR peut lancer l'enregistrement",
-			"NO_TRACKS_PUBLISHED": "Partagez de l’audio ou de la vidéo pour commencer l’enregistrement."
+			"NO_TRACKS_PUBLISHED": "Partagez de l’audio ou de la vidéo pour commencer l’enregistrement.",
+			"NO_RECORDINGS_AVAILABLE": "Aucun enregistrement disponible pour le moment"
 		},
 		"STREAMING": {
 			"TITLE": "Streaming",

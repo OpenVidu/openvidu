@@ -56,7 +56,8 @@
 		"PARTICIPANTS": "参与者",
 		"CHAT": "聊天",
 		"ACTIVITIES": "活动",
-		"NO_TRACKS_PUBLISHED": "请分享音频或视频以开始录制。"
+		"NO_TRACKS_PUBLISHED": "请分享音频或视频以开始录制。",
+		"VIEW_RECORDINGS": "查看录像"
 	},
 	"STREAM": {
 		"SETTINGS": "设置",
@@ -115,6 +116,10 @@
 			"SUBTITLE": "为后人记录你的会议",
 			"CONTENT_TITLE": "记录你的视频通话",
 			"CONTENT_SUBTITLE": "当录音完成后，你将可以轻松地下载它",
+			"VIEW_ONLY_SUBTITLE": "查看和访问房间录音",
+			"VIEW_ONLY_CONTENT_TITLE": "视频通话录音",
+			"VIEW_ONLY_CONTENT_SUBTITLE": "在这里您可以访问所有可用的录音",
+			"WATCH": "观看",
 			"STARTING": "开始录音",
 			"STOPPING": "停止录制",
 			"IN_PROGRESS": "录音中",
@@ -126,7 +131,8 @@
 			"DOWNLOAD": "下载",
 			"RECORDINGS": "录制",
 			"NO_MODERATOR": "只有主持人可以开始录音",
-			"NO_TRACKS_PUBLISHED": "请分享音频或视频以开始录制。"
+			"NO_TRACKS_PUBLISHED": "请分享音频或视频以开始录制。",
+			"NO_RECORDINGS_AVAILABLE": "目前没有可用的录音"
 		},
 		"STREAMING": {
 			"TITLE": "直播",

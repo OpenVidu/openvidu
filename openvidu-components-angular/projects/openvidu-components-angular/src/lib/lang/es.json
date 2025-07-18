@@ -56,7 +56,8 @@
 		"PARTICIPANTS": "Participantes",
 		"CHAT": "Chat",
 		"ACTIVITIES": "Actividades",
-		"NO_TRACKS_PUBLISHED": "Comparte audio o video para poder empezar a grabar."
+		"NO_TRACKS_PUBLISHED": "Comparte audio o video para poder empezar a grabar.",
+		"VIEW_RECORDINGS": "Ver grabaciones"
 	},
 	"STREAM": {
 		"SETTINGS": "Ajustes",
@@ -115,6 +116,10 @@
 			"SUBTITLE": "Graba tus llamadas para la posteridad",
 			"CONTENT_TITLE": "Graba tu video conferencia",
 			"CONTENT_SUBTITLE": "Cuando la grabación haya finalizado, podrás descargarla con facilidad",
+			"VIEW_ONLY_SUBTITLE": "Visualiza y accede a las grabaciones de la sala",
+			"VIEW_ONLY_CONTENT_TITLE": "Grabaciones de la video conferencia",
+			"VIEW_ONLY_CONTENT_SUBTITLE": "Aquí puedes acceder a todas las grabaciones disponibles",
+			"WATCH": "Visualizar",
 			"STARTING": "Iniciando grabación...",
 			"STOPPING": "Parando grabación",
 			"IN_PROGRESS": "Grabación en curso",
@@ -126,7 +131,8 @@
 			"DOWNLOAD": "Descargar",
 			"RECORDINGS": "GRABACIONES",
 			"NO_MODERATOR": "Sólo el MODERADOR puede iniciar la grabación",
-			"NO_TRACKS_PUBLISHED": "Comparte audio o video para poder empezar a grabar."
+			"NO_TRACKS_PUBLISHED": "Comparte audio o video para poder empezar a grabar.",
+			"NO_RECORDINGS_AVAILABLE": "No hay grabaciones disponibles en este momento"
 		},
 		"STREAMING": {
 			"TITLE": "Streaming",

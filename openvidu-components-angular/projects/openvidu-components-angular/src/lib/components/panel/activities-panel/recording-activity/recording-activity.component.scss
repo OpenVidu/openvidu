@@ -145,14 +145,24 @@
 	}
 
 	.recording-action-buttons {
-		margin-top: 20px;
-		margin-bottom: 20px;
+		margin: 5px 0px;
 	}
 
 	#start-recording-btn {
 		width: 100%;
 		background-color: var(--ov-primary-action-color);
 		color: var(--ov-secondary-action-color);
+	}
+
+	#view-recordings-btn {
+		width: 100%;
+		background-color: var(--ov-accent-action-color);
+		color: var(--ov-secondary-action-color);
+		margin-bottom: 10px;
+
+		mat-icon {
+			margin-right: 8px;
+		}
 	}
 
 	.start-recording-button-container {

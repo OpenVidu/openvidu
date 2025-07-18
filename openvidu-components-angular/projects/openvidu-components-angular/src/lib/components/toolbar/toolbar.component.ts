@@ -146,6 +146,12 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 		new EventEmitter<BroadcastingStopRequestedEvent>();
 
 	/**
+	 * @internal
+	 * This event is fired when the user clicks on the view recordings button.
+	 */
+	@Output() onViewRecordingsClicked: EventEmitter<void> = new EventEmitter<void>();
+
+	/**
 	 * @ignore
 	 */
 	@ViewChild(MatMenuTrigger) public menuTrigger: MatMenuTrigger;
@@ -243,6 +249,11 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 	/**
 	 * @ignore
 	 */
+	showViewRecordingsButton: boolean = false;
+
+	/**
+	 * @ignore
+	 */
 	showBroadcastingButton: boolean = true;
 
 	/**
@@ -311,6 +322,11 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 	 * @ignore
 	 */
 	recordingStatus: RecordingStatus = RecordingStatus.STOPPED;
+
+	/**
+	 * @ignore
+	 */
+	isRecordingReadOnlyMode: boolean = false;
 
 	/**
 	 * @ignore
@@ -602,17 +618,19 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 	}
 
 	private subscribeToFullscreenChanged() {
-		fromEvent(document, 'fullscreenchange').pipe(takeUntil(this.destroy$)).subscribe(() => {
-			const isFullscreen = Boolean(document.fullscreenElement);
-			if (isFullscreen) {
-				this.cdkOverlayService.setSelector('#session-container');
-			} else {
-				this.cdkOverlayService.setSelector('body');
-			}
-			this.isFullscreenActive = isFullscreen;
-			this.onFullscreenEnabledChanged.emit(this.isFullscreenActive);
-			this.cd.detectChanges();
-		});
+		fromEvent(document, 'fullscreenchange')
+			.pipe(takeUntil(this.destroy$))
+			.subscribe(() => {
+				const isFullscreen = Boolean(document.fullscreenElement);
+				if (isFullscreen) {
+					this.cdkOverlayService.setSelector('#session-container');
+				} else {
+					this.cdkOverlayService.setSelector('body');
+				}
+				this.isFullscreenActive = isFullscreen;
+				this.onFullscreenEnabledChanged.emit(this.isFullscreenActive);
+				this.cd.detectChanges();
+			});
 	}
 
 	private subscribeToMenuToggling() {
@@ -661,6 +679,11 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 	}
 
 	private subscribeToRecordingStatus() {
+		this.libService.recordingActivityReadOnly$.pipe(takeUntil(this.destroy$)).subscribe((readOnly: boolean) => {
+			this.isRecordingReadOnlyMode = readOnly;
+			this.cd.markForCheck();
+		});
+
 		this.recordingService.recordingStatusObs.pipe(takeUntil(this.destroy$)).subscribe((event: RecordingStatusInfo) => {
 			const { status, startedAt } = event;
 			this.recordingStatus = status;
@@ -694,6 +717,11 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 		});
 		this.libService.brandingLogo$.pipe(takeUntil(this.destroy$)).subscribe((value: string) => {
 			this.brandingLogo = value;
+			this.cd.markForCheck();
+		});
+		this.libService.toolbarViewRecordingsButton$.pipe(takeUntil(this.destroy$)).subscribe((value: boolean) => {
+			this.showViewRecordingsButton = value;
+			this.checkDisplayMoreOptions();
 			this.cd.markForCheck();
 		});
 		this.libService.cameraButton$.pipe(takeUntil(this.destroy$)).subscribe((value: boolean) => {
@@ -766,8 +794,9 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 			this.cd.markForCheck();
 		});
 
-		this.libService.toolbarAdditionalButtonsPosition$.pipe(takeUntil(this.destroy$)).subscribe(
-			(value: ToolbarAdditionalButtonsPosition) => {
+		this.libService.toolbarAdditionalButtonsPosition$
+			.pipe(takeUntil(this.destroy$))
+			.subscribe((value: ToolbarAdditionalButtonsPosition) => {
 				// Using Promise.resolve() to defer change detection until the next microtask.
 				// This ensures that Angular's change detection has the latest value before updating the view.
 				// Without this, Angular's OnPush strategy might not immediately reflect the change,
@@ -777,8 +806,7 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 					this.additionalButtonsPosition = value;
 					this.cd.markForCheck();
 				});
-			}
-		);
+			});
 	}
 
 	private subscribeToCaptionsToggling() {

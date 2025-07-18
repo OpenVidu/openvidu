@@ -17,6 +17,8 @@
 				(onRecordingDeleteRequested)="onRecordingDeleteRequested.emit($event)"
 				(onRecordingDownloadClicked)="onRecordingDownloadClicked.emit($event)"
 				(onRecordingPlayClicked)="onRecordingPlayClicked.emit($event)"
+				(onViewRecordingClicked)="onViewRecordingClicked.emit($event)"
+				(onViewRecordingsClicked)="onViewRecordingsClicked.emit()"
 			></ov-recording-activity>
 			<ov-broadcasting-activity
 				*ngIf="showBroadcastingActivity"

@@ -56,7 +56,8 @@
 		"PARTICIPANTS": "Deelnemers",
 		"CHAT": "Chat",
 		"ACTIVITIES": "Activiteiten",
-		"NO_TRACKS_PUBLISHED": "Deel audio of video om met opnemen te beginnen."
+		"NO_TRACKS_PUBLISHED": "Deel audio of video om met opnemen te beginnen.",
+		"VIEW_RECORDINGS": "Opnames bekijken"
 	},
 	"STREAM": {
 		"SETTINGS": "Instellingen",
@@ -115,6 +116,10 @@
 			"SUBTITLE": "Neem uw vergadering op voor het nageslacht",
 			"CONTENT_TITLE": "Neem uw videogesprek op",
 			"CONTENT_SUBTITLE": "Als de opname klaar is kunt u deze met gemak downloaden",
+			"VIEW_ONLY_SUBTITLE": "Bekijk en toegang tot kameropnames",
+			"VIEW_ONLY_CONTENT_TITLE": "Videogesprek opnames",
+			"VIEW_ONLY_CONTENT_SUBTITLE": "Hier heeft u toegang tot alle beschikbare opnames",
+			"WATCH": "Bekijken",
 			"STARTING": "Beginnen met opnemen",
 			"STOPPING": "Opname stoppen",
 			"IN_PROGRESS": "Opname in uitvoering",
@@ -126,7 +131,8 @@
 			"DOWNLOAD": "Downloaden",
 			"RECORDINGS": "OPNAME",
 			"NO_MODERATOR": "Alleen de MOEDERATOR kan de opname starten",
-			"NO_TRACKS_PUBLISHED": "Deel audio of video om met opnemen te beginnen."
+			"NO_TRACKS_PUBLISHED": "Deel audio of video om met opnemen te beginnen.",
+			"NO_RECORDINGS_AVAILABLE": "Momenteel zijn er geen opnames beschikbaar"
 		},
 		"STREAMING": {
 			"TITLE": "Streaming",

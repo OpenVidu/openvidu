@@ -96,12 +96,22 @@ export class OpenViduComponentsConfigService {
 	backgroundEffectsButton$: Observable<boolean>;
 	private recordingButton = <BehaviorSubject<boolean>>new BehaviorSubject(true);
 	recordingButton$: Observable<boolean>;
+	private toolbarViewRecordingsButton = <BehaviorSubject<boolean>>new BehaviorSubject(false);
+	toolbarViewRecordingsButton$: Observable<boolean>;
 	private broadcastingButton = <BehaviorSubject<boolean>>new BehaviorSubject(true);
 	broadcastingButton$: Observable<boolean>;
 	private recordingActivity = <BehaviorSubject<boolean>>new BehaviorSubject(true);
 	recordingActivity$: Observable<boolean>;
 	private broadcastingActivity = <BehaviorSubject<boolean>>new BehaviorSubject(true);
 	broadcastingActivity$: Observable<boolean>;
+
+	// Recording activity configuration
+	private recordingActivityReadOnly = <BehaviorSubject<boolean>>new BehaviorSubject(false);
+	recordingActivityReadOnly$: Observable<boolean>;
+	private recordingActivityShowControls = <BehaviorSubject<{ play?: boolean; download?: boolean; delete?: boolean }>>(
+		new BehaviorSubject({ play: true, download: true, delete: true })
+	);
+	recordingActivityShowControls$: Observable<{ play?: boolean; download?: boolean; delete?: boolean; externalView?: boolean }>;
 
 	// Admin
 	private adminRecordingsList: BehaviorSubject<RecordingInfo[]> = new BehaviorSubject(<RecordingInfo[]>[]);
@@ -142,6 +152,7 @@ export class OpenViduComponentsConfigService {
 		this.displayLogo$ = this.displayLogo.asObservable();
 		this.brandingLogo$ = this.brandingLogo.asObservable();
 		this.recordingButton$ = this.recordingButton.asObservable();
+		this.toolbarViewRecordingsButton$ = this.toolbarViewRecordingsButton.asObservable();
 		this.broadcastingButton$ = this.broadcastingButton.asObservable();
 		this.toolbarSettingsButton$ = this.toolbarSettingsButton.asObservable();
 		this.captionsButton$ = this.captionsButton.asObservable();
@@ -154,6 +165,8 @@ export class OpenViduComponentsConfigService {
 		this.participantItemMuteButton$ = this.participantItemMuteButton.asObservable();
 		// Recording activity observables
 		this.recordingActivity$ = this.recordingActivity.asObservable();
+		this.recordingActivityReadOnly$ = this.recordingActivityReadOnly.asObservable();
+		this.recordingActivityShowControls$ = this.recordingActivityShowControls.asObservable();
 		// Broadcasting activity
 		this.broadcastingActivity$ = this.broadcastingActivity.asObservable();
 		// Admin dashboard
@@ -357,6 +370,18 @@ export class OpenViduComponentsConfigService {
 		return this.recordingButton.getValue();
 	}
 
+	setToolbarViewRecordingsButton(toolbarViewRecordingsButton: boolean) {
+		this.toolbarViewRecordingsButton.next(toolbarViewRecordingsButton);
+	}
+
+	getToolbarViewRecordingsButton(): boolean {
+		return this.toolbarViewRecordingsButton.getValue();
+	}
+
+	showToolbarViewRecordingsButton(): boolean {
+		return this.getToolbarViewRecordingsButton();
+	}
+
 	setBroadcastingButton(broadcastingButton: boolean) {
 		this.broadcastingButton.next(broadcastingButton);
 	}
@@ -467,5 +492,23 @@ export class OpenViduComponentsConfigService {
 	// Internals
 	setLayoutRemoteParticipants(participants: ParticipantModel[] | undefined) {
 		this.layoutRemoteParticipants.next(participants);
+	}
+
+	// Recording Activity Configuration
+	setRecordingActivityReadOnly(readOnly: boolean) {
+		this.recordingActivityReadOnly.next(readOnly);
+	}
+
+	isRecordingActivityReadOnly(): boolean {
+		return this.recordingActivityReadOnly.getValue();
+	}
+
+
+	setRecordingActivityShowControls(controls: { play?: boolean; download?: boolean; delete?: boolean }) {
+		this.recordingActivityShowControls.next(controls);
+	}
+
+	getRecordingActivityShowControls(): { play?: boolean; download?: boolean; delete?: boolean } {
+		return this.recordingActivityShowControls.getValue();
 	}
 }

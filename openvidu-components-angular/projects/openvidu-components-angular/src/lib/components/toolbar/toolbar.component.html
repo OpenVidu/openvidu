@@ -137,6 +137,14 @@
 				</span>
 			</button>
 
+			<!-- View recordings button -->
+			@if (!isMinimal && showViewRecordingsButton) {
+				<button mat-menu-item id="view-recordings-btn" (click)="onViewRecordingsClicked.emit()">
+					<mat-icon>video_library</mat-icon>
+					<span>{{ 'TOOLBAR.VIEW_RECORDINGS' | translate }}</span>
+				</button>
+			}
+
 			<!-- Broadcasting button -->
 			<button
 				*ngIf="!isMinimal && showBroadcastingButton"

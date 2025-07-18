@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, OnInit, OnDestroy, Output } from '@angular/core';
 import { Subject, takeUntil } from 'rxjs';
 import {
 	RecordingDeleteRequestedEvent,
@@ -16,6 +16,7 @@ import { RecordingService } from '../../../../services/recording/recording.servi
 import { OpenViduService } from '../../../../services/openvidu/openvidu.service';
 import { ILogger } from '../../../../models/logger.model';
 import { LoggerService } from '../../../../services/logger/logger.service';
+import { OpenViduComponentsConfigService } from '../../../../services/config/directive-config.service';
 
 /**
  * The **RecordingActivityComponent** is the component that allows showing the recording activity.
@@ -31,7 +32,7 @@ import { LoggerService } from '../../../../services/logger/logger.service';
 // TODO: Allow to add more than one recording type
 // TODO: Allow to choose where the recording is stored (s3, google cloud, etc)
 // TODO: Allow to choose the layout of the recording
-export class RecordingActivityComponent implements OnInit {
+export class RecordingActivityComponent implements OnInit, OnDestroy {
 	/**
 	 * @internal
 	 */
@@ -66,6 +67,20 @@ export class RecordingActivityComponent implements OnInit {
 	 * It provides the {@link RecordingPlayClickedEvent} payload as event data.
 	 */
 	@Output() onRecordingPlayClicked: EventEmitter<RecordingPlayClickedEvent> = new EventEmitter<RecordingPlayClickedEvent>();
+
+	/**
+	 * @internal
+	 * Provides event notifications that fire when view recordings button has been clicked.
+	 * This event is triggered when the user wants to view all recordings in an external page.
+	 */
+	@Output() onViewRecordingsClicked: EventEmitter<void> = new EventEmitter<void>();
+
+	/**
+	 * @internal
+	 * This event is fired when the user clicks on the view recording button.
+	 * It provides the recording ID as event data.
+	 */
+	@Output() onViewRecordingClicked: EventEmitter<string> = new EventEmitter<string>();
 
 	/**
 	 * @internal
@@ -108,6 +123,27 @@ export class RecordingActivityComponent implements OnInit {
 	 * @internal
 	 */
 	mouseHovering: boolean = false;
+
+	/**
+	 * @internal
+	 */
+	isReadOnlyMode: boolean = false;
+
+	/**
+	 * @internal
+	 */
+	viewButtonText: string = 'PANEL.RECORDING.VIEW';
+
+	/**
+	 * @internal
+	 */
+	showControls: { play?: boolean; download?: boolean; delete?: boolean; externalView?: boolean } = {
+		play: true,
+		download: true,
+		delete: true,
+		externalView: false
+	};
+
 	private log: ILogger;
 	private destroy$ = new Subject<void>();
 
@@ -120,7 +156,8 @@ export class RecordingActivityComponent implements OnInit {
 		private actionService: ActionService,
 		private openviduService: OpenViduService,
 		private cd: ChangeDetectorRef,
-		private loggerSrv: LoggerService
+		private loggerSrv: LoggerService,
+		private libService: OpenViduComponentsConfigService
 	) {
 		this.log = this.loggerSrv.get('RecordingActivityComponent');
 	}
@@ -131,6 +168,7 @@ export class RecordingActivityComponent implements OnInit {
 	ngOnInit(): void {
 		this.subscribeToRecordingStatus();
 		this.subscribeToTracksChanges();
+		this.subscribeToConfigChanges();
 	}
 
 	/**
@@ -238,6 +276,46 @@ export class RecordingActivityComponent implements OnInit {
 		};
 		this.onRecordingPlayClicked.emit(payload);
 		this.recordingService.playRecording(recording);
+	}
+
+	/**
+	 * @internal
+	 */
+	viewRecording(recording: RecordingInfo) {
+		// This method can be overridden or emit a custom event for navigation
+		// For now, it uses the same behavior as play, but can be customized
+		if (!recording.filename) {
+			this.log.e('Error viewing recording. Recording filename is undefined');
+			return;
+		}
+		const payload: RecordingPlayClickedEvent = {
+			roomName: this.openviduService.getRoomName(),
+			recordingId: recording.id
+		};
+		this.onRecordingPlayClicked.emit(payload);
+		// You can customize this to navigate to a different page instead
+		this.recordingService.playRecording(recording);
+	}
+
+	/**
+	 * @internal
+	 */
+	viewAllRecordings() {
+		this.onViewRecordingsClicked.emit();
+	}
+
+	private subscribeToConfigChanges() {
+		this.libService.recordingActivityReadOnly$.pipe(takeUntil(this.destroy$)).subscribe((readOnly: boolean) => {
+			this.isReadOnlyMode = readOnly;
+			this.cd.markForCheck();
+		});
+
+		this.libService.recordingActivityShowControls$
+			.pipe(takeUntil(this.destroy$))
+			.subscribe((controls: { play?: boolean; download?: boolean; delete?: boolean; externalView?: boolean }) => {
+				this.showControls = controls;
+				this.cd.markForCheck();
+			});
 	}
 
 	private subscribeToRecordingStatus() {

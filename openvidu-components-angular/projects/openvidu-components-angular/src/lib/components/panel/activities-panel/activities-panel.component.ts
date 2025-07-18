@@ -55,6 +55,21 @@ export class ActivitiesPanelComponent implements OnInit {
 	@Output() onRecordingPlayClicked: EventEmitter<RecordingPlayClickedEvent> = new EventEmitter<RecordingPlayClickedEvent>();
 
 	/**
+	 * @internal
+	 * Provides event notifications that fire when view recordings button has been clicked.
+	 * This event is triggered when the user wants to view all recordings in an external page.
+	 */
+	@Output() onViewRecordingsClicked: EventEmitter<void> = new EventEmitter<void>();
+
+	/**
+	 * @internal
+	 * Provides event notifications that fire when view recording button has been clicked.
+	 * This event is triggered when the user wants to view a specific recording in an external page.
+	 * It provides the recording ID as event data.
+	 */
+	@Output() onViewRecordingClicked: EventEmitter<string> = new EventEmitter<string>();
+
+	/**
 	 * Provides event notifications that fire when start broadcasting button is clicked.
 	 * It provides the {@link BroadcastingStartRequestedEvent} payload as event data.
 	 */

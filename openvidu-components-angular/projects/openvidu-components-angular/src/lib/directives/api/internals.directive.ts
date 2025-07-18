@@ -161,3 +161,181 @@ export class PrejoinDisplayParticipantName implements OnDestroy {
 		this.libService.setPrejoinDisplayParticipantName(value);
 	}
 }
+
+/**
+ * @internal
+ *
+ * The **recordingActivityReadOnly** directive sets the recording activity panel to read-only mode.
+ * In this mode, users can only view recordings without the ability to start, stop, or delete them.
+ *
+ * It is only available for {@link VideoconferenceComponent}.
+ *
+ * Default: `false`
+ *
+ * @example
+ * <ov-videoconference [recordingActivityReadOnly]="true"></ov-videoconference>
+ */
+@Directive({
+	selector: 'ov-videoconference[recordingActivityReadOnly]',
+	standalone: false
+})
+export class RecordingActivityReadOnlyDirective implements OnDestroy {
+	/**
+	 * @ignore
+	 */
+	@Input() set recordingActivityReadOnly(value: boolean) {
+		this.update(value);
+	}
+
+	/**
+	 * @ignore
+	 */
+	constructor(
+		public elementRef: ElementRef,
+		private libService: OpenViduComponentsConfigService
+	) {}
+
+	/**
+	 * @ignore
+	 */
+	ngOnDestroy(): void {
+		this.clear();
+	}
+
+	/**
+	 * @ignore
+	 */
+	clear() {
+		this.update(false);
+	}
+
+	/**
+	 * @ignore
+	 */
+	update(value: boolean) {
+		this.libService.setRecordingActivityReadOnly(value);
+	}
+}
+
+/**
+ *
+ * @internal
+ *
+ * The **recordingActivityShowControls** directive allows to show/hide specific recording controls (play, download, delete, externalView).
+ * You can pass an object with boolean properties to control which buttons are shown.
+ *
+ * It is only available for {@link VideoconferenceComponent}.
+ *
+ * Default: `{ play: true, download: true, delete: true, externalView: false }`
+ *
+ * @example
+ * <ov-videoconference [recordingActivityShowControls]="{ play: false, download: true, delete: false }"></ov-videoconference>
+ */
+@Directive({
+	selector: 'ov-videoconference[recordingActivityShowControls]',
+	standalone: false
+})
+export class RecordingActivityShowControlsDirective implements OnDestroy {
+	/**
+	 * @ignore
+	 */
+	@Input() set recordingActivityShowControls(value: { play?: boolean; download?: boolean; delete?: boolean; externalView?: boolean }) {
+		this.update(value);
+	}
+
+	/**
+	 * @ignore
+	 */
+	constructor(
+		public elementRef: ElementRef,
+		private libService: OpenViduComponentsConfigService
+	) {}
+
+	/**
+	 * @ignore
+	 */
+	ngOnDestroy(): void {
+		this.clear();
+	}
+
+	/**
+	 * @ignore
+	 */
+	clear() {
+		this.update({ play: true, download: true, delete: true, externalView: false });
+	}
+
+	/**
+	 * @ignore
+	 */
+	update(value: { play?: boolean; download?: boolean; delete?: boolean; externalView?: boolean }) {
+		this.libService.setRecordingActivityShowControls(value);
+	}
+}
+
+/**
+ * @internal
+ * The **viewRecordingsButton** directive allows show/hide the view recordings toolbar button.
+ *
+ * Default: `false`
+ *
+ * It can be used in the parent element {@link VideoconferenceComponent} specifying the name of the `toolbar` component:
+ *
+ * @example
+ * <ov-videoconference [toolbarViewRecordingsButton]="true"></ov-videoconference>
+ *
+ * \
+ * And it also can be used in the {@link ToolbarComponent}.
+ * @example
+ * <ov-toolbar [viewRecordingsButton]="true"></ov-toolbar>
+ *
+ * When the button is clicked, it will fire the `onViewRecordingsClicked` event.
+ */
+@Directive({
+	selector: 'ov-videoconference[toolbarViewRecordingsButton], ov-toolbar[viewRecordingsButton]',
+	standalone: false
+})
+export class ToolbarViewRecordingsButtonDirective implements AfterViewInit, OnDestroy {
+	/**
+	 * @ignore
+	 */
+	@Input() set toolbarViewRecordingsButton(value: boolean) {
+		this.viewRecordingsValue = value;
+		this.update(this.viewRecordingsValue);
+	}
+	/**
+	 * @ignore
+	 */
+	@Input() set viewRecordingsButton(value: boolean) {
+		this.viewRecordingsValue = value;
+		this.update(this.viewRecordingsValue);
+	}
+
+	private viewRecordingsValue: boolean = false;
+
+	/**
+	 * @ignore
+	 */
+	constructor(
+		public elementRef: ElementRef,
+		private libService: OpenViduComponentsConfigService
+	) {}
+
+	ngAfterViewInit() {
+		this.update(this.viewRecordingsValue);
+	}
+
+	ngOnDestroy(): void {
+		this.clear();
+	}
+	private clear() {
+		this.viewRecordingsValue = false;
+		this.update(true);
+	}
+
+	private update(value: boolean) {
+		if (this.libService.getToolbarViewRecordingsButton() !== value) {
+			this.libService.setToolbarViewRecordingsButton(value);
+		}
+	}
+}

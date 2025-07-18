@@ -56,7 +56,8 @@
 		"PARTICIPANTS": "参加者",
 		"CHAT": "チャット",
 		"ACTIVITIES": "アクティビティ",
-		"NO_TRACKS_PUBLISHED": "録音を開始するには、音声または動画を共有してください。"
+		"NO_TRACKS_PUBLISHED": "録音を開始するには、音声または動画を共有してください。",
+		"VIEW_RECORDINGS": "録画を表示"
 	},
 	"STREAM": {
 		"SETTINGS": "設定",
@@ -115,6 +116,10 @@
 			"SUBTITLE": "会議を録画して保存する",
 			"CONTENT_TITLE": "ビデオ通話を録音する",
 			"CONTENT_SUBTITLE": "録画が完了したら、簡単にダウンロードできます",
+			"VIEW_ONLY_SUBTITLE": "ルームの録画を表示してアクセスする",
+			"VIEW_ONLY_CONTENT_TITLE": "ビデオ通話の録画",
+			"VIEW_ONLY_CONTENT_SUBTITLE": "ここで利用可能なすべての録画にアクセスできます",
+			"WATCH": "視聴する",
 			"STARTING": "録画開始",
 			"STOPPING": "録音停止",
 			"IN_PROGRESS": "録画中",
@@ -126,7 +131,8 @@
 			"DOWNLOAD": "保存",
 			"RECORDINGS": "録画",
 			"NO_MODERATOR": "録画を開始できるのは、モデレーターのみです",
-			"NO_TRACKS_PUBLISHED": "録音を開始するには、音声または動画を共有してください。"
+			"NO_TRACKS_PUBLISHED": "録音を開始するには、音声または動画を共有してください。",
+			"NO_RECORDINGS_AVAILABLE": "現在利用可能な録画はありません"
 		},
 		"STREAMING": {
 			"TITLE": "ストリーミング",
