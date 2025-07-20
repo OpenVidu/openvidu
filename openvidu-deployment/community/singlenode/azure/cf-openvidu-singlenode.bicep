@@ -305,7 +305,7 @@ MEET_ADMIN_SECRET="$(/usr/local/bin/store_secret.sh generate MEET-ADMIN-SECRET)"
 MEET_API_KEY="$(/usr/local/bin/store_secret.sh generate MEET-API-KEY)"
 LIVEKIT_API_KEY="$(/usr/local/bin/store_secret.sh generate LIVEKIT-API-KEY "API" 12)"
 LIVEKIT_API_SECRET="$(/usr/local/bin/store_secret.sh generate LIVEKIT-API-SECRET)"
-ENABLED_MODULES="$(/usr/local/bin/store_secret.sh save ENABLED-MODULES "observability,app")"
+ENABLED_MODULES="$(/usr/local/bin/store_secret.sh save ENABLED-MODULES "observability,openviduMeet")"
 
 # Base command
 INSTALL_COMMAND="sh <(curl -fsSL http://get.openvidu.io/community/singlenode/$OPENVIDU_VERSION/install.sh)"
