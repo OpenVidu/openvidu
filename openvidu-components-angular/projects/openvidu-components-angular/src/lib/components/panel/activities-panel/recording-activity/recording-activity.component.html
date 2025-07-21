@@ -160,108 +160,106 @@
 
 			<!-- Recording list -->
 			@if (recordingList.length > 0) {
-				<div class="item recording-list-container">
-					<mat-list>
-						@for (recording of recordingList; track trackByRecordingId($index, recording)) {
-							<mat-list-item class="recording-item" [class.blink]="recording.status === recStatusEnum.STARTED">
-								<!-- Recording icon -->
-								<mat-icon class="recording-icon" matListItemIcon>video_file</mat-icon>
-
-								<!-- Recording title -->
-								<div matListItemTitle>
-									<span class="recording-name">{{ recording.filename }}</span>
-								</div>
-
-								<!-- Recording status/progress -->
-								<div matListItemLine class="time-container">
+				<div class="recording-list-container">
+					@for (recording of recordingList; track trackByRecordingId($index, recording)) {
+						<div class="recording-card" [class.recording-active]="recording.status === recStatusEnum.STARTED">
+							<!-- Recording header with status indicator and info -->
+							<div class="recording-header">
+								<div class="recording-status-indicator">
 									@if (recording.status === recStatusEnum.STARTED) {
-										<span>
-											{{ 'PANEL.RECORDING.IN_PROGRESS' | translate }}
-										</span>
+										<div class="status-dot recording-live"></div>
 									} @else {
-										<span class="recording-duration">{{ recording.duration | duration }}</span>
-										<span class="recording-size">| {{ recording.size / 1024 / 1024 | number: '1.1-2' }} MBs</span>
+										<div class="status-dot recording-ready"></div>
 									}
 								</div>
 
-								<!-- Recording date -->
-								@if (recording.status !== recStatusEnum.STARTED) {
-									<div matListItemLine class="recording-date">
-										{{ recording.startedAt | date: 'HH:mm - dd/MM/yyyy' }}
-									</div>
-								}
+								<div class="recording-info">
+									<div class="recording-name">{{ recording.filename || 'Recording' }}</div>
 
-								<!-- Recording action buttons -->
-								@if (!isReadOnlyMode) {
-									@if (recording.status !== recStatusEnum.STARTED) {
-										<div id="recording-action-buttons" class="recording-actions">
-											@if (showControls.play) {
-												<button
-													mat-icon-button
-													(click)="play(recording)"
-													id="play-recording-btn"
-													matTooltip="{{ 'PANEL.RECORDING.PLAY' | translate }}"
-													class="action-button play-button"
-												>
-													<mat-icon>play_arrow</mat-icon>
-												</button>
-											}
-
-											@if (showControls.externalView) {
-												<button
-													mat-icon-button
-													(click)="onViewRecordingClicked.emit(recording.id)"
-													id="watch-recording-btn"
-													matTooltip="{{ 'PANEL.RECORDING.WATCH' | translate }}"
-													class="action-button watch-button"
-												>
-													<mat-icon>open_in_new</mat-icon>
-												</button>
-											}
-
-											@if (showControls.download) {
-												<button
-													mat-icon-button
-													(click)="download(recording)"
-													id="download-recording-btn"
-													matTooltip="{{ 'PANEL.RECORDING.DOWNLOAD' | translate }}"
-													class="action-button download-button"
-												>
-													<mat-icon>download</mat-icon>
-												</button>
-											}
-
-											@if (showControls.delete) {
-												<button
-													mat-icon-button
-													(click)="deleteRecording(recording)"
-													id="delete-recording-btn"
-													matTooltip="{{ 'PANEL.RECORDING.DELETE' | translate }}"
-													class="action-button delete-button"
-												>
-													<mat-icon>delete</mat-icon>
-												</button>
-											}
+									@if (recording.status === recStatusEnum.STARTED) {
+										<div class="recording-status-text recording-live-text">
+											{{ 'PANEL.RECORDING.IN_PROGRESS' | translate }}
+										</div>
+									} @else {
+										<div class="recording-metadata">
+											<span class="metadata-item">
+												<mat-icon class="metadata-icon">schedule</mat-icon>
+												{{ formatDuration(recording.duration) }}
+											</span>
+											<span class="metadata-item">
+												<mat-icon class="metadata-icon">storage</mat-icon>
+												{{ formatFileSize(recording.size) }}
+											</span>
+											<span class="metadata-item">
+												<mat-icon class="metadata-icon">today</mat-icon>
+												{{ recording.startedAt | date: 'MMM d, y' }}
+											</span>
 										</div>
 									}
-								} @else {
-									@if (recording.status !== recStatusEnum.STARTED) {
-										<div id="recording-action-buttons" class="recording-actions">
+								</div>
+							</div>
+
+							<!-- Actions menu row -->
+							@if (recording.status !== recStatusEnum.STARTED) {
+								<div class="recording-actions-menu">
+									@if (!isReadOnlyMode) {
+										@if (showControls.play) {
+											<button
+												mat-icon-button
+												(click)="play(recording)"
+												matTooltip="{{ 'PANEL.RECORDING.PLAY' | translate }}"
+												class="action-btn action-play"
+											>
+												<mat-icon>play_circle</mat-icon>
+											</button>
+										}
+
+										@if (showControls.externalView) {
 											<button
 												mat-icon-button
 												(click)="onViewRecordingClicked.emit(recording.id)"
-												id="watch-recording-btn"
 												matTooltip="{{ 'PANEL.RECORDING.WATCH' | translate }}"
-												class="action-button watch-button"
+												class="action-btn action-view"
 											>
 												<mat-icon>open_in_new</mat-icon>
 											</button>
-										</div>
+										}
+
+										@if (showControls.download) {
+											<button
+												mat-icon-button
+												(click)="download(recording)"
+												matTooltip="{{ 'PANEL.RECORDING.DOWNLOAD' | translate }}"
+												class="action-btn action-download"
+											>
+												<mat-icon>download</mat-icon>
+											</button>
+										}
+
+										@if (showControls.delete) {
+											<button
+												mat-icon-button
+												(click)="deleteRecording(recording)"
+												matTooltip="{{ 'PANEL.RECORDING.DELETE' | translate }}"
+												class="action-btn action-delete"
+											>
+												<mat-icon>delete_outline</mat-icon>
+											</button>
+										}
+									} @else {
+										<button
+											mat-icon-button
+											(click)="onViewRecordingClicked.emit(recording.id)"
+											matTooltip="{{ 'PANEL.RECORDING.WATCH' | translate }}"
+											class="action-btn action-view"
+										>
+											<mat-icon>visibility</mat-icon>
+										</button>
 									}
-								}
-							</mat-list-item>
-						}
-					</mat-list>
+								</div>
+							}
+						</div>
+					}
 				</div>
 			}
 		</div>

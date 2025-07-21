@@ -304,6 +304,40 @@ export class RecordingActivityComponent implements OnInit, OnDestroy {
 		this.onViewRecordingsClicked.emit();
 	}
 
+	/**
+	 * @internal
+	 * Format duration in seconds to a readable format (e.g., "2m 30s")
+	 */
+	formatDuration(seconds: number): string {
+		if (!seconds || seconds < 0) return '0s';
+
+		const hours = Math.floor(seconds / 3600);
+		const minutes = Math.floor((seconds % 3600) / 60);
+		const remainingSeconds = Math.floor(seconds % 60);
+
+		if (hours > 0) {
+			return `${hours}h ${minutes}m`;
+		} else if (minutes > 0) {
+			return `${minutes}m ${remainingSeconds}s`;
+		} else {
+			return `${remainingSeconds}s`;
+		}
+	}
+
+	/**
+	 * @internal
+	 * Format file size in bytes to a readable format (e.g., "2.5 MB")
+	 */
+	formatFileSize(bytes: number): string {
+		if (!bytes || bytes < 0) return '0 B';
+
+		const sizes = ['B', 'KB', 'MB', 'GB'];
+		const i = Math.floor(Math.log(bytes) / Math.log(1024));
+		const size = bytes / Math.pow(1024, i);
+
+		return `${size.toFixed(1)} ${sizes[i]}`;
+	}
+
 	private subscribeToConfigChanges() {
 		this.libService.recordingActivityReadOnly$.pipe(takeUntil(this.destroy$)).subscribe((readOnly: boolean) => {
 			this.isReadOnlyMode = readOnly;

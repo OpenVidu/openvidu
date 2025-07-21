@@ -99,8 +99,236 @@
 		margin-top: 10px;
 	}
 
+	// Modern recording list styles
 	.recording-list-container {
-		margin-top: 10px;
+		display: flex;
+		flex-direction: column;
+		gap: 16px;
+		padding-top: 16px;
+		max-height: 500px;
+
+		&::-webkit-scrollbar {
+			width: 4px;
+		}
+
+		&::-webkit-scrollbar-track {
+			background: transparent;
+		}
+
+		&::-webkit-scrollbar-thumb {
+			background-color: var(--ov-accent-action-color);
+			border-radius: 2px;
+			opacity: 0.3;
+		}
+
+		&::-webkit-scrollbar-thumb:hover {
+			opacity: 0.6;
+		}
+	}
+
+	.recording-card {
+		background: var(--ov-surface-background-color);
+		border: 1px solid rgba(0, 102, 204, 0.1);
+		border-radius: 12px;
+		padding: 8px;
+		transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+		position: relative;
+		overflow: hidden;
+		width: 100%;
+		display: flex;
+		flex-direction: column;
+		flex-shrink: 0;
+		box-sizing: border-box;
+
+		&.recording-active {
+			border-color: var(--ov-primary-action-color);
+			background: linear-gradient(135deg,
+				rgba(255, 87, 34, 0.05) 0%,
+				transparent 50%);
+
+			&:before {
+				content: '';
+				position: absolute;
+				top: 0;
+				left: 0;
+				width: 4px;
+				height: 100%;
+				background: var(--ov-primary-action-color);
+				animation: pulse-border 2s infinite;
+			}
+		}
+	}
+
+	.recording-header {
+		display: flex;
+		align-items: flex-start;
+		gap: 5px;
+		width: 100%;
+		height: 60px;
+		flex-shrink: 0;
+	}
+
+	.recording-status-indicator {
+		flex-shrink: 0;
+		padding-top: 2px;
+		width: 16px;
+		height: 16px;
+		display: flex;
+		justify-content: center;
+		align-items: flex-start;
+	}
+
+	.status-dot {
+		width: 8px;
+		height: 8px;
+		border-radius: 50%;
+
+		&.recording-live {
+			background: var(--ov-primary-action-color);
+			box-shadow: 0 0 0 4px rgba(255, 87, 34, 0.2);
+			animation: pulse-dot 2s infinite;
+		}
+
+		&.recording-ready {
+			background: var(--ov-accent-action-color);
+		}
+	}
+
+	.recording-info {
+		flex: 1;
+		min-width: 0;
+		display: flex;
+		flex-direction: column;
+		justify-content: flex-start;
+		overflow: hidden;
+	}
+
+	.recording-name {
+		font-size: 14px;
+		font-weight: 500;
+		color: var(--ov-text-surface-color);
+		margin-bottom: 4px;
+		line-height: 1.2;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		height: 17px;
+	}
+
+	.recording-status-text {
+		font-size: 12px;
+		font-weight: 500;
+
+		&.recording-live-text {
+			color: var(--ov-primary-action-color);
+			text-transform: uppercase;
+			letter-spacing: 0.5px;
+		}
+	}
+
+	.recording-metadata {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 16px;
+		margin-top: 4px;
+		height: auto;
+		overflow: visible;
+	}
+
+	.metadata-item {
+		display: flex;
+		align-items: center;
+		gap: 4px;
+		font-size: 12px;
+		color: var(--ov-text-surface-color);
+		opacity: 0.7;
+		white-space: nowrap;
+		flex-shrink: 0;
+
+		.metadata-icon {
+			font-size: 14px;
+			width: 14px;
+			height: 14px;
+			flex-shrink: 0;
+		}
+	}
+
+	.recording-actions-menu {
+		display: flex;
+		gap: 8px;
+		flex-shrink: 0;
+		opacity: 1;
+		align-items: center;
+		width: 100%;
+		justify-content: center;
+		height: 32px;
+		margin-top: auto;
+	}
+
+	.action-btn {
+
+		mat-icon {
+			font-size: 18px;
+			width: 18px;
+			height: 18px;
+		}
+
+		&.action-play {
+			color: var(--ov-accent-action-color);
+
+			&:hover {
+				background: rgba(0, 102, 204, 0.1);
+				color: var(--ov-accent-action-color);
+			}
+		}
+
+		&.action-view {
+			color: var(--ov-accent-action-color);
+
+			&:hover {
+				background: rgba(0, 102, 204, 0.1);
+				color: var(--ov-accent-action-color);
+			}
+		}
+
+		&.action-download {
+			color: #4CAF50;
+
+			&:hover {
+				background: rgba(76, 175, 80, 0.1);
+				color: #4CAF50;
+			}
+		}
+
+		&.action-delete {
+			color: var(--ov-error-color);
+
+			&:hover {
+				background: rgba(244, 67, 54, 0.1);
+				color: var(--ov-error-color);
+			}
+		}
+	}
+
+	// Animations
+	@keyframes pulse-dot {
+		0%, 100% {
+			transform: scale(1);
+			opacity: 1;
+		}
+		50% {
+			transform: scale(1.2);
+			opacity: 0.8;
+		}
+	}
+
+	@keyframes pulse-border {
+		0%, 100% {
+			opacity: 1;
+		}
+		50% {
+			opacity: 0.5;
+		}
 	}
 
 	.recording-actions {
@@ -116,6 +344,62 @@
 		}
 	}
 
+	// Mobile responsive design for new recording cards
+	@media (max-width: 768px) {
+		.recording-list-container {
+			padding-top: 12px;
+			gap: 12px;
+		}
+
+		.recording-card {
+			padding: 8px;
+			height: 100px;
+			gap: 8px;
+		}
+
+		.recording-header {
+			gap: 8px;
+			height: 50px;
+		}
+
+		.recording-info {
+			min-width: 0;
+		}
+
+		.recording-metadata {
+			gap: 8px;
+			margin-top: 2px;
+		}
+
+		.metadata-item {
+			font-size: 11px;
+			gap: 2px;
+
+			.metadata-icon {
+				font-size: 12px;
+				width: 12px;
+				height: 12px;
+			}
+		}
+
+		.recording-actions-menu {
+			opacity: 1; // Always visible on mobile
+			gap: 6px;
+			height: 28px;
+		}
+
+		.action-btn {
+			width: 28px;
+			height: 28px;
+
+			mat-icon {
+				font-size: 16px;
+				width: 16px;
+				height: 16px;
+			}
+		}
+	}
+
 	.recording-message {
 		color: var(--ov-text-surface-color);
 	}
@@ -124,19 +408,44 @@
 		color: var(--ov-error-color);
 		font-weight: 600;
 	}
+
 	.disable-recording-btn {
 		background-color: var(--ov-secondary-action-color) !important;
 		color: var(--ov-text-surface-color) !important;
 		cursor: not-allowed !important;
 	}
-	.recording-name {
-		font-size: 14px;
-		font-weight: bold;
+
+	// Enhanced empty state
+	.empty-state {
+		text-align: center;
+		padding: 32px 16px;
+		color: var(--ov-text-surface-color);
 	}
 
-	.recording-date {
-		font-size: 12px !important;
-		font-style: italic;
+	.empty-state-icon {
+		margin-bottom: 16px;
+
+		mat-icon {
+			font-size: 48px;
+			width: 48px;
+			height: 48px;
+			color: var(--ov-accent-action-color);
+			opacity: 0.6;
+		}
+	}
+
+	.empty-state-title {
+		font-size: 18px;
+		font-weight: 500;
+		margin: 0 0 8px 0;
+		color: var(--ov-text-surface-color);
+	}
+
+	.empty-state-subtitle {
+		font-size: 14px;
+		margin: 0;
+		opacity: 0.7;
+		line-height: 1.4;
 	}
 
 	.not-allowed-message {
