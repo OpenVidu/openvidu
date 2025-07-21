@@ -1996,7 +1996,7 @@ resource masterToMediaRtmpIngress 'Microsoft.Network/networkSecurityGroups/secur
     ]
     destinationPortRange: '1935'
     access: 'Allow'
-    priority: 150
+    priority: 160
     direction: 'Inbound'
   }
 }
@@ -2019,7 +2019,7 @@ resource masterToMediaTurnTlsIngress 'Microsoft.Network/networkSecurityGroups/se
     ]
     destinationPortRange: '5349'
     access: 'Allow'
-    priority: 160
+    priority: 170
     direction: 'Inbound'
   }
 }
@@ -2042,7 +2042,7 @@ resource masterToMediaServerIngress 'Microsoft.Network/networkSecurityGroups/sec
     ]
     destinationPortRange: '7880'
     access: 'Allow'
-    priority: 170
+    priority: 180
     direction: 'Inbound'
   }
 }
@@ -2065,7 +2065,7 @@ resource masterToMediaHttpWhipIngress 'Microsoft.Network/networkSecurityGroups/s
     ]
     destinationPortRange: '8080'
     access: 'Allow'
-    priority: 180
+    priority: 190
     direction: 'Inbound'
   }
 }
