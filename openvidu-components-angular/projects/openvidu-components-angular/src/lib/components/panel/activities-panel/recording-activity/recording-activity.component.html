@@ -168,7 +168,11 @@
 								<div class="recording-status-indicator">
 									@if (recording.status === recStatusEnum.STARTED) {
 										<div class="status-dot recording-live"></div>
-									} @else {
+									} @else if (recording.status === recStatusEnum.STOPPING) {
+										<div class="status-dot recording-stopping"></div>
+									} @else if (recording.status === recStatusEnum.FAILED) {
+										<div class="status-dot recording-failed"></div>
+									} @else if (recording.status === recStatusEnum.READY) {
 										<div class="status-dot recording-ready"></div>
 									}
 								</div>
@@ -216,12 +220,12 @@
 
 										@if (showControls.externalView) {
 											<button
-												mat-icon-button
+												mat-button
 												(click)="onViewRecordingClicked.emit(recording.id)"
-												matTooltip="{{ 'PANEL.RECORDING.WATCH' | translate }}"
 												class="action-btn action-view"
 											>
-												<mat-icon>open_in_new</mat-icon>
+												<mat-icon>visibility</mat-icon>
+												{{ 'PANEL.RECORDING.WATCH' | translate }}
 											</button>
 										}
 
@@ -248,12 +252,12 @@
 										}
 									} @else {
 										<button
-											mat-icon-button
+											mat-button
 											(click)="onViewRecordingClicked.emit(recording.id)"
-											matTooltip="{{ 'PANEL.RECORDING.WATCH' | translate }}"
 											class="action-btn action-view"
 										>
-											<mat-icon>visibility</mat-icon>
+											<mat-icon>open_in_new</mat-icon>
+											{{ 'PANEL.RECORDING.WATCH' | translate }}
 										</button>
 									}
 								</div>

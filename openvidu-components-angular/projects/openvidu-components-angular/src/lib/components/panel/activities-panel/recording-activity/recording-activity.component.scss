@@ -103,7 +103,7 @@
 	.recording-list-container {
 		display: flex;
 		flex-direction: column;
-		gap: 16px;
+		gap: 10px;
 		padding-top: 16px;
 		max-height: 500px;
 
@@ -129,7 +129,7 @@
 	.recording-card {
 		background: var(--ov-surface-background-color);
 		border: 1px solid rgba(0, 102, 204, 0.1);
-		border-radius: 12px;
+		border-radius: var(--ov-surface-radius);
 		padding: 8px;
 		transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 		position: relative;
@@ -141,21 +141,7 @@
 		box-sizing: border-box;
 
 		&.recording-active {
-			border-color: var(--ov-primary-action-color);
-			background: linear-gradient(135deg,
-				rgba(255, 87, 34, 0.05) 0%,
-				transparent 50%);
-
-			&:before {
-				content: '';
-				position: absolute;
-				top: 0;
-				left: 0;
-				width: 4px;
-				height: 100%;
-				background: var(--ov-primary-action-color);
-				animation: pulse-border 2s infinite;
-			}
+			background: linear-gradient(135deg,transparent 69%,var(--ov-error-color) 250%)
 		}
 	}
 
@@ -184,13 +170,22 @@
 		border-radius: 50%;
 
 		&.recording-live {
-			background: var(--ov-primary-action-color);
-			box-shadow: 0 0 0 4px rgba(255, 87, 34, 0.2);
+			background: #ffffff;
+			box-shadow: 0 0 0 4px var(--ov-error-color);
 			animation: pulse-dot 2s infinite;
 		}
 
+		&.recording-stopping {
+			background: var(--ov-warn-color);
+			animation: pulse-dot 2s infinite;
+		}
+
+		&.recording-failed {
+			background: var(--ov-error-color);
+		}
+
 		&.recording-ready {
-			background: var(--ov-accent-action-color);
+			background: #4caf50;
 		}
 	}
 
@@ -266,7 +261,6 @@
 	}
 
 	.action-btn {
-
 		mat-icon {
 			font-size: 18px;
 			width: 18px;
@@ -284,19 +278,15 @@
 
 		&.action-view {
 			color: var(--ov-accent-action-color);
-
-			&:hover {
-				background: rgba(0, 102, 204, 0.1);
-				color: var(--ov-accent-action-color);
-			}
+			border-radius: var(--ov-surface-radius);
 		}
 
 		&.action-download {
-			color: #4CAF50;
+			color: #4caf50;
 
 			&:hover {
 				background: rgba(76, 175, 80, 0.1);
-				color: #4CAF50;
+				color: #4caf50;
 			}
 		}
 
@@ -312,7 +302,8 @@
 
 	// Animations
 	@keyframes pulse-dot {
-		0%, 100% {
+		0%,
+		100% {
 			transform: scale(1);
 			opacity: 1;
 		}
@@ -323,7 +314,8 @@
 	}
 
 	@keyframes pulse-border {
-		0%, 100% {
+		0%,
+		100% {
 			opacity: 1;
 		}
 		50% {
