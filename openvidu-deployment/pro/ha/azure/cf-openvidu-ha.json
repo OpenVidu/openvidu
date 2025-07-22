@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.36.1.42791",
-      "templateHash": "7510193040455172414"
+      "templateHash": "5897921029518233739"
     }
   },
   "parameters": {
@@ -2067,7 +2067,7 @@
     {
       "type": "Microsoft.Network/networkSecurityGroups/securityRules",
       "apiVersion": "2023-11-01",
-      "name": "[format('{0}/{1}', format('{0}-masterNodeNSG', parameters('stackName')), 'masterNode_to_masterNode_DEFAULTAPP_INGRESS')]",
+      "name": "[format('{0}/{1}', format('{0}-masterNodeNSG', parameters('stackName')), 'masterNode_to_masterNode_MEET_INGRESS')]",
       "properties": {
         "protocol": "Tcp",
         "sourceApplicationSecurityGroups": [
@@ -2094,7 +2094,7 @@
     {
       "type": "Microsoft.Network/networkSecurityGroups/securityRules",
       "apiVersion": "2023-11-01",
-      "name": "[format('{0}/{1}', format('{0}-masterNodeNSG', parameters('stackName')), 'mediaNode_to_masterNode_DEFAULTAPP_WEBHOOK_INGRESS')]",
+      "name": "[format('{0}/{1}', format('{0}-masterNodeNSG', parameters('stackName')), 'mediaNode_to_masterNode_MEET_WEBHOOK_INGRESS')]",
       "properties": {
         "protocol": "Tcp",
         "sourceApplicationSecurityGroups": [

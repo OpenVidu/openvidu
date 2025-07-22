@@ -2040,7 +2040,7 @@ Resources:
       ToPort: 4443
       SourceSecurityGroupId: !GetAtt OpenViduMediaNodeSG.GroupId
 
-  OpenViduMasterToMasterDefaultAppIngress:
+  OpenViduMasterToMasterMeetIngress:
     Type: AWS::EC2::SecurityGroupIngress
     Properties:
       GroupId: !Ref OpenViduMasterNodeSG
@@ -2049,7 +2049,7 @@ Resources:
       ToPort: 6080
       SourceSecurityGroupId: !Ref OpenViduMasterNodeSG
 
-  OpenViduMediaNodeToMasterDefaultAppWebhookIngress:
+  OpenViduMediaNodeToMasterMeetWebhookIngress:
     Type: AWS::EC2::SecurityGroupIngress
     Properties:
       GroupId: !GetAtt OpenViduMasterNodeSG.GroupId

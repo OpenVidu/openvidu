@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.36.1.42791",
-      "templateHash": "10200229810519152840"
+      "templateHash": "11239986312025417470"
     }
   },
   "parameters": {
@@ -1193,7 +1193,7 @@
     {
       "type": "Microsoft.Network/networkSecurityGroups/securityRules",
       "apiVersion": "2023-11-01",
-      "name": "[format('{0}/{1}', format('{0}-masterNoderNSG', parameters('stackName')), 'mediaNode_to_masterNode_DEFAULTAPP_WEBHOOK_INGRESS')]",
+      "name": "[format('{0}/{1}', format('{0}-masterNoderNSG', parameters('stackName')), 'mediaNode_to_masterNode_MEET_WEBHOOK_INGRESS')]",
       "properties": {
         "protocol": "Tcp",
         "sourceApplicationSecurityGroups": [

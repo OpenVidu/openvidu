@@ -2721,9 +2721,9 @@ resource mediaToMasterV2CompatibilityWebhookIngress 'Microsoft.Network/networkSe
   }
 }
 
-resource masterToMasterDefaultApp 'Microsoft.Network/networkSecurityGroups/securityRules@2023-11-01' = {
+resource masterToMasterMeet 'Microsoft.Network/networkSecurityGroups/securityRules@2023-11-01' = {
   parent: openviduMasterNodeNSG
-  name: 'masterNode_to_masterNode_DEFAULTAPP_INGRESS'
+  name: 'masterNode_to_masterNode_MEET_INGRESS'
   properties: {
     protocol: 'Tcp'
     sourceApplicationSecurityGroups: [
@@ -2744,9 +2744,9 @@ resource masterToMasterDefaultApp 'Microsoft.Network/networkSecurityGroups/secur
   }
 }
 
-resource mediaToMasterDefaultAppWebhookIngress 'Microsoft.Network/networkSecurityGroups/securityRules@2023-11-01' = {
+resource mediaToMasterMeetWebhookIngress 'Microsoft.Network/networkSecurityGroups/securityRules@2023-11-01' = {
   parent: openviduMasterNodeNSG
-  name: 'mediaNode_to_masterNode_DEFAULTAPP_WEBHOOK_INGRESS'
+  name: 'mediaNode_to_masterNode_MEET_WEBHOOK_INGRESS'
   properties: {
     protocol: 'Tcp'
     sourceApplicationSecurityGroups: [
