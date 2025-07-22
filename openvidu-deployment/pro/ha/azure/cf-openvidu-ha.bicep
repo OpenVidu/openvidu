@@ -571,14 +571,13 @@ if [[ $MASTER_NODE_NUM -eq 1 ]] && [[ "$ALL_SECRETS_GENERATED" == "" || "$ALL_SE
   DASHBOARD_ADMIN_PASSWORD="$(/usr/local/bin/store_secret.sh generate DASHBOARD-ADMIN-PASSWORD)"
   GRAFANA_ADMIN_USERNAME="$(/usr/local/bin/store_secret.sh save GRAFANA-ADMIN-USERNAME "grafanaadmin")"
   GRAFANA_ADMIN_PASSWORD="$(/usr/local/bin/store_secret.sh generate GRAFANA-ADMIN-PASSWORD)"
-  DEFAULT_APP_USERNAME="$(/usr/local/bin/store_secret.sh save DEFAULT-APP-USERNAME "calluser")"
-  DEFAULT_APP_PASSWORD="$(/usr/local/bin/store_secret.sh generate DEFAULT-APP-PASSWORD)"
-  DEFAULT_APP_ADMIN_USERNAME="$(/usr/local/bin/store_secret.sh save DEFAULT-APP-ADMIN-USERNAME "calladmin")"
-  DEFAULT_APP_ADMIN_PASSWORD="$(/usr/local/bin/store_secret.sh generate DEFAULT-APP-ADMIN-PASSWORD)"
+  MEET_ADMIN_USER="$(/usr/local/bin/store_secret.sh save MEET-ADMIN-USER "meetadmin")"
+  MEET_ADMIN_SECRET="$(/usr/local/bin/store_secret.sh generate MEET-ADMIN-SECRET)"
+  MEET_API_KEY="$(/usr/local/bin/store_secret.sh generate MEET-API-KEY)"
   LIVEKIT_API_KEY="$(/usr/local/bin/store_secret.sh generate LIVEKIT-API-KEY "API" 12)"
   LIVEKIT_API_SECRET="$(/usr/local/bin/store_secret.sh generate LIVEKIT-API-SECRET)"
   OPENVIDU_VERSION="$(/usr/local/bin/store_secret.sh save OPENVIDU-VERSION "${OPENVIDU_VERSION}")"
-  ENABLED_MODULES="$(/usr/local/bin/store_secret.sh save ENABLED-MODULES "observability,app,v2compatibility")"
+  ENABLED_MODULES="$(/usr/local/bin/store_secret.sh save ENABLED-MODULES "observability,openviduMeet,v2compatibility")"
   ALL_SECRETS_GENERATED="$(/usr/local/bin/store_secret.sh save ALL-SECRETS-GENERATED "true")"
 fi
 
@@ -626,10 +625,9 @@ GRAFANA_ADMIN_USERNAME=$(az keyvault secret show --vault-name ${keyVaultName} --
 GRAFANA_ADMIN_PASSWORD=$(az keyvault secret show --vault-name ${keyVaultName} --name GRAFANA-ADMIN-PASSWORD --query value -o tsv)
 LIVEKIT_API_KEY=$(az keyvault secret show --vault-name ${keyVaultName} --name LIVEKIT-API-KEY --query value -o tsv)
 LIVEKIT_API_SECRET=$(az keyvault secret show --vault-name ${keyVaultName} --name LIVEKIT-API-SECRET --query value -o tsv)
-DEFAULT_APP_USERNAME=$(az keyvault secret show --vault-name ${keyVaultName} --name DEFAULT-APP-USERNAME --query value -o tsv)
-DEFAULT_APP_PASSWORD=$(az keyvault secret show --vault-name ${keyVaultName} --name DEFAULT-APP-PASSWORD --query value -o tsv)
-DEFAULT_APP_ADMIN_USERNAME=$(az keyvault secret show --vault-name ${keyVaultName} --name DEFAULT-APP-ADMIN-USERNAME --query value -o tsv)
-DEFAULT_APP_ADMIN_PASSWORD=$(az keyvault secret show --vault-name ${keyVaultName} --name DEFAULT-APP-ADMIN-PASSWORD --query value -o tsv)
+MEET_ADMIN_USER=$(az keyvault secret show --vault-name ${keyVaultName} --name MEET-ADMIN-USER --query value -o tsv)
+MEET_ADMIN_SECRET=$(az keyvault secret show --vault-name ${keyVaultName} --name MEET-ADMIN-SECRET --query value -o tsv)
+MEET_API_KEY=$(az keyvault secret show --vault-name ${keyVaultName} --name MEET-API-KEY --query value -o tsv)
 ENABLED_MODULES=$(az keyvault secret show --vault-name ${keyVaultName} --name ENABLED-MODULES --query value -o tsv)
 
 
@@ -660,10 +658,9 @@ COMMON_ARGS=(
   "--dashboard-admin-password=$DASHBOARD_ADMIN_PASSWORD"
   "--grafana-admin-user=$GRAFANA_ADMIN_USERNAME"
   "--grafana-admin-password=$GRAFANA_ADMIN_PASSWORD"
-  "--default-app-user=$DEFAULT_APP_USERNAME"
-  "--default-app-password=$DEFAULT_APP_PASSWORD"
-  "--default-app-admin-user=$DEFAULT_APP_ADMIN_USERNAME"
-  "--default-app-admin-password=$DEFAULT_APP_ADMIN_PASSWORD"
+  "--meet-admin-user=$MEET_ADMIN_USER"
+  "--meet-admin-password=$MEET_ADMIN_SECRET"
+  "--meet-api-key=$MEET_API_KEY"
   "--livekit-api-key=$LIVEKIT_API_KEY"
   "--livekit-api-secret=$LIVEKIT_API_SECRET"
 )
@@ -804,10 +801,9 @@ export GRAFANA_ADMIN_USERNAME=$(az keyvault secret show --vault-name ${keyVaultN
 export GRAFANA_ADMIN_PASSWORD=$(az keyvault secret show --vault-name ${keyVaultName} --name GRAFANA-ADMIN-PASSWORD --query value -o tsv)
 export LIVEKIT_API_KEY=$(az keyvault secret show --vault-name ${keyVaultName} --name LIVEKIT-API-KEY --query value -o tsv)
 export LIVEKIT_API_SECRET=$(az keyvault secret show --vault-name ${keyVaultName} --name LIVEKIT-API-SECRET --query value -o tsv)
-export DEFAULT_APP_USERNAME=$(az keyvault secret show --vault-name ${keyVaultName} --name DEFAULT-APP-USERNAME --query value -o tsv)
-export DEFAULT_APP_PASSWORD=$(az keyvault secret show --vault-name ${keyVaultName} --name DEFAULT-APP-PASSWORD --query value -o tsv)
-export DEFAULT_APP_ADMIN_USERNAME=$(az keyvault secret show --vault-name ${keyVaultName} --name DEFAULT-APP-ADMIN-USERNAME --query value -o tsv)
-export DEFAULT_APP_ADMIN_PASSWORD=$(az keyvault secret show --vault-name ${keyVaultName} --name DEFAULT-APP-ADMIN-PASSWORD --query value -o tsv)
+export MEET_ADMIN_USER=$(az keyvault secret show --vault-name ${keyVaultName} --name MEET-ADMIN-USER --query value -o tsv)
+export MEET_ADMIN_SECRET=$(az keyvault secret show --vault-name ${keyVaultName} --name MEET-ADMIN-SECRET --query value -o tsv)
+export MEET_API_KEY=$(az keyvault secret show --vault-name ${keyVaultName} --name MEET-API-KEY --query value -o tsv)
 export ENABLED_MODULES=$(az keyvault secret show --vault-name ${keyVaultName} --name ENABLED-MODULES --query value -o tsv)
 
 # Replace rest of the values
@@ -825,10 +821,9 @@ sed -i "s/GRAFANA_ADMIN_USERNAME=.*/GRAFANA_ADMIN_USERNAME=$GRAFANA_ADMIN_USERNA
 sed -i "s/GRAFANA_ADMIN_PASSWORD=.*/GRAFANA_ADMIN_PASSWORD=$GRAFANA_ADMIN_PASSWORD/" "${CLUSTER_CONFIG_DIR}/openvidu.env"
 sed -i "s/LIVEKIT_API_KEY=.*/LIVEKIT_API_KEY=$LIVEKIT_API_KEY/" "${CLUSTER_CONFIG_DIR}/openvidu.env"
 sed -i "s/LIVEKIT_API_SECRET=.*/LIVEKIT_API_SECRET=$LIVEKIT_API_SECRET/" "${CLUSTER_CONFIG_DIR}/openvidu.env"
-sed -i "s/CALL_USER=.*/CALL_USER=$DEFAULT_APP_USERNAME/" "${CLUSTER_CONFIG_DIR}/master_node/app.env"
-sed -i "s/CALL_SECRET=.*/CALL_SECRET=$DEFAULT_APP_PASSWORD/" "${CLUSTER_CONFIG_DIR}/master_node/app.env"
-sed -i "s/CALL_ADMIN_USER=.*/CALL_ADMIN_USER=$DEFAULT_APP_ADMIN_USERNAME/" "${CLUSTER_CONFIG_DIR}/master_node/app.env"
-sed -i "s/CALL_ADMIN_SECRET=.*/CALL_ADMIN_SECRET=$DEFAULT_APP_ADMIN_PASSWORD/" "${CLUSTER_CONFIG_DIR}/master_node/app.env"
+sed -i "s/MEET_ADMIN_USER=.*/MEET_ADMIN_USER=$MEET_ADMIN_USER/" "${CLUSTER_CONFIG_DIR}/master_node/meet.env"
+sed -i "s/MEET_ADMIN_SECRET=.*/MEET_ADMIN_SECRET=$MEET_ADMIN_SECRET/" "${CLUSTER_CONFIG_DIR}/master_node/meet.env"
+sed -i "s/MEET_API_KEY=.*/MEET_API_KEY=$MEET_API_KEY/" "${CLUSTER_CONFIG_DIR}/master_node/meet.env"
 sed -i "s/ENABLED_MODULES=.*/ENABLED_MODULES=$ENABLED_MODULES/" "${CLUSTER_CONFIG_DIR}/openvidu.env"
 
 # Update URLs in secret
@@ -876,10 +871,9 @@ GRAFANA_ADMIN_USERNAME="$(/usr/local/bin/get_value_from_config.sh GRAFANA_ADMIN_
 GRAFANA_ADMIN_PASSWORD="$(/usr/local/bin/get_value_from_config.sh GRAFANA_ADMIN_PASSWORD "${CLUSTER_CONFIG_DIR}/openvidu.env")"
 LIVEKIT_API_KEY="$(/usr/local/bin/get_value_from_config.sh LIVEKIT_API_KEY "${CLUSTER_CONFIG_DIR}/openvidu.env")"
 LIVEKIT_API_SECRET="$(/usr/local/bin/get_value_from_config.sh LIVEKIT_API_SECRET "${CLUSTER_CONFIG_DIR}/openvidu.env")"
-DEFAULT_APP_USERNAME="$(/usr/local/bin/get_value_from_config.sh CALL_USER "${CLUSTER_CONFIG_DIR}/master_node/app.env")"
-DEFAULT_APP_PASSWORD="$(/usr/local/bin/get_value_from_config.sh CALL_SECRET "${CLUSTER_CONFIG_DIR}/master_node/app.env")"
-DEFAULT_APP_ADMIN_USERNAME="$(/usr/local/bin/get_value_from_config.sh CALL_ADMIN_USER "${CLUSTER_CONFIG_DIR}/master_node/app.env")"
-DEFAULT_APP_ADMIN_PASSWORD="$(/usr/local/bin/get_value_from_config.sh CALL_ADMIN_SECRET "${CLUSTER_CONFIG_DIR}/master_node/app.env")"
+MEET_ADMIN_USER="$(/usr/local/bin/get_value_from_config.sh MEET_ADMIN_USER "${CLUSTER_CONFIG_DIR}/master_node/meet.env")"
+MEET_ADMIN_SECRET="$(/usr/local/bin/get_value_from_config.sh MEET_ADMIN_SECRET "${CLUSTER_CONFIG_DIR}/master_node/meet.env")"
+MEET_API_KEY="$(/usr/local/bin/get_value_from_config.sh MEET_API_KEY "${CLUSTER_CONFIG_DIR}/master_node/meet.env")"
 ENABLED_MODULES="$(/usr/local/bin/get_value_from_config.sh ENABLED_MODULES "${CLUSTER_CONFIG_DIR}/openvidu.env")"
 
 # Update shared secret
@@ -899,10 +893,9 @@ az keyvault secret set --vault-name ${keyVaultName} --name GRAFANA-ADMIN-USERNAM
 az keyvault secret set --vault-name ${keyVaultName} --name GRAFANA-ADMIN-PASSWORD --value $GRAFANA_ADMIN_PASSWORD
 az keyvault secret set --vault-name ${keyVaultName} --name LIVEKIT-API-KEY --value $LIVEKIT_API_KEY
 az keyvault secret set --vault-name ${keyVaultName} --name LIVEKIT-API-SECRET --value $LIVEKIT_API_SECRET
-az keyvault secret set --vault-name ${keyVaultName} --name DEFAULT-APP-USERNAME --value $DEFAULT_APP_USERNAME
-az keyvault secret set --vault-name ${keyVaultName} --name DEFAULT-APP-PASSWORD --value $DEFAULT_APP_PASSWORD
-az keyvault secret set --vault-name ${keyVaultName} --name DEFAULT-APP-ADMIN-USERNAME --value $DEFAULT_APP_ADMIN_USERNAME
-az keyvault secret set --vault-name ${keyVaultName} --name DEFAULT-APP-ADMIN-PASSWORD --value $DEFAULT_APP_ADMIN_PASSWORD
+az keyvault secret set --vault-name ${keyVaultName} --name MEET-ADMIN-USER --value $MEET_ADMIN_USER
+az keyvault secret set --vault-name ${keyVaultName} --name MEET-ADMIN-SECRET --value $MEET_ADMIN_SECRET
+az keyvault secret set --vault-name ${keyVaultName} --name MEET-API-KEY --value $MEET_API_KEY
 az keyvault secret set --vault-name ${keyVaultName} --name ENABLED-MODULES --value $ENABLED_MODULES
 '''
 
