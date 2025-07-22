@@ -17,6 +17,7 @@ import {
 	ToolbarDirective
 } from '../../directives/template/openvidu-components-angular.directive';
 import { ILogger } from '../../models/logger.model';
+import { VideoconferenceState, VideoconferenceStateInfo } from '../../models/videoconference-state.model';
 import { ActionService } from '../../services/action/action.service';
 import { OpenViduComponentsConfigService } from '../../services/config/directive-config.service';
 import { DeviceService } from '../../services/device/device.service';
@@ -52,13 +53,20 @@ import { LangOption } from '../../models/lang.model';
 	styleUrls: ['./videoconference.component.scss'],
 	animations: [
 		trigger('inOutAnimation', [
-			transition(':enter', [style({ opacity: 0 }), animate('300ms ease-out', style({ opacity: 1 }))])
+			transition(':enter', [style({ opacity: 0 }), animate(`${VideoconferenceComponent.ANIMATION_DURATION_MS}ms ease-out`, style({ opacity: 1 }))])
 			// transition(':leave', [style({ opacity: 1 }), animate('50ms ease-in', style({ opacity: 0.9 }))])
 		])
 	],
 	standalone: false
 })
 export class VideoconferenceComponent implements OnDestroy, AfterViewInit {
+
+	// Constants
+	private static readonly PARTICIPANT_NAME_TIMEOUT_MS = 1000;
+	private static readonly ANIMATION_DURATION_MS = 300;
+	private static readonly MATERIAL_ICONS_URL = 'https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined&icon_names=background_replace,keep_off';
+	private static readonly MATERIAL_ICONS_SELECTOR = 'link[href*="Material+Symbols+Outlined"]';
+	private static readonly SPINNER_DIAMETER = 50;
 	// *** Toolbar ***
 	/**
 	 * @internal
@@ -379,40 +387,54 @@ export class VideoconferenceComponent implements OnDestroy, AfterViewInit {
 
 	/**
 	 * @internal
+	 * Centralized state management for the videoconference component
 	 */
-	error: boolean = false;
-	/**
-	 * @internal
-	 */
-	errorMessage: string = '';
-	/**
-	 * @internal
-	 */
-	showPrejoin: boolean = true;
-
-	/**
-	 * @internal
-	 * Tracks if user has initiated the join process to prevent prejoin from showing again
-	 */
-	private hasUserInitiatedJoin: boolean = false;
-
-	/**
-	 * @internal
-	 */
-	isRoomReady: boolean = false;
-
-	/**
-	 * @internal
-	 */
-	loading = true;
-	/**
-	 * @internal
-	 */
-	_tokenError: any;
+	componentState: VideoconferenceStateInfo = {
+		state: VideoconferenceState.INITIALIZING,
+		showPrejoin: true,
+		isRoomReady: false,
+		isConnected: false,
+		hasAudioDevices: false,
+		hasVideoDevices: false,
+		hasUserInitiatedJoin: false,
+		wasPrejoinShown: false,
+		isLoading: true,
+		error: {
+			hasError: false,
+			message: '',
+			tokenError: null
+		}
+	};
 
 	private destroy$ = new Subject<void>();
 	private log: ILogger;
 	private latestParticipantName: string | undefined;
+
+	// Expose constants to template
+	get spinnerDiameter(): number {
+		return VideoconferenceComponent.SPINNER_DIAMETER;
+	}
+
+	/**
+	 * @internal
+	 * Updates the component state
+	 */
+	private updateComponentState(newState: Partial<VideoconferenceStateInfo>): void {
+		this.componentState = { ...this.componentState, ...newState };
+		this.log.d(`State updated to: ${this.componentState.state}`, this.componentState);
+	}
+
+	/**
+	 * @internal
+	 * Checks if user has initiated the join process
+	 */
+	private hasUserInitiatedJoin(): boolean {
+		return (
+			this.componentState.state === VideoconferenceState.JOINING ||
+			this.componentState.state === VideoconferenceState.READY_TO_CONNECT ||
+			this.componentState.state === VideoconferenceState.CONNECTED
+		);
+	}
 
 	/**
 	 * @internal
@@ -426,6 +448,17 @@ export class VideoconferenceComponent implements OnDestroy, AfterViewInit {
 		private libService: OpenViduComponentsConfigService
 	) {
 		this.log = this.loggerSrv.get('VideoconferenceComponent');
+
+		// Initialize state
+		this.updateComponentState({
+			state: VideoconferenceState.INITIALIZING,
+			showPrejoin: true,
+			isRoomReady: false,
+			wasPrejoinShown: false,
+			isLoading: true,
+			error: { hasError: false }
+		});
+
 		this.subscribeToVideconferenceDirectives();
 	}
 
@@ -441,7 +474,11 @@ export class VideoconferenceComponent implements OnDestroy, AfterViewInit {
 	ngAfterViewInit() {
 		this.addMaterialIconsIfNeeded();
 		this.setupTemplates();
-		this.deviceSrv.initializeDevices().then(() => (this.loading = false));
+		this.deviceSrv.initializeDevices().then(() => {
+			this.updateComponentState({
+				isLoading: false
+			});
+		});
 	}
 
 	/**
@@ -449,10 +486,10 @@ export class VideoconferenceComponent implements OnDestroy, AfterViewInit {
 	 */
 	private addMaterialIconsIfNeeded(): void {
 		//Add material icons to the page if not already present
-		const existingLink = document.querySelector('link[href*="Material+Symbols+Outlined"]');
+		const existingLink = document.querySelector(VideoconferenceComponent.MATERIAL_ICONS_SELECTOR);
 		if (!existingLink) {
 			const link = document.createElement('link');
-			link.href = 'https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined&icon_names=background_replace,keep_off';
+			link.href = VideoconferenceComponent.MATERIAL_ICONS_URL;
 			link.rel = 'stylesheet';
 			document.head.appendChild(link);
 		}
@@ -630,17 +667,23 @@ export class VideoconferenceComponent implements OnDestroy, AfterViewInit {
 
 		try {
 			// Mark that user has initiated the join process
-			this.hasUserInitiatedJoin = true;
+			this.updateComponentState({
+				state: VideoconferenceState.JOINING,
+				wasPrejoinShown: this.componentState.showPrejoin
+			});
 
 			// Always initialize the room when ready to join
 			this.openviduService.initRoom();
 
 			const participantName = this.latestParticipantName;
 
-			if (this.isRoomReady) {
+			if (this.componentState.isRoomReady) {
 				// Room is ready, hide prejoin and proceed
 				this.log.d('Room is ready, proceeding to join');
-				this.showPrejoin = false;
+				this.updateComponentState({
+					state: VideoconferenceState.READY_TO_CONNECT,
+					showPrejoin: false
+				});
 			} else {
 				// Room not ready, request token if we have a participant name
 				if (participantName) {
@@ -651,26 +694,34 @@ export class VideoconferenceComponent implements OnDestroy, AfterViewInit {
 				}
 			}
 
-			const wasPrejoinShown = this.showPrejoin;
-
 			// Emit onReadyToJoin event only if prejoin page was actually shown
 			// This ensures the event semantics are correct
-			if (wasPrejoinShown) {
+			if (this.componentState.wasPrejoinShown) {
 				this.log.d('Emitting onReadyToJoin event (prejoin was shown)');
 				this.onReadyToJoin.emit();
 			}
 		} catch (error) {
 			this.log.e('Error during ready to join process', error);
-			// Could emit an error event or handle gracefully based on requirements
+			this.updateComponentState({
+				state: VideoconferenceState.ERROR,
+				error: {
+					hasError: true,
+					message: 'Error during ready to join process'
+				}
+			});
 		}
 	}
 	/**
 	 * @internal
 	 */
 	_onParticipantLeft(event: ParticipantLeftEvent) {
-		this.isRoomReady = false;
-		// Reset join initiation flag to allow prejoin to show again if needed
-		this.hasUserInitiatedJoin = false;
+		// Reset to disconnected state to allow prejoin to show again if needed
+		this.updateComponentState({
+			state: VideoconferenceState.DISCONNECTED,
+			isRoomReady: false,
+			showPrejoin: this.libService.showPrejoin()
+		});
+
 		this.onParticipantLeft.emit(event);
 	}
 
@@ -685,20 +736,34 @@ export class VideoconferenceComponent implements OnDestroy, AfterViewInit {
 				const livekitUrl = this.libService.getLivekitUrl();
 				this.openviduService.initializeAndSetToken(token, livekitUrl);
 				this.log.d('Token has been successfully set. Room is ready to join');
-				this.isRoomReady = true;
 
 				// Only update showPrejoin if user hasn't initiated join process yet
 				// This prevents prejoin from showing again after user clicked join
-				if (!this.hasUserInitiatedJoin) {
-					this.showPrejoin = this.libService.showPrejoin();
+				if (!this.hasUserInitiatedJoin()) {
+					this.updateComponentState({
+						state: VideoconferenceState.PREJOIN_SHOWN,
+						isRoomReady: true,
+						showPrejoin: this.libService.showPrejoin()
+					});
 				} else {
 					// User has initiated join, proceed to hide prejoin and continue
 					this.log.d('User has initiated join, hiding prejoin and proceeding');
-					this.showPrejoin = false;
+					this.updateComponentState({
+						state: VideoconferenceState.READY_TO_CONNECT,
+						isRoomReady: true,
+						showPrejoin: false
+					});
 				}
 			} catch (error) {
 				this.log.e('Error trying to set token', error);
-				this._tokenError = error;
+				this.updateComponentState({
+					state: VideoconferenceState.ERROR,
+					error: {
+						hasError: true,
+						message: 'Error setting token',
+						tokenError: error
+					}
+				});
 			}
 		});
 
@@ -706,16 +771,26 @@ export class VideoconferenceComponent implements OnDestroy, AfterViewInit {
 			if (!error) return;
 
 			this.log.e('Token error received', error);
-			this._tokenError = error;
+			this.updateComponentState({
+				state: VideoconferenceState.ERROR,
+				error: {
+					hasError: true,
+					message: 'Token error',
+					tokenError: error
+				}
+			});
 
-			if (!this.showPrejoin) {
+			if (!this.componentState.showPrejoin) {
 				this.actionService.openDialog(error.name, error.message, false);
 			}
 		});
 
 		this.libService.prejoin$.pipe(takeUntil(this.destroy$)).subscribe((value: boolean) => {
-			this.showPrejoin = value;
-			if (!this.showPrejoin) {
+			this.updateComponentState({
+				showPrejoin: value
+			});
+
+			if (!value) {
 				// Emit token ready if the prejoin page won't be shown
 
 				// Ensure we have a participant name before proceeding with the join
@@ -747,10 +822,9 @@ export class VideoconferenceComponent implements OnDestroy, AfterViewInit {
 							}
 							this._onReadyToJoin();
 						}
-					}, 1000);
+					}, VideoconferenceComponent.PARTICIPANT_NAME_TIMEOUT_MS);
 				}
 			}
-			// this.cd.markForCheck();
 		});
 
 		this.libService.participantName$.pipe(takeUntil(this.destroy$)).subscribe((name: string) => {

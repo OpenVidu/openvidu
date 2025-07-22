@@ -1,16 +1,16 @@
 <div id="call-container">
-	<div id="spinner" *ngIf="loading">
-		<mat-spinner [diameter]="50"></mat-spinner>
+	<div id="spinner" *ngIf="componentState.isLoading">
+		<mat-spinner [diameter]="spinnerDiameter"></mat-spinner>
 		<span>{{ 'PREJOIN.PREPARING' | translate }}</span>
 	</div>
 
-	<div [@inOutAnimation] id="pre-join-container" *ngIf="showPrejoin && !loading">
+	<div [@inOutAnimation] id="pre-join-container" *ngIf="componentState.showPrejoin && !componentState.isLoading">
 		<ng-container *ngIf="openviduAngularPreJoinTemplate; else defaultPreJoin">
 			<ng-container *ngTemplateOutlet="openviduAngularPreJoinTemplate"></ng-container>
 		</ng-container>
 		<ng-template #defaultPreJoin>
 			<ov-pre-join
-				[error]="_tokenError"
+				[error]="componentState.error?.tokenError"
 				(onReadyToJoin)="_onReadyToJoin()"
 				(onVideoDeviceChanged)="onVideoDeviceChanged.emit($event)"
 				(onVideoEnabledChanged)="onVideoEnabledChanged.emit($event)"
@@ -21,12 +21,12 @@
 		</ng-template>
 	</div>
 
-	<div id="spinner" *ngIf="!loading && error">
+	<div id="spinner" *ngIf="!componentState.isLoading && componentState.error?.hasError">
 		<mat-icon class="error-icon">error</mat-icon>
-		<span>{{ errorMessage }}</span>
+		<span>{{ componentState.error?.message }}</span>
 	</div>
 
-	<div [@inOutAnimation] id="vc-container" *ngIf="isRoomReady && !showPrejoin && !loading && !error">
+	<div [@inOutAnimation] id="vc-container" *ngIf="componentState.isRoomReady && !componentState.showPrejoin && !componentState.isLoading && !componentState.error?.hasError">
 		<ov-session
 			(onRoomCreated)="onRoomCreated.emit($event)"
 			(onRoomReconnecting)="onRoomDisconnected.emit()"
