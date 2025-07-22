@@ -214,7 +214,7 @@ export class OpenViduComponentsConfigService {
 		this.prejoinDisplayParticipantName.next(prejoinDisplayParticipantName);
 	}
 
-	isPrejoin(): boolean {
+	showPrejoin(): boolean {
 		return this.prejoin.getValue();
 	}
 

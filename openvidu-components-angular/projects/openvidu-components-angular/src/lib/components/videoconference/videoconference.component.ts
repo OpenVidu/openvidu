@@ -616,13 +616,44 @@ export class VideoconferenceComponent implements OnDestroy, AfterViewInit {
 
 	/**
 	 * @internal
+	 * Handles the ready-to-join event, initializing the room and managing the prejoin flow.
+	 * This method coordinates the transition from prejoin state to actual room joining.
 	 */
-	_onReadyToJoin() {
-		this.openviduService.initRoom();
-		const participantName = this.latestParticipantName;
-		if (participantName) this.onTokenRequested.emit(participantName);
-		// Emits onReadyToJoin event only if prejoin page has been shown
-		if (this.showPrejoin) this.onReadyToJoin.emit();
+	_onReadyToJoin(): void {
+		this.log.d('Ready to join - initializing room and handling prejoin flow');
+
+		try {
+			// Always initialize the room when ready to join
+			this.openviduService.initRoom();
+
+			const participantName = this.latestParticipantName;
+			const wasShowingPrejoin = this.showPrejoin;
+
+			if (this.isRoomReady) {
+				// Room is ready, hide prejoin and proceed
+				this.log.d('Room is ready, proceeding to join');
+				this.showPrejoin = false;
+			} else {
+				// Room not ready, request token if we have a participant name
+				if (participantName) {
+					this.log.d(`Requesting token for participant: ${participantName}`);
+					this.onTokenRequested.emit(participantName);
+				} else {
+					this.log.w('No participant name available when requesting token');
+				}
+			}
+
+			// Emit onReadyToJoin event only if prejoin page was actually shown
+			// This ensures the event semantics are correct
+			if (wasShowingPrejoin) {
+				this.log.d('Emitting onReadyToJoin event (prejoin was shown)');
+				this.onReadyToJoin.emit();
+			}
+
+		} catch (error) {
+			this.log.e('Error during ready to join process', error);
+			// Could emit an error event or handle gracefully based on requirements
+		}
 	}
 	/**
 	 * @internal
@@ -644,7 +675,7 @@ export class VideoconferenceComponent implements OnDestroy, AfterViewInit {
 				this.openviduService.initializeAndSetToken(token, livekitUrl);
 				this.log.d('Token has been successfully set. Room is ready to join');
 				this.isRoomReady = true;
-				this.showPrejoin = false;
+				this.showPrejoin = this.libService.showPrejoin();
 			} catch (error) {
 				this.log.e('Error trying to set token', error);
 				this._tokenError = error;

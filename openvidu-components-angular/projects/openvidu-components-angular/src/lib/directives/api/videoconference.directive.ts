@@ -590,7 +590,7 @@ export class PrejoinDirective implements OnDestroy {
 	 * @ignore
 	 */
 	update(value: boolean) {
-		if (this.libService.isPrejoin() !== value) {
+		if (this.libService.showPrejoin() !== value) {
 			this.libService.setPrejoin(value);
 		}
 	}

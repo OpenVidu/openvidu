@@ -123,7 +123,7 @@ export class PreJoinComponent implements OnInit, OnDestroy {
 		this.cdkSrv.setSelector('#prejoin-container');
 	}
 
-	joinSession() {
+	join() {
 		if (this.showParticipantName && !this.participantName) {
 			this._error = this.translateService.translate('PREJOIN.NICKNAME_REQUIRED');
 			return;
@@ -143,7 +143,7 @@ export class PreJoinComponent implements OnInit, OnDestroy {
 	}
 
 	onEnterPressed() {
-		this.joinSession();
+		this.join();
 	}
 
 	private subscribeToPrejoinDirectives() {
