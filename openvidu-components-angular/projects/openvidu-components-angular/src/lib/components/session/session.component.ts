@@ -48,6 +48,7 @@ import {
 } from 'livekit-client';
 import { ParticipantLeftEvent, ParticipantLeftReason, ParticipantModel } from '../../models/participant.model';
 import { RecordingStatus } from '../../models/recording.model';
+import { TemplateManagerService, SessionTemplateConfiguration } from '../../services/template/template-manager.service';
 
 /**
  * @internal
@@ -103,6 +104,12 @@ export class SessionComponent implements OnInit, OnDestroy {
 	drawer: MatDrawerContainer;
 	loading: boolean = true;
 
+	/**
+	 * @internal
+	 * Template configuration managed by the service
+	 */
+	templateConfig: SessionTemplateConfiguration = {};
+
 	private shouldDisconnectRoomWhenComponentIsDestroyed: boolean = true;
 	private readonly SIDENAV_WIDTH_LIMIT_MODE = 790;
 	private destroy$ = new Subject<void>();
@@ -123,9 +130,11 @@ export class SessionComponent implements OnInit, OnDestroy {
 		private translateService: TranslateService,
 		// private captionService: CaptionService,
 		private backgroundService: VirtualBackgroundService,
-		private cd: ChangeDetectorRef
+		private cd: ChangeDetectorRef,
+		private templateManagerService: TemplateManagerService
 	) {
 		this.log = this.loggerSrv.get('SessionComponent');
+		this.setupTemplates();
 	}
 
 	@HostListener('window:beforeunload')
@@ -249,6 +258,18 @@ export class SessionComponent implements OnInit, OnDestroy {
 		this.room.on(RoomEvent.ActiveSpeakersChanged, (speakers: Participant[]) => {
 			this.participantService.setSpeaking(speakers);
 		});
+	}
+
+	/**
+	 * @internal
+	 * Sets up all templates using the template manager service
+	 */
+	private setupTemplates(): void {
+		this.templateConfig = this.templateManagerService.setupSessionTemplates(
+			this.toolbarTemplate,
+			this.panelTemplate,
+			this.layoutTemplate
+		);
 	}
 
 	async ngOnDestroy() {

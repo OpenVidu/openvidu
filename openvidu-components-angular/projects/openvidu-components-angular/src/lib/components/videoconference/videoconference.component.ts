@@ -1,5 +1,5 @@
 import { animate, style, transition, trigger } from '@angular/animations';
-import { AfterViewInit, Component, ContentChild, EventEmitter, OnDestroy, Output, TemplateRef, ViewChild } from '@angular/core';
+import { AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, ContentChild, EventEmitter, OnDestroy, Output, TemplateRef, ViewChild } from '@angular/core';
 import { Subject, filter, skip, take, takeUntil } from 'rxjs';
 import {
 	ActivitiesPanelDirective,
@@ -24,6 +24,7 @@ import { DeviceService } from '../../services/device/device.service';
 import { LoggerService } from '../../services/logger/logger.service';
 import { OpenViduService } from '../../services/openvidu/openvidu.service';
 import { StorageService } from '../../services/storage/storage.service';
+import { TemplateManagerService, TemplateConfiguration, ExternalDirectives, DefaultTemplates } from '../../services/template/template-manager.service';
 import { Room } from 'livekit-client';
 import { ParticipantLeftEvent, ParticipantModel } from '../../models/participant.model';
 import { CustomDevice } from '../../models/device.model';
@@ -217,6 +218,12 @@ export class VideoconferenceComponent implements OnDestroy, AfterViewInit {
 	 * @internal
 	 */
 	openviduAngularPreJoinTemplate: TemplateRef<any>;
+
+	/**
+	 * @internal
+	 * Template configuration managed by TemplateManagerService
+	 */
+	private templateConfig: TemplateConfiguration;
 
 	/**
 	 * Provides event notifications that fire when the local participant is ready to join to the room.
@@ -445,7 +452,8 @@ export class VideoconferenceComponent implements OnDestroy, AfterViewInit {
 		private deviceSrv: DeviceService,
 		private openviduService: OpenViduService,
 		private actionService: ActionService,
-		private libService: OpenViduComponentsConfigService
+		private libService: OpenViduComponentsConfigService,
+		private templateManagerService: TemplateManagerService
 	) {
 		this.log = this.loggerSrv.get('VideoconferenceComponent');
 
@@ -499,161 +507,69 @@ export class VideoconferenceComponent implements OnDestroy, AfterViewInit {
 	 * @internal
 	 */
 	private setupTemplates(): void {
-		this.setupToolbarTemplate();
-		this.setupPanelTemplate();
-		this.setupLayoutTemplate();
-		this.setupPreJoinTemplate();
+		const externalDirectives: ExternalDirectives = {
+			toolbar: this.externalToolbar,
+			toolbarAdditionalButtons: this.externalToolbarAdditionalButtons,
+			toolbarAdditionalPanelButtons: this.externalToolbarAdditionalPanelButtons,
+			additionalPanels: this.externalAdditionalPanels,
+			panel: this.externalPanel,
+			chatPanel: this.externalChatPanel,
+			activitiesPanel: this.externalActivitiesPanel,
+			participantsPanel: this.externalParticipantsPanel,
+			participantPanelItem: this.externalParticipantPanelItem,
+			participantPanelItemElements: this.externalParticipantPanelItemElements,
+			layout: this.externalLayout,
+			stream: this.externalStream,
+			preJoin: this.externalPreJoin
+		};
+
+		const defaultTemplates: DefaultTemplates = {
+			toolbar: this.defaultToolbarTemplate,
+			panel: this.defaultPanelTemplate,
+			chatPanel: this.defaultChatPanelTemplate,
+			participantsPanel: this.defaultParticipantsPanelTemplate,
+			activitiesPanel: this.defaultActivitiesPanelTemplate,
+			participantPanelItem: this.defaultParticipantPanelItemTemplate,
+			layout: this.defaultLayoutTemplate,
+			stream: this.defaultStreamTemplate
+		};
+
+		// Use the template manager service to set up all templates
+		this.templateConfig = this.templateManagerService.setupTemplates(externalDirectives, defaultTemplates);
+
+		// Apply the configuration to the component properties
+		this.applyTemplateConfiguration();
 	}
 
 	/**
 	 * @internal
+	 * Applies the template configuration to component properties
 	 */
-	private setupToolbarTemplate(): void {
-		if (this.externalToolbar) {
-			this.log.d('Setting EXTERNAL TOOLBAR');
-			this.openviduAngularToolbarTemplate = this.externalToolbar.template;
-		} else {
-			this.log.d('Setting DEFAULT TOOLBAR');
-			this.setupToolbarAdditionalButtons();
-			this.openviduAngularToolbarTemplate = this.defaultToolbarTemplate;
-		}
-	}
+	private applyTemplateConfiguration(): void {
+		this.openviduAngularToolbarTemplate = this.templateConfig.toolbarTemplate;
+		this.openviduAngularPanelTemplate = this.templateConfig.panelTemplate;
+		this.openviduAngularChatPanelTemplate = this.templateConfig.chatPanelTemplate;
+		this.openviduAngularParticipantsPanelTemplate = this.templateConfig.participantsPanelTemplate;
+		this.openviduAngularActivitiesPanelTemplate = this.templateConfig.activitiesPanelTemplate;
+		this.openviduAngularParticipantPanelItemTemplate = this.templateConfig.participantPanelItemTemplate;
+		this.openviduAngularLayoutTemplate = this.templateConfig.layoutTemplate;
+		this.openviduAngularStreamTemplate = this.templateConfig.streamTemplate;
 
-	/**
-	 * @internal
-	 */
-	private setupToolbarAdditionalButtons(): void {
-		if (this.externalToolbarAdditionalButtons) {
-			this.log.d('Setting EXTERNAL TOOLBAR ADDITIONAL BUTTONS');
-			this.openviduAngularToolbarAdditionalButtonsTemplate = this.externalToolbarAdditionalButtons.template;
+		// Optional templates
+		if (this.templateConfig.toolbarAdditionalButtonsTemplate) {
+			this.openviduAngularToolbarAdditionalButtonsTemplate = this.templateConfig.toolbarAdditionalButtonsTemplate;
 		}
-		if (this.externalToolbarAdditionalPanelButtons) {
-			this.log.d('Setting EXTERNAL TOOLBAR ADDITIONAL PANEL BUTTONS');
-			this.openviduAngularToolbarAdditionalPanelButtonsTemplate = this.externalToolbarAdditionalPanelButtons.template;
+		if (this.templateConfig.toolbarAdditionalPanelButtonsTemplate) {
+			this.openviduAngularToolbarAdditionalPanelButtonsTemplate = this.templateConfig.toolbarAdditionalPanelButtonsTemplate;
 		}
-	}
-
-	/**
-	 * @internal
-	 */
-	private setupPanelTemplate(): void {
-		if (this.externalPanel) {
-			this.log.d('Setting EXTERNAL PANEL');
-			this.openviduAngularPanelTemplate = this.externalPanel.template;
-		} else {
-			this.log.d('Setting DEFAULT PANEL');
-			this.setupParticipantsPanel();
-			this.setupChatPanel();
-			this.setupActivitiesPanel();
-			this.setupAdditionalPanels();
-			this.openviduAngularPanelTemplate = this.defaultPanelTemplate;
+		if (this.templateConfig.additionalPanelsTemplate) {
+			this.openviduAngularAdditionalPanelsTemplate = this.templateConfig.additionalPanelsTemplate;
 		}
-	}
-
-	/**
-	 * @internal
-	 */
-	private setupParticipantsPanel(): void {
-		if (this.externalParticipantsPanel) {
-			this.openviduAngularParticipantsPanelTemplate = this.externalParticipantsPanel.template;
-			this.log.d('Setting EXTERNAL PARTICIPANTS PANEL');
-		} else {
-			this.log.d('Setting DEFAULT PARTICIPANTS PANEL');
-			this.setupParticipantPanelItem();
-			this.openviduAngularParticipantsPanelTemplate = this.defaultParticipantsPanelTemplate;
+		if (this.templateConfig.participantPanelItemElementsTemplate) {
+			this.openviduAngularParticipantPanelItemElementsTemplate = this.templateConfig.participantPanelItemElementsTemplate;
 		}
-	}
-
-	/**
-	 * @internal
-	 */
-	private setupParticipantPanelItem(): void {
-		if (this.externalParticipantPanelItem) {
-			this.log.d('Setting EXTERNAL P ITEM');
-			this.openviduAngularParticipantPanelItemTemplate = this.externalParticipantPanelItem.template;
-		} else {
-			if (this.externalParticipantPanelItemElements) {
-				this.log.d('Setting EXTERNAL PARTICIPANT PANEL ITEM ELEMENT');
-				this.openviduAngularParticipantPanelItemElementsTemplate = this.externalParticipantPanelItemElements.template;
-			}
-			this.openviduAngularParticipantPanelItemTemplate = this.defaultParticipantPanelItemTemplate;
-			this.log.d('Setting DEFAULT P ITEM');
-		}
-	}
-
-	/**
-	 * @internal
-	 */
-	private setupChatPanel(): void {
-		if (this.externalChatPanel) {
-			this.log.d('Setting EXTERNAL CHAT PANEL');
-			this.openviduAngularChatPanelTemplate = this.externalChatPanel.template;
-		} else {
-			this.log.d('Setting DEFAULT CHAT PANEL');
-			this.openviduAngularChatPanelTemplate = this.defaultChatPanelTemplate;
-		}
-	}
-
-	/**
-	 * @internal
-	 */
-	private setupActivitiesPanel(): void {
-		if (this.externalActivitiesPanel) {
-			this.log.d('Setting EXTERNAL ACTIVITIES PANEL');
-			this.openviduAngularActivitiesPanelTemplate = this.externalActivitiesPanel.template;
-		} else {
-			this.log.d('Setting DEFAULT ACTIVITIES PANEL');
-			this.openviduAngularActivitiesPanelTemplate = this.defaultActivitiesPanelTemplate;
-		}
-	}
-
-	/**
-	 * @internal
-	 */
-	private setupAdditionalPanels(): void {
-		if (this.externalAdditionalPanels) {
-			this.log.d('Setting EXTERNAL ADDITIONAL PANELS');
-			this.openviduAngularAdditionalPanelsTemplate = this.externalAdditionalPanels.template;
-		}
-	}
-
-	/**
-	 * @internal
-	 */
-	private setupLayoutTemplate(): void {
-		if (this.externalLayout) {
-			this.log.d('Setting EXTERNAL LAYOUT');
-			this.openviduAngularLayoutTemplate = this.externalLayout.template;
-		} else {
-			this.log.d('Setting DEFAULT LAYOUT');
-			this.setupStreamTemplate();
-			this.openviduAngularLayoutTemplate = this.defaultLayoutTemplate;
-		}
-	}
-
-	/**
-	 * @internal
-	 */
-	private setupStreamTemplate(): void {
-		if (this.externalStream) {
-			this.log.d('Setting EXTERNAL STREAM');
-			this.openviduAngularStreamTemplate = this.externalStream.template;
-		} else {
-			this.log.d('Setting DEFAULT STREAM');
-			this.openviduAngularStreamTemplate = this.defaultStreamTemplate;
-		}
-	}
-
-	/**
-	 * @internal
-	 */
-	private setupPreJoinTemplate(): void {
-		if (this.externalPreJoin) {
-			this.log.d('Setting EXTERNAL PREJOIN');
-			this.openviduAngularPreJoinTemplate = this.externalPreJoin.template;
-		} else {
-			this.log.d('Setting DEFAULT PREJOIN');
-			// Keep the default behavior - no template is set
+		if (this.templateConfig.preJoinTemplate) {
+			this.openviduAngularPreJoinTemplate = this.templateConfig.preJoinTemplate;
 		}
 	}
 

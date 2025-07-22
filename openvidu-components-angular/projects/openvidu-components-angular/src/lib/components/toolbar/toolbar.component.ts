@@ -44,6 +44,7 @@ import { ParticipantService } from '../../services/participant/participant.servi
 import { PlatformService } from '../../services/platform/platform.service';
 import { RecordingService } from '../../services/recording/recording.service';
 import { StorageService } from '../../services/storage/storage.service';
+import { TemplateManagerService, ToolbarTemplateConfiguration } from '../../services/template/template-manager.service';
 import { TranslateService } from '../../services/translate/translate.service';
 import { CdkOverlayService } from '../../services/cdk-overlay/cdk-overlay.service';
 import { ParticipantLeftEvent, ParticipantLeftReason, ParticipantModel } from '../../models/participant.model';
@@ -77,10 +78,9 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 	 */
 	@ContentChild(ToolbarAdditionalButtonsDirective)
 	set externalAdditionalButtons(externalAdditionalButtons: ToolbarAdditionalButtonsDirective) {
-		// This directive will has value only when ADDITIONAL BUTTONS component (tagged with '*ovToolbarAdditionalButtons' directive)
-		// is inside of the TOOLBAR component tagged with '*ovToolbar' directive
+		this._externalAdditionalButtons = externalAdditionalButtons;
 		if (externalAdditionalButtons) {
-			this.toolbarAdditionalButtonsTemplate = externalAdditionalButtons.template;
+			this.updateTemplatesAndMarkForCheck();
 		}
 	}
 
@@ -89,10 +89,9 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 	 */
 	@ContentChild(ToolbarAdditionalPanelButtonsDirective)
 	set externalAdditionalPanelButtons(externalAdditionalPanelButtons: ToolbarAdditionalPanelButtonsDirective) {
-		// This directive will has value only when ADDITIONAL PANEL BUTTONS component tagged with '*ovToolbarAdditionalPanelButtons' directive
-		// is inside of the TOOLBAR component tagged with '*ovToolbar' directive
+		this._externalAdditionalPanelButtons = externalAdditionalPanelButtons;
 		if (externalAdditionalPanelButtons) {
-			this.toolbarAdditionalPanelButtonsTemplate = externalAdditionalPanelButtons.template;
+			this.updateTemplatesAndMarkForCheck();
 		}
 	}
 
@@ -355,6 +354,16 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 	 */
 	recordingTime: Date;
 
+	/**
+	 * @internal
+	 * Template configuration managed by the service
+	 */
+	templateConfig: ToolbarTemplateConfiguration = {};
+
+	// Store directive references for template setup
+	private _externalAdditionalButtons?: ToolbarAdditionalButtonsDirective;
+	private _externalAdditionalPanelButtons?: ToolbarAdditionalPanelButtonsDirective;
+
 	private log: ILogger;
 	private destroy$ = new Subject<void>();
 	private currentWindowHeight = window.innerHeight;
@@ -379,7 +388,8 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 		private broadcastingService: BroadcastingService,
 		private translateService: TranslateService,
 		private storageSrv: StorageService,
-		private cdkOverlayService: CdkOverlayService
+		private cdkOverlayService: CdkOverlayService,
+		private templateManagerService: TemplateManagerService
 	) {
 		this.log = this.loggerSrv.get('ToolbarComponent');
 	}
@@ -413,6 +423,7 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 		this.hasVideoDevices = this.oVDevicesService.hasVideoDeviceAvailable();
 		this.hasAudioDevices = this.oVDevicesService.hasAudioDeviceAvailable();
 
+		this.setupTemplates();
 		this.subscribeToToolbarDirectives();
 		this.subscribeToUserMediaProperties();
 
@@ -434,6 +445,42 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 		this.destroy$.complete();
 		this.isFullscreenActive = false;
 		this.cdkOverlayService.setSelector('body');
+	}
+
+	/**
+	 * @internal
+	 * Sets up all templates using the template manager service
+	 */
+	private setupTemplates(): void {
+		this.templateConfig = this.templateManagerService.setupToolbarTemplates(
+			this._externalAdditionalButtons,
+			this._externalAdditionalPanelButtons
+		);
+
+		// Apply templates to component properties for backward compatibility
+		this.applyTemplateConfiguration();
+	}
+
+	/**
+	 * @internal
+	 * Applies the template configuration to component properties
+	 */
+	private applyTemplateConfiguration(): void {
+		if (this.templateConfig.toolbarAdditionalButtonsTemplate) {
+			this.toolbarAdditionalButtonsTemplate = this.templateConfig.toolbarAdditionalButtonsTemplate;
+		}
+		if (this.templateConfig.toolbarAdditionalPanelButtonsTemplate) {
+			this.toolbarAdditionalPanelButtonsTemplate = this.templateConfig.toolbarAdditionalPanelButtonsTemplate;
+		}
+	}
+
+	/**
+	 * @internal
+	 * Updates templates and triggers change detection
+	 */
+	private updateTemplatesAndMarkForCheck(): void {
+		this.setupTemplates();
+		this.cd.markForCheck();
 	}
 
 	/**

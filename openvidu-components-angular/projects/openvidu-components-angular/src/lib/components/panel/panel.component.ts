@@ -25,6 +25,7 @@ import {
 } from '../../models/panel.model';
 import { PanelService } from '../../services/panel/panel.service';
 import { BackgroundEffect } from '../../models/background-effect.model';
+import { TemplateManagerService, PanelTemplateConfiguration } from '../../services/template/template-manager.service';
 
 /**
  *
@@ -75,42 +76,20 @@ export class PanelComponent implements OnInit {
 	 */
 	@ContentChild(ParticipantsPanelDirective)
 	set externalParticipantPanel(externalParticipantsPanel: ParticipantsPanelDirective) {
-		// This directive will has value only when PARTICIPANTS PANEL component tagged with '*ovParticipantsPanel'
-		// is inside of the PANEL component tagged with '*ovPanel'
+		this._externalParticipantPanel = externalParticipantsPanel;
 		if (externalParticipantsPanel) {
-			this.participantsPanelTemplate = externalParticipantsPanel.template;
+			this.updateTemplatesAndMarkForCheck();
 		}
 	}
-
-	// TODO: backgroundEffectsPanel does not provides customization
-	// @ContentChild(BackgroundEffectsPanelDirective)
-	// set externalBackgroundEffectsPanel(externalBackgroundEffectsPanel: BackgroundEffectsPanelDirective) {
-	// This directive will has value only when BACKGROUND EFFECTS PANEL component tagged with '*ovBackgroundEffectsPanel'
-	// is inside of the PANEL component tagged with '*ovPanel'
-	// if (externalBackgroundEffectsPanel) {
-	// 	this.backgroundEffectsPanelTemplate = externalBackgroundEffectsPanel.template;
-	// }
-	// }
-
-	// TODO: settingsPanel does not provides customization
-	// @ContentChild(SettingsPanelDirective)
-	// set externalSettingsPanel(externalSettingsPanel: SettingsPanelDirective) {
-	// This directive will has value only when SETTINGS PANEL component tagged with '*ovSettingsPanel'
-	// is inside of the PANEL component tagged with '*ovPanel'
-	// if (externalSettingsPanel) {
-	// 	this.settingsPanelTemplate = externalSettingsPanel.template;
-	// }
-	// }
 
 	/**
 	 * @ignore
 	 */
 	@ContentChild(ActivitiesPanelDirective)
 	set externalActivitiesPanel(externalActivitiesPanel: ActivitiesPanelDirective) {
-		// This directive will has value only when ACTIVITIES PANEL component tagged with '*ovActivitiesPanel'
-		// is inside of the PANEL component tagged with '*ovPanel'
+		this._externalActivitiesPanel = externalActivitiesPanel;
 		if (externalActivitiesPanel) {
-			this.activitiesPanelTemplate = externalActivitiesPanel.template;
+			this.updateTemplatesAndMarkForCheck();
 		}
 	}
 
@@ -119,10 +98,9 @@ export class PanelComponent implements OnInit {
 	 */
 	@ContentChild(ChatPanelDirective)
 	set externalChatPanel(externalChatPanel: ChatPanelDirective) {
-		// This directive will has value only when CHAT PANEL component tagged with '*ovChatPanel'
-		// is inside of the PANEL component tagged with '*ovPanel'
+		this._externalChatPanel = externalChatPanel;
 		if (externalChatPanel) {
-			this.chatPanelTemplate = externalChatPanel.template;
+			this.updateTemplatesAndMarkForCheck();
 		}
 	}
 
@@ -131,10 +109,9 @@ export class PanelComponent implements OnInit {
 	 */
 	@ContentChild(AdditionalPanelsDirective)
 	set externalAdditionalPanels(externalAdditionalPanels: AdditionalPanelsDirective) {
-		// This directive will has value only when ADDITIONAL PANELS component tagged with '*ovPanelAdditionalPanels'
-		// is inside of the PANEL component tagged with '*ovPanel'
+		this._externalAdditionalPanels = externalAdditionalPanels;
 		if (externalAdditionalPanels) {
-			this.additionalPanelsTemplate = externalAdditionalPanels.template;
+			this.updateTemplatesAndMarkForCheck();
 		}
 	}
 
@@ -195,6 +172,19 @@ export class PanelComponent implements OnInit {
 	 * @internal
 	 */
 	isExternalPanelOpened: boolean;
+
+	/**
+	 * @internal
+	 * Template configuration managed by the service
+	 */
+	templateConfig: PanelTemplateConfiguration = {};
+
+	// Store directive references for template setup
+	private _externalParticipantPanel?: ParticipantsPanelDirective;
+	private _externalChatPanel?: ChatPanelDirective;
+	private _externalActivitiesPanel?: ActivitiesPanelDirective;
+	private _externalAdditionalPanels?: AdditionalPanelsDirective;
+
 	private destroy$ = new Subject<void>();
 
 	private panelEmitersHandler: Map<
@@ -207,19 +197,66 @@ export class PanelComponent implements OnInit {
 	 */
 	constructor(
 		private panelService: PanelService,
-		private cd: ChangeDetectorRef
+		private cd: ChangeDetectorRef,
+		private templateManagerService: TemplateManagerService
 	) {}
 
 	/**
 	 * @ignore
 	 */
 	ngOnInit(): void {
+		this.setupTemplates();
 		this.subscribeToPanelToggling();
 		this.panelEmitersHandler.set(PanelType.CHAT, this.onChatPanelStatusChanged);
 		this.panelEmitersHandler.set(PanelType.PARTICIPANTS, this.onParticipantsPanelStatusChanged);
 		this.panelEmitersHandler.set(PanelType.SETTINGS, this.onSettingsPanelStatusChanged);
 		this.panelEmitersHandler.set(PanelType.ACTIVITIES, this.onActivitiesPanelStatusChanged);
 	}
+
+	/**
+	 * @internal
+	 * Sets up all templates using the template manager service
+	 */
+	private setupTemplates(): void {
+		this.templateConfig = this.templateManagerService.setupPanelTemplates(
+			this._externalParticipantPanel,
+			this._externalChatPanel,
+			this._externalActivitiesPanel,
+			this._externalAdditionalPanels
+		);
+
+		// Apply templates to component properties for backward compatibility
+		this.applyTemplateConfiguration();
+	}
+
+	/**
+	 * @internal
+	 * Applies the template configuration to component properties
+	 */
+	private applyTemplateConfiguration(): void {
+		if (this.templateConfig.participantsPanelTemplate) {
+			this.participantsPanelTemplate = this.templateConfig.participantsPanelTemplate;
+		}
+		if (this.templateConfig.chatPanelTemplate) {
+			this.chatPanelTemplate = this.templateConfig.chatPanelTemplate;
+		}
+		if (this.templateConfig.activitiesPanelTemplate) {
+			this.activitiesPanelTemplate = this.templateConfig.activitiesPanelTemplate;
+		}
+		if (this.templateConfig.additionalPanelsTemplate) {
+			this.additionalPanelsTemplate = this.templateConfig.additionalPanelsTemplate;
+		}
+	}
+
+	/**
+	 * @internal
+	 * Updates templates and triggers change detection
+	 */
+	private updateTemplatesAndMarkForCheck(): void {
+		this.setupTemplates();
+		this.cd.markForCheck();
+	}
+
 	/**
 	 * @ignore
 	 */
