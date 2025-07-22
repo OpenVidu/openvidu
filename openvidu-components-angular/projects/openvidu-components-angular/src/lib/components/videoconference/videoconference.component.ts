@@ -392,6 +392,12 @@ export class VideoconferenceComponent implements OnDestroy, AfterViewInit {
 
 	/**
 	 * @internal
+	 * Tracks if user has initiated the join process to prevent prejoin from showing again
+	 */
+	private hasUserInitiatedJoin: boolean = false;
+
+	/**
+	 * @internal
 	 */
 	isRoomReady: boolean = false;
 
@@ -623,11 +629,13 @@ export class VideoconferenceComponent implements OnDestroy, AfterViewInit {
 		this.log.d('Ready to join - initializing room and handling prejoin flow');
 
 		try {
+			// Mark that user has initiated the join process
+			this.hasUserInitiatedJoin = true;
+
 			// Always initialize the room when ready to join
 			this.openviduService.initRoom();
 
 			const participantName = this.latestParticipantName;
-			const wasShowingPrejoin = this.showPrejoin;
 
 			if (this.isRoomReady) {
 				// Room is ready, hide prejoin and proceed
@@ -643,13 +651,14 @@ export class VideoconferenceComponent implements OnDestroy, AfterViewInit {
 				}
 			}
 
+			const wasPrejoinShown = this.showPrejoin;
+
 			// Emit onReadyToJoin event only if prejoin page was actually shown
 			// This ensures the event semantics are correct
-			if (wasShowingPrejoin) {
+			if (wasPrejoinShown) {
 				this.log.d('Emitting onReadyToJoin event (prejoin was shown)');
 				this.onReadyToJoin.emit();
 			}
-
 		} catch (error) {
 			this.log.e('Error during ready to join process', error);
 			// Could emit an error event or handle gracefully based on requirements
@@ -660,6 +669,8 @@ export class VideoconferenceComponent implements OnDestroy, AfterViewInit {
 	 */
 	_onParticipantLeft(event: ParticipantLeftEvent) {
 		this.isRoomReady = false;
+		// Reset join initiation flag to allow prejoin to show again if needed
+		this.hasUserInitiatedJoin = false;
 		this.onParticipantLeft.emit(event);
 	}
 
@@ -675,7 +686,16 @@ export class VideoconferenceComponent implements OnDestroy, AfterViewInit {
 				this.openviduService.initializeAndSetToken(token, livekitUrl);
 				this.log.d('Token has been successfully set. Room is ready to join');
 				this.isRoomReady = true;
-				this.showPrejoin = this.libService.showPrejoin();
+
+				// Only update showPrejoin if user hasn't initiated join process yet
+				// This prevents prejoin from showing again after user clicked join
+				if (!this.hasUserInitiatedJoin) {
+					this.showPrejoin = this.libService.showPrejoin();
+				} else {
+					// User has initiated join, proceed to hide prejoin and continue
+					this.log.d('User has initiated join, hiding prejoin and proceeding');
+					this.showPrejoin = false;
+				}
 			} catch (error) {
 				this.log.e('Error trying to set token', error);
 				this._tokenError = error;
