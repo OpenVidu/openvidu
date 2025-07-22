@@ -2886,7 +2886,7 @@ resource loadBalancerToMediaRtmpIngress 'Microsoft.Network/networkSecurityGroups
     ]
     destinationPortRange: '1945'
     access: 'Allow'
-    priority: 150
+    priority: 160
     direction: 'Inbound'
   }
 }
@@ -2905,7 +2905,7 @@ resource loadBalancerToMediaHealthcheckIngress 'Microsoft.Network/networkSecurit
     ]
     destinationPortRange: '9092'
     access: 'Allow'
-    priority: 160
+    priority: 170
     direction: 'Inbound'
   }
 }
@@ -2924,7 +2924,7 @@ resource loadBalancerToMediaTurnTlsIngress 'Microsoft.Network/networkSecurityGro
     ]
     destinationPortRange: '5349'
     access: 'Allow'
-    priority: 170
+    priority: 180
     direction: 'Inbound'
   }
 }
@@ -2943,7 +2943,7 @@ resource loadBalancerToMediaTurnTlsHealthCheckIngress 'Microsoft.Network/network
     ]
     destinationPortRange: '7880'
     access: 'Allow'
-    priority: 180
+    priority: 190
     direction: 'Inbound'
   }
 }
@@ -2966,7 +2966,7 @@ resource masterToMediaServerIngress 'Microsoft.Network/networkSecurityGroups/sec
     ]
     destinationPortRange: '7880'
     access: 'Allow'
-    priority: 190
+    priority: 200
     direction: 'Inbound'
   }
 }
@@ -2989,7 +2989,7 @@ resource masterToMediaClientIngress 'Microsoft.Network/networkSecurityGroups/sec
     ]
     destinationPortRange: '8080'
     access: 'Allow'
-    priority: 200
+    priority: 210
     direction: 'Inbound'
   }
 }

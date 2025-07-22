@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.36.1.42791",
-      "templateHash": "5237566819187308269"
+      "templateHash": "6903609709428763780"
     }
   },
   "parameters": {
@@ -2234,7 +2234,7 @@
         ],
         "destinationPortRange": "1945",
         "access": "Allow",
-        "priority": 150,
+        "priority": 160,
         "direction": "Inbound"
       },
       "dependsOn": [
@@ -2257,7 +2257,7 @@
         ],
         "destinationPortRange": "9092",
         "access": "Allow",
-        "priority": 160,
+        "priority": 170,
         "direction": "Inbound"
       },
       "dependsOn": [
@@ -2281,7 +2281,7 @@
         ],
         "destinationPortRange": "5349",
         "access": "Allow",
-        "priority": 170,
+        "priority": 180,
         "direction": "Inbound"
       },
       "dependsOn": [
@@ -2305,7 +2305,7 @@
         ],
         "destinationPortRange": "7880",
         "access": "Allow",
-        "priority": 180,
+        "priority": 190,
         "direction": "Inbound"
       },
       "dependsOn": [
@@ -2332,7 +2332,7 @@
         ],
         "destinationPortRange": "7880",
         "access": "Allow",
-        "priority": 190,
+        "priority": 200,
         "direction": "Inbound"
       },
       "dependsOn": [
@@ -2360,7 +2360,7 @@
         ],
         "destinationPortRange": "8080",
         "access": "Allow",
-        "priority": 200,
+        "priority": 210,
         "direction": "Inbound"
       },
       "dependsOn": [
