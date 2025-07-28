@@ -134,6 +134,11 @@ export class RecordingActivityComponent implements OnInit, OnDestroy {
 	 */
 	viewButtonText: string = 'PANEL.RECORDING.VIEW';
 
+
+	/**
+	 * @internal
+	 */
+	showStartStopRecordingButton: boolean = true;
 	/**
 	 * @internal
 	 */
@@ -348,6 +353,11 @@ export class RecordingActivityComponent implements OnInit, OnDestroy {
 			.pipe(takeUntil(this.destroy$))
 			.subscribe((controls: { play?: boolean; download?: boolean; delete?: boolean; externalView?: boolean }) => {
 				this.showControls = controls;
+				this.cd.markForCheck();
+			});
+
+			this.libService.recordingActivityStartStopRecordingButton$.pipe(takeUntil(this.destroy$)).subscribe((show: boolean) => {
+				this.showStartStopRecordingButton = show;
 				this.cd.markForCheck();
 			});
 	}

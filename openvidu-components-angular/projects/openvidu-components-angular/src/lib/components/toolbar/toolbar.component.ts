@@ -836,10 +836,10 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 			this.showSessionName = value;
 			this.cd.markForCheck();
 		});
-		this.libService.captionsButton$.pipe(takeUntil(this.destroy$)).subscribe((value: boolean) => {
-			this.showCaptionsButton = value;
-			this.cd.markForCheck();
-		});
+		// this.libService.captionsButton$.pipe(takeUntil(this.destroy$)).subscribe((value: boolean) => {
+		// 	this.showCaptionsButton = value;
+		// 	this.cd.markForCheck();
+		// });
 
 		this.libService.toolbarAdditionalButtonsPosition$
 			.pipe(takeUntil(this.destroy$))

@@ -113,6 +113,8 @@ export class OpenViduComponentsConfigService {
 	);
 	recordingActivityShowControls$: Observable<{ play?: boolean; download?: boolean; delete?: boolean; externalView?: boolean }>;
 
+	private recordingActivityStartStopRecordingButton = <BehaviorSubject<boolean>>new BehaviorSubject(true);
+	recordingActivityStartStopRecordingButton$: Observable<boolean>;
 	// Admin
 	private adminRecordingsList: BehaviorSubject<RecordingInfo[]> = new BehaviorSubject(<RecordingInfo[]>[]);
 	adminRecordingsList$: Observable<RecordingInfo[]>;
@@ -167,6 +169,7 @@ export class OpenViduComponentsConfigService {
 		this.recordingActivity$ = this.recordingActivity.asObservable();
 		this.recordingActivityReadOnly$ = this.recordingActivityReadOnly.asObservable();
 		this.recordingActivityShowControls$ = this.recordingActivityShowControls.asObservable();
+		this.recordingActivityStartStopRecordingButton$ = this.recordingActivityStartStopRecordingButton.asObservable();
 		// Broadcasting activity
 		this.broadcastingActivity$ = this.broadcastingActivity.asObservable();
 		// Admin dashboard
@@ -503,12 +506,15 @@ export class OpenViduComponentsConfigService {
 		return this.recordingActivityReadOnly.getValue();
 	}
 
-
 	setRecordingActivityShowControls(controls: { play?: boolean; download?: boolean; delete?: boolean }) {
 		this.recordingActivityShowControls.next(controls);
 	}
 
 	getRecordingActivityShowControls(): { play?: boolean; download?: boolean; delete?: boolean } {
 		return this.recordingActivityShowControls.getValue();
+	}
+
+	setRecordingActivityStartStopRecordingButton(show: boolean) {
+		this.recordingActivityStartStopRecordingButton.next(show);
 	}
 }

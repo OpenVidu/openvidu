@@ -339,3 +339,48 @@ export class ToolbarViewRecordingsButtonDirective implements AfterViewInit, OnDe
 		}
 	}
 }
+
+/**
+ * @internal
+ *
+ * The **recordingActivityStartStopRecordingButton** directive allows to show or hide the start/stop recording buttons in recording activity.
+ *
+ * Default: `true`
+ *
+ * It is only available for {@link VideoconferenceComponent}.
+ *
+ * @example
+ * <ov-videoconference [recordingActivityStartStopRecordingButton]="false"></ov-videoconference>
+ */
+@Directive({
+	selector: 'ov-videoconference[recordingActivityStartStopRecordingButton]',
+	standalone: false
+})
+export class StartStopRecordingButtonsDirective implements OnDestroy {
+	/**
+	 * @ignore
+	 */
+	@Input() set recordingActivityStartStopRecordingButton(value: boolean) {
+		this.update(value);
+	}
+
+	/**
+	 * @ignore
+	 */
+	constructor(
+		public elementRef: ElementRef,
+		private libService: OpenViduComponentsConfigService
+	) {}
+
+	ngOnDestroy(): void {
+		this.clear();
+	}
+
+	private clear() {
+		this.update(true);
+	}
+
+	private update(value: boolean) {
+		this.libService.setRecordingActivityStartStopRecordingButton(value);
+	}
+}

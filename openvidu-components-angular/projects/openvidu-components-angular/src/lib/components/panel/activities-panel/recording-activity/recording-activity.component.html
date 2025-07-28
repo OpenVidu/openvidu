@@ -87,14 +87,14 @@
 				@if (!isReadOnlyMode) {
 					<div class="item recording-action-buttons">
 						<!-- Stop recording button -->
-						@if (recordingAlive) {
+						@if (recordingAlive && showStartStopRecordingButton) {
 							<button mat-flat-button id="stop-recording-btn" (click)="stopRecording()">
 								<span>{{ 'TOOLBAR.STOP_RECORDING' | translate }}</span>
 							</button>
 						}
 
 						<!-- Start recording button -->
-						@if (recordingStatus === recStatusEnum.STOPPED) {
+						@if (recordingStatus === recStatusEnum.STOPPED && showStartStopRecordingButton) {
 							<div
 								[matTooltip]="!hasRoomTracksPublished ? ('PANEL.RECORDING.NO_TRACKS_PUBLISHED' | translate) : ''"
 								[matTooltipDisabled]="hasRoomTracksPublished"
