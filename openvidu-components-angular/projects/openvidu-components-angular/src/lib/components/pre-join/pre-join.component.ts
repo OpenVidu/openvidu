@@ -9,7 +9,7 @@ import {
 	OnInit,
 	Output
 } from '@angular/core';
-import { Subject, takeUntil } from 'rxjs';
+import { filter, Subject, takeUntil, tap } from 'rxjs';
 import { ILogger } from '../../models/logger.model';
 import { CdkOverlayService } from '../../services/cdk-overlay/cdk-overlay.service';
 import { OpenViduComponentsConfigService } from '../../services/config/directive-config.service';
@@ -138,12 +138,13 @@ export class PreJoinComponent implements OnInit, OnDestroy {
 
 			// Wait for the next tick to ensure the participant name propagates
 			// through the observable before emitting onReadyToJoin
-			const sub = this.libService.participantName$.pipe(takeUntil(this.destroy$)).subscribe((name) => {
-				if (name === this.participantName) {
-					this.onReadyToJoin.emit();
-					sub.unsubscribe();
-				}
-			});
+			this.libService.participantName$
+				.pipe(
+					takeUntil(this.destroy$),
+					filter((name) => name === this.participantName),
+					tap(() => this.onReadyToJoin.emit())
+				)
+				.subscribe();
 		} else {
 			// No participant name to set, emit immediately
 			this.onReadyToJoin.emit();
