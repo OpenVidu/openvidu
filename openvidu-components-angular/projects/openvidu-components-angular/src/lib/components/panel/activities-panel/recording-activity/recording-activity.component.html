@@ -152,7 +152,7 @@
 						}
 
 						<!-- View all recordings button -->
-						@if (showViewRecordingsButton) {
+						@if (showViewRecordingsButton && recordingStatus !== recStatusEnum.FAILED) {
 							<div class="item recording-action-buttons">
 								<button
 									mat-flat-button
