@@ -63,7 +63,7 @@ jobs:
       # - name: Run Browserless Chrome
       #   run: docker run -d -p 3000:3000 --network host browserless/chrome:1.57-chrome-stable
       - name: Run Chrome
-        run: docker run --network=host -d -p 4444:4444 selenium/standalone-chrome:127.0
+        run: docker run --network=host -d -p 4444:4444 selenium/standalone-chrome:138.0
       - name: Run openvidu-local-deployment
         uses: OpenVidu/actions/start-openvidu-local-deployment@main
       - name: Start OpenVidu Call backend
@@ -100,7 +100,7 @@ jobs:
       # - name: Run Browserless Chrome
       #   run: docker run -d -p 3000:3000 --network host browserless/chrome:1.57-chrome-stable
       - name: Run Chrome
-        run: docker run --network=host -d -p 4444:4444 selenium/standalone-chrome:127.0
+        run: docker run --network=host -d -p 4444:4444 selenium/standalone-chrome:138.0
       - name: Run openvidu-local-deployment
         uses: OpenVidu/actions/start-openvidu-local-deployment@main
       - name: Start OpenVidu Call backend
@@ -133,7 +133,7 @@ jobs:
       # - name: Run Browserless Chrome
       #   run: docker run -d -p 3000:3000 --network host browserless/chrome:1.57-chrome-stable
       - name: Run Chrome
-        run: docker run --network=host -d -p 4444:4444 selenium/standalone-chrome:127.0
+        run: docker run --network=host -d -p 4444:4444 selenium/standalone-chrome:138.0
       - name: Run openvidu-local-deployment
         uses: OpenVidu/actions/start-openvidu-local-deployment@main
       - name: Start OpenVidu Call backend
@@ -166,7 +166,7 @@ jobs:
       # - name: Run Browserless Chrome
       #   run: docker run -d -p 3000:3000 --network host browserless/chrome:1.57-chrome-stable
       - name: Run Chrome
-        run: docker run --network=host -d -p 4444:4444 selenium/standalone-chrome:127.0
+        run: docker run --network=host -d -p 4444:4444 selenium/standalone-chrome:138.0
       - name: Run openvidu-local-deployment
         uses: OpenVidu/actions/start-openvidu-local-deployment@main
       - name: Start OpenVidu Call backend
@@ -177,6 +177,38 @@ jobs:
         env:
           LAUNCH_MODE: CI
         run: npm run e2e:lib-directives --prefix openvidu-components-angular
+      - name: Cleanup
+        if: always()
+        uses: OpenVidu/actions/cleanup@main
+  e2e_internal_directives:
+    needs: test_setup
+    name: Internal Directives Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.commit_sha || github.sha }}
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install wait-on package
+        run: npm install -g wait-on
+      # - name: Run Browserless Chrome
+      #   run: docker run -d -p 3000:3000 --network host browserless/chrome:1.57-chrome-stable
+      - name: Run Chrome
+        run: docker run --network=host -d -p 4444:4444 selenium/standalone-chrome:138.0
+      - name: Run openvidu-local-deployment
+        uses: OpenVidu/actions/start-openvidu-local-deployment@main
+      - name: Start OpenVidu Call backend
+        uses: OpenVidu/actions/start-openvidu-call@main
+      - name: Build and Serve openvidu-components-angular Testapp
+        uses: OpenVidu/actions/start-openvidu-components-testapp@main
+      - name: Run Tests
+        env:
+          LAUNCH_MODE: CI
+        run: npm run e2e:lib-internal-directives --prefix openvidu-components-angular
       - name: Cleanup
         if: always()
         uses: OpenVidu/actions/cleanup@main
@@ -199,7 +231,7 @@ jobs:
       # - name: Run Browserless Chrome
       #   run: docker run -d -p 3000:3000 --network host browserless/chrome:1.57-chrome-stable
       - name: Run Chrome
-        run: docker run --network=host -d -p 4444:4444 selenium/standalone-chrome:127.0
+        run: docker run --network=host -d -p 4444:4444 selenium/standalone-chrome:138.0
       - name: Run openvidu-local-deployment
         uses: OpenVidu/actions/start-openvidu-local-deployment@main
       - name: Start OpenVidu Call backend
@@ -232,7 +264,7 @@ jobs:
       # - name: Run Browserless Chrome
       #   run: docker run -d -p 3000:3000 --network host browserless/chrome:1.57-chrome-stable
       - name: Run Chrome
-        run: docker run --network=host -d -p 4444:4444 selenium/standalone-chrome:127.0
+        run: docker run --network=host -d -p 4444:4444 selenium/standalone-chrome:138.0
       - name: Run openvidu-local-deployment
         uses: OpenVidu/actions/start-openvidu-local-deployment@main
       - name: Start OpenVidu Call backend
@@ -265,7 +297,7 @@ jobs:
       # - name: Run Browserless Chrome
       #   run: docker run -d -p 3000:3000 --network host browserless/chrome:1.57-chrome-stable
       - name: Run Chrome
-        run: docker run --network=host -d -p 4444:4444 selenium/standalone-chrome:127.0
+        run: docker run --network=host -d -p 4444:4444 selenium/standalone-chrome:138.0
       - name: Run openvidu-local-deployment
         uses: OpenVidu/actions/start-openvidu-local-deployment@main
       - name: Start OpenVidu Call backend
@@ -298,7 +330,7 @@ jobs:
       # - name: Run Browserless Chrome
       #   run: docker run -d -p 3000:3000 --network host browserless/chrome:1.57-chrome-stable
       - name: Run Chrome
-        run: docker run --network=host -d -p 4444:4444 selenium/standalone-chrome:127.0
+        run: docker run --network=host -d -p 4444:4444 selenium/standalone-chrome:138.0
       - name: Run openvidu-local-deployment
         uses: OpenVidu/actions/start-openvidu-local-deployment@main
       - name: Start OpenVidu Call backend
@@ -331,7 +363,7 @@ jobs:
       # - name: Run Browserless Chrome
       #   run: docker run -d -p 3000:3000 --network host browserless/chrome:1.57-chrome-stable
       - name: Run Chrome
-        run: docker run --network=host -d -p 4444:4444 selenium/standalone-chrome:127.0
+        run: docker run --network=host -d -p 4444:4444 selenium/standalone-chrome:138.0
       - name: Run openvidu-local-deployment
         uses: OpenVidu/actions/start-openvidu-local-deployment@main
       - name: Start OpenVidu Call backend
@@ -364,7 +396,7 @@ jobs:
       # - name: Run Browserless Chrome
       #   run: docker run -d -p 3000:3000 --network host browserless/chrome:1.57-chrome-stable
       - name: Run Chrome
-        run: docker run --network=host -d -v $(pwd)/openvidu-components-angular/e2e/assets:/e2e-assets selenium/standalone-chrome:127.0
+        run: docker run --network=host -d -v $(pwd)/openvidu-components-angular/e2e/assets:/e2e-assets selenium/standalone-chrome:138.0
       - name: Run openvidu-local-deployment
         uses: OpenVidu/actions/start-openvidu-local-deployment@main
       - name: Start OpenVidu Call backend
@@ -397,7 +429,7 @@ jobs:
       # - name: Run Browserless Chrome
       #   run: docker run -d -p 3000:3000 --network host browserless/chrome:1.57-chrome-stable
       - name: Run Chrome
-        run: docker run --network=host -d -p 4444:4444 selenium/standalone-chrome:127.0
+        run: docker run --network=host -d -p 4444:4444 selenium/standalone-chrome:138.0
       - name: Run openvidu-local-deployment
         uses: OpenVidu/actions/start-openvidu-local-deployment@main
       - name: Start OpenVidu Call backend
