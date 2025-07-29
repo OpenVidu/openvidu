@@ -566,7 +566,30 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 	/**
 	 * @ignore
 	 */
+	openRecordingActivityPanel() {
+		if (this.showActivitiesPanelButton && !this.isActivitiesOpened) {
+			this.panelService.togglePanel(PanelType.ACTIVITIES, 'recording');
+		}
+	}
+
+	/**
+	 * @ignore
+	 */
+	openBroadcastingActivityPanel() {
+		if (this.showActivitiesPanelButton && !this.isActivitiesOpened) {
+			this.panelService.togglePanel(PanelType.ACTIVITIES, 'broadcasting');
+		}
+	}
+
+	/**
+	 * @ignore
+	 */
 	toggleRecording() {
+		if (this.recordingStatus === RecordingStatus.FAILED) {
+			this.openRecordingActivityPanel();
+			return;
+		}
+
 		const payload: RecordingStartRequestedEvent = {
 			roomName: this.openviduService.getRoomName()
 		};
@@ -576,9 +599,7 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 			this.onRecordingStopRequested.emit(payload);
 		} else if (this.recordingStatus === RecordingStatus.STOPPED) {
 			this.onRecordingStartRequested.emit(payload);
-			if (this.showActivitiesPanelButton && !this.isActivitiesOpened) {
-				this.toggleActivitiesPanel('recording');
-			}
+			this.openRecordingActivityPanel();
 		}
 	}
 
@@ -595,9 +616,7 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 			this.onBroadcastingStopRequested.emit(payload);
 			this.broadcastingService.setBroadcastingStopped();
 		} else if (this.broadcastingStatus === BroadcastingStatus.STOPPED) {
-			if (this.showActivitiesPanelButton && !this.isActivitiesOpened) {
-				this.toggleActivitiesPanel('broadcasting');
-			}
+			this.openBroadcastingActivityPanel();
 		}
 	}
 
@@ -650,7 +669,11 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 		this.documentService.toggleFullscreen('session-container');
 	}
 
-	private toggleActivitiesPanel(expandPanel: string) {
+	/**
+	 * @internal
+	 * @param expandPanel
+	 */
+	toggleActivitiesPanel(expandPanel: string) {
 		this.panelService.togglePanel(PanelType.ACTIVITIES, expandPanel);
 	}
 

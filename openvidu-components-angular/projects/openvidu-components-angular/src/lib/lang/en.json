@@ -136,7 +136,8 @@
 			"NO_MODERATOR": "Only the MODERATOR can start the recording",
 			"NO_TRACKS_PUBLISHED": "Share audio or video to start recording.",
 			"NO_RECORDINGS_AVAILABLE": "No recordings available at this time",
-			"BROWSE_RECORDINGS": "Browse saved recordings"
+			"BROWSE_RECORDINGS": "Browse saved recordings",
+			"ERROR_STARTING": "Error starting recording"
 		},
 		"STREAMING": {
 			"TITLE": "Streaming",

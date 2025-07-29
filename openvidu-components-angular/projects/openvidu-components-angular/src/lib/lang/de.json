@@ -126,7 +126,8 @@
 			"DOWNLOAD": "Download",
 			"RECORDINGS": "AUFZEICHNUNGEN",
 			"NO_MODERATOR": "Nur der MODERATOR kann die Aufzeichnung starten",
-			"NO_TRACKS_PUBLISHED": "Teile Audio oder Video, um mit der Aufnahme zu beginnen."
+			"NO_TRACKS_PUBLISHED": "Teile Audio oder Video, um mit der Aufnahme zu beginnen.",
+			"ERROR_STARTING": "Fehler beim Starten der Aufnahme"
 		},
 		"STREAMING": {
 			"TITLE": "Streaming",

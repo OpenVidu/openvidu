@@ -132,7 +132,8 @@
 			"RECORDINGS": "OPNAME",
 			"NO_MODERATOR": "Alleen de MOEDERATOR kan de opname starten",
 			"NO_TRACKS_PUBLISHED": "Deel audio of video om met opnemen te beginnen.",
-			"NO_RECORDINGS_AVAILABLE": "Momenteel zijn er geen opnames beschikbaar"
+			"NO_RECORDINGS_AVAILABLE": "Momenteel zijn er geen opnames beschikbaar",
+			"ERROR_STARTING": "Fout bij starten opname"
 		},
 		"STREAMING": {
 			"TITLE": "Streaming",

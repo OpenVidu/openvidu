@@ -132,7 +132,8 @@
 			"RECORDINGS": "GRABACIONES",
 			"NO_MODERATOR": "Sólo el MODERADOR puede iniciar la grabación",
 			"NO_TRACKS_PUBLISHED": "Comparte audio o video para poder empezar a grabar.",
-			"NO_RECORDINGS_AVAILABLE": "No hay grabaciones disponibles en este momento"
+			"NO_RECORDINGS_AVAILABLE": "No hay grabaciones disponibles en este momento",
+			"ERROR_STARTING": "Error iniciando la grabación"
 		},
 		"STREAMING": {
 			"TITLE": "Streaming",

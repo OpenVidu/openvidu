@@ -132,7 +132,8 @@
 			"RECORDINGS": "録画",
 			"NO_MODERATOR": "録画を開始できるのは、モデレーターのみです",
 			"NO_TRACKS_PUBLISHED": "録音を開始するには、音声または動画を共有してください。",
-			"NO_RECORDINGS_AVAILABLE": "現在利用可能な録画はありません"
+			"NO_RECORDINGS_AVAILABLE": "現在利用可能な録画はありません",
+			"ERROR_STARTING": "録画開始エラー"
 		},
 		"STREAMING": {
 			"TITLE": "ストリーミング",

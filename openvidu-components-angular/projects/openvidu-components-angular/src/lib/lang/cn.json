@@ -132,7 +132,8 @@
 			"RECORDINGS": "录制",
 			"NO_MODERATOR": "只有主持人可以开始录音",
 			"NO_TRACKS_PUBLISHED": "请分享音频或视频以开始录制。",
-			"NO_RECORDINGS_AVAILABLE": "目前没有可用的录音"
+			"NO_RECORDINGS_AVAILABLE": "目前没有可用的录音",
+			"ERROR_STARTING": "开始录音时出错"
 		},
 		"STREAMING": {
 			"TITLE": "直播",

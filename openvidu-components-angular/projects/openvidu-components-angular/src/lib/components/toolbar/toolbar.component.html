@@ -11,15 +11,21 @@
 					id="activities-tag"
 					*ngIf="recordingStatus === _recordingStatus.STARTED || broadcastingStatus === _broadcastingStatus.STARTED"
 				>
-					<div *ngIf="recordingStatus === _recordingStatus.STARTED" id="recording-tag" class="recording-tag">
-						<mat-icon class="blink">radio_button_checked</mat-icon>
-						<span class="blink">REC</span>
-						<span *ngIf="recordingTime"> | {{ recordingTime | date: 'H:mm:ss' }}</span>
-					</div>
-					<div *ngIf="broadcastingStatus === _broadcastingStatus.STARTED" id="broadcasting-tag" class="broadcasting-tag">
-						<mat-icon class="blink">sensors</mat-icon>
-						<span class="blink">LIVE</span>
-					</div>
+					@if (recordingStatus === _recordingStatus.STARTED) {
+						<div id="recording-tag" class="recording-tag" (click)="openRecordingActivityPanel()">
+							<mat-icon class="blink">radio_button_checked</mat-icon>
+							<span class="blink">REC</span>
+							<span *ngIf="recordingTime"> | {{ recordingTime | date: 'H:mm:ss' }}</span>
+						</div>
+					}
+
+					@if (broadcastingStatus === _broadcastingStatus.STARTED) {
+						<!-- Broadcasting tag -->
+						<div id="broadcasting-tag" class="broadcasting-tag">
+							<mat-icon class="blink">sensors</mat-icon>
+							<span class="blink">LIVE</span>
+						</div>
+					}
 				</div>
 			</div>
 		</div>
@@ -129,12 +135,17 @@
 				(click)="toggleRecording()"
 			>
 				<mat-icon color="warn">radio_button_checked</mat-icon>
-				<span *ngIf="recordingStatus === _recordingStatus.STOPPED || recordingStatus === _recordingStatus.STOPPING">
-					{{ 'TOOLBAR.START_RECORDING' | translate }}
-				</span>
-				<span *ngIf="recordingStatus === _recordingStatus.STARTED || recordingStatus === _recordingStatus.STARTING">
-					{{ 'TOOLBAR.STOP_RECORDING' | translate }}
-				</span>
+				@if (
+					recordingStatus === _recordingStatus.STOPPED ||
+					recordingStatus === _recordingStatus.STOPPING ||
+					recordingStatus === _recordingStatus.FAILED
+				) {
+					<span class="blink">
+						{{ 'TOOLBAR.START_RECORDING' | translate }}
+					</span>
+				} @else if (recordingStatus === _recordingStatus.STARTED || recordingStatus === _recordingStatus.STARTING) {
+					<span>{{ 'TOOLBAR.RECORDING' | translate }}</span>
+				}
 			</button>
 
 			<!-- View recordings button -->
