@@ -213,7 +213,17 @@
 							<!-- Actions menu row -->
 							@if (recording.status !== recStatusEnum.STARTED) {
 								<div class="recording-actions-menu">
-									@if (!isReadOnlyMode) {
+									@if (isReadOnlyMode) {
+										<button
+											mat-button
+											(click)="onViewRecordingClicked.emit(recording.id)"
+											class="action-btn action-view"
+											id="external-view-recording-btn"
+										>
+											<mat-icon>open_in_new</mat-icon>
+											{{ 'PANEL.RECORDING.WATCH' | translate }}
+										</button>
+									} @else {
 										@if (showControls.play) {
 											<button
 												mat-icon-button
@@ -261,16 +271,6 @@
 												<mat-icon>delete_outline</mat-icon>
 											</button>
 										}
-									} @else {
-										<button
-											mat-button
-											(click)="onViewRecordingClicked.emit(recording.id)"
-											class="action-btn action-view"
-											id="external-view-recording-btn"
-										>
-											<mat-icon>open_in_new</mat-icon>
-											{{ 'PANEL.RECORDING.WATCH' | translate }}
-										</button>
 									}
 								</div>
 							}

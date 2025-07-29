@@ -34,7 +34,6 @@ export class CallComponent implements OnInit {
 		{ name: 'custom', lang: 'cus' }
 	];
 	prejoin: boolean = true;
-	prejoinDisplayParticipantName: boolean = true;
 	participantName: string = `Participant${Math.floor(Math.random() * 1000)}`;
 	videoEnabled: boolean = true;
 	audioEnabled: boolean = true;
@@ -59,6 +58,13 @@ export class CallComponent implements OnInit {
 	activitiesPanelBroadcastingActivity: boolean = true;
 	toolbarSettingsButton: boolean = true;
 	fakeDevices: boolean = false;
+	// Internal directive inputs (public for E2E)
+
+	prejoinDisplayParticipantName: boolean = true;
+
+	public recordingActivityViewRecordingsButton: boolean = false;
+	public recordingActivityStartStopRecordingButton: boolean = true;
+	toolbarViewRecordingsButton: boolean = false;
 	private redirectToHomeOnLeaves: boolean = true;
 
 	private staticVideos = [
@@ -104,8 +110,6 @@ export class CallComponent implements OnInit {
 				} catch {}
 			}
 			if (params['prejoin'] !== undefined) this.prejoin = params['prejoin'] === 'true';
-			if (params['displayParticipantName'] !== undefined)
-				this.prejoinDisplayParticipantName = params['displayParticipantName'] === 'true';
 			if (params['participantName']) this.participantName = params['participantName'];
 			if (params['videoEnabled'] !== undefined) this.videoEnabled = params['videoEnabled'] === 'true';
 			if (params['audioEnabled'] !== undefined) this.audioEnabled = params['audioEnabled'] === 'true';
@@ -141,6 +145,15 @@ export class CallComponent implements OnInit {
 
 			if (params['fakeDevices'] !== undefined) this.fakeDevices = params['fakeDevices'] === 'true';
 
+			// Internal/private directive params
+			if (params['prejoinDisplayParticipantName'] !== undefined)
+				this.prejoinDisplayParticipantName = params['prejoinDisplayParticipantName'] === 'true';
+			if (params['recordingActivityViewRecordingsButton'] !== undefined)
+				this.recordingActivityViewRecordingsButton = params['recordingActivityViewRecordingsButton'] === 'true';
+			if (params['recordingActivityStartStopRecordingButton'] !== undefined)
+				this.recordingActivityStartStopRecordingButton = params['recordingActivityStartStopRecordingButton'] === 'true';
+			if (params['toolbarViewRecordingsButton'] !== undefined)
+				this.toolbarViewRecordingsButton = params['toolbarViewRecordingsButton'] === 'true';
 			if (params['redirectToHome'] === undefined) {
 				this.redirectToHomeOnLeaves = true;
 			} else {
@@ -198,7 +211,9 @@ export class CallComponent implements OnInit {
 						if (publication.videoTrack?.attachedElements) {
 							this.replaceWithStaticVideos(publication.videoTrack?.attachedElements);
 							const firstVideo = this.staticVideos.shift();
-							this.staticVideos.push(firstVideo);
+							if (firstVideo) {
+								this.staticVideos.push(firstVideo);
+							}
 						}
 					}, 2000);
 				}

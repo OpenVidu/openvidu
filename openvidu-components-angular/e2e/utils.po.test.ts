@@ -195,5 +195,7 @@ export class OpenViduComponentsPO {
 				await this.clickOn('#toolbar-settings-btn');
 				break;
 		}
+
+		await this.browser.sleep(500);
 	}
 }
