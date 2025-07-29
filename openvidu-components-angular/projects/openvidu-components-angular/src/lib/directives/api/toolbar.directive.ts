@@ -62,9 +62,7 @@ export class ToolbarCameraButtonDirective implements AfterViewInit, OnDestroy {
 	}
 
 	private update(value: boolean) {
-		if (this.libService.showCameraButton() !== value) {
-			this.libService.setCameraButton(value);
-		}
+		this.libService.updateToolbarConfig({ camera: value });
 	}
 }
 
@@ -128,9 +126,7 @@ export class ToolbarMicrophoneButtonDirective implements AfterViewInit, OnDestro
 	}
 
 	private update(value: boolean) {
-		if (this.libService.showMicrophoneButton() !== value) {
-			this.libService.setMicrophoneButton(value);
-		}
+		this.libService.updateToolbarConfig({ microphone: value });
 	}
 }
 
@@ -194,9 +190,7 @@ export class ToolbarScreenshareButtonDirective implements AfterViewInit, OnDestr
 	}
 
 	private update(value: boolean) {
-		if (this.libService.showScreenshareButton() !== value) {
-			this.libService.setScreenshareButton(value);
-		}
+		this.libService.updateToolbarConfig({ screenshare: value });
 	}
 }
 
@@ -257,9 +251,7 @@ export class ToolbarRecordingButtonDirective implements AfterViewInit, OnDestroy
 	}
 
 	private update(value: boolean) {
-		if (this.libService.showRecordingButton() !== value) {
-			this.libService.setRecordingButton(value);
-		}
+		this.libService.updateToolbarConfig({ recording: value });
 	}
 }
 
@@ -321,9 +313,7 @@ export class ToolbarBroadcastingButtonDirective implements AfterViewInit, OnDest
 	}
 
 	private update(value: boolean) {
-		if (this.libService.showBroadcastingButton() !== value) {
-			this.libService.setBroadcastingButton(value);
-		}
+		this.libService.setBroadcastingButton(value);
 	}
 }
 
@@ -384,9 +374,7 @@ export class ToolbarFullscreenButtonDirective implements AfterViewInit, OnDestro
 	}
 
 	private update(value: boolean) {
-		if (this.libService.showFullscreenButton() !== value) {
-			this.libService.setFullscreenButton(value);
-		}
+		this.libService.updateToolbarConfig({ fullscreen: value });
 	}
 }
 
@@ -447,9 +435,7 @@ export class ToolbarBackgroundEffectsButtonDirective implements AfterViewInit, O
 	}
 
 	private update(value: boolean) {
-		if (this.libService.showBackgroundEffectsButton() !== value) {
-			this.libService.setBackgroundEffectsButton(value);
-		}
+		this.libService.updateToolbarConfig({ backgroundEffects: value });
 	}
 }
 
@@ -569,9 +555,7 @@ export class ToolbarSettingsButtonDirective implements AfterViewInit, OnDestroy 
 	}
 
 	private update(value: boolean) {
-		if (this.libService.showToolbarSettingsButton() !== value) {
-			this.libService.setToolbarSettingsButton(value);
-		}
+		this.libService.updateToolbarConfig({ settings: value });
 	}
 }
 
@@ -633,9 +617,7 @@ export class ToolbarLeaveButtonDirective implements AfterViewInit, OnDestroy {
 	}
 
 	private update(value: boolean) {
-		if (this.libService.showLeaveButton() !== value) {
-			this.libService.setLeaveButton(value);
-		}
+		this.libService.updateToolbarConfig({ leave: value });
 	}
 }
 
@@ -698,9 +680,7 @@ export class ToolbarParticipantsPanelButtonDirective implements AfterViewInit, O
 	}
 
 	private update(value: boolean) {
-		if (this.libService.showParticipantsPanelButton() !== value) {
-			this.libService.setParticipantsPanelButton(value);
-		}
+		this.libService.updateToolbarConfig({ participantsPanel: value });
 	}
 }
 
@@ -761,9 +741,7 @@ export class ToolbarChatPanelButtonDirective implements AfterViewInit, OnDestroy
 	}
 
 	private update(value: boolean) {
-		if (this.libService.showChatPanelButton() !== value) {
-			this.libService.setChatPanelButton(value);
-		}
+		this.libService.updateToolbarConfig({ chatPanel: value });
 	}
 }
 
@@ -824,9 +802,7 @@ export class ToolbarActivitiesPanelButtonDirective implements AfterViewInit, OnD
 	}
 
 	private update(value: boolean) {
-		if (this.libService.showActivitiesPanelButton() !== value) {
-			this.libService.setActivitiesPanelButton(value);
-		}
+		this.libService.updateToolbarConfig({ activitiesPanel: value });
 	}
 }
 
@@ -888,9 +864,7 @@ export class ToolbarDisplayRoomNameDirective implements AfterViewInit, OnDestroy
 	}
 
 	private update(value: boolean) {
-		if (this.libService.showRoomName() !== value) {
-			this.libService.setDisplayRoomName(value);
-		}
+		this.libService.updateToolbarConfig({ displayRoomName: value });
 	}
 }
 
@@ -952,9 +926,7 @@ export class ToolbarDisplayLogoDirective implements AfterViewInit, OnDestroy {
 	}
 
 	private update(value: boolean) {
-		if (this.libService.showLogo() !== value) {
-			this.libService.setDisplayLogo(value);
-		}
+		this.libService.updateToolbarConfig({ displayLogo: value });
 	}
 }
 
@@ -1009,8 +981,6 @@ export class ToolbarAdditionalButtonsPossitionDirective implements AfterViewInit
 	}
 
 	private update(value: ToolbarAdditionalButtonsPosition) {
-		if (this.libService.getToolbarAdditionalButtonsPosition() !== value) {
-			this.libService.setToolbarAdditionalButtonsPosition(value);
-		}
+		this.libService.updateToolbarConfig({ additionalButtonsPosition: value });
 	}
 }

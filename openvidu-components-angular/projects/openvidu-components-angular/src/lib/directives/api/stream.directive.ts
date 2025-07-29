@@ -46,9 +46,7 @@ export class StreamDisplayParticipantNameDirective implements AfterViewInit, OnD
 	}
 
 	update(value: boolean) {
-		if (this.libService.isParticipantNameDisplayed() !== value) {
-			this.libService.setDisplayParticipantName(value);
-		}
+		this.libService.updateStreamConfig({ displayParticipantName: value });
 	}
 
 	clear() {
@@ -100,9 +98,7 @@ export class StreamDisplayAudioDetectionDirective implements AfterViewInit, OnDe
 	}
 
 	update(value: boolean) {
-		if (this.libService.isAudioDetectionDisplayed() !== value) {
-			this.libService.setDisplayAudioDetection(value);
-		}
+		this.libService.updateStreamConfig({ displayAudioDetection: value });
 	}
 	clear() {
 		this.update(true);
@@ -154,9 +150,7 @@ export class StreamVideoControlsDirective implements AfterViewInit, OnDestroy {
 	}
 
 	update(value: boolean) {
-		if (this.libService.showStreamVideoControls() !== value) {
-			this.libService.setStreamVideoControls(value);
-		}
+		this.libService.updateStreamConfig({ videoControls: value });
 	}
 
 	clear() {

@@ -235,13 +235,13 @@ export class SessionComponent implements OnInit, OnDestroy {
 		this.subscribeToReconnection();
 		this.subscribeToVirtualBackground();
 
-		if (this.libService.isRecordingEnabled()) {
+		// if (this.libService.isRecordingEnabled()) {
 			// this.subscribeToRecordingEvents();
-		}
+		// }
 
-		if (this.libService.isBroadcastingEnabled()) {
+		// if (this.libService.isBroadcastingEnabled()) {
 			// this.subscribeToBroadcastingEvents();
-		}
+		// }
 		try {
 			await this.participantService.connect();
 			// Send room created after participant connect for avoiding to send incomplete room payload

@@ -133,9 +133,21 @@ export class PreJoinComponent implements OnInit, OnDestroy {
 		this.shouldRemoveTracksWhenComponentIsDestroyed = false;
 
 		// Assign participant name to the observable if it is defined
-		if(this.participantName) this.libService.setParticipantName(this.participantName);
+		if (this.participantName) {
+			this.libService.updateGeneralConfig({ participantName: this.participantName });
 
-		this.onReadyToJoin.emit();
+			// Wait for the next tick to ensure the participant name propagates
+			// through the observable before emitting onReadyToJoin
+			const sub = this.libService.participantName$.pipe(takeUntil(this.destroy$)).subscribe((name) => {
+				if (name === this.participantName) {
+					this.onReadyToJoin.emit();
+					sub.unsubscribe();
+				}
+			});
+		} else {
+			// No participant name to set, emit immediately
+			this.onReadyToJoin.emit();
+		}
 	}
 
 	onParticipantNameChanged(name: string) {
@@ -147,49 +159,37 @@ export class PreJoinComponent implements OnInit, OnDestroy {
 	}
 
 	private subscribeToPrejoinDirectives() {
-		this.libService.minimal$
-			.pipe(takeUntil(this.destroy$))
-			.subscribe((value: boolean) => {
-				this.isMinimal = value;
-				this.changeDetector.markForCheck();
-			});
+		this.libService.minimal$.pipe(takeUntil(this.destroy$)).subscribe((value: boolean) => {
+			this.isMinimal = value;
+			this.changeDetector.markForCheck();
+		});
 
-		this.libService.cameraButton$
-			.pipe(takeUntil(this.destroy$))
-			.subscribe((value: boolean) => {
-				this.showCameraButton = value;
-				this.changeDetector.markForCheck();
-			});
+		this.libService.cameraButton$.pipe(takeUntil(this.destroy$)).subscribe((value: boolean) => {
+			this.showCameraButton = value;
+			this.changeDetector.markForCheck();
+		});
 
-		this.libService.microphoneButton$
-			.pipe(takeUntil(this.destroy$))
-			.subscribe((value: boolean) => {
-				this.showMicrophoneButton = value;
-				this.changeDetector.markForCheck();
-			});
+		this.libService.microphoneButton$.pipe(takeUntil(this.destroy$)).subscribe((value: boolean) => {
+			this.showMicrophoneButton = value;
+			this.changeDetector.markForCheck();
+		});
 
-		this.libService.displayLogo$
-			.pipe(takeUntil(this.destroy$))
-			.subscribe((value: boolean) => {
-				this.showLogo = value;
-				this.changeDetector.markForCheck();
-			});
+		this.libService.displayLogo$.pipe(takeUntil(this.destroy$)).subscribe((value: boolean) => {
+			this.showLogo = value;
+			this.changeDetector.markForCheck();
+		});
 
-		this.libService.participantName$
-			.pipe(takeUntil(this.destroy$))
-			.subscribe((value: string) => {
-				if (value) {
-					this.participantName = value;
-					this.changeDetector.markForCheck();
-				}
-			});
-
-		this.libService.prejoinDisplayParticipantName$
-			.pipe(takeUntil(this.destroy$))
-			.subscribe((value: boolean) => {
-				this.showParticipantName = value;
+		this.libService.participantName$.pipe(takeUntil(this.destroy$)).subscribe((value: string) => {
+			if (value) {
+				this.participantName = value;
 				this.changeDetector.markForCheck();
-			});
+			}
+		});
+
+		this.libService.prejoinDisplayParticipantName$.pipe(takeUntil(this.destroy$)).subscribe((value: boolean) => {
+			this.showParticipantName = value;
+			this.changeDetector.markForCheck();
+		});
 	}
 
 	async videoEnabledChanged(enabled: boolean) {

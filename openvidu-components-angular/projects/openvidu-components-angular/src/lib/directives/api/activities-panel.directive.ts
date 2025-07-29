@@ -49,9 +49,7 @@ export class ActivitiesPanelRecordingActivityDirective implements AfterViewInit,
 	}
 
 	update(value: boolean) {
-		if (this.libService.showRecordingActivity() !== value) {
-			this.libService.setRecordingActivity(value);
-		}
+		this.libService.updateRecordingActivityConfig({ enabled: value });
 	}
 }
 
@@ -103,8 +101,6 @@ export class ActivitiesPanelBroadcastingActivityDirective implements AfterViewIn
 	}
 
 	update(value: boolean) {
-		if (this.libService.showBroadcastingActivity() !== value) {
-			this.libService.setBroadcastingActivity(value);
-		}
+		this.libService.setBroadcastingActivity(value);
 	}
 }

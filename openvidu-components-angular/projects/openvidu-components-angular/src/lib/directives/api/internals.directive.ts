@@ -122,7 +122,7 @@ export class ToolbarBrandingLogoDirective implements AfterViewInit, OnDestroy {
 	}
 
 	private update(value: string) {
-		this.libService.setBrandingLogo(value);
+		this.libService.updateToolbarConfig({ brandingLogo: value });
 	}
 }
 
@@ -158,7 +158,7 @@ export class PrejoinDisplayParticipantName implements OnDestroy {
 	}
 
 	private update(value: boolean) {
-		this.libService.setPrejoinDisplayParticipantName(value);
+		this.libService.updateGeneralConfig({ prejoinDisplayParticipantName: value });
 	}
 }
 
@@ -213,7 +213,7 @@ export class RecordingActivityReadOnlyDirective implements OnDestroy {
 	 * @ignore
 	 */
 	update(value: boolean) {
-		this.libService.setRecordingActivityReadOnly(value);
+		this.libService.updateRecordingActivityConfig({ readOnly: value });
 	}
 }
 
@@ -239,7 +239,7 @@ export class RecordingActivityShowControlsDirective implements OnDestroy {
 	/**
 	 * @ignore
 	 */
-	@Input() set recordingActivityShowControls(value: { play?: boolean; download?: boolean; delete?: boolean; externalView?: boolean }) {
+	@Input() set recordingActivityShowControls(value: { play: boolean; download: boolean; delete: boolean; externalView: boolean }) {
 		this.update(value);
 	}
 
@@ -268,8 +268,8 @@ export class RecordingActivityShowControlsDirective implements OnDestroy {
 	/**
 	 * @ignore
 	 */
-	update(value: { play?: boolean; download?: boolean; delete?: boolean; externalView?: boolean }) {
-		this.libService.setRecordingActivityShowControls(value);
+	update(value: { play: boolean; download: boolean; delete: boolean; externalView: boolean }) {
+		this.libService.updateRecordingActivityConfig({ showControls: value });
 	}
 }
 
@@ -334,9 +334,7 @@ export class ToolbarViewRecordingsButtonDirective implements AfterViewInit, OnDe
 	}
 
 	private update(value: boolean) {
-		if (this.libService.getToolbarViewRecordingsButton() !== value) {
-			this.libService.setToolbarViewRecordingsButton(value);
-		}
+		this.libService.updateToolbarConfig({ viewRecordings: value });
 	}
 }
 
@@ -381,7 +379,7 @@ export class StartStopRecordingButtonsDirective implements OnDestroy {
 	}
 
 	private update(value: boolean) {
-		this.libService.setRecordingActivityStartStopRecordingButton(value);
+		this.libService.updateRecordingActivityConfig({ startStopButton: value });
 	}
 }
 
@@ -427,7 +425,7 @@ export class RecordingActivityViewRecordingsButtonDirective implements AfterView
 	}
 
 	private update(value: boolean) {
-		this.libService.setRecordingActivityViewRecordingsButton(value);
+		this.libService.updateRecordingActivityConfig({ viewRecordingsButton: value });
 	}
 }
 
@@ -473,6 +471,6 @@ export class RecordingActivityShowRecordingsListDirective implements AfterViewIn
 	}
 
 	private update(value: boolean) {
-		this.libService.setRecordingActivityShowRecordingsList(value);
+		this.libService.updateRecordingActivityConfig({ showRecordingsList: value });
 	}
 }

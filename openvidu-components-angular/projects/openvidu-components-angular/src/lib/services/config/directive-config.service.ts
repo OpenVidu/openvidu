@@ -1,8 +1,100 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
+import { distinctUntilChanged, shareReplay, map } from 'rxjs/operators';
 import { RecordingInfo } from '../../models/recording.model';
 import { ToolbarAdditionalButtonsPosition } from '../../models/toolbar.model';
 import { ParticipantModel } from '../../models/participant.model';
+
+/**
+ * Configuration item for the service
+ */
+interface ConfigItem<T> {
+	subject: BehaviorSubject<T>;
+	observable$: Observable<T>;
+}
+
+/**
+ * Recording activity controls configuration
+ */
+interface RecordingControls {
+	play: boolean;
+	download: boolean;
+	delete: boolean;
+	externalView: boolean;
+}
+
+/**
+ * Toolbar configuration grouped by domain
+ */
+interface ToolbarConfig {
+	camera: boolean;
+	microphone: boolean;
+	screenshare: boolean;
+	fullscreen: boolean;
+	captions: boolean;
+	settings: boolean;
+	leave: boolean;
+	participantsPanel: boolean;
+	chatPanel: boolean;
+	activitiesPanel: boolean;
+	displayRoomName: boolean;
+	displayLogo: boolean;
+	backgroundEffects: boolean;
+	recording: boolean;
+	viewRecordings: boolean;
+	broadcasting: boolean;
+	brandingLogo: string;
+	additionalButtonsPosition: ToolbarAdditionalButtonsPosition;
+}
+
+/**
+ * Stream/Video configuration
+ */
+interface StreamConfig {
+	videoEnabled: boolean;
+	audioEnabled: boolean;
+	displayParticipantName: boolean;
+	displayAudioDetection: boolean;
+	videoControls: boolean;
+	participantItemMuteButton: boolean;
+}
+
+/**
+ * Recording activity configuration
+ */
+interface RecordingActivityConfig {
+	enabled: boolean;
+	readOnly: boolean;
+	showControls: RecordingControls;
+	startStopButton: boolean;
+	viewRecordingsButton: boolean;
+	showRecordingsList: boolean;
+}
+
+/**
+ * Admin dashboard configuration
+ */
+interface AdminConfig {
+	recordingsList: RecordingInfo[];
+	loginError: any;
+	loginTitle: string;
+	dashboardTitle: string;
+}
+
+/**
+ * General application configuration
+ */
+interface GeneralConfig {
+	token: string;
+	livekitUrl: string;
+	tokenError: any;
+	minimal: boolean;
+	participantName: string;
+	prejoin: boolean;
+	prejoinDisplayParticipantName: boolean;
+	showDisconnectionDialog: boolean;
+	recordingStreamBaseUrl: string;
+}
 
 /**
  * @internal
@@ -11,530 +103,476 @@ import { ParticipantModel } from '../../models/participant.model';
 	providedIn: 'root'
 })
 export class OpenViduComponentsConfigService {
-	private token = <BehaviorSubject<string>>new BehaviorSubject('');
-	token$: Observable<string>;
+	/**
+	 * Helper method to create a configuration item with BehaviorSubject and Observable
+	 */
+	private createConfigItem<T>(initialValue: T): ConfigItem<T> {
+		const subject = new BehaviorSubject<T>(initialValue);
+		const observable$ = subject.asObservable().pipe(distinctUntilChanged(), shareReplay(1));
+		return { subject, observable$ };
+	}
 
-	private livekitUrl = <BehaviorSubject<string>>new BehaviorSubject('');
-	livekitUrl$: Observable<string>;
+	/**
+	 * Helper method for array configurations with optimized comparison
+	 */
+	private createArrayConfigItem<T>(initialValue: T[]): ConfigItem<T[]> {
+		const subject = new BehaviorSubject<T[]>(initialValue);
+		const observable$ = subject.asObservable().pipe(
+			distinctUntilChanged((prev, curr) => {
+				if (prev.length !== curr.length) return false;
+				return prev.every((item, index) => this.deepEqual(item, curr[index]));
+			}),
+			shareReplay(1)
+		);
+		return { subject, observable$ };
+	}
 
-	private tokenError = <BehaviorSubject<any>>new BehaviorSubject(null);
-	tokenError$: Observable<any>;
-	private minimal = <BehaviorSubject<boolean>>new BehaviorSubject(false);
-	minimal$: Observable<boolean>;
-	private participantName = <BehaviorSubject<string>>new BehaviorSubject('');
-	participantName$: Observable<string>;
-	private prejoin = <BehaviorSubject<boolean>>new BehaviorSubject(true);
-	prejoin$: Observable<boolean>;
-	private prejoinDisplayParticipantName = <BehaviorSubject<boolean>>new BehaviorSubject(true);
-	prejoinDisplayParticipantName$: Observable<boolean>;
+	/**
+	 * Helper method for RecordingControls with specific comparison
+	 */
+	private createRecordingControlsConfigItem(initialValue: RecordingControls): ConfigItem<RecordingControls> {
+		const subject = new BehaviorSubject<RecordingControls>(initialValue);
+		const observable$ = subject.asObservable().pipe(
+			distinctUntilChanged(
+				(prev, curr) =>
+					prev.play === curr.play &&
+					prev.download === curr.download &&
+					prev.delete === curr.delete &&
+					prev.externalView === curr.externalView
+			),
+			shareReplay(1)
+		);
+		return { subject, observable$ };
+	}
 
-	private videoEnabled = <BehaviorSubject<boolean>>new BehaviorSubject(true);
-	videoEnabled$: Observable<boolean>;
-	private audioEnabled = <BehaviorSubject<boolean>>new BehaviorSubject(true);
-	audioEnabled$: Observable<boolean>;
+	/**
+	 * Helper method for ToolbarConfig with specific comparison
+	 */
+	private createToolbarConfigItem(initialValue: ToolbarConfig): ConfigItem<ToolbarConfig> {
+		const subject = new BehaviorSubject<ToolbarConfig>(initialValue);
+		const observable$ = subject.asObservable().pipe(
+			distinctUntilChanged((prev, curr) => this.compareToolbarConfig(prev, curr)),
+			shareReplay(1)
+		);
+		return { subject, observable$ };
+	}
 
-	private showDisconnectionDialog = <BehaviorSubject<boolean>>new BehaviorSubject(true);
-	showDisconnectionDialog$: Observable<boolean>;
+	/**
+	 * Helper method for StreamConfig with specific comparison
+	 */
+	private createStreamConfigItem(initialValue: StreamConfig): ConfigItem<StreamConfig> {
+		const subject = new BehaviorSubject<StreamConfig>(initialValue);
+		const observable$ = subject.asObservable().pipe(
+			distinctUntilChanged((prev, curr) => this.compareStreamConfig(prev, curr)),
+			shareReplay(1)
+		);
+		return { subject, observable$ };
+	}
 
-	private recordingStreamBaseUrl = <BehaviorSubject<string>>new BehaviorSubject('call/api/recordings');
-	recordingStreamBaseUrl$: Observable<string>;
+	/**
+	 * Helper method for RecordingActivityConfig with specific comparison
+	 */
+	private createRecordingActivityConfigItem(initialValue: RecordingActivityConfig): ConfigItem<RecordingActivityConfig> {
+		const subject = new BehaviorSubject<RecordingActivityConfig>(initialValue);
+		const observable$ = subject.asObservable().pipe(
+			distinctUntilChanged((prev, curr) => this.compareRecordingActivityConfig(prev, curr)),
+			shareReplay(1)
+		);
+		return { subject, observable$ };
+	}
 
-	//Toolbar settings
-	private cameraButton = <BehaviorSubject<boolean>>new BehaviorSubject(true);
-	cameraButton$: Observable<boolean>;
+	/**
+	 * Helper method for AdminConfig with specific comparison
+	 */
+	private createAdminConfigItem(initialValue: AdminConfig): ConfigItem<AdminConfig> {
+		const subject = new BehaviorSubject<AdminConfig>(initialValue);
+		const observable$ = subject.asObservable().pipe(
+			distinctUntilChanged((prev, curr) => this.compareAdminConfig(prev, curr)),
+			shareReplay(1)
+		);
+		return { subject, observable$ };
+	}
 
-	private microphoneButton = <BehaviorSubject<boolean>>new BehaviorSubject(true);
-	microphoneButton$: Observable<boolean>;
+	/**
+	 * Helper method for GeneralConfig with specific comparison
+	 */
+	private createGeneralConfigItem(initialValue: GeneralConfig): ConfigItem<GeneralConfig> {
+		const subject = new BehaviorSubject<GeneralConfig>(initialValue);
+		const observable$ = subject.asObservable().pipe(
+			distinctUntilChanged((prev, curr) => this.compareGeneralConfig(prev, curr)),
+			shareReplay(1)
+		);
+		return { subject, observable$ };
+	}
 
-	private screenshareButton = <BehaviorSubject<boolean>>new BehaviorSubject(true);
-	screenshareButton$: Observable<boolean>;
+	/**
+	 * Optimized deep equality check
+	 */
+	private deepEqual(a: any, b: any): boolean {
+		if (a === b) return true;
+		if (a == null || b == null) return a === b;
+		if (typeof a !== typeof b) return false;
+		if (typeof a !== 'object') return a === b;
 
-	private fullscreenButton = <BehaviorSubject<boolean>>new BehaviorSubject(true);
-	fullscreenButton$: Observable<boolean>;
+		const keysA = Object.keys(a);
+		const keysB = Object.keys(b);
+		if (keysA.length !== keysB.length) return false;
 
-	private captionsButton = <BehaviorSubject<boolean>>new BehaviorSubject(true);
-	captionsButton$: Observable<boolean>;
+		return keysA.every((key) => this.deepEqual(a[key], b[key]));
+	}
 
-	private toolbarSettingsButton = <BehaviorSubject<boolean>>new BehaviorSubject(true);
-	toolbarSettingsButton$: Observable<boolean>;
+	/**
+	 * Compare ToolbarConfig efficiently
+	 */
+	private compareToolbarConfig(prev: ToolbarConfig, curr: ToolbarConfig): boolean {
+		return (
+			prev.camera === curr.camera &&
+			prev.microphone === curr.microphone &&
+			prev.screenshare === curr.screenshare &&
+			prev.fullscreen === curr.fullscreen &&
+			prev.captions === curr.captions &&
+			prev.settings === curr.settings &&
+			prev.leave === curr.leave &&
+			prev.participantsPanel === curr.participantsPanel &&
+			prev.chatPanel === curr.chatPanel &&
+			prev.activitiesPanel === curr.activitiesPanel &&
+			prev.displayRoomName === curr.displayRoomName &&
+			prev.displayLogo === curr.displayLogo &&
+			prev.backgroundEffects === curr.backgroundEffects &&
+			prev.recording === curr.recording &&
+			prev.viewRecordings === curr.viewRecordings &&
+			prev.broadcasting === curr.broadcasting &&
+			prev.brandingLogo === curr.brandingLogo &&
+			prev.additionalButtonsPosition === curr.additionalButtonsPosition
+		);
+	}
 
-	private leaveButton = <BehaviorSubject<boolean>>new BehaviorSubject(true);
-	leaveButton$: Observable<boolean>;
+	/**
+	 * Compare StreamConfig efficiently
+	 */
+	private compareStreamConfig(prev: StreamConfig, curr: StreamConfig): boolean {
+		return (
+			prev.videoEnabled === curr.videoEnabled &&
+			prev.audioEnabled === curr.audioEnabled &&
+			prev.displayParticipantName === curr.displayParticipantName &&
+			prev.displayAudioDetection === curr.displayAudioDetection &&
+			prev.videoControls === curr.videoControls &&
+			prev.participantItemMuteButton === curr.participantItemMuteButton
+		);
+	}
 
-	private participantsPanelButton = <BehaviorSubject<boolean>>new BehaviorSubject(true);
-	participantsPanelButton$: Observable<boolean>;
+	/**
+	 * Compare RecordingActivityConfig efficiently
+	 */
+	private compareRecordingActivityConfig(prev: RecordingActivityConfig, curr: RecordingActivityConfig): boolean {
+		return (
+			prev.enabled === curr.enabled &&
+			prev.readOnly === curr.readOnly &&
+			prev.startStopButton === curr.startStopButton &&
+			prev.viewRecordingsButton === curr.viewRecordingsButton &&
+			prev.showRecordingsList === curr.showRecordingsList &&
+			prev.showControls.play === curr.showControls.play &&
+			prev.showControls.download === curr.showControls.download &&
+			prev.showControls.delete === curr.showControls.delete &&
+			prev.showControls.externalView === curr.showControls.externalView
+		);
+	}
 
-	private chatPanelButton = <BehaviorSubject<boolean>>new BehaviorSubject(true);
-	chatPanelButton$: Observable<boolean>;
+	/**
+	 * Compare AdminConfig efficiently
+	 */
+	private compareAdminConfig(prev: AdminConfig, curr: AdminConfig): boolean {
+		return (
+			prev.loginError === curr.loginError &&
+			prev.loginTitle === curr.loginTitle &&
+			prev.dashboardTitle === curr.dashboardTitle &&
+			prev.recordingsList.length === curr.recordingsList.length &&
+			prev.recordingsList.every((item, index) => this.deepEqual(item, curr.recordingsList[index]))
+		);
+	}
 
-	private activitiesPanelButton = <BehaviorSubject<boolean>>new BehaviorSubject(true);
-	activitiesPanelButton$: Observable<boolean>;
+	/**
+	 * Compare GeneralConfig efficiently
+	 */
+	private compareGeneralConfig(prev: GeneralConfig, curr: GeneralConfig): boolean {
+		return (
+			prev.token === curr.token &&
+			prev.livekitUrl === curr.livekitUrl &&
+			prev.tokenError === curr.tokenError &&
+			prev.minimal === curr.minimal &&
+			prev.participantName === curr.participantName &&
+			prev.prejoin === curr.prejoin &&
+			prev.prejoinDisplayParticipantName === curr.prejoinDisplayParticipantName &&
+			prev.showDisconnectionDialog === curr.showDisconnectionDialog &&
+			prev.recordingStreamBaseUrl === curr.recordingStreamBaseUrl
+		);
+	}
 
-	private displayRoomName = <BehaviorSubject<boolean>>new BehaviorSubject(true);
-	displayRoomName$: Observable<boolean>;
+	// Grouped configuration items by domain
+	private generalConfig = this.createGeneralConfigItem({
+		token: '',
+		livekitUrl: '',
+		tokenError: null,
+		minimal: false,
+		participantName: '',
+		prejoin: true,
+		prejoinDisplayParticipantName: true,
+		showDisconnectionDialog: true,
+		recordingStreamBaseUrl: 'call/api/recordings'
+	});
 
-	private brandingLogo = <BehaviorSubject<string>>new BehaviorSubject('');
-	brandingLogo$: Observable<string>;
+	private toolbarConfig = this.createToolbarConfigItem({
+		camera: true,
+		microphone: true,
+		screenshare: true,
+		fullscreen: true,
+		captions: true,
+		settings: true,
+		leave: true,
+		participantsPanel: true,
+		chatPanel: true,
+		activitiesPanel: true,
+		displayRoomName: true,
+		displayLogo: true,
+		backgroundEffects: true,
+		recording: true,
+		viewRecordings: false,
+		broadcasting: true,
+		brandingLogo: '',
+		additionalButtonsPosition: ToolbarAdditionalButtonsPosition.AFTER_MENU
+	});
 
-	private displayLogo = <BehaviorSubject<boolean>>new BehaviorSubject(true);
-	displayLogo$: Observable<boolean>;
+	private streamConfig = this.createStreamConfigItem({
+		videoEnabled: true,
+		audioEnabled: true,
+		displayParticipantName: true,
+		displayAudioDetection: true,
+		videoControls: true,
+		participantItemMuteButton: true
+	});
 
-	private toolbarAdditionalButtonsPosition = <BehaviorSubject<ToolbarAdditionalButtonsPosition>>(
-		new BehaviorSubject(ToolbarAdditionalButtonsPosition.AFTER_MENU)
+	private recordingActivityConfig = this.createRecordingActivityConfigItem({
+		enabled: true,
+		readOnly: false,
+		showControls: {
+			play: true,
+			download: true,
+			delete: true,
+			externalView: false
+		},
+		startStopButton: true,
+		viewRecordingsButton: false,
+		showRecordingsList: false
+	});
+
+	private adminConfig = this.createAdminConfigItem({
+		recordingsList: [],
+		loginError: null,
+		loginTitle: '',
+		dashboardTitle: ''
+	});
+
+	// Individual configs that don't fit into groups
+	private broadcastingActivityConfig = this.createConfigItem(true);
+	private layoutRemoteParticipantsConfig = this.createConfigItem<ParticipantModel[] | undefined>(undefined);
+
+	// General observables
+	token$: Observable<string> = this.generalConfig.observable$.pipe(map((config) => config.token));
+	livekitUrl$: Observable<string> = this.generalConfig.observable$.pipe(map((config) => config.livekitUrl));
+	tokenError$: Observable<any> = this.generalConfig.observable$.pipe(map((config) => config.tokenError));
+	minimal$: Observable<boolean> = this.generalConfig.observable$.pipe(map((config) => config.minimal));
+	participantName$: Observable<string> = this.generalConfig.observable$.pipe(map((config) => config.participantName));
+	prejoin$: Observable<boolean> = this.generalConfig.observable$.pipe(map((config) => config.prejoin));
+	prejoinDisplayParticipantName$: Observable<boolean> = this.generalConfig.observable$.pipe(
+		map((config) => config.prejoinDisplayParticipantName)
 	);
-	toolbarAdditionalButtonsPosition$: Observable<ToolbarAdditionalButtonsPosition>;
+	showDisconnectionDialog$: Observable<boolean> = this.generalConfig.observable$.pipe(map((config) => config.showDisconnectionDialog));
+	recordingStreamBaseUrl$: Observable<string> = this.generalConfig.observable$.pipe(map((config) => config.recordingStreamBaseUrl));
 
-	private displayParticipantName = <BehaviorSubject<boolean>>new BehaviorSubject(true);
-	displayParticipantName$: Observable<boolean>;
-	private displayAudioDetection = <BehaviorSubject<boolean>>new BehaviorSubject(true);
-	displayAudioDetection$: Observable<boolean>;
-	private streamVideoControls = <BehaviorSubject<boolean>>new BehaviorSubject(true);
-	streamVideoControls$: Observable<boolean>;
-	private participantItemMuteButton = <BehaviorSubject<boolean>>new BehaviorSubject(true);
-	participantItemMuteButton$: Observable<boolean>;
-	private backgroundEffectsButton = <BehaviorSubject<boolean>>new BehaviorSubject(true);
-	backgroundEffectsButton$: Observable<boolean>;
-	private recordingButton = <BehaviorSubject<boolean>>new BehaviorSubject(true);
-	recordingButton$: Observable<boolean>;
-	private toolbarViewRecordingsButton = <BehaviorSubject<boolean>>new BehaviorSubject(false);
-	toolbarViewRecordingsButton$: Observable<boolean>;
-	private broadcastingButton = <BehaviorSubject<boolean>>new BehaviorSubject(true);
-	broadcastingButton$: Observable<boolean>;
-	private recordingActivity = <BehaviorSubject<boolean>>new BehaviorSubject(true);
-	recordingActivity$: Observable<boolean>;
-	private broadcastingActivity = <BehaviorSubject<boolean>>new BehaviorSubject(true);
-	broadcastingActivity$: Observable<boolean>;
+	// Stream observables
+	videoEnabled$: Observable<boolean> = this.streamConfig.observable$.pipe(map((config) => config.videoEnabled));
+	audioEnabled$: Observable<boolean> = this.streamConfig.observable$.pipe(map((config) => config.audioEnabled));
+	displayParticipantName$: Observable<boolean> = this.streamConfig.observable$.pipe(map((config) => config.displayParticipantName));
+	displayAudioDetection$: Observable<boolean> = this.streamConfig.observable$.pipe(map((config) => config.displayAudioDetection));
+	streamVideoControls$: Observable<boolean> = this.streamConfig.observable$.pipe(map((config) => config.videoControls));
+	participantItemMuteButton$: Observable<boolean> = this.streamConfig.observable$.pipe(map((config) => config.participantItemMuteButton));
 
-	// Recording activity configuration
-	private recordingActivityReadOnly = <BehaviorSubject<boolean>>new BehaviorSubject(false);
-	recordingActivityReadOnly$: Observable<boolean>;
-	private recordingActivityShowControls = <BehaviorSubject<{ play?: boolean; download?: boolean; delete?: boolean }>>(
-		new BehaviorSubject({ play: true, download: true, delete: true })
+	// Toolbar observables
+	cameraButton$: Observable<boolean> = this.toolbarConfig.observable$.pipe(map((config) => config.camera));
+	microphoneButton$: Observable<boolean> = this.toolbarConfig.observable$.pipe(map((config) => config.microphone));
+	screenshareButton$: Observable<boolean> = this.toolbarConfig.observable$.pipe(map((config) => config.screenshare));
+	fullscreenButton$: Observable<boolean> = this.toolbarConfig.observable$.pipe(map((config) => config.fullscreen));
+	captionsButton$: Observable<boolean> = this.toolbarConfig.observable$.pipe(map((config) => config.captions));
+	toolbarSettingsButton$: Observable<boolean> = this.toolbarConfig.observable$.pipe(map((config) => config.settings));
+	leaveButton$: Observable<boolean> = this.toolbarConfig.observable$.pipe(map((config) => config.leave));
+	participantsPanelButton$: Observable<boolean> = this.toolbarConfig.observable$.pipe(map((config) => config.participantsPanel));
+	chatPanelButton$: Observable<boolean> = this.toolbarConfig.observable$.pipe(map((config) => config.chatPanel));
+	activitiesPanelButton$: Observable<boolean> = this.toolbarConfig.observable$.pipe(map((config) => config.activitiesPanel));
+	displayRoomName$: Observable<boolean> = this.toolbarConfig.observable$.pipe(map((config) => config.displayRoomName));
+	brandingLogo$: Observable<string> = this.toolbarConfig.observable$.pipe(map((config) => config.brandingLogo));
+	displayLogo$: Observable<boolean> = this.toolbarConfig.observable$.pipe(map((config) => config.displayLogo));
+	toolbarAdditionalButtonsPosition$: Observable<ToolbarAdditionalButtonsPosition> = this.toolbarConfig.observable$.pipe(
+		map((config) => config.additionalButtonsPosition)
 	);
-	recordingActivityShowControls$: Observable<{ play?: boolean; download?: boolean; delete?: boolean; externalView?: boolean }>;
+	backgroundEffectsButton$: Observable<boolean> = this.toolbarConfig.observable$.pipe(map((config) => config.backgroundEffects));
+	recordingButton$: Observable<boolean> = this.toolbarConfig.observable$.pipe(map((config) => config.recording));
+	toolbarViewRecordingsButton$: Observable<boolean> = this.toolbarConfig.observable$.pipe(map((config) => config.viewRecordings));
+	broadcastingButton$: Observable<boolean> = this.toolbarConfig.observable$.pipe(map((config) => config.broadcasting));
 
-	private recordingActivityStartStopRecordingButton = <BehaviorSubject<boolean>>new BehaviorSubject(true);
-	recordingActivityStartStopRecordingButton$: Observable<boolean>;
+	// Recording activity observables
+	recordingActivity$: Observable<boolean> = this.recordingActivityConfig.observable$.pipe(map((config) => config.enabled));
+	recordingActivityReadOnly$: Observable<boolean> = this.recordingActivityConfig.observable$.pipe(map((config) => config.readOnly));
+	recordingActivityShowControls$: Observable<RecordingControls> = this.recordingActivityConfig.observable$.pipe(
+		map((config) => config.showControls)
+	);
+	recordingActivityStartStopRecordingButton$: Observable<boolean> = this.recordingActivityConfig.observable$.pipe(
+		map((config) => config.startStopButton)
+	);
+	recordingActivityViewRecordingsButton$: Observable<boolean> = this.recordingActivityConfig.observable$.pipe(
+		map((config) => config.viewRecordingsButton)
+	);
+	recordingActivityShowRecordingsList$: Observable<boolean> = this.recordingActivityConfig.observable$.pipe(
+		map((config) => config.showRecordingsList)
+	);
 
-	private recordingActivityViewRecordingsButton = <BehaviorSubject<boolean>>new BehaviorSubject(false);
-	recordingActivityViewRecordingsButton$: Observable<boolean>;
+	// Admin observables
+	adminRecordingsList$: Observable<RecordingInfo[]> = this.adminConfig.observable$.pipe(map((config) => config.recordingsList));
+	adminLoginError$: Observable<any> = this.adminConfig.observable$.pipe(map((config) => config.loginError));
+	adminLoginTitle$: Observable<string> = this.adminConfig.observable$.pipe(map((config) => config.loginTitle));
+	adminDashboardTitle$: Observable<string> = this.adminConfig.observable$.pipe(map((config) => config.dashboardTitle));
 
-	private recordingActivityShowRecordingsList = <BehaviorSubject<boolean>>new BehaviorSubject(false);
-	recordingActivityShowRecordingsList$: Observable<boolean>;
-	// Admin
-	private adminRecordingsList: BehaviorSubject<RecordingInfo[]> = new BehaviorSubject(<RecordingInfo[]>[]);
-	adminRecordingsList$: Observable<RecordingInfo[]>;
-	private adminLoginError = <BehaviorSubject<any>>new BehaviorSubject(null);
-	private adminLoginTitle = <BehaviorSubject<string>>new BehaviorSubject('');
-	private adminDashboardTitle = <BehaviorSubject<string>>new BehaviorSubject('');
-	adminLoginTitle$: Observable<string>;
-	adminDashboardTitle$: Observable<string>;
-	adminLoginError$: Observable<any>;
-
-	// Internals
-	private layoutRemoteParticipants: BehaviorSubject<ParticipantModel[] | undefined> = new BehaviorSubject(<any>undefined);
-	layoutRemoteParticipants$: Observable<ParticipantModel[] | undefined>;
+	// Individual observables that don't fit into groups
+	broadcastingActivity$: Observable<boolean> = this.broadcastingActivityConfig.observable$;
+	layoutRemoteParticipants$: Observable<ParticipantModel[] | undefined> = this.layoutRemoteParticipantsConfig.observable$;
 
 	constructor() {
-		this.token$ = this.token.asObservable();
-		this.livekitUrl$ = this.livekitUrl.asObservable();
-		this.tokenError$ = this.tokenError.asObservable();
-		this.minimal$ = this.minimal.asObservable();
-		this.participantName$ = this.participantName.asObservable();
-		this.prejoin$ = this.prejoin.asObservable();
-		this.prejoinDisplayParticipantName$ = this.prejoinDisplayParticipantName.asObservable();
-		this.videoEnabled$ = this.videoEnabled.asObservable();
-		this.audioEnabled$ = this.audioEnabled.asObservable();
-		this.recordingStreamBaseUrl$ = this.recordingStreamBaseUrl.asObservable();
-		//Toolbar observables
-		this.cameraButton$ = this.cameraButton.asObservable();
-		this.microphoneButton$ = this.microphoneButton.asObservable();
-		this.screenshareButton$ = this.screenshareButton.asObservable();
-		this.fullscreenButton$ = this.fullscreenButton.asObservable();
-		this.backgroundEffectsButton$ = this.backgroundEffectsButton.asObservable();
-		this.leaveButton$ = this.leaveButton.asObservable();
-		this.participantsPanelButton$ = this.participantsPanelButton.asObservable();
-		this.chatPanelButton$ = this.chatPanelButton.asObservable();
-		this.activitiesPanelButton$ = this.activitiesPanelButton.asObservable();
-		this.displayRoomName$ = this.displayRoomName.asObservable();
-		this.displayLogo$ = this.displayLogo.asObservable();
-		this.brandingLogo$ = this.brandingLogo.asObservable();
-		this.recordingButton$ = this.recordingButton.asObservable();
-		this.toolbarViewRecordingsButton$ = this.toolbarViewRecordingsButton.asObservable();
-		this.broadcastingButton$ = this.broadcastingButton.asObservable();
-		this.toolbarSettingsButton$ = this.toolbarSettingsButton.asObservable();
-		this.captionsButton$ = this.captionsButton.asObservable();
-		this.toolbarAdditionalButtonsPosition$ = this.toolbarAdditionalButtonsPosition.asObservable();
-		//Stream observables
-		this.displayParticipantName$ = this.displayParticipantName.asObservable();
-		this.displayAudioDetection$ = this.displayAudioDetection.asObservable();
-		this.streamVideoControls$ = this.streamVideoControls.asObservable();
-		// Participant item observables
-		this.participantItemMuteButton$ = this.participantItemMuteButton.asObservable();
-		// Recording activity observables
-		this.recordingActivity$ = this.recordingActivity.asObservable();
-		this.recordingActivityReadOnly$ = this.recordingActivityReadOnly.asObservable();
-		this.recordingActivityShowControls$ = this.recordingActivityShowControls.asObservable();
-		this.recordingActivityStartStopRecordingButton$ = this.recordingActivityStartStopRecordingButton.asObservable();
-		this.recordingActivityViewRecordingsButton$ = this.recordingActivityViewRecordingsButton.asObservable();
-		this.recordingActivityShowRecordingsList$ = this.recordingActivityShowRecordingsList.asObservable();
-		// Broadcasting activity
-		this.broadcastingActivity$ = this.broadcastingActivity.asObservable();
-		// Admin dashboard
-		this.adminRecordingsList$ = this.adminRecordingsList.asObservable();
-		this.adminLoginError$ = this.adminLoginError.asObservable();
-		this.adminLoginTitle$ = this.adminLoginTitle.asObservable();
-		this.adminDashboardTitle$ = this.adminDashboardTitle.asObservable();
-		// Internals
-		this.layoutRemoteParticipants$ = this.layoutRemoteParticipants.asObservable();
+		// Constructor no longer needed - all observables are initialized directly
 	}
 
-	setToken(token: string) {
-		this.token.next(token);
+	// ============================================
+	// BATCH UPDATE METHODS
+	// ============================================
+
+	/**
+	 * Update multiple general configuration properties at once
+	 */
+	updateGeneralConfig(partialConfig: Partial<GeneralConfig>): void {
+		const current = this.generalConfig.subject.getValue();
+		this.generalConfig.subject.next({ ...current, ...partialConfig });
 	}
 
-	setLivekitUrl(livekitUrl: string) {
-		this.livekitUrl.next(livekitUrl);
+	/**
+	 * Update multiple toolbar configuration properties at once
+	 */
+	updateToolbarConfig(partialConfig: Partial<ToolbarConfig>): void {
+		const current = this.toolbarConfig.subject.getValue();
+		this.toolbarConfig.subject.next({ ...current, ...partialConfig });
 	}
+
+	/**
+	 * Update multiple stream configuration properties at once
+	 */
+	updateStreamConfig(partialConfig: Partial<StreamConfig>): void {
+		const current = this.streamConfig.subject.getValue();
+		this.streamConfig.subject.next({ ...current, ...partialConfig });
+	}
+
+	/**
+	 * Update multiple recording activity configuration properties at once
+	 */
+	updateRecordingActivityConfig(partialConfig: Partial<RecordingActivityConfig>): void {
+		const current = this.recordingActivityConfig.subject.getValue();
+		this.recordingActivityConfig.subject.next({ ...current, ...partialConfig });
+	}
+
+	/**
+	 * Update multiple admin configuration properties at once
+	 */
+	updateAdminConfig(partialConfig: Partial<AdminConfig>): void {
+		const current = this.adminConfig.subject.getValue();
+		this.adminConfig.subject.next({ ...current, ...partialConfig });
+	}
+
+	/**
+	 * Update recording controls specifically with batch support
+	 */
+	updateRecordingControls(partialControls: Partial<RecordingControls>): void {
+		const current = this.recordingActivityConfig.subject.getValue();
+		const updatedControls = { ...current.showControls, ...partialControls };
+		this.updateRecordingActivityConfig({ showControls: updatedControls });
+	}
+
+	// ============================================
+	// DIRECT ACCESS METHODS (for internal use)
+	// ============================================
+
+	/**
+	 * @internal
+	 * Get current participant name directly
+	 */
+	getCurrentParticipantName(): string {
+		return this.generalConfig.subject.getValue().participantName;
+	}
+
+	// ============================================
+	// INDIVIDUAL GETTER/SETTER METHODS
+	// ============================================
+
+	// General configuration methods
 
 	getLivekitUrl(): string {
-		return this.livekitUrl.getValue();
-	}
-
-	setTokenError(error: any) {
-		this.tokenError.next(error);
-	}
-
-	setMinimal(minimal: boolean) {
-		this.minimal.next(minimal);
-	}
-
-	isMinimal(): boolean {
-		return this.minimal.getValue();
-	}
-
-	setParticipantName(participantName: string) {
-		this.participantName.next(participantName);
-	}
-
-	setPrejoin(prejoin: boolean) {
-		this.prejoin.next(prejoin);
-	}
-
-	setPrejoinDisplayParticipantName(prejoinDisplayParticipantName: boolean) {
-		this.prejoinDisplayParticipantName.next(prejoinDisplayParticipantName);
+		return this.generalConfig.subject.getValue().livekitUrl;
 	}
 
 	showPrejoin(): boolean {
-		return this.prejoin.getValue();
-	}
-
-	setVideoEnabled(videoEnabled: boolean) {
-		this.videoEnabled.next(videoEnabled);
-	}
-
-	isVideoEnabled(): boolean {
-		return this.videoEnabled.getValue();
-	}
-
-	setAudioEnabled(audioEnabled: boolean) {
-		this.audioEnabled.next(audioEnabled);
-	}
-
-	isAudioEnabled(): boolean {
-		return this.audioEnabled.getValue();
+		return this.generalConfig.subject.getValue().prejoin;
 	}
 
 	getShowDisconnectionDialog(): boolean {
-		return this.showDisconnectionDialog.getValue();
-	}
-
-	setShowDisconnectionDialog(showDisconnectionDialog: boolean) {
-		this.showDisconnectionDialog.next(showDisconnectionDialog);
-	}
-
-	setRecordingStreamBaseUrl(recordingStreamBaseUrl: string) {
-		this.recordingStreamBaseUrl.next(recordingStreamBaseUrl);
+		return this.generalConfig.subject.getValue().showDisconnectionDialog;
 	}
 
 	getRecordingStreamBaseUrl(): string {
-		let baseUrl = this.recordingStreamBaseUrl.getValue();
+		let baseUrl = this.generalConfig.subject.getValue().recordingStreamBaseUrl;
 		// Add trailing slash if not present
 		baseUrl += baseUrl.endsWith('/') ? '' : '/';
 		return baseUrl;
 	}
 
-	//Toolbar settings
+	// Stream configuration methods
 
-	setCameraButton(cameraButton: boolean) {
-		this.cameraButton.next(cameraButton);
-	}
-
-	showCameraButton(): boolean {
-		return this.cameraButton.getValue();
+	isVideoEnabled(): boolean {
+		return this.streamConfig.subject.getValue().videoEnabled;
 	}
 
-	setMicrophoneButton(microphoneButton: boolean) {
-		this.microphoneButton.next(microphoneButton);
+	isAudioEnabled(): boolean {
+		return this.streamConfig.subject.getValue().audioEnabled;
 	}
 
-	showMicrophoneButton(): boolean {
-		return this.microphoneButton.getValue();
-	}
-
-	setScreenshareButton(screenshareButton: boolean) {
-		this.screenshareButton.next(screenshareButton);
-	}
-
-	showScreenshareButton(): boolean {
-		return this.screenshareButton.getValue();
-	}
-
-	setFullscreenButton(fullscreenButton: boolean) {
-		this.fullscreenButton.next(fullscreenButton);
-	}
-
-	showFullscreenButton(): boolean {
-		return this.fullscreenButton.getValue();
-	}
-
-	setCaptionsButton(captionsButton: boolean) {
-		this.captionsButton.next(captionsButton);
-	}
-
-	showCaptionsButton(): boolean {
-		return this.captionsButton.getValue();
-	}
-
-	setToolbarSettingsButton(toolbarSettingsButton: boolean) {
-		this.toolbarSettingsButton.next(toolbarSettingsButton);
-	}
-
-	showToolbarSettingsButton(): boolean {
-		return this.toolbarSettingsButton.getValue();
-	}
-
-	setLeaveButton(leaveButton: boolean) {
-		this.leaveButton.next(leaveButton);
-	}
-
-	showLeaveButton(): boolean {
-		return this.leaveButton.getValue();
-	}
-
-	setParticipantsPanelButton(participantsPanelButton: boolean) {
-		this.participantsPanelButton.next(participantsPanelButton);
-	}
-
-	showParticipantsPanelButton(): boolean {
-		return this.participantsPanelButton.getValue();
-	}
-
-	setChatPanelButton(chatPanelButton: boolean) {
-		this.chatPanelButton.next(chatPanelButton);
-	}
-
-	showChatPanelButton(): boolean {
-		return this.chatPanelButton.getValue();
-	}
-
-	setActivitiesPanelButton(activitiesPanelButton: boolean) {
-		this.activitiesPanelButton.next(activitiesPanelButton);
-	}
-
-	showActivitiesPanelButton(): boolean {
-		return this.activitiesPanelButton.getValue();
-	}
-
-	setDisplayRoomName(displayRoomName: boolean) {
-		this.displayRoomName.next(displayRoomName);
-	}
-
-	setBrandingLogo(brandingLogo: string) {
-		this.brandingLogo.next(brandingLogo);
-	}
-
-	showRoomName(): boolean {
-		return this.displayRoomName.getValue();
-	}
-
-	setDisplayLogo(displayLogo: boolean) {
-		this.displayLogo.next(displayLogo);
-	}
-
-	showLogo(): boolean {
-		return this.displayLogo.getValue();
-	}
-	getToolbarAdditionalButtonsPosition(): ToolbarAdditionalButtonsPosition {
-		return this.toolbarAdditionalButtonsPosition.getValue();
-	}
-
-	setToolbarAdditionalButtonsPosition(toolbarAdditionalButtonsPosition: ToolbarAdditionalButtonsPosition) {
-		this.toolbarAdditionalButtonsPosition.next(toolbarAdditionalButtonsPosition);
-	}
-
-	setRecordingButton(recordingButton: boolean) {
-		this.recordingButton.next(recordingButton);
-	}
-
-	showRecordingButton(): boolean {
-		return this.recordingButton.getValue();
-	}
-
-	setToolbarViewRecordingsButton(toolbarViewRecordingsButton: boolean) {
-		this.toolbarViewRecordingsButton.next(toolbarViewRecordingsButton);
-	}
-
-	getToolbarViewRecordingsButton(): boolean {
-		return this.toolbarViewRecordingsButton.getValue();
-	}
-
-	showToolbarViewRecordingsButton(): boolean {
-		return this.getToolbarViewRecordingsButton();
-	}
+	// Toolbar configuration methods
 
 	setBroadcastingButton(broadcastingButton: boolean) {
-		this.broadcastingButton.next(broadcastingButton);
-	}
-
-	showBroadcastingButton(): boolean {
-		return this.broadcastingButton.getValue();
-	}
-
-	setRecordingActivity(recordingActivity: boolean) {
-		this.recordingActivity.next(recordingActivity);
-	}
-
-	showRecordingActivity(): boolean {
-		return this.recordingActivity.getValue();
-	}
-
-	setBroadcastingActivity(broadcastingActivity: boolean) {
-		this.broadcastingActivity.next(broadcastingActivity);
-	}
-
-	showBroadcastingActivity(): boolean {
-		return this.broadcastingActivity.getValue();
-	}
-
-	//Stream settings
-	setDisplayParticipantName(displayParticipantName: boolean) {
-		this.displayParticipantName.next(displayParticipantName);
-	}
-
-	isParticipantNameDisplayed(): boolean {
-		return this.displayParticipantName.getValue();
-	}
-
-	setDisplayAudioDetection(displayAudioDetection: boolean) {
-		this.displayAudioDetection.next(displayAudioDetection);
-	}
-
-	isAudioDetectionDisplayed(): boolean {
-		return this.displayAudioDetection.getValue();
-	}
-
-	setStreamVideoControls(streamVideoControls: boolean) {
-		this.streamVideoControls.next(streamVideoControls);
-	}
-
-	showStreamVideoControls(): boolean {
-		return this.streamVideoControls.getValue();
-	}
-
-	setParticipantItemMuteButton(participantItemMuteButton: boolean) {
-		this.participantItemMuteButton.next(participantItemMuteButton);
-	}
-
-	showParticipantItemMuteButton(): boolean {
-		return this.participantItemMuteButton.getValue();
-	}
-
-	setBackgroundEffectsButton(backgroundEffectsButton: boolean) {
-		this.backgroundEffectsButton.next(backgroundEffectsButton);
+		this.updateToolbarConfig({ broadcasting: broadcastingButton });
 	}
 
 	showBackgroundEffectsButton(): boolean {
-		return this.backgroundEffectsButton.getValue();
+		return this.toolbarConfig.subject.getValue().backgroundEffects;
 	}
 
-	// Admin dashboard
+	// Activity methods (these remain individual as they don't fit cleanly into toolbar config)
 
-	setAdminRecordingsList(adminRecordingsList: RecordingInfo[]) {
-		this.adminRecordingsList.next(adminRecordingsList);
-	}
-
-	getAdminRecordingsList(): RecordingInfo[] {
-		return this.adminRecordingsList.getValue();
-	}
-
-	setAdminLoginError(adminLoginError: any) {
-		this.adminLoginError.next(adminLoginError);
-	}
-
-	getAdminLoginError(): any {
-		return this.adminLoginError.getValue();
-	}
-
-	getAdminLoginTitle(): string {
-		return this.adminLoginTitle.getValue();
-	}
-
-	setAdminLoginTitle(title: string) {
-		this.adminLoginTitle.next(title);
-	}
-
-	getAdminDashboardTitle(): string {
-		return this.adminDashboardTitle.getValue();
-	}
-
-	setAdminDashboardTitle(title: string) {
-		this.adminDashboardTitle.next(title);
-	}
-
-	isRecordingEnabled(): boolean {
-		return this.recordingButton.getValue() && this.recordingActivity.getValue();
-	}
-
-	isBroadcastingEnabled(): boolean {
-		return this.broadcastingButton.getValue() && this.broadcastingActivity.getValue();
+	setBroadcastingActivity(broadcastingActivity: boolean) {
+		this.broadcastingActivityConfig.subject.next(broadcastingActivity);
 	}
 
 	// Internals
 	setLayoutRemoteParticipants(participants: ParticipantModel[] | undefined) {
-		this.layoutRemoteParticipants.next(participants);
+		this.layoutRemoteParticipantsConfig.subject.next(participants);
 	}
 
-	// Recording Activity Configuration
-	setRecordingActivityReadOnly(readOnly: boolean) {
-		this.recordingActivityReadOnly.next(readOnly);
-	}
-
-	isRecordingActivityReadOnly(): boolean {
-		return this.recordingActivityReadOnly.getValue();
-	}
-
-	setRecordingActivityShowControls(controls: { play?: boolean; download?: boolean; delete?: boolean }) {
-		this.recordingActivityShowControls.next(controls);
-	}
-
-	getRecordingActivityShowControls(): { play?: boolean; download?: boolean; delete?: boolean } {
-		return this.recordingActivityShowControls.getValue();
-	}
-
-	setRecordingActivityStartStopRecordingButton(show: boolean) {
-		this.recordingActivityStartStopRecordingButton.next(show);
-	}
-
-	setRecordingActivityViewRecordingsButton(show: boolean) {
-		this.recordingActivityViewRecordingsButton.next(show);
-	}
-
-	setRecordingActivityShowRecordingsList(show: boolean) {
-		this.recordingActivityShowRecordingsList.next(show);
-	}
+	// Recording Activity Configuration methods
 
 	showRecordingActivityRecordingsList(): boolean {
-		return this.recordingActivityShowRecordingsList.getValue();
+		return this.recordingActivityConfig.subject.getValue().showRecordingsList;
 	}
 }

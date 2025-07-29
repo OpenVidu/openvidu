@@ -16,15 +16,17 @@ import { OpenViduComponentsConfigService } from '../../services/config/directive
 	standalone: false
 })
 export class AdminDashboardRecordingsListDirective implements AfterViewInit, OnDestroy {
-
 	@Input() set recordingsList(value: RecordingInfo[]) {
 		this.recordingsValue = value;
 		this.update(this.recordingsValue);
 	}
 
-	recordingsValue: RecordingInfo [] = [];
+	recordingsValue: RecordingInfo[] = [];
 
-	constructor(public elementRef: ElementRef, private libService: OpenViduComponentsConfigService) {}
+	constructor(
+		public elementRef: ElementRef,
+		private libService: OpenViduComponentsConfigService
+	) {}
 
 	ngAfterViewInit() {
 		this.update(this.recordingsValue);
@@ -38,9 +40,7 @@ export class AdminDashboardRecordingsListDirective implements AfterViewInit, OnD
 	}
 
 	update(value: RecordingInfo[]) {
-		if (this.libService.getAdminRecordingsList() !== value) {
-			this.libService.setAdminRecordingsList(value);
-		}
+		this.libService.updateAdminConfig({ recordingsList: value });
 	}
 }
 
@@ -58,7 +58,6 @@ export class AdminDashboardRecordingsListDirective implements AfterViewInit, OnD
 	standalone: false
 })
 export class AdminDashboardTitleDirective implements AfterViewInit, OnDestroy {
-
 	@Input() set navbarTitle(value: string) {
 		this.navbarTitleValue = value;
 		this.update(this.navbarTitleValue);
@@ -66,7 +65,10 @@ export class AdminDashboardTitleDirective implements AfterViewInit, OnDestroy {
 
 	navbarTitleValue: string = 'OpenVidu Dashboard';
 
-	constructor(public elementRef: ElementRef, private libService: OpenViduComponentsConfigService) {}
+	constructor(
+		public elementRef: ElementRef,
+		private libService: OpenViduComponentsConfigService
+	) {}
 
 	ngAfterViewInit() {
 		this.update(this.navbarTitleValue);
@@ -80,12 +82,9 @@ export class AdminDashboardTitleDirective implements AfterViewInit, OnDestroy {
 	}
 
 	update(value: any) {
-		if (this.libService.getAdminDashboardTitle() !== value) {
-			this.libService.setAdminDashboardTitle(value);
-		}
+		this.libService.updateAdminConfig({ dashboardTitle: value });
 	}
 }
-
 
 /**
  * The **navbarTitle** directive allows customize the title of the navbar in {@link AdminLoginComponent}.
@@ -101,7 +100,6 @@ export class AdminDashboardTitleDirective implements AfterViewInit, OnDestroy {
 	standalone: false
 })
 export class AdminLoginTitleDirective implements AfterViewInit, OnDestroy {
-
 	@Input() set navbarTitle(value: any) {
 		this.navbarTitleValue = value;
 		this.update(this.navbarTitleValue);
@@ -109,7 +107,10 @@ export class AdminLoginTitleDirective implements AfterViewInit, OnDestroy {
 
 	navbarTitleValue: any = null;
 
-	constructor(public elementRef: ElementRef, private libService: OpenViduComponentsConfigService) {}
+	constructor(
+		public elementRef: ElementRef,
+		private libService: OpenViduComponentsConfigService
+	) {}
 
 	ngAfterViewInit() {
 		this.update(this.navbarTitleValue);
@@ -123,13 +124,9 @@ export class AdminLoginTitleDirective implements AfterViewInit, OnDestroy {
 	}
 
 	update(value: any) {
-		if (this.libService.getAdminLoginTitle() !== value) {
-			this.libService.setAdminLoginTitle(value);
-		}
+		this.libService.updateAdminConfig({ loginTitle: value });
 	}
 }
-
-
 
 /**
  * The **error** directive allows show the authentication error in {@link AdminLoginComponent}.
@@ -140,12 +137,11 @@ export class AdminLoginTitleDirective implements AfterViewInit, OnDestroy {
  * <ov-admin-login [error]="error"></ov-admin-login>
  *
  */
- @Directive({
+@Directive({
 	selector: 'ov-admin-login[error]',
 	standalone: false
 })
 export class AdminLoginErrorDirective implements AfterViewInit, OnDestroy {
-
 	@Input() set error(value: any) {
 		this.errorValue = value;
 		this.update(this.errorValue);
@@ -153,7 +149,10 @@ export class AdminLoginErrorDirective implements AfterViewInit, OnDestroy {
 
 	errorValue: any = null;
 
-	constructor(public elementRef: ElementRef, private libService: OpenViduComponentsConfigService) {}
+	constructor(
+		public elementRef: ElementRef,
+		private libService: OpenViduComponentsConfigService
+	) {}
 
 	ngAfterViewInit() {
 		this.update(this.errorValue);
@@ -167,9 +166,6 @@ export class AdminLoginErrorDirective implements AfterViewInit, OnDestroy {
 	}
 
 	update(value: any) {
-		if (this.libService.getAdminLoginError() !== value) {
-			this.libService.setAdminLoginError(value);
-		}
+		this.libService.updateAdminConfig({ loginError: value });
 	}
 }
-

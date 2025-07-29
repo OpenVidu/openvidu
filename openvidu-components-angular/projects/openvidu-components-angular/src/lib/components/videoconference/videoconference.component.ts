@@ -591,7 +591,9 @@ export class VideoconferenceComponent implements OnDestroy, AfterViewInit {
 			// Always initialize the room when ready to join
 			this.openviduService.initRoom();
 
-			const participantName = this.latestParticipantName;
+			// Get the most current participant name from the service
+			// This ensures we have the latest value after any batch updates
+			const participantName = this.libService.getCurrentParticipantName() || this.latestParticipantName;
 
 			if (this.componentState.isRoomReady) {
 				// Room is ready, hide prejoin and proceed
@@ -607,6 +609,16 @@ export class VideoconferenceComponent implements OnDestroy, AfterViewInit {
 					this.onTokenRequested.emit(participantName);
 				} else {
 					this.log.w('No participant name available when requesting token');
+					// Wait a bit and try again in case name is still propagating
+					setTimeout(() => {
+						const retryName = this.libService.getCurrentParticipantName()|| this.latestParticipantName;
+						if (retryName) {
+							this.log.d(`Retrying token request for participant: ${retryName}`);
+							this.onTokenRequested.emit(retryName);
+						} else {
+							this.log.e('Still no participant name available after retry');
+						}
+					}, 10);
 				}
 			}
 
@@ -734,7 +746,7 @@ export class VideoconferenceComponent implements OnDestroy, AfterViewInit {
 							const storedName = this.storageSrv.getParticipantName();
 							if (storedName) {
 								this.latestParticipantName = storedName;
-								this.libService.setParticipantName(storedName);
+								this.libService.updateGeneralConfig({ participantName: storedName });
 							}
 							this._onReadyToJoin();
 						}
@@ -747,6 +759,17 @@ export class VideoconferenceComponent implements OnDestroy, AfterViewInit {
 			if (name) {
 				this.latestParticipantName = name;
 				this.storageSrv.setParticipantName(name);
+
+				// If we're waiting for a participant name to proceed with joining, do it now
+				if (this.componentState.state === VideoconferenceState.JOINING &&
+					this.componentState.isRoomReady &&
+					!this.componentState.showPrejoin) {
+					this.log.d('Participant name received, proceeding to join');
+					this.updateComponentState({
+						state: VideoconferenceState.READY_TO_CONNECT,
+						showPrejoin: false
+					});
+				}
 			}
 		});
 	}

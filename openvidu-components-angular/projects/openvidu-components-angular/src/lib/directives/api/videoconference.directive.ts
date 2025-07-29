@@ -55,7 +55,7 @@ export class LivekitUrlDirective implements OnDestroy {
 	 * @ignore
 	 */
 	update(value: string) {
-		this.libService.setLivekitUrl(value);
+		this.libService.updateGeneralConfig({ livekitUrl: value });
 	}
 }
 
@@ -108,7 +108,7 @@ export class TokenDirective implements OnDestroy {
 	 * @ignore
 	 */
 	update(value: string) {
-		this.libService.setToken(value);
+		this.libService.updateGeneralConfig({ token: value });
 	}
 }
 
@@ -160,7 +160,7 @@ export class TokenErrorDirective implements OnDestroy {
 	 * @ignore
 	 */
 	update(value: any) {
-		this.libService.setTokenError(value);
+		this.libService.updateGeneralConfig({ tokenError: value });
 	}
 }
 
@@ -212,9 +212,7 @@ export class MinimalDirective implements OnDestroy {
 	 * @ignore
 	 */
 	update(value: boolean) {
-		if (this.libService.isMinimal() !== value) {
-			this.libService.setMinimal(value);
-		}
+		this.libService.updateGeneralConfig({ minimal: value });
 	}
 }
 
@@ -538,7 +536,7 @@ export class ParticipantNameDirective implements AfterViewInit, OnDestroy {
 	 * @ignore
 	 */
 	update(value: string) {
-		if (value) this.libService.setParticipantName(value);
+		if (value) this.libService.updateGeneralConfig({ participantName: value });
 	}
 }
 
@@ -590,9 +588,7 @@ export class PrejoinDirective implements OnDestroy {
 	 * @ignore
 	 */
 	update(value: boolean) {
-		if (this.libService.showPrejoin() !== value) {
-			this.libService.setPrejoin(value);
-		}
+		this.libService.updateGeneralConfig({ prejoin: value });
 	}
 }
 
@@ -663,7 +659,7 @@ export class VideoEnabledDirective implements OnDestroy {
 
 		// Ensure libService state is consistent with the final enabled state
 		if (this.libService.isVideoEnabled() !== finalEnabledState) {
-			this.libService.setVideoEnabled(finalEnabledState);
+			this.libService.updateStreamConfig({ videoEnabled: finalEnabledState });
 		}
 	}
 }
@@ -731,7 +727,7 @@ export class AudioEnabledDirective implements OnDestroy {
 		this.storageService.setMicrophoneEnabled(finalEnabledState);
 
 		if (this.libService.isAudioEnabled() !== enabled) {
-			this.libService.setAudioEnabled(enabled);
+			this.libService.updateStreamConfig({ audioEnabled: enabled });
 		}
 	}
 }
@@ -785,7 +781,7 @@ export class ShowDisconnectionDialogDirective implements OnDestroy {
 	 */
 	update(value: boolean) {
 		if (this.libService.getShowDisconnectionDialog() !== value) {
-			this.libService.setShowDisconnectionDialog(value);
+			this.libService.updateGeneralConfig({ showDisconnectionDialog: value });
 		}
 	}
 }
@@ -857,6 +853,6 @@ export class RecordingStreamBaseUrlDirective implements AfterViewInit, OnDestroy
 	 * @ignore
 	 */
 	update(value: string) {
-		if (value) this.libService.setRecordingStreamBaseUrl(value);
+		if (value) this.libService.updateGeneralConfig({ recordingStreamBaseUrl: value });
 	}
 }

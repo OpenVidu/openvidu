@@ -32,7 +32,10 @@ export class ParticipantPanelItemMuteButtonDirective implements AfterViewInit, O
 
 	muteValue: boolean = true;
 
-	constructor(public elementRef: ElementRef, private libService: OpenViduComponentsConfigService) {}
+	constructor(
+		public elementRef: ElementRef,
+		private libService: OpenViduComponentsConfigService
+	) {}
 
 	ngAfterViewInit() {
 		this.update(this.muteValue);
@@ -46,8 +49,6 @@ export class ParticipantPanelItemMuteButtonDirective implements AfterViewInit, O
 	}
 
 	update(value: boolean) {
-		if (this.libService.showParticipantItemMuteButton() !== value) {
-			this.libService.setParticipantItemMuteButton(value);
-		}
+		this.libService.updateStreamConfig({ participantItemMuteButton: value });
 	}
 }
