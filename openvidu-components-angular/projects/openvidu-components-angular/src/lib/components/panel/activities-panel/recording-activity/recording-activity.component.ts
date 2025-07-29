@@ -147,6 +147,11 @@ export class RecordingActivityComponent implements OnInit, OnDestroy {
 	/**
 	 * @internal
 	 */
+	showRecordingList: boolean = true; // Controls visibility of the recording list in the panel
+
+	/**
+	 * @internal
+	 */
 	showControls: { play?: boolean; download?: boolean; delete?: boolean; externalView?: boolean } = {
 		play: true,
 		download: true,
@@ -370,13 +375,22 @@ export class RecordingActivityComponent implements OnInit, OnDestroy {
 			this.showViewRecordingsButton = show;
 			this.cd.markForCheck();
 		});
+
+		this.libService.recordingActivityShowRecordingsList$.pipe(takeUntil(this.destroy$)).subscribe((show: boolean) => {
+			this.showRecordingList = show;
+			this.cd.markForCheck();
+		});
 	}
 
 	private subscribeToRecordingStatus() {
 		this.recordingService.recordingStatusObs.pipe(takeUntil(this.destroy$)).subscribe((event: RecordingStatusInfo) => {
 			const { status, recordingList, error } = event;
 			this.recordingStatus = status;
-			this.recordingList = recordingList;
+			if (this.showRecordingList) {
+				this.recordingList = recordingList;
+			} else {
+				this.recordingList = recordingList.filter((rec) => rec.status === RecordingStatus.STARTED);
+			}
 			this.recordingError = error;
 			this.recordingAlive = this.recordingStatus === RecordingStatus.STARTED;
 			if (this.recordingStatus !== RecordingStatus.FAILED) {

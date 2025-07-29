@@ -430,3 +430,49 @@ export class RecordingActivityViewRecordingsButtonDirective implements AfterView
 		this.libService.setRecordingActivityViewRecordingsButton(value);
 	}
 }
+
+/**
+ * @internal
+ * The **recordingActivityShowRecordingsList** directive allows to show or hide the recordings list in the recording activity panel.
+ *
+ * Default: `true`
+ *
+ * Can be used in {@link VideoconferenceComponent}.
+ *
+ * @example
+ * <ov-videoconference [recordingActivityShowRecordingsList]="false"></ov-videoconference>
+ */
+@Directive({
+	selector: 'ov-videoconference[recordingActivityShowRecordingsList]',
+	standalone: false
+})
+export class RecordingActivityShowRecordingsListDirective implements AfterViewInit, OnDestroy {
+	@Input() set recordingActivityShowRecordingsList(value: boolean) {
+		this._value = value;
+		this.update(this._value);
+	}
+
+	private _value: boolean = true;
+
+	constructor(
+		public elementRef: ElementRef,
+		private libService: OpenViduComponentsConfigService
+	) {}
+
+	ngAfterViewInit() {
+		this.update(this._value);
+	}
+
+	ngOnDestroy(): void {
+		this.clear();
+	}
+
+	private clear() {
+		this._value = true;
+		this.update(this._value);
+	}
+
+	private update(value: boolean) {
+		this.libService.setRecordingActivityShowRecordingsList(value);
+	}
+}

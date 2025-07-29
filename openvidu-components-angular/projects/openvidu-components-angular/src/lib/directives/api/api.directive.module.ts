@@ -15,7 +15,8 @@ import {
 	RecordingActivityReadOnlyDirective,
 	RecordingActivityShowControlsDirective,
 	StartStopRecordingButtonsDirective,
-	RecordingActivityViewRecordingsButtonDirective
+	RecordingActivityViewRecordingsButtonDirective,
+	RecordingActivityShowRecordingsListDirective
 } from './internals.directive';
 import { ParticipantPanelItemMuteButtonDirective } from './participant-panel-item.directive';
 import {
@@ -107,7 +108,8 @@ const directives = [
 	AdminDashboardTitleDirective,
 	LayoutRemoteParticipantsDirective,
 	StartStopRecordingButtonsDirective,
-	RecordingActivityViewRecordingsButtonDirective
+	RecordingActivityViewRecordingsButtonDirective,
+	RecordingActivityShowRecordingsListDirective
 ];
 
 @NgModule({

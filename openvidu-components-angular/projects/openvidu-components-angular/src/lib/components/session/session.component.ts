@@ -499,7 +499,9 @@ export class SessionComponent implements OnInit, OnDestroy {
 					case DataTopic.ROOM_STATUS:
 						const { recordingList, isRecordingStarted, isBroadcastingStarted, broadcastingId } = event as RoomStatusData;
 
-						this.recordingService.setRecordingList(recordingList);
+						if (this.libService.showRecordingActivityRecordingsList()) {
+							this.recordingService.setRecordingList(recordingList);
+						}
 						if (isRecordingStarted) {
 							const recordingActive = recordingList.find((recording) => recording.status === RecordingStatus.STARTED);
 							this.recordingService.setRecordingStarted(recordingActive);
