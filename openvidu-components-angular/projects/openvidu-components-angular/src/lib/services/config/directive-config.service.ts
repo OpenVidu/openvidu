@@ -362,7 +362,7 @@ export class OpenViduComponentsConfigService {
 		},
 		startStopButton: true,
 		viewRecordingsButton: false,
-		showRecordingsList: false
+		showRecordingsList: true
 	});
 
 	private adminConfig = this.createAdminConfigItem({
