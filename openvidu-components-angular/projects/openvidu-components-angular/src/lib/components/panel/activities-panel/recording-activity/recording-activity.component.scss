@@ -141,7 +141,7 @@
 		box-sizing: border-box;
 
 		&.recording-active {
-			background: linear-gradient(135deg,transparent 69%,var(--ov-error-color) 250%)
+			background: linear-gradient(135deg, transparent 69%, var(--ov-error-color) 250%);
 		}
 	}
 
@@ -453,6 +453,7 @@
 		width: 100%;
 		background-color: var(--ov-primary-action-color);
 		color: var(--ov-secondary-action-color);
+		border-radius: var(--ov-surface-radius);
 	}
 
 	#view-recordings-btn {
@@ -475,11 +476,13 @@
 		width: 100%;
 		background-color: var(--ov-error-color);
 		color: var(--ov-secondary-action-color);
+		border-radius: var(--ov-surface-radius);
 	}
 
 	#reset-recording-status-btn {
 		width: 100%;
-		background-color: var(--ov-secondary-action-color);
+		background-color: var(--ov-accent-action-color);
+		border-radius: var(--ov-surface-radius);
 	}
 
 	.recording-item {

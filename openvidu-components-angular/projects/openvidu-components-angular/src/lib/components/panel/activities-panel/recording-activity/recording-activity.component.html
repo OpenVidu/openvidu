@@ -62,7 +62,7 @@
 				}
 
 				<!-- Empty state content -->
-				@if (recordingList.length === 0) {
+				@if (recordingList.length === 0 && recordingStatus === recStatusEnum.STOPPED) {
 					<div class="empty-state">
 						<h2 class="recording-title">
 							{{
@@ -83,8 +83,40 @@
 					</div>
 				}
 
+				<!-- Panel body messages -->
+				<div class="recording-status-messages">
+					@if (recordingStatus === recStatusEnum.STARTING) {
+						<span class="recording-message">
+							{{ 'PANEL.RECORDING.STARTING' | translate }}
+						</span>
+					}
+
+					@if (recordingStatus === recStatusEnum.STOPPING) {
+						<span class="recording-message">
+							{{ 'PANEL.RECORDING.STOPPING' | translate }}
+						</span>
+					}
+
+					@if (recordingStatus === recStatusEnum.FAILED) {
+						<div class="recording-error-container">
+							<span class="recording-error">{{ recordingError }}</span>
+							<button mat-flat-button id="reset-recording-status-btn" (click)="resetStatus()">
+								<span>{{ 'PANEL.RECORDING.ACCEPT' | translate }}</span>
+							</button>
+						</div>
+					}
+				</div>
+
 				<!-- Recording control buttons -->
-				@if (!isReadOnlyMode) {
+				@if (isReadOnlyMode) {
+					<!-- View all recordings button -->
+					<div class="item recording-action-buttons">
+						<button mat-flat-button id="view-recordings-btn" (click)="viewAllRecordings()" class="view-recordings-button">
+							<span>{{ 'TOOLBAR.VIEW_RECORDINGS' | translate }}</span>
+							<mat-icon class="external-link-icon">open_in_new</mat-icon>
+						</button>
+					</div>
+				} @else {
 					<div class="item recording-action-buttons">
 						<!-- Stop recording button -->
 						@if (recordingAlive && showStartStopRecordingButton) {
@@ -126,38 +158,6 @@
 								</button>
 							</div>
 						}
-
-						<!-- Recording status messages -->
-						<div class="recording-status-messages">
-							@if (recordingStatus === recStatusEnum.STARTING) {
-								<span class="recording-message">
-									{{ 'PANEL.RECORDING.STARTING' | translate }}
-								</span>
-							}
-
-							@if (recordingStatus === recStatusEnum.STOPPING) {
-								<span class="recording-message">
-									{{ 'PANEL.RECORDING.STOPPING' | translate }}
-								</span>
-							}
-
-							@if (recordingStatus === recStatusEnum.FAILED) {
-								<div class="recording-error-container">
-									<span class="recording-error">Message: {{ recordingError }}</span>
-									<button mat-flat-button id="reset-recording-status-btn" (click)="resetStatus()">
-										<span>{{ 'PANEL.RECORDING.ACCEPT' | translate }}</span>
-									</button>
-								</div>
-							}
-						</div>
-					</div>
-				} @else {
-					<!-- View all recordings button -->
-					<div class="item recording-action-buttons">
-						<button mat-flat-button id="view-recordings-btn" (click)="viewAllRecordings()" class="view-recordings-button">
-							<span>{{ 'TOOLBAR.VIEW_RECORDINGS' | translate }}</span>
-							<mat-icon class="external-link-icon">open_in_new</mat-icon>
-						</button>
 					</div>
 				}
 			</div>
