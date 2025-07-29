@@ -384,3 +384,49 @@ export class StartStopRecordingButtonsDirective implements OnDestroy {
 		this.libService.setRecordingActivityStartStopRecordingButton(value);
 	}
 }
+
+/**
+ * @internal
+ * The **recordingActivityViewRecordingsButton** directive allows to show/hide the view recordings button in the recording activity panel.
+ *
+ * Default: `false`
+ *
+ * Can be used in {@link VideoconferenceComponent}.
+ *
+ * @example
+ * <ov-videoconference [recordingActivityViewRecordingsButton]="true"></ov-videoconference>
+ */
+@Directive({
+	selector: 'ov-videoconference[recordingActivityViewRecordingsButton]',
+	standalone: false
+})
+export class RecordingActivityViewRecordingsButtonDirective implements AfterViewInit, OnDestroy {
+	@Input() set recordingActivityViewRecordingsButton(value: boolean) {
+		this._value = value;
+		this.update(this._value);
+	}
+
+	private _value: boolean = false;
+
+	constructor(
+		public elementRef: ElementRef,
+		private libService: OpenViduComponentsConfigService
+	) {}
+
+	ngAfterViewInit() {
+		this.update(this._value);
+	}
+
+	ngOnDestroy(): void {
+		this.clear();
+	}
+
+	private clear() {
+		this._value = false;
+		this.update(this._value);
+	}
+
+	private update(value: boolean) {
+		this.libService.setRecordingActivityViewRecordingsButton(value);
+	}
+}

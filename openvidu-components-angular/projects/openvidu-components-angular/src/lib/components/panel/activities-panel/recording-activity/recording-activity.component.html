@@ -113,12 +113,19 @@
 						}
 
 						<!-- View all recordings button -->
-						<div class="item recording-action-buttons">
-							<button mat-flat-button id="view-recordings-btn" (click)="viewAllRecordings()" class="view-recordings-button">
-								<span>{{ 'TOOLBAR.VIEW_RECORDINGS' | translate }}</span>
-								<mat-icon class="external-link-icon">open_in_new</mat-icon>
-							</button>
-						</div>
+						@if (showViewRecordingsButton) {
+							<div class="item recording-action-buttons">
+								<button
+									mat-flat-button
+									id="view-recordings-btn"
+									(click)="viewAllRecordings()"
+									class="view-recordings-button"
+								>
+									<span>{{ 'TOOLBAR.VIEW_RECORDINGS' | translate }}</span>
+									<mat-icon class="external-link-icon">open_in_new</mat-icon>
+								</button>
+							</div>
+						}
 
 						<!-- Recording status messages -->
 						<div class="recording-status-messages">
