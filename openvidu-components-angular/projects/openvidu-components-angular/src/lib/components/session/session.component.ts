@@ -534,6 +534,7 @@ export class SessionComponent implements OnInit, OnDestroy {
 
 		this.room.on(RoomEvent.Disconnected, async (reason: DisconnectReason | undefined) => {
 			this.shouldDisconnectRoomWhenComponentIsDestroyed = false;
+			this.actionService.closeConnectionDialog();
 			const participantLeftEvent: ParticipantLeftEvent = {
 				roomName: this.openviduService.getRoomName(),
 				participantName: this.participantService.getLocalParticipant()?.identity || '',
