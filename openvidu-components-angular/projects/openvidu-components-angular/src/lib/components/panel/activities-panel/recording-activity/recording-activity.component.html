@@ -84,18 +84,27 @@
 
 				<!-- Panel body messages -->
 				<div class="recording-status-messages">
+					<!-- Starting message -->
 					@if (recordingStatus === recStatusEnum.STARTING) {
-						<span class="recording-message">
-							{{ 'PANEL.RECORDING.STARTING' | translate }}
-						</span>
+						<div class="recording-status recording-status-starting blink" role="status">
+							<mat-icon class="status-icon" aria-hidden="true">hourglass_top</mat-icon>
+							<div class="status-content">
+								<span class="status-title">{{ 'PANEL.RECORDING.STARTING' | translate }}</span>
+							</div>
+						</div>
 					}
 
+					<!-- Stopping message -->
 					@if (recordingStatus === recStatusEnum.STOPPING) {
-						<span class="recording-message">
-							{{ 'PANEL.RECORDING.STOPPING' | translate }}
-						</span>
+						<div class="recording-status recording-status-stopping blink" role="status">
+							<mat-icon class="status-icon" aria-hidden="true">hourglass_bottom</mat-icon>
+							<div class="status-content">
+								<span class="status-title">{{ 'PANEL.RECORDING.STOPPING' | translate }}</span>
+							</div>
+						</div>
 					}
 
+					<!-- Error message -->
 					@if (showStartStopRecordingButton && recordingStatus === recStatusEnum.FAILED && recordingError) {
 						<div class="recording-error-container">
 							<div class="recording-error" role="alert">

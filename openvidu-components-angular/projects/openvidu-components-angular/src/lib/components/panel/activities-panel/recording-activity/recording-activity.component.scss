@@ -92,6 +92,52 @@
 		margin-top: 10px;
 	}
 
+	.recording-status {
+		display: flex;
+		align-items: flex-start;
+		gap: 12px;
+		border: 1px solid var(--ov-warn-color);
+		border-radius: 8px;
+		padding: 12px 16px;
+		margin: 16px 0;
+		font-size: 15px;
+		box-shadow: 0 2px 8px 0 rgba(255, 193, 7, 0.04);
+
+		.status-icon {
+			font-size: 28px;
+			color: var(--ov-warn-color);
+			flex-shrink: 0;
+			margin-top: 2px;
+		}
+
+		.status-content {
+			display: flex;
+			flex-direction: column;
+			gap: 2px;
+		}
+
+		.status-title {
+			font-weight: 600;
+			font-size: 15px;
+			margin-bottom: 2px;
+		}
+
+		.status-message {
+			font-size: 14px;
+			opacity: 0.85;
+		}
+	}
+
+	.recording-status-starting {
+		background: rgba(255, 193, 7, 0.08);
+		border-color: var(--ov-warn-color);
+	}
+
+	.recording-status-stopping {
+		background: rgba(255, 193, 7, 0.13);
+		border-color: var(--ov-warn-color);
+	}
+
 	.recording-error-container {
 		display: flex;
 		flex-direction: column;
@@ -412,7 +458,7 @@
 		margin: 16px 0;
 		color: var(--ov-error-color);
 		font-size: 15px;
-		box-shadow: 0 2px 8px 0 rgba(244,67,54,0.04);
+		box-shadow: 0 2px 8px 0 rgba(244, 67, 54, 0.04);
 
 		.error-icon {
 			font-size: 28px;
