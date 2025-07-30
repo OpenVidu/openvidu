@@ -13,9 +13,10 @@ import {
 import { ParticipantService } from '../../../../services/participant/participant.service';
 import { PanelService } from '../../../../services/panel/panel.service';
 import { ParticipantPanelItemDirective } from '../../../../directives/template/openvidu-components-angular.directive';
-import { Subscription } from 'rxjs';
+import { Subject, takeUntil } from 'rxjs';
 import { ParticipantModel } from '../../../../models/participant.model';
 import { TemplateManagerService, ParticipantsPanelTemplateConfiguration } from '../../../../services/template/template-manager.service';
+import { OpenViduComponentsConfigService } from '../../../../services/config/directive-config.service';
 
 /**
  * The **ParticipantsPanelComponent** is hosted inside of the {@link PanelComponent}.
@@ -52,6 +53,12 @@ export class ParticipantsPanelComponent implements OnInit, OnDestroy, AfterViewI
 	/**
 	 * @ignore
 	 */
+	@ContentChild('participantPanelAfterLocalParticipant', { read: TemplateRef })
+	participantPanelAfterLocalParticipantTemplate: TemplateRef<any>;
+
+	/**
+	 * @ignore
+	 */
 	@ContentChild(ParticipantPanelItemDirective)
 	set externalParticipantPanelItem(externalParticipantPanelItem: ParticipantPanelItemDirective) {
 		this._externalParticipantPanelItem = externalParticipantPanelItem;
@@ -69,8 +76,7 @@ export class ParticipantsPanelComponent implements OnInit, OnDestroy, AfterViewI
 	// Store directive references for template setup
 	private _externalParticipantPanelItem?: ParticipantPanelItemDirective;
 
-	private localParticipantSubs: Subscription;
-	private remoteParticipantsSubs: Subscription;
+	private destroy$ = new Subject<void>();
 
 	/**
 	 * @ignore
@@ -79,7 +85,8 @@ export class ParticipantsPanelComponent implements OnInit, OnDestroy, AfterViewI
 		private participantService: ParticipantService,
 		private panelService: PanelService,
 		private cd: ChangeDetectorRef,
-		private templateManagerService: TemplateManagerService
+		private templateManagerService: TemplateManagerService,
+		private libService: OpenViduComponentsConfigService
 	) {}
 
 	/**
@@ -88,25 +95,15 @@ export class ParticipantsPanelComponent implements OnInit, OnDestroy, AfterViewI
 	ngOnInit(): void {
 		this.setupTemplates();
 
-		this.localParticipantSubs = this.participantService.localParticipant$.subscribe((p: ParticipantModel | undefined) => {
-			if (p) {
-				this.localParticipant = p;
-				this.cd.markForCheck();
-			}
-		});
-
-		this.remoteParticipantsSubs = this.participantService.remoteParticipants$.subscribe((p: ParticipantModel[]) => {
-			this.remoteParticipants = p;
-			this.cd.markForCheck();
-		});
+		this.subscribeToParticipantsChanges();
 	}
 
 	/**
 	 * @ignore
 	 */
 	ngOnDestroy() {
-		if (this.localParticipantSubs) this.localParticipantSubs.unsubscribe();
-		if (this.remoteParticipantsSubs) this.remoteParticipantsSubs.unsubscribe;
+		this.destroy$.next();
+		this.destroy$.complete();
 	}
 
 	/**
@@ -120,6 +117,21 @@ export class ParticipantsPanelComponent implements OnInit, OnDestroy, AfterViewI
 			this.cd.detectChanges();
 		}
 	}
+
+	private subscribeToParticipantsChanges() {
+		this.participantService.localParticipant$.pipe(takeUntil(this.destroy$)).subscribe((p: ParticipantModel | undefined) => {
+			if (p) {
+				this.localParticipant = p;
+				this.cd.markForCheck();
+			}
+		});
+
+		this.participantService.remoteParticipants$.pipe(takeUntil(this.destroy$)).subscribe((p: ParticipantModel[]) => {
+			this.remoteParticipants = p;
+			this.cd.markForCheck();
+		});
+	}
+
 
 	/**
 	 * @internal
@@ -142,6 +154,9 @@ export class ParticipantsPanelComponent implements OnInit, OnDestroy, AfterViewI
 	private applyTemplateConfiguration(): void {
 		if (this.templateConfig.participantPanelItemTemplate) {
 			this.participantPanelItemTemplate = this.templateConfig.participantPanelItemTemplate;
+		}
+		if (this.templateConfig.participantPanelAfterLocalParticipantTemplate) {
+			this.participantPanelAfterLocalParticipantTemplate = this.templateConfig.participantPanelAfterLocalParticipantTemplate;
 		}
 	}
 

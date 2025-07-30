@@ -10,7 +10,6 @@ import {
 	ParticipantPanelItemDirective,
 	ParticipantPanelItemElementsDirective,
 	ParticipantsPanelDirective,
-	PreJoinDirective,
 	StreamDirective,
 	ToolbarAdditionalButtonsDirective,
 	ToolbarAdditionalPanelButtonsDirective,
@@ -43,6 +42,7 @@ import {
 } from '../../models/recording.model';
 import { BroadcastingStartRequestedEvent, BroadcastingStopRequestedEvent } from '../../models/broadcasting.model';
 import { LangOption } from '../../models/lang.model';
+import { ParticipantPanelAfterLocalParticipantDirective, PreJoinDirective } from '../../directives/template/internals.directive';
 
 /**
  * The **VideoconferenceComponent** is the parent of all OpenVidu components.
@@ -129,6 +129,11 @@ export class VideoconferenceComponent implements OnDestroy, AfterViewInit {
 	 * @internal
 	 */
 	@ContentChild(PreJoinDirective) externalPreJoin: PreJoinDirective;
+	/**
+	 * @internal
+	 *
+	 */
+	@ContentChild(ParticipantPanelAfterLocalParticipantDirective) externalParticipantPanelAfterLocalParticipant: ParticipantPanelAfterLocalParticipantDirective;
 
 	/**
 	 * @internal
@@ -198,6 +203,10 @@ export class VideoconferenceComponent implements OnDestroy, AfterViewInit {
 	 * @internal
 	 */
 	openviduAngularAdditionalPanelsTemplate: TemplateRef<any>;
+	/**
+	 * @internal
+	 */
+	openviduAngularParticipantPanelAfterLocalParticipantTemplate: TemplateRef<any>;
 	/**
 	 * @internal
 	 */
@@ -516,6 +525,7 @@ export class VideoconferenceComponent implements OnDestroy, AfterViewInit {
 			chatPanel: this.externalChatPanel,
 			activitiesPanel: this.externalActivitiesPanel,
 			participantsPanel: this.externalParticipantsPanel,
+			participantPanelAfterLocalParticipant: this.externalParticipantPanelAfterLocalParticipant,
 			participantPanelItem: this.externalParticipantPanelItem,
 			participantPanelItemElements: this.externalParticipantPanelItemElements,
 			layout: this.externalLayout,
@@ -564,6 +574,9 @@ export class VideoconferenceComponent implements OnDestroy, AfterViewInit {
 		}
 		if (this.templateConfig.additionalPanelsTemplate) {
 			this.openviduAngularAdditionalPanelsTemplate = this.templateConfig.additionalPanelsTemplate;
+		}
+		if (this.templateConfig.participantPanelAfterLocalParticipantTemplate) {
+			this.openviduAngularParticipantPanelAfterLocalParticipantTemplate = this.templateConfig.participantPanelAfterLocalParticipantTemplate;
 		}
 		if (this.templateConfig.participantPanelItemElementsTemplate) {
 			this.openviduAngularParticipantPanelItemElementsTemplate = this.templateConfig.participantPanelItemElementsTemplate;

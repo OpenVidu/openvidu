@@ -10,12 +10,12 @@ import {
 	ParticipantPanelItemDirective,
 	ParticipantPanelItemElementsDirective,
 	ParticipantsPanelDirective,
-	PreJoinDirective,
 	StreamDirective,
 	ToolbarAdditionalButtonsDirective,
 	ToolbarAdditionalPanelButtonsDirective,
 	ToolbarDirective
 } from '../../directives/template/openvidu-components-angular.directive';
+import { PreJoinDirective, ParticipantPanelAfterLocalParticipantDirective } from '../../directives/template/internals.directive';
 
 /**
  * Configuration object for all templates in the videoconference component
@@ -34,6 +34,7 @@ export interface TemplateConfiguration {
 	additionalPanelsTemplate?: TemplateRef<any>;
 
 	// Participant templates
+	participantPanelAfterLocalParticipantTemplate?: TemplateRef<any>;
 	participantPanelItemTemplate: TemplateRef<any>;
 	participantPanelItemElementsTemplate?: TemplateRef<any>;
 
@@ -70,6 +71,7 @@ export interface ToolbarTemplateConfiguration {
  */
 export interface ParticipantsPanelTemplateConfiguration {
 	participantPanelItemTemplate?: TemplateRef<any>;
+	participantPanelAfterLocalParticipantTemplate?: TemplateRef<any>;
 }
 
 /**
@@ -100,6 +102,7 @@ export interface ExternalDirectives {
 	chatPanel?: ChatPanelDirective;
 	activitiesPanel?: ActivitiesPanelDirective;
 	participantsPanel?: ParticipantsPanelDirective;
+	participantPanelAfterLocalParticipant?: ParticipantPanelAfterLocalParticipantDirective;
 	participantPanelItem?: ParticipantPanelItemDirective;
 	participantPanelItemElements?: ParticipantPanelItemElementsDirective;
 	layout?: LayoutDirective;
@@ -138,10 +141,7 @@ export class TemplateManagerService {
 	/**
 	 * Sets up all templates based on external directives and default templates
 	 */
-	setupTemplates(
-		externalDirectives: ExternalDirectives,
-		defaultTemplates: DefaultTemplates
-	): TemplateConfiguration {
+	setupTemplates(externalDirectives: ExternalDirectives, defaultTemplates: DefaultTemplates): TemplateConfiguration {
 		this.log.d('Setting up templates...');
 
 		const config: TemplateConfiguration = {
@@ -155,7 +155,8 @@ export class TemplateManagerService {
 			participantsPanelTemplate: this.setupParticipantsPanelTemplate(externalDirectives, defaultTemplates),
 			activitiesPanelTemplate: this.setupActivitiesPanelTemplate(externalDirectives, defaultTemplates),
 			participantPanelItemTemplate: this.setupParticipantPanelItemTemplate(externalDirectives, defaultTemplates),
-			streamTemplate: this.setupStreamTemplate(externalDirectives, defaultTemplates)
+			streamTemplate: this.setupStreamTemplate(externalDirectives, defaultTemplates),
+			participantPanelAfterLocalParticipantTemplate: this.setupParticipantPanelAfterLocalParticipantTemplate(externalDirectives)
 		};
 
 		// Optional templates
@@ -184,12 +185,20 @@ export class TemplateManagerService {
 	}
 
 	/**
+	 * Sets up the participantPanelAfterLocalParticipant template
+	 */
+	private setupParticipantPanelAfterLocalParticipantTemplate(externalDirectives: ExternalDirectives): TemplateRef<any> | undefined {
+		if (externalDirectives.participantPanelAfterLocalParticipant) {
+			this.log.d('Setting EXTERNAL PARTICIPANT PANEL AFTER LOCAL PARTICIPANT');
+			return (externalDirectives.participantPanelAfterLocalParticipant as any).template;
+		}
+		return undefined;
+	}
+
+	/**
 	 * Sets up the toolbar template
 	 */
-	private setupToolbarTemplate(
-		externalDirectives: ExternalDirectives,
-		defaultTemplates: DefaultTemplates
-	): TemplateRef<any> {
+	private setupToolbarTemplate(externalDirectives: ExternalDirectives, defaultTemplates: DefaultTemplates): TemplateRef<any> {
 		if (externalDirectives.toolbar) {
 			this.log.d('Setting EXTERNAL TOOLBAR');
 			return externalDirectives.toolbar.template;
@@ -202,10 +211,7 @@ export class TemplateManagerService {
 	/**
 	 * Sets up the panel template
 	 */
-	private setupPanelTemplate(
-		externalDirectives: ExternalDirectives,
-		defaultTemplates: DefaultTemplates
-	): TemplateRef<any> {
+	private setupPanelTemplate(externalDirectives: ExternalDirectives, defaultTemplates: DefaultTemplates): TemplateRef<any> {
 		if (externalDirectives.panel) {
 			this.log.d('Setting EXTERNAL PANEL');
 			return externalDirectives.panel.template;
@@ -218,10 +224,7 @@ export class TemplateManagerService {
 	/**
 	 * Sets up the layout template
 	 */
-	private setupLayoutTemplate(
-		externalDirectives: ExternalDirectives,
-		defaultTemplates: DefaultTemplates
-	): TemplateRef<any> {
+	private setupLayoutTemplate(externalDirectives: ExternalDirectives, defaultTemplates: DefaultTemplates): TemplateRef<any> {
 		if (externalDirectives.layout) {
 			this.log.d('Setting EXTERNAL LAYOUT');
 			return externalDirectives.layout.template;
@@ -247,10 +250,7 @@ export class TemplateManagerService {
 	/**
 	 * Sets up the chat panel template
 	 */
-	private setupChatPanelTemplate(
-		externalDirectives: ExternalDirectives,
-		defaultTemplates: DefaultTemplates
-	): TemplateRef<any> {
+	private setupChatPanelTemplate(externalDirectives: ExternalDirectives, defaultTemplates: DefaultTemplates): TemplateRef<any> {
 		if (externalDirectives.chatPanel) {
 			this.log.d('Setting EXTERNAL CHAT PANEL');
 			return externalDirectives.chatPanel.template;
@@ -263,10 +263,7 @@ export class TemplateManagerService {
 	/**
 	 * Sets up the participants panel template
 	 */
-	private setupParticipantsPanelTemplate(
-		externalDirectives: ExternalDirectives,
-		defaultTemplates: DefaultTemplates
-	): TemplateRef<any> {
+	private setupParticipantsPanelTemplate(externalDirectives: ExternalDirectives, defaultTemplates: DefaultTemplates): TemplateRef<any> {
 		if (externalDirectives.participantsPanel) {
 			this.log.d('Setting EXTERNAL PARTICIPANTS PANEL');
 			return externalDirectives.participantsPanel.template;
@@ -279,10 +276,7 @@ export class TemplateManagerService {
 	/**
 	 * Sets up the activities panel template
 	 */
-	private setupActivitiesPanelTemplate(
-		externalDirectives: ExternalDirectives,
-		defaultTemplates: DefaultTemplates
-	): TemplateRef<any> {
+	private setupActivitiesPanelTemplate(externalDirectives: ExternalDirectives, defaultTemplates: DefaultTemplates): TemplateRef<any> {
 		if (externalDirectives.activitiesPanel) {
 			this.log.d('Setting EXTERNAL ACTIVITIES PANEL');
 			return externalDirectives.activitiesPanel.template;
@@ -311,10 +305,7 @@ export class TemplateManagerService {
 	/**
 	 * Sets up the stream template
 	 */
-	private setupStreamTemplate(
-		externalDirectives: ExternalDirectives,
-		defaultTemplates: DefaultTemplates
-	): TemplateRef<any> {
+	private setupStreamTemplate(externalDirectives: ExternalDirectives, defaultTemplates: DefaultTemplates): TemplateRef<any> {
 		if (externalDirectives.stream) {
 			this.log.d('Setting EXTERNAL STREAM');
 			return externalDirectives.stream.template;
@@ -363,12 +354,14 @@ export class TemplateManagerService {
 	 */
 	setupParticipantsPanelTemplates(
 		externalParticipantPanelItem?: ParticipantPanelItemDirective,
-		defaultParticipantPanelItem?: TemplateRef<any>
+		defaultParticipantPanelItem?: TemplateRef<any>,
+		externalParticipantPanelAfterLocalParticipant?: TemplateRef<any>
 	): ParticipantsPanelTemplateConfiguration {
 		this.log.d('Setting up participants panel templates...');
 
 		return {
-			participantPanelItemTemplate: externalParticipantPanelItem?.template || defaultParticipantPanelItem
+			participantPanelItemTemplate: externalParticipantPanelItem?.template || defaultParticipantPanelItem,
+			participantPanelAfterLocalParticipantTemplate: externalParticipantPanelAfterLocalParticipant
 		};
 	}
 

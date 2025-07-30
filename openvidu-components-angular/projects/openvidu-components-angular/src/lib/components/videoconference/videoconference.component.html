@@ -26,7 +26,11 @@
 		<span>{{ componentState.error?.message }}</span>
 	</div>
 
-	<div [@inOutAnimation] id="vc-container" *ngIf="componentState.isRoomReady && !componentState.showPrejoin && !componentState.isLoading && !componentState.error?.hasError">
+	<div
+		[@inOutAnimation]
+		id="vc-container"
+		*ngIf="componentState.isRoomReady && !componentState.showPrejoin && !componentState.isLoading && !componentState.error?.hasError"
+	>
 		<ov-session
 			(onRoomCreated)="onRoomCreated.emit($event)"
 			(onRoomReconnecting)="onRoomDisconnected.emit()"
@@ -147,6 +151,9 @@
 			<ng-container
 				*ngTemplateOutlet="openviduAngularParticipantPanelItemTemplate; context: { $implicit: participant }"
 			></ng-container>
+		</ng-template>
+		<ng-template #participantPanelAfterLocalParticipant>
+			<ng-container *ngTemplateOutlet="openviduAngularParticipantPanelAfterLocalParticipantTemplate"></ng-container>
 		</ng-template>
 	</ov-participants-panel>
 </ng-template>

@@ -18,6 +18,7 @@ export * from './lib/components/toolbar/toolbar.component';
 export * from './lib/components/videoconference/videoconference.component';
 export * from './lib/config/openvidu-components-angular.config';
 // Directives
+export * from './lib/directives/template/internals.directive';
 export * from './lib/directives/api/activities-panel.directive';
 export * from './lib/directives/api/admin.directive';
 export * from './lib/directives/api/api.directive.module';

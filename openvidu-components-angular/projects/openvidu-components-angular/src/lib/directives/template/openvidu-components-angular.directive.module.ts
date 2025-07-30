@@ -12,9 +12,9 @@ import {
 	ToolbarAdditionalPanelButtonsDirective,
 	AdditionalPanelsDirective,
 	ActivitiesPanelDirective,
-	BackgroundEffectsPanelDirective,
-	PreJoinDirective
+	BackgroundEffectsPanelDirective
 } from './openvidu-components-angular.directive';
+import { ParticipantPanelAfterLocalParticipantDirective, PreJoinDirective } from './internals.directive';
 
 @NgModule({
 	declarations: [
@@ -31,6 +31,7 @@ import {
 		ParticipantPanelItemElementsDirective,
 		ActivitiesPanelDirective,
 		PreJoinDirective,
+		ParticipantPanelAfterLocalParticipantDirective
 		// BackgroundEffectsPanelDirective
 	],
 	exports: [
@@ -47,6 +48,7 @@ import {
 		ParticipantPanelItemElementsDirective,
 		ActivitiesPanelDirective,
 		PreJoinDirective,
+		ParticipantPanelAfterLocalParticipantDirective
 		// BackgroundEffectsPanelDirective
 	]
 })
