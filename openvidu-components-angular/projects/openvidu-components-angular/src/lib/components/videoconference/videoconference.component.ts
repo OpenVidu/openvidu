@@ -1,5 +1,16 @@
 import { animate, style, transition, trigger } from '@angular/animations';
-import { AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, ContentChild, EventEmitter, OnDestroy, Output, TemplateRef, ViewChild } from '@angular/core';
+import {
+	AfterViewInit,
+	ChangeDetectionStrategy,
+	ChangeDetectorRef,
+	Component,
+	ContentChild,
+	EventEmitter,
+	OnDestroy,
+	Output,
+	TemplateRef,
+	ViewChild
+} from '@angular/core';
 import { Subject, filter, skip, take, takeUntil } from 'rxjs';
 import {
 	ActivitiesPanelDirective,
@@ -23,7 +34,12 @@ import { DeviceService } from '../../services/device/device.service';
 import { LoggerService } from '../../services/logger/logger.service';
 import { OpenViduService } from '../../services/openvidu/openvidu.service';
 import { StorageService } from '../../services/storage/storage.service';
-import { TemplateManagerService, TemplateConfiguration, ExternalDirectives, DefaultTemplates } from '../../services/template/template-manager.service';
+import {
+	TemplateManagerService,
+	TemplateConfiguration,
+	ExternalDirectives,
+	DefaultTemplates
+} from '../../services/template/template-manager.service';
 import { Room } from 'livekit-client';
 import { ParticipantLeftEvent, ParticipantModel } from '../../models/participant.model';
 import { CustomDevice } from '../../models/device.model';
@@ -42,7 +58,11 @@ import {
 } from '../../models/recording.model';
 import { BroadcastingStartRequestedEvent, BroadcastingStopRequestedEvent } from '../../models/broadcasting.model';
 import { LangOption } from '../../models/lang.model';
-import { ParticipantPanelAfterLocalParticipantDirective, PreJoinDirective } from '../../directives/template/internals.directive';
+import {
+	LayoutAdditionalElementsDirective,
+	ParticipantPanelAfterLocalParticipantDirective,
+	PreJoinDirective
+} from '../../directives/template/internals.directive';
 
 /**
  * The **VideoconferenceComponent** is the parent of all OpenVidu components.
@@ -54,18 +74,21 @@ import { ParticipantPanelAfterLocalParticipantDirective, PreJoinDirective } from
 	styleUrls: ['./videoconference.component.scss'],
 	animations: [
 		trigger('inOutAnimation', [
-			transition(':enter', [style({ opacity: 0 }), animate(`${VideoconferenceComponent.ANIMATION_DURATION_MS}ms ease-out`, style({ opacity: 1 }))])
+			transition(':enter', [
+				style({ opacity: 0 }),
+				animate(`${VideoconferenceComponent.ANIMATION_DURATION_MS}ms ease-out`, style({ opacity: 1 }))
+			])
 			// transition(':leave', [style({ opacity: 1 }), animate('50ms ease-in', style({ opacity: 0.9 }))])
 		])
 	],
 	standalone: false
 })
 export class VideoconferenceComponent implements OnDestroy, AfterViewInit {
-
 	// Constants
 	private static readonly PARTICIPANT_NAME_TIMEOUT_MS = 1000;
 	private static readonly ANIMATION_DURATION_MS = 300;
-	private static readonly MATERIAL_ICONS_URL = 'https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined&icon_names=background_replace,keep_off';
+	private static readonly MATERIAL_ICONS_URL =
+		'https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined&icon_names=background_replace,keep_off';
 	private static readonly MATERIAL_ICONS_SELECTOR = 'link[href*="Material+Symbols+Outlined"]';
 	private static readonly SPINNER_DIAMETER = 50;
 	// *** Toolbar ***
@@ -133,7 +156,12 @@ export class VideoconferenceComponent implements OnDestroy, AfterViewInit {
 	 * @internal
 	 *
 	 */
-	@ContentChild(ParticipantPanelAfterLocalParticipantDirective) externalParticipantPanelAfterLocalParticipant: ParticipantPanelAfterLocalParticipantDirective;
+	@ContentChild(ParticipantPanelAfterLocalParticipantDirective)
+	externalParticipantPanelAfterLocalParticipant: ParticipantPanelAfterLocalParticipantDirective;
+	/**
+	 * @internal
+	 */
+	@ContentChild(LayoutAdditionalElementsDirective) externalLayoutAdditionalElements: LayoutAdditionalElementsDirective;
 
 	/**
 	 * @internal
@@ -227,6 +255,10 @@ export class VideoconferenceComponent implements OnDestroy, AfterViewInit {
 	 * @internal
 	 */
 	openviduAngularPreJoinTemplate: TemplateRef<any>;
+	/**
+	 * @internal
+	 */
+	ovLayoutAdditionalElementsTemplate: TemplateRef<any>;
 
 	/**
 	 * @internal
@@ -530,7 +562,8 @@ export class VideoconferenceComponent implements OnDestroy, AfterViewInit {
 			participantPanelItemElements: this.externalParticipantPanelItemElements,
 			layout: this.externalLayout,
 			stream: this.externalStream,
-			preJoin: this.externalPreJoin
+			preJoin: this.externalPreJoin,
+			layoutAdditionalElements: this.externalLayoutAdditionalElements
 		};
 
 		const defaultTemplates: DefaultTemplates = {
@@ -576,13 +609,17 @@ export class VideoconferenceComponent implements OnDestroy, AfterViewInit {
 			this.openviduAngularAdditionalPanelsTemplate = this.templateConfig.additionalPanelsTemplate;
 		}
 		if (this.templateConfig.participantPanelAfterLocalParticipantTemplate) {
-			this.openviduAngularParticipantPanelAfterLocalParticipantTemplate = this.templateConfig.participantPanelAfterLocalParticipantTemplate;
+			this.openviduAngularParticipantPanelAfterLocalParticipantTemplate =
+				this.templateConfig.participantPanelAfterLocalParticipantTemplate;
 		}
 		if (this.templateConfig.participantPanelItemElementsTemplate) {
 			this.openviduAngularParticipantPanelItemElementsTemplate = this.templateConfig.participantPanelItemElementsTemplate;
 		}
 		if (this.templateConfig.preJoinTemplate) {
 			this.openviduAngularPreJoinTemplate = this.templateConfig.preJoinTemplate;
+		}
+		if (this.templateConfig.layoutAdditionalElementsTemplate) {
+			this.ovLayoutAdditionalElementsTemplate = this.templateConfig.layoutAdditionalElementsTemplate;
 		}
 	}
 
@@ -624,7 +661,7 @@ export class VideoconferenceComponent implements OnDestroy, AfterViewInit {
 					this.log.w('No participant name available when requesting token');
 					// Wait a bit and try again in case name is still propagating
 					setTimeout(() => {
-						const retryName = this.libService.getCurrentParticipantName()|| this.latestParticipantName;
+						const retryName = this.libService.getCurrentParticipantName() || this.latestParticipantName;
 						if (retryName) {
 							this.log.d(`Retrying token request for participant: ${retryName}`);
 							this.onTokenRequested.emit(retryName);
@@ -774,9 +811,11 @@ export class VideoconferenceComponent implements OnDestroy, AfterViewInit {
 				this.storageSrv.setParticipantName(name);
 
 				// If we're waiting for a participant name to proceed with joining, do it now
-				if (this.componentState.state === VideoconferenceState.JOINING &&
+				if (
+					this.componentState.state === VideoconferenceState.JOINING &&
 					this.componentState.isRoomReady &&
-					!this.componentState.showPrejoin) {
+					!this.componentState.showPrejoin
+				) {
 					this.log.d('Participant name received, proceeding to join');
 					this.updateComponentState({
 						state: VideoconferenceState.READY_TO_CONNECT,

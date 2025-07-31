@@ -15,7 +15,11 @@ import {
 	ToolbarAdditionalPanelButtonsDirective,
 	ToolbarDirective
 } from '../../directives/template/openvidu-components-angular.directive';
-import { PreJoinDirective, ParticipantPanelAfterLocalParticipantDirective } from '../../directives/template/internals.directive';
+import {
+	PreJoinDirective,
+	ParticipantPanelAfterLocalParticipantDirective,
+	LayoutAdditionalElementsDirective
+} from '../../directives/template/internals.directive';
 
 /**
  * Configuration object for all templates in the videoconference component
@@ -41,6 +45,7 @@ export interface TemplateConfiguration {
 	// Layout templates
 	layoutTemplate: TemplateRef<any>;
 	streamTemplate: TemplateRef<any>;
+	layoutAdditionalElementsTemplate?: TemplateRef<any>;
 
 	// PreJoin template
 	preJoinTemplate?: TemplateRef<any>;
@@ -64,6 +69,14 @@ export interface PanelTemplateConfiguration {
 export interface ToolbarTemplateConfiguration {
 	toolbarAdditionalButtonsTemplate?: TemplateRef<any>;
 	toolbarAdditionalPanelButtonsTemplate?: TemplateRef<any>;
+}
+
+/**
+ * Configuration object for layout component templates
+ */
+export interface LayoutTemplateConfiguration {
+	layoutStreamTemplate?: TemplateRef<any>;
+	layoutAdditionalElementsTemplate?: TemplateRef<any>;
 }
 
 /**
@@ -108,6 +121,7 @@ export interface ExternalDirectives {
 	layout?: LayoutDirective;
 	stream?: StreamDirective;
 	preJoin?: PreJoinDirective;
+	layoutAdditionalElements?: LayoutAdditionalElementsDirective;
 }
 
 /**
@@ -178,6 +192,11 @@ export class TemplateManagerService {
 		if (externalDirectives.participantPanelItemElements) {
 			config.participantPanelItemElementsTemplate = externalDirectives.participantPanelItemElements.template;
 			this.log.d('Setting EXTERNAL PARTICIPANT PANEL ITEM ELEMENTS');
+		}
+
+		if (externalDirectives.layoutAdditionalElements) {
+			this.log.d('Setting EXTERNAL ADDITIONAL LAYOUT ELEMENTS');
+			config.layoutAdditionalElementsTemplate = externalDirectives.layoutAdditionalElements.template;
 		}
 
 		this.log.d('Template setup completed', config);
@@ -346,6 +365,21 @@ export class TemplateManagerService {
 		return {
 			toolbarAdditionalButtonsTemplate: externalAdditionalButtons?.template,
 			toolbarAdditionalPanelButtonsTemplate: externalAdditionalPanelButtons?.template
+		};
+	}
+
+	/**
+	 * Sets up templates for the LayoutComponent
+	 */
+	setupLayoutTemplates(
+		externalStream?: StreamDirective,
+		externalLayoutAdditionalElements?: LayoutAdditionalElementsDirective
+	): LayoutTemplateConfiguration {
+		this.log.d('Setting up layout templates...');
+
+		return {
+			layoutStreamTemplate: externalStream?.template,
+			layoutAdditionalElementsTemplate: externalLayoutAdditionalElements?.template
 		};
 	}
 

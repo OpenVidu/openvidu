@@ -1,3 +1,5 @@
+import { LayoutAdditionalElementsDirective } from '../../directives/template/internals.directive';
+
 import {
 	AfterViewInit,
 	ChangeDetectionStrategy,
@@ -20,6 +22,7 @@ import { CdkDrag } from '@angular/cdk/drag-drop';
 import { PanelService } from '../../services/panel/panel.service';
 import { GlobalConfigService } from '../../services/config/global-config.service';
 import { OpenViduComponentsConfigService } from '../../services/config/directive-config.service';
+import { LayoutTemplateConfiguration, TemplateManagerService } from '../../services/template/template-manager.service';
 
 /**
  *
@@ -38,6 +41,11 @@ export class LayoutComponent implements OnInit, OnDestroy, AfterViewInit {
 	 * @ignore
 	 */
 	@ContentChild('stream', { read: TemplateRef }) streamTemplate: TemplateRef<any>;
+
+	/**
+	 * @ignore
+	 */
+	@ContentChild('layoutAdditionalElements', { read: TemplateRef }) layoutAdditionalElementsTemplate: TemplateRef<any>;
 
 	/**
 	 * @ignore
@@ -62,8 +70,26 @@ export class LayoutComponent implements OnInit, OnDestroy, AfterViewInit {
 		// is inside of the layout component tagged with '*ovLayout' directive
 		if (externalStream) {
 			this.streamTemplate = externalStream.template;
+			this.updateTemplatesAndMarkForCheck();
 		}
 	}
+
+	/**
+	 * @ignore
+	 */
+	@ContentChild(LayoutAdditionalElementsDirective) set externalAdditionalElements(
+		externalAdditionalElements: LayoutAdditionalElementsDirective
+	) {
+		if (externalAdditionalElements) {
+			this._externalLayoutAdditionalElements = externalAdditionalElements;
+			this.updateTemplatesAndMarkForCheck();
+		}
+	}
+
+	/**
+	 * @ignore
+	 */
+	templateConfig: LayoutTemplateConfiguration = {};
 
 	localParticipant: ParticipantModel | undefined;
 	remoteParticipants: ParticipantModel[] = [];
@@ -71,6 +97,9 @@ export class LayoutComponent implements OnInit, OnDestroy, AfterViewInit {
 	 * @ignore
 	 */
 	captionsEnabled = true;
+
+	private _externalStream?: StreamDirective;
+	private _externalLayoutAdditionalElements?: LayoutAdditionalElementsDirective;
 
 	private destroy$ = new Subject<void>();
 	private resizeObserver: ResizeObserver;
@@ -87,10 +116,13 @@ export class LayoutComponent implements OnInit, OnDestroy, AfterViewInit {
 		private participantService: ParticipantService,
 		private globalService: GlobalConfigService,
 		private directiveService: OpenViduComponentsConfigService,
-		private cd: ChangeDetectorRef
+		private cd: ChangeDetectorRef,
+		private templateManagerService: TemplateManagerService
 	) {}
 
 	ngOnInit(): void {
+		this.setupTemplates();
+
 		this.subscribeToParticipants();
 		this.subscribeToCaptions();
 	}
@@ -121,34 +153,55 @@ export class LayoutComponent implements OnInit, OnDestroy, AfterViewInit {
 		return track;
 	}
 
+	private setupTemplates() {
+		this.templateConfig = this.templateManagerService.setupLayoutTemplates(
+			this._externalStream,
+			this._externalLayoutAdditionalElements
+		);
+
+		// Apply templates to component properties for backward compatibility
+		this.applyTemplateConfiguration();
+	}
+
+	private applyTemplateConfiguration() {
+		if (this.templateConfig.layoutStreamTemplate) {
+			this.streamTemplate = this.templateConfig.layoutStreamTemplate;
+		}
+		if (this.templateConfig.layoutAdditionalElementsTemplate) {
+			this.layoutAdditionalElementsTemplate = this.templateConfig.layoutAdditionalElementsTemplate;
+		}
+	}
+
+	/**
+	 * @internal
+	 * Updates templates and triggers change detection
+	 */
+	private updateTemplatesAndMarkForCheck(): void {
+		this.setupTemplates();
+		this.cd.markForCheck();
+	}
+
 	private subscribeToCaptions() {
-		this.layoutService.captionsTogglingObs
-			.pipe(takeUntil(this.destroy$))
-			.subscribe((value: boolean) => {
-				this.captionsEnabled = value;
-				this.cd.markForCheck();
-				this.layoutService.update();
-			});
+		this.layoutService.captionsTogglingObs.pipe(takeUntil(this.destroy$)).subscribe((value: boolean) => {
+			this.captionsEnabled = value;
+			this.cd.markForCheck();
+			this.layoutService.update();
+		});
 	}
 
 	private subscribeToParticipants() {
-		this.participantService.localParticipant$
-			.pipe(takeUntil(this.destroy$))
-			.subscribe((p) => {
-				if (p) {
-					this.localParticipant = p;
-					if (!this.localParticipant?.isMinimized) {
-						this.videoIsAtRight = false;
-					}
-					this.layoutService.update();
-					this.cd.markForCheck();
+		this.participantService.localParticipant$.pipe(takeUntil(this.destroy$)).subscribe((p) => {
+			if (p) {
+				this.localParticipant = p;
+				if (!this.localParticipant?.isMinimized) {
+					this.videoIsAtRight = false;
 				}
-			});
+				this.layoutService.update();
+				this.cd.markForCheck();
+			}
+		});
 
-		combineLatest([
-			this.participantService.remoteParticipants$,
-			this.directiveService.layoutRemoteParticipants$
-		])
+		combineLatest([this.participantService.remoteParticipants$, this.directiveService.layoutRemoteParticipants$])
 			.pipe(
 				map(([serviceParticipants, directiveParticipants]) =>
 					directiveParticipants !== undefined ? directiveParticipants : serviceParticipants
@@ -219,9 +272,7 @@ export class LayoutComponent implements OnInit, OnDestroy, AfterViewInit {
 			}
 		};
 
-		this.cdkDrag.released
-			.pipe(takeUntil(this.destroy$))
-			.subscribe(handler);
+		this.cdkDrag.released.pipe(takeUntil(this.destroy$)).subscribe(handler);
 
 		if (this.globalService.isProduction()) return;
 		// Just for allow E2E testing with drag and drop

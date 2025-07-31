@@ -173,6 +173,10 @@
 		<ng-template #stream let-track>
 			<ng-container *ngTemplateOutlet="openviduAngularStreamTemplate; context: { $implicit: track }"></ng-container>
 		</ng-template>
+
+		<ng-template #layoutAdditionalElements>
+			<ng-container *ngTemplateOutlet="ovLayoutAdditionalElementsTemplate"></ng-container>
+		</ng-template>
 	</ov-layout>
 </ng-template>
 

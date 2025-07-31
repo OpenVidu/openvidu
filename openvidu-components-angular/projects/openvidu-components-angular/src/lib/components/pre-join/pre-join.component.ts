@@ -100,7 +100,7 @@ export class PreJoinComponent implements OnInit, OnDestroy {
 		this.cdkSrv.setSelector('body');
 
 		if (this.shouldRemoveTracksWhenComponentIsDestroyed) {
-			this.tracks.forEach((track) => {
+			this.tracks?.forEach((track) => {
 				track.stop();
 			});
 		}

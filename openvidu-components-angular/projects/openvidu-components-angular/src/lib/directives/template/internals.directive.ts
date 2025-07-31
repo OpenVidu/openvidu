@@ -196,7 +196,7 @@ export class PreJoinDirective {
 
 
 /**
- * The **ovParticipantPanelAfterLocalParticipant** directive allows you to inject custom HTML or Angular templates
+ * The ***ovParticipantPanelAfterLocalParticipant** directive allows you to inject custom HTML or Angular templates
  * immediately after the local participant item in the participant panel.
  * This enables you to extend the participant panel with additional controls, information, or UI elements.
  *
@@ -217,6 +217,34 @@ export class PreJoinDirective {
 	standalone: false
 })
 export class ParticipantPanelAfterLocalParticipantDirective {
+	constructor(
+		public template: TemplateRef<any>,
+		public container: ViewContainerRef
+	) {}
+}
+
+/**
+ * The ***ovLayoutAdditionalElements** directive allows you to inject custom HTML or Angular templates
+ * as additional layout elements within the videoconference UI.
+ * This enables you to extend the layout with extra controls, banners, or any custom UI.
+ *
+ * Usage example:
+ * ```html
+ * <ov-videoconference>
+ *   <ng-container *ovLayoutAdditionalElements>
+ *     <div class="my-custom-layout-element">
+ *       <!-- Your custom HTML here -->
+ *       <span>Extra layout element</span>
+ *     </div>
+ *   </ng-container>
+ * </ov-videoconference>
+ * ```
+ */
+@Directive({
+	selector: '[ovLayoutAdditionalElements]',
+	standalone: false
+})
+export class LayoutAdditionalElementsDirective {
 	constructor(
 		public template: TemplateRef<any>,
 		public container: ViewContainerRef

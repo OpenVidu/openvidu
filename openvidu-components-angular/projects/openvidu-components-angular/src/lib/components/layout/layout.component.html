@@ -19,6 +19,11 @@
 			<ng-container *ngTemplateOutlet="streamTemplate; context: { $implicit: track }"></ng-container>
 		</div>
 
+		<!-- Render additional layout elements injected via ovAdditionalLayoutElement -->
+		@if (layoutAdditionalElementsTemplate) {
+			<ng-container *ngTemplateOutlet="layoutAdditionalElementsTemplate"></ng-container>
+		}
+
 		<div
 			*ngFor="let track of remoteParticipants | tracks; trackBy: trackParticipantElement"
 			class="remote-participant"
