@@ -91,7 +91,9 @@
 			"MICROPHONE": "マイクロフォン",
 			"SCREEN": "スクリーン",
 			"NO_STREAMS": "ストリームなし",
-			"YOU": "あなた"
+			"YOU": "あなた",
+			"MUTE": "ミュート",
+			"UNMUTE": "ミュート解除"
 		},
 		"SETTINGS": {
 			"TITLE": "設定",

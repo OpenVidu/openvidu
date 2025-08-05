@@ -91,7 +91,9 @@
 			"MICROPHONE": "MICROPHONE",
 			"SCREEN": "ÉCRAN",
 			"NO_STREAMS": "PAS_DE_FLUX",
-			"YOU": "Vous"
+			"YOU": "Vous",
+			"MUTE": "Couper le son",
+			"UNMUTE": "Désactiver le son"
 		},
 		"SETTINGS": {
 			"TITLE": "Paramètres",

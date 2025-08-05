@@ -91,7 +91,9 @@
 			"MICROPHONE": "MICROFONO",
 			"SCREEN": "SCREEN",
 			"NO_STREAMS": "NESSUNO",
-			"YOU": "Tu"
+			"YOU": "Tu",
+			"MUTE": "Disattiva l'audio",
+			"UNMUTE": "Attiva l'audio"
 		},
 		"SETTINGS": {
 			"TITLE": "Impostazioni",

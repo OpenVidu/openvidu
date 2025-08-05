@@ -91,7 +91,9 @@
 			"MICROPHONE": "MICROPHONE",
 			"SCREEN": "SCREEN",
 			"NO_STREAMS": "NONE",
-			"YOU": "You"
+			"YOU": "You",
+			"MUTE": "Mute",
+			"UNMUTE": "Unmute"
 		},
 		"SETTINGS": {
 			"TITLE": "Settings",

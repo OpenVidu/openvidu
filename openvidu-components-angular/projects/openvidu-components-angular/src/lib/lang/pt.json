@@ -91,7 +91,9 @@
 			"MICROPHONE": "MICROFONE",
 			"SCREEN": "TELA",
 			"NO_STREAMS": "NENHUM",
-			"YOU": "Você (eu)"
+			"YOU": "Você (eu)",
+			"MUTE": "Silenciar",
+			"UNMUTE": "Ativar som"
 		},
 		"SETTINGS": {
 			"TITLE": "Configurações",

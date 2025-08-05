@@ -91,7 +91,9 @@
 			"MICROPHONE": "MICROFOON",
 			"SCREEN": "SCHERM",
 			"NO_STREAMS": "GEEN",
-			"YOU": "Jij"
+			"YOU": "Jij",
+			"MUTE": "Dempen",
+			"UNMUTE": "Dempen opheffen"
 		},
 		"SETTINGS": {
 			"TITLE": "Instellingen",

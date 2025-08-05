@@ -1,33 +1,76 @@
 <mat-list>
 	<mat-list-item>
-		<div matListItemIcon class="participant-avatar" [style.background-color]="_participant.colorProfile">
-			<mat-icon>person</mat-icon>
-		</div>
-		<h3 matListItemTitle class="participant-name">{{ _participant.name }}
-			<span *ngIf="_participant.isLocal"> ({{ 'PANEL.PARTICIPANTS.YOU' | translate }})</span>
-		</h3>
-		<p matListItemLine class="participant-subtitle">{{ _participant | tracksPublishedTypes }}</p>
-		<!-- <p matListItemLine>
-			<span class="participant-subtitle"></span>
-		</p> -->
-
-		<div class="participant-action-buttons" matListItemMeta>
-			<button
-				mat-icon-button
-				id="mute-btn"
-				*ngIf="!_participant.isLocal && showMuteButton"
-				[class.warn-btn]="_participant.isMutedForcibly"
-				(click)="toggleMuteForcibly()"
-				[disableRipple]="true"
+		<!-- Main participant container with improved structure -->
+		<div class="participant-container" [attr.data-participant-id]="_participant?.sid">
+			<!-- Avatar section with dynamic color -->
+			<div
+				class="participant-avatar"
+				[style.background-color]="_participant?.colorProfile"
+				[attr.aria-label]="'Avatar for ' + participantDisplayName"
 			>
-				<mat-icon *ngIf="!_participant.isMutedForcibly">volume_up</mat-icon>
-				<mat-icon *ngIf="_participant.isMutedForcibly">volume_off</mat-icon>
-			</button>
+				<mat-icon>person</mat-icon>
+			</div>
 
-			<!-- External item elements  -->
-			<ng-container *ngIf="participantPanelItemElementsTemplate">
-				<ng-container *ngTemplateOutlet="participantPanelItemElementsTemplate"></ng-container>
-			</ng-container>
+			<!-- Content section with name and status -->
+			<div class="participant-content">
+				<div class="participant-name">
+					{{ participantDisplayName }}
+					<span *ngIf="isLocalParticipant" class="local-indicator">
+						{{ 'PANEL.PARTICIPANTS.YOU' | translate }}
+					</span>
+				</div>
+
+				<div class="participant-subtitle">
+					<span class="status-indicator">
+						{{ _participant | tracksPublishedTypes }}
+					</span>
+					<!-- Additional status indicators -->
+					<span *ngIf="_participant?.isMutedForcibly" class="status-indicator">
+						<mat-icon>volume_off</mat-icon>
+						{{ 'PANEL.PARTICIPANTS.MUTED' | translate }}
+					</span>
+				</div>
+			</div>
+
+			<!-- Action buttons section -->
+			<div class="participant-action-buttons">
+				<!-- Mute/Unmute button for remote participants -->
+				<button
+					mat-icon-button
+					id="mute-btn"
+					*ngIf="!isLocalParticipant && showMuteButton"
+					[class.warn-btn]="_participant?.isMutedForcibly"
+					(click)="toggleMuteForcibly()"
+					[disabled]="!_participant"
+					[disableRipple]="true"
+					[attr.aria-label]="
+						_participant?.isMutedForcibly
+							? ('PANEL.PARTICIPANTS.UNMUTE' | translate) + ' ' + participantDisplayName
+							: ('PANEL.PARTICIPANTS.MUTE' | translate) + ' ' + participantDisplayName
+					"
+					[matTooltip]="
+						_participant?.isMutedForcibly ? ('PANEL.PARTICIPANTS.UNMUTE' | translate) : ('PANEL.PARTICIPANTS.MUTE' | translate)
+					"
+				>
+					<mat-icon *ngIf="!_participant?.isMutedForcibly">volume_up</mat-icon>
+					<mat-icon *ngIf="_participant?.isMutedForcibly">volume_off</mat-icon>
+				</button>
+
+				<!-- External item elements with improved structure -->
+				<div class="external-elements" *ngIf="hasExternalElements">
+					<ng-container *ngTemplateOutlet="participantPanelItemElementsTemplate"></ng-container>
+				</div>
+			</div>
 		</div>
+
+		<!-- Content after local participant (only for local participant) -->
+		<!-- <div
+			class="after-local-content"
+			*ngIf="hasAfterLocalContent"
+			role="region"
+			[attr.aria-label]="'Additional content for local participant'"
+		>
+			<ng-container *ngTemplateOutlet="afterLocalParticipantTemplate"></ng-container>
+		</div> -->
 	</mat-list-item>
 </mat-list>

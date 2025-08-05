@@ -90,7 +90,9 @@
 			"MICROPHONE": "MIKROFON",
 			"SCREEN": "BILDSCHIRM",
 			"NO_STREAMS": "KEINE",
-			"YOU": "Sie"
+			"YOU": "Sie",
+			"MUTE": "Stummschalten",
+			"UNMUTE": "Stummschaltung aufheben"
 		},
 		"SETTINGS": {
 			"TITLE": "Einstellungen",

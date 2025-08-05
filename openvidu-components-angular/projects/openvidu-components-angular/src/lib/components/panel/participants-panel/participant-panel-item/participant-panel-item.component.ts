@@ -1,17 +1,17 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, ContentChild, Input, OnDestroy, OnInit, TemplateRef } from '@angular/core';
 import { Subscription } from 'rxjs';
 import { ParticipantPanelItemElementsDirective } from '../../../../directives/template/openvidu-components-angular.directive';
+// import { ParticipantPanelAfterLocalParticipantDirective } from '../../../../directives/template/internals.directive';
 import { ParticipantModel } from '../../../../models/participant.model';
 import { OpenViduComponentsConfigService } from '../../../../services/config/directive-config.service';
 import { ParticipantService } from '../../../../services/participant/participant.service';
 import { TemplateManagerService, ParticipantPanelItemTemplateConfiguration } from '../../../../services/template/template-manager.service';
 
 /**
- *
  * The **ParticipantPanelItemComponent** is hosted inside of the {@link ParticipantsPanelComponent}.
- * It is in charge of displaying the participants information inside of the ParticipansPanelComponent.
+ * It displays participant information with enhanced UI/UX, including support for custom content
+ * injection through structural directives.
  */
-
 @Component({
 	selector: 'ov-participant-panel-item',
 	templateUrl: './participant-panel-item.component.html',
@@ -42,6 +42,17 @@ export class ParticipantPanelItemComponent implements OnInit, OnDestroy {
 		}
 	}
 
+	// /**
+	//  * @ignore
+	//  */
+	// @ContentChild(ParticipantPanelAfterLocalParticipantDirective)
+	// set externalAfterLocalParticipant(afterLocalParticipant: ParticipantPanelAfterLocalParticipantDirective) {
+	// 	this._externalAfterLocalParticipant = afterLocalParticipant;
+	// 	if (afterLocalParticipant) {
+	// 		this.updateTemplatesAndMarkForCheck();
+	// 	}
+	// }
+
 	/**
 	 * @internal
 	 * Template configuration managed by the service
@@ -50,20 +61,28 @@ export class ParticipantPanelItemComponent implements OnInit, OnDestroy {
 
 	// Store directive references for template setup
 	private _externalItemElements?: ParticipantPanelItemElementsDirective;
+	// private _externalAfterLocalParticipant?: ParticipantPanelAfterLocalParticipantDirective;
 
 	/**
 	 * The participant to be displayed
-	 * @ignore
 	 */
 	@Input()
 	set participant(participant: ParticipantModel) {
 		this._participant = participant;
+		this.cd.markForCheck();
 	}
 
 	/**
-	 * @ignore
+	 * @internal
+	 * Current participant being displayed
 	 */
 	_participant: ParticipantModel;
+
+	/**
+	 * Whether to show the mute button for remote participants
+	 */
+	@Input()
+	muteButton: boolean = true;
 
 	/**
 	 * @ignore
@@ -91,13 +110,48 @@ export class ParticipantPanelItemComponent implements OnInit, OnDestroy {
 	}
 
 	/**
-	 * @ignore
+	 * Toggles the mute state of a remote participant
 	 */
 	toggleMuteForcibly() {
-		if (this._participant) {
+		if (this._participant && !this._participant.isLocal) {
 			this.participantService.setRemoteMutedForcibly(this._participant.sid, !this._participant.isMutedForcibly);
 		}
 	}
+
+	/**
+	 * Gets the template for content after local participant
+	 */
+	// get afterLocalParticipantTemplate(): TemplateRef<any> | undefined {
+	// 	return this._externalAfterLocalParticipant?.template;
+	// }
+
+	/**
+	 * Checks if the current participant is the local participant
+	 */
+	get isLocalParticipant(): boolean {
+		return this._participant?.isLocal || false;
+	}
+
+	/**
+	 * Gets the participant's display name
+	 */
+	get participantDisplayName(): string {
+		return this._participant?.name || '';
+	}
+
+	/**
+	 * Checks if external elements are available
+	 */
+	get hasExternalElements(): boolean {
+		return !!this.participantPanelItemElementsTemplate;
+	}
+
+	/**
+	 * Checks if after local participant content is available
+	 */
+	// get hasAfterLocalContent(): boolean {
+	// 	return this.isLocalParticipant && !!this.afterLocalParticipantTemplate;
+	// }
 
 	/**
 	 * @internal
