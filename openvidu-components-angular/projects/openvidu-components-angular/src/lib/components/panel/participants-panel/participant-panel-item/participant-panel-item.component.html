@@ -18,6 +18,11 @@
 					<span *ngIf="isLocalParticipant" class="local-indicator">
 						{{ 'PANEL.PARTICIPANTS.YOU' | translate }}
 					</span>
+
+					<!-- Participant badges -->
+					<div class="participant-badges">
+						<ng-container *ngTemplateOutlet="participantBadgeTemplate"></ng-container>
+					</div>
 				</div>
 
 				<div class="participant-subtitle">
@@ -62,15 +67,5 @@
 				</div>
 			</div>
 		</div>
-
-		<!-- Content after local participant (only for local participant) -->
-		<!-- <div
-			class="after-local-content"
-			*ngIf="hasAfterLocalContent"
-			role="region"
-			[attr.aria-label]="'Additional content for local participant'"
-		>
-			<ng-container *ngTemplateOutlet="afterLocalParticipantTemplate"></ng-container>
-		</div> -->
 	</mat-list-item>
 </mat-list>

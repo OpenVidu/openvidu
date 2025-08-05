@@ -194,7 +194,6 @@ export class PreJoinDirective {
 	) {}
 }
 
-
 /**
  * The ***ovParticipantPanelAfterLocalParticipant** directive allows you to inject custom HTML or Angular templates
  * immediately after the local participant item in the participant panel.
@@ -245,6 +244,39 @@ export class ParticipantPanelAfterLocalParticipantDirective {
 	standalone: false
 })
 export class LayoutAdditionalElementsDirective {
+	constructor(
+		public template: TemplateRef<any>,
+		public container: ViewContainerRef
+	) {}
+}
+
+/**
+ * The ***ovParticipantPanelParticipantBadge** directive allows you to inject custom badges or indicators
+ * in the participant panel.
+ * This enables you to add role indicators, status badges, or other visual elements.
+ *
+ * Usage example:
+ * ```html
+ * <ov-participants-panel>
+ *   <div *ovParticipantPanelItem="let participant">
+ *     <ov-participant-panel-item [participant]="participant">
+ *       <!-- Custom badge for local participant only -->
+ *       <ng-container *ovParticipantPanelParticipantBadge>
+ *         <span class="moderator-badge">
+ *           <mat-icon>admin_panel_settings</mat-icon>
+ *           Moderator
+ *         </span>
+ *       </ng-container>
+ *     </ov-participant-panel-item>
+ *   </div>
+ * </ov-participants-panel>
+ * ```
+ */
+@Directive({
+	selector: '[ovParticipantPanelParticipantBadge]',
+	standalone: false
+})
+export class ParticipantPanelParticipantBadgeDirective {
 	constructor(
 		public template: TemplateRef<any>,
 		public container: ViewContainerRef

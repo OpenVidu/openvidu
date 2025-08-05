@@ -14,7 +14,12 @@ import {
 	ActivitiesPanelDirective,
 	BackgroundEffectsPanelDirective
 } from './openvidu-components-angular.directive';
-import { LayoutAdditionalElementsDirective, ParticipantPanelAfterLocalParticipantDirective, PreJoinDirective } from './internals.directive';
+import {
+	LayoutAdditionalElementsDirective,
+	ParticipantPanelAfterLocalParticipantDirective,
+	ParticipantPanelParticipantBadgeDirective,
+	PreJoinDirective
+} from './internals.directive';
 
 @NgModule({
 	declarations: [
@@ -32,7 +37,8 @@ import { LayoutAdditionalElementsDirective, ParticipantPanelAfterLocalParticipan
 		ActivitiesPanelDirective,
 		PreJoinDirective,
 		ParticipantPanelAfterLocalParticipantDirective,
-		LayoutAdditionalElementsDirective
+		LayoutAdditionalElementsDirective,
+		ParticipantPanelParticipantBadgeDirective
 		// BackgroundEffectsPanelDirective
 	],
 	exports: [
@@ -50,7 +56,8 @@ import { LayoutAdditionalElementsDirective, ParticipantPanelAfterLocalParticipan
 		ActivitiesPanelDirective,
 		PreJoinDirective,
 		ParticipantPanelAfterLocalParticipantDirective,
-		LayoutAdditionalElementsDirective
+		LayoutAdditionalElementsDirective,
+		ParticipantPanelParticipantBadgeDirective
 		// BackgroundEffectsPanelDirective
 	]
 })

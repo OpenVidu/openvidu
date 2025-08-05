@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, ContentChild, Input, OnDestroy, OnInit, TemplateRef } from '@angular/core';
 import { Subscription } from 'rxjs';
 import { ParticipantPanelItemElementsDirective } from '../../../../directives/template/openvidu-components-angular.directive';
-// import { ParticipantPanelAfterLocalParticipantDirective } from '../../../../directives/template/internals.directive';
+import { ParticipantPanelParticipantBadgeDirective } from '../../../../directives/template/internals.directive';
 import { ParticipantModel } from '../../../../models/participant.model';
 import { OpenViduComponentsConfigService } from '../../../../services/config/directive-config.service';
 import { ParticipantService } from '../../../../services/participant/participant.service';
@@ -42,16 +42,16 @@ export class ParticipantPanelItemComponent implements OnInit, OnDestroy {
 		}
 	}
 
-	// /**
-	//  * @ignore
-	//  */
-	// @ContentChild(ParticipantPanelAfterLocalParticipantDirective)
-	// set externalAfterLocalParticipant(afterLocalParticipant: ParticipantPanelAfterLocalParticipantDirective) {
-	// 	this._externalAfterLocalParticipant = afterLocalParticipant;
-	// 	if (afterLocalParticipant) {
-	// 		this.updateTemplatesAndMarkForCheck();
-	// 	}
-	// }
+	/**
+	 * @ignore
+	 */
+	@ContentChild(ParticipantPanelParticipantBadgeDirective)
+	set externalParticipantBadge(participantBadge: ParticipantPanelParticipantBadgeDirective) {
+		this._externalParticipantBadge = participantBadge;
+		if (participantBadge) {
+			this.updateTemplatesAndMarkForCheck();
+		}
+	}
 
 	/**
 	 * @internal
@@ -61,7 +61,7 @@ export class ParticipantPanelItemComponent implements OnInit, OnDestroy {
 
 	// Store directive references for template setup
 	private _externalItemElements?: ParticipantPanelItemElementsDirective;
-	// private _externalAfterLocalParticipant?: ParticipantPanelAfterLocalParticipantDirective;
+	private _externalParticipantBadge?: ParticipantPanelParticipantBadgeDirective;
 
 	/**
 	 * The participant to be displayed
@@ -119,11 +119,11 @@ export class ParticipantPanelItemComponent implements OnInit, OnDestroy {
 	}
 
 	/**
-	 * Gets the template for content after local participant
+	 * Gets the template for local participant badge
 	 */
-	// get afterLocalParticipantTemplate(): TemplateRef<any> | undefined {
-	// 	return this._externalAfterLocalParticipant?.template;
-	// }
+	get participantBadgeTemplate(): TemplateRef<any> | undefined {
+		return this._externalParticipantBadge?.template;
+	}
 
 	/**
 	 * Checks if the current participant is the local participant
@@ -147,20 +147,11 @@ export class ParticipantPanelItemComponent implements OnInit, OnDestroy {
 	}
 
 	/**
-	 * Checks if after local participant content is available
-	 */
-	// get hasAfterLocalContent(): boolean {
-	// 	return this.isLocalParticipant && !!this.afterLocalParticipantTemplate;
-	// }
-
-	/**
 	 * @internal
 	 * Sets up all templates using the template manager service
 	 */
 	private setupTemplates(): void {
-		this.templateConfig = this.templateManagerService.setupParticipantPanelItemTemplates(
-			this._externalItemElements
-		);
+		this.templateConfig = this.templateManagerService.setupParticipantPanelItemTemplates(this._externalItemElements);
 
 		// Apply templates to component properties for backward compatibility
 		this.applyTemplateConfiguration();

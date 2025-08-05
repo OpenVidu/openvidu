@@ -209,6 +209,30 @@
 		}
 	}
 
+	// Participant badges container
+	.participant-badges {
+		display: flex;
+		align-items: center;
+		gap: 6px;
+		flex-wrap: wrap;
+
+		// Badge styling
+		::ng-deep .badge {
+			// Badge variants
+			&.moderator {
+				color: var(--ov-warning-color, #f57c00);
+			}
+
+			&.speaker {
+				color: var(--ov-primary-color, #1976d2);
+			}
+
+			&.host {
+				color: var(--ov-success-color, #4caf50);
+			}
+		}
+	}
+
 	// After local participant content area
 	.after-local-content {
 		margin-top: 12px;
