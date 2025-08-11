@@ -19,7 +19,6 @@ import { TranslateService } from '../../services/translate/translate.service';
 import { LocalTrack } from 'livekit-client';
 import { CustomDevice } from '../../models/device.model';
 import { LangOption } from '../../models/lang.model';
-import { StorageService } from '../../services/storage/storage.service';
 
 /**
  * @internal
@@ -74,7 +73,6 @@ export class PreJoinComponent implements OnInit, OnDestroy {
 		private libService: OpenViduComponentsConfigService,
 		private cdkSrv: CdkOverlayService,
 		private openviduService: OpenViduService,
-		private storageService: StorageService,
 		private translateService: TranslateService,
 		private changeDetector: ChangeDetectorRef
 	) {
