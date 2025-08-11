@@ -679,8 +679,6 @@ describe('Stream UI controls and interaction features', () => {
 		await browser.sleep(1000);
 		const tabs = await browser.getAllWindowHandles();
 
-		await browser.switchTo().window(tabs[1]);
-		await utils.clickOn('#mic-btn');
 		await browser.switchTo().window(tabs[0]);
 
 		await utils.waitForElement('.OV_stream.remote.speaking');
