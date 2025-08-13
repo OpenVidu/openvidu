@@ -474,3 +474,53 @@ export class RecordingActivityShowRecordingsListDirective implements AfterViewIn
 		this.libService.updateRecordingActivityConfig({ showRecordingsList: value });
 	}
 }
+
+/**
+ * @internal
+ * The **toolbarRoomName** directive allows to display a specific room name in the toolbar.
+ * If the room name is not set, it will display the room ID instead.
+ *
+ * Can be used in {@link ToolbarComponent}.
+ *
+ * @example
+ * <ov-videoconference [toolbarRoomName]="roomName"></ov-videoconference>
+ */
+@Directive({
+	selector: 'ov-videoconference[toolbarRoomName], ov-toolbar[roomName]',
+	standalone: false
+})
+export class ToolbarRoomNameDirective implements AfterViewInit, OnDestroy {
+	@Input() set toolbarRoomName(value: string | undefined) {
+		this._roomName = value;
+		this.updateRoomName();
+	}
+
+	@Input() set roomName(value: string | undefined) {
+		this._roomName = value;
+		this.updateRoomName();
+	}
+
+	private _roomName?: string;
+
+	constructor(
+		public elementRef: ElementRef,
+		private libService: OpenViduComponentsConfigService
+	) {}
+
+	ngAfterViewInit() {
+		this.updateRoomName();
+	}
+
+	ngOnDestroy(): void {
+		this.clear();
+	}
+
+	private clear() {
+		this._roomName = undefined;
+		this.updateRoomName();
+	}
+
+	private updateRoomName() {
+		this.libService.updateToolbarConfig({ roomName: this._roomName || '' });
+	}
+}

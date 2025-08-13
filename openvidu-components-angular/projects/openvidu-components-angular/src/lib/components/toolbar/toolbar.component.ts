@@ -290,7 +290,12 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 	/**
 	 * @ignore
 	 */
-	showSessionName: boolean = true;
+	showRoomName: boolean = true;
+
+	/**
+	 * @ignore
+	 */
+	roomName: string = '';
 
 	/**
 	 * @ignore
@@ -419,6 +424,7 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 
 	async ngOnInit() {
 		this.room = this.openviduService.getRoom();
+		this.evalAndSetRoomName(this.libService.getRoomName());
 
 		this.hasVideoDevices = this.oVDevicesService.hasVideoDeviceAvailable();
 		this.hasAudioDevices = this.oVDevicesService.hasAudioDeviceAvailable();
@@ -856,7 +862,12 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 		});
 
 		this.libService.displayRoomName$.pipe(takeUntil(this.destroy$)).subscribe((value: boolean) => {
-			this.showSessionName = value;
+			this.showRoomName = value;
+			this.cd.markForCheck();
+		});
+
+		this.libService.roomName$.pipe(takeUntil(this.destroy$)).subscribe((value: string) => {
+			this.evalAndSetRoomName(value);
 			this.cd.markForCheck();
 		});
 		// this.libService.captionsButton$.pipe(takeUntil(this.destroy$)).subscribe((value: boolean) => {
@@ -893,5 +904,15 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 			this.showRecordingButton ||
 			this.showBroadcastingButton ||
 			this.showSettingsButton;
+	}
+
+	private evalAndSetRoomName(value: string) {
+		if (!!value) {
+			this.roomName = value;
+		} else if (!!this.room && this.room.name) {
+			this.roomName = this.room.name;
+		} else {
+			this.roomName = '';
+		}
 	}
 }

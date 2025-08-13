@@ -6,7 +6,7 @@
 				id="session-info-container"
 				[class.collapsed]="recordingStatus === _recordingStatus.STARTED || broadcastingStatus === _broadcastingStatus.STARTED"
 			>
-				<span id="session-name" *ngIf="!isMinimal && room && room.name && showSessionName">{{ room.name }}</span>
+				<span id="session-name" *ngIf="!isMinimal && showRoomName">{{ roomName }}</span>
 				<div
 					id="activities-tag"
 					*ngIf="recordingStatus === _recordingStatus.STARTED || broadcastingStatus === _broadcastingStatus.STARTED"

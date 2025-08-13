@@ -38,6 +38,7 @@ interface ToolbarConfig {
 	chatPanel: boolean;
 	activitiesPanel: boolean;
 	displayRoomName: boolean;
+	roomName: string;
 	displayLogo: boolean;
 	backgroundEffects: boolean;
 	recording: boolean;
@@ -237,6 +238,7 @@ export class OpenViduComponentsConfigService {
 			prev.chatPanel === curr.chatPanel &&
 			prev.activitiesPanel === curr.activitiesPanel &&
 			prev.displayRoomName === curr.displayRoomName &&
+			prev.roomName === curr.roomName &&
 			prev.displayLogo === curr.displayLogo &&
 			prev.backgroundEffects === curr.backgroundEffects &&
 			prev.recording === curr.recording &&
@@ -333,6 +335,7 @@ export class OpenViduComponentsConfigService {
 		chatPanel: true,
 		activitiesPanel: true,
 		displayRoomName: true,
+		roomName: '',
 		displayLogo: true,
 		backgroundEffects: true,
 		recording: true,
@@ -409,6 +412,7 @@ export class OpenViduComponentsConfigService {
 	chatPanelButton$: Observable<boolean> = this.toolbarConfig.observable$.pipe(map((config) => config.chatPanel));
 	activitiesPanelButton$: Observable<boolean> = this.toolbarConfig.observable$.pipe(map((config) => config.activitiesPanel));
 	displayRoomName$: Observable<boolean> = this.toolbarConfig.observable$.pipe(map((config) => config.displayRoomName));
+	roomName$: Observable<string> = this.toolbarConfig.observable$.pipe(map((config) => config.roomName));
 	brandingLogo$: Observable<string> = this.toolbarConfig.observable$.pipe(map((config) => config.brandingLogo));
 	displayLogo$: Observable<boolean> = this.toolbarConfig.observable$.pipe(map((config) => config.displayLogo));
 	toolbarAdditionalButtonsPosition$: Observable<ToolbarAdditionalButtonsPosition> = this.toolbarConfig.observable$.pipe(
@@ -550,6 +554,10 @@ export class OpenViduComponentsConfigService {
 	}
 
 	// Toolbar configuration methods
+
+	getRoomName(): string {
+		return this.toolbarConfig.subject.getValue().roomName;
+	}
 
 	setBroadcastingButton(broadcastingButton: boolean) {
 		this.updateToolbarConfig({ broadcasting: broadcastingButton });
