@@ -92,76 +92,268 @@ export class VideoconferenceComponent implements OnDestroy, AfterViewInit {
 	private static readonly MATERIAL_ICONS_SELECTOR = 'link[href*="Material+Symbols+Outlined"]';
 	private static readonly SPINNER_DIAMETER = 50;
 	// *** Toolbar ***
+
+	private _externalToolbar?: ToolbarDirective;
 	/**
 	 * @internal
 	 */
-	@ContentChild(ToolbarDirective) externalToolbar: ToolbarDirective;
+	@ContentChild(ToolbarDirective)
+	set externalToolbar(value: ToolbarDirective) {
+		this._externalToolbar = value;
+		this.setupTemplates();
+	}
+
+	get externalToolbar(): ToolbarDirective | undefined {
+		return this._externalToolbar;
+	}
+
+	private _externalToolbarAdditionalButtons?: ToolbarAdditionalButtonsDirective;
+
 	/**
 	 * @internal
 	 */
-	@ContentChild(ToolbarAdditionalButtonsDirective) externalToolbarAdditionalButtons: ToolbarAdditionalButtonsDirective;
+	@ContentChild(ToolbarAdditionalButtonsDirective)
+	set externalToolbarAdditionalButtons(value: ToolbarAdditionalButtonsDirective) {
+		this._externalToolbarAdditionalButtons = value;
+		this.setupTemplates();
+	}
+
 	/**
 	 * @internal
 	 */
-	@ContentChild(ToolbarAdditionalPanelButtonsDirective) externalToolbarAdditionalPanelButtons: ToolbarAdditionalPanelButtonsDirective;
+	get externalToolbarAdditionalButtons(): ToolbarAdditionalButtonsDirective | undefined {
+		return this._externalToolbarAdditionalButtons;
+	}
+
+	private _externalToolbarAdditionalPanelButtons?: ToolbarAdditionalPanelButtonsDirective;
+
 	/**
 	 * @internal
 	 */
-	@ContentChild(AdditionalPanelsDirective) externalAdditionalPanels: AdditionalPanelsDirective;
+	@ContentChild(ToolbarAdditionalPanelButtonsDirective)
+	set externalToolbarAdditionalPanelButtons(value: ToolbarAdditionalPanelButtonsDirective) {
+		this._externalToolbarAdditionalPanelButtons = value;
+		this.setupTemplates();
+	}
+
+	/**
+	 * @internal
+	 */
+	get externalToolbarAdditionalPanelButtons(): ToolbarAdditionalPanelButtonsDirective | undefined {
+		return this._externalToolbarAdditionalPanelButtons;
+	}
+
+	private _externalAdditionalPanels?: AdditionalPanelsDirective;
+
+	/**
+	 * @internal
+	 */
+	@ContentChild(AdditionalPanelsDirective)
+	set externalAdditionalPanels(value: AdditionalPanelsDirective) {
+		this._externalAdditionalPanels = value;
+		this.setupTemplates();
+	}
+
+	/**
+	 * @internal
+	 */
+	get externalAdditionalPanels(): AdditionalPanelsDirective | undefined {
+		return this._externalAdditionalPanels;
+	}
 
 	// *** Panels ***
 
-	/**
-	 * @internal
-	 */
-	@ContentChild(PanelDirective) externalPanel: PanelDirective;
-	/**
-	 * @internal
-	 */
-	@ContentChild(ChatPanelDirective) externalChatPanel: ChatPanelDirective;
-	/**
-	 * @internal
-	 */
-	@ContentChild(ActivitiesPanelDirective) externalActivitiesPanel: ActivitiesPanelDirective;
+	private _externalPanel?: PanelDirective;
 
 	/**
 	 * @internal
 	 */
-	@ContentChild(ParticipantsPanelDirective) externalParticipantsPanel: ParticipantsPanelDirective;
+	@ContentChild(PanelDirective)
+	set externalPanel(value: PanelDirective) {
+		this._externalPanel = value;
+		this.setupTemplates();
+	}
+
 	/**
 	 * @internal
 	 */
-	@ContentChild(ParticipantPanelItemDirective) externalParticipantPanelItem: ParticipantPanelItemDirective;
+	get externalPanel(): PanelDirective | undefined {
+		return this._externalPanel;
+	}
+
+	private _externalChatPanel?: ChatPanelDirective;
+
 	/**
 	 * @internal
 	 */
-	@ContentChild(ParticipantPanelItemElementsDirective) externalParticipantPanelItemElements: ParticipantPanelItemElementsDirective;
+	@ContentChild(ChatPanelDirective)
+	set externalChatPanel(value: ChatPanelDirective) {
+		this._externalChatPanel = value;
+		this.setupTemplates();
+	}
+
+	/**
+	 * @internal
+	 */
+	get externalChatPanel(): ChatPanelDirective | undefined {
+		return this._externalChatPanel;
+	}
+
+	private _externalActivitiesPanel?: ActivitiesPanelDirective;
+
+	/**
+	 * @internal
+	 */
+	@ContentChild(ActivitiesPanelDirective)
+	set externalActivitiesPanel(value: ActivitiesPanelDirective) {
+		this._externalActivitiesPanel = value;
+		this.setupTemplates();
+	}
+
+	/**
+	 * @internal
+	 */
+	get externalActivitiesPanel(): ActivitiesPanelDirective | undefined {
+		return this._externalActivitiesPanel;
+	}
+
+	private _externalParticipantsPanel?: ParticipantsPanelDirective;
+
+	/**
+	 * @internal
+	 */
+	@ContentChild(ParticipantsPanelDirective)
+	set externalParticipantsPanel(value: ParticipantsPanelDirective) {
+		this._externalParticipantsPanel = value;
+		this.setupTemplates();
+	}
+
+	/**
+	 * @internal
+	 */
+	get externalParticipantsPanel(): ParticipantsPanelDirective | undefined {
+		return this._externalParticipantsPanel;
+	}
+
+	private _externalParticipantPanelItem?: ParticipantPanelItemDirective;
+
+	/**
+	 * @internal
+	 */
+	@ContentChild(ParticipantPanelItemDirective)
+	set externalParticipantPanelItem(value: ParticipantPanelItemDirective) {
+		this._externalParticipantPanelItem = value;
+		this.setupTemplates();
+	}
+
+	/**
+	 * @internal
+	 */
+	get externalParticipantPanelItem(): ParticipantPanelItemDirective | undefined {
+		return this._externalParticipantPanelItem;
+	}
+
+	private _externalParticipantPanelItemElements?: ParticipantPanelItemElementsDirective;
+
+	/**
+	 * @internal
+	 */
+	@ContentChild(ParticipantPanelItemElementsDirective)
+	set externalParticipantPanelItemElements(value: ParticipantPanelItemElementsDirective) {
+		this._externalParticipantPanelItemElements = value;
+		this.setupTemplates();
+	}
+
+	/**
+	 * @internal
+	 */
+	get externalParticipantPanelItemElements(): ParticipantPanelItemElementsDirective | undefined {
+		return this._externalParticipantPanelItemElements;
+	}
 
 	// *** Layout ***
+
+	private _externalLayout?: LayoutDirective;
 	/**
 	 * @internal
 	 */
-	@ContentChild(LayoutDirective) externalLayout: LayoutDirective;
+	@ContentChild(LayoutDirective)
+	set externalLayout(value: LayoutDirective) {
+		this._externalLayout = value;
+		this.setupTemplates();
+	}
 	/**
 	 * @internal
 	 */
-	@ContentChild(StreamDirective) externalStream: StreamDirective;
+	get externalLayout(): LayoutDirective | undefined {
+		return this._externalLayout;
+	}
+
+	private _externalStream?: StreamDirective;
+	/**
+	 * @internal
+	 */
+	@ContentChild(StreamDirective)
+	set externalStream(value: StreamDirective) {
+		this._externalStream = value;
+		this.setupTemplates();
+	}
+	/**
+	 * @internal
+	 */
+	get externalStream(): StreamDirective | undefined {
+		return this._externalStream;
+	}
 
 	// *** PreJoin ***
+
+	private _externalPreJoin?: PreJoinDirective;
 	/**
 	 * @internal
 	 */
-	@ContentChild(PreJoinDirective) externalPreJoin: PreJoinDirective;
+	@ContentChild(PreJoinDirective)
+	set externalPreJoin(value: PreJoinDirective) {
+		this._externalPreJoin = value;
+		this.setupTemplates();
+	}
 	/**
 	 * @internal
-	 *
+	 */
+	get externalPreJoin(): PreJoinDirective | undefined {
+		return this._externalPreJoin;
+	}
+
+	private _externalParticipantPanelAfterLocalParticipant?: ParticipantPanelAfterLocalParticipantDirective;
+	/**
+	 * @internal
 	 */
 	@ContentChild(ParticipantPanelAfterLocalParticipantDirective)
-	externalParticipantPanelAfterLocalParticipant: ParticipantPanelAfterLocalParticipantDirective;
+	set externalParticipantPanelAfterLocalParticipant(value: ParticipantPanelAfterLocalParticipantDirective) {
+		this._externalParticipantPanelAfterLocalParticipant = value;
+		this.setupTemplates();
+	}
 	/**
 	 * @internal
 	 */
-	@ContentChild(LayoutAdditionalElementsDirective) externalLayoutAdditionalElements: LayoutAdditionalElementsDirective;
+	get externalParticipantPanelAfterLocalParticipant(): ParticipantPanelAfterLocalParticipantDirective | undefined {
+		return this._externalParticipantPanelAfterLocalParticipant;
+	}
+
+	private _externalLayoutAdditionalElements?: LayoutAdditionalElementsDirective;
+	/**
+	 * @internal
+	 */
+	@ContentChild(LayoutAdditionalElementsDirective)
+	set externalLayoutAdditionalElements(value: LayoutAdditionalElementsDirective) {
+		this._externalLayoutAdditionalElements = value;
+		this.setupTemplates();
+	}
+	/**
+	 * @internal
+	 */
+	get externalLayoutAdditionalElements(): LayoutAdditionalElementsDirective | undefined {
+		return this._externalLayoutAdditionalElements;
+	}
 
 	/**
 	 * @internal
@@ -589,37 +781,51 @@ export class VideoconferenceComponent implements OnDestroy, AfterViewInit {
 	 * Applies the template configuration to component properties
 	 */
 	private applyTemplateConfiguration(): void {
-		this.openviduAngularToolbarTemplate = this.templateConfig.toolbarTemplate;
-		this.openviduAngularPanelTemplate = this.templateConfig.panelTemplate;
-		this.openviduAngularChatPanelTemplate = this.templateConfig.chatPanelTemplate;
-		this.openviduAngularParticipantsPanelTemplate = this.templateConfig.participantsPanelTemplate;
-		this.openviduAngularActivitiesPanelTemplate = this.templateConfig.activitiesPanelTemplate;
-		this.openviduAngularParticipantPanelItemTemplate = this.templateConfig.participantPanelItemTemplate;
-		this.openviduAngularLayoutTemplate = this.templateConfig.layoutTemplate;
-		this.openviduAngularStreamTemplate = this.templateConfig.streamTemplate;
+		const assignIfChanged = <K extends keyof this>(prop: K, value: this[K]) => {
+			if (this[prop] !== value) {
+				this[prop] = value;
+			}
+		};
+
+		assignIfChanged('openviduAngularToolbarTemplate', this.templateConfig.toolbarTemplate);
+		assignIfChanged('openviduAngularPanelTemplate', this.templateConfig.panelTemplate);
+		assignIfChanged('openviduAngularChatPanelTemplate', this.templateConfig.chatPanelTemplate);
+		assignIfChanged('openviduAngularParticipantsPanelTemplate', this.templateConfig.participantsPanelTemplate);
+		assignIfChanged('openviduAngularActivitiesPanelTemplate', this.templateConfig.activitiesPanelTemplate);
+		assignIfChanged('openviduAngularParticipantPanelItemTemplate', this.templateConfig.participantPanelItemTemplate);
+		assignIfChanged('openviduAngularLayoutTemplate', this.templateConfig.layoutTemplate);
+		assignIfChanged('openviduAngularStreamTemplate', this.templateConfig.streamTemplate);
 
 		// Optional templates
 		if (this.templateConfig.toolbarAdditionalButtonsTemplate) {
-			this.openviduAngularToolbarAdditionalButtonsTemplate = this.templateConfig.toolbarAdditionalButtonsTemplate;
+			assignIfChanged('openviduAngularToolbarAdditionalButtonsTemplate', this.templateConfig.toolbarAdditionalButtonsTemplate);
 		}
 		if (this.templateConfig.toolbarAdditionalPanelButtonsTemplate) {
-			this.openviduAngularToolbarAdditionalPanelButtonsTemplate = this.templateConfig.toolbarAdditionalPanelButtonsTemplate;
+			assignIfChanged(
+				'openviduAngularToolbarAdditionalPanelButtonsTemplate',
+				this.templateConfig.toolbarAdditionalPanelButtonsTemplate
+			);
 		}
 		if (this.templateConfig.additionalPanelsTemplate) {
-			this.openviduAngularAdditionalPanelsTemplate = this.templateConfig.additionalPanelsTemplate;
+			assignIfChanged('openviduAngularAdditionalPanelsTemplate', this.templateConfig.additionalPanelsTemplate);
 		}
 		if (this.templateConfig.participantPanelAfterLocalParticipantTemplate) {
-			this.openviduAngularParticipantPanelAfterLocalParticipantTemplate =
-				this.templateConfig.participantPanelAfterLocalParticipantTemplate;
+			assignIfChanged(
+				'openviduAngularParticipantPanelAfterLocalParticipantTemplate',
+				this.templateConfig.participantPanelAfterLocalParticipantTemplate
+			);
 		}
 		if (this.templateConfig.participantPanelItemElementsTemplate) {
-			this.openviduAngularParticipantPanelItemElementsTemplate = this.templateConfig.participantPanelItemElementsTemplate;
+			assignIfChanged(
+				'openviduAngularParticipantPanelItemElementsTemplate',
+				this.templateConfig.participantPanelItemElementsTemplate
+			);
 		}
 		if (this.templateConfig.preJoinTemplate) {
-			this.openviduAngularPreJoinTemplate = this.templateConfig.preJoinTemplate;
+			assignIfChanged('openviduAngularPreJoinTemplate', this.templateConfig.preJoinTemplate);
 		}
 		if (this.templateConfig.layoutAdditionalElementsTemplate) {
-			this.ovLayoutAdditionalElementsTemplate = this.templateConfig.layoutAdditionalElementsTemplate;
+			assignIfChanged('ovLayoutAdditionalElementsTemplate', this.templateConfig.layoutAdditionalElementsTemplate);
 		}
 	}
 
