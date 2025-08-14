@@ -681,8 +681,8 @@ describe('Stream UI controls and interaction features', () => {
 
 		await browser.switchTo().window(tabs[0]);
 
+		await utils.waitForElement('.OV_stream.remote.speaking');
 		expect(await utils.getNumberOfElements('.OV_stream.remote.speaking')).toEqual(1);
-		// Wait for at least one speaking element to appear before asserting
 		expect(await utils.getNumberOfElements('.OV_stream.speaking')).toEqual(1);
 	});
 });

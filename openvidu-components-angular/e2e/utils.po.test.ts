@@ -15,13 +15,7 @@ export class OpenViduComponentsPO {
 		);
 	}
 
-	async getNumberOfElements(selector: string, timeout: number = this.TIMEOUT): Promise<number> {
-		try {
-			await this.waitForElement(selector);
-		} catch {
-			// If timeout, return 0 as no elements found
-			return 0;
-		}
+	async getNumberOfElements(selector: string): Promise<number> {
 		return (await this.browser.findElements(By.css(selector))).length;
 	}
 
