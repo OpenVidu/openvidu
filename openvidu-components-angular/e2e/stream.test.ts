@@ -683,6 +683,9 @@ describe('Stream UI controls and interaction features', () => {
 
 		await utils.waitForElement('.OV_stream.remote.speaking');
 		expect(await utils.getNumberOfElements('.OV_stream.remote.speaking')).toEqual(1);
+
+		// Check only one element is marked as speaker due to the local participant is muted
+		await utils.waitForElement('.OV_stream.speaking');
 		expect(await utils.getNumberOfElements('.OV_stream.speaking')).toEqual(1);
 	});
 });
