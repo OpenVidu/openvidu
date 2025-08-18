@@ -88,7 +88,7 @@ export class VideoconferenceComponent implements OnDestroy, AfterViewInit {
 	private static readonly PARTICIPANT_NAME_TIMEOUT_MS = 1000;
 	private static readonly ANIMATION_DURATION_MS = 300;
 	private static readonly MATERIAL_ICONS_URL =
-		'https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined&icon_names=background_replace,keep_off';
+		'https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined';
 	private static readonly MATERIAL_ICONS_SELECTOR = 'link[href*="Material+Symbols+Outlined"]';
 	private static readonly SPINNER_DIAMETER = 50;
 	// *** Toolbar ***
