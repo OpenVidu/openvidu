@@ -18,6 +18,7 @@ import {
 export interface ParticipantLeftEvent {
 	roomName: string;
 	participantName: string;
+	identity: string;
 	reason: ParticipantLeftReason;
 }
 

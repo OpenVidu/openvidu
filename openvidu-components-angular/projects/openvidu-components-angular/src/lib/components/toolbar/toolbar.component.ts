@@ -558,7 +558,8 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 			await this.openviduService.disconnectRoom(() => {
 				this.onParticipantLeft.emit({
 					roomName: this.openviduService.getRoomName(),
-					participantName: this.participantService.getLocalParticipant()?.identity || '',
+					participantName: this.participantService.getLocalParticipant()?.name || '',
+					identity: this.participantService.getLocalParticipant()?.identity || '',
 					reason: ParticipantLeftReason.LEAVE
 				});
 				this.onRoomDisconnected.emit();

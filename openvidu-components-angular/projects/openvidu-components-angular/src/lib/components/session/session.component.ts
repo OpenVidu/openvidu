@@ -290,7 +290,8 @@ export class SessionComponent implements OnInit, OnDestroy {
 		await this.openviduService.disconnectRoom(() => {
 			this.onParticipantLeft.emit({
 				roomName: this.openviduService.getRoomName(),
-				participantName: this.participantService.getLocalParticipant()?.identity || '',
+				participantName: this.participantService.getLocalParticipant()?.name || '',
+				identity: this.participantService.getLocalParticipant()?.identity || '',
 				reason
 			});
 		}, false);
@@ -447,7 +448,7 @@ export class SessionComponent implements OnInit, OnDestroy {
 				this.log.d(`Data event received: ${topic}`);
 				switch (topic) {
 					case DataTopic.CHAT:
-						const participantName = participant?.identity || 'Unknown';
+						const participantName = participant?.name || 'Unknown';
 						this.chatService.addRemoteMessage(event.message, participantName);
 						break;
 					case DataTopic.RECORDING_STARTING:
@@ -537,7 +538,8 @@ export class SessionComponent implements OnInit, OnDestroy {
 			this.actionService.closeConnectionDialog();
 			const participantLeftEvent: ParticipantLeftEvent = {
 				roomName: this.openviduService.getRoomName(),
-				participantName: this.participantService.getLocalParticipant()?.identity || '',
+				participantName: this.participantService.getLocalParticipant()?.name || '',
+				identity: this.participantService.getLocalParticipant()?.identity || '',
 				reason: ParticipantLeftReason.NETWORK_DISCONNECT
 			};
 			const messageErrorKey = 'ERRORS.DISCONNECT';
