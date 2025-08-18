@@ -389,7 +389,8 @@ export class RecordingActivityComponent implements OnInit, OnDestroy {
 			if (this.showRecordingList) {
 				this.recordingList = recordingList;
 			} else {
-				this.recordingList = recordingList.filter((rec) => rec.status === RecordingStatus.STARTED);
+				// Avoid showing recordings
+				this.recordingList = [];
 			}
 			this.recordingError = error;
 			this.recordingAlive = this.recordingStatus === RecordingStatus.STARTED;
