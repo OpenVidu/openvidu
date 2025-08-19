@@ -1,6 +1,5 @@
 import { Injectable } from '@angular/core';
-import { ILogService } from '../../models/logger.model';
-
+import { ILogService, ILogger } from '../../models/logger.model';
 import { GlobalConfigService } from '../config/global-config.service';
 
 /**
@@ -10,42 +9,71 @@ import { GlobalConfigService } from '../config/global-config.service';
 	providedIn: 'root'
 })
 export class LoggerService implements ILogService {
-	public log;
-	public LOG_FNS = [];
-	public MSG_PREFIXES = [
-		['[', ']'],
+	private log: Console;
+	private LOG_FNS: Function[] = [];
+	private MSG_PREFIXES: string[][] = [
+		['[', '] DEBUG: '],
 		['[', '] WARN: '],
 		['[', '] ERROR: ']
 	];
+	private loggerCache: Map<string, ILogger> = new Map();
 
 	constructor(private globalService: GlobalConfigService) {
+		this.initializeLogger();
 	}
 
-	private getLoggerFns(prefix: string) {
+	private initializeLogger(): void {
 		this.log = window.console;
-		this.LOG_FNS = [this.log.log, this.log.warn, this.log.error];
-		const loggerFns = this.LOG_FNS.map((logTemplFn, i) => {
-			return logTemplFn.bind(this.log, this.MSG_PREFIXES[i][0] + prefix + this.MSG_PREFIXES[i][1]);
-		});
-		return loggerFns;
+		this.LOG_FNS = [this.log.log.bind(this.log), this.log.warn.bind(this.log), this.log.error.bind(this.log)];
 	}
 
-	public get(prefix: string) {
+	private createLoggerFunctions(prefix: string): [(...args: any[]) => void, (...args: any[]) => void, (...args: any[]) => void] {
 		const prodMode = this.globalService.isProduction();
-		const loggerService = this;
-		return {
-			d: function(...args: any[]) {
-				if (!prodMode) {
-					loggerService.getLoggerFns(prefix)[0].apply(this.log, arguments);
-				}
-			},
-			w: function(...args: any[]) {
-				loggerService.getLoggerFns(prefix)[1].apply(this.log, arguments);
 
-			},
-			e: function(...args: any[]) {
-				loggerService.getLoggerFns(prefix)[2].apply(this.log, arguments);
+		const debugFn = (...args: any[]): void => {
+			if (!prodMode) {
+				// Only log debug messages in non-production mode
+				this.LOG_FNS[0](this.MSG_PREFIXES[0][0] + prefix + this.MSG_PREFIXES[0][1], ...args);
 			}
 		};
+
+		const warnFn = (...args: any[]): void => {
+			this.LOG_FNS[1](this.MSG_PREFIXES[1][0] + prefix + this.MSG_PREFIXES[1][1], ...args);
+		};
+
+		const errorFn = (...args: any[]): void => {
+			this.LOG_FNS[2](this.MSG_PREFIXES[2][0] + prefix + this.MSG_PREFIXES[2][1], ...args);
+		};
+
+		return [debugFn, warnFn, errorFn];
+	}
+
+	public get(prefix: string): ILogger {
+		// Check cache first
+		if (this.loggerCache.has(prefix)) {
+			return this.loggerCache.get(prefix)!;
+		}
+
+		// Create new logger functions
+		const [debugFn, warnFn, errorFn] = this.createLoggerFunctions(prefix);
+
+		const logger: ILogger = {
+			d: debugFn,
+			w: warnFn,
+			e: errorFn
+		};
+
+		// Cache the logger
+		this.loggerCache.set(prefix, logger);
+
+		return logger;
+	}
+
+	/**
+	 * Clears the logger cache. Useful for testing or when configuration changes.
+	 * @internal
+	 */
+	public clearCache(): void {
+		this.loggerCache.clear();
 	}
 }
