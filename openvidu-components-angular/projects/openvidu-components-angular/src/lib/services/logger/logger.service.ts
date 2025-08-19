@@ -13,6 +13,7 @@ export class LoggerService implements ILogService {
 	private LOG_FNS: Function[] = [];
 	private MSG_PREFIXES: string[][] = [
 		['[', '] DEBUG: '],
+		['[', '] VERBOSE: '],
 		['[', '] WARN: '],
 		['[', '] ERROR: ']
 	];
@@ -24,10 +25,17 @@ export class LoggerService implements ILogService {
 
 	private initializeLogger(): void {
 		this.log = window.console;
-		this.LOG_FNS = [this.log.log.bind(this.log), this.log.warn.bind(this.log), this.log.error.bind(this.log)];
+		this.LOG_FNS = [
+			this.log.log.bind(this.log),
+			this.log.debug.bind(this.log),
+			this.log.warn.bind(this.log),
+			this.log.error.bind(this.log)
+		];
 	}
 
-	private createLoggerFunctions(prefix: string): [(...args: any[]) => void, (...args: any[]) => void, (...args: any[]) => void] {
+	private createLoggerFunctions(
+		prefix: string
+	): [(...args: any[]) => void, (...args: any[]) => void, (...args: any[]) => void, (...args: any[]) => void] {
 		const prodMode = this.globalService.isProduction();
 
 		const debugFn = (...args: any[]): void => {
@@ -37,15 +45,22 @@ export class LoggerService implements ILogService {
 			}
 		};
 
-		const warnFn = (...args: any[]): void => {
-			this.LOG_FNS[1](this.MSG_PREFIXES[1][0] + prefix + this.MSG_PREFIXES[1][1], ...args);
+		const verboseFn = (...args: any[]): void => {
+			if (!prodMode) {
+				// Only log verbose messages in non-production mode and when verbose is enabled
+				this.LOG_FNS[1](this.MSG_PREFIXES[1][0] + prefix + this.MSG_PREFIXES[1][1], ...args);
+			}
 		};
 
-		const errorFn = (...args: any[]): void => {
+		const warnFn = (...args: any[]): void => {
 			this.LOG_FNS[2](this.MSG_PREFIXES[2][0] + prefix + this.MSG_PREFIXES[2][1], ...args);
 		};
 
-		return [debugFn, warnFn, errorFn];
+		const errorFn = (...args: any[]): void => {
+			this.LOG_FNS[3](this.MSG_PREFIXES[3][0] + prefix + this.MSG_PREFIXES[3][1], ...args);
+		};
+
+		return [debugFn, verboseFn, warnFn, errorFn];
 	}
 
 	public get(prefix: string): ILogger {
@@ -55,10 +70,11 @@ export class LoggerService implements ILogService {
 		}
 
 		// Create new logger functions
-		const [debugFn, warnFn, errorFn] = this.createLoggerFunctions(prefix);
+		const [debugFn, verboseFn, warnFn, errorFn] = this.createLoggerFunctions(prefix);
 
 		const logger: ILogger = {
 			d: debugFn,
+			v: verboseFn,
 			w: warnFn,
 			e: errorFn
 		};
