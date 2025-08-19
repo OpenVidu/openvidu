@@ -1,0 +1,245 @@
+// Shared styles for device selectors (video and audio)
+// This file contains common styling for both video-devices and audio-devices components
+
+@mixin device-selector-base() {
+	display: flex;
+	align-items: center;
+	width: 100%;
+
+	// Compact Mode - Unified Button
+	&.compact {
+		.unified-device-button {
+			display: flex;
+			background: var(--ov-secondary-action-color);
+			border-radius: 12px;
+			overflow: hidden;
+			transition: all 0.2s ease;
+			box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+
+			.toggle-section {
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				min-width: 50px;
+				width: 50px;
+				height: 48px;
+				border: none;
+				background: transparent;
+				border-radius: 0;
+				padding: 0;
+				transition: all 0.2s ease;
+
+				&.device-enabled {
+					color: var(--ov-primary-action-color, #4285f4);
+
+					mat-icon {
+						color: var(--ov-primary-action-color, #4285f4);
+					}
+				}
+
+				&.device-disabled {
+					background: rgba(244, 67, 54, 0.9);
+					color: white;
+
+					mat-icon {
+						color: white;
+					}
+				}
+
+				&[disabled] {
+					background: rgba(150, 150, 150, 0.5);
+					color: rgba(150, 150, 150, 0.8);
+					cursor: not-allowed;
+				}
+
+				mat-icon {
+					font-size: 20px;
+					width: 20px;
+					height: 20px;
+					margin: 0;
+				}
+			}
+
+			.dropdown-section {
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				min-width: 30px;
+				width: 30px;
+				height: 48px;
+				border: none;
+				background: transparent;
+				border-left: 1px solid rgba(0, 0, 0, 0.1);
+				border-radius: 0;
+				padding: 0;
+				color: var(--ov-text-secondary-color, #666);
+				transition: all 0.2s ease;
+
+				mat-icon {
+					font-size: 16px;
+					width: 16px;
+					height: 16px;
+					margin: 0;
+				}
+			}
+		}
+	}
+
+	// Normal Mode - Input Style Selector
+	&:not(.compact) {
+		.normal-device-selector {
+			display: flex;
+			align-items: center;
+			gap: 12px;
+			width: 100%;
+
+			.device-input-selector {
+				flex: 1;
+
+				&:not(.disabled) {
+					.selector-button {
+						display: flex;
+						align-items: center;
+						gap: 12px;
+						width: 100%;
+						height: 48px;
+						padding: 0 16px;
+						background: var(--ov-surface-color, #ffffff);
+						border: 2px solid var(--ov-border-color, #e0e0e0);
+						border-radius: 8px;
+						color: var(--ov-text-surface-color);
+						font-size: 14px;
+						font-weight: 500;
+						transition: all 0.2s ease;
+						text-align: left;
+						justify-content: flex-start;
+
+						&[disabled] {
+							background: var(--ov-disabled-background, #f5f5f5);
+							color: var(--ov-disabled-text-color, #999);
+							cursor: not-allowed;
+							border-color: var(--ov-disabled-border-color, #ddd);
+						}
+
+						.device-icon {
+							font-size: 18px;
+							width: 18px;
+							height: 18px;
+							color: var(--ov-text-secondary-color, #666);
+							flex-shrink: 0;
+						}
+
+						.selected-device-name {
+							flex: 1;
+							text-overflow: ellipsis;
+							overflow: hidden;
+						}
+
+						.dropdown-icon {
+							font-size: 18px;
+							width: 18px;
+							height: 18px;
+							color: var(--ov-text-secondary-color, #666);
+							flex-shrink: 0;
+							transition: transform 0.2s ease;
+						}
+
+						&[aria-expanded='true'] .dropdown-icon {
+							transform: rotate(180deg);
+						}
+					}
+				}
+
+				&.disabled {
+					.selector-button.disabled {
+						display: flex;
+						align-items: center;
+						gap: 12px;
+						height: 48px;
+						padding: 0 16px;
+						background: var(--ov-disabled-background, #f5f5f5);
+						border: 2px solid var(--ov-disabled-border-color, #ddd);
+						border-radius: 8px;
+						color: var(--ov-disabled-text-color, #999);
+						font-size: 14px;
+						cursor: not-allowed;
+
+						.device-icon {
+							font-size: 18px;
+							width: 18px;
+							height: 18px;
+							color: var(--ov-error-color, #d32f2f);
+						}
+
+						.selected-device-name {
+							flex: 1;
+							font-style: italic;
+						}
+					}
+				}
+			}
+		}
+	}
+
+	.no-device-message {
+		display: flex;
+		align-items: center;
+		gap: 6px;
+		padding: 8px 12px;
+		background: rgba(255, 193, 7, 0.1);
+		border: 1px solid rgba(255, 193, 7, 0.3);
+		border-radius: 8px;
+		color: var(--ov-warning-color, #ff9800);
+		font-size: 12px;
+
+		.warning-icon {
+			font-size: 16px;
+			width: 16px;
+			height: 16px;
+		}
+	}
+}
+
+// Shared device menu styles
+@mixin device-menu-styles() {
+	::ng-deep .device-menu.mat-mdc-menu-panel {
+		border-radius: 12px;
+		box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+		border: 1px solid var(--ov-border-color, #e0e0e0);
+		overflow: hidden;
+		background-color: var(--ov-surface-color);
+
+		.mat-mdc-menu-item {
+			display: flex;
+			align-items: center;
+			gap: 12px;
+			padding: 12px 16px;
+			transition: background-color 0.2s ease;
+			font-size: 14px;
+
+			&:hover {
+				background-color: var(--ov-hover-color, #f5f5f5);
+			}
+
+			&.selected {
+				background-color: rgba(66, 133, 244, 0.08);
+				color: var(--ov-primary-action-color, #4285f4);
+
+				mat-icon {
+					color: var(--ov-primary-action-color, #4285f4);
+				}
+			}
+
+			mat-icon {
+				font-size: 18px;
+				width: 18px;
+				height: 18px;
+			}
+
+			span {
+				flex: 1;
+				font-weight: 500;
+			}
+		}
+	}
+}

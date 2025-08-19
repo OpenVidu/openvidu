@@ -1,4 +1,4 @@
-import { Component, EventEmitter, OnDestroy, OnInit, Output } from '@angular/core';
+import { Component, EventEmitter, Input, OnDestroy, OnInit, Output } from '@angular/core';
 import { Subscription } from 'rxjs';
 import { CustomDevice } from '../../../models/device.model';
 import { DeviceService } from '../../../services/device/device.service';
@@ -16,6 +16,7 @@ import { ParticipantModel } from '../../../models/participant.model';
 	standalone: false
 })
 export class AudioDevicesComponent implements OnInit, OnDestroy {
+	@Input() compact: boolean = false;
 	@Output() onAudioDeviceChanged = new EventEmitter<CustomDevice>();
 	@Output() onAudioEnabledChanged = new EventEmitter<boolean>();
 

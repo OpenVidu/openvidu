@@ -1,4 +1,4 @@
-import { Component, EventEmitter, OnDestroy, OnInit, Output } from '@angular/core';
+import { Component, EventEmitter, Input, OnDestroy, OnInit, Output } from '@angular/core';
 import { Subscription } from 'rxjs';
 import { CustomDevice } from '../../../models/device.model';
 import { DeviceService } from '../../../services/device/device.service';
@@ -16,6 +16,7 @@ import { ParticipantModel } from '../../../models/participant.model';
 	standalone: false
 })
 export class VideoDevicesComponent implements OnInit, OnDestroy {
+	@Input() compact: boolean = false;
 	@Output() onVideoDeviceChanged = new EventEmitter<CustomDevice>();
 	@Output() onVideoEnabledChanged = new EventEmitter<boolean>();
 

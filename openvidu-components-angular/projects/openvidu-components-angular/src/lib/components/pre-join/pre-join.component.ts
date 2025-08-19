@@ -19,6 +19,8 @@ import { TranslateService } from '../../services/translate/translate.service';
 import { LocalTrack } from 'livekit-client';
 import { CustomDevice } from '../../models/device.model';
 import { LangOption } from '../../models/lang.model';
+import { VirtualBackgroundService } from '../../services/virtual-background/virtual-background.service';
+import { BackgroundEffect } from '../../models/background-effect.model';
 
 /**
  * @internal
@@ -56,6 +58,11 @@ export class PreJoinComponent implements OnInit, OnDestroy {
 	showLogo: boolean = true;
 	showParticipantName: boolean = true;
 
+	// Future feature preparation
+	backgroundEffectEnabled: boolean = false;
+	availableBackgroundEffects: BackgroundEffect[] = [];
+	selectedBackgroundEffect: BackgroundEffect | undefined;
+
 	videoTrack: LocalTrack | undefined;
 	audioTrack: LocalTrack | undefined;
 	private tracks: LocalTrack[];
@@ -74,9 +81,11 @@ export class PreJoinComponent implements OnInit, OnDestroy {
 		private cdkSrv: CdkOverlayService,
 		private openviduService: OpenViduService,
 		private translateService: TranslateService,
+		private virtualBackgroundService: VirtualBackgroundService,
 		private changeDetector: ChangeDetectorRef
 	) {
 		this.log = this.loggerSrv.get('PreJoinComponent');
+		this.availableBackgroundEffects = this.virtualBackgroundService.getBackgrounds();
 	}
 
 	async ngOnInit() {
@@ -105,14 +114,7 @@ export class PreJoinComponent implements OnInit, OnDestroy {
 	}
 
 	private async initializeDevices() {
-		try {
-			this.tracks = await this.openviduService.createLocalTracks();
-			this.openviduService.setLocalTracks(this.tracks);
-			this.videoTrack = this.tracks.find((track) => track.kind === 'video');
-			this.audioTrack = this.tracks.find((track) => track.kind === 'audio');
-		} catch (error) {
-			this.log.e('Error creating local tracks:', error);
-		}
+		await this.initializeDevicesWithRetry();
 	}
 
 	onDeviceSelectorClicked() {
@@ -122,24 +124,27 @@ export class PreJoinComponent implements OnInit, OnDestroy {
 	}
 
 	join() {
-		if (this.showParticipantName && !this.participantName) {
+		if (this.showParticipantName && !this.participantName?.trim()) {
 			this._error = this.translateService.translate('PREJOIN.NICKNAME_REQUIRED');
 			return;
 		}
+
+		// Clear any previous errors
+		this._error = undefined;
 
 		// Mark tracks as permanent for avoiding to be removed in ngOnDestroy
 		this.shouldRemoveTracksWhenComponentIsDestroyed = false;
 
 		// Assign participant name to the observable if it is defined
-		if (this.participantName) {
-			this.libService.updateGeneralConfig({ participantName: this.participantName });
+		if (this.participantName?.trim()) {
+			this.libService.updateGeneralConfig({ participantName: this.participantName.trim() });
 
 			// Wait for the next tick to ensure the participant name propagates
 			// through the observable before emitting onReadyToJoin
 			this.libService.participantName$
 				.pipe(
 					takeUntil(this.destroy$),
-					filter((name) => name === this.participantName),
+					filter((name) => name === this.participantName?.trim()),
 					tap(() => this.onReadyToJoin.emit())
 				)
 				.subscribe();
@@ -150,7 +155,11 @@ export class PreJoinComponent implements OnInit, OnDestroy {
 	}
 
 	onParticipantNameChanged(name: string) {
-		if (name) this.participantName = name;
+		this.participantName = name?.trim() || '';
+		// Clear error when user starts typing
+		if (this._error && this.participantName) {
+			this._error = undefined;
+		}
 	}
 
 	onEnterPressed() {
@@ -209,5 +218,49 @@ export class PreJoinComponent implements OnInit, OnDestroy {
 			this.openviduService.setLocalTracks(this.tracks);
 		}
 		this.onAudioEnabledChanged.emit(enabled);
+	}
+
+	/**
+	 * Future method for background effects
+	 * @param effect - The background effect to apply
+	 */
+	onBackgroundEffectChanged(effect: string) {
+		// TODO: Implement background effect logic
+		// this.selectedBackgroundEffect = effect;
+		// this.log.d('Background effect changed to:', effect);
+		// this.virtualBackgroundService.applyBackground(this.virtualBackgroundService.getBackgrounds()[0]);
+	}
+
+	/**
+	 * Enhanced error handling with better UX
+	 */
+	private handleError(error: any) {
+		this.log.e('PreJoin component error:', error);
+		this._error = error.message || 'An unexpected error occurred';
+		this.changeDetector.markForCheck();
+	}
+
+	/**
+	 * Improved device initialization with error handling
+	 */
+	private async initializeDevicesWithRetry(maxRetries: number = 3): Promise<void> {
+		for (let attempt = 1; attempt <= maxRetries; attempt++) {
+			try {
+				this.tracks = await this.openviduService.createLocalTracks();
+				this.openviduService.setLocalTracks(this.tracks);
+				this.videoTrack = this.tracks.find((track) => track.kind === 'video');
+				this.audioTrack = this.tracks.find((track) => track.kind === 'audio');
+				return; // Success, exit retry loop
+			} catch (error) {
+				this.log.w(`Device initialization attempt ${attempt} failed:`, error);
+
+				if (attempt === maxRetries) {
+					this.handleError(error);
+				} else {
+					// Wait before retrying
+					await new Promise((resolve) => setTimeout(resolve, 1000 * attempt));
+				}
+			}
+		}
 	}
 }

@@ -1,21 +1,120 @@
-$ov-surface-color-lighter: color-mix(in srgb, var(--ov-surface-color), #fff 5%);
+:host {
+	display: inline-block;
 
-.lang-button {
-	background-color: var(--ov-primary-action-color) !important;
-	color: var(--ov-secondary-action-color) !important;
-}
-.lang-button .mat-icon {
-	color: var(--ov-secondary-action-color);
+	.language-selector-container {
+		.compact-lang-button {
+			width: 40px;
+			height: 40px;
+			background: rgba(255, 255, 255, 0.9);
+			backdrop-filter: blur(10px);
+			border: 1px solid var(--ov-border-color, #e0e0e0);
+			border-radius: 10px;
+			transition: all 0.2s ease;
+			color: var(--ov-text-secondary-color, #666);
 
-}
-::ng-deep .mat-mdc-menu-panel {
-	border-radius: var(--ov-surface-radius) !important;
-	background-color: $ov-surface-color-lighter !important;
-	box-shadow: 1px 1px 5px 0px rgba(0, 0, 0, 0.2) !important;
+			&:hover {
+				background: rgba(255, 255, 255, 1);
+				border-color: var(--ov-primary-action-color, #4285f4);
+				transform: scale(1.02);
+			}
+
+			mat-icon {
+				font-size: 18px;
+				width: 18px;
+				height: 18px;
+			}
+		}
+
+		.full-lang-button {
+			display: flex;
+			align-items: center;
+			gap: 8px;
+			padding: 12px 16px;
+			background: var(--ov-surface-color, #ffffff);
+			border: 2px solid var(--ov-border-color, #e0e0e0);
+			border-radius: 12px;
+			transition: all 0.2s ease;
+			color: var(--ov-text-primary-color, #333);
+			font-weight: 500;
+
+			&:hover {
+				border-color: var(--ov-primary-action-color, #4285f4);
+				box-shadow: 0 2px 8px rgba(66, 133, 244, 0.1);
+			}
+
+			.lang-icon {
+				font-size: 18px;
+				width: 18px;
+				height: 18px;
+				color: var(--ov-text-secondary-color, #666);
+			}
+
+			.lang-name {
+				font-size: 14px;
+				font-weight: 500;
+			}
+
+			.expand-icon {
+				font-size: 16px;
+				width: 16px;
+				height: 16px;
+				color: var(--ov-text-secondary-color, #666);
+				transition: transform 0.2s ease;
+			}
+
+			&[aria-expanded="true"] .expand-icon {
+				transform: rotate(180deg);
+			}
+		}
+	}
 }
 
-::ng-deep .mat-mdc-menu-item,
-.mat-mdc-menu-item:visited,
-.mat-mdc-menu-item:link {
-	color: var(--ov-text-surface-color) !important;
+::ng-deep .language-menu {
+	.mat-mdc-menu-panel {
+		border-radius: 12px;
+		box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+		border: 1px solid var(--ov-border-color, #e0e0e0);
+		overflow: hidden;
+		background: var(--ov-surface-color, #ffffff);
+	}
+
+	.language-option {
+		display: flex;
+		align-items: center;
+		gap: 12px;
+		padding: 12px 16px;
+		transition: background-color 0.2s ease;
+		font-size: 14px;
+		min-height: 48px;
+
+		&:hover {
+			background-color: var(--ov-hover-color, #f5f5f5);
+		}
+
+		&.selected {
+			background-color: rgba(66, 133, 244, 0.08);
+			color: var(--ov-primary-action-color, #4285f4);
+
+			.check-icon {
+				color: var(--ov-primary-action-color, #4285f4);
+			}
+		}
+
+		.check-icon {
+			font-size: 18px;
+			width: 18px;
+			height: 18px;
+		}
+
+		.lang-option-name {
+			flex: 1;
+			font-weight: 500;
+			color: var(--ov-text-primary-color, #333);
+		}
+
+		&.selected .lang-option-name {
+			color: var(--ov-primary-action-color, #4285f4);
+			font-weight: 600;
+		}
+	}
 }

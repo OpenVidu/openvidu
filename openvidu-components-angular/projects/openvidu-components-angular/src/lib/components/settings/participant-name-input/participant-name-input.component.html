@@ -1,20 +1,17 @@
-<div id="name-input-container" [ngClass]="{ warn: !name }">
-	<mat-form-field id="name-form" [ngClass]="{ error: error }">
-		<mat-select-trigger>
-			<button mat-flat-button disabled>
-				<mat-icon>person</mat-icon>
-			</button>
-		</mat-select-trigger>
+<div class="participant-name-input-container" [class.error]="error">
+	<div class="input-wrapper">
+		<mat-icon class="input-icon">person</mat-icon>
 		<input
 			id="name-input"
-			matInput
-			(change)="updateName()"
 			type="text"
 			maxlength="20"
 			[(ngModel)]="name"
 			autocomplete="off"
 			[disabled]="!isPrejoinPage"
+			(change)="updateName()"
 			(keypress)="eventKeyPress($event)"
+			[placeholder]="'PREJOIN.NICKNAME' | translate"
+			class="name-input-field"
 		/>
-	</mat-form-field>
+	</div>
 </div>

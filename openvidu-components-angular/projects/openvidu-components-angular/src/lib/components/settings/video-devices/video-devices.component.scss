@@ -1,106 +1,51 @@
+@use '../device-selector-shared' as shared;
+
 $ov-selection-color-btn: #afafaf;
 $ov-selection-color: #cccccc;
 
 :host {
-	.device-container-element {
-		border-radius: var(--ov-surface-radius);
-		border: 1px solid $ov-selection-color-btn;
-	}
-	.device-container-element.mute-btn {
-		border: 1px solid var(--ov-error-color);
-	}
-	#video-devices-form {
-		width: 100%;
-		height: 50px;
-	}
+	display: flex;
+	align-items: center;
 
-	#video-devices-not-found {
-		font-size: 13px;
-	}
+	.video-device-selector {
+		@include shared.device-selector-base();
 
-	#camera-button {
-		color: #000000;
-	}
+		// Video-specific overrides for compact mode
+		&.compact {
+			.unified-device-button {
+				.toggle-section {
+					display: flex-end; // Video-specific styling
+				}
+			}
+		}
 
-	::ng-deep .mat-mdc-text-field-wrapper,
-	::ng-deep .mat-mdc-form-field-flex,
-	::ng-deep .mat-mdc-select-trigger {
-		height: 50px !important;
-	}
-
-	::ng-deep .mat-mdc-form-field-subscript-wrapper {
-		display: none !important;
-	}
-
-	::ng-deep .mat-mdc-text-field-wrapper {
-		padding-left: 0px;
-		padding-right: 10px;
-		background-color: $ov-selection-color !important;
-		border-radius: var(--ov-surface-radius);
-	}
-	::ng-deep .mdc-button--unelevated {
-		border-top-left-radius: var(--ov-surface-radius);
-		border-bottom-left-radius: var(--ov-surface-radius);
-		border-bottom-right-radius: 0px !important;
-		border-top-right-radius: 0px !important;
-		background-color: $ov-selection-color-btn !important;
-		width: 48px !important;
-		min-width: 48px !important;
-		padding: 0;
-		height: 50px;
-	}
-
-	::ng-deep .mat-mdc-unelevated-button > .mat-icon {
-		height: 24px;
-		width: 24px;
-		font-size: 24px !important;
-		margin: auto;
-	}
-	::ng-deep .mat-mdc-form-field-infix {
-		padding: 0px !important;
-		min-height: 100%;
-	}
-
-	.selected-text {
-		padding-left: 5px;
-	}
-
-	.mat-icon {
-		vertical-align: middle;
-		display: inline-flex;
-	}
-
-	::ng-deep .mdc-text-field--filled:not(.mdc-text-field--disabled) .mdc-line-ripple::before {
-		border: 0px !important;
-	}
-
-	::ng-deep .mat-mdc-button-touch-target {
-		border-radius: var(--ov-surface-radius) !important;
-	}
-
-	.mute-btn {
-		color: #ffffff !important;
-		background-color: var(--ov-error-color) !important;
+		// Video-specific overrides for normal mode
+		&:not(.compact) {
+			.normal-device-selector {
+				.device-input-selector {
+					&:not(.disabled) {
+						.selector-button {
+							// Video-specific hover effect with box-shadow
+							&:hover:not([disabled]) {
+								background-color: white !important;
+								border-color: var(--ov-primary-action-color);
+							}
+						}
+					}
+				}
+			}
+		}
 	}
 }
-::ng-deep .mat-mdc-select-panel {
-	background-color: var(--ov-surface-color) !important;
-}
 
-::ng-deep .mat-mdc-select-panel {
-	background-color: #e2e2e2 !important;
-}
+// Include shared device menu styles
+@include shared.device-menu-styles();
 
-::ng-deep .mat-mdc-option {
-	padding: 10px 10px !important;
-}
-
-::ng-deep .mat-mdc-form-field.mat-focused .mat-mdc-select-arrow {
-	color: var(--ov-primary-action-color-lighter) !important;
-}
+// Video-specific additional styles
 ::ng-deep .mdc-text-field--filled:not(.mdc-text-field--disabled) .mdc-line-ripple::after {
 	border-bottom-color: var(--ov-primary-action-color-lighter) !important;
 }
+
 ::ng-deep .mat-mdc-option.mdc-list-item--selected:not(.mdc-list-item--disabled):not(.mat-mdc-option-multiple) {
 	background-color: $ov-selection-color !important;
 }
