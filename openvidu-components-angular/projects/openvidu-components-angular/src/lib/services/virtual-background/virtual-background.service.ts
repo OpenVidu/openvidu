@@ -2,12 +2,12 @@ import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { BackgroundEffect, EffectType } from '../../models/background-effect.model';
 import { ParticipantService } from '../participant/participant.service';
+import { OpenViduService } from '../openvidu/openvidu.service';
 import { StorageService } from '../storage/storage.service';
-import { LocalTrack } from 'livekit-client';
+import { LocalVideoTrack, Track } from 'livekit-client';
 import { BackgroundBlur, BackgroundOptions, ProcessorWrapper, VirtualBackground } from '@livekit/track-processors';
 import { LoggerService } from '../logger/logger.service';
 import { ILogger } from '../../models/logger.model';
-import { ParticipantTrackPublication } from '../../models/participant.model';
 
 /**
  * @internal
@@ -49,6 +49,7 @@ export class VirtualBackgroundService {
 	private log: ILogger;
 	constructor(
 		private participantService: ParticipantService,
+		private openviduService: OpenViduService,
 		private storageService: StorageService,
 		private loggerSrv: LoggerService
 	) {
@@ -79,11 +80,12 @@ export class VirtualBackgroundService {
 		// If the background is already applied, do nothing
 		if (this.backgroundIsAlreadyApplied(bg.id)) return;
 
-		const cameraTracks = this.getCameraTracks();
-		if (!cameraTracks) {
-			this.log.e('No camera tracks found. Cannot apply background.');
+		const cameraTrack = this.getCameraTrack();
+		if (!cameraTrack) {
+			this.log.e('No camera track found. Cannot apply background.');
 			return;
 		}
+
 		try {
 			// If no effect is selected, remove the background
 			if (bg.type === EffectType.NONE) {
@@ -91,8 +93,7 @@ export class VirtualBackgroundService {
 				return;
 			}
 
-			const localTrack = cameraTracks[0].track as LocalTrack;
-			const currentProcessor = localTrack.getProcessor() as ProcessorWrapper<BackgroundOptions>;
+			const currentProcessor = cameraTrack.getProcessor() as ProcessorWrapper<BackgroundOptions>;
 
 			// Check if the background is the same type as the previous one
 			if (this.hasSameTypeAsPreviousOne(bg.type) && currentProcessor) {
@@ -104,7 +105,7 @@ export class VirtualBackgroundService {
 					this.log.e('No processor found for the background effect.');
 					return;
 				}
-				await this.applyProcessorToCameraTracks(cameraTracks, newProcessor);
+				await this.applyProcessorToCameraTrack(cameraTrack, newProcessor);
 			}
 
 			this.storageService.setBackground(bg.id);
@@ -128,15 +129,14 @@ export class VirtualBackgroundService {
 	async removeBackground() {
 		if (this.isBackgroundApplied()) {
 			this.backgroundIdSelected.next('no_effect');
-			const tracks = this.participantService.getLocalParticipant()?.tracks;
-			const promises = tracks?.map(async (t) => {
+			const cameraTrack = this.getCameraTrack();
+			if (cameraTrack) {
 				try {
-					await (t.track as LocalTrack).stopProcessor();
+					await cameraTrack.stopProcessor();
 				} catch (e) {
 					this.log.w('Error stopping processor:', e);
 				}
-			});
-			await Promise.all(promises || []);
+			}
 			this.storageService.removeBackground();
 		}
 	}
@@ -160,24 +160,39 @@ export class VirtualBackgroundService {
 		return undefined;
 	}
 
-	private async applyProcessorToCameraTracks(
-		cameraTracks: ParticipantTrackPublication[],
-		processor: ProcessorWrapper<BackgroundOptions>
-	) {
-		const promises = cameraTracks.map((track) => {
-			return (track.track as LocalTrack).setProcessor(processor);
-		});
+	/**
+	 * Gets the camera track from either the published tracks (if in room) or local tracks (if in prejoin)
+	 * @returns The camera LocalTrack or undefined if not found
+	 * @private
+	 */
+	private getCameraTrack(): LocalVideoTrack | undefined {
+		// First, try to get from published tracks (when in room)
+		if (this.openviduService.isRoomConnected()) {
+			const localParticipant = this.participantService.getLocalParticipant();
+			const cameraTrackPublication = localParticipant?.cameraTracks?.[0];
+			if (cameraTrackPublication?.track) {
+				return cameraTrackPublication.track as LocalVideoTrack;
+			}
+		}
 
-		await Promise.all(promises || []);
+		// Fallback to local tracks (when in prejoin or tracks not yet published)
+		const localTracks = this.openviduService.getLocalTracks();
+		const cameraTrack = localTracks.find((track) => track.kind === Track.Kind.Video);
+		return cameraTrack as LocalVideoTrack | undefined;
+	}
+
+	/**
+	 * Applies a background processor to the camera track
+	 * @param cameraTrack The camera track to apply the processor to
+	 * @param processor The background processor to apply
+	 * @private
+	 */
+	private async applyProcessorToCameraTrack(cameraTrack: LocalVideoTrack, processor: ProcessorWrapper<BackgroundOptions>): Promise<void> {
+		await cameraTrack.setProcessor(processor);
 	}
 
 	private backgroundIsAlreadyApplied(backgroundId: string): boolean {
 		return backgroundId === this.backgroundIdSelected.getValue();
-	}
-
-	private getCameraTracks(): ParticipantTrackPublication[] | undefined {
-		const localParticipant = this.participantService.getLocalParticipant();
-		return localParticipant?.cameraTracks;
 	}
 
 	/**

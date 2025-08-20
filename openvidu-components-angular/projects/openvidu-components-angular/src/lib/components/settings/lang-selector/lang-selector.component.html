@@ -1,39 +1,33 @@
 <div class="language-selector-container">
-	<!-- Compact version (icon only) -->
-	<button
-		*ngIf="compact"
-		mat-icon-button
-		[matMenuTriggerFor]="menu"
-		class="compact-lang-button"
-		[matTooltip]="'Change language'"
-	>
-		<mat-icon>translate</mat-icon>
-	</button>
-
-	<!-- Full version (with text) -->
-	<button
-		*ngIf="!compact"
-		mat-flat-button
-		[matMenuTriggerFor]="menu"
-		class="full-lang-button"
-	>
-		<mat-icon class="lang-icon">translate</mat-icon>
-		<span class="lang-name">{{ langSelected?.name }}</span>
-		<mat-icon class="expand-icon">expand_more</mat-icon>
-	</button>
+	@if (compact) {
+		<!-- Compact version (icon only) -->
+		<button mat-icon-button [matMenuTriggerFor]="langMenu" class="compact-lang-button" [matTooltip]="'Change language'" disableRipple>
+			<mat-icon>translate</mat-icon>
+		</button>
+	} @else {
+		<!-- Full version (with text) -->
+		<button mat-flat-button [matMenuTriggerFor]="langMenu" class="full-lang-button">
+			<!-- <mat-icon class="lang-icon">translate</mat-icon> -->
+			<span class="lang-name">
+				{{ langSelected?.name }}
+				<mat-icon class="expand-icon">expand_more</mat-icon>
+			</span>
+		</button>
+	}
 
 	<!-- Language Menu -->
-	<mat-menu #menu="matMenu" class="language-menu">
-		<button
-			mat-menu-item
-			*ngFor="let lang of languages"
-			(click)="onLangSelected(lang.lang)"
-			[attr.id]="'lang-opt-' + lang.lang"
-			[class.selected]="langSelected?.lang === lang.lang"
-			class="language-option"
-		>
-			<mat-icon *ngIf="langSelected?.lang === lang.lang" class="check-icon">check</mat-icon>
-			<span class="lang-option-name">{{ lang.name }}</span>
-		</button>
+	<mat-menu #langMenu="matMenu" class="language-menu">
+		@for (lang of languages; track lang.lang) {
+			<button
+				mat-menu-item
+				(click)="onLangSelected(lang.lang)"
+				[attr.id]="'lang-opt-' + lang.lang"
+				[class.selected]="langSelected?.lang === lang.lang"
+				class="language-option"
+			>
+				<mat-icon *ngIf="langSelected?.lang === lang.lang" class="check-icon">check</mat-icon>
+				<span class="lang-option-name">{{ lang.name }}</span>
+			</button>
+		}
 	</mat-menu>
 </div>

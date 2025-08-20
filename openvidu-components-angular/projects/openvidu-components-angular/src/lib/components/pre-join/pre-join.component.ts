@@ -19,8 +19,6 @@ import { TranslateService } from '../../services/translate/translate.service';
 import { LocalTrack } from 'livekit-client';
 import { CustomDevice } from '../../models/device.model';
 import { LangOption } from '../../models/lang.model';
-import { VirtualBackgroundService } from '../../services/virtual-background/virtual-background.service';
-import { BackgroundEffect } from '../../models/background-effect.model';
 
 /**
  * @internal
@@ -44,7 +42,6 @@ export class PreJoinComponent implements OnInit, OnDestroy {
 	@Output() onReadyToJoin = new EventEmitter<any>();
 
 	_error: string | undefined;
-
 	windowSize: number;
 	isLoading = true;
 	participantName: string | undefined = '';
@@ -59,9 +56,8 @@ export class PreJoinComponent implements OnInit, OnDestroy {
 	showParticipantName: boolean = true;
 
 	// Future feature preparation
-	backgroundEffectEnabled: boolean = false;
-	availableBackgroundEffects: BackgroundEffect[] = [];
-	selectedBackgroundEffect: BackgroundEffect | undefined;
+	backgroundEffectEnabled: boolean = true; // Enable virtual backgrounds by default
+	showBackgroundPanel: boolean = false;
 
 	videoTrack: LocalTrack | undefined;
 	audioTrack: LocalTrack | undefined;
@@ -81,11 +77,9 @@ export class PreJoinComponent implements OnInit, OnDestroy {
 		private cdkSrv: CdkOverlayService,
 		private openviduService: OpenViduService,
 		private translateService: TranslateService,
-		private virtualBackgroundService: VirtualBackgroundService,
 		private changeDetector: ChangeDetectorRef
 	) {
 		this.log = this.loggerSrv.get('PreJoinComponent');
-		this.availableBackgroundEffects = this.virtualBackgroundService.getBackgrounds();
 	}
 
 	async ngOnInit() {
@@ -221,14 +215,19 @@ export class PreJoinComponent implements OnInit, OnDestroy {
 	}
 
 	/**
-	 * Future method for background effects
-	 * @param effect - The background effect to apply
+	 * Toggle virtual background panel visibility
 	 */
-	onBackgroundEffectChanged(effect: string) {
-		// TODO: Implement background effect logic
-		// this.selectedBackgroundEffect = effect;
-		// this.log.d('Background effect changed to:', effect);
-		// this.virtualBackgroundService.applyBackground(this.virtualBackgroundService.getBackgrounds()[0]);
+	toggleBackgroundPanel() {
+		this.showBackgroundPanel = !this.showBackgroundPanel;
+		this.changeDetector.markForCheck();
+	}
+
+	/**
+	 * Close virtual background panel
+	 */
+	closeBackgroundPanel() {
+		this.showBackgroundPanel = false;
+		this.changeDetector.markForCheck();
 	}
 
 	/**

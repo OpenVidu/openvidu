@@ -1,89 +1,115 @@
 <div class="prejoin-container" id="prejoin-container">
-	<!-- Loading State -->
-	<div *ngIf="isLoading" class="loading-overlay">
-		<div class="loading-content">
-			<mat-spinner [diameter]="40"></mat-spinner>
-			<span class="loading-text">{{ 'PREJOIN.PREPARING' | translate }}</span>
-		</div>
+	<!-- Top Language Toolbar -->
+	<div class="top-toolbar" *ngIf="!isMinimal">
+		<ov-lang-selector [compact]="false" class="language-selector" (onLangChanged)="onLangChanged.emit($event)"> </ov-lang-selector>
 	</div>
 
-	<!-- Main Content -->
-	<div *ngIf="!isLoading" class="prejoin-main">
-		<!-- Header with Language Selector -->
-		<div class="prejoin-header" *ngIf="!isMinimal">
-			<ov-lang-selector [compact]="true" class="language-selector" (onLangChanged)="onLangChanged.emit($event)"> </ov-lang-selector>
+	<!-- Loading State -->
+	@if (isLoading) {
+		<div class="loading-overlay">
+			<div class="loading-content">
+				<mat-spinner [diameter]="40"></mat-spinner>
+				<span class="loading-text">{{ 'PREJOIN.PREPARING' | translate }}</span>
+			</div>
 		</div>
+	} @else {
+		<!-- Main Content with Side Panel Layout -->
+		<div class="prejoin-content">
+			<!-- Main Card -->
+			<div class="prejoin-main">
+				<!-- Video Preview Section -->
+				<div class="video-preview-section">
+					<div class="video-preview-container">
+						<div class="video-frame">
+							<ov-media-element
+								[track]="videoTrack"
+								[showAvatar]="!videoTrack || videoTrack.isMuted"
+								[avatarName]="participantName"
+								[avatarColor]="'hsl(48, 100%, 50%)'"
+								[isLocal]="true"
+								class="video-element"
+							>
+							</ov-media-element>
 
-		<!-- Video Preview Section -->
-		<div class="video-preview-section">
-			<div class="video-preview-container">
-				<div class="video-frame">
-					<ov-media-element
-						[track]="videoTrack"
-						[showAvatar]="!videoTrack || videoTrack.isMuted"
-						[avatarName]="participantName"
-						[avatarColor]="'hsl(48, 100%, 50%)'"
-						[isLocal]="true"
-						class="video-element"
-					>
-					</ov-media-element>
+							<!-- Video Controls Overlay -->
+							<div class="video-overlay">
+								<div class="device-controls">
+									<div class="control-group" *ngIf="showCameraButton">
+										<ov-video-devices-select
+											[compact]="true"
+											(onVideoDeviceChanged)="onVideoDeviceChanged.emit($event)"
+											(onVideoEnabledChanged)="videoEnabledChanged($event)"
+											class="device-selector"
+										>
+										</ov-video-devices-select>
+									</div>
 
-					<!-- Video Controls Overlay -->
-					<div class="video-overlay">
-						<div class="device-controls">
-							<div class="control-group" *ngIf="showCameraButton">
-								<ov-video-devices-select
-									[compact]="true"
-									(onVideoDeviceChanged)="onVideoDeviceChanged.emit($event)"
-									(onVideoEnabledChanged)="videoEnabledChanged($event)"
-									class="device-selector"
-								>
-								</ov-video-devices-select>
-							</div>
+									<div class="control-group" *ngIf="showMicrophoneButton">
+										<ov-audio-devices-select
+											[compact]="true"
+											(onAudioDeviceChanged)="onAudioDeviceChanged.emit($event)"
+											(onAudioEnabledChanged)="audioEnabledChanged($event)"
+											(onDeviceSelectorClicked)="onDeviceSelectorClicked()"
+											class="device-selector"
+										>
+										</ov-audio-devices-select>
+									</div>
+								</div>
 
-							<div class="control-group" *ngIf="showMicrophoneButton">
-								<ov-audio-devices-select
-									[compact]="true"
-									(onAudioDeviceChanged)="onAudioDeviceChanged.emit($event)"
-									(onAudioEnabledChanged)="audioEnabledChanged($event)"
-									(onDeviceSelectorClicked)="onDeviceSelectorClicked()"
-									class="device-selector"
-								>
-								</ov-audio-devices-select>
+								<!-- Virtual Background Button -->
+								<div class="background-control" *ngIf="backgroundEffectEnabled">
+									<button
+										mat-icon-button
+										class="background-button"
+										(click)="toggleBackgroundPanel()"
+										[matTooltip]="'Virtual Backgrounds'"
+									>
+										<mat-icon>auto_fix_high</mat-icon>
+									</button>
+								</div>
 							</div>
 						</div>
 					</div>
 				</div>
+
+				@if (showBackgroundPanel) {
+					<ov-background-effects-panel [mode]="'prejoin'" (onClose)="closeBackgroundPanel()"> </ov-background-effects-panel>
+				} @else {
+					<!-- Configuration Section -->
+					<div class="configuration-section">
+						<!-- Participant Name Input -->
+						<div class="input-section" *ngIf="showParticipantName">
+							<ov-participant-name-input
+								[isPrejoinPage]="true"
+								[error]="!!_error"
+								(onNameUpdated)="onParticipantNameChanged($event)"
+								(onEnterPressed)="onEnterPressed()"
+								class="name-input"
+							>
+							</ov-participant-name-input>
+						</div>
+
+						<!-- Error Message -->
+						<div *ngIf="!!_error" class="error-message">
+							<mat-icon class="error-icon">error_outline</mat-icon>
+							<span class="error-text">{{ _error }}</span>
+						</div>
+
+						<!-- Join Button -->
+						<div class="join-section">
+							<button
+								mat-flat-button
+								(click)="join()"
+								class="join-button"
+								[disabled]="showParticipantName && !participantName"
+							>
+								<mat-icon class="join-icon">videocam</mat-icon>
+								{{ 'PREJOIN.JOIN' | translate }}
+							</button>
+						</div>
+					</div>
+				}
 			</div>
 		</div>
-
-		<!-- Configuration Section -->
-		<div class="configuration-section">
-			<!-- Participant Name Input -->
-			<div class="input-section" *ngIf="showParticipantName">
-				<ov-participant-name-input
-					[isPrejoinPage]="true"
-					[error]="!!_error"
-					(onNameUpdated)="onParticipantNameChanged($event)"
-					(onEnterPressed)="onEnterPressed()"
-					class="name-input"
-				>
-				</ov-participant-name-input>
-			</div>
-
-			<!-- Error Message -->
-			<div *ngIf="!!_error" class="error-message">
-				<mat-icon class="error-icon">error_outline</mat-icon>
-				<span class="error-text">{{ _error }}</span>
-			</div>
-
-			<!-- Join Button -->
-			<div class="join-section">
-				<button mat-flat-button (click)="join()" class="join-button" [disabled]="showParticipantName && !participantName">
-					<mat-icon class="join-icon">videocam</mat-icon>
-					{{ 'PREJOIN.JOIN' | translate }}
-				</button>
-			</div>
-		</div>
-	</div>
+	}
 </div>

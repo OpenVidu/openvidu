@@ -12,12 +12,6 @@
 			transition: all 0.2s ease;
 			color: var(--ov-text-secondary-color, #666);
 
-			&:hover {
-				background: rgba(255, 255, 255, 1);
-				border-color: var(--ov-primary-action-color, #4285f4);
-				transform: scale(1.02);
-			}
-
 			mat-icon {
 				font-size: 18px;
 				width: 18px;
@@ -46,12 +40,14 @@
 				font-size: 18px;
 				width: 18px;
 				height: 18px;
-				color: var(--ov-text-secondary-color, #666);
+				color: var(--ov-text-surface-color, #666);
 			}
 
 			.lang-name {
 				font-size: 14px;
 				font-weight: 500;
+				display: inline-block !important;
+				color: var(--ov-text-surface-color) !important;
 			}
 
 			.expand-icon {
@@ -62,21 +58,19 @@
 				transition: transform 0.2s ease;
 			}
 
-			&[aria-expanded="true"] .expand-icon {
+			&[aria-expanded='true'] .expand-icon {
 				transform: rotate(180deg);
 			}
 		}
 	}
 }
 
-::ng-deep .language-menu {
-	.mat-mdc-menu-panel {
-		border-radius: 12px;
-		box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
-		border: 1px solid var(--ov-border-color, #e0e0e0);
-		overflow: hidden;
-		background: var(--ov-surface-color, #ffffff);
-	}
+::ng-deep .language-menu.mat-mdc-menu-panel {
+	border-radius: 12px;
+	box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+	border: 1px solid var(--ov-border-color, #e0e0e0);
+	overflow: hidden;
+	background: var(--ov-surface-color, #ffffff);
 
 	.language-option {
 		display: flex;
@@ -86,6 +80,7 @@
 		transition: background-color 0.2s ease;
 		font-size: 14px;
 		min-height: 48px;
+		color: var(--ov-text-surface-color);
 
 		&:hover {
 			background-color: var(--ov-hover-color, #f5f5f5);
@@ -109,11 +104,9 @@
 		.lang-option-name {
 			flex: 1;
 			font-weight: 500;
-			color: var(--ov-text-primary-color, #333);
 		}
 
 		&.selected .lang-option-name {
-			color: var(--ov-primary-action-color, #4285f4);
 			font-weight: 600;
 		}
 	}

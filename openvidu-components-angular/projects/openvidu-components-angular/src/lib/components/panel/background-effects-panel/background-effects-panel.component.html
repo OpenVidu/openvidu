@@ -1,10 +1,17 @@
-<div class="panel-container" id="background-effects-container">
-	<div class="panel-header-container">
-		<h3 class="panel-title">{{ 'PANEL.BACKGROUND.TITLE' | translate }}</h3>
-		<button class="panel-close-button" mat-icon-button matTooltip="{{ 'PANEL.CLOSE' | translate }}" (click)="close()">
-			<mat-icon>close</mat-icon>
+<div class="panel-container" id="background-effects-container" [class.prejoin-mode]="mode === 'prejoin'">
+	@if (mode === 'meeting') {
+		<div class="panel-header-container">
+			<h3 class="panel-title">{{ 'PANEL.BACKGROUND.TITLE' | translate }}</h3>
+
+			<button class="panel-close-button" mat-icon-button matTooltip="{{ 'PANEL.CLOSE' | translate }}" (click)="close()">
+				<mat-icon>close</mat-icon>
+			</button>
+		</div>
+	} @else {
+		<button class="pansel-close-button" mat-icon-button matTooltip="{{ 'PANEL.CLOSE' | translate }}" (click)="close()">
+			<mat-icon>arrow_back</mat-icon>
 		</button>
-	</div>
+	}
 
 	<div class="effects-container" fxFlex="100%" fxLayoutAlign="space-evenly none">
 		<div>

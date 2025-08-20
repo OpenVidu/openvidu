@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { Subscription } from 'rxjs';
 import { BackgroundEffect, EffectType } from '../../../models/background-effect.model';
 import { PanelType } from '../../../models/panel.model';
@@ -16,6 +16,9 @@ import { VirtualBackgroundService } from '../../../services/virtual-background/v
 	standalone: false
 })
 export class BackgroundEffectsPanelComponent implements OnInit {
+	@Input() mode: 'prejoin' | 'meeting' = 'meeting';
+	@Output() onClose = new EventEmitter<void>();
+
 	backgroundSelectedId: string;
 	effectType = EffectType;
 	backgroundImages: BackgroundEffect[] = [];
@@ -53,7 +56,11 @@ export class BackgroundEffectsPanelComponent implements OnInit {
 	}
 
 	close() {
-		this.panelService.togglePanel(PanelType.BACKGROUND_EFFECTS);
+		if (this.mode === 'prejoin') {
+			this.onClose.emit();
+		} else {
+			this.panelService.togglePanel(PanelType.BACKGROUND_EFFECTS);
+		}
 	}
 
 	async applyBackground(effect: BackgroundEffect) {

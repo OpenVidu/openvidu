@@ -10,7 +10,8 @@
 	&.compact {
 		.unified-device-button {
 			display: flex;
-			background: var(--ov-secondary-action-color);
+			background: rgba(255, 255, 255, 0.7);
+			backdrop-filter: blur(20px);
 			border-radius: 12px;
 			overflow: hidden;
 			transition: all 0.2s ease;
