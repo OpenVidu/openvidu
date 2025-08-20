@@ -5,7 +5,7 @@ export DOCKER_VERSION="${DOCKER_VERSION:-28.1.1}"
 export DOCKER_COMPOSE_VERSION="${DOCKER_COMPOSE_VERSION:-v2.35.1}"
 export OPENVIDU_VERSION="${OPENVIDU_VERSION:-main}"
 export INSTALLER_IMAGE="${INSTALLER_IMAGE:-docker.io/openvidu/openvidu-installer:${OPENVIDU_VERSION}}"
-export MINIO_SERVER_IMAGE="${MINIO_SERVER_IMAGE:-docker.io/bitnami/minio:2025.5.24-debian-12-r1}"
+export MINIO_SERVER_IMAGE="${MINIO_SERVER_IMAGE:-docker.io/openvidu/minio:2025.5.24-debian-12-r1}"
 export MINIO_CLIENT_IMAGE="${MINIO_CLIENT_IMAGE:-docker.io/minio/mc:RELEASE.2025-05-21T01-59-54Z}"
 export MONGO_SERVER_IMAGE="${MONGO_SERVER_IMAGE:-docker.io/mongo:8.0.9}"
 export REDIS_SERVER_IMAGE="${REDIS_SERVER_IMAGE:-docker.io/redis:7.4.4-alpine}"
@@ -25,7 +25,7 @@ export LIVEKIT_EGRESS_SERVER_IMAGE="${LIVEKIT_EGRESS_SERVER_IMAGE:-docker.io/liv
 export PROMETHEUS_IMAGE="${PROMETHEUS_IMAGE:-docker.io/prom/prometheus:v3.4.0}"
 export PROMTAIL_IMAGE="${PROMTAIL_IMAGE:-docker.io/grafana/promtail:3.5.1}"
 export LOKI_IMAGE="${LOKI_IMAGE:-docker.io/grafana/loki:3.5.1}"
-export MIMIR_IMAGE="${MIMIR_IMAGE:-docker.io/bitnami/grafana-mimir:2.16.0}"
+export MIMIR_IMAGE="${MIMIR_IMAGE:-docker.io/openvidu/grafana-mimir:2.16.0}"
 export GRAFANA_IMAGE="${GRAFANA_IMAGE:-docker.io/grafana/grafana:11.6.2}"
 
 # Function to compare two version strings
