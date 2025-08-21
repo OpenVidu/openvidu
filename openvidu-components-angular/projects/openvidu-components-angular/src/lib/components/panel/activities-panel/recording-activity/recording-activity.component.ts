@@ -386,11 +386,7 @@ export class RecordingActivityComponent implements OnInit, OnDestroy {
 		this.recordingService.recordingStatusObs.pipe(takeUntil(this.destroy$)).subscribe((event: RecordingStatusInfo) => {
 			const { status, recordingList, error } = event;
 			this.recordingStatus = status;
-			if (this.showRecordingList) {
-				this.recordingList = recordingList;
-			} else {
-				this.recordingList = recordingList.filter((rec) => rec.status === RecordingStatus.STARTED);
-			}
+			this.recordingList = recordingList;
 			this.recordingError = error;
 			this.recordingAlive = this.recordingStatus === RecordingStatus.STARTED;
 			if (this.recordingStatus !== RecordingStatus.FAILED) {

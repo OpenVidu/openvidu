@@ -177,12 +177,11 @@
 					</div>
 				}
 			</div>
-			@if (recordingList.length > 0) {
-				<mat-divider></mat-divider>
-			}
 
 			<!-- Recording list -->
-			@if (recordingList.length > 0) {
+			@if (showRecordingList && recordingList.length > 0) {
+				<mat-divider></mat-divider>
+
 				<div class="recording-list-container">
 					@for (recording of recordingList; track trackByRecordingId($index, recording)) {
 						<div class="recording-card" [class.recording-active]="recording.status === recStatusEnum.STARTED">
