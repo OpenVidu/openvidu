@@ -177,15 +177,19 @@ export class OpenViduService {
 	/**
 	 * @internal
 	 */
-	initializeAndSetToken(token: string, livekitUrl: string): void {
-		const livekitData = this.extractLivekitData(token, livekitUrl);
-		this.livekitToken = token;
-		this.livekitUrl = livekitData.livekitUrl;
+	initializeAndSetToken(token: string, livekitUrl?: string): void {
+		const { livekitUrl: urlFromToken } = this.extractLivekitData(token);
 
-		if (!this.livekitUrl) {
+		this.livekitToken = token;
+		const url = livekitUrl || urlFromToken;
+
+		if (!url) {
 			this.log.e('LiveKit URL is not defined. Please, check the livekitUrl parameter of the VideoConferenceComponent');
 			throw new Error('Livekit URL is not defined');
 		}
+
+		this.livekitUrl = url;
+		// this.livekitRoomAdmin = !!livekitRoomAdmin;
 
 		// Initialize room if it doesn't exist yet
 		// This ensures that getRoom() won't fail if token is set before onTokenRequested
@@ -370,9 +374,8 @@ export class OpenViduService {
 	 * @throws Error if there is an error decoding and parsing the token.
 	 * @internal
 	 */
-	private extractLivekitData(token: string, livekitUrl: string): { livekitUrl: string; livekitRoomAdmin: boolean } {
+	private extractLivekitData(token: string): { livekitUrl?: string; livekitRoomAdmin: boolean } {
 		try {
-			const response = { livekitUrl, livekitRoomAdmin: false };
 			const base64Url = token.split('.')[1];
 			const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
 			const jsonPayload = decodeURIComponent(
@@ -388,13 +391,13 @@ export class OpenViduService {
 			const payload = JSON.parse(jsonPayload);
 			if (payload?.metadata) {
 				const tokenMetadata = JSON.parse(payload.metadata);
-				if (tokenMetadata.livekitUrl) {
-					response.livekitUrl = tokenMetadata.livekitUrl;
-				}
-				response.livekitRoomAdmin = tokenMetadata.roomAdmin;
+				return {
+					livekitUrl: tokenMetadata.livekitUrl,
+					livekitRoomAdmin: !!tokenMetadata.roomAdmin
+				};
 			}
 
-			return response;
+			return { livekitRoomAdmin: false };
 		} catch (error) {
 			throw new Error('Error decoding and parsing token: ' + error);
 		}

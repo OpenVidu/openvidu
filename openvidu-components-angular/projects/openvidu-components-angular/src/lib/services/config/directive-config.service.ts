@@ -199,10 +199,7 @@ export class OpenViduComponentsConfigService {
 	 */
 	private createGeneralConfigItem(initialValue: GeneralConfig): ConfigItem<GeneralConfig> {
 		const subject = new BehaviorSubject<GeneralConfig>(initialValue);
-		const observable$ = subject.asObservable().pipe(
-			distinctUntilChanged((prev, curr) => this.compareGeneralConfig(prev, curr)),
-			shareReplay(1)
-		);
+		const observable$ = subject.asObservable();
 		return { subject, observable$ };
 	}
 
@@ -297,7 +294,7 @@ export class OpenViduComponentsConfigService {
 	 * Compare GeneralConfig efficiently
 	 */
 	private compareGeneralConfig(prev: GeneralConfig, curr: GeneralConfig): boolean {
-		return (
+		const equal =
 			prev.token === curr.token &&
 			prev.livekitUrl === curr.livekitUrl &&
 			prev.tokenError === curr.tokenError &&
@@ -306,8 +303,12 @@ export class OpenViduComponentsConfigService {
 			prev.prejoin === curr.prejoin &&
 			prev.prejoinDisplayParticipantName === curr.prejoinDisplayParticipantName &&
 			prev.showDisconnectionDialog === curr.showDisconnectionDialog &&
-			prev.recordingStreamBaseUrl === curr.recordingStreamBaseUrl
-		);
+			prev.recordingStreamBaseUrl === curr.recordingStreamBaseUrl;
+
+		if (!equal) {
+			console.log('GeneralConfig cambió', { prev, curr });
+		}
+		return equal;
 	}
 
 	// Grouped configuration items by domain
@@ -380,17 +381,51 @@ export class OpenViduComponentsConfigService {
 	private layoutRemoteParticipantsConfig = this.createConfigItem<ParticipantModel[] | undefined>(undefined);
 
 	// General observables
-	token$: Observable<string> = this.generalConfig.observable$.pipe(map((config) => config.token));
-	livekitUrl$: Observable<string> = this.generalConfig.observable$.pipe(map((config) => config.livekitUrl));
-	tokenError$: Observable<any> = this.generalConfig.observable$.pipe(map((config) => config.tokenError));
-	minimal$: Observable<boolean> = this.generalConfig.observable$.pipe(map((config) => config.minimal));
-	participantName$: Observable<string> = this.generalConfig.observable$.pipe(map((config) => config.participantName));
-	prejoin$: Observable<boolean> = this.generalConfig.observable$.pipe(map((config) => config.prejoin));
-	prejoinDisplayParticipantName$: Observable<boolean> = this.generalConfig.observable$.pipe(
-		map((config) => config.prejoinDisplayParticipantName)
+	token$: Observable<string> = this.generalConfig.observable$.pipe(
+		map((config) => config.token),
+		distinctUntilChanged(),
+		shareReplay(1)
 	);
-	showDisconnectionDialog$: Observable<boolean> = this.generalConfig.observable$.pipe(map((config) => config.showDisconnectionDialog));
-	recordingStreamBaseUrl$: Observable<string> = this.generalConfig.observable$.pipe(map((config) => config.recordingStreamBaseUrl));
+	livekitUrl$: Observable<string> = this.generalConfig.observable$.pipe(
+		map((config) => config.livekitUrl),
+		distinctUntilChanged(),
+		shareReplay(1)
+	);
+	tokenError$: Observable<any> = this.generalConfig.observable$.pipe(
+		map((config) => config.tokenError),
+		distinctUntilChanged(),
+		shareReplay(1)
+	);
+	minimal$: Observable<boolean> = this.generalConfig.observable$.pipe(
+		map((config) => config.minimal),
+		distinctUntilChanged(),
+		shareReplay(1)
+	);
+	participantName$: Observable<string> = this.generalConfig.observable$.pipe(
+		map((config) => config.participantName),
+		distinctUntilChanged(),
+		shareReplay(1)
+	);
+	prejoin$: Observable<boolean> = this.generalConfig.observable$.pipe(
+		map((config) => config.prejoin),
+		distinctUntilChanged(),
+		shareReplay(1)
+	);
+	prejoinDisplayParticipantName$: Observable<boolean> = this.generalConfig.observable$.pipe(
+		map((config) => config.prejoinDisplayParticipantName),
+		distinctUntilChanged(),
+		shareReplay(1)
+	);
+	showDisconnectionDialog$: Observable<boolean> = this.generalConfig.observable$.pipe(
+		map((config) => config.showDisconnectionDialog),
+		distinctUntilChanged(),
+		shareReplay(1)
+	);
+	recordingStreamBaseUrl$: Observable<string> = this.generalConfig.observable$.pipe(
+		map((config) => config.recordingStreamBaseUrl),
+		distinctUntilChanged(),
+		shareReplay(1)
+	);
 
 	// Stream observables
 	videoEnabled$: Observable<boolean> = this.streamConfig.observable$.pipe(map((config) => config.videoEnabled));

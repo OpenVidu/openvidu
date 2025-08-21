@@ -836,7 +836,6 @@ export class VideoconferenceComponent implements OnDestroy, AfterViewInit {
 	 */
 	_onReadyToJoin(): void {
 		this.log.d('Ready to join - initializing room and handling prejoin flow');
-
 		try {
 			// Mark that user has initiated the join process
 			this.updateComponentState({
@@ -921,21 +920,28 @@ export class VideoconferenceComponent implements OnDestroy, AfterViewInit {
 				this.openviduService.initializeAndSetToken(token, livekitUrl);
 				this.log.d('Token has been successfully set. Room is ready to join');
 
-				// Only update showPrejoin if user hasn't initiated join process yet
-				// This prevents prejoin from showing again after user clicked join
-				if (!this.hasUserInitiatedJoin()) {
-					this.updateComponentState({
-						state: VideoconferenceState.PREJOIN_SHOWN,
-						isRoomReady: true,
-						showPrejoin: this.libService.showPrejoin()
-					});
-				} else {
+				if (this.hasUserInitiatedJoin()) {
 					// User has initiated join, proceed to hide prejoin and continue
 					this.log.d('User has initiated join, hiding prejoin and proceeding');
 					this.updateComponentState({
 						state: VideoconferenceState.READY_TO_CONNECT,
 						isRoomReady: true,
 						showPrejoin: false
+					});
+					console.log(this.componentState);
+					console.warn(
+						this.componentState.isRoomReady &&
+							!this.componentState.showPrejoin &&
+							!this.componentState.isLoading &&
+							!this.componentState.error?.hasError
+					);
+				} else {
+					// Only update showPrejoin if user hasn't initiated join process yet
+					// This prevents prejoin from showing again after user clicked join
+					this.updateComponentState({
+						state: VideoconferenceState.PREJOIN_SHOWN,
+						isRoomReady: true,
+						showPrejoin: this.libService.showPrejoin()
 					});
 				}
 			} catch (error) {

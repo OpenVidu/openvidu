@@ -8,7 +8,7 @@
 			[(ngModel)]="name"
 			autocomplete="off"
 			[disabled]="!isPrejoinPage"
-			(change)="updateName()"
+			(input)="updateName()"
 			(keypress)="eventKeyPress($event)"
 			[placeholder]="'PREJOIN.NICKNAME' | translate"
 			class="name-input-field"
