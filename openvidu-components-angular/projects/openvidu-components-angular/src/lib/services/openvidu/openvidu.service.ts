@@ -238,23 +238,20 @@ export class OpenViduService {
 		videoDeviceId: string | boolean | undefined = undefined,
 		audioDeviceId: string | boolean | undefined = undefined
 	): Promise<LocalTrack[]> {
-		// If video and audio device IDs are not provided, check if they are enabled and use the default devices
-		if (videoDeviceId === undefined) videoDeviceId = this.deviceService.isCameraEnabled();
-		if (audioDeviceId === undefined) audioDeviceId = this.deviceService.isMicrophoneEnabled();
+		// Default values: true if device is enabled, false otherwise
+		videoDeviceId ??= this.deviceService.isCameraEnabled();
+		audioDeviceId ??= this.deviceService.isMicrophoneEnabled();
 
-		let options: CreateLocalTracksOptions = {
+		const options: CreateLocalTracksOptions = {
 			audio: { echoCancellation: true, noiseSuppression: true },
 			video: {}
 		};
 
 		// Video device
 		if (videoDeviceId === true) {
-			if (this.deviceService.hasVideoDeviceAvailable()) {
-				videoDeviceId = this.deviceService.getCameraSelected()?.device || 'default';
-				(options.video as VideoCaptureOptions).deviceId = videoDeviceId;
-			} else {
-				options.video = false;
-			}
+			options.video = this.deviceService.hasVideoDeviceAvailable()
+				? { deviceId: this.deviceService.getCameraSelected()?.device || 'default' }
+				: false;
 		} else if (videoDeviceId === false) {
 			options.video = false;
 		} else {
@@ -279,13 +276,13 @@ export class OpenViduService {
 		if (options.audio || options.video) {
 			this.log.d('Creating local tracks with options', options);
 			newLocalTracks = await createLocalTracks(options);
+
+			// Mute tracks if devices are disabled
 			if (!this.deviceService.isCameraEnabled()) {
-				const videoTrack = newLocalTracks.find((track) => track.kind === Track.Kind.Video);
-				if (videoTrack) videoTrack.mute();
+				newLocalTracks.find((t) => t.kind === Track.Kind.Video)?.mute();
 			}
 			if (!this.deviceService.isMicrophoneEnabled()) {
-				const audioTrack = newLocalTracks.find((track) => track.kind === Track.Kind.Audio);
-				if (audioTrack) audioTrack.mute();
+				newLocalTracks.find((t) => t.kind === Track.Kind.Audio)?.mute();
 			}
 		}
 		return newLocalTracks;
@@ -331,7 +328,7 @@ export class OpenViduService {
 			return this.deviceService.isCameraEnabled();
 		}
 		const videoTrack = this.localTracks.find((track) => track.kind === Track.Kind.Video);
-		return !!videoTrack && !videoTrack.isMuted;
+		return !!videoTrack && !videoTrack.isMuted && videoTrack?.mediaStreamTrack?.enabled;
 	}
 
 	/**
@@ -344,7 +341,7 @@ export class OpenViduService {
 			return this.deviceService.isMicrophoneEnabled();
 		}
 		const audioTrack = this.localTracks.find((track) => track.kind === Track.Kind.Audio);
-		return !!audioTrack && !audioTrack.isMuted;
+		return !!audioTrack && !audioTrack.isMuted && audioTrack?.mediaStreamTrack?.enabled;
 	}
 
 	/**

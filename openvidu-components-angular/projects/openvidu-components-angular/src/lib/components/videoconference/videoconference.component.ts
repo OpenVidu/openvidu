@@ -87,8 +87,7 @@ export class VideoconferenceComponent implements OnDestroy, AfterViewInit {
 	// Constants
 	private static readonly PARTICIPANT_NAME_TIMEOUT_MS = 1000;
 	private static readonly ANIMATION_DURATION_MS = 300;
-	private static readonly MATERIAL_ICONS_URL =
-		'https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined';
+	private static readonly MATERIAL_ICONS_URL = 'https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined';
 	private static readonly MATERIAL_ICONS_SELECTOR = 'link[href*="Material+Symbols+Outlined"]';
 	private static readonly SPINNER_DIAMETER = 50;
 	// *** Toolbar ***
@@ -690,6 +689,8 @@ export class VideoconferenceComponent implements OnDestroy, AfterViewInit {
 	) {
 		this.log = this.loggerSrv.get('VideoconferenceComponent');
 
+		this.addMaterialIconsIfNeeded();
+
 		// Initialize state
 		this.updateComponentState({
 			state: VideoconferenceState.INITIALIZING,
@@ -713,7 +714,6 @@ export class VideoconferenceComponent implements OnDestroy, AfterViewInit {
 	 * @internal
 	 */
 	ngAfterViewInit() {
-		this.addMaterialIconsIfNeeded();
 		this.setupTemplates();
 		this.deviceSrv.initializeDevices().then(() => {
 			this.updateComponentState({

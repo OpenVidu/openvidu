@@ -13,13 +13,13 @@
 			</div>
 		</div>
 	} @else {
-		<!-- Main Content with Side Panel Layout -->
+		<!-- Main Content -->
 		<div class="prejoin-content">
 			<!-- Main Card -->
 			<div class="prejoin-main">
 				<!-- Video Preview Section -->
 				<div class="video-preview-section">
-					<div class="video-preview-container">
+					<div class="video-preview-container" [@containerResize]="showBackgroundPanel ? 'compact' : 'normal'">
 						<div class="video-frame">
 							<ov-media-element
 								[track]="videoTrack"
@@ -63,8 +63,9 @@
 										class="background-button"
 										(click)="toggleBackgroundPanel()"
 										[matTooltip]="'Virtual Backgrounds'"
+										[disabled]="!isVideoEnabled"
 									>
-										<mat-icon>auto_fix_high</mat-icon>
+										<mat-icon class="material-symbols-outlined">background_replace</mat-icon>
 									</button>
 								</div>
 							</div>
@@ -73,7 +74,9 @@
 				</div>
 
 				@if (showBackgroundPanel) {
-					<ov-background-effects-panel [mode]="'prejoin'" (onClose)="closeBackgroundPanel()"> </ov-background-effects-panel>
+					<div class="vb-container" [@slideInOut]>
+						<ov-background-effects-panel [mode]="'prejoin'" (onClose)="closeBackgroundPanel()"> </ov-background-effects-panel>
+					</div>
 				} @else {
 					<!-- Configuration Section -->
 					<div class="configuration-section">

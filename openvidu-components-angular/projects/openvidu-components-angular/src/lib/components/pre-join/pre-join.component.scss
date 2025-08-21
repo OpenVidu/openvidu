@@ -85,6 +85,7 @@
 	.prejoin-main {
 		width: 100%;
 		max-width: 520px;
+		max-height: 544px;
 		background: var(--ov-surface-color, #ffffff);
 		border-radius: var(--ov-surface-radius);
 		overflow: hidden;
@@ -93,18 +94,16 @@
 		box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
 	}
 
-	// Video Preview Section (moved to top with no padding)
+	// Video Preview Section
 	.video-preview-section {
 		padding: 0;
-
 		.video-preview-container {
 			position: relative;
 			width: 100%;
-			aspect-ratio: 4/3; // Changed from 16/9 to 4/3 for taller video
-			border-radius: var(--ov-surface-radius) var(--ov-surface-radius) 0 0; // Only top corners rounded
+			aspect-ratio: 4/3;
+			border-radius: var(--ov-surface-radius) var(--ov-surface-radius) 0 0;
 			overflow: hidden;
 			background: #000;
-
 			.video-frame {
 				width: 100%;
 				height: 100%;
@@ -156,14 +155,21 @@
 						transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 						color: #333333;
 						box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-
-						&:hover {
-							color: rgba(255, 255, 255, 1);
-						}
+						transform: translateZ(0);
 
 						&:active {
 							transform: translateY(-1px);
 							transition: all 0.15s ease;
+						}
+
+						&.mat-mdc-button-disabled {
+							background: rgba(255, 255, 255, 0.137);
+							color: rgba(233, 233, 233, 0.5);
+							cursor: not-allowed;
+
+							&:hover {
+								transform: none;
+							}
 						}
 
 						mat-icon {
@@ -181,6 +187,11 @@
 				}
 			}
 		}
+	}
+
+	.vb-container {
+		height: fit-content;
+		overflow: hidden;
 	}
 
 	// Configuration Section
@@ -393,8 +404,8 @@
 			transform: translateY(0);
 		}
 	}
-
 	.prejoin-main {
 		animation: fadeIn 0.3s ease-out;
+		transform: translateZ(0);
 	}
 }

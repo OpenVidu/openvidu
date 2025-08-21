@@ -9,6 +9,7 @@ import {
 	OnInit,
 	Output
 } from '@angular/core';
+import { animate, state, style, transition, trigger } from '@angular/animations';
 import { filter, Subject, takeUntil, tap } from 'rxjs';
 import { ILogger } from '../../models/logger.model';
 import { CdkOverlayService } from '../../services/cdk-overlay/cdk-overlay.service';
@@ -28,7 +29,47 @@ import { LangOption } from '../../models/lang.model';
 	templateUrl: './pre-join.component.html',
 	styleUrls: ['./pre-join.component.scss'],
 	changeDetection: ChangeDetectionStrategy.OnPush,
-	standalone: false
+	standalone: false,
+	animations: [
+		trigger('containerResize', [
+			state(
+				'normal',
+				style({
+					height: '*'
+				})
+			),
+			state(
+				'compact',
+				style({
+					height: '28vh'
+				})
+			),
+			transition('normal => compact', [animate('250ms cubic-bezier(0.25, 0.8, 0.25, 1)')]),
+			transition('compact => normal', [animate('350ms cubic-bezier(0.25, 0.8, 0.25, 1)')])
+		]),
+		trigger('slideInOut', [
+			transition(':enter', [
+				style({
+					opacity: 0
+				}),
+				animate(
+					'300ms cubic-bezier(0.34, 1.56, 0.64, 1)',
+					style({
+						opacity: 1
+					})
+				)
+			]),
+			transition(':leave', [
+				animate(
+					'200ms cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+					style({
+						opacity: 0,
+						transform: 'translateY(-10px)'
+					})
+				)
+			])
+		])
+	]
 })
 export class PreJoinComponent implements OnInit, OnDestroy {
 	@Input() set error(error: { name: string; message: string } | undefined) {
@@ -61,6 +102,7 @@ export class PreJoinComponent implements OnInit, OnDestroy {
 
 	videoTrack: LocalTrack | undefined;
 	audioTrack: LocalTrack | undefined;
+	isVideoEnabled: boolean = false;
 	private tracks: LocalTrack[];
 	private log: ILogger;
 	private destroy$ = new Subject<void>();
@@ -195,12 +237,16 @@ export class PreJoinComponent implements OnInit, OnDestroy {
 	}
 
 	async videoEnabledChanged(enabled: boolean) {
-		if (enabled && !this.videoTrack) {
+		this.isVideoEnabled = enabled;
+		if (!enabled) {
+			this.closeBackgroundPanel();
+		} else if (!this.videoTrack) {
 			const newVideoTrack = await this.openviduService.createLocalTracks(true, false);
 			this.videoTrack = newVideoTrack[0];
 			this.tracks.push(this.videoTrack);
 			this.openviduService.setLocalTracks(this.tracks);
 		}
+
 		this.onVideoEnabledChanged.emit(enabled);
 	}
 
@@ -215,19 +261,32 @@ export class PreJoinComponent implements OnInit, OnDestroy {
 	}
 
 	/**
-	 * Toggle virtual background panel visibility
+	 * Toggle virtual background panel visibility with smooth animation
 	 */
 	toggleBackgroundPanel() {
-		this.showBackgroundPanel = !this.showBackgroundPanel;
-		this.changeDetector.markForCheck();
+		// Add a small delay to ensure smooth transition
+		if (!this.showBackgroundPanel) {
+			// Opening panel
+			this.showBackgroundPanel = true;
+			this.changeDetector.markForCheck();
+		} else {
+			// Closing panel - add slight delay for smooth animation
+			setTimeout(() => {
+				this.showBackgroundPanel = false;
+				this.changeDetector.markForCheck();
+			}, 50);
+		}
 	}
 
 	/**
-	 * Close virtual background panel
+	 * Close virtual background panel with smooth animation
 	 */
 	closeBackgroundPanel() {
-		this.showBackgroundPanel = false;
-		this.changeDetector.markForCheck();
+		// Add animation delay for smooth closing
+		setTimeout(() => {
+			this.showBackgroundPanel = false;
+			this.changeDetector.markForCheck();
+		}, 100);
 	}
 
 	/**
@@ -249,6 +308,8 @@ export class PreJoinComponent implements OnInit, OnDestroy {
 				this.openviduService.setLocalTracks(this.tracks);
 				this.videoTrack = this.tracks.find((track) => track.kind === 'video');
 				this.audioTrack = this.tracks.find((track) => track.kind === 'audio');
+				this.isVideoEnabled = this.openviduService.isVideoTrackEnabled();
+
 				return; // Success, exit retry loop
 			} catch (error) {
 				this.log.w(`Device initialization attempt ${attempt} failed:`, error);
