@@ -1,64 +1,74 @@
 <div id="call-container">
-	<div id="spinner" *ngIf="componentState.isLoading">
-		<mat-spinner [diameter]="spinnerDiameter"></mat-spinner>
-		<span>{{ 'PREJOIN.PREPARING' | translate }}</span>
-	</div>
-
-	<div [@inOutAnimation] id="pre-join-container" *ngIf="componentState.showPrejoin && !componentState.isLoading">
-		<ng-container *ngIf="openviduAngularPreJoinTemplate; else defaultPreJoin">
-			<ng-container *ngTemplateOutlet="openviduAngularPreJoinTemplate"></ng-container>
-		</ng-container>
-		<ng-template #defaultPreJoin>
-			<ov-pre-join
-				[error]="componentState.error?.tokenError"
-				(onReadyToJoin)="_onReadyToJoin()"
-				(onVideoDeviceChanged)="onVideoDeviceChanged.emit($event)"
-				(onVideoEnabledChanged)="onVideoEnabledChanged.emit($event)"
-				(onAudioDeviceChanged)="onAudioDeviceChanged.emit($event)"
-				(onAudioEnabledChanged)="onAudioEnabledChanged.emit($event)"
-				(onLangChanged)="onLangChanged.emit($event)"
-			></ov-pre-join>
-		</ng-template>
-	</div>
-
-	<div id="spinner" *ngIf="!componentState.isLoading && componentState.error?.hasError">
-		<mat-icon class="error-icon">error</mat-icon>
-		<span>{{ componentState.error?.message }}</span>
-	</div>
-
-	<div
-		[@inOutAnimation]
-		id="vc-container"
-		*ngIf="componentState.isRoomReady && !componentState.showPrejoin && !componentState.isLoading && !componentState.error?.hasError"
-	>
-		<ov-session
-			(onRoomCreated)="onRoomCreated.emit($event)"
-			(onRoomReconnecting)="onRoomDisconnected.emit()"
-			(onRoomDisconnected)="onRoomDisconnected.emit()"
-			(onRoomReconnected)="onRoomReconnected.emit()"
-			(onParticipantConnected)="onParticipantCreated.emit($event)"
-			(onParticipantConnected)="onParticipantConnected.emit($event)"
-			(onParticipantLeft)="_onParticipantLeft($event)"
-		>
-			<ng-template #toolbar>
-				<ng-container *ngIf="openviduAngularToolbarTemplate">
-					<ng-container *ngTemplateOutlet="openviduAngularToolbarTemplate"></ng-container>
-				</ng-container>
+	<!-- Loading spinner -->
+	@if (componentState.isLoading) {
+		<div id="spinner" *ngIf="componentState.isLoading">
+			<mat-spinner [diameter]="spinnerDiameter"></mat-spinner>
+			<span>{{ 'PREJOIN.PREPARING' | translate }}</span>
+		</div>
+	} @else if (componentState.showPrejoin) {
+		<!-- Prejoin -->
+		<div [@inOutAnimation] id="pre-join-container">
+			<ng-container *ngIf="openviduAngularPreJoinTemplate; else defaultPreJoin">
+				<ng-container *ngTemplateOutlet="openviduAngularPreJoinTemplate"></ng-container>
+			</ng-container>
+			<ng-template #defaultPreJoin>
+				<ov-pre-join
+					[error]="componentState.error?.tokenError"
+					(onReadyToJoin)="_onReadyToJoin()"
+					(onVideoDeviceChanged)="onVideoDeviceChanged.emit($event)"
+					(onVideoEnabledChanged)="onVideoEnabledChanged.emit($event)"
+					(onAudioDeviceChanged)="onAudioDeviceChanged.emit($event)"
+					(onAudioEnabledChanged)="onAudioEnabledChanged.emit($event)"
+					(onLangChanged)="onLangChanged.emit($event)"
+				></ov-pre-join>
 			</ng-template>
+		</div>
+	} @else if (componentState.error?.hasError) {
+		<!-- Error -->
 
-			<ng-template #panel>
-				<ng-container *ngIf="openviduAngularPanelTemplate">
-					<ng-container *ngTemplateOutlet="openviduAngularPanelTemplate"></ng-container>
-				</ng-container>
-			</ng-template>
+		<div id="spinner">
+			<mat-icon class="error-icon">error</mat-icon>
+			<span>{{ componentState.error?.message }}</span>
+		</div>
+	} @else if (componentState.isRoomReady) {
+		<!-- VideoConference -->
 
-			<ng-template #layout>
-				<ng-container *ngIf="openviduAngularLayoutTemplate">
-					<ng-container *ngTemplateOutlet="openviduAngularLayoutTemplate"></ng-container>
-				</ng-container>
-			</ng-template>
-		</ov-session>
-	</div>
+		<div [@inOutAnimation] id="vc-container">
+			<ov-session
+				(onRoomCreated)="onRoomCreated.emit($event)"
+				(onRoomReconnecting)="onRoomDisconnected.emit()"
+				(onRoomDisconnected)="onRoomDisconnected.emit()"
+				(onRoomReconnected)="onRoomReconnected.emit()"
+				(onParticipantConnected)="onParticipantCreated.emit($event)"
+				(onParticipantConnected)="onParticipantConnected.emit($event)"
+				(onParticipantLeft)="_onParticipantLeft($event)"
+			>
+				<ng-template #toolbar>
+					<ng-container *ngIf="openviduAngularToolbarTemplate">
+						<ng-container *ngTemplateOutlet="openviduAngularToolbarTemplate"></ng-container>
+					</ng-container>
+				</ng-template>
+
+				<ng-template #panel>
+					<ng-container *ngIf="openviduAngularPanelTemplate">
+						<ng-container *ngTemplateOutlet="openviduAngularPanelTemplate"></ng-container>
+					</ng-container>
+				</ng-template>
+
+				<ng-template #layout>
+					<ng-container *ngIf="openviduAngularLayoutTemplate">
+						<ng-container *ngTemplateOutlet="openviduAngularLayoutTemplate"></ng-container>
+					</ng-container>
+				</ng-template>
+			</ov-session>
+		</div>
+	} @else {
+		<!-- Fallback / unknown state -->
+		<div id="unknown-state">
+			<mat-icon class="warning-icon">help_outline</mat-icon>
+			<span>An error occurred in the video conference</span>
+		</div>
+	}
 </div>
 
 <ng-template #defaultToolbar>

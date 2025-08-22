@@ -332,7 +332,8 @@ export class CallComponent implements OnInit {
 		}
 	}
 	async onRecordingStopRequested(event: RecordingStopRequestedEvent) {
-		this.appendElement('onRecordingStopRequested');
+		this.appendElement('onRecordingStopRequested-' + event.roomName);
+
 		console.warn('STOP RECORDING CLICKED', event);
 		try {
 			await this.restService.stopRecording(event);
