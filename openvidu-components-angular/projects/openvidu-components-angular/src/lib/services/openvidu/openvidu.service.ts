@@ -208,7 +208,7 @@ export class OpenViduService {
 	 * @internal
 	 */
 	setLocalTracks(tracks: LocalTrack[]): void {
-		this.localTracks = tracks;
+		this.localTracks = tracks.filter((track) => track !== undefined) as LocalTrack[];
 	}
 
 	/**
@@ -235,12 +235,14 @@ export class OpenViduService {
 	 *
 	 * @param videoDeviceId - The ID of the video device to use. If not provided, the default video device will be used.
 	 * @param audioDeviceId - The ID of the audio device to use. If not provided, the default audio device will be used.
+	 * @param allowPartialCreation - If true, allows creating tracks even if some devices fail
 	 * @returns A promise that resolves to an array of LocalTrack objects representing the created tracks.
 	 * @internal
 	 */
 	async createLocalTracks(
 		videoDeviceId: string | boolean | undefined = undefined,
-		audioDeviceId: string | boolean | undefined = undefined
+		audioDeviceId: string | boolean | undefined = undefined,
+		allowPartialCreation: boolean = true
 	): Promise<LocalTrack[]> {
 		// Default values: true if device is enabled, false otherwise
 		videoDeviceId ??= this.deviceService.isCameraEnabled();
@@ -277,9 +279,17 @@ export class OpenViduService {
 		}
 
 		let newLocalTracks: LocalTrack[] = [];
+
 		if (options.audio || options.video) {
 			this.log.d('Creating local tracks with options', options);
-			newLocalTracks = await createLocalTracks(options);
+
+			if (allowPartialCreation) {
+				// Try to create tracks separately to handle device conflicts gracefully
+				newLocalTracks = await this.createTracksWithFallback(options);
+			} else {
+				// Original behavior - all or nothing
+				newLocalTracks = await createLocalTracks(options);
+			}
 
 			// Mute tracks if devices are disabled
 			if (!this.deviceService.isCameraEnabled()) {
@@ -290,6 +300,41 @@ export class OpenViduService {
 			}
 		}
 		return newLocalTracks;
+	}
+
+	/**
+	 * Creates tracks with fallback strategy to handle device conflicts
+	 * @param options - The track creation options
+	 * @returns Array of successfully created tracks
+	 * @internal
+	 */
+	private async createTracksWithFallback(options: CreateLocalTracksOptions): Promise<LocalTrack[]> {
+		const tracks: LocalTrack[] = [];
+
+		// Try to create video track separately
+		if (options.video) {
+			try {
+				const videoTracks = await createLocalTracks({ video: options.video });
+				tracks.push(...videoTracks);
+				this.log.d('Video track created successfully');
+			} catch (error) {
+				this.log.w('Failed to create video track, device may be busy:', error);
+				// Still continue to try audio track
+			}
+		}
+
+		// Try to create audio track separately
+		if (options.audio) {
+			try {
+				const audioTracks = await createLocalTracks({ audio: options.audio });
+				tracks.push(...audioTracks);
+				this.log.d('Audio track created successfully');
+			} catch (error) {
+				this.log.w('Failed to create audio track, device may be busy:', error);
+			}
+		}
+
+		return tracks;
 	}
 
 	/**
@@ -349,21 +394,130 @@ export class OpenViduService {
 	}
 
 	/**
-	 * Switch the microphone device when the room is not connected (prejoin page)
+	 * Switch the camera device when the room is not connected (prejoin page)
 	 * @param deviceId new video device to use
 	 * @internal
 	 */
-	switchCamera(deviceId: string): Promise<void> {
-		return (this.localTracks?.find((track) => track.kind === Track.Kind.Video) as LocalVideoTrack).restartTrack({ deviceId: deviceId });
+	async switchCamera(deviceId: string): Promise<void> {
+		const existingTrack = this.localTracks.find((track) => track.kind === Track.Kind.Video) as LocalVideoTrack;
+
+		if (existingTrack) {
+			//TODO: SHould use replace track using restartTrack
+			// Try to restart existing track
+			this.removeVideoTrack();
+			// try {
+				// await existingTrack.restartTrack({ deviceId: deviceId });
+			// 	this.log.d('Camera switched successfully using existing track');
+			// 	return;
+			// } catch (error) {
+			// 	this.log.w('Failed to restart video track, trying to create new one:', error);
+			// 	// Remove the failed track
+			// 	this.removeVideoTrack();
+			// }
+		}
+
+		// Create new video track if no existing track or restart failed
+		try {
+			const newVideoTracks = await createLocalTracks({
+				video: { deviceId: deviceId }
+			});
+
+			const videoTrack = newVideoTracks.find((t) => t.kind === Track.Kind.Video);
+			if (videoTrack) {
+
+				// Mute if camera is disabled in settings
+				if (!this.deviceService.isCameraEnabled()) {
+					await videoTrack.mute();
+				}
+
+				this.localTracks.push(videoTrack);
+				this.log.d('New camera track created and added');
+			}
+		} catch (error) {
+			this.log.e('Failed to create new video track:', error);
+			throw new Error(`Failed to switch camera: ${error.message}`);
+		}
 	}
 
 	/**
 	 * Switches the microphone device when the room is not connected (prejoin page)
-	 * @param deviceId new video device to use
+	 * @param deviceId new audio device to use
 	 * @internal
 	 */
-	switchMicrophone(deviceId: string): Promise<void> {
-		return (this.localTracks?.find((track) => track.kind === Track.Kind.Audio) as LocalAudioTrack).restartTrack({ deviceId: deviceId });
+	async switchMicrophone(deviceId: string): Promise<void> {
+		const existingTrack = this.localTracks?.find((track) => track.kind === Track.Kind.Audio) as LocalAudioTrack;
+
+		if (existingTrack) {
+				this.removeAudioTrack();
+			//TODO: SHould use replace track using restartTrack
+			// Try to restart existing track
+			// try {
+			// 	await existingTrack.restartTrack({ deviceId: deviceId });
+			// 	this.log.d('Microphone switched successfully using existing track');
+			// 	return;
+			// } catch (error) {
+			// 	this.log.w('Failed to restart audio track, trying to create new one:', error);
+			// 	// Remove the failed track
+			// 	this.removeAudioTrack();
+			// }
+		}
+
+		// Create new audio track if no existing track or restart failed
+		try {
+			const newAudioTracks = await createLocalTracks({
+				audio: {
+					deviceId: deviceId,
+					echoCancellation: true,
+					noiseSuppression: true,
+					autoGainControl: true
+				}
+			});
+
+			const audioTrack = newAudioTracks.find((t) => t.kind === Track.Kind.Audio);
+			if (audioTrack) {
+				this.localTracks.push(audioTrack);
+
+				// Mute if microphone is disabled in settings
+				if (!this.deviceService.isMicrophoneEnabled()) {
+					await audioTrack.mute();
+				}
+
+				this.log.d('New microphone track created and added');
+			}
+		} catch (error) {
+			this.log.e('Failed to create new audio track:', error);
+			throw new Error(`Failed to switch microphone: ${error.message}`);
+		}
+	}
+
+	/**
+	 * Removes video track from local tracks
+	 * @internal
+	 */
+	private removeVideoTrack(): void {
+		const videoTrackIndex = this.localTracks.findIndex((track) => track.kind === Track.Kind.Video);
+		if (videoTrackIndex !== -1) {
+			const videoTrack = this.localTracks[videoTrackIndex];
+			videoTrack.stop();
+			videoTrack.detach();
+			this.localTracks.splice(videoTrackIndex, 1);
+			this.log.d('Video track removed');
+		}
+	}
+
+	/**
+	 * Removes audio track from local tracks
+	 * @internal
+	 */
+	private removeAudioTrack(): void {
+		const audioTrackIndex = this.localTracks.findIndex((track) => track.kind === Track.Kind.Audio);
+		if (audioTrackIndex !== -1) {
+			const audioTrack = this.localTracks[audioTrackIndex];
+			audioTrack.stop();
+			audioTrack.detach();
+			this.localTracks.splice(audioTrackIndex, 1);
+			this.log.d('Audio track removed');
+		}
 	}
 
 	/**

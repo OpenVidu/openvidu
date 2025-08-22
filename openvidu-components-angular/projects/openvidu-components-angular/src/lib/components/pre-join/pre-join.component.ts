@@ -10,14 +10,14 @@ import {
 	Output
 } from '@angular/core';
 import { animate, state, style, transition, trigger } from '@angular/animations';
-import { filter, Subject, take, takeUntil, tap } from 'rxjs';
+import { filter, Subject, take, takeUntil } from 'rxjs';
 import { ILogger } from '../../models/logger.model';
 import { CdkOverlayService } from '../../services/cdk-overlay/cdk-overlay.service';
 import { OpenViduComponentsConfigService } from '../../services/config/directive-config.service';
 import { LoggerService } from '../../services/logger/logger.service';
 import { OpenViduService } from '../../services/openvidu/openvidu.service';
 import { TranslateService } from '../../services/translate/translate.service';
-import { LocalTrack } from 'livekit-client';
+import { LocalTrack, Track } from 'livekit-client';
 import { CustomDevice } from '../../models/device.model';
 import { LangOption } from '../../models/lang.model';
 
@@ -41,7 +41,7 @@ import { LangOption } from '../../models/lang.model';
 			state(
 				'compact',
 				style({
-					height: '28vh'
+					height: '300px'
 				})
 			),
 			transition('normal => compact', [animate('250ms cubic-bezier(0.25, 0.8, 0.25, 1)')]),
@@ -56,15 +56,6 @@ import { LangOption } from '../../models/lang.model';
 					'300ms cubic-bezier(0.34, 1.56, 0.64, 1)',
 					style({
 						opacity: 1
-					})
-				)
-			]),
-			transition(':leave', [
-				animate(
-					'200ms cubic-bezier(0.25, 0.46, 0.45, 0.94)',
-					style({
-						opacity: 0,
-						transform: 'translateY(-10px)'
 					})
 				)
 			])
@@ -127,7 +118,7 @@ export class PreJoinComponent implements OnInit, OnDestroy {
 
 	async ngOnInit() {
 		this.subscribeToPrejoinDirectives();
-		await this.initializeDevices();
+		await this.initializeDevicesWithRetry();
 		this.windowSize = window.innerWidth;
 		this.isLoading = false;
 		this.changeDetector.markForCheck();
@@ -148,10 +139,6 @@ export class PreJoinComponent implements OnInit, OnDestroy {
 				track.stop();
 			});
 		}
-	}
-
-	private async initializeDevices() {
-		await this.initializeDevicesWithRetry();
 	}
 
 	onDeviceSelectorClicked() {
@@ -246,6 +233,27 @@ export class PreJoinComponent implements OnInit, OnDestroy {
 		}
 
 		this.onVideoEnabledChanged.emit(enabled);
+	}
+
+	async videoDeviceChanged(device: CustomDevice) {
+		try {
+			this.log.d('Video device changed to:', device);
+
+			// Get the updated tracks from the service
+			const updatedTracks = this.openviduService.getLocalTracks();
+
+			// Find the new video track
+			const newVideoTrack = updatedTracks.find((track) => track.kind === 'video');
+
+			// if (newVideoTrack && newVideoTrack !== this.videoTrack) {
+			this.tracks = updatedTracks;
+			this.videoTrack = newVideoTrack;
+
+			this.onVideoDeviceChanged.emit(device);
+		} catch (error) {
+			this.log.e('Error handling video device change:', error);
+			this.handleError(error);
+		}
 	}
 
 	onVideoDevicesLoaded(devices: CustomDevice[]) {

@@ -1,5 +1,5 @@
 import { animate, style, transition, trigger } from '@angular/animations';
-import { AfterViewInit, Component, ElementRef, Input, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, Input, OnDestroy, ViewChild } from '@angular/core';
 import { Track } from 'livekit-client';
 
 /**
@@ -21,12 +21,13 @@ import { Track } from 'livekit-client';
 	],
 	standalone: false
 })
-export class MediaElementComponent implements AfterViewInit {
+export class MediaElementComponent implements AfterViewInit, OnDestroy {
 	_track: Track;
 	_videoElement: ElementRef;
 	_audioElement: ElementRef;
 	type: Track.Source = Track.Source.Camera;
 	private _muted: boolean = false;
+	private previousTrack: Track | null = null;
 
 	@Input() showAvatar: boolean;
 	@Input() avatarColor: string;
@@ -37,20 +38,25 @@ export class MediaElementComponent implements AfterViewInit {
 	set videoElement(element: ElementRef) {
 		this._videoElement = element;
 		this.attachTracks();
-
 	}
 
 	@ViewChild('audioElement', { static: false })
 	set audioElement(element: ElementRef) {
 		this._audioElement = element;
 		this.attachTracks();
-
 	}
 
 	@Input()
 	set track(track: Track) {
 		if (!track) return;
+
+		// Detach previous track if it's different
+		if (this.previousTrack && this.previousTrack !== track) {
+			this.detachPreviousTrack();
+		}
+
 		this._track = track;
+		this.previousTrack = track;
 		this.attachTracks();
 	}
 
@@ -67,6 +73,23 @@ export class MediaElementComponent implements AfterViewInit {
 			if (!this._track) return;
 			this.attachTracks();
 		});
+	}
+
+	ngOnDestroy() {
+		this.detachPreviousTrack();
+	}
+
+	private detachPreviousTrack() {
+		if (this.previousTrack) {
+			// Detach from video element
+			if (this.isVideoTrack() && this._videoElement?.nativeElement) {
+				this.previousTrack.detach(this._videoElement.nativeElement);
+			}
+			// Detach from audio element
+			if (this.isAudioTrack() && this._audioElement?.nativeElement) {
+				this.previousTrack.detach(this._audioElement.nativeElement);
+			}
+		}
 	}
 
 	private updateVideoStyles() {

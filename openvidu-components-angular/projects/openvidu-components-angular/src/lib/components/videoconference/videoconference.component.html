@@ -1,7 +1,7 @@
 <div id="call-container">
 	<!-- Loading spinner -->
 	@if (componentState.isLoading) {
-		<div id="spinner" *ngIf="componentState.isLoading">
+		<div id="spinner">
 			<mat-spinner [diameter]="spinnerDiameter"></mat-spinner>
 			<span>{{ 'PREJOIN.PREPARING' | translate }}</span>
 		</div>

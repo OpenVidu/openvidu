@@ -5,6 +5,8 @@ import { DeviceService } from '../../../services/device/device.service';
 import { ParticipantService } from '../../../services/participant/participant.service';
 import { StorageService } from '../../../services/storage/storage.service';
 import { ParticipantModel } from '../../../models/participant.model';
+import { LoggerService } from '../../../services/logger/logger.service';
+import { ILogger } from '../../../models/logger.model';
 
 /**
  * @internal
@@ -26,12 +28,16 @@ export class AudioDevicesComponent implements OnInit, OnDestroy {
 	microphoneSelected: CustomDevice | undefined;
 	microphones: CustomDevice[] = [];
 	private localParticipantSubscription: Subscription;
+	private log: ILogger;
 
 	constructor(
 		private deviceSrv: DeviceService,
 		private storageSrv: StorageService,
-		private participantService: ParticipantService
-	) {}
+		private participantService: ParticipantService,
+		private loggerSrv: LoggerService
+	) {
+		this.log = this.loggerSrv.get('AudioDevicesComponent');
+	}
 
 	async ngOnInit() {
 		this.subscribeToParticipantMediaProperties();
@@ -60,14 +66,19 @@ export class AudioDevicesComponent implements OnInit, OnDestroy {
 	}
 
 	async onMicrophoneSelected(event: any) {
-		const device: CustomDevice = event?.value;
-		if (this.deviceSrv.needUpdateAudioTrack(device)) {
-			this.microphoneStatusChanging = true;
-			await this.participantService.switchMicrophone(device.device);
-			this.deviceSrv.setMicSelected(device.device);
-			this.microphoneSelected = this.deviceSrv.getMicrophoneSelected();
+		try {
+			const device: CustomDevice = event?.value;
+			if (this.deviceSrv.needUpdateAudioTrack(device)) {
+				this.microphoneStatusChanging = true;
+				await this.participantService.switchMicrophone(device.device);
+				this.deviceSrv.setMicSelected(device.device);
+				this.microphoneSelected = this.deviceSrv.getMicrophoneSelected();
+				this.onAudioDeviceChanged.emit(this.microphoneSelected);
+			}
+		} catch (error) {
+			this.log.e('Error switching microphone', error);
+		} finally {
 			this.microphoneStatusChanging = false;
-			this.onAudioDeviceChanged.emit(this.microphoneSelected);
 		}
 	}
 

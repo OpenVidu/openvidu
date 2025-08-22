@@ -5,6 +5,8 @@ import { DeviceService } from '../../../services/device/device.service';
 import { ParticipantService } from '../../../services/participant/participant.service';
 import { StorageService } from '../../../services/storage/storage.service';
 import { ParticipantModel } from '../../../models/participant.model';
+import { LoggerService } from '../../../services/logger/logger.service';
+import { ILogger } from '../../../models/logger.model';
 
 /**
  * @internal
@@ -28,11 +30,16 @@ export class VideoDevicesComponent implements OnInit, OnDestroy {
 	cameras: CustomDevice[] = [];
 	localParticipantSubscription: Subscription;
 
+	private log: ILogger;
+
 	constructor(
 		private storageSrv: StorageService,
 		private deviceSrv: DeviceService,
-		private participantService: ParticipantService
-	) {}
+		private participantService: ParticipantService,
+		private loggerSrv: LoggerService
+	) {
+		this.log = this.loggerSrv.get('VideoDevicesComponent');
+	}
 
 	async ngOnInit() {
 		this.subscribeToParticipantMediaProperties();
@@ -63,37 +70,24 @@ export class VideoDevicesComponent implements OnInit, OnDestroy {
 	}
 
 	async onCameraSelected(event: any) {
-		const device: CustomDevice = event?.value;
+		try {
+			const device: CustomDevice = event?.value;
 
-		// Is New deviceId different from the old one?
-		if (this.deviceSrv.needUpdateVideoTrack(device)) {
-			// const mirror = this.deviceSrv.cameraNeedsMirror(device.device);
-			// Reapply Virtual Background to new Publisher if necessary
-			// const backgroundSelected = this.backgroundService.backgroundSelected.getValue();
-			// const isBackgroundApplied = this.backgroundService.isBackgroundApplied();
+			// Is New deviceId different from the old one?
+			if (this.deviceSrv.needUpdateVideoTrack(device)) {
 
-			// if (isBackgroundApplied) {
-			// 	await this.backgroundService.removeBackground();
-			// }
-			// const pp: PublisherProperties = { videoSource: device.device, audioSource: false, mirror };
-			// const publisher = this.participantService.getMyCameraPublisher();
-			// await this.openviduService.replaceCameraTrack(publisher, pp);
+				this.cameraStatusChanging = true;
 
-			this.cameraStatusChanging = true;
+				await this.participantService.switchCamera(device.device);
 
-			await this.participantService.switchCamera(device.device);
-
-			// if (isBackgroundApplied) {
-			// 	const bgSelected = this.backgroundService.backgrounds.find((b) => b.id === backgroundSelected);
-			// 	if (bgSelected) {
-			// 		await this.backgroundService.applyBackground(bgSelected);
-			// 	}
-			// }
-
-			this.deviceSrv.setCameraSelected(device.device);
-			this.cameraSelected = this.deviceSrv.getCameraSelected();
+				this.deviceSrv.setCameraSelected(device.device);
+				this.cameraSelected = device;
+				this.onVideoDeviceChanged.emit(this.cameraSelected);
+			}
+		} catch (error) {
+			this.log.e('Error switching camera', error);
+		} finally {
 			this.cameraStatusChanging = false;
-			this.onVideoDeviceChanged.emit(this.cameraSelected);
 		}
 	}
 

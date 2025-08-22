@@ -23,11 +23,12 @@
 						<div class="video-frame">
 							<ov-media-element
 								[track]="videoTrack"
-								[showAvatar]="!videoTrack || videoTrack.isMuted"
+								[showAvatar]="!isVideoEnabled"
 								[avatarName]="participantName"
 								[avatarColor]="'hsl(48, 100%, 50%)'"
 								[isLocal]="true"
 								class="video-element"
+								[id]="videoTrack?.id || 'no-video'"
 							>
 							</ov-media-element>
 
@@ -37,7 +38,7 @@
 									<div class="control-group" *ngIf="showCameraButton">
 										<ov-video-devices-select
 											[compact]="true"
-											(onVideoDeviceChanged)="onVideoDeviceChanged.emit($event)"
+											(onVideoDeviceChanged)="videoDeviceChanged($event)"
 											(onVideoEnabledChanged)="videoEnabledChanged($event)"
 											(onVideoDevicesLoaded)="onVideoDevicesLoaded($event)"
 											class="device-selector"
