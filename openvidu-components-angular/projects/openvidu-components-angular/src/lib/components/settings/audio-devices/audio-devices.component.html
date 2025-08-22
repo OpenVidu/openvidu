@@ -1,28 +1,43 @@
 <div class="audio-device-selector" [class.compact]="compact">
 	<!-- Unified Device Button (Compact Mode) -->
 	@if (compact) {
-		<div class="unified-device-button">
-			<!-- Main toggle button -->
-			<button
-				mat-flat-button
-				class="toggle-section"
-				[disabled]="!hasAudioDevices || microphoneStatusChanging"
-				[class.device-enabled]="isMicrophoneEnabled"
-				[class.device-disabled]="!isMicrophoneEnabled"
-				(click)="toggleMic($event)"
-				[matTooltip]="isMicrophoneEnabled ? ('TOOLBAR.MUTE_AUDIO' | translate) : ('TOOLBAR.UNMUTE_AUDIO' | translate)"
-				[matTooltipDisabled]="!hasAudioDevices"
-			>
-				<mat-icon>{{ isMicrophoneEnabled ? 'mic' : 'mic_off' }}</mat-icon>
-			</button>
-
-			<!-- Dropdown section -->
-			@if (microphones.length > 1 && isMicrophoneEnabled) {
-				<button mat-flat-button class="dropdown-section" [matMenuTriggerFor]="microphoneMenu" [disabled]="microphoneStatusChanging">
-					<mat-icon>expand_more</mat-icon>
+		@if (hasAudioDevices) {
+			<div class="unified-device-button">
+				<!-- Main toggle button -->
+				<button
+					mat-flat-button
+					class="toggle-section"
+					[disabled]="!hasAudioDevices || microphoneStatusChanging"
+					[class.device-enabled]="isMicrophoneEnabled"
+					[class.device-disabled]="!isMicrophoneEnabled"
+					(click)="toggleMic($event)"
+					[matTooltip]="isMicrophoneEnabled ? ('TOOLBAR.MUTE_AUDIO' | translate) : ('TOOLBAR.UNMUTE_AUDIO' | translate)"
+					[matTooltipDisabled]="!hasAudioDevices"
+					id="microphone-button"
+				>
+					<mat-icon [id]="isMicrophoneEnabled ? 'mic' : 'mic_off'">{{ isMicrophoneEnabled ? 'mic' : 'mic_off' }}</mat-icon>
 				</button>
-			}
-		</div>
+
+				<!-- Dropdown section -->
+				@if (isMicrophoneEnabled) {
+					<button
+						mat-flat-button
+						id="audio-dropdown"
+						class="dropdown-section"
+						[matMenuTriggerFor]="microphoneMenu"
+						[disabled]="microphoneStatusChanging"
+					>
+						<mat-icon>expand_more</mat-icon>
+					</button>
+				}
+			</div>
+		} @else {
+			<!-- No Microphone Available -->
+			<div id="no-audio-device-message" class="no-device-message">
+				<mat-icon class="warning-icon">warning</mat-icon>
+				<span>{{ 'PREJOIN.NO_AUDIO_DEVICE' | translate }}</span>
+			</div>
+		}
 	} @else {
 		<!-- Normal Mode - Input Style Selector -->
 		<div class="normal-device-selector">
@@ -33,6 +48,7 @@
 					<div class="device-input-selector">
 						<button
 							mat-flat-button
+							id="audio-dropdown"
 							class="selector-button"
 							[disabled]="microphoneStatusChanging || microphones.length <= 1"
 							[matMenuTriggerFor]="microphoneMenu"
@@ -44,24 +60,34 @@
 						</button>
 					</div>
 				} @else {
-					<!-- When microphone is disabled -->
-					<div class="device-input-selector disabled">
-						<div class="selector-button disabled">
-							<mat-icon class="device-icon">mic_off</mat-icon>
-							<span class="selected-device-name">
-								{{ !hasAudioDevices ? ('PREJOIN.NO_AUDIO_DEVICE' | translate) : 'Microphone disabled' }}
-							</span>
+					@if (hasAudioDevices) {
+						<!-- When microphone is disabled -->
+						<div class="device-input-selector disabled">
+							<div class="selector-button disabled">
+								<mat-icon class="device-icon">mic_off</mat-icon>
+								<span class="selected-device-name">
+									{{ !hasAudioDevices ? ('PREJOIN.NO_AUDIO_DEVICE' | translate) : 'Microphone disabled' }}
+								</span>
+							</div>
 						</div>
-					</div>
+					} @else {
+						<!-- No Microphone Available -->
+						<div id="no-audio-device-message" class="no-device-message">
+							<mat-icon class="warning-icon">warning</mat-icon>
+							<span>{{ 'PREJOIN.NO_AUDIO_DEVICE' | translate }}</span>
+						</div>
+					}
 				}
 			</div>
 		</div>
 	}
+
 	<!-- Device Selection Menu (Shared) -->
 	<mat-menu #microphoneMenu="matMenu" class="device-menu">
 		@for (microphone of microphones; track microphone.device) {
 			<button
 				mat-menu-item
+				id="option-{{ microphone.label }}"
 				(click)="onMicrophoneSelected({ value: microphone })"
 				[class.selected]="microphone.device === microphoneSelected.device"
 			>
@@ -70,12 +96,4 @@
 			</button>
 		}
 	</mat-menu>
-
-	<!-- No Microphone Available -->
-	@if (microphones.length === 0) {
-		<div class="no-device-message">
-			<mat-icon class="warning-icon">warning</mat-icon>
-			<span>{{ 'PREJOIN.NO_AUDIO_DEVICE' | translate }}</span>
-		</div>
-	}
 </div>

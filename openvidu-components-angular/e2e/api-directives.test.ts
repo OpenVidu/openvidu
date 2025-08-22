@@ -89,7 +89,7 @@ describe('Testing API Directives', () => {
 
 		await utils.checkPrejoinIsPresent();
 
-		await utils.waitForElement('#lang-btn-compact');
+		await utils.waitForElement('.language-selector');
 
 		const element = await utils.waitForElement('#join-button');
 		expect(await element.getText()).toEqual('Unirme ahora');
@@ -108,20 +108,20 @@ describe('Testing API Directives', () => {
 		const panelTitle = await utils.waitForElement('.panel-title');
 		expect(await panelTitle.getText()).toEqual('Configuración');
 
-		const element = await utils.waitForElement('#lang-selected-name');
-		expect(await element.getAttribute('innerText')).toEqual('Español');
+		const element = await utils.waitForElement('.lang-name');
+		expect(await element.getAttribute('innerText')).toEqual('Español expand_more');
 	});
 
 	it('should override the LANG OPTIONS', async () => {
 		await browser.get(`${url}&prejoin=true&langOptions=true`);
 
 		await utils.checkPrejoinIsPresent();
-		await utils.waitForElement('#lang-btn-compact');
-		await utils.clickOn('#lang-btn-compact');
+		await utils.waitForElement('.language-selector');
+		await utils.clickOn('.language-selector');
 		await browser.sleep(500);
-		expect(await utils.getNumberOfElements('.lang-menu-opt')).toEqual(2);
+		expect(await utils.getNumberOfElements('.language-option')).toEqual(2);
 
-		await utils.clickOn('.lang-menu-opt');
+		await utils.clickOn('.language-option');
 		await browser.sleep(500);
 
 		await utils.clickOn('#join-button');
@@ -136,12 +136,12 @@ describe('Testing API Directives', () => {
 		await browser.sleep(500);
 
 		await utils.waitForElement('#settings-container');
-		await utils.waitForElement('.lang-button');
-		await utils.clickOn('.lang-button');
+		await utils.waitForElement('.full-lang-button');
+		await utils.clickOn('.full-lang-button');
 
 		await browser.sleep(500);
 
-		expect(await utils.getNumberOfElements('.lang-menu-opt')).toEqual(2);
+		expect(await utils.getNumberOfElements('.language-option')).toEqual(2);
 	});
 
 	it('should show the PREJOIN page', async () => {

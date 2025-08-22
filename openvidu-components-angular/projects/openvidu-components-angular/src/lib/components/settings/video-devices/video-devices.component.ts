@@ -19,6 +19,7 @@ export class VideoDevicesComponent implements OnInit, OnDestroy {
 	@Input() compact: boolean = false;
 	@Output() onVideoDeviceChanged = new EventEmitter<CustomDevice>();
 	@Output() onVideoEnabledChanged = new EventEmitter<boolean>();
+	@Output() onVideoDevicesLoaded = new EventEmitter<CustomDevice[]>();
 
 	cameraStatusChanging: boolean;
 	isCameraEnabled: boolean;
@@ -42,6 +43,7 @@ export class VideoDevicesComponent implements OnInit, OnDestroy {
 			this.cameraSelected = this.deviceSrv.getCameraSelected();
 		}
 
+		this.onVideoDevicesLoaded.emit(this.cameras);
 		this.isCameraEnabled = this.participantService.isMyCameraEnabled();
 	}
 

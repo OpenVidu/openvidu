@@ -1,28 +1,45 @@
 <div class="video-device-selector" [class.compact]="compact">
 	<!-- Unified Device Button (Compact Mode) -->
 	@if (compact) {
-		<div class="unified-device-button">
-			<!-- Main toggle button -->
-			<button
-				mat-flat-button
-				class="toggle-section"
-				[disabled]="!hasVideoDevices || cameraStatusChanging"
-				[class.device-enabled]="isCameraEnabled"
-				[class.device-disabled]="!isCameraEnabled"
-				(click)="toggleCam($event)"
-				[matTooltip]="isCameraEnabled ? ('TOOLBAR.STOP_VIDEO' | translate) : ('TOOLBAR.START_VIDEO' | translate)"
-				[matTooltipDisabled]="!hasVideoDevices"
-			>
-				<mat-icon>{{ isCameraEnabled ? 'videocam' : 'videocam_off' }}</mat-icon>
-			</button>
-
-			<!-- Dropdown section -->
-			@if (isCameraEnabled && cameras.length > 1) {
-				<button mat-flat-button class="dropdown-section" [matMenuTriggerFor]="cameraMenu" [disabled]="cameraStatusChanging">
-					<mat-icon>expand_more</mat-icon>
+		@if (hasVideoDevices) {
+			<div class="unified-device-button">
+				<!-- Main toggle button -->
+				<button
+					mat-flat-button
+					class="toggle-section"
+					[disabled]="!hasVideoDevices || cameraStatusChanging"
+					[class.device-enabled]="isCameraEnabled"
+					[class.device-disabled]="!isCameraEnabled"
+					(click)="toggleCam($event)"
+					[matTooltip]="isCameraEnabled ? ('TOOLBAR.STOP_VIDEO' | translate) : ('TOOLBAR.START_VIDEO' | translate)"
+					[matTooltipDisabled]="!hasVideoDevices"
+					id="camera-button"
+				>
+					<mat-icon [id]="isCameraEnabled ? 'videocam' : 'videocam_off'">
+						{{ isCameraEnabled ? 'videocam' : 'videocam_off' }}
+					</mat-icon>
 				</button>
-			}
-		</div>
+
+				<!-- Dropdown section -->
+				@if (isCameraEnabled) {
+					<button
+						mat-flat-button
+						id="video-dropdown"
+						class="dropdown-section"
+						[matMenuTriggerFor]="cameraMenu"
+						[disabled]="cameraStatusChanging"
+					>
+						<mat-icon>expand_more</mat-icon>
+					</button>
+				}
+			</div>
+		} @else {
+			<!-- No Camera Available -->
+			<div id="no-video-device-message" class="no-device-message">
+				<mat-icon class="warning-icon">warning</mat-icon>
+				<span>{{ 'PREJOIN.NO_VIDEO_DEVICE' | translate }}</span>
+			</div>
+		}
 	} @else {
 		<!-- Normal Mode - Input-style Selector -->
 		<div class="normal-device-selector">
@@ -31,6 +48,7 @@
 				<div class="device-input-selector">
 					<button
 						mat-flat-button
+						id="video-dropdown"
 						class="selector-button"
 						[matMenuTriggerFor]="cameraMenu"
 						[disabled]="cameraStatusChanging || cameras.length <= 1"
@@ -41,13 +59,21 @@
 					</button>
 				</div>
 			} @else {
-				<!-- Disabled state message -->
-				<div class="device-input-selector disabled">
-					<div class="selector-button disabled">
-						<mat-icon class="device-icon">videocam_off</mat-icon>
-						<span class="selected-device-name">{{ 'PANEL.SETTINGS.DISABLED_VIDEO' | translate }}</span>
+				@if (hasVideoDevices) {
+					<!-- Disabled state message -->
+					<div class="device-input-selector disabled">
+						<div class="selector-button disabled">
+							<mat-icon class="device-icon">videocam_off</mat-icon>
+							<span class="selected-device-name">{{ 'PANEL.SETTINGS.DISABLED_VIDEO' | translate }}</span>
+						</div>
 					</div>
-				</div>
+				} @else {
+					<!-- No Camera Available -->
+					<div id="no-video-device-message" class="no-device-message">
+						<mat-icon class="warning-icon">warning</mat-icon>
+						<span>{{ 'PREJOIN.NO_VIDEO_DEVICE' | translate }}</span>
+					</div>
+				}
 			}
 		</div>
 	}
@@ -55,18 +81,15 @@
 	<!-- Device Selection Menu (Shared) -->
 	<mat-menu #cameraMenu="matMenu" class="device-menu">
 		@for (camera of cameras; track camera.device) {
-			<button mat-menu-item (click)="onCameraSelected({ value: camera })" [class.selected]="camera.device === cameraSelected?.device">
+			<button
+				mat-menu-item
+				id="option-{{ camera.label }}"
+				(click)="onCameraSelected({ value: camera })"
+				[class.selected]="camera.device === cameraSelected?.device"
+			>
 				<mat-icon *ngIf="camera.device === cameraSelected?.device" class="check-icon">check</mat-icon>
 				<span>{{ camera.label }}</span>
 			</button>
 		}
 	</mat-menu>
-
-	<!-- No Camera Available -->
-	@if (cameras.length === 0) {
-		<div class="no-device-message">
-			<mat-icon class="warning-icon">warning</mat-icon>
-			<span>{{ 'PREJOIN.NO_VIDEO_DEVICE' | translate }}</span>
-		</div>
-	}
 </div>

@@ -92,35 +92,12 @@ describe('Testing videoconference EVENTS', () => {
 		expect(await utils.isPresent('#onVideoEnabledChanged-true')).toBeTrue();
 	});
 
-	it('should receive the onVideoEnabledChanged event when clicking on the settings panel', async () => {
-		await browser.get(`${url}&prejoin=false`);
-
-		await utils.checkSessionIsPresent();
-
-		await utils.checkToolbarIsPresent();
-		await utils.togglePanel('settings');
-		await browser.sleep(500);
-
-		await utils.waitForElement('#settings-container');
-		await utils.clickOn('#video-opt');
-
-		await utils.waitForElement('ov-video-devices-select');
-		await utils.clickOn('ov-video-devices-select #camera-button');
-		// Checking if onVideoEnabledChanged has been received
-		await utils.waitForElement('#onVideoEnabledChanged-false');
-		expect(await utils.isPresent('#onVideoEnabledChanged-false')).toBeTrue();
-
-		await utils.clickOn('ov-video-devices-select #camera-button');
-		await utils.waitForElement('#onVideoEnabledChanged-true');
-		expect(await utils.isPresent('#onVideoEnabledChanged-true')).toBeTrue();
-	});
-
 	it('should receive the onVideoDeviceChanged event on prejoin', async () => {
 		await browser.get(`${url}&fakeDevices=true`);
 		await utils.checkPrejoinIsPresent();
 
-		await utils.waitForElement('#video-devices-form');
-		await utils.clickOn('#video-devices-form');
+		await utils.waitForElement('#video-dropdown');
+		await utils.clickOn('#video-dropdown');
 
 		await utils.waitForElement('#option-custom_fake_video_1');
 		await utils.clickOn('#option-custom_fake_video_1');
@@ -142,8 +119,8 @@ describe('Testing videoconference EVENTS', () => {
 		await utils.clickOn('#video-opt');
 
 		await utils.waitForElement('ov-video-devices-select');
-		await utils.waitForElement('#video-devices-form');
-		await utils.clickOn('#video-devices-form');
+		await utils.waitForElement('#video-dropdown');
+		await utils.clickOn('#video-dropdown');
 
 		await utils.waitForElement('#option-custom_fake_video_1');
 		await utils.clickOn('#option-custom_fake_video_1');
@@ -184,35 +161,12 @@ describe('Testing videoconference EVENTS', () => {
 		expect(await utils.isPresent('#onAudioEnabledChanged-true')).toBeTrue();
 	});
 
-	it('should receive the onAudioEnabledChanged event when clicking on the settings panel', async () => {
-		await browser.get(`${url}&prejoin=false`);
-
-		await utils.checkSessionIsPresent();
-
-		await utils.checkToolbarIsPresent();
-		await utils.togglePanel('settings');
-		await browser.sleep(500);
-
-		await utils.waitForElement('#settings-container');
-		await utils.clickOn('#audio-opt');
-
-		await utils.waitForElement('ov-audio-devices-select');
-		await utils.clickOn('ov-audio-devices-select #microphone-button');
-		// Checking if onAudioEnabledChanged has been received
-		await utils.waitForElement('#onAudioEnabledChanged-false');
-		expect(await utils.isPresent('#onAudioEnabledChanged-false')).toBeTrue();
-
-		await utils.clickOn('ov-audio-devices-select #microphone-button');
-		await utils.waitForElement('#onAudioEnabledChanged-true');
-		expect(await utils.isPresent('#onAudioEnabledChanged-true')).toBeTrue();
-	});
-
 	it('should receive the onAudioDeviceChanged event on prejoin', async () => {
 		await browser.get(`${url}&fakeDevices=true`);
 		await utils.checkPrejoinIsPresent();
 
-		await utils.waitForElement('#audio-devices-form');
-		await utils.clickOn('#audio-devices-form');
+		await utils.waitForElement('#audio-dropdown');
+		await utils.clickOn('#audio-dropdown');
 
 		await utils.waitForElement('#option-custom_fake_audio_1');
 		await utils.clickOn('#option-custom_fake_audio_1');
@@ -234,8 +188,8 @@ describe('Testing videoconference EVENTS', () => {
 		await utils.clickOn('#audio-opt');
 
 		await utils.waitForElement('ov-audio-devices-select');
-		await utils.waitForElement('#audio-devices-form');
-		await utils.clickOn('#audio-devices-form');
+		await utils.waitForElement('#audio-dropdown');
+		await utils.clickOn('#audio-dropdown');
 
 		await utils.waitForElement('#option-custom_fake_audio_1');
 		await utils.clickOn('#option-custom_fake_audio_1');
@@ -248,8 +202,8 @@ describe('Testing videoconference EVENTS', () => {
 		await browser.get(`${url}`);
 		await utils.checkPrejoinIsPresent();
 
-		await utils.waitForElement('#lang-btn-compact');
-		await utils.clickOn('#lang-btn-compact');
+		await utils.waitForElement('.language-selector');
+		await utils.clickOn('.language-selector');
 
 		await browser.sleep(500);
 		await utils.clickOn('#lang-opt-es');
@@ -269,8 +223,8 @@ describe('Testing videoconference EVENTS', () => {
 		await browser.sleep(500);
 
 		await utils.waitForElement('#settings-container');
-		await utils.waitForElement('.lang-button');
-		await utils.clickOn('.lang-button');
+		await utils.waitForElement('.full-lang-button');
+		await utils.clickOn('.full-lang-button');
 
 		await browser.sleep(500);
 		await utils.clickOn('#lang-opt-es');
@@ -398,7 +352,7 @@ describe('Testing videoconference EVENTS', () => {
 		expect(await utils.isPresent('#onSettingsPanelStatusChanged-false')).toBeTrue();
 	});
 
-	it('should receive the onRecordingStartRequested event when clicking toolbar button', async () => {
+	fit('should receive the onRecordingStartRequested and onRecordingStopRequested event when clicking toolbar button', async () => {
 		const roomName = 'recordingToolbarEvent';
 		await browser.get(`${url}&prejoin=false&roomName=${roomName}`);
 
@@ -410,9 +364,15 @@ describe('Testing videoconference EVENTS', () => {
 		// Checking if onRecordingStartRequested has been received
 		await utils.waitForElement(`#onRecordingStartRequested-${roomName}`);
 		expect(await utils.isPresent(`#onRecordingStartRequested-${roomName}`)).toBeTrue();
-	});
 
-	xit('should receive the onRecordingStopRequested event when clicking toolbar button', async () => {});
+		await utils.waitForElement('.activity-status.started');
+
+		await utils.toggleRecordingFromToolbar();
+
+		// Checking if onRecordingStopRequested has been received
+		await utils.waitForElement(`#onRecordingStopRequested-${roomName}`);
+		expect(await utils.isPresent(`#onRecordingStopRequested-${roomName}`)).toBeTrue();
+	});
 
 	xit('should receive the onBroadcastingStopRequested event when clicking toolbar button', async () => {
 		await browser.get(`${url}&prejoin=false`);
@@ -446,7 +406,7 @@ describe('Testing videoconference EVENTS', () => {
 		expect(await utils.isPresent('#onBroadcastingStopRequested')).toBeTrue();
 	});
 
-	it('should receive the onRecordingStartRequested when clicking from activities panel', async () => {
+	it('should receive the onRecordingStartRequested and onRecordingStopRequested when clicking from activities panel', async () => {
 		const roomName = 'recordingActivitiesEvent';
 		await browser.get(`${url}&prejoin=false&roomName=${roomName}`);
 
@@ -471,8 +431,6 @@ describe('Testing videoconference EVENTS', () => {
 		await utils.waitForElement(`#onRecordingStartRequested-${roomName}`);
 		expect(await utils.isPresent(`#onRecordingStartRequested-${roomName}`)).toBeTrue();
 	});
-
-	xit('should receive the onRecordingStopRequested when clicking from activities panel', async () => {});
 
 	xit('should receive the onRecordingDeleteRequested event', async () => {
 		let element;

@@ -103,6 +103,7 @@ export class PreJoinComponent implements OnInit, OnDestroy {
 	videoTrack: LocalTrack | undefined;
 	audioTrack: LocalTrack | undefined;
 	isVideoEnabled: boolean = false;
+	hasVideoDevices: boolean = true;
 	private tracks: LocalTrack[];
 	private log: ILogger;
 	private destroy$ = new Subject<void>();
@@ -245,6 +246,10 @@ export class PreJoinComponent implements OnInit, OnDestroy {
 		}
 
 		this.onVideoEnabledChanged.emit(enabled);
+	}
+
+	onVideoDevicesLoaded(devices: CustomDevice[]) {
+		this.hasVideoDevices = devices.length > 0;
 	}
 
 	async audioEnabledChanged(enabled: boolean) {

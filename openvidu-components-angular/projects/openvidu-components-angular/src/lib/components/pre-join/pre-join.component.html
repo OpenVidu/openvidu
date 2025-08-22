@@ -1,4 +1,4 @@
-<div class="prejoin-container" id="prejoin-container">
+<div class="prejoin-container" id="prejoin-container" [class.name-error]="!!_error">
 	<!-- Top Language Toolbar -->
 	<div class="top-toolbar" *ngIf="!isMinimal">
 		<ov-lang-selector [compact]="false" class="language-selector" (onLangChanged)="onLangChanged.emit($event)"> </ov-lang-selector>
@@ -39,6 +39,7 @@
 											[compact]="true"
 											(onVideoDeviceChanged)="onVideoDeviceChanged.emit($event)"
 											(onVideoEnabledChanged)="videoEnabledChanged($event)"
+											(onVideoDevicesLoaded)="onVideoDevicesLoaded($event)"
 											class="device-selector"
 										>
 										</ov-video-devices-select>
@@ -57,17 +58,20 @@
 								</div>
 
 								<!-- Virtual Background Button -->
-								<div class="background-control" *ngIf="backgroundEffectEnabled">
-									<button
-										mat-icon-button
-										class="background-button"
-										(click)="toggleBackgroundPanel()"
-										[matTooltip]="'Virtual Backgrounds'"
-										[disabled]="!isVideoEnabled"
-									>
-										<mat-icon class="material-symbols-outlined">background_replace</mat-icon>
-									</button>
-								</div>
+								@if (backgroundEffectEnabled && hasVideoDevices) {
+									<div class="background-control">
+										<button
+											mat-icon-button
+											class="background-button"
+											(click)="toggleBackgroundPanel()"
+											[matTooltip]="'Virtual Backgrounds'"
+											[disabled]="!isVideoEnabled"
+											id="backgrounds-button"
+										>
+											<mat-icon class="material-symbols-outlined">background_replace</mat-icon>
+										</button>
+									</div>
+								}
 							</div>
 						</div>
 					</div>
@@ -81,7 +85,7 @@
 					<!-- Configuration Section -->
 					<div class="configuration-section">
 						<!-- Participant Name Input -->
-						<div class="input-section" *ngIf="showParticipantName">
+						<div class="participant-name-container input-section" *ngIf="showParticipantName">
 							<ov-participant-name-input
 								[isPrejoinPage]="true"
 								[error]="!!_error"
@@ -93,7 +97,7 @@
 						</div>
 
 						<!-- Error Message -->
-						<div *ngIf="!!_error" class="error-message">
+						<div *ngIf="!!_error" class="error-message" id="token-error">
 							<mat-icon class="error-icon">error_outline</mat-icon>
 							<span class="error-text">{{ _error }}</span>
 						</div>
@@ -104,9 +108,9 @@
 								mat-flat-button
 								(click)="join()"
 								class="join-button"
+								id="join-button"
 								[disabled]="showParticipantName && !participantName"
 							>
-								<mat-icon class="join-icon">videocam</mat-icon>
 								{{ 'PREJOIN.JOIN' | translate }}
 							</button>
 						</div>

@@ -33,7 +33,7 @@ describe('Media Devices: Virtual Device Replacement and Permissions Handling', (
 
 		await browser.get(`${url}&fakeDevices=true`);
 
-		let videoDevices = await utils.waitForElement('#video-devices-form');
+		let videoDevices = await utils.waitForElement('#video-dropdown');
 		await videoDevices.click();
 		let element = await utils.waitForElement('#option-custom_fake_video_1');
 		await element.click();
@@ -63,7 +63,7 @@ describe('Media Devices: Virtual Device Replacement and Permissions Handling', (
 		await browser.sleep(500);
 		await utils.clickOn('#video-opt');
 		expect(await utils.isPresent('ov-video-devices-select')).toBeTrue();
-		let videoDevices = await utils.waitForElement('#video-devices-form');
+		let videoDevices = await utils.waitForElement('#video-dropdown');
 		await videoDevices.click();
 		let element = await utils.waitForElement('#option-custom_fake_video_1');
 		await element.click();
@@ -130,16 +130,15 @@ describe('Media Devices: UI Behavior Without Media Device Permissions', () => {
 		await browser.quit();
 	});
 
-	it('should disable camera and microphone buttons in the prejoin page when permissions are denied', async () => {
+	it('should camera and microphone buttons be disabled in the prejoin page when permissions are denied', async () => {
 		await browser.get(`${url}`);
 		await utils.checkPrejoinIsPresent();
-		let button = await utils.waitForElement('#camera-button');
-		expect(await button.isEnabled()).toBeFalse();
-		button = await utils.waitForElement('#microphone-button');
-		expect(await button.isEnabled()).toBeFalse();
+		await utils.waitForElement('#no-video-device-message');
+		await utils.waitForElement('#no-audio-device-message');
+		expect(await utils.isPresent('#backgrounds-button')).toBeFalse();
 	});
 
-	it('should disable camera and microphone buttons in the room page when permissions are denied', async () => {
+	it('should camera and microphone buttons be disabled in the room page when permissions are denied', async () => {
 		await browser.get(`${url}`);
 		await utils.checkPrejoinIsPresent();
 		await utils.clickOn('#join-button');
@@ -151,7 +150,7 @@ describe('Media Devices: UI Behavior Without Media Device Permissions', () => {
 		expect(await button.isEnabled()).toBeFalse();
 	});
 
-	it('should disable camera and microphone buttons in the room page without prejoin when permissions are denied', async () => {
+	it('should camera and microphone buttons be disabled in the room page without prejoin when permissions are denied', async () => {
 		await browser.get(`${url}&prejoin=false`);
 		await utils.checkSessionIsPresent();
 		await utils.checkToolbarIsPresent();
@@ -161,7 +160,7 @@ describe('Media Devices: UI Behavior Without Media Device Permissions', () => {
 		expect(await button.isEnabled()).toBeFalse();
 	});
 
-	it('should disable camera and microphone device selection buttons in settings when permissions are denied', async () => {
+	it('should show an audio and video device warning in settings when permissions are denied', async () => {
 		await browser.get(`${url}&prejoin=false`);
 		await utils.checkToolbarIsPresent();
 		await utils.togglePanel('settings');
@@ -170,11 +169,9 @@ describe('Media Devices: UI Behavior Without Media Device Permissions', () => {
 		expect(await utils.isPresent('.settings-container')).toBeTrue();
 		await utils.clickOn('#video-opt');
 		expect(await utils.isPresent('ov-video-devices-select')).toBeTrue();
-		let button = await utils.waitForElement('#camera-button');
-		expect(await button.isEnabled()).toBeFalse();
+		await utils.waitForElement('#no-video-device-message');
 		await utils.clickOn('#audio-opt');
 		expect(await utils.isPresent('ov-audio-devices-select')).toBeTrue();
-		button = await utils.waitForElement('#microphone-button');
-		expect(await button.isEnabled()).toBeFalse();
+		await utils.waitForElement('#no-audio-device-message');
 	});
 });

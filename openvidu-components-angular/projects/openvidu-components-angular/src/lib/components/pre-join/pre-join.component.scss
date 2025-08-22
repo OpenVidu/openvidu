@@ -14,6 +14,12 @@
 		position: relative;
 		transition: all 0.3s ease;
 
+		&.name-error {
+			.prejoin-main {
+				min-height: fit-content;
+			}
+		}
+
 		.prejoin-content {
 			display: flex;
 			justify-content: center;
