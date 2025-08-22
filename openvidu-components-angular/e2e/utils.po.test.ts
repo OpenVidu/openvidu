@@ -1,4 +1,8 @@
 import { By, until, WebDriver, WebElement } from 'selenium-webdriver';
+import * as fs from 'fs';
+import { PNG } from 'pngjs';
+import pixelmatch from 'pixelmatch';
+type PNGWithMetadata = PNG & { data: Buffer };
 
 export class OpenViduComponentsPO {
 	private TIMEOUT = 10 * 1000;
@@ -188,6 +192,16 @@ export class OpenViduComponentsPO {
 				await this.waitForElement('#participants-panel-btn');
 				await this.clickOn('#participants-panel-btn');
 				break;
+			case 'backgrounds':
+				await this.waitForElement('#more-options-btn');
+				await this.clickOn('#more-options-btn');
+
+				await this.browser.sleep(500);
+				await this.waitForElement('#virtual-bg-btn');
+				await this.clickOn('#virtual-bg-btn');
+
+				await this.browser.sleep(1000);
+				break;
 
 			case 'settings':
 				await this.toggleToolbarMoreOptions();
@@ -197,5 +211,72 @@ export class OpenViduComponentsPO {
 		}
 
 		await this.browser.sleep(500);
+	}
+
+	async applyBackground(bgId: string) {
+		await this.waitForElement('ov-background-effects-panel');
+		await this.browser.sleep(1000);
+		await this.waitForElement(`#effect-${bgId}`);
+
+		await this.clickOn(`#effect-${bgId}`);
+		await this.browser.sleep(2000);
+	}
+
+	async applyVirtualBackgroundFromPrejoin(bgId: string): Promise<void> {
+		await this.waitForElement('#backgrounds-button');
+		await this.clickOn('#backgrounds-button');
+
+		await this.applyBackground(bgId);
+		await this.clickOn('#backgrounds-button');
+	}
+
+	async saveScreenshot(filename: string, element: WebElement) {
+		const image = await element.takeScreenshot();
+		fs.writeFileSync(filename, image, 'base64');
+	}
+
+	async expectVirtualBackgroundApplied(
+		img1Name: string,
+		img2Name: string,
+		{
+			threshold = 0.4,
+			minDiffPixels = 500,
+			debug = false
+		}: {
+			threshold?: number;
+			minDiffPixels?: number;
+			debug?: boolean;
+		} = {}
+	): Promise<void> {
+		const beforeImg = PNG.sync.read(fs.readFileSync(img1Name));
+		const afterImg = PNG.sync.read(fs.readFileSync(img2Name));
+		const { width, height } = beforeImg;
+		const diff = new PNG({ width, height });
+
+		// const numDiffPixels = pixelmatch(img1.data, img2.data, diff.data, width, height, {
+		// 	threshold: 0.4
+		// 	// alpha: 0.5,
+		// 	// includeAA: false,
+		// 	// diffColor: [255, 0, 0]
+		// });
+
+		const numDiffPixels = pixelmatch(beforeImg.data, afterImg.data, diff.data, width, height, {
+			threshold
+			// includeAA: true
+		});
+
+		if (numDiffPixels <= minDiffPixels) {
+			// Sólo guardar los archivos de debug si falla la prueba
+			if (debug) {
+				fs.writeFileSync('before.png', PNG.sync.write(beforeImg));
+				fs.writeFileSync('after.png', PNG.sync.write(afterImg));
+				fs.writeFileSync('diff.png', PNG.sync.write(diff));
+			}
+		}
+
+		expect(numDiffPixels).toBeGreaterThan(minDiffPixels, 'The virtual background was not applied correctly');
+
+		// fs.writeFileSync('diff.png', PNG.sync.write(diff));
+		// expect(numDiffPixels).to.be.greaterThan(500, 'The virtual background was not applied correctly');
 	}
 }

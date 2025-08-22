@@ -29,39 +29,34 @@ describe('Panels: UI Navigation and Section Switching', () => {
 		await browser.quit();
 	});
 
-	/**
-	 * TODO
-	 * It only works with OpenVidu PRO because this is a PRO feature
-	 */
-	// it('should toggle BACKGROUND panel on prejoin page when VIDEO is MUTED', async () => {
-	// 	let element;
-	// 	await browser.get(`${url}`);
-	// 	element = await utils.waitForElement('#pre-join-container');
-	// 	expect(await utils.isPresent('#pre-join-container')).toBeTrue();
+	fit('should close BACKGROUND panel on prejoin page when VIDEO is MUTED', async () => {
+		let element;
+		await browser.get(`${url}`);
+		await utils.checkPrejoinIsPresent();
 
-	// 	const backgroundButton = await utils.waitForElement('#background-effects-btn');
-	// 	expect(await utils.isPresent('#background-effects-btn')).toBeTrue();
-	// 	expect(await backgroundButton.isEnabled()).toBeTrue();
-	// 	await backgroundButton.click();
-	// 	await browser.sleep(500);
+		const backgroundButton = await utils.waitForElement('#background-effects-btn');
+		expect(await utils.isPresent('#background-effects-btn')).toBeTrue();
+		expect(await backgroundButton.isEnabled()).toBeTrue();
+		await backgroundButton.click();
+		await browser.sleep(500);
 
-	// 	await utils.waitForElement('#background-effects-container');
-	// 	expect(await utils.isPresent('#background-effects-container')).toBeTrue();
+		await utils.waitForElement('#background-effects-container');
+		expect(await utils.isPresent('#background-effects-container')).toBeTrue();
 
-	// 	element = await utils.waitForElement('#camera-button');
-	// 	expect(await utils.isPresent('#camera-button')).toBeTrue();
-	// 	expect(await element.isEnabled()).toBeTrue();
-	// 	await element.click();
+		element = await utils.waitForElement('#camera-button');
+		expect(await utils.isPresent('#camera-button')).toBeTrue();
+		expect(await element.isEnabled()).toBeTrue();
+		await element.click();
 
-	// 	await browser.sleep(500);
-	// 	element = await utils.waitForElement('#video-poster');
-	// 	expect(await utils.isPresent('#video-poster')).toBeTrue();
+		await browser.sleep(500);
+		element = await utils.waitForElement('#video-poster');
+		expect(await utils.isPresent('#video-poster')).toBeTrue();
 
-	// 	expect(await backgroundButton.isDisplayed()).toBeTrue();
-	// 	expect(await backgroundButton.isEnabled()).toBeFalse();
+		expect(await backgroundButton.isDisplayed()).toBeTrue();
+		expect(await backgroundButton.isEnabled()).toBeFalse();
 
-	// 	expect(await utils.isPresent('#background-effects-container')).toBeFalse();
-	// });
+		expect(await utils.isPresent('#background-effects-container')).toBeFalse();
+	});
 
 	it('should open and close the CHAT panel and verify its content', async () => {
 		await browser.get(`${url}&prejoin=false`);
