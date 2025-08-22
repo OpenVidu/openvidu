@@ -8,9 +8,11 @@ import { Component, Input } from '@angular/core';
 	selector: 'ov-avatar-profile',
 	template: `
 		<div class="poster" id="video-poster">
-			<div class="initial" [ngStyle]="{ 'background-color': color }">
-				<span id="poster-text">{{ letter }}</span>
-			</div>
+			@if (letter) {
+				<div class="initial" [ngStyle]="{ 'background-color': color }">
+					<span id="poster-text">{{ letter }}</span>
+				</div>
+			}
 		</div>
 	`,
 	styleUrls: ['./avatar-profile.component.scss'],
