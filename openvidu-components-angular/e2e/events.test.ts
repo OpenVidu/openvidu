@@ -352,7 +352,7 @@ describe('Testing videoconference EVENTS', () => {
 		expect(await utils.isPresent('#onSettingsPanelStatusChanged-false')).toBeTrue();
 	});
 
-	fit('should receive the onRecordingStartRequested and onRecordingStopRequested event when clicking toolbar button', async () => {
+	it('should receive the onRecordingStartRequested and onRecordingStopRequested event when clicking toolbar button', async () => {
 		const roomName = 'recordingToolbarEvent';
 		await browser.get(`${url}&prejoin=false&roomName=${roomName}`);
 
