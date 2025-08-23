@@ -402,11 +402,11 @@ export class OpenViduService {
 		const existingTrack = this.localTracks.find((track) => track.kind === Track.Kind.Video) as LocalVideoTrack;
 
 		if (existingTrack) {
-			//TODO: SHould use replace track using restartTrack
+			//TODO: Should use replace track using restartTrack
 			// Try to restart existing track
 			this.removeVideoTrack();
 			// try {
-				// await existingTrack.restartTrack({ deviceId: deviceId });
+			// await existingTrack.restartTrack({ deviceId: deviceId });
 			// 	this.log.d('Camera switched successfully using existing track');
 			// 	return;
 			// } catch (error) {
@@ -424,7 +424,6 @@ export class OpenViduService {
 
 			const videoTrack = newVideoTracks.find((t) => t.kind === Track.Kind.Video);
 			if (videoTrack) {
-
 				// Mute if camera is disabled in settings
 				if (!this.deviceService.isCameraEnabled()) {
 					await videoTrack.mute();
@@ -448,8 +447,8 @@ export class OpenViduService {
 		const existingTrack = this.localTracks?.find((track) => track.kind === Track.Kind.Audio) as LocalAudioTrack;
 
 		if (existingTrack) {
-				this.removeAudioTrack();
-			//TODO: SHould use replace track using restartTrack
+			this.removeAudioTrack();
+			//TODO: Should use replace track using restartTrack
 			// Try to restart existing track
 			// try {
 			// 	await existingTrack.restartTrack({ deviceId: deviceId });

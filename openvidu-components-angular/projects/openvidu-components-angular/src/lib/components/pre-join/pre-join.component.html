@@ -49,7 +49,7 @@
 									<div class="control-group" *ngIf="showMicrophoneButton">
 										<ov-audio-devices-select
 											[compact]="true"
-											(onAudioDeviceChanged)="onAudioDeviceChanged.emit($event)"
+											(onAudioDeviceChanged)="audioDeviceChanged($event)"
 											(onAudioEnabledChanged)="audioEnabledChanged($event)"
 											(onDeviceSelectorClicked)="onDeviceSelectorClicked()"
 											class="device-selector"

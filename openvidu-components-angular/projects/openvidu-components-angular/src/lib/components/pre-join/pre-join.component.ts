@@ -243,7 +243,7 @@ export class PreJoinComponent implements OnInit, OnDestroy {
 			const updatedTracks = this.openviduService.getLocalTracks();
 
 			// Find the new video track
-			const newVideoTrack = updatedTracks.find((track) => track.kind === 'video');
+			const newVideoTrack = updatedTracks.find((track) => track.kind === Track.Kind.Video);
 
 			// if (newVideoTrack && newVideoTrack !== this.videoTrack) {
 			this.tracks = updatedTracks;
@@ -258,6 +258,26 @@ export class PreJoinComponent implements OnInit, OnDestroy {
 
 	onVideoDevicesLoaded(devices: CustomDevice[]) {
 		this.hasVideoDevices = devices.length > 0;
+	}
+
+	audioDeviceChanged(device: CustomDevice) {
+		try {
+			this.log.d('Audio device changed to:', device);
+
+			// Get the updated tracks from the service
+			const updatedTracks = this.openviduService.getLocalTracks();
+
+			// Find the new audio track
+			const newAudioTrack = updatedTracks.find((track) => track.kind === Track.Kind.Audio);
+
+			this.tracks = updatedTracks;
+			this.audioTrack = newAudioTrack;
+
+			this.onAudioDeviceChanged.emit(device);
+		} catch (error) {
+			this.log.e('Error handling audio device change:', error);
+			this.handleError(error);
+		}
 	}
 
 	async audioEnabledChanged(enabled: boolean) {
@@ -316,8 +336,8 @@ export class PreJoinComponent implements OnInit, OnDestroy {
 			try {
 				this.tracks = await this.openviduService.createLocalTracks();
 				this.openviduService.setLocalTracks(this.tracks);
-				this.videoTrack = this.tracks.find((track) => track.kind === 'video');
-				this.audioTrack = this.tracks.find((track) => track.kind === 'audio');
+				this.videoTrack = this.tracks.find((track) => track.kind === Track.Kind.Video);
+				this.audioTrack = this.tracks.find((track) => track.kind === Track.Kind.Audio);
 				this.isVideoEnabled = this.openviduService.isVideoTrackEnabled();
 
 				return; // Success, exit retry loop
