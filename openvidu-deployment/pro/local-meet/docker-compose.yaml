@@ -147,7 +147,7 @@ services:
         condition: service_completed_successfully
 
   egress:
-    image: docker.io/livekit/egress:v1.9.1
+    image: docker.io/livekit/egress:v1.10.0
     platform: linux/amd64
     restart: unless-stopped
     container_name: egress
