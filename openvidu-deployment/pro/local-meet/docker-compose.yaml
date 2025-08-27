@@ -1,0 +1,297 @@
+services:
+  caddy-proxy:
+    image: docker.io/openvidu/openvidu-caddy-local:main
+    platform: linux/amd64
+    container_name: caddy-proxy
+    restart: unless-stopped
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    environment:
+      - LAN_PRIVATE_IP=${LAN_PRIVATE_IP:-}
+      - LIVEKIT_API_KEY=devkey
+      - LIVEKIT_API_SECRET=secret
+      - DASHBOARD_ADMIN_USERNAME=admin
+      - DASHBOARD_ADMIN_PASSWORD=admin
+      - MINIO_ACCESS_KEY=minioadmin
+      - MINIO_SECRET_KEY=minioadmin
+      - V2COMPAT_OPENVIDU_SECRET=secret
+      - MEET_INITIAL_ADMIN_USER=admin
+      - MEET_INITIAL_ADMIN_PASSWORD=admin
+      - MEET_INITIAL_ADMIN_PASSWORD=meet-api-key
+    volumes:
+      - scripts:/scripts
+    entrypoint: /bin/sh /scripts/entrypoint_caddy.sh
+    ports:
+      - 5443:5443
+      - 6443:6443
+      - 7443:7443
+      - 7880:7880
+      - 9443:9443
+    depends_on:
+      setup:
+        condition: service_completed_successfully
+
+  redis:
+    image: docker.io/redis:7.4.4-alpine
+    platform: linux/amd64
+    container_name: redis
+    restart: unless-stopped
+    ports:
+      - 6379:6379
+    volumes:
+      - redis:/data
+    command: >
+      redis-server
+      --bind 0.0.0.0
+      --requirepass redispassword
+    depends_on:
+      setup:
+        condition: service_completed_successfully
+
+  minio:
+    image: docker.io/bitnami/minio:2025.5.24-debian-12-r1
+    platform: linux/amd64
+    container_name: minio
+    restart: unless-stopped
+    ports:
+      - 9000:9000
+    environment:
+      - MINIO_ROOT_USER=minioadmin
+      - MINIO_ROOT_PASSWORD=minioadmin
+      - MINIO_DEFAULT_BUCKETS=openvidu-appdata
+      - MINIO_CONSOLE_SUBPATH=/minio-console
+      - MINIO_BROWSER_REDIRECT_URL=http://localhost:7880/minio-console
+    volumes:
+      - minio-data:/bitnami/minio/data
+      - minio-certs:/certs
+    depends_on:
+      setup:
+        condition: service_completed_successfully
+
+  mongo:
+    image: docker.io/bitnami/mongodb:8.0.9
+    platform: linux/amd64
+    container_name: mongo
+    restart: unless-stopped
+    ports:
+      - 27017:27017
+    volumes:
+      - mongo-data:/bitnami/mongodb
+    environment:
+      - MONGODB_ROOT_USER=mongoadmin
+      - MONGODB_ROOT_PASSWORD=mongoadmin
+      - MONGODB_ADVERTISED_HOSTNAME=mongo
+      - MONGODB_REPLICA_SET_MODE=primary
+      - MONGODB_REPLICA_SET_NAME=rs0
+      - MONGODB_REPLICA_SET_KEY=devreplicasetkey
+      - EXPERIMENTAL_DOCKER_DESKTOP_FORCE_QEMU=1
+    depends_on:
+      setup:
+        condition: service_completed_successfully
+
+  dashboard:
+    image: docker.io/openvidu/openvidu-dashboard:main
+    platform: linux/amd64
+    container_name: dashboard
+    restart: unless-stopped
+    environment:
+      - SERVER_PORT=5000
+      - ADMIN_USERNAME=admin
+      - ADMIN_PASSWORD=admin
+      - DATABASE_URL=mongodb://mongoadmin:mongoadmin@mongo:27017/?replicaSet=rs0&readPreference=primaryPreferred
+    depends_on:
+      setup:
+        condition: service_completed_successfully
+
+  openvidu:
+    image: docker.io/openvidu/openvidu-server-pro:main
+    platform: linux/amd64
+    restart: unless-stopped
+    container_name: openvidu
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    environment:
+      - LAN_PRIVATE_IP=${LAN_PRIVATE_IP:-}
+      - OPENVIDU_DEPLOYMENT_TYPE=local
+      - OPENVIDU_ENVIRONMENT=on_premise
+    ports:
+      - 3478:3478/udp
+      - 7881:7881/tcp
+      - 7900-7999:7900-7999/udp
+    entrypoint: /bin/sh /scripts/entrypoint_openvidu.sh
+    command: --config /config/livekit.yaml
+    volumes:
+      - scripts:/scripts
+      - config:/config
+    depends_on:
+      setup:
+        condition: service_completed_successfully
+
+  ingress:
+    image: docker.io/openvidu/ingress:main
+    platform: linux/amd64
+    container_name: ingress
+    restart: unless-stopped
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    ports:
+      - 1935:1935
+      - 8085:8085
+      - 7895:7895/udp
+    environment:
+      - INGRESS_CONFIG_FILE=/config/ingress.yaml
+    volumes:
+      - config:/config
+    depends_on:
+      setup:
+        condition: service_completed_successfully
+
+  egress:
+    image: docker.io/livekit/egress:v1.9.1
+    platform: linux/amd64
+    restart: unless-stopped
+    container_name: egress
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    environment:
+      - EGRESS_CONFIG_FILE=/config/egress.yaml
+    volumes:
+      - config:/config
+      - egress-data:/home/egress/tmp
+    depends_on:
+      setup:
+        condition: service_completed_successfully
+
+  openvidu-meet:
+    image: docker.io/openvidu/openvidu-meet:main
+    platform: linux/amd64
+    container_name: openvidu-meet
+    restart: on-failure
+    ports:
+      - 9080:6080
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    environment:
+      - LAN_PRIVATE_IP=${LAN_PRIVATE_IP:-}
+      - SERVER_PORT=6080
+      - MEET_LOG_LEVEL=info
+      - MEET_NAME_ID=openviduMeet-LOCAL
+      - MEET_INITIAL_ADMIN_PASSWORD=meet-api-key
+      - MEET_INITIAL_ADMIN_USER=admin
+      - MEET_INITIAL_ADMIN_PASSWORD=admin
+      - MEET_COOKIE_SECURE=false
+      - MEET_INITIAL_WEBHOOK_ENABLED=true
+      - MEET_INITIAL_WEBHOOK_URL=http://host.docker.internal:5080/webhook
+      - LIVEKIT_URL_PRIVATE=ws://openvidu:7880/
+      - LIVEKIT_API_KEY=devkey
+      - LIVEKIT_API_SECRET=secret
+      - MEET_S3_BUCKET=openvidu-appdata
+      - MEET_S3_SUBBUCKET=openvidu-meet
+      - MEET_S3_SERVICE_ENDPOINT=http://minio:9000
+      - MEET_S3_ACCESS_KEY=minioadmin
+      - MEET_S3_SECRET_KEY=minioadmin
+      - MEET_AWS_REGION=us-east-1
+      - MEET_S3_WITH_PATH_STYLE_ACCESS=true
+      - MEET_REDIS_HOST=redis
+      - MEET_REDIS_PORT=6379
+      - MEET_REDIS_PASSWORD=redispassword
+      - MEET_REDIS_DB=0
+    volumes:
+      - scripts:/scripts
+    entrypoint: /bin/sh /scripts/entrypoint_openvidu_meet.sh
+    depends_on:
+      setup:
+        condition: service_completed_successfully
+
+  openvidu-v2compatibility:
+    image: docker.io/openvidu/openvidu-v2compatibility:main
+    platform: linux/amd64
+    restart: unless-stopped
+    container_name: openvidu-v2compatibility
+    entrypoint: /bin/sh /scripts/entrypoint_openvidu_v2_compat.sh
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    ports:
+      - 4443:4443
+    environment:
+      - LAN_PRIVATE_IP=${LAN_PRIVATE_IP:-}
+      - V2COMPAT_OPENVIDU_SHIM_PORT=4443
+      - V2COMPAT_OPENVIDU_SECRET=secret
+      - V2COMPAT_LIVEKIT_URL_PRIVATE=ws://openvidu:7880
+      - V2COMPAT_LIVEKIT_API_KEY=devkey
+      - V2COMPAT_LIVEKIT_API_SECRET=secret
+      - V2COMPAT_OPENVIDU_RECORDING_PATH=/opt/openvidu/recordings
+      - V2COMPAT_OPENVIDU_PRO_RECORDING_STORAGE=local
+      - V2COMPAT_OPENVIDU_PRO_AWS_S3_BUCKET=openvidu-appdata
+      - V2COMPAT_OPENVIDU_PRO_AWS_S3_SERVICE_ENDPOINT=http://minio:9000
+      - V2COMPAT_OPENVIDU_PRO_AWS_REGION=us-east-1
+      - V2COMPAT_OPENVIDU_PRO_AWS_ACCESS_KEY=minioadmin
+      - V2COMPAT_OPENVIDU_PRO_AWS_SECRET_KEY=minioadmin
+      - V2COMPAT_REDIS_HOST=redis
+      - V2COMPAT_REDIS_PORT=6379
+      - V2COMPAT_REDIS_PASSWORD=redispassword
+      - V2COMPAT_REDIS_DB=0
+      - V2COMPAT_OPENVIDU_WEBHOOK=false
+      - V2COMPAT_OPENVIDU_WEBHOOK_ENDPOINT=http://host.docker.internal:7777/webhook
+      - OPENVIDU_DEPLOYMENT_TYPE=local
+    volumes:
+      - v2compat-recordings:/opt/openvidu/recordings
+      - scripts:/scripts
+    depends_on:
+      setup:
+        condition: service_completed_successfully
+
+  ready-check:
+    image: docker.io/openvidu/openvidu-operator:main
+    platform: linux/amd64
+    container_name: ready-check
+    restart: on-failure
+    environment:
+      - MODE=local-ready-check
+      - LAN_PRIVATE_IP=${LAN_PRIVATE_IP:-}
+      - DASHBOARD_ADMIN_USERNAME=admin
+      - DASHBOARD_ADMIN_PASSWORD=admin
+      - MINIO_ACCESS_KEY=minioadmin
+      - MINIO_SECRET_KEY=minioadmin
+      - LIVEKIT_API_KEY=devkey
+      - LIVEKIT_API_SECRET=secret
+      - V2COMPAT_OPENVIDU_SECRET=secret
+      - MEET_INITIAL_ADMIN_USER=admin
+      - MEET_INITIAL_ADMIN_PASSWORD=admin
+      - MEET_INITIAL_ADMIN_PASSWORD=meet-api-key
+    volumes:
+      - scripts:/scripts
+    entrypoint: /bin/sh /scripts/entrypoint_ready_check.sh
+    depends_on:
+      - openvidu
+      - ingress
+      - egress
+      - dashboard
+      - minio
+      - mongo
+
+volumes:
+  scripts:
+    name: openvidu-pro-scripts
+  config:
+    name: openvidu-pro-config
+  agents-config:
+    name: openvidu-pro-agents-config
+  minio-certs:
+    name: openvidu-pro-minio-certs
+  mongodb-config:
+    name: openvidu-pro-mongodb-config
+  redis:
+    name: openvidu-pro-redis
+  minio-data:
+    name: openvidu-pro-minio-data
+  mongo-data:
+    name: openvidu-pro-mongo-data
+  egress-data:
+    name: openvidu-pro-egress-data
+  v2compat-recordings:
+    name: openvidu-pro-v2compat-recordings
+
+networks:
+  default:
+    name: openvidu-pro

@@ -1,0 +1,294 @@
+services:
+
+  generate-scripts:
+    image: alpine:3.22.1
+    entrypoint: ["/bin/sh", "-c"]
+    restart: "no"
+    user: root
+    volumes:
+      - scripts:/scripts
+      - config:/config
+    command:
+      - |
+        set -e
+        # Check if /scripts and /config are empty, if not, skip script generation
+        if [ "$(ls -A /scripts)" ] && [ "$(ls -A /config)" ]; then
+          echo "/config and /scripts are not empty, skipping script generation."
+          exit 0
+        fi
+        echo "Generating scripts..."
+        echo "$${SETUP_SCRIPT}" > /scripts/setup.sh
+        echo "$${UTILS_SCRIPT}" > /scripts/utils.sh
+        echo "$${READY_CHECK_ENTRYPOINT}" > /scripts/entrypoint_ready_check.sh
+        echo "$${CADDY_ENTRYPOINT}" > /scripts/entrypoint_caddy.sh
+        echo "$${OPENVIDU_ENTRYPOINT}" > /scripts/entrypoint_openvidu.sh
+        echo "$${OPENVIDU_V2_COMPAT_ENTRYPOINT}" > /scripts/entrypoint_openvidu_v2_compat.sh
+        echo "$${OPENVIDU_MEET_ENTRYPOINT}" > /scripts/entrypoint_openvidu_meet.sh
+        echo "$${OPENVIDU_CONFIG}" > /config/livekit.yaml
+        echo "$${INGRESS_CONFIG}" > /config/ingress.yaml
+        echo "$${EGRESS_CONFIG}" > /config/egress.yaml
+        echo "Generating configuration files..."
+        echo "Setting permissions..."
+        chmod +x /scripts/setup.sh
+        chmod +x /scripts/utils.sh
+        chmod +x /scripts/entrypoint_ready_check.sh
+        chmod +x /scripts/entrypoint_caddy.sh
+        chmod +x /scripts/entrypoint_openvidu.sh
+        chmod +x /scripts/entrypoint_openvidu_meet.sh
+        chmod +x /scripts/entrypoint_openvidu_v2_compat.sh
+    environment:
+      SETUP_SCRIPT: |
+        #!/bin/sh
+        echo "Setting up directories and permissions..."
+        mkdir -p /minio/data/
+        mkdir -p /mongo/data/
+        mkdir -p /egress/home/egress
+        chown 1001:1001 /minio /minio/data
+        chown 1001:1001 /mongo /mongo/data
+        chown 1001:1001 /egress
+        chown 1001:1001 /egress/home
+        chown 1001:1001 /egress/home/egress
+        echo "Setup complete."
+      UTILS_SCRIPT: |
+        #!/bin/sh
+        LAN_DOMAIN=openvidu-local.dev
+        if [ "$$LAN_PRIVATE_IP" != "" ]; then
+            export USE_HTTPS=true
+            export LAN_MODE=true
+        else
+            export USE_HTTPS=false
+            export LAN_MODE=false
+        fi
+        echo "Using LAN_PRIVATE_IP: $${LAN_PRIVATE_IP:-none}"
+        echo "Using USE_HTTPS: $${USE_HTTPS}"
+        echo "Using LAN_MODE: $${LAN_MODE}"
+        getDeploymentUrl() {
+            schema="$${1:-http}"
+            URL="$$schema://localhost:7880"
+            if [ "$${USE_HTTPS}" = 'true' ]; then
+                URL="$${schema}s://localhost:7443"
+            fi
+            if [ "$${LAN_MODE}" = 'true' ]; then
+                LAN_DOMAIN=$${LAN_DOMAIN:-"openvidu-local.dev"}
+                if [ "$$LAN_PRIVATE_IP" != 'none' ] && [ "$${LAN_DOMAIN}" = 'openvidu-local.dev' ]; then
+                    # Replace dots with dashes
+                    LAN_DOMAIN="$$(echo "$$LAN_PRIVATE_IP" | sed 's/\./-/g').openvidu-local.dev"
+                fi
+                URL="$${schema}s://$${LAN_DOMAIN}:7443"
+            fi
+            echo "$$URL"
+        }
+      READY_CHECK_ENTRYPOINT: |
+        #!/bin/sh
+        set -e
+        export LAN_DOMAIN=openvidu-local.dev
+        if [ "$$LAN_PRIVATE_IP" != "" ]; then
+          export USE_HTTPS=true
+          export LAN_MODE=true
+        else
+          export USE_HTTPS=false
+          export LAN_MODE=false
+        fi
+        echo "Using LAN_PRIVATE_IP: $${LAN_PRIVATE_IP:-none}"
+        echo "Using LAN_DOMAIN: $${LAN_DOMAIN}"
+        echo "Using USE_HTTPS: $${USE_HTTPS}"
+        echo "Using LAN_MODE: $${LAN_MODE}"
+        /bin/operator
+      CADDY_ENTRYPOINT: |
+        #!/bin/sh
+        set -e
+        export LAN_DOMAIN=openvidu-local.dev
+        if [ "$$LAN_PRIVATE_IP" != "" ]; then
+          export USE_HTTPS=true
+          export LAN_MODE=true
+        else
+          export USE_HTTPS=false
+          export LAN_MODE=false
+        fi
+        echo "Using LAN_PRIVATE_IP: $${LAN_PRIVATE_IP:-none}"
+        echo "Using LAN_DOMAIN: $${LAN_DOMAIN}"
+        echo "Using USE_HTTPS: $${USE_HTTPS}"
+        echo "Using LAN_MODE: $${LAN_MODE}"
+        /entrypoint.sh /usr/bin/caddy run --config /config/caddy/Caddyfile
+      OPENVIDU_ENTRYPOINT: |
+        #!/bin/sh
+        set -e
+        if [ "$$LAN_PRIVATE_IP" != "" ]; then
+            echo "Using as NODE_IP: $$LAN_PRIVATE_IP"
+            export NODE_IP="$$LAN_PRIVATE_IP"
+        fi
+
+        # Configure container private IP as node private IP
+        LIVEKIT_OPENVIDU_NODE_PRIVATE_IP="$$(hostname -i)"
+        export LIVEKIT_OPENVIDU_NODE_PRIVATE_IP
+
+        ./livekit-server "$@"
+      OPENVIDU_V2_COMPAT_ENTRYPOINT: |
+        #!/bin/sh
+        set -e
+        . /scripts/utils.sh
+
+        URL=$(getDeploymentUrl)
+        export V2COMPAT_OPENVIDU_SHIM_URL="$${URL}"
+        export V2COMPAT_LIVEKIT_URL="$${URL}"
+
+        /bin/server
+      OPENVIDU_MEET_ENTRYPOINT: |
+        #!/bin/bash
+        . /scripts/utils.sh
+
+        URL=$(getDeploymentUrl ws)
+        export LIVEKIT_URL="$${URL}"
+
+        /usr/local/bin/entrypoint.sh
+      OPENVIDU_CONFIG: |
+        # OpenVidu configuration
+        openvidu:
+            analytics:
+                enabled: true
+                interval: 10s
+                expiration: 768h # 32 days
+                mongo_url: mongodb://mongoadmin:mongoadmin@mongo:27017/?replicaSet=rs0&readPreference=primaryPreferred
+            rtc:
+                # WebRTC engine selection
+                # Values: pion, mediasoup
+                engine: pion
+            mediasoup:
+                # Global toggle to enable debugging logs from mediasoup.
+                # In most debugging cases, using just an asterisk ("*") here is enough,
+                # but this can be fine-tuned for specific log levels.
+                # More info: https://mediasoup.org/documentation/v3/mediasoup/debugging/
+                # Default: "" (empty).
+                # Overridden by the `DEBUG` env var, if it is set.
+                debug: ""
+
+                # Logging level for logs generated by mediasoup.
+                # More info: https://mediasoup.org/documentation/v3/mediasoup/debugging/
+                # Values: debug, warn, error, none.
+                # Default: error.
+                log_level: error
+
+                # Comma-separated list of log tag names, for debugging.
+                # More info: https://mediasoup.org/documentation/v3/mediasoup/debugging/
+                # Values: info, ice, dtls, rtp, srtp, rtcp, rtx, bwe, score, simulcast, svc, sctp, message.
+                # Default: [info, ice, rtp, rtcp, message].
+                log_tags: [info, ice, rtp, rtcp, message]
+
+        # LiveKit configuration
+        port: 7880
+        bind_addresses:
+            - ""
+        rtc:
+            tcp_port: 7881
+            port_range_start: 7900
+            port_range_end: 7999
+        redis:
+            address: redis:6379
+            username: ""
+            password: redispassword
+            db: 0
+            use_tls: false
+        turn:
+            enabled: true
+            udp_port: 3478
+            relay_range_start: 40000
+            relay_range_end: 50000
+        keys:
+            devkey: secret
+        webhook:
+            api_key: devkey
+            urls:
+                - http://host.docker.internal:4443/livekit/webhook # For OpenVidu 2 compatibility
+                - http://host.docker.internal:6080/livekit/webhook
+                - http://openvidu-meet:6080/livekit/webhook
+        ingress:
+            rtmp_base_url: rtmp://localhost:1935/rtmp
+            whip_base_url: http://localhost:8085/whip
+        logging:
+            # Logging level for the LiveKit server.
+            # Values: debug, info, warn, error.
+            # Default: info.
+            level: info
+
+            # Logging level for the Pion WebRTC engine.
+            # Values: trace, debug, info, warn, error.
+            # Default: error.
+            pion_level: warn
+
+      INGRESS_CONFIG: |
+        redis:
+            address: redis:6379
+            username: ""
+            password: redispassword
+            db: 0
+            use_tls: false
+        api_key: devkey
+        api_secret: secret
+        ws_url: ws://openvidu:7880
+        rtmp_port: 1935
+        whip_port: 8085
+        http_relay_port: 9090
+        health_port: 9091
+        logging:
+            json: false
+            level: ""
+        development: false
+        rtc_config:
+            udp_port: 7895
+      EGRESS_CONFIG: |
+        redis:
+            address: redis:6379
+            username: ""
+            password: redispassword
+            db: 0
+            use_tls: false
+        api_key: devkey
+        api_secret: secret
+        ws_url: ws://openvidu:7880
+        health_port: 9091
+
+        # Files will be moved here when uploads fail.
+        backup:
+            prefix: /home/egress/backup_storage
+
+        # Storage for recordings.
+        storage:
+            s3:
+                access_key: minioadmin
+                secret: minioadmin
+                # Default region for minio
+                region: us-east-1
+                endpoint: http://minio:9000
+                bucket: openvidu-appdata
+                force_path_style: true
+            #azure:
+            #    account_name: your_account_name
+            #    account_key: your_account_key
+            #    container_name: openvidu-appdata
+
+        # CPU cost for each type of Egress operation.
+        cpu_cost:
+            max_cpu_utilization: 0.80
+            room_composite_cpu_cost: 0.01
+            audio_room_composite_cpu_cost: 0.01
+            web_cpu_cost: 0.01
+            audio_web_cpu_cost: 0.01
+            participant_cpu_cost: 0.01
+            track_composite_cpu_cost: 0.01
+            track_cpu_cost: 0.01
+
+  setup:
+    image: docker.io/busybox:1.37.0
+    platform: linux/amd64
+    container_name: setup
+    restart: "no"
+    volumes:
+      - minio-data:/minio
+      - mongo-data:/mongo
+      - egress-data:/egress
+      - scripts:/scripts/
+    user: root
+    depends_on:
+      generate-scripts:
+        condition: service_completed_successfully
+    command: /bin/sh /scripts/setup.sh
