@@ -17,7 +17,7 @@ services:
       - V2COMPAT_OPENVIDU_SECRET=secret
       - MEET_INITIAL_ADMIN_USER=admin
       - MEET_INITIAL_ADMIN_PASSWORD=admin
-      - MEET_INITIAL_ADMIN_PASSWORD=meet-api-key
+      - MEET_INITIAL_API_KEY=meet-api-key
     volumes:
       - scripts:/scripts
     entrypoint: /bin/sh /scripts/entrypoint_caddy.sh
@@ -176,7 +176,7 @@ services:
       - SERVER_PORT=6080
       - MEET_LOG_LEVEL=info
       - MEET_NAME_ID=openviduMeet-LOCAL
-      - MEET_INITIAL_ADMIN_PASSWORD=meet-api-key
+      - MEET_INITIAL_API_KEY=meet-api-key
       - MEET_INITIAL_ADMIN_USER=admin
       - MEET_INITIAL_ADMIN_PASSWORD=admin
       - MEET_COOKIE_SECURE=false
@@ -258,7 +258,7 @@ services:
       - V2COMPAT_OPENVIDU_SECRET=secret
       - MEET_INITIAL_ADMIN_USER=admin
       - MEET_INITIAL_ADMIN_PASSWORD=admin
-      - MEET_INITIAL_ADMIN_PASSWORD=meet-api-key
+      - MEET_INITIAL_API_KEY=meet-api-key
     volumes:
       - scripts:/scripts
     entrypoint: /bin/sh /scripts/entrypoint_ready_check.sh
