@@ -1,23 +1,3 @@
-terraform {
-  required_version = ">= 1.5.0"
-  required_providers {
-    google = {
-      source  = "hashicorp/google"
-      version = ">= 4.0"
-    }
-    random = {
-      source  = "hashicorp/random"
-      version = ">= 3.0"
-    }
-  }
-}
-
-provider "google" {
-  project = var.projectId
-  region  = var.region
-  zone    = var.zone
-}
-
 # Enable APIs the deployment needs
 resource "google_project_service" "compute_api" { service = "compute.googleapis.com" }
 resource "google_project_service" "secretmanager_api" { service = "secretmanager.googleapis.com" }
@@ -26,53 +6,53 @@ resource "google_project_service" "storage_api" { service = "storage.googleapis.
 resource "random_id" "bucket_suffix" { byte_length = 3 }
 
 # GCS bucket (conditional)
-resource "google_storage_bucket" "bucket" {
-  count                       = 1
-  name                        = local.isEmpty ? "openvidu-appdata" : var.bucketName
-  location                    = var.region
-  force_destroy               = false
-  uniform_bucket_level_access = true
-}
+# resource "google_storage_bucket" "bucket" {
+#   count                       = 1
+#   name                        = local.isEmpty ? "openvidu-appdata" : var.bucketName
+#   location                    = var.region
+#   force_destroy               = false
+#   uniform_bucket_level_access = true
+# }
 
 # Secret Manager secret that stores deployment info and seed secrets
-resource "google_secret_manager_secret" "openvidu" {
-  secret_id = "openvidu-${var.region}-${var.stackName}"
-  replication {
-    auto {}
-  }
-}
+# resource "google_secret_manager_secret" "openvidu" {
+#   secret_id = "openvidu-${var.region}-${var.stackName}"
+#   replication {
+#     auto {}
+#   }
+# }
 
-resource "google_secret_manager_secret_version" "openvidu_version" {
-  secret = google_secret_manager_secret.openvidu.id
-  secret_data = jsonencode({
-    domainName               = "none",
-    LIVEKIT_turnDomainName   = "none",
-    LETSENCRYPT_EMAIL        = "none",
-    REDIS_PASSWORD           = "none",
-    MONGO_ADMIN_USERNAME     = "none",
-    MONGO_ADMIN_PASSWORD     = "none",
-    MONGO_REPLICA_SET_KEY    = "none",
-    MINIO_URL                = "none",
-    MINIO_ACCESS_KEY         = "none",
-    MINIO_SECRET_KEY         = "none",
-    DASHBOARD_URL            = "none",
-    DASHBOARD_ADMIN_USERNAME = "none",
-    DASHBOARD_ADMIN_PASSWORD = "none",
-    GRAFANA_URL              = "none",
-    GRAFANA_ADMIN_USERNAME   = "none",
-    GRAFANA_ADMIN_PASSWORD   = "none",
-    LIVEKIT_API_KEY          = "none",
-    LIVEKIT_API_SECRET       = "none",
-    MEET_ADMIN_USER          = "none",
-    MEET_ADMIN_SECRET        = "none",
-    MEET_API_KEY             = "none",
-    ENABLED_MODULES          = "none"
-  })
-}
+# resource "google_secret_manager_secret_version" "openvidu_version" {
+#   secret = google_secret_manager_secret.openvidu.id
+#   secret_data = jsonencode({
+#     domainName               = "none",
+#     LIVEKIT_turnDomainName   = "none",
+#     LETSENCRYPT_EMAIL        = "none",
+#     REDIS_PASSWORD           = "none",
+#     MONGO_ADMIN_USERNAME     = "none",
+#     MONGO_ADMIN_PASSWORD     = "none",
+#     MONGO_REPLICA_SET_KEY    = "none",
+#     MINIO_URL                = "none",
+#     MINIO_ACCESS_KEY         = "none",
+#     MINIO_SECRET_KEY         = "none",
+#     DASHBOARD_URL            = "none",
+#     DASHBOARD_ADMIN_USERNAME = "none",
+#     DASHBOARD_ADMIN_PASSWORD = "none",
+#     GRAFANA_URL              = "none",
+#     GRAFANA_ADMIN_USERNAME   = "none",
+#     GRAFANA_ADMIN_PASSWORD   = "none",
+#     LIVEKIT_API_KEY          = "none",
+#     LIVEKIT_API_SECRET       = "none",
+#     MEET_ADMIN_USER          = "none",
+#     MEET_ADMIN_SECRET        = "none",
+#     MEET_API_KEY             = "none",
+#     ENABLED_MODULES          = "none"
+#   })
+# }
 
 # Service account for the instance
 resource "google_service_account" "openvidu_sa" {
-  account_id   = "openvidu-sa-${substr(var.stackName, 0, 12)}"
+  account_id   = lower("openvidu-sa-${substr(var.stackName, 0, 12)}")
   display_name = "OpenVidu instance service account"
 }
 
@@ -91,7 +71,7 @@ resource "google_project_iam_member" "sa_storage_object_admin" {
 
 # Firewall (similar ports to your AWS SG)
 resource "google_compute_firewall" "openvidu_fw" {
-  name    = "openvidu-fw-${var.stackName}"
+  name    = lower("openvidu-fw-${var.stackName}")
   network = "default"
 
   allow {
@@ -139,7 +119,7 @@ resource "google_compute_instance" "openvidu" {
 
   metadata = {
     # metadata values are accessible from the instance
-    secret_name               = google_secret_manager_secret.openvidu.secret_id
+    # secret_name               = google_secret_manager_secret.openvidu.secret_id
     region                    = var.region
     stackName                 = var.stackName
     certificateType           = var.certificateType
@@ -151,7 +131,7 @@ resource "google_compute_instance" "openvidu" {
     turnDomainName            = var.turnDomainName
     turnOwnPublicCertificate  = var.turnOwnPublicCertificate
     turnOwnPrivateCertificate = var.turnOwnPrivateCertificate
-    s3_bucket_name            = var.bucketName == "" ? google_storage_bucket.appdata[0].name : var.bucketName
+    s3_bucket_name            = var.bucketName == "" ? "openvidu-appdata" : var.bucketName
   }
 
   service_account {
@@ -335,133 +315,8 @@ resource "google_compute_instance" "openvidu" {
   }
 }
 
-# ------------------------- outputs.tf -------------------------
-
-output "openvidu_instance_name" {
-  value = google_compute_instance.openvidu.name
-}
-
-output "openvidu_public_ip" {
-  value = length(google_compute_address.openvidu_ip) > 0 ? google_compute_address.openvidu_ip[0].address : google_compute_instance.openvidu.network_interface[0].access_config[0].nat_ip
-}
-
-output "services_and_credentials_secret_id" {
-  value = google_secret_manager_secret.openvidu.secret_id
-}
-
-output "appdata_bucket" {
-  value = var.bucketName == "" ? google_storage_bucket.appdata[0].name : var.bucketName
-}
-
 # ------------------------- local values -------------------------
 
 locals {
   isEmpty = var.bucketName == ""
-}
-
-# ------------------------- variables -------------------------
-
-# Variables used by the configuration
-variable "projectId" {
-  description = "GCP project id"
-  type        = string
-}
-
-variable "region" {
-  description = "GCP region"
-  type        = string
-  default     = "europe-west1"
-}
-
-variable "zone" {
-  description = "GCP zone"
-  type        = string
-  default     = "europe-west1-b"
-}
-
-variable "stackName" {
-  description = "Stack name for OpenVidu deployment"
-  type        = string
-}
-
-variable "certificateType" {
-  description = "[selfsigned] Not recommended for production use. If you don't have a FQDN, (DomainName parameter) you can use this option to generate a self-signed certificate. [owncert] Valid for productions environments. If you have a FQDN, (DomainName parameter) and an Elastic IP, you can use this option to use your own certificate. [letsencrypt] Valid for production environments. If you have a FQDN, (DomainName parameter) and an Elastic IP, you can use this option to generate a Let's Encrypt certificate."
-  type        = string
-  default     = "selfsigned"
-  validation {
-    condition     = contains(["selfsigned", "owncert", "letsencrypt"], var.certificateType)
-    error_message = "certificateType must be one of: selfsigned, owncert, letsencrypt"
-  }
-}
-
-variable "publicStaticIp" {
-  description = "Previously created Public IP address for the OpenVidu Deployment. Blank will generate a public IP"
-  type        = string
-  default     = ""
-}
-
-variable "domainName" {
-  description = "Optional domain name for the deployment"
-  type        = string
-  default     = ""
-}
-
-variable "ownPublicCertificate" {
-  description = "If owncert: URL to fullchain.pem"
-  type        = string
-  default     = ""
-}
-
-variable "ownPrivateCertificate" {
-  description = "If owncert: URL to privkey.pem"
-  type        = string
-  default     = ""
-}
-
-variable "letsEncryptEmail" {
-  description = "If letsencrypt: email for LE"
-  type        = string
-  default     = ""
-}
-
-variable "additional_install_flags" {
-  description = "Comma-separated additional flags passed to the OpenVidu installer"
-  type        = string
-  default     = ""
-}
-
-variable "turnDomainName" {
-  description = "Optional TURN server TLS domain"
-  type        = string
-  default     = ""
-}
-
-variable "turnOwnPublicCertificate" {
-  description = "Optional TURN public cert URL for owncert"
-  type        = string
-  default     = ""
-}
-
-variable "turnOwnPrivateCertificate" {
-  description = "Optional TURN private key URL for owncert"
-  type        = string
-  default     = ""
-}
-
-variable "instanceType" {
-  description = "GCE machine type"
-  type        = string
-  default     = "e2-standard-8"
-}
-
-variable "boot_image" {
-  description = "Boot image for the instance (family or specific image)"
-  type        = string
-  default     = "projects/ubuntu-os-cloud/global/images/family/ubuntu-2204-lts"
-}
-
-variable "bucketName" {
-  description = "If empty, a GCS bucket will be created for app data and recordings"
-  type        = string
-  default     = ""
 }
