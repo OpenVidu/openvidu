@@ -161,6 +161,31 @@ services:
     depends_on:
       setup:
         condition: service_completed_successfully
+  operator:
+    image: docker.io/openvidu/openvidu-operator:main
+    platform: linux/amd64
+    container_name: operator
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - agents-config:/agents-config
+      - operator-deployment:/deployment
+    environment:
+      - PLATFORM=linux/amd64
+      - MODE=agent-manager-local
+      - DEPLOYMENT_FILES_DIR=/deployment
+      - AGENTS_CONFIG_DIR=/agents-config
+      - NETWORK_NAME=openvidu-community
+      - AGENTS_CONFIG_VOLUME=openvidu-agents-config
+      - LIVEKIT_URL=ws://openvidu:7880/
+      - LIVEKIT_API_KEY=${LIVEKIT_API_KEY:-devkey}
+      - LIVEKIT_API_SECRET=${LIVEKIT_API_SECRET:-secret}
+      - REDIS_ADDRESS=redis:6379
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-redispassword}
+    depends_on:
+      setup:
+        condition: service_completed_successfully
+
 
   openvidu-meet:
     image: docker.io/openvidu/openvidu-meet:main
@@ -295,6 +320,8 @@ volumes:
     name: openvidu-pro-mongo-data
   egress-data:
     name: openvidu-pro-egress-data
+  operator-deployment:
+    name: openvidu-pro-operator-deployment
   v2compat-recordings:
     name: openvidu-pro-v2compat-recordings
 

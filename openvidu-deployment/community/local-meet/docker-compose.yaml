@@ -277,3 +277,6 @@ volumes:
   mongo-data:
     name: openvidu-mongo-data
   egress-data:
+    name: openvidu-egress-data
+  operator-deployment:
+    name: openvidu-operator-deployment
