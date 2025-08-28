@@ -233,6 +233,7 @@ services:
     restart: on-failure
     environment:
       - MODE=local-ready-check
+      - OPENVIDU_ENVIRONMENT=local-meet
       - LAN_PRIVATE_IP=${LAN_PRIVATE_IP:-}
       - DASHBOARD_ADMIN_USERNAME=admin
       - DASHBOARD_ADMIN_PASSWORD=admin
