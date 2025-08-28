@@ -2,7 +2,6 @@ services:
   caddy-proxy:
     image: docker.io/openvidu/openvidu-caddy-local:main
     platform: linux/amd64
-    container_name: caddy-proxy
     restart: unless-stopped
     extra_hosts:
       - host.docker.internal:host-gateway
@@ -34,7 +33,6 @@ services:
   redis:
     image: docker.io/redis:7.4.4-alpine
     platform: linux/amd64
-    container_name: redis
     restart: unless-stopped
     ports:
       - 6379:6379
@@ -51,7 +49,6 @@ services:
   minio:
     image: docker.io/openvidu/minio:2025.5.24-debian-12-r1
     platform: linux/amd64
-    container_name: minio
     restart: unless-stopped
     ports:
       - 9000:9000
@@ -71,7 +68,6 @@ services:
   mongo:
     image: docker.io/openvidu/mongodb:8.0.9
     platform: linux/amd64
-    container_name: mongo
     restart: unless-stopped
     ports:
       - 27017:27017
@@ -92,7 +88,6 @@ services:
   dashboard:
     image: docker.io/openvidu/openvidu-dashboard:main
     platform: linux/amd64
-    container_name: dashboard
     restart: unless-stopped
     environment:
       - SERVER_PORT=5000
@@ -107,7 +102,6 @@ services:
     image: docker.io/openvidu/openvidu-server-pro:main
     platform: linux/amd64
     restart: unless-stopped
-    container_name: openvidu
     extra_hosts:
       - host.docker.internal:host-gateway
     environment:
@@ -130,7 +124,6 @@ services:
   ingress:
     image: docker.io/openvidu/ingress:main
     platform: linux/amd64
-    container_name: ingress
     restart: unless-stopped
     extra_hosts:
       - host.docker.internal:host-gateway
@@ -150,7 +143,6 @@ services:
     image: docker.io/livekit/egress:v1.10.0
     platform: linux/amd64
     restart: unless-stopped
-    container_name: egress
     extra_hosts:
       - host.docker.internal:host-gateway
     environment:
@@ -164,7 +156,6 @@ services:
   operator:
     image: docker.io/openvidu/openvidu-operator:main
     platform: linux/amd64
-    container_name: operator
     restart: unless-stopped
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
@@ -190,7 +181,6 @@ services:
   openvidu-meet:
     image: docker.io/openvidu/openvidu-meet:main
     platform: linux/amd64
-    container_name: openvidu-meet
     restart: on-failure
     ports:
       - 9080:6080
@@ -232,7 +222,6 @@ services:
     image: docker.io/openvidu/openvidu-v2compatibility:main
     platform: linux/amd64
     restart: unless-stopped
-    container_name: openvidu-v2compatibility
     entrypoint: /bin/sh /scripts/entrypoint_openvidu_v2_compat.sh
     extra_hosts:
       - host.docker.internal:host-gateway
@@ -269,7 +258,6 @@ services:
   openvidu-meet-init:
     image: docker.io/openvidu/openvidu-operator:main
     platform: linux/amd64
-    container_name: openvidu-meet-init
     restart: on-failure
     environment:
       - MODE=local-ready-check
