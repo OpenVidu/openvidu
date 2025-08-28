@@ -241,10 +241,10 @@ services:
       setup:
         condition: service_completed_successfully
 
-  ready-check:
+  openvidu-meet-init:
     image: docker.io/openvidu/openvidu-operator:main
     platform: linux/amd64
-    container_name: ready-check
+    container_name: openvidu-meet-init
     restart: on-failure
     environment:
       - MODE=local-ready-check
@@ -264,12 +264,17 @@ services:
       - scripts:/scripts
     entrypoint: /bin/sh /scripts/entrypoint_ready_check.sh
     depends_on:
+      - caddy-proxy
+      - redis
+      - minio
+      - mongo
+      - dashboard
       - openvidu
       - ingress
       - egress
-      - dashboard
-      - minio
-      - mongo
+      - operator
+      - openvidu-meet
+      - openvidu-v2compatibility
 
 volumes:
   scripts:
