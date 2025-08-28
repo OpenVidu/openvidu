@@ -148,11 +148,11 @@ services:
                 enabled: true
                 interval: 10s
                 expiration: 768h # 32 days
-                mongo_url: mongodb://mongoadmin:mongoadmin@mongo:27017/?replicaSet=rs0&readPreference=primaryPreferred
+                mongo_url: mongodb://${MONGO_ADMIN_USERNAME:-mongoadmin}:${MONGO_ADMIN_PASSWORD:-mongoadmin}@mongo:27017/?replicaSet=rs0&readPreference=primaryPreferred
             rtc:
                 # WebRTC engine selection
                 # Values: pion, mediasoup
-                engine: pion
+                engine: ${RTC_ENGINE:-pion}
             mediasoup:
                 # Global toggle to enable debugging logs from mediasoup.
                 # In most debugging cases, using just an asterisk ("*") here is enough,
@@ -185,7 +185,7 @@ services:
         redis:
             address: redis:6379
             username: ""
-            password: redispassword
+            password: ${REDIS_PASSWORD:-redispassword}
             db: 0
             use_tls: false
         turn:
@@ -194,9 +194,9 @@ services:
             relay_range_start: 40000
             relay_range_end: 50000
         keys:
-            devkey: secret
+            ${LIVEKIT_API_KEY:-devkey}: ${LIVEKIT_API_SECRET:-secret}
         webhook:
-            api_key: devkey
+            api_key: ${LIVEKIT_API_KEY:-devkey}
             urls:
                 - http://host.docker.internal:4443/livekit/webhook # For OpenVidu 2 compatibility
                 - http://host.docker.internal:6080/livekit/webhook
@@ -219,11 +219,11 @@ services:
         redis:
             address: redis:6379
             username: ""
-            password: redispassword
+            password: ${REDIS_PASSWORD:-redispassword}
             db: 0
             use_tls: false
-        api_key: devkey
-        api_secret: secret
+        api_key: ${LIVEKIT_API_KEY:-devkey}
+        api_secret: ${LIVEKIT_API_SECRET:-secret}
         ws_url: ws://openvidu:7880
         rtmp_port: 1935
         whip_port: 8085
@@ -239,11 +239,11 @@ services:
         redis:
             address: redis:6379
             username: ""
-            password: redispassword
+            password: ${REDIS_PASSWORD:-redispassword}
             db: 0
             use_tls: false
-        api_key: devkey
-        api_secret: secret
+        api_key: ${LIVEKIT_API_KEY:-devkey}
+        api_secret: ${LIVEKIT_API_SECRET:-secret}
         ws_url: ws://openvidu:7880
         health_port: 9091
 
@@ -254,8 +254,8 @@ services:
         # Storage for recordings.
         storage:
             s3:
-                access_key: minioadmin
-                secret: minioadmin
+                access_key: ${MINIO_ACCESS_KEY:-minioadmin}
+                secret: ${MINIO_SECRET_KEY:-minioadmin}
                 # Default region for minio
                 region: us-east-1
                 endpoint: http://minio:9000

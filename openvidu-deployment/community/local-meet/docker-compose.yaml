@@ -9,15 +9,15 @@ services:
       - host.docker.internal:host-gateway
     environment:
       - LAN_PRIVATE_IP=${LAN_PRIVATE_IP:-}
-      - LIVEKIT_API_KEY=devkey
-      - LIVEKIT_API_SECRET=secret
-      - DASHBOARD_ADMIN_USERNAME=admin
-      - DASHBOARD_ADMIN_PASSWORD=admin
-      - MINIO_ACCESS_KEY=minioadmin
-      - MINIO_SECRET_KEY=minioadmin
-      - MEET_INITIAL_ADMIN_USER=admin
-      - MEET_INITIAL_ADMIN_PASSWORD=admin
-      - MEET_INITIAL_API_KEY=meet-api-key
+      - LIVEKIT_API_KEY=${LIVEKIT_API_KEY:-devkey}
+      - LIVEKIT_API_SECRET=${LIVEKIT_API_SECRET:-secret}
+      - DASHBOARD_ADMIN_USERNAME=${DASHBOARD_ADMIN_USERNAME:-admin}
+      - DASHBOARD_ADMIN_PASSWORD=${DASHBOARD_ADMIN_PASSWORD:-admin}
+      - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY:-minioadmin}
+      - MINIO_SECRET_KEY=${MINIO_SECRET_KEY:-minioadmin}
+      - MEET_INITIAL_ADMIN_USER=${MEET_INITIAL_ADMIN_USER:-admin}
+      - MEET_INITIAL_ADMIN_PASSWORD=${MEET_INITIAL_ADMIN_PASSWORD:-admin}
+      - MEET_INITIAL_API_KEY=${MEET_INITIAL_API_KEY:-meet-api-key}
     volumes:
       - scripts:/scripts
     entrypoint: /bin/sh /scripts/entrypoint_caddy.sh
@@ -43,7 +43,7 @@ services:
     command: >
       redis-server
       --bind 0.0.0.0
-      --requirepass redispassword
+      --requirepass ${REDIS_PASSWORD:-redispassword}
     depends_on:
       setup:
         condition: service_completed_successfully
@@ -56,8 +56,8 @@ services:
     ports:
       - 9000:9000
     environment:
-      - MINIO_ROOT_USER=minioadmin
-      - MINIO_ROOT_PASSWORD=minioadmin
+      - MINIO_ROOT_USER=${MINIO_ACCESS_KEY:-minioadmin}
+      - MINIO_ROOT_PASSWORD=${MINIO_SECRET_KEY:-minioadmin}
       - MINIO_DEFAULT_BUCKETS=openvidu-appdata
       - MINIO_CONSOLE_SUBPATH=/minio-console
       - MINIO_BROWSER_REDIRECT_URL=http://localhost:7880/minio-console
@@ -78,8 +78,8 @@ services:
     volumes:
       - mongo-data:/bitnami/mongodb
     environment:
-      - MONGODB_ROOT_USER=mongoadmin
-      - MONGODB_ROOT_PASSWORD=mongoadmin
+      - MONGODB_ROOT_USER=${MONGO_ADMIN_USERNAME:-mongoadmin}
+      - MONGODB_ROOT_PASSWORD=${MONGO_ADMIN_PASSWORD:-mongoadmin}
       - MONGODB_ADVERTISED_HOSTNAME=mongo
       - MONGODB_REPLICA_SET_MODE=primary
       - MONGODB_REPLICA_SET_NAME=rs0
@@ -96,9 +96,9 @@ services:
     restart: unless-stopped
     environment:
       - SERVER_PORT=5000
-      - ADMIN_USERNAME=admin
-      - ADMIN_PASSWORD=admin
-      - DATABASE_URL=mongodb://mongoadmin:mongoadmin@mongo:27017/?replicaSet=rs0&readPreference=primaryPreferred
+      - ADMIN_USERNAME=${DASHBOARD_ADMIN_USERNAME:-admin}
+      - ADMIN_PASSWORD=${DASHBOARD_ADMIN_PASSWORD:-admin}
+      - DATABASE_URL=mongodb://${MONGO_ADMIN_USERNAME:-mongoadmin}:${MONGO_ADMIN_PASSWORD:-mongoadmin}@mongo:27017/?replicaSet=rs0&readPreference=primaryPreferred
     depends_on:
       setup:
         condition: service_completed_successfully
@@ -177,10 +177,10 @@ services:
       - NETWORK_NAME=openvidu-community
       - AGENTS_CONFIG_VOLUME=openvidu-agents-config
       - LIVEKIT_URL=ws://openvidu:7880/
-      - LIVEKIT_API_KEY=devkey
-      - LIVEKIT_API_SECRET=secret
+      - LIVEKIT_API_KEY=${LIVEKIT_API_KEY:-devkey}
+      - LIVEKIT_API_SECRET=${LIVEKIT_API_SECRET:-secret}
       - REDIS_ADDRESS=redis:6379
-      - REDIS_PASSWORD=redispassword
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-redispassword}
     depends_on:
       setup:
         condition: service_completed_successfully
@@ -199,25 +199,25 @@ services:
       - SERVER_PORT=6080
       - MEET_LOG_LEVEL=info
       - MEET_NAME_ID=openviduMeet-LOCAL
-      - MEET_INITIAL_API_KEY=meet-api-key
-      - MEET_INITIAL_ADMIN_USER=admin
-      - MEET_INITIAL_ADMIN_PASSWORD=admin
+      - MEET_INITIAL_API_KEY=${MEET_INITIAL_API_KEY:-meet-api-key}
+      - MEET_INITIAL_ADMIN_USER=${MEET_INITIAL_ADMIN_USER:-admin}
+      - MEET_INITIAL_ADMIN_PASSWORD=${MEET_INITIAL_ADMIN_PASSWORD:-admin}
       - MEET_COOKIE_SECURE=false
       - MEET_INITIAL_WEBHOOK_ENABLED=true
       - MEET_INITIAL_WEBHOOK_URL=http://host.docker.internal:5080/webhook
       - LIVEKIT_URL_PRIVATE=ws://openvidu:7880/
-      - LIVEKIT_API_KEY=devkey
-      - LIVEKIT_API_SECRET=secret
+      - LIVEKIT_API_KEY=${LIVEKIT_API_KEY:-devkey}
+      - LIVEKIT_API_SECRET=${LIVEKIT_API_SECRET:-secret}
       - MEET_S3_BUCKET=openvidu-appdata
       - MEET_S3_SUBBUCKET=openvidu-meet
       - MEET_S3_SERVICE_ENDPOINT=http://minio:9000
-      - MEET_S3_ACCESS_KEY=minioadmin
-      - MEET_S3_SECRET_KEY=minioadmin
+      - MEET_S3_ACCESS_KEY=${MINIO_ACCESS_KEY:-minioadmin}
+      - MEET_S3_SECRET_KEY=${MINIO_SECRET_KEY:-minioadmin}
       - MEET_AWS_REGION=us-east-1
       - MEET_S3_WITH_PATH_STYLE_ACCESS=true
       - MEET_REDIS_HOST=redis
       - MEET_REDIS_PORT=6379
-      - MEET_REDIS_PASSWORD=redispassword
+      - MEET_REDIS_PASSWORD=${REDIS_PASSWORD:-redispassword}
       - MEET_REDIS_DB=0
     volumes:
       - scripts:/scripts
@@ -235,15 +235,15 @@ services:
       - MODE=local-ready-check
       - OPENVIDU_ENVIRONMENT=local-meet
       - LAN_PRIVATE_IP=${LAN_PRIVATE_IP:-}
-      - DASHBOARD_ADMIN_USERNAME=admin
-      - DASHBOARD_ADMIN_PASSWORD=admin
-      - MINIO_ACCESS_KEY=minioadmin
-      - MINIO_SECRET_KEY=minioadmin
-      - LIVEKIT_API_KEY=devkey
-      - LIVEKIT_API_SECRET=secret
-      - MEET_INITIAL_ADMIN_USER=admin
-      - MEET_INITIAL_ADMIN_PASSWORD=admin
-      - MEET_INITIAL_API_KEY=meet-api-key
+      - DASHBOARD_ADMIN_USERNAME=${DASHBOARD_ADMIN_USERNAME:-admin}
+      - DASHBOARD_ADMIN_PASSWORD=${DASHBOARD_ADMIN_PASSWORD:-admin}
+      - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY:-minioadmin}
+      - MINIO_SECRET_KEY=${MINIO_SECRET_KEY:-minioadmin}
+      - LIVEKIT_API_KEY=${LIVEKIT_API_KEY:-devkey}
+      - LIVEKIT_API_SECRET=${LIVEKIT_API_SECRET:-secret}
+      - MEET_INITIAL_ADMIN_USER=${MEET_INITIAL_ADMIN_USER:-admin}
+      - MEET_INITIAL_ADMIN_PASSWORD=${MEET_INITIAL_ADMIN_PASSWORD:-admin}
+      - MEET_INITIAL_API_KEY=${MEET_INITIAL_API_KEY:-meet-api-key}
     volumes:
       - scripts:/scripts
     entrypoint: /bin/sh /scripts/entrypoint_ready_check.sh
