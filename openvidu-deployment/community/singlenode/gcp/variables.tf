@@ -63,7 +63,7 @@ variable "letsEncryptEmail" {
   default     = ""
 }
 
-variable "additional_install_flags" {
+variable "additionalInstallFlags" {
   description = "Comma-separated additional flags passed to the OpenVidu installer"
   type        = string
   default     = ""
@@ -91,12 +91,6 @@ variable "instanceType" {
   description = "GCE machine type"
   type        = string
   default     = "e2-standard-8"
-}
-
-variable "boot_image" {
-  description = "Boot image for the instance (family or specific image)"
-  type        = string
-  default     = "projects/ubuntu-os-cloud/global/images/family/ubuntu-2204-lts"
 }
 
 variable "bucketName" {
