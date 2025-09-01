@@ -5,17 +5,17 @@ Parameters:
 
   CertificateType:
     Description: |
-      [selfsigned] Not recommended for production use. If you don't have a FQDN, (DomainName parameter) you can use this option to generate a self-signed certificate.
-      [owncert] Valid for productions environments. If you have a FQDN, (DomainName parameter)
+      [selfsigned] Not recommended for production use. Just for testing purposes or development environments.
+      [owncert] Valid for productions environments. If you don't have a FQDN, sslip.io will be used.
         and an Elastic IP, you can use this option to use your own certificate.
       [letsencrypt] Valid for production environments. If you have a FQDN, (DomainName parameter)
         and an Elastic IP, you can use this option to generate a Let's Encrypt certificate.
     Type: String
     AllowedValues:
       - selfsigned
-      - owncert
       - letsencrypt
-    Default: selfsigned
+      - owncert
+    Default: letsencrypt
 
   PublicElasticIP:
     Type: String
@@ -35,10 +35,6 @@ Parameters:
 
   OwnPrivateCertificate:
     Description: "If certificate type is 'owncert', this parameter will be used to specify the private certificate"
-    Type: String
-
-  LetsEncryptEmail:
-    Description: "If certificate type is 'letsencrypt', this email will be used for Let's Encrypt notifications"
     Type: String
 
   AdditionalInstallFlags:
@@ -216,7 +212,6 @@ Metadata:
           - DomainName
           - OwnPublicCertificate
           - OwnPrivateCertificate
-          - LetsEncryptEmail
       - Label:
           default: EC2 Instance configuration
         Parameters:
@@ -255,7 +250,6 @@ Resources:
         {
           "DOMAIN_NAME": "none",
           "LIVEKIT_TURN_DOMAIN_NAME": "none",
-          "LETSENCRYPT_EMAIL": "none",
           "REDIS_PASSWORD": "none",
           "MONGO_ADMIN_USERNAME": "none",
           "MONGO_ADMIN_PASSWORD": "none",
@@ -375,11 +369,11 @@ Resources:
                   unzip \
                   jq \
                   wget
-                wget https://github.com/mikefarah/yq/releases/download/${!YQ_VERSION}/yq_linux_amd64.tar.gz -O - |\
-                  tar xz && mv yq_linux_amd64 /usr/bin/yq
+                wget https://github.com/mikefarah/yq/releases/download/${!YQ_VERSION}/yq_linux_$(dpkg --print-architecture).tar.gz -O - |\
+                  tar xz && mv yq_linux_$(dpkg --print-architecture) /usr/bin/yq
 
                 # Install aws-cli
-                curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+                curl "https://awscli.amazonaws.com/awscli-exe-linux-$(uname -m).zip" -o "awscliv2.zip"
                 unzip -qq awscliv2.zip
                 ./aws/install
                 rm -rf awscliv2.zip aws
@@ -391,7 +385,8 @@ Resources:
                 if [[ "${DomainName}" == '' ]]; then
                   [ ! -d "/usr/share/openvidu" ] && mkdir -p /usr/share/openvidu
                   PublicHostname=$(curl -s -H "X-aws-ec2-metadata-token: $TOKEN" http://169.254.169.254/latest/meta-data/public-hostname)
-                  DOMAIN=$PublicHostname
+                  DOMAIN=$(echo "$PublicHostname" | cut -d'.' -f1 | sed 's/^ec2-//').sslip.io
+                  TURN_DOMAIN_NAME_SSLIP_IO="turn-$DOMAIN"
                   echo $PublicHostname > /usr/share/openvidu/old-host-name
                 else
                   DOMAIN=${DomainName}
@@ -456,8 +451,12 @@ Resources:
                   done
                 fi
 
-                # Turn with TLS
-                if [[ "${TurnDomainName}" != '' ]]; then
+                if [[ "${!TURN_DOMAIN_NAME_SSLIP_IO}" != '' ]]; then
+                  LIVEKIT_TURN_DOMAIN_NAME=$(/usr/local/bin/store_secret.sh save LIVEKIT_TURN_DOMAIN_NAME "${!TURN_DOMAIN_NAME_SSLIP_IO}")
+                  COMMON_ARGS+=(
+                    "--turn-domain-name=$LIVEKIT_TURN_DOMAIN_NAME"
+                  )
+                elif [[ "${TurnDomainName}" != '' ]]; then
                   LIVEKIT_TURN_DOMAIN_NAME=$(/usr/local/bin/store_secret.sh save LIVEKIT_TURN_DOMAIN_NAME "${TurnDomainName}")
                   COMMON_ARGS+=(
                     "--turn-domain-name=$LIVEKIT_TURN_DOMAIN_NAME"
@@ -470,10 +469,8 @@ Resources:
                     "--certificate-type=selfsigned"
                   )
                 elif [[ "${CertificateType}" == "letsencrypt" ]]; then
-                  LETSENCRYPT_EMAIL=$(/usr/local/bin/store_secret.sh save LETSENCRYPT_EMAIL "${LetsEncryptEmail}")
                   CERT_ARGS=(
                     "--certificate-type=letsencrypt"
-                    "--letsencrypt-email=$LETSENCRYPT_EMAIL"
                   )
                 else
                   # Download owncert files
@@ -559,7 +556,7 @@ Resources:
 
                 if [[ "${DomainName}" == '' ]]; then
                   PublicHostname=$(curl -s -H "X-aws-ec2-metadata-token: $TOKEN" http://169.254.169.254/latest/meta-data/public-hostname)
-                  DOMAIN=$PublicHostname
+                  DOMAIN=$(echo "$PublicHostname" | cut -d'.' -f1 | sed 's/^ec2-//').sslip.io
                 else
                   DOMAIN=${DomainName}
                 fi
@@ -601,9 +598,9 @@ Resources:
 
                 # Replace DOMAIN_NAME
                 export DOMAIN=$(echo $SHARED_SECRET | jq -r .DOMAIN_NAME)
-                if [[ $DOMAIN == *"compute.amazonaws.com"* ]] || [[ -z $DOMAIN ]]; then
+                if [[ $DOMAIN == *"sslip.io"* ]] || [[ -z $DOMAIN ]]; then
                   PublicHostname=$(curl -s -H "X-aws-ec2-metadata-token: $TOKEN" http://169.254.169.254/latest/meta-data/public-hostname)
-                  DOMAIN=$PublicHostname
+                  DOMAIN=$(echo "$PublicHostname" | cut -d'.' -f1 | sed 's/^ec2-//').sslip.io
                 fi
                 if [[ -n "$DOMAIN" ]]; then
                   sed -i "s/DOMAIN_NAME=.*/DOMAIN_NAME=$DOMAIN/" "${!CONFIG_DIR}/openvidu.env"
@@ -613,13 +610,12 @@ Resources:
 
                 # Replace LIVEKIT_TURN_DOMAIN_NAME
                 export LIVEKIT_TURN_DOMAIN_NAME=$(echo $SHARED_SECRET | jq -r .LIVEKIT_TURN_DOMAIN_NAME)
+                if [[ $LIVEKIT_TURN_DOMAIN_NAME == *"sslip.io"* ]] || [[ -z $LIVEKIT_TURN_DOMAIN_NAME ]]; then
+                  PublicHostname=$(curl -s -H "X-aws-ec2-metadata-token: $TOKEN" http://169.254.169.254/latest/meta-data/public-hostname)
+                  LIVEKIT_TURN_DOMAIN_NAME="turn-$(echo "$PublicHostname" | cut -d'.' -f1 | sed 's/^ec2-//').sslip.io"
+                fi
                 if [[ -n "$LIVEKIT_TURN_DOMAIN_NAME" ]]; then
                   sed -i "s/LIVEKIT_TURN_DOMAIN_NAME=.*/LIVEKIT_TURN_DOMAIN_NAME=$LIVEKIT_TURN_DOMAIN_NAME/" "${!CONFIG_DIR}/openvidu.env"
-                fi
-
-                if [[ ${CertificateType} == "letsencrypt" ]]; then
-                  export LETSENCRYPT_EMAIL=$(echo $SHARED_SECRET | jq -r .LETSENCRYPT_EMAIL)
-                  sed -i "s/LETSENCRYPT_EMAIL=.*/LETSENCRYPT_EMAIL=$LETSENCRYPT_EMAIL/" "${!CONFIG_DIR}/openvidu.env"
                 fi
 
                 # Replace rest of the values
@@ -668,10 +664,6 @@ Resources:
                 # Installation directory
                 INSTALL_DIR="/opt/openvidu"
                 CONFIG_DIR="${!INSTALL_DIR}/config"
-
-                if [[ ${CertificateType} == "letsencrypt" ]]; then
-                  SHARED_SECRET="$(echo "$SHARED_SECRET" | jq '. + {"LETSENCRYPT_EMAIL": "'"$(/usr/local/bin/get_value_from_config.sh LETSENCRYPT_EMAIL "${!CONFIG_DIR}/openvidu.env")"'"}')"
-                fi
 
                 # Update shared secret
                 SHARED_SECRET="$(echo "$SHARED_SECRET" | jq '. + {"REDIS_PASSWORD": "'"$(/usr/local/bin/get_value_from_config.sh REDIS_PASSWORD "${!CONFIG_DIR}/openvidu.env")"'"}')"
@@ -827,8 +819,11 @@ Resources:
 
           apt-get update && apt-get install -y \
                 python3-pip \
-                ec2-instance-connect
-          pip3 install https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-py3-latest.tar.gz
+                ec2-instance-connect \
+                pipx
+
+          pipx install https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-py3-latest.tar.gz
+          export PATH=$PATH:/root/.local/bin
 
           cfn-init --region ${AWS::Region} --stack ${AWS::StackId} --resource OpenviduServer
 
@@ -853,7 +848,7 @@ Resources:
           /usr/local/bin/check_app_ready.sh
 
           # sending the finish call
-          /usr/local/bin/cfn-signal -e $? --stack ${AWS::StackId} --resource WaitCondition --region ${AWS::Region}
+          cfn-signal -e $? --stack ${AWS::StackId} --resource WaitCondition --region ${AWS::Region}
 
       BlockDeviceMappings:
         - DeviceName: /dev/sda1
