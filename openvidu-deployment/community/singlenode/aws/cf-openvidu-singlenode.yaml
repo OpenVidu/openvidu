@@ -653,6 +653,7 @@ Resources:
 
                 # Update URLs in secret
                 OPENVIDU_URL="https://${!DOMAIN}/"
+                LIVEKIT_URL="wss://${!DOMAIN}/"
                 DASHBOARD_URL="https://${!DOMAIN}/dashboard/"
                 GRAFANA_URL="https://${!DOMAIN}/grafana/"
                 MINIO_URL="https://${!DOMAIN}/minio-console/"

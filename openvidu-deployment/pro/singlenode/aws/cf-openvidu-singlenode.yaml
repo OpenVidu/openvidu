@@ -681,12 +681,13 @@ Resources:
 
                 # Update URLs in secret
                 OPENVIDU_URL="https://${!DOMAIN}/"
+                LIVEKIT_URL="wss://${!DOMAIN}/"
                 DASHBOARD_URL="https://${!DOMAIN}/dashboard/"
                 GRAFANA_URL="https://${!DOMAIN}/grafana/"
                 MINIO_URL="https://${!DOMAIN}/minio-console/"
                 SHARED_SECRET="$(echo "$SHARED_SECRET" | jq '. + {"DOMAIN_NAME": "'"$DOMAIN"'" }')"
-                SHARED_SECRET="$(echo "$SHARED_SECRET" | jq '. + {"OPENVIDU_URL": "'"$OPENVIDU_URL"'" }')"
                 SHARED_SECRET="$(echo "$SHARED_SECRET" | jq '. + {"LIVEKIT_URL": "'"$LIVEKIT_URL"'" }')"
+                SHARED_SECRET="$(echo "$SHARED_SECRET" | jq '. + {"OPENVIDU_URL": "'"$OPENVIDU_URL"'" }')"
                 SHARED_SECRET="$(echo "$SHARED_SECRET" | jq '. + {"DASHBOARD_URL": "'"$DASHBOARD_URL"'" }')"
                 SHARED_SECRET="$(echo "$SHARED_SECRET" | jq '. + {"GRAFANA_URL": "'"$GRAFANA_URL"'" }')"
                 SHARED_SECRET="$(echo "$SHARED_SECRET" | jq '. + {"MINIO_URL": "'"$MINIO_URL"'" }')"
