@@ -205,6 +205,10 @@ Metadata:
   'AWS::CloudFormation::Interface':
     ParameterGroups:
       - Label:
+          default: SSH Access configuration
+        Parameters:
+          - KeyName
+      - Label:
           default: Domain and SSL certificate configuration
         Parameters:
           - CertificateType
@@ -216,7 +220,6 @@ Metadata:
           default: EC2 Instance configuration
         Parameters:
           - InstanceType
-          - KeyName
           - AmiId
       - Label:
           default: S3 bucket for application data and recordings
@@ -235,6 +238,7 @@ Metadata:
 
 Conditions:
     PublicElasticIPPresent: !Not [ !Equals [!Ref PublicElasticIP, ""] ]
+    PublicElasticIPAbsent: !Equals [!Ref PublicElasticIP, ""]
     CreateRecordingsBucket: !Equals [!Ref S3AppDataBucketName, ""]
 
 Resources:
@@ -248,26 +252,28 @@ Resources:
       Description: Secret for OpenVidu to store deployment info and seed secrets
       SecretString: |
         {
+          "OPENVIDU_URL": "none",
+          "MEET_INITIAL_ADMIN_USER": "none",
+          "MEET_INITIAL_ADMIN_PASSWORD": "none",
+          "MEET_INITIAL_API_KEY": "none",
+          "LIVEKIT_URL": "none",
+          "LIVEKIT_API_KEY": "none",
+          "LIVEKIT_API_SECRET": "none",
+          "DASHBOARD_URL": "none",
+          "GRAFANA_URL": "none",
+          "MINIO_URL": "none",
           "DOMAIN_NAME": "none",
           "LIVEKIT_TURN_DOMAIN_NAME": "none",
           "REDIS_PASSWORD": "none",
           "MONGO_ADMIN_USERNAME": "none",
           "MONGO_ADMIN_PASSWORD": "none",
           "MONGO_REPLICA_SET_KEY": "none",
-          "MINIO_URL": "none",
           "MINIO_ACCESS_KEY": "none",
           "MINIO_SECRET_KEY": "none",
-          "DASHBOARD_URL": "none",
           "DASHBOARD_ADMIN_USERNAME": "none",
           "DASHBOARD_ADMIN_PASSWORD": "none",
-          "GRAFANA_URL": "none",
           "GRAFANA_ADMIN_USERNAME": "none",
           "GRAFANA_ADMIN_PASSWORD": "none",
-          "LIVEKIT_API_KEY": "none",
-          "LIVEKIT_API_SECRET": "none",
-          "MEET_INITIAL_ADMIN_USER": "none",
-          "MEET_INITIAL_ADMIN_PASSWORD": "none",
-          "MEET_INITIAL_API_KEY": "none",
           "ENABLED_MODULES": "none"
         }
 
@@ -385,8 +391,10 @@ Resources:
                 if [[ "${DomainName}" == '' ]]; then
                   [ ! -d "/usr/share/openvidu" ] && mkdir -p /usr/share/openvidu
                   PublicHostname=$(curl -s -H "X-aws-ec2-metadata-token: $TOKEN" http://169.254.169.254/latest/meta-data/public-hostname)
-                  DOMAIN=$(echo "$PublicHostname" | cut -d'.' -f1 | sed 's/^ec2-//').sslip.io
-                  TURN_DOMAIN_NAME_SSLIP_IO="turn-$DOMAIN"
+                  RANDOM_DOMAIN_STRING=$(tr -dc 'a-z' < /dev/urandom | head -c 8)
+                  DOMAIN=openvidu-$RANDOM_DOMAIN_STRING-$(echo "$PublicHostname" | cut -d'.' -f1 | sed 's/^ec2-//').sslip.io
+                  TURN_DOMAIN_NAME_SSLIP_IO="turn-$RANDOM_DOMAIN_STRING-$(echo "$PublicHostname" | cut -d'.' -f1 | sed 's/^ec2-//').sslip.io"
+                  echo $RANDOM_DOMAIN_STRING > /usr/share/openvidu/random-domain-string
                   echo $PublicHostname > /usr/share/openvidu/old-host-name
                 else
                   DOMAIN=${DomainName}
@@ -556,18 +564,23 @@ Resources:
 
                 if [[ "${DomainName}" == '' ]]; then
                   PublicHostname=$(curl -s -H "X-aws-ec2-metadata-token: $TOKEN" http://169.254.169.254/latest/meta-data/public-hostname)
-                  DOMAIN=$(echo "$PublicHostname" | cut -d'.' -f1 | sed 's/^ec2-//').sslip.io
+                  RANDOM_DOMAIN_STRING=$(cat /usr/share/openvidu/random-domain-string)
+                  DOMAIN=openvidu-$RANDOM_DOMAIN_STRING-$(echo "$PublicHostname" | cut -d'.' -f1 | sed 's/^ec2-//').sslip.io
                 else
                   DOMAIN=${DomainName}
                 fi
 
                 # Generate URLs
+                OPENVIDU_URL="https://${!DOMAIN}/"
+                LIVEKIT_URL="wss://${!DOMAIN}/"
                 DASHBOARD_URL="https://${!DOMAIN}/dashboard/"
                 GRAFANA_URL="https://${!DOMAIN}/grafana/"
                 MINIO_URL="https://${!DOMAIN}/minio-console/"
 
                 # Update shared secret
                 SHARED_SECRET="$(echo "$SHARED_SECRET" | jq '. + {"DOMAIN_NAME": "'"$DOMAIN"'"}')"
+                SHARED_SECRET="$(echo "$SHARED_SECRET" | jq '. + {"OPENVIDU_URL": "'"$OPENVIDU_URL"'" }')"
+                SHARED_SECRET="$(echo "$SHARED_SECRET" | jq '. + {"LIVEKIT_URL": "'"$LIVEKIT_URL"'" }')"
                 SHARED_SECRET="$(echo "$SHARED_SECRET" | jq '. + {"DASHBOARD_URL": "'"$DASHBOARD_URL"'" }')"
                 SHARED_SECRET="$(echo "$SHARED_SECRET" | jq '. + {"GRAFANA_URL": "'"$GRAFANA_URL"'" }')"
                 SHARED_SECRET="$(echo "$SHARED_SECRET" | jq '. + {"MINIO_URL": "'"$MINIO_URL"'" }')"
@@ -600,7 +613,8 @@ Resources:
                 export DOMAIN=$(echo $SHARED_SECRET | jq -r .DOMAIN_NAME)
                 if [[ $DOMAIN == *"sslip.io"* ]] || [[ -z $DOMAIN ]]; then
                   PublicHostname=$(curl -s -H "X-aws-ec2-metadata-token: $TOKEN" http://169.254.169.254/latest/meta-data/public-hostname)
-                  DOMAIN=$(echo "$PublicHostname" | cut -d'.' -f1 | sed 's/^ec2-//').sslip.io
+                  RANDOM_DOMAIN_STRING=$(cat /usr/share/openvidu/random-domain-string)
+                  DOMAIN=openvidu-$RANDOM_DOMAIN_STRING-$(echo "$PublicHostname" | cut -d'.' -f1 | sed 's/^ec2-//').sslip.io
                 fi
                 if [[ -n "$DOMAIN" ]]; then
                   sed -i "s/DOMAIN_NAME=.*/DOMAIN_NAME=$DOMAIN/" "${!CONFIG_DIR}/openvidu.env"
@@ -612,7 +626,8 @@ Resources:
                 export LIVEKIT_TURN_DOMAIN_NAME=$(echo $SHARED_SECRET | jq -r .LIVEKIT_TURN_DOMAIN_NAME)
                 if [[ $LIVEKIT_TURN_DOMAIN_NAME == *"sslip.io"* ]] || [[ -z $LIVEKIT_TURN_DOMAIN_NAME ]]; then
                   PublicHostname=$(curl -s -H "X-aws-ec2-metadata-token: $TOKEN" http://169.254.169.254/latest/meta-data/public-hostname)
-                  LIVEKIT_TURN_DOMAIN_NAME="turn-$(echo "$PublicHostname" | cut -d'.' -f1 | sed 's/^ec2-//').sslip.io"
+                  RANDOM_DOMAIN_STRING=$(cat /usr/share/openvidu/random-domain-string)
+                  LIVEKIT_TURN_DOMAIN_NAME="turn-$RANDOM_DOMAIN_STRING-$(echo "$PublicHostname" | cut -d'.' -f1 | sed 's/^ec2-//').sslip.io"
                 fi
                 if [[ -n "$LIVEKIT_TURN_DOMAIN_NAME" ]]; then
                   sed -i "s/LIVEKIT_TURN_DOMAIN_NAME=.*/LIVEKIT_TURN_DOMAIN_NAME=$LIVEKIT_TURN_DOMAIN_NAME/" "${!CONFIG_DIR}/openvidu.env"
@@ -637,10 +652,13 @@ Resources:
                 sed -i "s/ENABLED_MODULES=.*/ENABLED_MODULES=$(echo $SHARED_SECRET | jq -r .ENABLED_MODULES)/" "${!CONFIG_DIR}/openvidu.env"
 
                 # Update URLs in secret
+                OPENVIDU_URL="https://${!DOMAIN}/"
                 DASHBOARD_URL="https://${!DOMAIN}/dashboard/"
                 GRAFANA_URL="https://${!DOMAIN}/grafana/"
                 MINIO_URL="https://${!DOMAIN}/minio-console/"
                 SHARED_SECRET="$(echo "$SHARED_SECRET" | jq '. + {"DOMAIN_NAME": "'"$DOMAIN"'" }')"
+                SHARED_SECRET="$(echo "$SHARED_SECRET" | jq '. + {"OPENVIDU_URL": "'"$OPENVIDU_URL"'" }')"
+                SHARED_SECRET="$(echo "$SHARED_SECRET" | jq '. + {"LIVEKIT_URL": "'"$LIVEKIT_URL"'" }')"
                 SHARED_SECRET="$(echo "$SHARED_SECRET" | jq '. + {"DASHBOARD_URL": "'"$DASHBOARD_URL"'" }')"
                 SHARED_SECRET="$(echo "$SHARED_SECRET" | jq '. + {"GRAFANA_URL": "'"$GRAFANA_URL"'" }')"
                 SHARED_SECRET="$(echo "$SHARED_SECRET" | jq '. + {"MINIO_URL": "'"$MINIO_URL"'" }')"
@@ -863,6 +881,12 @@ Resources:
     Properties:
       InstanceId: !Ref OpenviduServer
       EIP: !Ref PublicElasticIP
+
+  NewEIP:
+    Type: 'AWS::EC2::EIP'
+    Condition: PublicElasticIPAbsent
+    Properties:
+      InstanceId: !Ref OpenviduServer
 
   IMDSv2LaunchTemplate:
     Type: AWS::EC2::LaunchTemplate
