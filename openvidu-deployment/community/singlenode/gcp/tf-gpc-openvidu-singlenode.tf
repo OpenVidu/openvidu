@@ -5,7 +5,7 @@ resource "google_project_service" "storage_api" { service = "storage.googleapis.
 
 resource "random_id" "bucket_suffix" { byte_length = 3 }
 
-# GCS bucket (conditional)
+# GCS bucket
 resource "google_storage_bucket" "bucket" {
   count                       = 1
   name                        = local.isEmpty ? "openvidu-appdata" : var.bucketName
@@ -14,64 +14,34 @@ resource "google_storage_bucket" "bucket" {
   uniform_bucket_level_access = true
 }
 
-# Secret Manager secret that stores deployment info and seed secrets
-resource "google_secret_manager_secret" "openvidu_secret_manager" {
-  secret_id = "openvidu-${var.region}-${var.stackName}"
-  replication {
-    auto {}
-  }
-}
-
-resource "google_secret_manager_secret_version" "openvidu_version" {
-  secret = google_secret_manager_secret.openvidu.id
-  secret_data = jsonencode({
-    DOMAIN_NAME              = "none",
-    LIVEKIT_TURN_DOMAIN_NAME = "none",
-    LETSENCRYPT_EMAIL        = "none",
-    REDIS_PASSWORD           = "none",
-    MONGO_ADMIN_USERNAME     = "none",
-    MONGO_ADMIN_PASSWORD     = "none",
-    MONGO_REPLICA_SET_KEY    = "none",
-    MINIO_URL                = "none",
-    MINIO_ACCESS_KEY         = "none",
-    MINIO_SECRET_KEY         = "none",
-    DASHBOARD_URL            = "none",
-    DASHBOARD_ADMIN_USERNAME = "none",
-    DASHBOARD_ADMIN_PASSWORD = "none",
-    GRAFANA_URL              = "none",
-    GRAFANA_ADMIN_USERNAME   = "none",
-    GRAFANA_ADMIN_PASSWORD   = "none",
-    LIVEKIT_API_KEY          = "none",
-    LIVEKIT_API_SECRET       = "none",
-    MEET_ADMIN_USER          = "none",
-    MEET_ADMIN_SECRET        = "none",
-    MEET_API_KEY             = "none",
-    ENABLED_MODULES          = "none"
-  })
-}
-
 # Service account for the instance
-resource "google_service_account" "openvidu_sa" {
-  account_id   = lower("openvidu-sa-${substr(var.stackName, 0, 12)}")
+resource "google_service_account" "service_account" {
+  account_id   = lower("${substr(var.stackName, 0, 12)}-sa")
   display_name = "OpenVidu instance service account"
 }
 
 # IAM bindings for the service account so the instance can access Secret Manager and GCS
-resource "google_project_iam_member" "sa_secret_accessor" {
+resource "google_project_iam_member" "iam_secret_role" {
   project = var.projectId
   role    = "roles/secretmanager.secretAccessor"
-  member  = "serviceAccount:${google_service_account.openvidu_sa.email}"
+  member  = "serviceAccount:${google_service_account.service_account.email}"
 }
 
-resource "google_project_iam_member" "sa_storage_object_admin" {
+resource "google_project_iam_member" "iam_storage_role" {
   project = var.projectId
   role    = "roles/storage.objectAdmin"
-  member  = "serviceAccount:${google_service_account.openvidu_sa.email}"
+  member  = "serviceAccount:${google_service_account.service_account.email}"
+}
+
+resource "google_project_iam_member" "iam_project_role" {
+  project = var.projectId
+  role    = "roles/owner"
+  member  = "serviceAccount:${google_service_account.service_account.email}"
 }
 
 # Firewall (similar ports to your AWS SG)
-resource "google_compute_firewall" "openvidu_fw" {
-  name    = lower("openvidu-fw-${var.stackName}")
+resource "google_compute_firewall" "firewall" {
+  name    = lower("${var.stackName}-firewall")
   network = "default"
 
   allow {
@@ -84,28 +54,28 @@ resource "google_compute_firewall" "openvidu_fw" {
   }
 
   source_ranges = ["0.0.0.0/0"]
-  target_tags   = ["openvidu-server-${var.stackName}"]
+  target_tags   = [lower("${var.stackName}-vm-ce")]
 }
 
-# Static external IP (optional)
-resource "google_compute_address" "openvidu_ip" {
-  count   = var.publicStaticIp == "" ? 0 : 1
-  name    = "openvidu-eip-${var.stackName}"
-  address = var.publicStaticIp
+# Create Public Ip address (if not provided)
+resource "google_compute_address" "public_ip_address" {
+  count  = var.publicIpAddress == "" ? 1 : 0
+  name   = lower("${var.stackName}-public-ip")
+  region = var.region
 }
 
 # Compute instance for OpenVidu
-resource "google_compute_instance" "openvidu" {
-  name         = "openvidu-${var.stackName}"
+resource "google_compute_instance" "openvidu_server" {
+  name         = lower("${var.stackName}-vm-ce")
   machine_type = var.instanceType
   zone         = var.zone
 
-  tags = ["openvidu-server-${var.stackName}"]
+  tags = [lower("${var.stackName}-vm-ce")]
 
   boot_disk {
     initialize_params {
       image = "projects/ubuntu-os-cloud/global/images/family/ubuntu-2204-lts"
-      size  = 200
+      size  = 100
       type  = "pd-standard"
     }
   }
@@ -113,29 +83,28 @@ resource "google_compute_instance" "openvidu" {
   network_interface {
     network = "default"
     access_config {
-      nat_ip = length(google_compute_address.openvidu_ip) > 0 ? google_compute_address.openvidu_ip[0].address : null
+      nat_ip = coalesce(var.publicIpAddress, google_compute_address.public_ip_address[0].address)
     }
   }
 
   metadata = {
     # metadata values are accessible from the instance
-    # secret_name               = google_secret_manager_secret.openvidu.secret_id
+    publicIpAddress           = google_compute_address.public_ip_address[0].address
     region                    = var.region
     stackName                 = var.stackName
     certificateType           = var.certificateType
     domainName                = var.domainName
-    letsEncryptEmail          = var.letsEncryptEmail
     ownPublicCertificate      = var.ownPublicCertificate
     ownPrivateCertificate     = var.ownPrivateCertificate
-    additional_install_flags  = var.additional_install_flags
+    additionalInstallFlags    = var.additionalInstallFlags
     turnDomainName            = var.turnDomainName
     turnOwnPublicCertificate  = var.turnOwnPublicCertificate
     turnOwnPrivateCertificate = var.turnOwnPrivateCertificate
-    s3_bucket_name            = var.bucketName == "" ? "openvidu-appdata" : var.bucketName
+    bucketName                = var.bucketName == "" ? "openvidu-appdata" : var.bucketName
   }
 
   service_account {
-    email  = google_service_account.openvidu_sa.email
+    email  = google_service_account.service_account.email
     scopes = ["https://www.googleapis.com/auth/cloud-platform"]
   }
 
@@ -152,7 +121,7 @@ locals {
   isEmpty        = var.bucketName == ""
   install_script = <<-EOF
   #!/bin/bash -x
-  OPENVIDU_VERSION=3.3.0 #CHANGE
+  OPENVIDU_VERSION=main
   DOMAIN=
   YQ_VERSION=v4.44.5
 
@@ -169,16 +138,51 @@ locals {
   wget https://github.com/mikefarah/yq/releases/download/$${YQ_VERSION}/yq_linux_amd64.tar.gz -O - |\
   tar xz && mv yq_linux_amd64 /usr/bin/yq
 
+  # Configure gcloud with instance service account
+  gcloud auth activate-service-account --key-file=/dev/null 2>/dev/null || true
+
+  METADATA_URL="http://metadata.google.internal/computeMetadata/v1"
+  get_meta() { curl -s -H "Metadata-Flavor: Google" "$${METADATA_URL}/$1"; }
+
+  # Create all the secrets
+  gcloud secrets create OPENVIDU_URL --replication-policy=automatic || true
+  gcloud secrets create MEET_INITIAL_ADMIN_USER --replication-policy=automatic || true
+  gcloud secrets create MEET_INITIAL_ADMIN_PASSWORD --replication-policy=automatic || true
+  gcloud secrets create MEET_INITIAL_API_KEY --replication-policy=automatic || true
+  gcloud secrets create LIVEKIT_URL --replication-policy=automatic || true
+  gcloud secrets create LIVEKIT_API_KEY --replication-policy=automatic || true
+  gcloud secrets create LIVEKIT_API_SECRET --replication-policy=automatic || true
+  gcloud secrets create DASHBOARD_URL --replication-policy=automatic || true
+  gcloud secrets create GRAFANA_URL --replication-policy=automatic || true
+  gcloud secrets create MINIO_URL --replication-policy=automatic || true
+  gcloud secrets create DOMAIN_NAME --replication-policy=automatic || true
+  gcloud secrets create LIVEKIT_TURN_DOMAIN_NAME --replication-policy=automatic || true
+  gcloud secrets create REDIS_PASSWORD --replication-policy=automatic || true
+  gcloud secrets create MONGO_ADMIN_USERNAME --replication-policy=automatic || true 
+  gcloud secrets create MONGO_ADMIN_PASSWORD --replication-policy=automatic || true 
+  gcloud secrets create MONGO_REPLICA_SET_KEY --replication-policy=automatic || true
+  gcloud secrets create MINIO_ACCESS_KEY --replication-policy=automatic || true
+  gcloud secrets create MINIO_SECRET_KEY --replication-policy=automatic || true
+  gcloud secrets create DASHBOARD_ADMIN_USERNAME --replication-policy=automatic || true
+  gcloud secrets create DASHBOARD_ADMIN_PASSWORD --replication-policy=automatic || true
+  gcloud secrets create GRAFANA_ADMIN_USERNAME --replication-policy=automatic || true
+  gcloud secrets create GRAFANA_ADMIN_PASSWORD --replication-policy=automatic || true
+  gcloud secrets create ENABLED_MODULES --replication-policy=automatic || true
+
   # Configure domain
-  if [[ -z "${var.domainName}" || "${var.domainName}" == "none" ]]; then
-    # Use external IP
-    EXTERNAL_IP=$(curl -s ifconfig.co || true)
-    DOMAIN="$$EXTERNAL_IP"
+  if [[ "${var.domainName}" == "" ]]; then
+    [ ! -d "/usr/share/openvidu" ] && mkdir -p /usr/share/openvidu
+    EXTERNAL_IP=$(get_meta "instance/network-interfaces/0/access-configs/0/external-ip")
+    RANDOM_DOMAIN_STRING=$(tr -dc 'a-z' < /dev/urandom | head -c 8)
+    DOMAIN=openvidu-$RANDOM_DOMAIN_STRING-$(echo $EXTERNAL_IP | tr '.' '-').sslip.io
+    TURN_DOMAIN_NAME_SSLIP_IO=turn-$RANDOM_DOMAIN_STRING-$(echo $EXTERNAL_IP | tr '.' '-').sslip.io
+    echo $RANDOM_DOMAIN_STRING > /usr/share/openvidu/random-domain-string
+    echo $EXTERNAL_IP > /usr/share/openvidu/old-host-name
   else
     DOMAIN="${var.domainName}"
   fi
   
-  DOMAIN="$(/usr/local/bin/store_secret.sh save DOMAIN_NAME "$$DOMAIN")"
+  DOMAIN="$(/usr/local/bin/store_secret.sh save DOMAIN_NAME "$DOMAIN")"
 
   # Store usernames and generate random passwords
   REDIS_PASSWORD="$(/usr/local/bin/store_secret.sh generate REDIS_PASSWORD)"
@@ -191,15 +195,15 @@ locals {
   DASHBOARD_ADMIN_PASSWORD="$(/usr/local/bin/store_secret.sh generate DASHBOARD_ADMIN_PASSWORD)"
   GRAFANA_ADMIN_USERNAME="$(/usr/local/bin/store_secret.sh save GRAFANA_ADMIN_USERNAME "grafanaadmin")"
   GRAFANA_ADMIN_PASSWORD="$(/usr/local/bin/store_secret.sh generate GRAFANA_ADMIN_PASSWORD)"
-  MEET_ADMIN_USER="$(/usr/local/bin/store_secret.sh save MEET_ADMIN_USER "meetadmin")"
-  MEET_ADMIN_SECRET="$(/usr/local/bin/store_secret.sh generate MEET_ADMIN_SECRET)"
-  MEET_API_KEY="$(/usr/local/bin/store_secret.sh generate MEET_API_KEY)"
+  MEET_INITIAL_ADMIN_USER="$(/usr/local/bin/store_secret.sh save MEET_INITIAL_ADMIN_USER "meetadmin")"
+  MEET_INITIAL_ADMIN_PASSWORD="$(/usr/local/bin/store_secret.sh generate MEET_INITIAL_ADMIN_PASSWORD)"
+  MEET_INITIAL_API_KEY="$(/usr/local/bin/store_secret.sh generate MEET_INITIAL_API_KEY)"
   ENABLED_MODULES="$(/usr/local/bin/store_secret.sh save ENABLED_MODULES "observability,openviduMeet")"
   LIVEKIT_API_KEY="$(/usr/local/bin/store_secret.sh generate LIVEKIT_API_KEY "API" 12)"
   LIVEKIT_API_SECRET="$(/usr/local/bin/store_secret.sh generate LIVEKIT_API_SECRET)"
 
   # Build install command and args
-  INSTALL_COMMAND="sh <(curl -fsSL http://get.openvidu.io/community/singlenode/$$OPENVIDU_VERSION/install.sh)"
+  INSTALL_COMMAND="sh <(curl -fsSL http://get.openvidu.io/community/singlenode/$OPENVIDU_VERSION/install.sh)"
   
   # Common arguments
   COMMON_ARGS=(
@@ -207,23 +211,23 @@ locals {
     "--install"
     "--environment=gcp"
     "--deployment-type=single_node"
-    "--domain-name=$$DOMAIN"
-    "--enabled-modules='$$ENABLED_MODULES'"
-    "--redis-password=$$REDIS_PASSWORD"
-    "--mongo-admin-user=$$MONGO_ADMIN_USERNAME"
-    "--mongo-admin-password=$$MONGO_ADMIN_PASSWORD"
-    "--mongo-replica-set-key=$$MONGO_REPLICA_SET_KEY"
-    "--minio-access-key=$$MINIO_ACCESS_KEY"
-    "--minio-secret-key=$$MINIO_SECRET_KEY"
-    "--dashboard-admin-user=$$DASHBOARD_ADMIN_USERNAME"
-    "--dashboard-admin-password=$$DASHBOARD_ADMIN_PASSWORD"
-    "--grafana-admin-user=$$GRAFANA_ADMIN_USERNAME"
-    "--grafana-admin-password=$$GRAFANA_ADMIN_PASSWORD"
-    "--meet-admin-user=$$MEET_ADMIN_USER"
-    "--meet-admin-password=$$MEET_ADMIN_SECRET"
-    "--meet-api-key=$$MEET_API_KEY"
-    "--livekit-api-key=$$LIVEKIT_API_KEY"
-    "--livekit-api-secret=$$LIVEKIT_API_SECRET"
+    "--domain-name=$DOMAIN"
+    "--enabled-modules='$ENABLED_MODULES'"
+    "--redis-password=$REDIS_PASSWORD"
+    "--mongo-admin-user=$MONGO_ADMIN_USERNAME"
+    "--mongo-admin-password=$MONGO_ADMIN_PASSWORD"
+    "--mongo-replica-set-key=$MONGO_REPLICA_SET_KEY"
+    "--minio-access-key=$MINIO_ACCESS_KEY"
+    "--minio-secret-key=$MINIO_SECRET_KEY"
+    "--dashboard-admin-user=$DASHBOARD_ADMIN_USERNAME"
+    "--dashboard-admin-password=$DASHBOARD_ADMIN_PASSWORD"
+    "--grafana-admin-user=$GRAFANA_ADMIN_USERNAME"
+    "--grafana-admin-password=$GRAFANA_ADMIN_PASSWORD"
+    "--meet-initial-admin-user=$MEET_INITIAL_ADMIN_USER"
+    "--meet-initial-admin-password=$MEET_INITIAL_ADMIN_PASSWORD"
+    "--meet-initial-api-key=$MEET_INITIAL_API_KEY"
+    "--livekit-api-key=$LIVEKIT_API_KEY"
+    "--livekit-api-secret=$LIVEKIT_API_SECRET"
   )
 
   # Include additional installer flags (trimmed)
@@ -232,17 +236,22 @@ locals {
     for extra_flag in "$${EXTRA_FLAGS[@]}"; do
       # Trim whitespace around each flag
       extra_flag="$(echo -e "$${extra_flag}" | sed -e 's/^[ \t]*//' -e 's/[ \t]*$//')"
-      if [[ "$$extra_flag" != "" ]]; then
-        COMMON_ARGS+=("$$extra_flag")
+      if [[ "$extra_flag" != "" ]]; then
+        COMMON_ARGS+=("$extra_flag")
       fi
     done
   fi
 
   # Turn with TLS
-  if [[ "${var.turnDomainName}" != "" ]]; then
-    LIVEKIT_TURN_DOMAIN_NAME=$(/usr/local/bin/store_secret.sh save LIVEKIT_TURN_DOMAIN_NAME "${TurnDomainName}")
+  if [[ "$TURN_DOMAIN_NAME_SSLIP_IO" != "" ]]; then
+    LIVEKIT_TURN_DOMAIN_NAME=$(/usr/local/bin/store_secret.sh save LIVEKIT_TURN_DOMAIN_NAME "$TURN_DOMAIN_NAME_SSLIP_IO")
     COMMON_ARGS+=(
-      "--turn-domain-name=$$LIVEKIT_TURN_DOMAIN_NAME"
+      "--turn-domain-name=$LIVEKIT_TURN_DOMAIN_NAME"
+    )
+  elif [[ "${var.turnDomainName}" != '' ]]; then
+    LIVEKIT_TURN_DOMAIN_NAME=$(/usr/local/bin/store_secret.sh save LIVEKIT_TURN_DOMAIN_NAME "${var.turnDomainName}")
+    COMMON_ARGS+=(
+      "--turn-domain-name=$LIVEKIT_TURN_DOMAIN_NAME"
     )
   fi
 
@@ -252,10 +261,8 @@ locals {
       "--certificate-type=selfsigned"
     )
   elif [[ "${var.certificateType}" == "letsencrypt" ]]; then
-    LETSENCRYPT_EMAIL=$(/usr/local/bin/store_secret.sh save LETSENCRYPT_EMAIL "${var.letsEncryptEmail}")
     CERT_ARGS=(
       "--certificate-type=letsencrypt"
-      "--letsencrypt-email=${var.letsEncryptEmail}"
     )
   else
     # Download owncert files
@@ -298,16 +305,255 @@ locals {
   exec bash -c "$FINAL_COMMAND"
   EOF
 
+  config_s3_script = <<-EOF
+  #!/bin/bash -x
+  set -e
+
+  # Configure gcloud with instance service account
+  gcloud auth activate-service-account --key-file=/dev/null 2>/dev/null || true
+
+  # Install dir and config dir
+  INSTALL_DIR="/opt/openvidu"
+  CONFIG_DIR="$${INSTALL_DIR}/config"
+
+  METADATA_URL="http://metadata.google.internal/computeMetadata/v1"
+  get_meta() { curl -s -H "Metadata-Flavor: Google" "$${METADATA_URL}/$1"; }
+
+  SERVICE_ACCOUNT_EMAIL=$(get_meta "instance/service-accounts/default/email")
+  # Create key for service account
+  gcloud iam service-accounts keys create credentials.json --iam-account=$SERVICE_ACCOUNT_EMAIL
+
+  # Get credentials
+  # Create HMAC key and parse output
+  HMAC_OUTPUT=$(gcloud storage hmac create $SERVICE_ACCOUNT_EMAIL --format="json")
+  EXTERNAL_S3_ACCESS_KEY=$(echo "$HMAC_OUTPUT" | jq -r '.metadata.accessId')
+  EXTERNAL_S3_SECRET_KEY=$(echo "$HMAC_OUTPUT" | jq -r '.secret')
+
+  # Config S3 bucket
+  EXTERNAL_S3_ENDPOINT="https://storage.googleapis.com"
+  EXTERNAL_S3_REGION="${var.region}"
+  EXTERNAL_S3_PATH_STYLE_ACCESS="true"
+  EXTERNAL_S3_BUCKET_APP_DATA=${var.bucketName == "" ? "openvidu-appdata" : var.bucketName}
+
+  # Update egress.yaml to use hardcoded credentials instead of env variable
+  if [ -f "$${CONFIG_DIR}/egress.yaml" ]; then
+    yq eval --inplace '.storage.gcp.credentials_json = (load("/credentials.json") | tostring) | .storage.gcp.credentials_json style="single"' /opt/openvidu/config/egress.yaml
+  fi
+
+  sed -i "s|EXTERNAL_S3_ENDPOINT=.*|EXTERNAL_S3_ENDPOINT=$EXTERNAL_S3_ENDPOINT|" "$${CONFIG_DIR}/openvidu.env"
+  sed -i "s|EXTERNAL_S3_REGION=.*|EXTERNAL_S3_REGION=$EXTERNAL_S3_REGION|" "$${CONFIG_DIR}/openvidu.env"
+  sed -i "s|EXTERNAL_S3_PATH_STYLE_ACCESS=.*|EXTERNAL_S3_PATH_STYLE_ACCESS=$EXTERNAL_S3_PATH_STYLE_ACCESS|" "$${CONFIG_DIR}/openvidu.env"
+  sed -i "s|EXTERNAL_S3_BUCKET_APP_DATA=.*|EXTERNAL_S3_BUCKET_APP_DATA=$EXTERNAL_S3_BUCKET_APP_DATA|" "$${CONFIG_DIR}/openvidu.env"
+  sed -i "s|EXTERNAL_S3_ACCESS_KEY=.*|EXTERNAL_S3_ACCESS_KEY=$EXTERNAL_S3_ACCESS_KEY|" "$${CONFIG_DIR}/openvidu.env"
+  sed -i "s|EXTERNAL_S3_SECRET_KEY=.*|EXTERNAL_S3_SECRET_KEY=$EXTERNAL_S3_SECRET_KEY|" "$${CONFIG_DIR}/openvidu.env"
+  EOF
+
   after_install_script = <<-EOF
+  #!/bin/bash
+  set -e
+
+  # Configure gcloud with instance service account
+  gcloud auth activate-service-account --key-file=/dev/null 2>/dev/null || true
+
+
+  # Generate URLs
+  DOMAIN=$(gcloud secrets versions access latest --secret=DOMAIN_NAME)
+  OPENVIDU_URL="https://$${DOMAIN}/"
+  LIVEKIT_URL="wss://$${DOMAIN}/"
+  DASHBOARD_URL="https://$${DOMAIN}/dashboard/"
+  GRAFANA_URL="https://$${DOMAIN}/grafana/"
+  MINIO_URL="https://$${DOMAIN}/minio-console/"
+
+  # Update shared secret
+  echo -n "$DOMAIN" | gcloud secrets versions add DOMAIN_NAME --data-file=-
+  echo -n "$OPENVIDU_URL" | gcloud secrets versions add OPENVIDU_URL --data-file=-
+  echo -n "$LIVEKIT_URL" | gcloud secrets versions add LIVEKIT_URL --data-file=-
+  echo -n "$DASHBOARD_URL" | gcloud secrets versions add DASHBOARD_URL --data-file=-
+  echo -n "$GRAFANA_URL" | gcloud secrets versions add GRAFANA_URL --data-file=-
+  echo -n "$MINIO_URL" | gcloud secrets versions add MINIO_URL --data-file=-
+
+  gcloud secrets versions access latest --secret=MINIO_URL
+
+  if [[ $? -ne 0 ]]; then
+      echo "Error updating secret_manager"
+  fi
   EOF
 
   update_config_from_secret_script = <<-EOF
+  #!/bin/bash -x
+  set -e
+  
+  # Configure gcloud with instance service account
+  gcloud auth activate-service-account --key-file=/dev/null 2>/dev/null || true
+
+  # Installation directory
+  INSTALL_DIR="/opt/openvidu"
+  CONFIG_DIR="$${INSTALL_DIR}/config"
+
+  # Replace DOMAIN_NAME
+  export DOMAIN=$(gcloud secrets versions access latest --secret=DOMAIN_NAME)
+  if [[ $DOMAIN == *"sslip.io"* ]] || [[ -z $DOMAIN ]]; then
+    EXTERNAL_IP=$(get_meta() "instance/network-interfaces/0/access-configs/0/nat-ip")
+    RANDOM_DOMAIN_STRING=$(cat /usr/share/openvidu/random-domain-string)
+    DOMAIN=openvidu-$RANDOM_DOMAIN_STRING-$(echo $EXTERNAL_IP | tr '.' '-').sslip.io
+  fi
+  if [[ -n "$DOMAIN" ]]; then
+      sed -i "s/DOMAIN_NAME=.*/DOMAIN_NAME=$DOMAIN/" "$${CONFIG_DIR}/openvidu.env"
+  else
+      exit 1
+  fi
+
+  # Replace LIVEKIT_TURN_DOMAIN_NAME
+  export LIVEKIT_TURN_DOMAIN_NAME=$(gcloud secrets versions access latest --secret=LIVEKIT_TURN_DOMAIN_NAME)
+  if [[ $LIVEKIT_TURN_DOMAIN_NAME == *"sslip.io"* ]] || [[ -z $LIVEKIT_TURN_DOMAIN_NAME ]]; then
+    EXTERNAL_IP=$(get_meta() "instance/network-interfaces/0/access-configs/0/nat-ip")
+    RANDOM_DOMAIN_STRING=$(cat /usr/share/openvidu/random-domain-string)
+    LIVEKIT_TURN_DOMAIN_NAME=turn-$RANDOM_DOMAIN_STRING-$(echo $EXTERNAL_IP | tr '.' '-').sslip.io
+  fi
+  if [[ -n "$LIVEKIT_TURN_DOMAIN_NAME" ]]; then
+      sed -i "s/LIVEKIT_TURN_DOMAIN_NAME=.*/LIVEKIT_TURN_DOMAIN_NAME=$LIVEKIT_TURN_DOMAIN_NAME/" "$${CONFIG_DIR}/openvidu.env"
+  fi
+
+  # Get the rest of the values
+  export REDIS_PASSWORD=$(gcloud secrets versions access latest --secret=REDIS_PASSWORD)
+  export MONGO_ADMIN_USERNAME=$(gcloud secrets versions access latest --secret=MONGO_ADMIN_USERNAME)
+  export MONGO_ADMIN_PASSWORD=$(gcloud secrets versions access latest --secret=MONGO_ADMIN_PASSWORD)
+  export MONGO_REPLICA_SET_KEY=$(gcloud secrets versions access latest --secret=MONGO_REPLICA_SET_KEY)
+  export DASHBOARD_ADMIN_USERNAME=$(gcloud secrets versions access latest --secret=DASHBOARD_ADMIN_USERNAME)
+  export DASHBOARD_ADMIN_PASSWORD=$(gcloud secrets versions access latest --secret=DASHBOARD_ADMIN_PASSWORD)
+  export MINIO_ACCESS_KEY=$(gcloud secrets versions access latest --secret=MINIO_ACCESS_KEY)
+  export MINIO_SECRET_KEY=$(gcloud secrets versions access latest --secret=MINIO_SECRET_KEY)
+  export GRAFANA_ADMIN_USERNAME=$(gcloud secrets versions access latest --secret=GRAFANA_ADMIN_USERNAME)
+  export GRAFANA_ADMIN_PASSWORD=$(gcloud secrets versions access latest --secret=GRAFANA_ADMIN_PASSWORD)
+  export LIVEKIT_API_KEY=$(gcloud secrets versions access latest --secret=LIVEKIT_API_KEY)
+  export LIVEKIT_API_SECRET=$(gcloud secrets versions access latest --secret=LIVEKIT_API_SECRET)
+  export MEET_INITIAL_ADMIN_USER=$(gcloud secrets versions access latest --secret=MEET_INITIAL_ADMIN_USER)
+  export MEET_INITIAL_ADMIN_PASSWORD=$(gcloud secrets versions access latest --secret=MEET_INITIAL_ADMIN_PASSWORD)
+  export MEET_INITIAL_API_KEY=$(gcloud secrets versions access latest --secret=MEET_INITIAL_API_KEY)
+  export ENABLED_MODULES=$(gcloud secrets versions access latest --secret=ENABLED_MODULES)
+
+
+  # Replace rest of the values
+  sed -i "s/REDIS_PASSWORD=.*/REDIS_PASSWORD=$REDIS_PASSWORD/" "$${CONFIG_DIR}/openvidu.env"
+  sed -i "s/MONGO_ADMIN_USERNAME=.*/MONGO_ADMIN_USERNAME=$MONGO_ADMIN_USERNAME/" "$${CONFIG_DIR}/openvidu.env"
+  sed -i "s/MONGO_ADMIN_PASSWORD=.*/MONGO_ADMIN_PASSWORD=$MONGO_ADMIN_PASSWORD/" "$${CONFIG_DIR}/openvidu.env"
+  sed -i "s/MONGO_REPLICA_SET_KEY=.*/MONGO_REPLICA_SET_KEY=$MONGO_REPLICA_SET_KEY/" "$${CONFIG_DIR}/openvidu.env"
+  sed -i "s/DASHBOARD_ADMIN_USERNAME=.*/DASHBOARD_ADMIN_USERNAME=$DASHBOARD_ADMIN_USERNAME/" "$${CONFIG_DIR}/openvidu.env"
+  sed -i "s/DASHBOARD_ADMIN_PASSWORD=.*/DASHBOARD_ADMIN_PASSWORD=$DASHBOARD_ADMIN_PASSWORD/" "$${CONFIG_DIR}/openvidu.env"
+  sed -i "s/MINIO_ACCESS_KEY=.*/MINIO_ACCESS_KEY=$MINIO_ACCESS_KEY/" "$${CONFIG_DIR}/openvidu.env"
+  sed -i "s/MINIO_SECRET_KEY=.*/MINIO_SECRET_KEY=$MINIO_SECRET_KEY/" "$${CONFIG_DIR}/openvidu.env"
+  sed -i "s/GRAFANA_ADMIN_USERNAME=.*/GRAFANA_ADMIN_USERNAME=$GRAFANA_ADMIN_USERNAME/" "$${CONFIG_DIR}/openvidu.env"
+  sed -i "s/GRAFANA_ADMIN_PASSWORD=.*/GRAFANA_ADMIN_PASSWORD=$GRAFANA_ADMIN_PASSWORD/" "$${CONFIG_DIR}/openvidu.env"
+  sed -i "s/LIVEKIT_API_KEY=.*/LIVEKIT_API_KEY=$LIVEKIT_API_KEY/" "$${CONFIG_DIR}/openvidu.env"
+  sed -i "s/LIVEKIT_API_SECRET=.*/LIVEKIT_API_SECRET=$LIVEKIT_API_SECRET/" "$${CONFIG_DIR}/openvidu.env"
+  sed -i "s/MEET_INITIAL_ADMIN_USER=.*/MEET_INITIAL_ADMIN_USER=$MEET_INITIAL_ADMIN_USER/" "$${CONFIG_DIR}/meet.env"
+  sed -i "s/MEET_INITIAL_ADMIN_PASSWORD=.*/MEET_INITIAL_ADMIN_PASSWORD=$MEET_INITIAL_ADMIN_PASSWORD/" "$${CONFIG_DIR}/meet.env"
+  sed -i "s/MEET_INITIAL_API_KEY=.*/MEET_INITIAL_API_KEY=$MEET_INITIAL_API_KEY/" "$${CONFIG_DIR}/meet.env"
+  sed -i "s/ENABLED_MODULES=.*/ENABLED_MODULES=$ENABLED_MODULES/" "$${CONFIG_DIR}/openvidu.env"
+
+
+  # Update URLs in secret
+  OPENVIDU_URL="https://$${DOMAIN}/"
+  LIVEKIT_URL="wss://$${DOMAIN}/"
+  DASHBOARD_URL="https://$${DOMAIN}/dashboard/"
+  GRAFANA_URL="https://$${DOMAIN}/grafana/"
+  MINIO_URL="https://$${DOMAIN}/minio-console/"
+
+  # Update shared secret
+  echo -n "$DOMAIN" | gcloud secrets versions add DOMAIN_NAME --data-file=-
+  echo -n "$OPENVIDU_URL" | gcloud secrets versions add OPENVIDU_URL --data-file=-
+  echo -n "$LIVEKIT_URL" | gcloud secrets versions add LIVEKIT_URL --
+  echo -n "$DASHBOARD_URL" | gcloud secrets versions add DASHBOARD_URL --data-file=-
+  echo -n "$GRAFANA_URL" | gcloud secrets versions add GRAFANA_URL --data-file=-
+  echo -n "$MINIO_URL" | gcloud secrets versions add MINIO_URL --data-file=-
   EOF
 
   update_secret_from_config_script = <<-EOF
+  #!/bin/bash
+  set -e
+
+  # Configure gcloud with instance service account
+  gcloud auth activate-service-account --key-file=/dev/null 2>/dev/null || true
+
+  # Installation directory
+  INSTALL_DIR="/opt/openvidu"
+  CONFIG_DIR="$${INSTALL_DIR}/config"
+
+  # Get current values of the config
+  REDIS_PASSWORD="$(/usr/local/bin/get_value_from_config.sh REDIS_PASSWORD "$${CONFIG_DIR}/openvidu.env")"
+  DOMAIN_NAME="$(/usr/local/bin/get_value_from_config.sh DOMAIN_NAME "$${CONFIG_DIR}/openvidu.env")"
+  LIVEKIT_TURN_DOMAIN_NAME="$(/usr/local/bin/get_value_from_config.sh LIVEKIT_TURN_DOMAIN_NAME "$${CONFIG_DIR}/openvidu.env")"
+  MONGO_ADMIN_USERNAME="$(/usr/local/bin/get_value_from_config.sh MONGO_ADMIN_USERNAME "$${CONFIG_DIR}/openvidu.env")"
+  MONGO_ADMIN_PASSWORD="$(/usr/local/bin/get_value_from_config.sh MONGO_ADMIN_PASSWORD "$${CONFIG_DIR}/openvidu.env")"
+  MONGO_REPLICA_SET_KEY="$(/usr/local/bin/get_value_from_config.sh MONGO_REPLICA_SET_KEY "$${CONFIG_DIR}/openvidu.env")"
+  MINIO_ACCESS_KEY="$(/usr/local/bin/get_value_from_config.sh MINIO_ACCESS_KEY "$${CONFIG_DIR}/openvidu.env")"
+  MINIO_SECRET_KEY="$(/usr/local/bin/get_value_from_config.sh MINIO_SECRET_KEY "$${CONFIG_DIR}/openvidu.env")"
+  DASHBOARD_ADMIN_USERNAME="$(/usr/local/bin/get_value_from_config.sh DASHBOARD_ADMIN_USERNAME "$${CONFIG_DIR}/openvidu.env")"
+  DASHBOARD_ADMIN_PASSWORD="$(/usr/local/bin/get_value_from_config.sh DASHBOARD_ADMIN_PASSWORD "$${CONFIG_DIR}/openvidu.env")"
+  GRAFANA_ADMIN_USERNAME="$(/usr/local/bin/get_value_from_config.sh GRAFANA_ADMIN_USERNAME "$${CONFIG_DIR}/openvidu.env")"
+  GRAFANA_ADMIN_PASSWORD="$(/usr/local/bin/get_value_from_config.sh GRAFANA_ADMIN_PASSWORD "$${CONFIG_DIR}/openvidu.env")"
+  LIVEKIT_API_KEY="$(/usr/local/bin/get_value_from_config.sh LIVEKIT_API_KEY "$${CONFIG_DIR}/openvidu.env")"
+  LIVEKIT_API_SECRET="$(/usr/local/bin/get_value_from_config.sh LIVEKIT_API_SECRET "$${CONFIG_DIR}/openvidu.env")"
+  MEET_INITIAL_ADMIN_USER="$(/usr/local/bin/get_value_from_config.sh MEET_INITIAL_ADMIN_USER "$${CONFIG_DIR}/meet.env")"
+  MEET_INITIAL_ADMIN_PASSWORD="$(/usr/local/bin/get_value_from_config.sh MEET_INITIAL_ADMIN_PASSWORD "$${CONFIG_DIR}/meet.env")"
+  MEET_INITIAL_API_KEY="$(/usr/local/bin/get_value_from_config.sh MEET_INITIAL_API_KEY "$${CONFIG_DIR}/meet.env")"
+  ENABLED_MODULES="$(/usr/local/bin/get_value_from_config.sh ENABLED_MODULES "$${CONFIG_DIR}/openvidu.env")"
+
+
+  # Update shared secret
+  echo -n "$REDIS_PASSWORD" | gcloud secrets versions add REDIS_PASSWORD --data-file=-
+  echo -n "$DOMAIN_NAME" | gcloud secrets versions add DOMAIN_NAME --data-file=-
+  echo -n "$LIVEKIT_TURN_DOMAIN_NAME" | gcloud secrets versions add LIVEKIT_TURN_DOMAIN_NAME --data-file=-
+  echo -n "$MONGO_ADMIN_USERNAME" | gcloud secrets versions add MONGO_ADMIN_USERNAME --data-file=-
+  echo -n "$MONGO_ADMIN_PASSWORD" | gcloud secrets versions add MONGO_ADMIN_PASSWORD --data-file=-
+  echo -n "$MONGO_REPLICA_SET_KEY" | gcloud secrets versions add MONGO_REPLICA_SET_KEY --data-file=-
+  echo -n "$MINIO_ACCESS_KEY" | gcloud secrets versions add MINIO_ACCESS_KEY --data-file=-
+  echo -n "$MINIO_SECRET_KEY" | gcloud secrets versions add MINIO_SECRET_KEY --data-file=-
+  echo -n "$DASHBOARD_ADMIN_USERNAME" | gcloud secrets versions add DASHBOARD_ADMIN_USERNAME --data-file=-
+  echo -n "$DASHBOARD_ADMIN_PASSWORD" | gcloud secrets versions add DASHBOARD_ADMIN_PASSWORD --data-file=-
+  echo -n "$GRAFANA_ADMIN_USERNAME" | gcloud secrets versions add GRAFANA_ADMIN_USERNAME --data-file=-
+  echo -n "$GRAFANA_ADMIN_PASSWORD" | gcloud secrets versions add GRAFANA_ADMIN_PASSWORD --data-file=-
+  echo -n "$LIVEKIT_API_KEY" | gcloud secrets versions add LIVEKIT_API_KEY --data-file=-
+  echo -n "$LIVEKIT_API_SECRET" | gcloud secrets versions add LIVEKIT_API_SECRET --data-file=-
+  echo -n "$MEET_INITIAL_ADMIN_USER" | gcloud secrets versions add MEET_INITIAL_ADMIN_USER --data-file=-
+  echo -n "$MEET_INITIAL_ADMIN_PASSWORD" | gcloud secrets versions add MEET_INITIAL_ADMIN_PASSWORD --data-file=-
+  echo -n "$MEET_INITIAL_API_KEY" | gcloud secrets versions add MEET_INITIAL_API_KEY --data-file=-
+  echo -n "$ENABLED_MODULES" | gcloud secrets versions add ENABLED_MODULES --data-file=-
   EOF
 
   get_value_from_config_script = <<-EOF
+  #!/bin/bash -x
+  set -e
+
+  # Function to get the value of a given key from the environment file
+  get_value() {
+      local key="$1"
+      local file_path="$2"
+
+      # Use grep to find the line with the key, ignoring lines starting with #
+      # Use awk to split on '=' and print the second field, which is the value
+      local value=$(grep -E "^\s*$key\s*=" "$file_path" | awk -F= '{print $2}' | sed 's/#.*//; s/^\s*//; s/\s*$//')
+
+      # If the value is empty, return "none"
+      if [ -z "$value" ]; then
+          echo "none"
+      else
+          echo "$value"
+      fi
+  }
+
+  # Check if the correct number of arguments are supplied
+  if [ "$#" -ne 2 ]; then
+      echo "Usage: $0 <key> <file_path>"
+      exit 1
+  fi
+
+  # Get the key and file path from the arguments
+  key="$1"
+  file_path="$2"
+
+  # Get and print the value
+  get_value "$key" "$file_path"
   EOF
 
   store_secret_script = <<-EOF
@@ -328,7 +574,7 @@ locals {
       LENGTH="$${4:-44}"
       RANDOM_PASSWORD="$(openssl rand -base64 64 | tr -d '+/=\n' | cut -c -$${LENGTH})"
       RANDOM_PASSWORD="$${PREFIX}$${RANDOM_PASSWORD}"
-      gcloud secrets versions add $SECRET_KEY_NAME --data-file=<(echo -n "$RANDOM_PASSWORD") 2>/dev/null || echo "$RANDOM_PASSWORD" | gcloud secrets versions add $SECRET_KEY_NAME --data-file=-
+      echo -n "$RANDOM_PASSWORD" | gcloud secrets versions add $SECRET_KEY_NAME --data-file=-
       if [[ $? -ne 0 ]]; then
           echo "Error generating secret"
       fi
@@ -336,7 +582,7 @@ locals {
   elif [[ "$MODE" == "save" ]]; then
       SECRET_KEY_NAME="$2"
       SECRET_VALUE="$3"
-      gcloud secrets versions add $SECRET_KEY_NAME --data-file=<(echo -n "$SECRET_VALUE") 2>/dev/null || echo "$SECRET_VALUE" | gcloud secrets versions add $SECRET_KEY_NAME --data-file=-
+      echo -n "$SECRET_VALUE" | gcloud secrets versions add $SECRET_KEY_NAME --data-file=-
       if [[ $? -ne 0 ]]; then
           echo "Error generating secret"
       fi
@@ -422,6 +668,13 @@ locals {
   RESTART_EOF
   chmod +x /usr/local/bin/restart.sh
 
+  # config_s3.sh
+  cat > /usr/local/bin/config_s3.sh << 'CONFIG_S3_EOF'
+  ${local.config_s3_script}
+  CONFIG_S3_EOF
+  chmod +x /usr/local/bin/config_s3.sh
+
+
   apt-get update && apt-get install -y
 
   # Install google cli 
@@ -434,14 +687,15 @@ locals {
   # Authenticate with gcloud using instance service account
   gcloud auth activate-service-account --key-file=/dev/null 2>/dev/null || true
   gcloud config set account $(curl -s "http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/email" -H "Metadata-Flavor: Google")
+  gcloud config set project $(curl -s "http://metadata.google.internal/computeMetadata/v1/project/project-id" -H "Metadata-Flavor: Google")
 
   export HOME="/root"
 
   # Install OpenVidu
   /usr/local/bin/install.sh || { echo "[OpenVidu] error installing OpenVidu"; exit 1; }
 
-  #Config blob storage
-  # /usr/local/bin/config_blobStorage.sh || { echo "[OpenVidu] error configuring Blob Storage"; exit 1; }
+  # Config S3 bucket
+  /usr/local/bin/config_s3.sh || { echo "[OpenVidu] error configuring S3 bucket"; exit 1; }
 
   # Start OpenVidu
   systemctl start openvidu || { echo "[OpenVidu] error starting OpenVidu"; exit 1; }

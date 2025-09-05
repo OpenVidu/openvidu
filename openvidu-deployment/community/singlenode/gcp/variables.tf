@@ -26,14 +26,14 @@ variable "stackName" {
 variable "certificateType" {
   description = "[selfsigned] Not recommended for production use. If you don't have a FQDN, (DomainName parameter) you can use this option to generate a self-signed certificate. [owncert] Valid for productions environments. If you have a FQDN, (DomainName parameter) and an Elastic IP, you can use this option to use your own certificate. [letsencrypt] Valid for production environments. If you have a FQDN, (DomainName parameter) and an Elastic IP, you can use this option to generate a Let's Encrypt certificate."
   type        = string
-  default     = "selfsigned"
+  default     = "letsencrypt"
   validation {
     condition     = contains(["selfsigned", "owncert", "letsencrypt"], var.certificateType)
     error_message = "certificateType must be one of: selfsigned, owncert, letsencrypt"
   }
 }
 
-variable "publicStaticIp" {
+variable "publicIpAddress" {
   description = "Previously created Public IP address for the OpenVidu Deployment. Blank will generate a public IP"
   type        = string
   default     = ""
@@ -53,12 +53,6 @@ variable "ownPublicCertificate" {
 
 variable "ownPrivateCertificate" {
   description = "If owncert: URL to privkey.pem"
-  type        = string
-  default     = ""
-}
-
-variable "letsEncryptEmail" {
-  description = "If letsencrypt: email for LE"
   type        = string
   default     = ""
 }
