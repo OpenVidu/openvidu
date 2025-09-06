@@ -220,15 +220,6 @@ Metadata:
   'AWS::CloudFormation::Interface':
     ParameterGroups:
       - Label:
-          default: SSH Access configuration
-        Parameters:
-          - KeyName
-      - Label:
-          default: OpenVidu Single Node PRO configuration
-        Parameters:
-          - OpenViduLicense
-          - RTCEngine
-      - Label:
           default: Domain and SSL certificate configuration
         Parameters:
           - CertificateType
@@ -237,9 +228,15 @@ Metadata:
           - OwnPublicCertificate
           - OwnPrivateCertificate
       - Label:
+          default: OpenVidu Single Node PRO configuration
+        Parameters:
+          - OpenViduLicense
+          - RTCEngine
+      - Label:
           default: EC2 Instance configuration
         Parameters:
           - InstanceType
+          - KeyName
           - AmiId
       - Label:
           default: S3 bucket for application data and recordings
