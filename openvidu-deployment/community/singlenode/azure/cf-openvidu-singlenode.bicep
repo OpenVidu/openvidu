@@ -2,18 +2,16 @@
 param stackName string
 
 @description('''
-[selfsigned] Not recommended for production use. If you don't have a FQDN, (DomainName parameter) you can use this option to generate a self-signed certificate.
-[owncert] Valid for productions environments. If you have a FQDN, (DomainName parameter)
-and an Elastic IP, you can use this option to use your own certificate.
-[letsencrypt] Valid for production environments. If you have a FQDN, (DomainName parameter)
-and an Elastic IP, you can use this option to generate a Let's Encrypt certificate.
+[selfsigned] Not recommended for production use. Just for testing purposes or development environments. You don't need a FQDN to use this option.
+[owncert] Valid for production environments. Use your own certificate. You need a FQDN to use this option.
+[letsencrypt] Valid for production environments. Can be used with or without a FQDN (if no FQDN is provided, a random sslip.io domain will be used).
 ''')
 @allowed([
   'selfsigned'
   'owncert'
   'letsencrypt'
 ])
-param certificateType string = 'selfsigned'
+param certificateType string = 'letsencrypt'
 
 @description('Previously created Public IP address for the OpenVidu Deployment. Blank will generate a public IP')
 param publicIpAddressObject object
@@ -26,9 +24,6 @@ param ownPublicCertificate string = ''
 
 @description('If certificate type is \'owncert\', this parameter will be used to specify the private certificate')
 param ownPrivateCertificate string = ''
-
-@description('If certificate type is \'letsencrypt\', this email will be used for Let\'s Encrypt notifications')
-param letsEncryptEmail string = ''
 
 @description('(Optional) Domain name for the TURN server with TLS. Only needed if your users are behind restrictive firewalls')
 param turnDomainName string = ''
@@ -259,7 +254,6 @@ var stringInterpolationParams = {
   fqdn: fqdn
   turnDomainName: turnDomainName
   certificateType: certificateType
-  letsEncryptEmail: letsEncryptEmail
   ownPublicCertificate: ownPublicCertificate
   ownPrivateCertificate: ownPrivateCertificate
   turnOwnPublicCertificate: turnOwnPublicCertificate
@@ -361,10 +355,8 @@ if [[ "${certificateType}" == "selfsigned" ]]; then
     "--certificate-type=selfsigned"
   )
 elif [[ "${certificateType}" == "letsencrypt" ]]; then
-  LETSENCRYPT_EMAIL=$(/usr/local/bin/store_secret.sh save LETSENCRYPT-EMAIL "${letsEncryptEmail}")
   CERT_ARGS=(
     "--certificate-type=letsencrypt"
-    "--letsencrypt-email=${letsEncryptEmail}"
   )
 else
   # Download owncert files
@@ -455,11 +447,6 @@ fi
 export LIVEKIT_TURN_DOMAIN_NAME=$(az keyvault secret show --vault-name ${keyVaultName} --name LIVEKIT-TURN-DOMAIN-NAME --query value -o tsv)
 if [[ -n "$LIVEKIT_TURN_DOMAIN_NAME" ]]; then
     sed -i "s/LIVEKIT_TURN_DOMAIN_NAME=.*/LIVEKIT_TURN_DOMAIN_NAME=$LIVEKIT_TURN_DOMAIN_NAME/" "${CONFIG_DIR}/openvidu.env"
-fi
-
-if [[ ${certificateType} == "letsencrypt" ]]; then
-    export LETSENCRYPT_EMAIL=$(az keyvault secret show --vault-name ${keyVaultName} --name LETSENCRYPT-EMAIL --query value -o tsv)
-    sed -i "s/LETSENCRYPT_EMAIL=.*/LETSENCRYPT_EMAIL=$LETSENCRYPT_EMAIL/" "${CONFIG_DIR}/openvidu.env"
 fi
 
 # Get the rest of the values
