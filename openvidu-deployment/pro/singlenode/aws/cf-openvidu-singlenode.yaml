@@ -868,11 +868,15 @@ Resources:
 
           apt-get update && apt-get install -y \
                 python3-pip \
-                ec2-instance-connect \
-                pipx
+                ec2-instance-connect
 
-          pipx install https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-py3-latest.tar.gz
-          export PATH=$PATH:/root/.local/bin
+          # Detect Ubuntu version and install cfn-bootstrap accordingly
+          UBUNTU_VERSION=$(lsb_release -rs | cut -d. -f1)
+          if [ "$UBUNTU_VERSION" -ge 24 ]; then
+            python3 -m pip install --break-system-packages https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-py3-latest.tar.gz
+          else
+            python3 -m pip install https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-py3-latest.tar.gz
+          fi
 
           cfn-init --region ${AWS::Region} --stack ${AWS::StackId} --resource OpenviduServer
 

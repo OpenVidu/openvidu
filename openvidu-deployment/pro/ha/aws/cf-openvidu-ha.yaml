@@ -1306,7 +1306,14 @@ Resources:
           apt-get update && apt-get install -y \
                 python3-pip \
                 ec2-instance-connect
-          pip3 install https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-py3-latest.tar.gz
+
+          # Detect Ubuntu version and install cfn-bootstrap accordingly
+          UBUNTU_VERSION=$(lsb_release -rs | cut -d. -f1)
+          if [ "$UBUNTU_VERSION" -ge 24 ]; then
+            python3 -m pip install --break-system-packages https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-py3-latest.tar.gz
+          else
+            python3 -m pip install https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-py3-latest.tar.gz
+          fi
 
           cfn-init -v --region ${AWS::Region} --stack ${AWS::StackName} --resource OpenViduMasterLaunchTemplate
 
@@ -1352,7 +1359,14 @@ Resources:
           apt-get update && apt-get install -y \
                 python3-pip \
                 ec2-instance-connect
-          pip3 install https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-py3-latest.tar.gz
+
+          # Detect Ubuntu version and install cfn-bootstrap accordingly
+          UBUNTU_VERSION=$(lsb_release -rs | cut -d. -f1)
+          if [ "$UBUNTU_VERSION" -ge 24 ]; then
+            python3 -m pip install --break-system-packages https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-py3-latest.tar.gz
+          else
+            python3 -m pip install https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-py3-latest.tar.gz
+          fi
 
           cfn-init -v --region ${AWS::Region} --stack ${AWS::StackName} --resource OpenViduMasterLaunchTemplate
 
