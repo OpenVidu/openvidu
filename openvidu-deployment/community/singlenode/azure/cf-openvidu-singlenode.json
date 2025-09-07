@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.37.4.10188",
-      "templateHash": "9679404047975187940"
+      "templateHash": "17663479742831822905"
     }
   },
   "parameters": {
@@ -407,10 +407,10 @@
       ]
     },
     {
-      "condition": "[equals(variables('isEmptyIp'), true())]",
+      "condition": "[equals(variables('ipNew'), true())]",
       "type": "Microsoft.Network/publicIPAddresses",
       "apiVersion": "2023-11-01",
-      "name": "[format('{0}-publicIP', parameters('stackName'))]",
+      "name": "[parameters('publicIpAddressObject').name]",
       "location": "[variables('location')]",
       "sku": {
         "name": "Standard",
@@ -468,9 +468,7 @@
               "subnet": {
                 "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('networkSettings').vNetName, variables('networkSettings').subnetName)]"
               },
-              "publicIPAddress": {
-                "id": "[if(variables('isEmptyIp'), resourceId('Microsoft.Network/publicIPAddresses', format('{0}-publicIP', parameters('stackName'))), if(variables('ipNew'), resourceId('Microsoft.Network/publicIPAddresses', parameters('publicIpAddressObject').name), resourceId('Microsoft.Network/publicIPAddresses', parameters('publicIpAddressObject').name)))]"
-              }
+              "publicIPAddress": "[if(variables('isEmptyIp'), null(), createObject('id', if(variables('ipNew'), resourceId('Microsoft.Network/publicIPAddresses', parameters('publicIpAddressObject').name), resourceId('Microsoft.Network/publicIPAddresses', parameters('publicIpAddressObject').name))))]"
             }
           }
         ],
@@ -479,7 +477,7 @@
         }
       },
       "dependsOn": [
-        "[resourceId('Microsoft.Network/publicIPAddresses', format('{0}-publicIP', parameters('stackName')))]",
+        "[resourceId('Microsoft.Network/publicIPAddresses', parameters('publicIpAddressObject').name)]",
         "[resourceId('Microsoft.Network/virtualNetworks', variables('networkSettings').vNetName)]",
         "[resourceId('Microsoft.Network/networkSecurityGroups', format('{0}-nsg', parameters('stackName')))]"
       ]
