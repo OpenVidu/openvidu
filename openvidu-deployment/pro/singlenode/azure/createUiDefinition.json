@@ -46,7 +46,7 @@
                             "type": "Microsoft.Common.DropDown",
                             "label": "Certificate Type",
                             "subLabel": "",
-                            "defaultValue": "selfsigned",
+                            "defaultValue": "letsencrypt",
                             "toolTip": "[[selfsigned] Not recommended for production use. If you don't have a FQDN, (DomainName parameter) you can use this option to generate a self-signed certificate.\n[owncert] Valid for productions environments. If you have a FQDN, (DomainName parameter)\nand an Elastic IP, you can use this option to use your own certificate.\n[letsencrypt] Valid for production environments. If you have a FQDN, (DomainName parameter)\nand an Elastic IP, you can use this option to generate a Let's Encrypt certificate.\n",
                             "constraints": {
                                 "required": true,
@@ -82,7 +82,7 @@
                                 "publicIpAddressName": "defaultName"
                             },
                             "options": {
-                                "hideNone": false,
+                                "hideNone": true,
                                 "hideDomainNameLabel": true,
                                 "hideExisting": false
                             },
@@ -101,8 +101,8 @@
                                 "validationMessage": "Please enter a valid domain name or leave it blank to generate",
                                 "validations": [
                                     {
-                                        "isValid": "[if(or(equals(steps('parameters SSL').certificateType, 'letsencrypt'), equals(steps('parameters SSL').certificateType, 'owncert')), not(empty(steps('parameters SSL').domainName)), true)]",
-                                        "message": "You need to fill this parameter because you've selected another certificate type that is not selfsigned."
+                                        "isValid": "[if(equals(steps('parameters SSL').certificateType, 'owncert'), not(empty(steps('parameters SSL').domainName)), true)]",
+                                        "message": "You need to fill this parameter because you've selected owncert certificate type."
                                     }
                                 ]
                             },
@@ -145,27 +145,6 @@
                                     {
                                         "isValid": "[if(equals(steps('parameters SSL').certificateType, 'owncert'), not(empty(steps('parameters SSL').ownPrivateCertificate)), true)]",
                                         "message": "You need to fill this parameter because you've selected owncert certificate type."
-                                    }
-                                ]
-                            },
-                            "infoMessages": [],
-                            "visible": true
-                        },
-                        {
-                            "name": "letsEncryptEmail",
-                            "type": "Microsoft.Common.TextBox",
-                            "label": "Lets Encrypt Email",
-                            "subLabel": "\nIf certificate type is 'letsencrypt', this email will be used for Let's Encrypt notifications",
-                            "defaultValue": "",
-                            "toolTip": "",
-                            "constraints": {
-                                "required": false,
-                                "regex": "",
-                                "validationMessage": "",
-                                "validations": [
-                                    {
-                                        "isValid": "[if(equals(steps('parameters SSL').certificateType, 'letsencrypt'), not(empty(steps('parameters SSL').letsEncryptEmail)), true)]",
-                                        "message": "You need to fill this parameter because you've selected letsencrypt certificate type."
                                     }
                                 ]
                             },
