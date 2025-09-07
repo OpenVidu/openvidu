@@ -782,11 +782,11 @@ Resources:
                   unzip \
                   jq \
                   wget
-                wget https://github.com/mikefarah/yq/releases/download/${!YQ_VERSION}/yq_linux_amd64.tar.gz -O - |\
-                  tar xz && mv yq_linux_amd64 /usr/bin/yq
+                wget https://github.com/mikefarah/yq/releases/download/${!YQ_VERSION}/yq_linux_$(dpkg --print-architecture).tar.gz -O - |\
+                  tar xz && mv yq_linux_$(dpkg --print-architecture) /usr/bin/yq
 
                 # Install aws-cli
-                curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+                curl "https://awscli.amazonaws.com/awscli-exe-linux-$(uname -m).zip" -o "awscliv2.zip"
                 unzip -qq awscliv2.zip
                 ./aws/install
                 rm -rf awscliv2.zip aws
@@ -1521,11 +1521,11 @@ Resources:
                   unzip \
                   jq \
                   wget
-                wget https://github.com/mikefarah/yq/releases/download/${!YQ_VERSION}/yq_linux_amd64.tar.gz -O - |\
-                  tar xz && mv yq_linux_amd64 /usr/bin/yq
+                wget https://github.com/mikefarah/yq/releases/download/${!YQ_VERSION}/yq_linux_$(dpkg --print-architecture).tar.gz -O - |\
+                  tar xz && mv yq_linux_$(dpkg --print-architecture) /usr/bin/yq
 
                 # Install aws-cli
-                curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+                curl "https://awscli.amazonaws.com/awscli-exe-linux-$(uname -m).zip" -o "awscliv2.zip"
                 unzip -qq awscliv2.zip
                 ./aws/install
                 rm -rf awscliv2.zip aws
