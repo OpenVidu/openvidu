@@ -926,9 +926,16 @@ resource roleAssignmentOpenViduServer 'Microsoft.Authorization/roleAssignments@2
 }
 /*------------------------------------------- NETWORK -------------------------------------------*/
 
-//Create publicIPAddress if convinient
-resource publicIP_OV 'Microsoft.Network/publicIPAddresses@2023-11-01' = if (isEmptyIp == true) {
-  name: '${stackName}-publicIP'
+var ipExists = publicIpAddressObject.newOrExistingOrNone == 'existing'
+
+resource publicIP_OV_ifExisting 'Microsoft.Network/publicIPAddresses@2023-11-01' existing = if (ipExists == true) {
+  name: publicIpAddressObject.name
+}
+
+var ipNew = publicIpAddressObject.newOrExistingOrNone == 'new'
+
+resource publicIP_OV_ifNew 'Microsoft.Network/publicIPAddresses@2023-11-01' = if (ipNew == true) {
+  name: publicIpAddressObject.name
   location: location
   sku: {
     name: 'Standard'
@@ -942,18 +949,6 @@ resource publicIP_OV 'Microsoft.Network/publicIPAddresses@2023-11-01' = if (isEm
       fqdn: isEmptyDomain ? null : domainName
     }
   }
-}
-
-var ipExists = publicIpAddressObject.newOrExistingOrNone == 'existing'
-
-resource publicIP_OV_ifExisting 'Microsoft.Network/publicIPAddresses@2023-11-01' existing = if (ipExists == true) {
-  name: publicIpAddressObject.name
-}
-
-var ipNew = publicIpAddressObject.newOrExistingOrNone == 'new'
-
-resource publicIP_OV_ifNew 'Microsoft.Network/publicIPAddresses@2023-11-01' existing = if (ipNew == true) {
-  name: publicIpAddressObject.name
 }
 
 // Create the virtual network
@@ -994,8 +989,8 @@ resource netInterface_OV 'Microsoft.Network/networkInterfaces@2023-11-01' = {
           subnet: {
             id: resourceId('Microsoft.Network/virtualNetworks/subnets', vnet_OV.name, networkSettings.subnetName)
           }
-          publicIPAddress: {
-            id: isEmptyIp ? publicIP_OV.id : ipNew ? publicIP_OV_ifNew.id : publicIP_OV_ifExisting.id
+          publicIPAddress: isEmptyIp ? null : {
+            id: ipNew ? publicIP_OV_ifNew.id : publicIP_OV_ifExisting.id
           }
         }
       }
