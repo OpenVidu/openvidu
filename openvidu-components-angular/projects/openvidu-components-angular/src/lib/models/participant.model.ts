@@ -507,6 +507,19 @@ export class ParticipantModel {
 		}
 	}
 
+
+	/**
+	 * Sets all video track elements from a specific source to pinned or unpinned given a boolean value
+	 * @param source The source of the track to be pinned or unpinned (e.g., 'camera', 'screenShare').
+	 * @param pinned
+	 * @internal
+	 */
+	setVideoPinnedBySource(source: Track.Source, pinned: boolean) {
+		this.tracks
+			.filter((track) => track.source === source && track.kind === Track.Kind.Video)
+			.forEach((track) => (track.isPinned = pinned));
+	}
+
 	/**
 	 * Toggle the minimized status of a video track element
 	 * @param trackSid
