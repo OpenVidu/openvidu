@@ -413,7 +413,6 @@
                 "domainName": "[steps('parameters SSL').domainName]",
                 "ownPublicCertificate": "[steps('parameters SSL').ownPublicCertificate]",
                 "ownPrivateCertificate": "[steps('parameters SSL').ownPrivateCertificate]",
-                "letsEncryptEmail": "[steps('parameters SSL').letsEncryptEmail]",
                 "openviduLicense": "[steps('parameters OPENVIDU').openviduLicense]",
                 "rtcEngine": "[steps('parameters OPENVIDU').rtcEngine]",
                 "turnDomainName": "[steps('parameters TURN').turnDomainName]",
