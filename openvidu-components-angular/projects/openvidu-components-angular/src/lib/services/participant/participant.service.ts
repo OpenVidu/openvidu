@@ -548,10 +548,11 @@ export class ParticipantService {
 			},
 			systemAudio: 'include', // Include system audio as an option
 			resolution: VideoPresets.h1080.resolution,
-			contentHint: 'detail', // Optimized for detailed content, adjust based on use case
-			suppressLocalAudioPlayback: true,
+			contentHint: 'text', // Optimized for detailed content, adjust based on use case
+			suppressLocalAudioPlayback: true, // Prevent echo by not playing local audio
 			selfBrowserSurface: 'exclude', // Avoid self capture to prevent mirror effect
-			surfaceSwitching: 'include' // Allow users to switch shared tab dynamically
+			surfaceSwitching: 'include', // Allow users to switch shared tab dynamically
+			preferCurrentTab: false // Do not force current tab to be selected
 		};
 	}
 }

@@ -378,19 +378,10 @@ export class ParticipantModel {
 	 */
 	setScreenShareEnabled(
 		enabled: boolean,
-		options?: ScreenShareCaptureOptions,
+		options: ScreenShareCaptureOptions,
 		publishOptions?: TrackPublishOptions
 	): Promise<LocalTrackPublication | undefined> {
 		if (this.participant instanceof LocalParticipant) {
-			if (!options) {
-				options = {
-					audio: false,
-					resolution: VideoPresets.h1080.resolution,
-					suppressLocalAudioPlayback: true,
-					selfBrowserSurface: 'include',
-					surfaceSwitching: 'include'
-				};
-			}
 			return this.participant.setScreenShareEnabled(enabled, options, publishOptions);
 		}
 		return Promise.reject("Remote participant can't enable screen share");
@@ -506,7 +497,6 @@ export class ParticipantModel {
 			track.isPinned = !track.isPinned;
 		}
 	}
-
 
 	/**
 	 * Sets all video track elements from a specific source to pinned or unpinned given a boolean value
