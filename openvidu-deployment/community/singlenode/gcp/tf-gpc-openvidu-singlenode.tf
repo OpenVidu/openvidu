@@ -2,6 +2,8 @@
 resource "google_project_service" "compute_api" { service = "compute.googleapis.com" }
 resource "google_project_service" "secretmanager_api" { service = "secretmanager.googleapis.com" }
 resource "google_project_service" "storage_api" { service = "storage.googleapis.com" }
+resource "google_project_service" "iam_api" { service = "iam.googleapis.com" }
+
 
 resource "random_id" "bucket_suffix" { byte_length = 3 }
 
@@ -10,7 +12,7 @@ resource "google_storage_bucket" "bucket" {
   count                       = 1
   name                        = local.isEmpty ? "openvidu-appdata" : var.bucketName
   location                    = var.region
-  force_destroy               = false
+  force_destroy               = true
   uniform_bucket_level_access = true
 }
 
