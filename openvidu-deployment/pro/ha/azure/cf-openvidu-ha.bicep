@@ -2,21 +2,19 @@
 param stackName string
 
 @description('''
-[selfsigned] Not recommended for production use. If you don't have a FQDN, (DomainName parameter) you can use this option to generate a self-signed certificate.
-[owncert] Valid for productions environments. If you have a FQDN, (DomainName parameter)
-and an Elastic IP, you can use this option to use your own certificate.
-[letsencrypt] Valid for production environments. If you have a FQDN, (DomainName parameter)
-and an Elastic IP, you can use this option to generate a Let's Encrypt certificate.
+[selfsigned] Not recommended for production use. Just for testing purposes or development environments. You don't need a FQDN to use this option.
+[owncert] Valid for production environments. Use your own certificate. You need a FQDN to use this option.
+[letsencrypt] Valid for production environments. Can be used with or without a FQDN (if no FQDN is provided, a random sslip.io domain will be used).
 ''')
 @allowed([
   'selfsigned'
   'owncert'
   'letsencrypt'
 ])
-param certificateType string = 'selfsigned'
+param certificateType string = 'letsencrypt'
 
 @description('Domain name for the OpenVidu Deployment.')
-param domainName string
+param domainName string = ''
 
 @description('If certificate type is \'owncert\', this parameter will be used to specify the public certificate')
 param ownPublicCertificate string = ''
@@ -299,6 +297,10 @@ param additionalInstallFlags string = ''
 
 /*------------------------------------------- VARIABLES AND VALIDATIONS -------------------------------------------*/
 
+var isEmptyIp = publicIpAddressObject.newOrExistingOrNone == 'none'
+
+var isEmptyDomain = domainName == ''
+
 var masterNodeVMSettings = {
   osDiskType: 'StandardSSD_LRS'
   osDiskSize: masterNodesDiskSize
@@ -344,8 +346,6 @@ var mediaNodeVMSettings = {
 }
 
 var turnTLSIsEnabled = turnDomainName != ''
-
-var fqdn = domainName
 
 var keyVaultName = '${stackName}-keyvault'
 
@@ -424,6 +424,7 @@ resource openviduSharedInfo 'Microsoft.KeyVault/vaults@2023-07-01' = {
 /*------------------------------------------- MASTER NODE -------------------------------------------*/
 
 var stringInterpolationParamsMaster1 = {
+  publicIPId: publicIPId
   domainName: domainName
   turnDomainName: turnDomainName
   certificateType: certificateType
@@ -431,7 +432,6 @@ var stringInterpolationParamsMaster1 = {
   ownPrivateCertificate: ownPrivateCertificate
   turnOwnPublicCertificate: turnOwnPublicCertificate
   turnOwnPrivateCertificate: turnOwnPrivateCertificate
-  fqdn: fqdn
   openviduLicense: openviduLicense
   rtcEngine: rtcEngine
   keyVaultName: keyVaultName
@@ -440,6 +440,7 @@ var stringInterpolationParamsMaster1 = {
 }
 
 var stringInterpolationParamsMaster2 = {
+  publicIPId: publicIPId
   domainName: domainName
   turnDomainName: turnDomainName
   certificateType: certificateType
@@ -447,7 +448,6 @@ var stringInterpolationParamsMaster2 = {
   ownPrivateCertificate: ownPrivateCertificate
   turnOwnPublicCertificate: turnOwnPublicCertificate
   turnOwnPrivateCertificate: turnOwnPrivateCertificate
-  fqdn: fqdn
   openviduLicense: openviduLicense
   rtcEngine: rtcEngine
   keyVaultName: keyVaultName
@@ -456,6 +456,7 @@ var stringInterpolationParamsMaster2 = {
 }
 
 var stringInterpolationParamsMaster3 = {
+  publicIPId: publicIPId
   domainName: domainName
   turnDomainName: turnDomainName
   certificateType: certificateType
@@ -463,7 +464,6 @@ var stringInterpolationParamsMaster3 = {
   ownPrivateCertificate: ownPrivateCertificate
   turnOwnPublicCertificate: turnOwnPublicCertificate
   turnOwnPrivateCertificate: turnOwnPrivateCertificate
-  fqdn: fqdn
   openviduLicense: openviduLicense
   rtcEngine: rtcEngine
   keyVaultName: keyVaultName
@@ -472,6 +472,7 @@ var stringInterpolationParamsMaster3 = {
 }
 
 var stringInterpolationParamsMaster4 = {
+  publicIPId: publicIPId
   domainName: domainName
   turnDomainName: turnDomainName
   certificateType: certificateType
@@ -479,7 +480,6 @@ var stringInterpolationParamsMaster4 = {
   ownPrivateCertificate: ownPrivateCertificate
   turnOwnPublicCertificate: turnOwnPublicCertificate
   turnOwnPrivateCertificate: turnOwnPrivateCertificate
-  fqdn: fqdn
   openviduLicense: openviduLicense
   rtcEngine: rtcEngine
   keyVaultName: keyVaultName
@@ -501,12 +501,6 @@ apt-get update && apt-get install -y \
   jq \
   wget
 
-# Configure Domain
-if [[ "${domainName}" == '' ]]; then
-  DOMAIN=${fqdn}
-else
-  DOMAIN=${domainName}
-fi
 
 # Wait for the keyvault availability
 MAX_WAIT=100
@@ -545,9 +539,34 @@ PRIVATE_IP="$(/usr/local/bin/store_secret.sh save MASTER-NODE-${masterNodeNum}-P
 
 
 if [[ $MASTER_NODE_NUM -eq 1 ]] && [[ "$ALL_SECRETS_GENERATED" == "" || "$ALL_SECRETS_GENERATED" == "false" ]]; then
+
+  # Configure Domain name
+  if [[ "${domainName}" == '' ]]; then
+    # Get public IP using the get_public_ip.sh script
+    PUBLIC_IP=$(/usr/local/bin/get_public_ip.sh 2>/dev/null)
+    if [[ $? -ne 0 || -z "${PUBLIC_IP}" ]]; then
+      echo "Could not determine public IP."
+      exit 1
+    fi
+
+    RANDOM_DOMAIN_STRING=$(tr -dc 'a-z' < /dev/urandom | head -c 8)
+    DOMAIN="openvidu-$RANDOM_DOMAIN_STRING-$(echo "$PUBLIC_IP" | tr '.' '-').sslip.io"
+    TURN_DOMAIN_NAME_SSLIP_IO="turn-$RANDOM_DOMAIN_STRING-$(echo "$PUBLIC_IP" | tr '.' '-').sslip.io"
+    echo $RANDOM_DOMAIN_STRING > /usr/share/openvidu/random-domain-string
+    echo $PUBLIC_IP > /usr/share/openvidu/public-ip
+  else
+    DOMAIN=${domainName}
+  fi
   DOMAIN="$(/usr/local/bin/store_secret.sh save DOMAIN-NAME "${domainName}")"
+
+  # Configure TURN server domain name
   if [[ -n "${turnDomainName}" ]]; then
     LIVEKIT_TURN_DOMAIN_NAME="$(/usr/local/bin/store_secret.sh save LIVEKIT-TURN-DOMAIN-NAME "${turnDomainName}")"
+  elif [[ "${TURN_DOMAIN_NAME_SSLIP_IO}" != '' ]]; then
+    LIVEKIT_TURN_DOMAIN_NAME=$(/usr/local/bin/store_secret.sh save LIVEKIT-TURN-DOMAIN-NAME "${TURN_DOMAIN_NAME_SSLIP_IO}")
+    COMMON_ARGS+=(
+      "--turn-domain-name=$LIVEKIT_TURN_DOMAIN_NAME"
+    )
   fi
 
   # Store usernames and generate random passwords
@@ -947,6 +966,15 @@ else
 fi
 '''
 
+var get_public_ip = '''
+#!/bin/bash
+az login --identity --allow-no-subscriptions > /dev/null
+
+az network public-ip show \
+  --id ${publicIPId} \
+  --query "ipAddress" -o tsv
+'''
+
 var check_app_readyScriptMaster = '''
 #!/bin/bash
 set -e
@@ -1028,6 +1056,12 @@ var update_config_from_secretScriptMaster = reduce(
   (curr, next) => { value: replace(curr.value, '\${${next.key}}', next.value) }
 ).value
 
+var get_public_ip_script = reduce(
+  items(stringInterpolationParamsMaster1),
+  { value: get_public_ip},
+  (curr, next) => { value: replace(curr.value, '\${${next.key}}', next.value) }
+).value
+
 var update_secret_from_configScriptMaster = reduce(
   items(stringInterpolationParamsMaster1),
   { value: update_secret_from_configScriptTemplateMaster },
@@ -1060,6 +1094,7 @@ var base64installMaster2 = base64(installScriptMaster2)
 var base64installMaster3 = base64(installScriptMaster3)
 var base64installMaster4 = base64(installScriptMaster4)
 var base64after_installMaster = base64(after_installScriptMaster)
+var base64get_public_ip = base64(get_public_ip_script)
 var base64update_config_from_secretMaster = base64(update_config_from_secretScriptMaster)
 var base64update_secret_from_configMaster = base64(update_secret_from_configScriptMaster)
 var base64get_value_from_configMaster = base64(get_value_from_configScriptMaster)
@@ -1071,6 +1106,7 @@ var base64config_blobStorage = base64(config_blobStorageScript)
 var userDataParamsMasterNode1 = {
   base64install: base64installMaster1
   base64after_install: base64after_installMaster
+  base64get_public_ip: base64get_public_ip
   base64update_config_from_secret: base64update_config_from_secretMaster
   base64update_secret_from_config: base64update_secret_from_configMaster
   base64get_value_from_config: base64get_value_from_configMaster
@@ -1085,6 +1121,7 @@ var userDataParamsMasterNode1 = {
 var userDataParamsMasterNode2 = {
   base64install: base64installMaster2
   base64after_install: base64after_installMaster
+  base64get_public_ip: base64get_public_ip
   base64update_config_from_secret: base64update_config_from_secretMaster
   base64update_secret_from_config: base64update_secret_from_configMaster
   base64get_value_from_config: base64get_value_from_configMaster
@@ -1099,6 +1136,7 @@ var userDataParamsMasterNode2 = {
 var userDataParamsMasterNode3 = {
   base64install: base64installMaster3
   base64after_install: base64after_installMaster
+  base64get_public_ip: base64get_public_ip
   base64update_config_from_secret: base64update_config_from_secretMaster
   base64update_secret_from_config: base64update_secret_from_configMaster
   base64get_value_from_config: base64get_value_from_configMaster
@@ -1113,6 +1151,7 @@ var userDataParamsMasterNode3 = {
 var userDataParamsMasterNode4 = {
   base64install: base64installMaster4
   base64after_install: base64after_installMaster
+  base64get_public_ip: base64get_public_ip
   base64update_config_from_secret: base64update_config_from_secretMaster
   base64update_secret_from_config: base64update_secret_from_configMaster
   base64get_value_from_config: base64get_value_from_configMaster
@@ -1137,6 +1176,10 @@ chmod +x /usr/local/bin/install.sh
 # after_install.sh
 echo ${base64after_install} | base64 -d > /usr/local/bin/after_install.sh
 chmod +x /usr/local/bin/after_install.sh
+
+# get_public_ip.sh
+echo ${base64get_public_ip} | base64 -d > /usr/local/bin/get_public_ip.sh
+chmod +x /usr/local/bin/get_public_ip.sh
 
 # update_config_from_secret.sh
 echo ${base64update_config_from_secret} | base64 -d > /usr/local/bin/update_config_from_secret.sh
@@ -1877,34 +1920,35 @@ resource scaleInActivityLogRule 'Microsoft.Insights/activityLogAlerts@2020-10-01
 
 /*------------------------------------------- NETWORK -------------------------------------------*/
 
-var isEmptyIp = publicIpAddressObject.newOrExistingOrNone == 'none'
 var lbName = '${stackName}-loadBalancer'
 var lbFrontEndName = 'LoadBalancerFrontEnd'
 var lbBackendPoolNameMasterNode = 'LoadBalancerBackEndMasterNode'
 
-resource publicIPAddressLoadBalancer 'Microsoft.Network/publicIPAddresses@2024-05-01' = if (isEmptyIp == true) {
-  name: '${stackName}-publicIPAddressLoadBalancer'
-  location: location
-  sku: {
-    name: 'Standard'
-  }
-  properties: {
-    publicIPAddressVersion: 'IPv4'
-    publicIPAllocationMethod: 'Static'
-  }
-}
-
 var ipExists = publicIpAddressObject.newOrExistingOrNone == 'existing'
 
-resource publicIP_LoadBalancer_ifExisting 'Microsoft.Network/publicIPAddresses@2023-11-01' existing = if (ipExists == true) {
+resource publicIP_OV_ifExisting'Microsoft.Network/publicIPAddresses@2023-11-01' existing = if (ipExists == true) {
   name: publicIpAddressObject.name
 }
 
 var ipNew = publicIpAddressObject.newOrExistingOrNone == 'new'
 
-resource publicIP_LoadBalancer_ifNew 'Microsoft.Network/publicIPAddresses@2023-11-01' existing = if (ipNew == true) {
+resource publicIP_OV_ifNew 'Microsoft.Network/publicIPAddresses@2023-11-01' = if (ipNew == true) {
   name: publicIpAddressObject.name
+  location: location
+  sku: {
+    name: 'Standard'
+    tier: 'Regional'
+  }
+  properties: {
+    publicIPAddressVersion: 'IPv4'
+    publicIPAllocationMethod: 'Static'
+    dnsSettings: {
+      domainNameLabel: isEmptyDomain ? toLower('${stackName}') : null
+    }
+  }
 }
+
+var publicIPId = ipNew ? publicIP_OV_ifNew.id : ipExists ? publicIP_OV_ifExisting.id : ''
 
 resource LoadBalancer 'Microsoft.Network/loadBalancers@2024-05-01' = {
   name: lbName
@@ -1917,10 +1961,8 @@ resource LoadBalancer 'Microsoft.Network/loadBalancers@2024-05-01' = {
       {
         name: lbFrontEndName
         properties: {
-          publicIPAddress: {
-            id: isEmptyIp
-              ? publicIPAddressLoadBalancer.id
-              : ipNew ? publicIP_LoadBalancer_ifNew.id : publicIP_LoadBalancer_ifExisting.id
+          publicIPAddress: isEmptyIp ? null : {
+            id: ipNew ? publicIP_OV_ifNew.id : publicIP_OV_ifExisting.id
           }
         }
       }

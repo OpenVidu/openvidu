@@ -47,8 +47,8 @@
                             "type": "Microsoft.Common.DropDown",
                             "label": "Certificate Type",
                             "subLabel": "",
-                            "defaultValue": "selfsigned",
-                            "toolTip": "[[selfsigned] Not recommended for production use. If you don't have a FQDN, (DomainName parameter) you can use this option to generate a self-signed certificate.\n[owncert] Valid for productions environments. If you have a FQDN, (DomainName parameter)\nand an Elastic IP, you can use this option to use your own certificate.\n[letsencrypt] Valid for production environments. If you have a FQDN, (DomainName parameter)\nand an Elastic IP, you can use this option to generate a Let's Encrypt certificate.\n",
+                            "defaultValue": "letsencrypt",
+                            "toolTip": "[[selfsigned] Not recommended for production use. Just for testing purposes or development environments. You don't need a FQDN to use this option.\n[owncert] Valid for production environments. Use your own certificate. You need a FQDN to use this option.\n[letsencrypt] Valid for production environments. Can be used with or without a FQDN (if no FQDN is provided, a random sslip.io domain will be used).\n",
                             "constraints": {
                                 "required": false,
                                 "allowedValues": [
@@ -77,13 +77,13 @@
                                 "publicIpAddress": "Public IP address"
                             },
                             "toolTip": {
-                                "publicIpAddress": "Name of the PublicIPAddress resource in Azure when using certificateType 'owncert' or 'letsencrypt'"
+                                "publicIpAddress": "Previously created Public IP address for the OpenVidu Deployment. Blank will generate a public IP"
                             },
                             "defaultValue": {
                                 "publicIpAddressName": "defaultName"
                             },
                             "options": {
-                                "hideNone": false,
+                                "hideNone": true,
                                 "hideDomainNameLabel": true,
                                 "hideExisting": false
                             },
@@ -97,13 +97,13 @@
                             "defaultValue": "",
                             "toolTip": "",
                             "constraints": {
-                                "required": true,
+                                "required": false,
                                 "regex": "^$|^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\\.)+[a-z0-9][a-z0-9-]{0,61}[a-z0-9]$",
-                                "validationMessage": "",
+                                "validationMessage": "Please enter a valid domain name or leave it blank to generate",
                                 "validations": [
                                     {
-                                        "isValid": "[if(or(equals(steps('parameters SSL').certificateType, 'letsencrypt'), equals(steps('parameters SSL').certificateType, 'owncert')), not(empty(steps('parameters SSL').domainName)), true)]",
-                                        "message": "You need to fill this parameter because you've selected another certificate type that is not selfsigned."
+                                        "isValid": "[if(equals(steps('parameters SSL').certificateType, 'owncert'), not(empty(steps('parameters SSL').domainName)), true)]",
+                                        "message": "You need to fill this parameter because you've selected owncert certificate type."
                                     }
                                 ]
                             },
