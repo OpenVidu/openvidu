@@ -11,7 +11,7 @@ resource "random_id" "bucket_suffix" { byte_length = 3 }
 # GCS bucket
 resource "google_storage_bucket" "bucket" {
   count                       = 1
-  name                        = local.isEmpty ? "openvidu-appdata" : var.bucketName
+  name                        = local.isEmpty ? "${var.projectId}-${random_id.bucket_suffix.hex}" : var.bucketName
   location                    = var.region
   force_destroy               = true
   uniform_bucket_level_access = true
@@ -103,7 +103,7 @@ resource "google_compute_instance" "openvidu_server" {
     turnDomainName            = var.turnDomainName
     turnOwnPublicCertificate  = var.turnOwnPublicCertificate
     turnOwnPrivateCertificate = var.turnOwnPrivateCertificate
-    bucketName                = var.bucketName == "" ? "openvidu-appdata" : var.bucketName
+    bucketName                = google_storage_bucket.bucket[0].name
   }
 
   service_account {
@@ -336,7 +336,7 @@ locals {
   EXTERNAL_S3_ENDPOINT="https://storage.googleapis.com"
   EXTERNAL_S3_REGION="${var.region}"
   EXTERNAL_S3_PATH_STYLE_ACCESS="true"
-  EXTERNAL_S3_BUCKET_APP_DATA=${var.bucketName == "" ? "openvidu-appdata" : var.bucketName}
+  EXTERNAL_S3_BUCKET_APP_DATA=${google_storage_bucket.bucket[0].name}
 
   # Update egress.yaml to use hardcoded credentials instead of env variable
   if [ -f "$${CONFIG_DIR}/egress.yaml" ]; then
