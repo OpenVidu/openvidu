@@ -92,3 +92,9 @@ variable "bucketName" {
   type        = string
   default     = ""
 }
+
+variable "meetInitialAdminPassword" {
+  description = "Initial admin password for OpenVidu Meet"
+  type        = string
+  default     = ""
+}
