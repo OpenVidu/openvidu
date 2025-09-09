@@ -2,18 +2,16 @@
 param stackName string
 
 @description('''
-[selfsigned] Not recommended for production use. If you don't have a FQDN, (DomainName parameter) you can use this option to generate a self-signed certificate.
-[owncert] Valid for productions environments. If you have a FQDN, (DomainName parameter)
-and an Elastic IP, you can use this option to use your own certificate.
-[letsencrypt] Valid for production environments. If you have a FQDN, (DomainName parameter)
-and an Elastic IP, you can use this option to generate a Let's Encrypt certificate.
+[selfsigned] Not recommended for production use. Just for testing purposes or development environments. You don't need a FQDN to use this option.
+[owncert] Valid for production environments. Use your own certificate. You need a FQDN to use this option.
+[letsencrypt] Valid for production environments. Can be used with or without a FQDN (if no FQDN is provided, a random sslip.io domain will be used).
 ''')
 @allowed([
   'selfsigned'
   'owncert'
   'letsencrypt'
 ])
-param certificateType string = 'selfsigned'
+param certificateType string = 'letsencrypt'
 
 @description('Previously created Public IP address for the OpenVidu Deployment. Blank will generate a public IP')
 param publicIpAddressObject object
@@ -26,9 +24,6 @@ param ownPublicCertificate string = ''
 
 @description('If certificate type is \'owncert\', this parameter will be used to specify the private certificate')
 param ownPrivateCertificate string = ''
-
-@description('If certificate type is \'letsencrypt\', this email will be used for Let\'s Encrypt notifications')
-param letsEncryptEmail string = ''
 
 @description('(Optional) Domain name for the TURN server with TLS. Only needed if your users are behind restrictive firewalls')
 param turnDomainName string = ''
@@ -352,8 +347,6 @@ var networkSettings = {
   vNetName: '${stackName}-virtualNetwork'
 }
 
-var fqdn = isEmptyIp ? publicIP_OV.properties.dnsSettings.fqdn : domainName
-
 var keyVaultName = '${stackName}-keyvault'
 
 var location = resourceGroup().location
@@ -411,10 +404,8 @@ resource openviduSharedInfo 'Microsoft.KeyVault/vaults@2023-07-01' = {
 
 var stringInterpolationParamsMaster = {
   domainName: domainName
-  fqdn: fqdn
   turnDomainName: turnDomainName
   certificateType: certificateType
-  letsEncryptEmail: letsEncryptEmail
   ownPublicCertificate: ownPublicCertificate
   ownPrivateCertificate: ownPrivateCertificate
   turnOwnPublicCertificate: turnOwnPublicCertificate
@@ -440,7 +431,19 @@ apt-get update && apt-get install -y \
 
 # Configure Domain
 if [[ "${domainName}" == '' ]]; then
-  DOMAIN=${fqdn}
+  [ ! -d "/usr/share/openvidu" ] && mkdir -p /usr/share/openvidu
+  # Get public IP using the get_public_ip.sh script
+  PUBLIC_IP=$(/usr/local/bin/get_public_ip.sh 2>/dev/null)
+  if [[ $? -ne 0 || -z "${PUBLIC_IP}" ]]; then
+    echo "Could not determine public IP."
+    exit 1
+  fi
+
+  RANDOM_DOMAIN_STRING=$(tr -dc 'a-z' < /dev/urandom | head -c 8)
+  DOMAIN="openvidu-$RANDOM_DOMAIN_STRING-$(echo "$PUBLIC_IP" | tr '.' '-').sslip.io"
+  TURN_DOMAIN_NAME_SSLIP_IO="turn-$RANDOM_DOMAIN_STRING-$(echo "$PUBLIC_IP" | tr '.' '-').sslip.io"
+  echo $RANDOM_DOMAIN_STRING > /usr/share/openvidu/random-domain-string
+  echo $PUBLIC_IP > /usr/share/openvidu/public-ip
 else
   DOMAIN=${domainName}
 fi
@@ -549,6 +552,11 @@ if [[ "${turnDomainName}" != '' ]]; then
   COMMON_ARGS+=(
     "--turn-domain-name=$LIVEKIT_TURN_DOMAIN_NAME"
   )
+elif [[ "${TURN_DOMAIN_NAME_SSLIP_IO}" != '' ]]; then
+  LIVEKIT_TURN_DOMAIN_NAME=$(/usr/local/bin/store_secret.sh save LIVEKIT-TURN-DOMAIN-NAME "${TURN_DOMAIN_NAME_SSLIP_IO}")
+  COMMON_ARGS+=(
+    "--turn-domain-name=$LIVEKIT_TURN_DOMAIN_NAME"
+  )
 fi
 
 # Certificate arguments
@@ -557,10 +565,8 @@ if [[ "${certificateType}" == "selfsigned" ]]; then
     "--certificate-type=selfsigned"
   )
 elif [[ "${certificateType}" == "letsencrypt" ]]; then
-  LETSENCRYPT_EMAIL=$(/usr/local/bin/store_secret.sh save LETSENCRYPT-EMAIL "${letsEncryptEmail}")
   CERT_ARGS=(
     "--certificate-type=letsencrypt"
-    "--letsencrypt-email=$LETSENCRYPT_EMAIL"
   )
 else
   # Download owncert files
@@ -609,20 +615,18 @@ set -e
 
 az login --identity --allow-no-subscriptions > /dev/null
 
-# Configure Domain
-if [[ "${domainName}" == '' ]]; then
-  DOMAIN=${fqdn}
-else
-  DOMAIN=${domainName}
-fi
-
 # Generate URLs
+DOMAIN=$(az keyvault secret show --vault-name ${keyVaultName} --name DOMAIN-NAME --query value -o tsv)
+OPENVIDU_URL="https://${DOMAIN}/"
+LIVEKIT_URL="wss://${DOMAIN}/"
 DASHBOARD_URL="https://${DOMAIN}/dashboard/"
 GRAFANA_URL="https://${DOMAIN}/grafana/"
 MINIO_URL="https://${DOMAIN}/minio-console/"
 
 # Update shared secret
 az keyvault secret set --vault-name ${keyVaultName} --name DOMAIN-NAME --value $DOMAIN
+az keyvault secret set --vault-name ${keyVaultName} --name OPENVIDU-URL --value $OPENVIDU_URL
+az keyvault secret set --vault-name ${keyVaultName} --name LIVEKIT-URL --value $LIVEKIT_URL
 az keyvault secret set --vault-name ${keyVaultName} --name DASHBOARD-URL --value $DASHBOARD_URL
 az keyvault secret set --vault-name ${keyVaultName} --name GRAFANA-URL --value $GRAFANA_URL
 az keyvault secret set --vault-name ${keyVaultName} --name MINIO-URL --value $MINIO_URL
@@ -647,6 +651,14 @@ MASTER_NODE_CONFIG_DIR="${INSTALL_DIR}/config/node"
 
 # Replace DOMAIN_NAME
 export DOMAIN=$(az keyvault secret show --vault-name ${keyVaultName} --name DOMAIN-NAME --query value -o tsv)
+if [[ $DOMAIN == *"sslip.io"* ]] || [[ -z $DOMAIN ]]; then
+  PUBLIC_IP=$(/usr/local/bin/get_public_ip.sh 2>/dev/null || echo "")
+
+  if [[ -n "$PUBLIC_IP" ]] && [[ -f "/usr/share/openvidu/random-domain-string" ]]; then
+    RANDOM_DOMAIN_STRING=$(cat /usr/share/openvidu/random-domain-string)
+    DOMAIN="openvidu-$RANDOM_DOMAIN_STRING-$(echo "$PUBLIC_IP" | tr '.' '-').sslip.io"
+  fi
+fi
 if [[ -n "$DOMAIN" ]]; then
     sed -i "s/DOMAIN_NAME=.*/DOMAIN_NAME=$DOMAIN/" "${CLUSTER_CONFIG_DIR}/openvidu.env"
 else
@@ -655,13 +667,16 @@ fi
 
 # Replace LIVEKIT_TURN_DOMAIN_NAME
 export LIVEKIT_TURN_DOMAIN_NAME=$(az keyvault secret show --vault-name ${keyVaultName} --name LIVEKIT-TURN-DOMAIN-NAME --query value -o tsv)
+if [[ $LIVEKIT_TURN_DOMAIN_NAME == *"sslip.io"* ]] || [[ -z $LIVEKIT_TURN_DOMAIN_NAME ]]; then
+  PUBLIC_IP=$(/usr/local/bin/get_public_ip.sh 2>/dev/null || echo "")
+
+  if [[ -n "$PUBLIC_IP" ]] && [[ -f "/usr/share/openvidu/random-domain-string" ]]; then
+    RANDOM_DOMAIN_STRING=$(cat /usr/share/openvidu/random-domain-string)
+    LIVEKIT_TURN_DOMAIN_NAME="turn-$RANDOM_DOMAIN_STRING-$(echo "$PUBLIC_IP" | tr '.' '-').sslip.io"
+  fi
+fi
 if [[ -n "$LIVEKIT_TURN_DOMAIN_NAME" ]]; then
     sed -i "s/LIVEKIT_TURN_DOMAIN_NAME=.*/LIVEKIT_TURN_DOMAIN_NAME=$LIVEKIT_TURN_DOMAIN_NAME/" "${CLUSTER_CONFIG_DIR}/openvidu.env"
-fi
-
-if [[ ${certificateType} == "letsencrypt" ]]; then
-    export LETSENCRYPT_EMAIL=$(az keyvault secret show --vault-name ${keyVaultName} --name LETSENCRYPT-EMAIL --query value -o tsv)
-    sed -i "s/LETSENCRYPT_EMAIL=.*/LETSENCRYPT_EMAIL=$LETSENCRYPT_EMAIL/" "${CLUSTER_CONFIG_DIR}/openvidu.env"
 fi
 
 # Get the rest of the values
@@ -705,12 +720,16 @@ sed -i "s/MEET_INITIAL_API_KEY=.*/MEET_INITIAL_API_KEY=$MEET_INITIAL_API_KEY/" "
 sed -i "s/ENABLED_MODULES=.*/ENABLED_MODULES=$ENABLED_MODULES/" "${CLUSTER_CONFIG_DIR}/openvidu.env"
 
 # Update URLs in secret
+OPENVIDU_URL="https://${DOMAIN}/"
+LIVEKIT_URL="wss://${DOMAIN}/"
 DASHBOARD_URL="https://${DOMAIN}/dashboard/"
 GRAFANA_URL="https://${DOMAIN}/grafana/"
 MINIO_URL="https://${DOMAIN}/minio-console/"
 
 # Update shared secret
 az keyvault secret set --vault-name ${keyVaultName} --name DOMAIN-NAME --value $DOMAIN
+az keyvault secret set --vault-name ${keyVaultName} --name OPENVIDU-URL --value $OPENVIDU_URL
+az keyvault secret set --vault-name ${keyVaultName} --name LIVEKIT-URL --value $LIVEKIT_URL
 az keyvault secret set --vault-name ${keyVaultName} --name DASHBOARD-URL --value $DASHBOARD_URL
 az keyvault secret set --vault-name ${keyVaultName} --name GRAFANA-URL --value $GRAFANA_URL
 az keyvault secret set --vault-name ${keyVaultName} --name MINIO-URL --value $MINIO_URL
@@ -847,6 +866,32 @@ else
 fi
 '''
 
+var get_public_ip = '''
+#!/bin/bash
+
+# List of services to check public IP
+services=(
+    "https://checkip.amazonaws.com"
+    "https://ifconfig.me/ip"
+    "https://ipinfo.io/ip"
+    "https://api.ipify.org"
+    "https://icanhazip.com"
+)
+
+for service in "${services[@]}"; do
+    ip=$(curl -s --max-time 5 "$service")
+    if [[ -n "$ip" && "$ip" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+        echo "$ip"
+        exit 0
+    else
+        echo "Failed to get IP from $service" >&2
+    fi
+done
+
+echo "Could not retrieve public IP from any service." >&2
+exit 1
+'''
+
 var check_app_readyScriptMaster = '''
 #!/bin/bash
 set -e
@@ -940,6 +985,7 @@ var base64update_config_from_secretMaster = base64(update_config_from_secretScri
 var base64update_secret_from_configMaster = base64(update_secret_from_configScriptMaster)
 var base64get_value_from_configMaster = base64(get_value_from_configScriptMaster)
 var base64store_secretMaster = base64(store_secretScriptMaster)
+var base64get_public_ipMaster = base64(get_public_ip)
 var base64check_app_readyMaster = base64(check_app_readyScriptMaster)
 var base64restartMaster = base64(restartScriptMaster)
 var base64config_blobStorage = base64(config_blobStorageScript)
@@ -951,6 +997,7 @@ var userDataParamsMasterNode = {
   base64update_secret_from_config: base64update_secret_from_configMaster
   base64get_value_from_config: base64get_value_from_configMaster
   base64store_secret: base64store_secretMaster
+  base64get_public_ip: base64get_public_ipMaster
   base64check_app_ready: base64check_app_readyMaster
   base64restart: base64restartMaster
   base64config_blobStorage: base64config_blobStorage
@@ -986,6 +1033,10 @@ chmod +x /usr/local/bin/get_value_from_config.sh
 # store_secret.sh
 echo ${base64store_secret} | base64 -d > /usr/local/bin/store_secret.sh
 chmod +x /usr/local/bin/store_secret.sh
+
+# get_public_ip.sh
+echo ${base64get_public_ip} | base64 -d > /usr/local/bin/get_public_ip.sh
+chmod +x /usr/local/bin/get_public_ip.sh
 
 # check_app_ready.sh
 echo ${base64check_app_ready} | base64 -d > /usr/local/bin/check_app_ready.sh
@@ -1544,8 +1595,16 @@ resource scaleInActivityLogRule 'Microsoft.Insights/activityLogAlerts@2020-10-01
 
 /*------------------------------------------- NETWORK -------------------------------------------*/
 
-resource publicIP_OV 'Microsoft.Network/publicIPAddresses@2023-11-01' = if (isEmptyIp == true) {
-  name: '${stackName}-publicIP'
+var ipExists = publicIpAddressObject.newOrExistingOrNone == 'existing'
+
+resource publicIP_OV_ifExisting 'Microsoft.Network/publicIPAddresses@2023-11-01' existing = if (ipExists == true) {
+  name: publicIpAddressObject.name
+}
+
+var ipNew = publicIpAddressObject.newOrExistingOrNone == 'new'
+
+resource publicIP_OV_ifNew 'Microsoft.Network/publicIPAddresses@2023-11-01' = if (ipNew == true) {
+  name: publicIpAddressObject.name
   location: location
   sku: {
     name: 'Standard'
@@ -1556,21 +1615,8 @@ resource publicIP_OV 'Microsoft.Network/publicIPAddresses@2023-11-01' = if (isEm
     publicIPAllocationMethod: 'Static'
     dnsSettings: {
       domainNameLabel: isEmptyDomain ? toLower('${stackName}') : null
-      fqdn: isEmptyDomain ? null : domainName
     }
   }
-}
-
-var ipExists = publicIpAddressObject.newOrExistingOrNone == 'existing'
-
-resource publicIP_OV_ifExisting 'Microsoft.Network/publicIPAddresses@2023-11-01' existing = if (ipExists == true) {
-  name: publicIpAddressObject.name
-}
-
-var ipNew = publicIpAddressObject.newOrExistingOrNone == 'new'
-
-resource publicIP_OV_ifNew 'Microsoft.Network/publicIPAddresses@2023-11-01' existing = if (ipNew == true) {
-  name: publicIpAddressObject.name
 }
 
 resource vnet_OV 'Microsoft.Network/virtualNetworks@2023-11-01' = {
@@ -1625,11 +1671,8 @@ resource netInterfaceMasterNode 'Microsoft.Network/networkInterfaces@2023-11-01'
               id: openviduMasterNodeASG.id
             }
           ]
-          publicIPAddress: {
-            id: isEmptyIp ? publicIP_OV.id : ipNew ? publicIP_OV_ifNew.id : publicIP_OV_ifExisting.id
-            properties: {
-              deleteOption: 'Delete'
-            }
+          publicIPAddress: isEmptyIp ? null : {
+            id: ipNew ? publicIP_OV_ifNew.id : publicIP_OV_ifExisting.id
           }
         }
       }
