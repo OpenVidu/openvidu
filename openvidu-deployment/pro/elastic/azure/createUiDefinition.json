@@ -83,7 +83,7 @@
                                 "publicIpAddressName": "defaultName"
                             },
                             "options": {
-                                "hideNone": false,
+                                "hideNone": true,
                                 "hideDomainNameLabel": true,
                                 "hideExisting": false
                             },
