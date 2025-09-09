@@ -256,7 +256,6 @@ var stringInterpolationParams = {
   ownPrivateCertificate: ownPrivateCertificate
   turnOwnPublicCertificate: turnOwnPublicCertificate
   turnOwnPrivateCertificate: turnOwnPrivateCertificate
-  publicIPValue: publicIPValue
   keyVaultName: keyVaultName
   additionalInstallFlags: additionalInstallFlags
 }
@@ -276,7 +275,8 @@ apt-get update && apt-get install -y \
 if [[ "${domainName}" == '' ]]; then
 
   [ ! -d "/usr/share/openvidu" ] && mkdir -p /usr/share/openvidu
-  PUBLIC_IP=${publicIPValue}
+  # Get public IP using the get_public_ip.sh script
+  PUBLIC_IP=$(/usr/local/bin/get_public_ip.sh 2>/dev/null)
   if [[ $? -ne 0 || -z "${PUBLIC_IP}" ]]; then
     echo "Could not determine public IP."
     exit 1
@@ -457,7 +457,7 @@ CONFIG_DIR="${INSTALL_DIR}/config"
 # Replace DOMAIN_NAME
 export DOMAIN=$(az keyvault secret show --vault-name ${keyVaultName} --name DOMAIN-NAME --query value -o tsv)
 if [[ $DOMAIN == *"sslip.io"* ]] || [[ -z $DOMAIN ]]; then
-  PUBLIC_IP=${publicIPValue}
+  PUBLIC_IP=$(/usr/local/bin/get_public_ip.sh 2>/dev/null || echo "")
 
   if [[ -n "$PUBLIC_IP" ]] && [[ -f "/usr/share/openvidu/random-domain-string" ]]; then
     RANDOM_DOMAIN_STRING=$(cat /usr/share/openvidu/random-domain-string)
@@ -473,7 +473,7 @@ fi
 # Replace LIVEKIT_TURN_DOMAIN_NAME
 export LIVEKIT_TURN_DOMAIN_NAME=$(az keyvault secret show --vault-name ${keyVaultName} --name LIVEKIT-TURN-DOMAIN-NAME --query value -o tsv)
 if [[ $LIVEKIT_TURN_DOMAIN_NAME == *"sslip.io"* ]] || [[ -z $LIVEKIT_TURN_DOMAIN_NAME ]]; then
-  PUBLIC_IP=${publicIPValue}
+  PUBLIC_IP=$(/usr/local/bin/get_public_ip.sh 2>/dev/null || echo "")
 
   if [[ -n "$PUBLIC_IP" ]] && [[ -f "/usr/share/openvidu/random-domain-string" ]]; then
     RANDOM_DOMAIN_STRING=$(cat /usr/share/openvidu/random-domain-string)
@@ -668,6 +668,31 @@ else
 fi
 '''
 
+var get_public_ip = '''
+#!/bin/bash
+
+# List of services to check public IP
+services=(
+    "https://checkip.amazonaws.com"
+    "https://ifconfig.me/ip"
+    "https://ipinfo.io/ip"
+    "https://api.ipify.org"
+    "https://icanhazip.com"
+)
+
+for service in "${services[@]}"; do
+    ip=$(curl -s --max-time 5 "$service")
+    if [[ -n "$ip" && "$ip" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+        echo "$ip"
+        exit 0
+    else
+        echo "Failed to get IP from $service" >&2
+    fi
+done
+
+echo "Could not retrieve public IP from any service." >&2
+exit 1
+'''
 
 var check_app_ready = '''
 #!/bin/bash
@@ -761,6 +786,7 @@ var base64update_config_from_secret = base64(update_config_from_secretScript)
 var base64update_secret_from_config = base64(update_secret_from_configScript)
 var base64get_value_from_config = base64(get_value_from_configScript)
 var base64store_secret = base64(store_secretScript)
+var base64get_public_ip = base64(get_public_ip)
 var base64check_app_ready = base64(check_app_ready)
 var base64restart = base64(restart)
 var base64config_blobStorage = base64(config_blobStorageScript)
@@ -772,6 +798,7 @@ var userDataParams = {
   base64update_secret_from_config: base64update_secret_from_config
   base64get_value_from_config: base64get_value_from_config
   base64store_secret: base64store_secret
+  base64get_public_ip: base64get_public_ip
   base64check_app_ready: base64check_app_ready
   base64restart: base64restart
   base64config_blobStorage: base64config_blobStorage
@@ -803,6 +830,10 @@ chmod +x /usr/local/bin/get_value_from_config.sh
 # store_secret.sh
 echo ${base64store_secret} | base64 -d > /usr/local/bin/store_secret.sh
 chmod +x /usr/local/bin/store_secret.sh
+
+# get_public_ip.sh
+echo ${base64get_public_ip} | base64 -d > /usr/local/bin/get_public_ip.sh
+chmod +x /usr/local/bin/get_public_ip.sh
 
 echo ${base64check_app_ready} | base64 -d > /usr/local/bin/check_app_ready.sh
 chmod +x /usr/local/bin/check_app_ready.sh
@@ -919,9 +950,6 @@ resource publicIP_OV_ifNew 'Microsoft.Network/publicIPAddresses@2023-11-01' = if
     }
   }
 }
-
-// Wait for the new public IP resource to be provisioned before referencing its properties
-var publicIPValue = ipNew ? reference(publicIP_OV_ifNew.id).ipAddress: reference(publicIP_OV_ifExisting.id).ipAddress
 
 // Create the virtual network
 resource vnet_OV 'Microsoft.Network/virtualNetworks@2023-11-01' = {
