@@ -403,6 +403,7 @@ resource openviduSharedInfo 'Microsoft.KeyVault/vaults@2023-07-01' = {
 /*------------------------------------------- MASTER NODE -------------------------------------------*/
 
 var stringInterpolationParamsMaster = {
+  publicIPId: publicIPId
   domainName: domainName
   turnDomainName: turnDomainName
   certificateType: certificateType
@@ -863,28 +864,11 @@ fi
 
 var get_public_ip = '''
 #!/bin/bash
+az login --identity --allow-no-subscriptions > /dev/null
 
-# List of services to check public IP
-services=(
-    "https://checkip.amazonaws.com"
-    "https://ifconfig.me/ip"
-    "https://ipinfo.io/ip"
-    "https://api.ipify.org"
-    "https://icanhazip.com"
-)
-
-for service in "${services[@]}"; do
-    ip=$(curl -s --max-time 5 "$service")
-    if [[ -n "$ip" && "$ip" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-        echo "$ip"
-        exit 0
-    else
-        echo "Failed to get IP from $service" >&2
-    fi
-done
-
-echo "Could not retrieve public IP from any service." >&2
-exit 1
+az network public-ip show \
+  --id ${publicIPId} \
+  --query "ipAddress" -o tsv
 '''
 
 var check_app_readyScriptMaster = '''
@@ -944,6 +928,12 @@ var after_installScriptMaster = reduce(
   (curr, next) => { value: replace(curr.value, '\${${next.key}}', next.value) }
 ).value
 
+var get_public_ip_script = reduce(
+  items(stringInterpolationParamsMaster),
+  { value: get_public_ip},
+  (curr, next) => { value: replace(curr.value, '\${${next.key}}', next.value) }
+).value
+
 var update_config_from_secretScriptMaster = reduce(
   items(stringInterpolationParamsMaster),
   { value: update_config_from_secretScriptTemplateMaster },
@@ -980,7 +970,7 @@ var base64update_config_from_secretMaster = base64(update_config_from_secretScri
 var base64update_secret_from_configMaster = base64(update_secret_from_configScriptMaster)
 var base64get_value_from_configMaster = base64(get_value_from_configScriptMaster)
 var base64store_secretMaster = base64(store_secretScriptMaster)
-var base64get_public_ipMaster = base64(get_public_ip)
+var base64get_public_ipMaster = base64(get_public_ip_script)
 var base64check_app_readyMaster = base64(check_app_readyScriptMaster)
 var base64restartMaster = base64(restartScriptMaster)
 var base64config_blobStorage = base64(config_blobStorageScript)
@@ -1613,6 +1603,8 @@ resource publicIP_OV_ifNew 'Microsoft.Network/publicIPAddresses@2023-11-01' = if
     }
   }
 }
+
+var publicIPId = ipNew ? publicIP_OV_ifNew.id : ipExists ? publicIP_OV_ifExisting.id : ''
 
 resource vnet_OV 'Microsoft.Network/virtualNetworks@2023-11-01' = {
   name: networkSettings.vNetName
