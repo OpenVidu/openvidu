@@ -151,27 +151,6 @@
                             },
                             "infoMessages": [],
                             "visible": true
-                        },
-                        {
-                            "name": "letsEncryptEmail",
-                            "type": "Microsoft.Common.TextBox",
-                            "label": "Lets Encrypt Email",
-                            "subLabel": "If certificate type is 'letsencrypt', this email will be used for Let's Encrypt notifications",
-                            "defaultValue": "",
-                            "toolTip": "",
-                            "constraints": {
-                                "required": false,
-                                "regex": "",
-                                "validationMessage": "",
-                                "validations": [
-                                    {
-                                        "isValid": "[if(equals(steps('parameters SSL').certificateType, 'letsencrypt'), not(empty(steps('parameters SSL').letsEncryptEmail)), true)]",
-                                        "message": "You need to fill this parameter because you've selected letsencrypt certificate type."
-                                    }
-                                ]
-                            },
-                            "infoMessages": [],
-                            "visible": true
                         }
                     ]
                 },
@@ -571,7 +550,6 @@
                 "domainName": "[steps('parameters SSL').domainName]",
                 "ownPublicCertificate": "[steps('parameters SSL').ownPublicCertificate]",
                 "ownPrivateCertificate": "[steps('parameters SSL').ownPrivateCertificate]",
-                "letsEncryptEmail": "[steps('parameters SSL').letsEncryptEmail]",
                 "publicIpAddressObject": "[steps('parameters SSL').publicIpAddressObject]",
                 "turnDomainName": "[steps('parameters TURN').turnDomainName]",
                 "turnOwnPublicCertificate": "[steps('parameters TURN').turnOwnPublicCertificate]",

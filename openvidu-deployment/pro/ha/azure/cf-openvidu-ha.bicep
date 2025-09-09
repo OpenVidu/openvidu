@@ -24,8 +24,7 @@ param ownPublicCertificate string = ''
 @description('If certificate type is \'owncert\', this parameter will be used to specify the private certificate')
 param ownPrivateCertificate string = ''
 
-@description('If certificate type is \'letsencrypt\', this email will be used for Let\'s Encrypt notifications')
-param letsEncryptEmail string = ''
+
 
 @description('Name of the PublicIPAddress resource in Azure when using certificateType \'owncert\' or \'letsencrypt\'')
 param publicIpAddressObject object
@@ -428,7 +427,6 @@ var stringInterpolationParamsMaster1 = {
   domainName: domainName
   turnDomainName: turnDomainName
   certificateType: certificateType
-  letsEncryptEmail: letsEncryptEmail
   ownPublicCertificate: ownPublicCertificate
   ownPrivateCertificate: ownPrivateCertificate
   turnOwnPublicCertificate: turnOwnPublicCertificate
@@ -445,7 +443,6 @@ var stringInterpolationParamsMaster2 = {
   domainName: domainName
   turnDomainName: turnDomainName
   certificateType: certificateType
-  letsEncryptEmail: letsEncryptEmail
   ownPublicCertificate: ownPublicCertificate
   ownPrivateCertificate: ownPrivateCertificate
   turnOwnPublicCertificate: turnOwnPublicCertificate
@@ -462,7 +459,6 @@ var stringInterpolationParamsMaster3 = {
   domainName: domainName
   turnDomainName: turnDomainName
   certificateType: certificateType
-  letsEncryptEmail: letsEncryptEmail
   ownPublicCertificate: ownPublicCertificate
   ownPrivateCertificate: ownPrivateCertificate
   turnOwnPublicCertificate: turnOwnPublicCertificate
@@ -479,7 +475,6 @@ var stringInterpolationParamsMaster4 = {
   domainName: domainName
   turnDomainName: turnDomainName
   certificateType: certificateType
-  letsEncryptEmail: letsEncryptEmail
   ownPublicCertificate: ownPublicCertificate
   ownPrivateCertificate: ownPrivateCertificate
   turnOwnPublicCertificate: turnOwnPublicCertificate
@@ -554,9 +549,6 @@ if [[ $MASTER_NODE_NUM -eq 1 ]] && [[ "$ALL_SECRETS_GENERATED" == "" || "$ALL_SE
   if [[ -n "${turnDomainName}" ]]; then
     LIVEKIT_TURN_DOMAIN_NAME="$(/usr/local/bin/store_secret.sh save LIVEKIT-TURN-DOMAIN-NAME "${turnDomainName}")"
   fi
-  if [[ "${certificateType}" == "letsencrypt" ]]; then
-    LETSENCRYPT_EMAIL=$(/usr/local/bin/store_secret.sh save LETSENCRYPT-EMAIL "${letsEncryptEmail}")
-  fi
 
   # Store usernames and generate random passwords
   OPENVIDU_PRO_LICENSE="$(/usr/local/bin/store_secret.sh save OPENVIDU-PRO-LICENSE "${openviduLicense}")"
@@ -607,9 +599,6 @@ MASTER_NODE_PRIVATE_IP_LIST="$MASTER_NODE_1_PRIVATE_IP,$MASTER_NODE_2_PRIVATE_IP
 DOMAIN=$(az keyvault secret show --vault-name ${keyVaultName} --name DOMAIN-NAME --query value -o tsv)
 if [[ -n "${turnDomainName}" ]]; then
   LIVEKIT_TURN_DOMAIN_NAME=$(az keyvault secret show --vault-name ${keyVaultName} --name LIVEKIT-TURN-DOMAIN-NAME --query value -o tsv)
-fi
-if [[ "${certificateType}" == "letsencrypt" ]]; then
-  LETSENCRYPT_EMAIL=$(az keyvault secret show --vault-name ${keyVaultName} --name LETSENCRYPT-EMAIL --query value -o tsv)
 fi
 OPENVIDU_RTC_ENGINE=$(az keyvault secret show --vault-name ${keyVaultName} --name OPENVIDU-RTC-ENGINE --query value -o tsv)
 OPENVIDU_PRO_LICENSE=$(az keyvault secret show --vault-name ${keyVaultName} --name OPENVIDU-PRO-LICENSE --query value -o tsv)
@@ -689,7 +678,6 @@ if [[ "${certificateType}" == "selfsigned" ]]; then
 elif [[ "${certificateType}" == "letsencrypt" ]]; then
   CERT_ARGS=(
     "--certificate-type=letsencrypt"
-    "--letsencrypt-email=$LETSENCRYPT_EMAIL"
   )
 else
   # Download owncert files
@@ -781,11 +769,6 @@ if [[ -n "$LIVEKIT_TURN_DOMAIN_NAME" ]]; then
     sed -i "s/LIVEKIT_TURN_DOMAIN_NAME=.*/LIVEKIT_TURN_DOMAIN_NAME=$LIVEKIT_TURN_DOMAIN_NAME/" "${CLUSTER_CONFIG_DIR}/openvidu.env"
 fi
 
-if [[ ${certificateType} == "letsencrypt" ]]; then
-    export LETSENCRYPT_EMAIL=$(az keyvault secret show --vault-name ${keyVaultName} --name LETSENCRYPT-EMAIL --query value -o tsv)
-    sed -i "s/LETSENCRYPT_EMAIL=.*/LETSENCRYPT_EMAIL=$LETSENCRYPT_EMAIL/" "${CLUSTER_CONFIG_DIR}/openvidu.env"
-fi
-
 # Get the rest of the values
 export REDIS_PASSWORD=$(az keyvault secret show --vault-name ${keyVaultName} --name REDIS-PASSWORD --query value -o tsv)
 export OPENVIDU_RTC_ENGINE=$(az keyvault secret show --vault-name ${keyVaultName} --name OPENVIDU-RTC-ENGINE --query value -o tsv)
@@ -848,11 +831,6 @@ az login --identity --allow-no-subscriptions > /dev/null
 INSTALL_DIR="/opt/openvidu"
 CLUSTER_CONFIG_DIR="${INSTALL_DIR}/config/cluster"
 MASTER_NODE_CONFIG_DIR="${INSTALL_DIR}/config/node"
-
-if [[ ${certificateType} == "letsencrypt" ]]; then
-  LETSENCRYPT_EMAIL="$(/usr/local/bin/get_value_from_config.sh LETSENCRYPT_EMAIL "${CLUSTER_CONFIG_DIR}/openvidu.env")"
-  az keyvault secret set --vault-name ${keyVaultName} --name "LETSENCRYPT-EMAIL" --value $LETSENCRYPT_EMAIL
-fi
 
 # Get current values of the config
 REDIS_PASSWORD="$(/usr/local/bin/get_value_from_config.sh REDIS_PASSWORD "${MASTER_NODE_CONFIG_DIR}/master_node.env")"
