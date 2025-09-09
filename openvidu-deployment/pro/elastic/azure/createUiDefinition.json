@@ -536,7 +536,6 @@
                 "domainName": "[steps('parameters SSL').domainName]",
                 "ownPublicCertificate": "[steps('parameters SSL').ownPublicCertificate]",
                 "ownPrivateCertificate": "[steps('parameters SSL').ownPrivateCertificate]",
-                "letsEncryptEmail": "[steps('parameters SSL').letsEncryptEmail]",
                 "turnDomainName": "[steps('parameters TURN').turnDomainName]",
                 "turnOwnPublicCertificate": "[steps('parameters TURN').turnOwnPublicCertificate]",
                 "turnOwnPrivateCertificate": "[steps('parameters TURN').turnOwnPrivateCertificate]",
