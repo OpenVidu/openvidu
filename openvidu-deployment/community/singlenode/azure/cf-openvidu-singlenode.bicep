@@ -249,6 +249,7 @@ resource openviduSharedInfo 'Microsoft.KeyVault/vaults@2023-07-01' = {
 
 //Parms for not string interpolation support for multiline
 var stringInterpolationParams = {
+  publicIPId: publicIPId
   domainName: domainName
   turnDomainName: turnDomainName
   certificateType: certificateType
@@ -670,28 +671,11 @@ fi
 
 var get_public_ip = '''
 #!/bin/bash
+az login --identity --allow-no-subscriptions > /dev/null
 
-# List of services to check public IP
-services=(
-    "https://checkip.amazonaws.com"
-    "https://ifconfig.me/ip"
-    "https://ipinfo.io/ip"
-    "https://api.ipify.org"
-    "https://icanhazip.com"
-)
-
-for service in "${services[@]}"; do
-    ip=$(curl -s --max-time 5 "$service")
-    if [[ -n "$ip" && "$ip" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-        echo "$ip"
-        exit 0
-    else
-        echo "Failed to get IP from $service" >&2
-    fi
-done
-
-echo "Could not retrieve public IP from any service." >&2
-exit 1
+az network public-ip show \
+  --id ${publicIPId} \
+  --query "ipAddress" -o tsv
 '''
 
 var check_app_ready = '''
@@ -750,6 +734,12 @@ var after_installScriptMaster = reduce(
   (curr, next) => { value: replace(curr.value, '\${${next.key}}', next.value) }
 ).value
 
+var get_public_ip_script = reduce(
+  items(stringInterpolationParams),
+  { value: get_public_ip},
+  (curr, next) => { value: replace(curr.value, '\${${next.key}}', next.value) }
+).value
+
 var update_config_from_secretScript = reduce(
   items(stringInterpolationParams),
   { value: update_config_from_secretScriptTemplate },
@@ -786,7 +776,7 @@ var base64update_config_from_secret = base64(update_config_from_secretScript)
 var base64update_secret_from_config = base64(update_secret_from_configScript)
 var base64get_value_from_config = base64(get_value_from_configScript)
 var base64store_secret = base64(store_secretScript)
-var base64get_public_ip = base64(get_public_ip)
+var base64get_public_ip = base64(get_public_ip_script)
 var base64check_app_ready = base64(check_app_ready)
 var base64restart = base64(restart)
 var base64config_blobStorage = base64(config_blobStorageScript)
@@ -950,6 +940,8 @@ resource publicIP_OV_ifNew 'Microsoft.Network/publicIPAddresses@2023-11-01' = if
     }
   }
 }
+
+var publicIPId = ipNew ? publicIP_OV_ifNew.id : ipExists ? publicIP_OV_ifExisting.id : ''
 
 // Create the virtual network
 resource vnet_OV 'Microsoft.Network/virtualNetworks@2023-11-01' = {
