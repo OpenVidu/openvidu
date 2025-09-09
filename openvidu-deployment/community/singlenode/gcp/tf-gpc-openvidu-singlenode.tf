@@ -3,6 +3,7 @@ resource "google_project_service" "compute_api" { service = "compute.googleapis.
 resource "google_project_service" "secretmanager_api" { service = "secretmanager.googleapis.com" }
 resource "google_project_service" "storage_api" { service = "storage.googleapis.com" }
 resource "google_project_service" "iam_api" { service = "iam.googleapis.com" }
+resource "google_project_service" "cloudresourcemanager_api" { service = "cloudresourcemanager.googleapis.com" }
 
 
 resource "random_id" "bucket_suffix" { byte_length = 3 }
