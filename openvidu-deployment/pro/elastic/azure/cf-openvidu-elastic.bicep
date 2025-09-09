@@ -746,11 +746,6 @@ INSTALL_DIR="/opt/openvidu"
 CLUSTER_CONFIG_DIR="${INSTALL_DIR}/config/cluster"
 MASTER_NODE_CONFIG_DIR="${INSTALL_DIR}/config/node"
 
-if [[ ${certificateType} == "letsencrypt" ]]; then
-  LETSENCRYPT_EMAIL="$(/usr/local/bin/get_value_from_config.sh LETSENCRYPT_EMAIL "${CLUSTER_CONFIG_DIR}/openvidu.env")"
-  az keyvault secret set --vault-name ${keyVaultName} --name "LETSENCRYPT-EMAIL" --value $LETSENCRYPT_EMAIL
-fi
-
 # Get current values of the config
 REDIS_PASSWORD="$(/usr/local/bin/get_value_from_config.sh REDIS_PASSWORD "${MASTER_NODE_CONFIG_DIR}/master_node.env")"
 DOMAIN_NAME="$(/usr/local/bin/get_value_from_config.sh DOMAIN_NAME "${CLUSTER_CONFIG_DIR}/openvidu.env")"
