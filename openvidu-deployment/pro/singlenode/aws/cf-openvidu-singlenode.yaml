@@ -406,13 +406,10 @@ Resources:
 
                 # Configure Domain
                 if [[ "${DomainName}" == '' ]]; then
-                  [ ! -d "/usr/share/openvidu" ] && mkdir -p /usr/share/openvidu
                   PublicHostname=$(curl -s -H "X-aws-ec2-metadata-token: $TOKEN" http://169.254.169.254/latest/meta-data/public-hostname)
                   RANDOM_DOMAIN_STRING=$(tr -dc 'a-z' < /dev/urandom | head -c 8)
                   DOMAIN=openvidu-$RANDOM_DOMAIN_STRING-$(echo "$PublicHostname" | cut -d'.' -f1 | sed 's/^ec2-//').sslip.io
                   TURN_DOMAIN_NAME_SSLIP_IO="turn-$RANDOM_DOMAIN_STRING-$(echo "$PublicHostname" | cut -d'.' -f1 | sed 's/^ec2-//').sslip.io"
-                  echo $RANDOM_DOMAIN_STRING > /usr/share/openvidu/random-domain-string
-                  echo $PublicHostname > /usr/share/openvidu/old-host-name
                 else
                   DOMAIN=${DomainName}
                 fi
@@ -580,16 +577,7 @@ Resources:
                   --secret-id openvidu-${AWS::Region}-${AWS::StackName} \
                   --query SecretString --output text)
 
-                # Token for IMDSv2
-                TOKEN=$(curl -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 21600")
-
-                if [[ "${DomainName}" == '' ]]; then
-                  PublicHostname=$(curl -s -H "X-aws-ec2-metadata-token: $TOKEN" http://169.254.169.254/latest/meta-data/public-hostname)
-                  RANDOM_DOMAIN_STRING=$(cat /usr/share/openvidu/random-domain-string)
-                  DOMAIN=openvidu-$RANDOM_DOMAIN_STRING-$(echo "$PublicHostname" | cut -d'.' -f1 | sed 's/^ec2-//').sslip.io
-                else
-                  DOMAIN=${DomainName}
-                fi
+                DOMAIN=$(echo $SHARED_SECRET | jq -r .DOMAIN_NAME)
 
                 # Generate URLs
                 OPENVIDU_URL="https://${!DOMAIN}/"
@@ -632,11 +620,6 @@ Resources:
 
                 # Replace DOMAIN_NAME
                 export DOMAIN=$(echo $SHARED_SECRET | jq -r .DOMAIN_NAME)
-                if [[ $DOMAIN == *"sslip.io"* ]] || [[ -z $DOMAIN ]]; then
-                  PublicHostname=$(curl -s -H "X-aws-ec2-metadata-token: $TOKEN" http://169.254.169.254/latest/meta-data/public-hostname)
-                  RANDOM_DOMAIN_STRING=$(cat /usr/share/openvidu/random-domain-string)
-                  DOMAIN=openvidu-$RANDOM_DOMAIN_STRING-$(echo "$PublicHostname" | cut -d'.' -f1 | sed 's/^ec2-//').sslip.io
-                fi
                 if [[ -n "$DOMAIN" ]]; then
                   sed -i "s/DOMAIN_NAME=.*/DOMAIN_NAME=$DOMAIN/" "${!CONFIG_DIR}/openvidu.env"
                 else
@@ -645,11 +628,6 @@ Resources:
 
                 # Replace LIVEKIT_TURN_DOMAIN_NAME
                 export LIVEKIT_TURN_DOMAIN_NAME=$(echo $SHARED_SECRET | jq -r .LIVEKIT_TURN_DOMAIN_NAME)
-                if [[ $LIVEKIT_TURN_DOMAIN_NAME == *"sslip.io"* ]] || [[ -z $LIVEKIT_TURN_DOMAIN_NAME ]]; then
-                  PublicHostname=$(curl -s -H "X-aws-ec2-metadata-token: $TOKEN" http://169.254.169.254/latest/meta-data/public-hostname)
-                  RANDOM_DOMAIN_STRING=$(cat /usr/share/openvidu/random-domain-string)
-                  LIVEKIT_TURN_DOMAIN_NAME="turn-$RANDOM_DOMAIN_STRING-$(echo "$PublicHostname" | cut -d'.' -f1 | sed 's/^ec2-//').sslip.io"
-                fi
                 if [[ -n "$LIVEKIT_TURN_DOMAIN_NAME" ]]; then
                   sed -i "s/LIVEKIT_TURN_DOMAIN_NAME=.*/LIVEKIT_TURN_DOMAIN_NAME=$LIVEKIT_TURN_DOMAIN_NAME/" "${!CONFIG_DIR}/openvidu.env"
                 fi

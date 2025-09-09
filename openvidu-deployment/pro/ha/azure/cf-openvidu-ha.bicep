@@ -552,8 +552,6 @@ if [[ $MASTER_NODE_NUM -eq 1 ]] && [[ "$ALL_SECRETS_GENERATED" == "" || "$ALL_SE
     RANDOM_DOMAIN_STRING=$(tr -dc 'a-z' < /dev/urandom | head -c 8)
     DOMAIN="openvidu-$RANDOM_DOMAIN_STRING-$(echo "$PUBLIC_IP" | tr '.' '-').sslip.io"
     TURN_DOMAIN_NAME_SSLIP_IO="turn-$RANDOM_DOMAIN_STRING-$(echo "$PUBLIC_IP" | tr '.' '-').sslip.io"
-    echo $RANDOM_DOMAIN_STRING > /usr/share/openvidu/random-domain-string
-    echo $PUBLIC_IP > /usr/share/openvidu/public-ip
   else
     DOMAIN=${domainName}
   fi

@@ -432,7 +432,6 @@ apt-get update && apt-get install -y \
 
 # Configure Domain
 if [[ "${domainName}" == '' ]]; then
-  [ ! -d "/usr/share/openvidu" ] && mkdir -p /usr/share/openvidu
   # Get public IP using the get_public_ip.sh script
   PUBLIC_IP=$(/usr/local/bin/get_public_ip.sh 2>/dev/null)
   if [[ $? -ne 0 || -z "${PUBLIC_IP}" ]]; then
@@ -443,8 +442,6 @@ if [[ "${domainName}" == '' ]]; then
   RANDOM_DOMAIN_STRING=$(tr -dc 'a-z' < /dev/urandom | head -c 8)
   DOMAIN="openvidu-$RANDOM_DOMAIN_STRING-$(echo "$PUBLIC_IP" | tr '.' '-').sslip.io"
   TURN_DOMAIN_NAME_SSLIP_IO="turn-$RANDOM_DOMAIN_STRING-$(echo "$PUBLIC_IP" | tr '.' '-').sslip.io"
-  echo $RANDOM_DOMAIN_STRING > /usr/share/openvidu/random-domain-string
-  echo $PUBLIC_IP > /usr/share/openvidu/public-ip
 else
   DOMAIN=${domainName}
 fi
@@ -652,14 +649,6 @@ MASTER_NODE_CONFIG_DIR="${INSTALL_DIR}/config/node"
 
 # Replace DOMAIN_NAME
 export DOMAIN=$(az keyvault secret show --vault-name ${keyVaultName} --name DOMAIN-NAME --query value -o tsv)
-if [[ $DOMAIN == *"sslip.io"* ]] || [[ -z $DOMAIN ]]; then
-  PUBLIC_IP=$(/usr/local/bin/get_public_ip.sh 2>/dev/null || echo "")
-
-  if [[ -n "$PUBLIC_IP" ]] && [[ -f "/usr/share/openvidu/random-domain-string" ]]; then
-    RANDOM_DOMAIN_STRING=$(cat /usr/share/openvidu/random-domain-string)
-    DOMAIN="openvidu-$RANDOM_DOMAIN_STRING-$(echo "$PUBLIC_IP" | tr '.' '-').sslip.io"
-  fi
-fi
 if [[ -n "$DOMAIN" ]]; then
     sed -i "s/DOMAIN_NAME=.*/DOMAIN_NAME=$DOMAIN/" "${CLUSTER_CONFIG_DIR}/openvidu.env"
 else
@@ -668,14 +657,6 @@ fi
 
 # Replace LIVEKIT_TURN_DOMAIN_NAME
 export LIVEKIT_TURN_DOMAIN_NAME=$(az keyvault secret show --vault-name ${keyVaultName} --name LIVEKIT-TURN-DOMAIN-NAME --query value -o tsv)
-if [[ $LIVEKIT_TURN_DOMAIN_NAME == *"sslip.io"* ]] || [[ -z $LIVEKIT_TURN_DOMAIN_NAME ]]; then
-  PUBLIC_IP=$(/usr/local/bin/get_public_ip.sh 2>/dev/null || echo "")
-
-  if [[ -n "$PUBLIC_IP" ]] && [[ -f "/usr/share/openvidu/random-domain-string" ]]; then
-    RANDOM_DOMAIN_STRING=$(cat /usr/share/openvidu/random-domain-string)
-    LIVEKIT_TURN_DOMAIN_NAME="turn-$RANDOM_DOMAIN_STRING-$(echo "$PUBLIC_IP" | tr '.' '-').sslip.io"
-  fi
-fi
 if [[ -n "$LIVEKIT_TURN_DOMAIN_NAME" ]]; then
     sed -i "s/LIVEKIT_TURN_DOMAIN_NAME=.*/LIVEKIT_TURN_DOMAIN_NAME=$LIVEKIT_TURN_DOMAIN_NAME/" "${CLUSTER_CONFIG_DIR}/openvidu.env"
 fi
