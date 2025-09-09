@@ -47,7 +47,7 @@
                             "type": "Microsoft.Common.DropDown",
                             "label": "Certificate Type",
                             "subLabel": "",
-                            "defaultValue": "selfsigned",
+                            "defaultValue": "letsencrypt",
                             "toolTip": "[[selfsigned] Not recommended for production use. If you don't have a FQDN (DomainName parameter), you can use this option to generate a self-signed certificate.\n[owncert] Valid for production environments. If you have a FQDN (DomainName parameter) and an Elastic IP, you can use this option to use your own certificate.\n[letsencrypt] Valid for production environments. If you have a FQDN (DomainName parameter) and an Elastic IP, you can use this option to generate a Let's Encrypt certificate. If you don't have a FQDN, Let's Encrypt will use sslip.io to generate a valid certificate.\n",
                             "constraints": {
                                 "required": false,
