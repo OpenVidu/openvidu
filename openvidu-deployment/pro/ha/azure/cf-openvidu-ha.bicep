@@ -555,7 +555,7 @@ if [[ $MASTER_NODE_NUM -eq 1 ]] && [[ "$ALL_SECRETS_GENERATED" == "" || "$ALL_SE
   else
     DOMAIN=${domainName}
   fi
-  DOMAIN="$(/usr/local/bin/store_secret.sh save DOMAIN-NAME "${domainName}")"
+  DOMAIN="$(/usr/local/bin/store_secret.sh save DOMAIN-NAME "${DOMAIN}")"
 
   # Configure TURN server domain name
   if [[ -n "${turnDomainName}" ]]; then
