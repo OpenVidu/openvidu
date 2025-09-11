@@ -531,11 +531,6 @@ az login --identity --allow-no-subscriptions > /dev/null
 INSTALL_DIR="/opt/openvidu"
 CONFIG_DIR="${INSTALL_DIR}/config"
 
-if [[ ${certificateType} == "letsencrypt" ]]; then
-  LETSENCRYPT_EMAIL="$(/usr/local/bin/get_value_from_config.sh LETSENCRYPT_EMAIL "${CONFIG_DIR}/openvidu.env")"
-  az keyvault secret set --vault-name ${keyVaultName} --name "LETSENCRYPT-EMAIL" --value $LETSENCRYPT_EMAIL
-fi
-
 # Get current values of the config
 REDIS_PASSWORD="$(/usr/local/bin/get_value_from_config.sh REDIS_PASSWORD "${CONFIG_DIR}/openvidu.env")"
 DOMAIN_NAME="$(/usr/local/bin/get_value_from_config.sh DOMAIN_NAME "${CONFIG_DIR}/openvidu.env")"
