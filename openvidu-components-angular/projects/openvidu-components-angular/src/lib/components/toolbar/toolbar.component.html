@@ -38,7 +38,7 @@
 			*ngIf="showCameraButton"
 			(click)="toggleCamera()"
 			[disabled]="isConnectionLost || !hasVideoDevices || cameraMuteChanging"
-			[class.warn-btn]="!isCameraEnabled"
+			[class.disabled]="!isCameraEnabled"
 			[matTooltip]="isCameraEnabled ? ('TOOLBAR.STOP_VIDEO' | translate) : ('TOOLBAR.START_VIDEO' | translate)"
 			[matTooltipDisabled]="!hasVideoDevices"
 		>
@@ -53,7 +53,7 @@
 			*ngIf="showMicrophoneButton"
 			(click)="toggleMicrophone()"
 			[disabled]="isConnectionLost || !hasAudioDevices || microphoneMuteChanging"
-			[class.warn-btn]="!isMicrophoneEnabled"
+			[class.disabled]="!isMicrophoneEnabled"
 			[matTooltip]="isMicrophoneEnabled ? ('TOOLBAR.MUTE_AUDIO' | translate) : ('TOOLBAR.UNMUTE_AUDIO' | translate)"
 			[matTooltipDisabled]="!hasAudioDevices"
 		>

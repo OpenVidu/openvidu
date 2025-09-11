@@ -40,6 +40,7 @@ export * from './lib/models/toolbar.model';
 export * from './lib/models/logger.model'
 export * from './lib/models/storage.model';
 export * from './lib/models/lang.model';
+export * from './lib/models/theme.model';
 // Pipes
 export * from './lib/pipes/participant.pipe';
 export * from './lib/pipes/recording.pipe';
@@ -57,6 +58,7 @@ export * from './lib/services/config/global-config.service';
 export * from './lib/services/logger/logger.service';
 export * from './lib/services/storage/storage.service';
 export * from './lib/services/translate/translate.service';
+export * from './lib/services/theme/theme.service';
 //Modules
 export * from './lib/openvidu-components-angular.module';
 export * from './lib/openvidu-components-angular-ui.module';

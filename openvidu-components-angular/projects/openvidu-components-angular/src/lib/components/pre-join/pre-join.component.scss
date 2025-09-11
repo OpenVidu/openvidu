@@ -109,7 +109,7 @@
 			aspect-ratio: 4/3;
 			border-radius: var(--ov-surface-radius) var(--ov-surface-radius) 0 0;
 			overflow: hidden;
-			background: #000;
+			background: var(--ov-video-background);
 			.video-frame {
 				width: 100%;
 				height: 100%;
@@ -154,23 +154,16 @@
 					.background-button {
 						width: 48px;
 						height: 48px;
-						background: rgba(255, 255, 255, 0.7);
-						backdrop-filter: blur(20px);
-						border: 1px solid rgba(255, 255, 255, 0.2);
+						min-width: 48px;
+						min-height: 48px;
+						background: var(--ov-primary-action-color);
+						color: var(--ov-secondary-action-color);
 						border-radius: 16px;
-						transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-						color: #333333;
-						box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-						transform: translateZ(0);
-
-						&:active {
-							transform: translateY(-1px);
-							transition: all 0.15s ease;
-						}
+						padding: 0;
 
 						&.mat-mdc-button-disabled {
-							background: rgba(255, 255, 255, 0.137);
-							color: rgba(233, 233, 233, 0.5);
+							background:var(--ov-disabled-background);
+							color: var(--ov-text-disabled-color);
 							cursor: not-allowed;
 
 							&:hover {
@@ -184,10 +177,7 @@
 							height: 22px;
 							opacity: 0.9;
 							transition: opacity 0.2s ease;
-						}
-
-						&:hover mat-icon {
-							opacity: 1;
+							margin: 0;
 						}
 					}
 				}
@@ -235,11 +225,11 @@
 					input {
 						font-size: 16px;
 						font-weight: 500;
-						color: var(--ov-text-primary-color, #333);
+						color: var(--ov-text-surface-color, #666);
 						padding: 16px;
 
 						&::placeholder {
-							color: var(--ov-text-secondary-color, #666);
+							color: var(--ov-text-surface-color, #666);
 							font-weight: 400;
 						}
 					}
@@ -273,7 +263,7 @@
 			.join-button {
 				width: 100%;
 				height: 56px;
-				background: var(--ov-primary-action-color, #4285f4);
+				background: var(--ov-focus-color, #4285f4);
 				color: white;
 				border-radius: var(--ov-surface-radius);
 				font-size: 16px;

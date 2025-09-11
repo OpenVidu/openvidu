@@ -27,7 +27,7 @@
 				justify-content: center;
 				width: 48px;
 				height: 56px;
-				background: var(--ov-surface-secondary, #f0f0f0);
+				background: var(--ov-surface-color, #f0f0f0);
 				color: var(--ov-text-secondary-color, #666);
 				font-size: 20px;
 				border-top-left-radius: 10px;
@@ -44,6 +44,7 @@
 				background: transparent;
 				font-size: 16px;
 				font-weight: 500;
+				color: var(--ov-text-surface-color, #666);
 
 				&::placeholder {
 					color: var(--ov-text-secondary-color, #666);

@@ -1,7 +1,7 @@
 .poster {
 	height: 100%;
 	width: 100%;
-	background-color: #000000;
+	background-color: var(--ov-video-background);
 	position: absolute;
 	z-index: 888;
 	border-radius: var(--ov-video-radius);
@@ -20,7 +20,7 @@
     width: 70px;
 	border-radius: var(--ov-video-radius);
 	border: 2px solid var(--ov-text-primary-color);
-	color: #000000;
+	color: var(--ov-video-background);
 }
 
 #poster-text {

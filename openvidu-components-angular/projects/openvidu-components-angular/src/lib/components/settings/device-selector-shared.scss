@@ -10,12 +10,12 @@
 	&.compact {
 		.unified-device-button {
 			display: flex;
-			background: rgba(255, 255, 255, 0.7);
+			background: var(--ov-primary-action-color);
 			backdrop-filter: blur(20px);
 			border-radius: 12px;
 			overflow: hidden;
 			transition: all 0.2s ease;
-			box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+			box-shadow: var(--ov-shadow-low);
 
 			.toggle-section {
 				display: flex;
@@ -31,25 +31,25 @@
 				transition: all 0.2s ease;
 
 				&.device-enabled {
-					color: var(--ov-primary-action-color, #4285f4);
+					color: var(--ov-focus-color);
 
 					mat-icon {
-						color: var(--ov-primary-action-color, #4285f4);
+						color: var(--ov-focus-color);
 					}
 				}
 
 				&.device-disabled {
-					background: rgba(244, 67, 54, 0.9);
-					color: white;
+					background: var(--ov-error-color);
+					color: var(--ov-surface-color);
 
 					mat-icon {
-						color: white;
+						color: var(--ov-surface-color);
 					}
 				}
 
 				&[disabled] {
-					background: rgba(150, 150, 150, 0.5);
-					color: rgba(150, 150, 150, 0.8);
+					background: var(--ov-gray-alpha-50);
+					color: var(--ov-gray-alpha-80);
 					cursor: not-allowed;
 				}
 
@@ -70,7 +70,7 @@
 				height: 48px;
 				border: none;
 				background: transparent;
-				border-left: 1px solid rgba(0, 0, 0, 0.1);
+				border-left: 1px solid var(--ov-black-alpha-10);
 				border-radius: 0;
 				padding: 0;
 				color: var(--ov-text-secondary-color, #666);
@@ -217,17 +217,17 @@
 			padding: 12px 16px;
 			transition: background-color 0.2s ease;
 			font-size: 14px;
+			color: var(--ov-text-surface-color);
 
 			&:hover {
-				background-color: var(--ov-hover-color, #f5f5f5);
+				background-color: var(--ov-hover-color);
 			}
 
 			&.selected {
-				background-color: rgba(66, 133, 244, 0.08);
-				color: var(--ov-primary-action-color, #4285f4);
+				background-color: var(--ov-active-color);
 
 				mat-icon {
-					color: var(--ov-primary-action-color, #4285f4);
+					color: var(--ov-text-surface-color);
 				}
 			}
 

@@ -1,8 +1,3 @@
-$ov-broadcasting-color: #5903ca;
-
-$ov-input-color: #cccccc;
-
-
 .time-container {
 	padding: 2px;
 }
@@ -14,7 +9,7 @@ $ov-input-color: #cccccc;
 }
 
 #broadcasting-icon {
-	color: $ov-broadcasting-color !important;
+	color: var(--ov-broadcasting-color) !important;
 }
 
 .broadcasting-duration {
@@ -31,12 +26,12 @@ $ov-input-color: #cccccc;
 }
 
 .started {
-	background-color: $ov-broadcasting-color !important;
+	background-color: var(--ov-broadcasting-color) !important;
 	color: var(--ov-text-primary-color);
 }
 
 .activity-icon.started {
-	background-color: $ov-broadcasting-color !important;
+	background-color: var(--ov-broadcasting-color) !important;
 	color: var(--ov-text-primary-color);
 }
 
@@ -119,10 +114,11 @@ mat-expansion-panel {
 .input-container {
 	height: 25px;
 	display: flex;
-	background-color: $ov-input-color;
+	background-color: var(--ov-input-background);
 	padding: 10px;
 	margin: 10px;
 	border-radius: var(--ov-surface-radius);
+	border: 1px solid var(--ov-border-color);
 	order: 3;
 	justify-content: space-evenly;
 	align-items: center;
@@ -131,6 +127,7 @@ mat-expansion-panel {
 .input-container input {
 	width: 100%;
 	height: 16px;
+	color: var(--ov-text-surface-color);
 	margin: auto;
 	background-color: transparent;
 	display: block;
@@ -143,5 +140,19 @@ mat-expansion-panel {
 	-webkit-box-shadow: none;
 	-moz-box-shadow: none;
 	box-shadow: none;
-	font-family: 'Roboto', 'RobotoDraft', Helvetica, Arial, sans-serif;
+
+	&::placeholder {
+		color: var(--ov-text-surface-color);
+		opacity: 1; /* Firefox */
+	}
+}
+
+#broadcasting-btn {
+	color: var(--ov-text-secondary-color);
+
+	&:disabled {
+		// background-color: var(--ov-disabled-color) !important;
+		color: var(--ov-text-disabled-color) !important;
+		cursor: not-allowed !important;
+	}
 }

@@ -1,4 +1,5 @@
 @use '@angular/material' as mat;
+@use '../projects/openvidu-components-angular/src/lib/config/theme' as ovtheme;
 
 @include mat.elevation-classes();
 @include mat.app-background();
@@ -15,7 +16,13 @@ html {
 	@include mat.all-component-colors($openvidu-theme);
 	@include mat.all-component-typographies($openvidu-theme);
 	@include mat.all-component-densities($openvidu-theme);
+
+	// Apply OpenVidu theme integration with Angular Material
+	@include ovtheme.apply-openvidu-theme($openvidu-theme);
 }
+
+// Include responsive theme detection
+@include ovtheme.openvidu-theme-responsive();
 
 html,
 body {
@@ -27,23 +34,77 @@ body {
 	font-family: 'Roboto', 'RobotoDraft', Helvetica, Arial, sans-serif;
 }
 
-// Custom openvidu-components styles
+// Custom openvidu-components styles with Angular Material Theme support
 :root {
-	--ov-background-color: #1f2020;
-	--ov-surface-color: #ffffff;
+	// === Core Background Colors ===
+	--ov-background-color: var(--mat-sys-background, #1f2020);
+	--ov-surface-color: var(--mat-sys-surface, #ffffff);
+	--ov-surface-container-color: var(--mat-sys-surface-container, #f3f3f3);
+	--ov-surface-container-high-color: var(--mat-sys-surface-container-high, #e6e6e6);
 
-	--ov-primary-action-color: #273235;
-	--ov-secondary-action-color: #f1f1f1;
-	--ov-accent-action-color: #0089ab;
+	// === Action Colors (Primary, Secondary, Accent) ===
+	--ov-primary-action-color: var(--mat-sys-primary, #273235);
+	--ov-primary-action-color-lighter: var(--mat-sys-primary-container, #394649);
+	--ov-secondary-action-color: var(--mat-sys-secondary, #f1f1f1);
+	--ov-accent-action-color: var(--mat-sys-tertiary, #0089ab);
 
-	--ov-error-color: #eb5144;
-	--ov-warn-color: #ffba53;
+	// === State Colors ===
+	--ov-error-color: var(--mat-sys-error, #eb5144);
+	--ov-warn-color: var(--mat-sys-error-container, #ffba53);
+	--ov-success-color: var(--mat-sys-tertiary-container, #8bffc9);
 
-	--ov-text-primary-color: #ffffff;
-	--ov-text-surface-color: #1d1d1d;
+	// === Text Colors ===
+	--ov-text-primary-color: var(--mat-sys-on-background, #ffffff);
+	--ov-text-surface-color: var(--mat-sys-on-surface, #1d1d1d);
+	--ov-text-secondary-color: var(--mat-sys-on-surface-variant, #666666);
+	--ov-text-disabled-color: var(--mat-sys-outline, #999999);
 
+	// === Interactive States ===
+	--ov-hover-color: var(--mat-sys-surface-container-highest, #f5f5f5);
+	--ov-active-color: var(--mat-sys-primary-container, rgba(66, 133, 244, 0.08));
+	--ov-focus-color: var(--mat-sys-primary, #4285f4);
+	--ov-disabled-background: var(--mat-sys-surface-container-low, #f5f5f5);
+	--ov-disabled-border-color: var(--mat-sys-outline-variant, #ddd);
+
+	// === Input & Form Colors ===
+	--ov-input-background: var(--mat-sys-surface-container, #f8f9fa);
+	--ov-border-color: var(--mat-sys-outline-variant, #e0e0e0);
+	--ov-border-focus-color: var(--mat-sys-primary, #4285f4);
+
+	// === Shadow & Elevation ===
+	--ov-shadow-low: 0 2px 8px rgba(0, 0, 0, 0.1);
+	--ov-shadow-medium: 0 4px 20px rgba(0, 0, 0, 0.1);
+	--ov-shadow-high: 0 8px 32px rgba(0, 0, 0, 0.12);
+	--ov-border-shadow: 1px 1px 5px 0px rgba(0, 0, 0, 0.2);
+
+	// === Layout & Spacing ===
 	--ov-toolbar-buttons-radius: 50%;
 	--ov-leave-button-radius: 10px;
 	--ov-video-radius: 5px;
 	--ov-surface-radius: 5px;
+	--ov-input-radius: 4px;
+
+	// === Special Colors (with fallbacks) ===
+	--ov-recording-color: var(--ov-error-color);
+	--ov-broadcasting-color: #5903ca;
+	--ov-selection-color: #d4d6d7;
+	--ov-selection-color-btn: #afafaf;
+	--ov-activity-status-color: #afafaf;
+
+	// === Alpha/Transparency Variants ===
+	--ov-primary-alpha-08: rgba(66, 133, 244, 0.08);
+	--ov-primary-alpha-10: rgba(66, 133, 244, 0.1);
+	--ov-error-alpha-10: rgba(211, 47, 47, 0.1);
+	--ov-warning-alpha-10: rgba(255, 193, 7, 0.1);
+	--ov-warning-alpha-30: rgba(255, 193, 7, 0.3);
+	--ov-black-alpha-10: rgba(0, 0, 0, 0.1);
+	--ov-white-alpha-70: rgba(255, 255, 255, 0.7);
+	--ov-white-alpha-90: rgba(255, 255, 255, 0.9);
+	--ov-gray-alpha-50: rgba(150, 150, 150, 0.5);
+	--ov-gray-alpha-80: rgba(150, 150, 150, 0.8);
+
+	// === Video/Media Specific ===
+	--ov-video-background: #000000;
+	--ov-audio-wave-color: var(--ov-accent-action-color);
+	--ov-captions-height: 250px;
 }

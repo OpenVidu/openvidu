@@ -1,0 +1,147 @@
+@use '@angular/material' as mat;
+
+// Mixin for applying OpenVidu CSS variables based on an Angular Material theme
+@mixin apply-openvidu-theme($theme) {
+	:root {
+		// === Core Background Colors ===
+		--ov-background-color: #{mat.get-theme-color($theme, background)};
+		--ov-surface-color: #{mat.get-theme-color($theme, surface)};
+		--ov-surface-container-color: #{mat.get-theme-color($theme, surface-container)};
+		--ov-surface-container-high-color: #{mat.get-theme-color($theme, surface-container-high)};
+
+		// === Action Colors (Primary, Secondary, Accent) ===
+		--ov-primary-action-color: #{mat.get-theme-color($theme, primary)};
+		--ov-primary-action-color-lighter: #{mat.get-theme-color($theme, primary-container)};
+		--ov-secondary-action-color: #{mat.get-theme-color($theme, secondary)};
+		--ov-accent-action-color: #{mat.get-theme-color($theme, tertiary)};
+
+		// === State Colors ===
+		--ov-error-color: #{mat.get-theme-color($theme, error)};
+		--ov-warn-color: #{mat.get-theme-color($theme, error-container)};
+		--ov-success-color: #{mat.get-theme-color($theme, tertiary-container)};
+
+		// === Text Colors ===
+		--ov-text-primary-color: #{mat.get-theme-color($theme, on-background)};
+		--ov-text-surface-color: #{mat.get-theme-color($theme, on-surface)};
+		--ov-text-secondary-color: #{mat.get-theme-color($theme, on-surface-variant)};
+		--ov-text-disabled-color: #{mat.get-theme-color($theme, outline)};
+
+		// === Interactive States ===
+		--ov-hover-color: #{mat.get-theme-color($theme, surface-container-highest)};
+		--ov-active-color: #{mat.get-theme-color($theme, primary-container)};
+		--ov-focus-color: #{mat.get-theme-color($theme, primary)};
+		--ov-disabled-background: #{mat.get-theme-color($theme, surface-container-low)};
+		--ov-disabled-border-color: #{mat.get-theme-color($theme, outline-variant)};
+
+		// === Input & Form Colors ===
+		--ov-input-background: #{mat.get-theme-color($theme, surface-container)};
+		--ov-border-color: #{mat.get-theme-color($theme, outline-variant)};
+		--ov-border-focus-color: #{mat.get-theme-color($theme, primary)};
+	}
+}
+
+// Mixin for applying dark theme of OpenVidu
+@mixin apply-openvidu-dark-theme() {
+	:root {
+		// === Core Background Colors ===
+		--ov-background-color: #1f2020;
+		--ov-surface-color: #2d2d2d;
+		--ov-surface-container-color: #3a3a3a;
+		--ov-surface-container-high-color: #474747;
+
+		// === Action Colors ===
+		--ov-primary-action-color: #4a5a5d;
+		--ov-primary-action-color-lighter: #5a6a6d;
+		--ov-secondary-action-color: #e1e1e1;
+		--ov-accent-action-color: #00b3d6;
+
+		// === State Colors ===
+		--ov-error-color: #ff6b6b;
+		--ov-warn-color: #ffd93d;
+		--ov-success-color: #69db7c;
+
+		// === Text Colors ===
+		--ov-text-primary-color: #ffffff;
+		--ov-text-surface-color: #ffffff;
+		--ov-text-secondary-color: #b3b3b3;
+		--ov-text-disabled-color: #666666;
+
+		// === Interactive States ===
+		--ov-hover-color: #4a4a4a;
+		--ov-active-color: rgba(66, 133, 244, 0.2);
+		--ov-focus-color: #5294ff;
+		--ov-disabled-background: #3a3a3a;
+		--ov-disabled-border-color: #555555;
+
+		// === Input & Form Colors ===
+		--ov-input-background: #3a3a3a;
+		--ov-border-color: #555555;
+		--ov-border-focus-color: #5294ff;
+	}
+}
+
+// Mixin for applying light theme of OpenVidu
+@mixin apply-openvidu-light-theme() {
+	:root {
+		// === Core Background Colors ===
+		--ov-background-color: #ffffff;
+		--ov-surface-color: #ffffff;
+		--ov-surface-container-color: #f8f9fa;
+		--ov-surface-container-high-color: #f0f0f0;
+
+		// === Action Colors ===
+		--ov-primary-action-color: #273235;
+		--ov-primary-action-color-lighter: #394649;
+		--ov-secondary-action-color: #6c757d;
+		--ov-accent-action-color: #0089ab;
+
+		// === State Colors ===
+		--ov-error-color: #dc3545;
+		--ov-warn-color: #ffc107;
+		--ov-success-color: #28a745;
+
+		// === Text Colors ===
+		--ov-text-primary-color: #212529;
+		--ov-text-surface-color: #212529;
+		--ov-text-secondary-color: #6c757d;
+		--ov-text-disabled-color: #adb5bd;
+
+		// === Interactive States ===
+		--ov-hover-color: #f8f9fa;
+		--ov-active-color: rgba(66, 133, 244, 0.08);
+		--ov-focus-color: #4285f4;
+		--ov-disabled-background: #f8f9fa;
+		--ov-disabled-border-color: #dee2e6;
+
+		// === Input & Form Colors ===
+		--ov-input-background: #ffffff;
+		--ov-border-color: #ced4da;
+		--ov-border-focus-color: #4285f4;
+	}
+}
+
+// Mixin for establishing responsive theme properties
+@mixin openvidu-theme-responsive() {
+	// Media query for detecting system dark theme preference
+	@media (prefers-color-scheme: dark) {
+		:root:not([data-ov-theme]) {
+			@include apply-openvidu-dark-theme();
+		}
+	}
+
+	// Media query for detecting system light theme preference
+	@media (prefers-color-scheme: light) {
+		:root:not([data-ov-theme]) {
+			@include apply-openvidu-light-theme();
+		}
+	}
+
+	// Apply specific theme when explicitly defined
+	:root[data-ov-theme='dark'] {
+		@include apply-openvidu-dark-theme();
+	}
+
+	:root[data-ov-theme='light'] {
+		@include apply-openvidu-light-theme();
+	}
+}

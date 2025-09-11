@@ -1,8 +1,5 @@
 @use '../device-selector-shared' as shared;
 
-$ov-selection-color-btn: #afafaf;
-$ov-selection-color: #cccccc;
-
 :host {
 	display: flex;
 	align-items: center;
@@ -27,7 +24,7 @@ $ov-selection-color: #cccccc;
 						.selector-button {
 							// Video-specific hover effect with box-shadow
 							&:hover:not([disabled]) {
-								background-color: white !important;
+								background-color: var(--ov-surface-color) !important;
 								border-color: var(--ov-primary-action-color);
 							}
 						}
@@ -47,5 +44,5 @@ $ov-selection-color: #cccccc;
 }
 
 ::ng-deep .mat-mdc-option.mdc-list-item--selected:not(.mdc-list-item--disabled):not(.mat-mdc-option-multiple) {
-	background-color: $ov-selection-color !important;
+	background-color: var(--ov-selection-color) !important;
 }

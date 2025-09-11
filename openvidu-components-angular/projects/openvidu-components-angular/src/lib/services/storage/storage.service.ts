@@ -19,7 +19,7 @@ import { CustomDevice } from '../../models/device.model';
 })
 export class StorageService implements OnDestroy {
 	public log: ILogger;
-	protected readonly PREFIX_KEY = STORAGE_PREFIX;
+	readonly PREFIX_KEY = STORAGE_PREFIX;
 	private readonly tabId: string;
 	private readonly TAB_CLEANUP_INTERVAL = 30000; // 30 seconds
 	private readonly TAB_TIMEOUT_THRESHOLD = 60000; // 60 seconds

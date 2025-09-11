@@ -1,6 +1,3 @@
-$ov-broadcasting-blinking-color: #5903ca;
-$ov-recording-blinking-color: #eb5144;
-
 :host {
 	#toolbar {
 		height: 100%;
@@ -58,9 +55,12 @@ $ov-recording-blinking-color: #eb5144;
 	#menu-buttons-container button {
 		border-radius: var(--ov-toolbar-buttons-radius);
 		color: var(--ov-secondary-action-color);
+
+		&.disabled {
+			background-color: var(--ov-error-color) !important;
+			color: #fff !important;
+		}
 	}
-
-
 
 	#media-buttons-container > button,
 	::ng-deep #media-buttons-container > button,
@@ -74,9 +74,6 @@ $ov-recording-blinking-color: #eb5144;
 		margin: 6px;
 	}
 
-	.warn-btn {
-		background-color: var(--ov-error-color) !important;
-	}
 	#disable-screen-button > mat-icon {
 		color: var(--ov-error-color) !important;
 	}
@@ -133,7 +130,7 @@ $ov-recording-blinking-color: #eb5144;
 		background-color: var(--ov-error-color);
 	}
 	.broadcasting-tag {
-		background-color: $ov-broadcasting-blinking-color;
+		background-color: var(--ov-broadcasting-color);
 	}
 
 	.recording-tag mat-icon,
@@ -152,12 +149,13 @@ $ov-recording-blinking-color: #eb5144;
 		background-color: var(--ov-error-color) !important;
 		border-radius: var(--ov-leave-button-radius) !important;
 		width: 65px !important;
+		color: #ffffff !important;
 	}
 
 	.mat-mdc-icon-button[disabled] {
 		color: #fff;
 	}
-	::ng-deep .mat-badge-content{
+	::ng-deep .mat-badge-content {
 		background-color: var(--ov-warn-color);
 	}
 	.divider {
@@ -186,14 +184,14 @@ $ov-recording-blinking-color: #eb5144;
 		/* Animation for recording blinking */
 		@keyframes blinker-recording {
 			50% {
-				background-color: $ov-recording-blinking-color;
+				background-color: var(--ov-recording-color);
 			}
 		}
 
 		/* Animation for broadcasting blinking */
 		@keyframes blinker-broadcasting {
 			50% {
-				background-color: $ov-broadcasting-blinking-color;
+				background-color: var(--ov-broadcasting-color);
 			}
 		}
 
@@ -246,14 +244,14 @@ $ov-recording-blinking-color: #eb5144;
 	color: var(--ov-text-surface-color) !important;
 }
 ::ng-deep #toolbar-broadcasting-btn > .mat-icon {
-	color: $ov-broadcasting-blinking-color !important;
+	color: var(--ov-broadcasting-color) !important;
 }
 ::ng-deep #recording-btn > .mat-icon {
-	color: $ov-recording-blinking-color !important;
+	color: var(--ov-recording-color) !important;
 }
 
 ::ng-deep .mat-mdc-menu-panel {
 	border-radius: var(--ov-surface-radius) !important;
 	background-color: var(--ov-surface-color) !important;
-	box-shadow: 1px 1px 5px 0px rgba(0, 0, 0, 0.2) !important;
+	box-shadow: var(--ov-border-shadow) !important;
 }

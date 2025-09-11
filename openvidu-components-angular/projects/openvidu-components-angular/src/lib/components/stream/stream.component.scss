@@ -1,4 +1,3 @@
-$ov-video-elements-bg-color: var(--ov-primary-action-color);
 :host {
 	/* Fixes layout bug. The OV_root is created with the entire layout width and it has a weird UX behaviour */
 	.no-size {
@@ -7,10 +6,10 @@ $ov-video-elements-bg-color: var(--ov-primary-action-color);
 	}
 
 	.participant-name-container {
-		background-color: $ov-video-elements-bg-color;
+		background-color: var(--ov-primary-action-color);
 		padding: 5px;
 		color: var(--ov-secondary-action-color);
-		font-weight: bold;
+		font-weight: 400;
 		border-radius: var(--ov-video-radius);
 	}
 	.participant-name {
@@ -46,7 +45,7 @@ $ov-video-elements-bg-color: var(--ov-primary-action-color);
 	}
 
 	.stream-video-controls {
-		background-color: $ov-video-elements-bg-color;
+		background-color: var(--ov-primary-action-color);
 		border-radius: var(--ov-video-radius);
 		width: fit-content;
 		height: 50px;

@@ -1,5 +1,4 @@
 :host {
-	$ov-activity-status-color: #afafaf;
 	.recording-title,
 	.recording-subtitle {
 		color: var(--ov-text-surface-color);
@@ -25,7 +24,7 @@
 	}
 
 	.recording-duration {
-		background-color: $ov-activity-status-color;
+		background-color: var(--ov-activity-status-color);
 		padding: 4px 8px;
 		border-radius: var(--ov-surface-radius);
 		font-weight: 500;
@@ -120,6 +119,7 @@
 			font-weight: 600;
 			font-size: 15px;
 			margin-bottom: 2px;
+			color: var(--ov-text-surface-color);
 		}
 
 		.status-message {
@@ -173,7 +173,7 @@
 	}
 
 	.recording-card {
-		background: var(--ov-surface-background-color);
+		background: var(--ov-surface-container-color);
 		border: 1px solid rgba(0, 102, 204, 0.1);
 		border-radius: var(--ov-surface-radius);
 		padding: 8px;
@@ -261,7 +261,7 @@
 		font-weight: 500;
 
 		&.recording-live-text {
-			color: var(--ov-primary-action-color);
+			color: var(--ov-text-surface-color);
 			text-transform: uppercase;
 			letter-spacing: 0.5px;
 		}
@@ -317,22 +317,24 @@
 			color: var(--ov-accent-action-color);
 
 			&:hover {
-				background: rgba(0, 102, 204, 0.1);
-				color: var(--ov-accent-action-color);
+				background: transparent;
 			}
 		}
 
 		&.action-view {
 			color: var(--ov-accent-action-color);
 			border-radius: var(--ov-surface-radius);
+
+			&:hover {
+				background: transparent;
+			}
 		}
 
 		&.action-download {
-			color: #4caf50;
+			color: var(--ov-success-color);
 
 			&:hover {
-				background: rgba(76, 175, 80, 0.1);
-				color: #4caf50;
+				background: transparent;
 			}
 		}
 
@@ -340,8 +342,7 @@
 			color: var(--ov-error-color);
 
 			&:hover {
-				background: rgba(244, 67, 54, 0.1);
-				color: var(--ov-error-color);
+				background: transparent;
 			}
 		}
 	}
@@ -538,7 +539,7 @@
 	#start-recording-btn {
 		width: 100%;
 		background-color: var(--ov-primary-action-color);
-		color: var(--ov-secondary-action-color);
+		color: var(--ov-text-surface-color);
 		border-radius: var(--ov-surface-radius);
 	}
 
@@ -562,7 +563,7 @@
 	#stop-recording-btn {
 		width: 100%;
 		background-color: var(--ov-error-color);
-		color: var(--ov-secondary-action-color);
+		color: #fff;
 		border-radius: var(--ov-surface-radius);
 	}
 

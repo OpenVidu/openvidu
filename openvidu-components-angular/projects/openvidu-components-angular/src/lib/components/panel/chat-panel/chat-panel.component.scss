@@ -1,5 +1,3 @@
-$ov-selection-color: #d4d6d7;
-
 .text-container {
 	color: var(--ov-text-primary-color);
 	text-align: center;
@@ -29,8 +27,8 @@ $ov-selection-color: #d4d6d7;
 .input-container {
 	height: 65px;
 	display: flex;
-	background-color: var(--ov-surface-color);
-	border: 1px solid $ov-selection-color;
+	background-color: var(--ov-input-background);
+	border: 1px solid var(--ov-border-color);
 	padding: 10px 5px 10px 10px;
 	margin: 10px;
 	border-radius: var(--ov-surface-radius);
@@ -87,7 +85,7 @@ $ov-selection-color: #d4d6d7;
 	position: relative;
 	border-radius: var(--ov-surface-radius);
 	padding: 8px;
-	color: var(--ov-secondary-action-color);
+	color: var(--ov-text-surface-color);
 	width: auto;
 	max-width: 95%;
 	font-size: 14px;
