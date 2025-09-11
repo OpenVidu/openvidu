@@ -1460,6 +1460,7 @@ resource roleAssignmentMasterNode 'Microsoft.Authorization/roleAssignments@2022-
       'b24988ac-6180-42a0-ab88-20f7382dd24c'
     )
     principalId: openviduMasterNode.identity.principalId
+    principalType: 'ServicePrincipal'
   }
 }
 
@@ -1472,6 +1473,7 @@ resource roleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
       'b24988ac-6180-42a0-ab88-20f7382dd24c'
     )
     principalId: openviduScaleSetMediaNode.identity.principalId
+    principalType: 'ServicePrincipal'
   }
 }
 

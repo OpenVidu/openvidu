@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.37.4.10188",
-      "templateHash": "14527112771015407913"
+      "templateHash": "11078520118740523375"
     }
   },
   "parameters": {
@@ -1009,7 +1009,8 @@
       "name": "[guid(format('roleAssignmentForMasterNode{0}', format('{0}-VM-MasterNode1', parameters('stackName'))))]",
       "properties": {
         "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'b24988ac-6180-42a0-ab88-20f7382dd24c')]",
-        "principalId": "[reference(resourceId('Microsoft.Compute/virtualMachines', format('{0}-VM-MasterNode1', parameters('stackName'))), '2023-09-01', 'full').identity.principalId]"
+        "principalId": "[reference(resourceId('Microsoft.Compute/virtualMachines', format('{0}-VM-MasterNode1', parameters('stackName'))), '2023-09-01', 'full').identity.principalId]",
+        "principalType": "ServicePrincipal"
       },
       "dependsOn": [
         "[resourceId('Microsoft.Compute/virtualMachines', format('{0}-VM-MasterNode1', parameters('stackName')))]"
@@ -1021,7 +1022,8 @@
       "name": "[guid(format('roleAssignmentForMasterNode{0}', format('{0}-VM-MasterNode2', parameters('stackName'))))]",
       "properties": {
         "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'b24988ac-6180-42a0-ab88-20f7382dd24c')]",
-        "principalId": "[reference(resourceId('Microsoft.Compute/virtualMachines', format('{0}-VM-MasterNode2', parameters('stackName'))), '2023-09-01', 'full').identity.principalId]"
+        "principalId": "[reference(resourceId('Microsoft.Compute/virtualMachines', format('{0}-VM-MasterNode2', parameters('stackName'))), '2023-09-01', 'full').identity.principalId]",
+        "principalType": "ServicePrincipal"
       },
       "dependsOn": [
         "[resourceId('Microsoft.Compute/virtualMachines', format('{0}-VM-MasterNode2', parameters('stackName')))]"
@@ -1033,7 +1035,8 @@
       "name": "[guid(format('roleAssignmentForMasterNode{0}', format('{0}-VM-MasterNode3', parameters('stackName'))))]",
       "properties": {
         "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'b24988ac-6180-42a0-ab88-20f7382dd24c')]",
-        "principalId": "[reference(resourceId('Microsoft.Compute/virtualMachines', format('{0}-VM-MasterNode3', parameters('stackName'))), '2023-09-01', 'full').identity.principalId]"
+        "principalId": "[reference(resourceId('Microsoft.Compute/virtualMachines', format('{0}-VM-MasterNode3', parameters('stackName'))), '2023-09-01', 'full').identity.principalId]",
+        "principalType": "ServicePrincipal"
       },
       "dependsOn": [
         "[resourceId('Microsoft.Compute/virtualMachines', format('{0}-VM-MasterNode3', parameters('stackName')))]"
@@ -1045,7 +1048,8 @@
       "name": "[guid(format('roleAssignmentForMasterNode{0}', format('{0}-VM-MasterNode4', parameters('stackName'))))]",
       "properties": {
         "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'b24988ac-6180-42a0-ab88-20f7382dd24c')]",
-        "principalId": "[reference(resourceId('Microsoft.Compute/virtualMachines', format('{0}-VM-MasterNode4', parameters('stackName'))), '2023-09-01', 'full').identity.principalId]"
+        "principalId": "[reference(resourceId('Microsoft.Compute/virtualMachines', format('{0}-VM-MasterNode4', parameters('stackName'))), '2023-09-01', 'full').identity.principalId]",
+        "principalType": "ServicePrincipal"
       },
       "dependsOn": [
         "[resourceId('Microsoft.Compute/virtualMachines', format('{0}-VM-MasterNode4', parameters('stackName')))]"
@@ -1057,7 +1061,8 @@
       "name": "[guid(format('roleAssignmentForScaleSet{0}', format('{0}-mediaNodeScaleSet', parameters('stackName'))))]",
       "properties": {
         "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'b24988ac-6180-42a0-ab88-20f7382dd24c')]",
-        "principalId": "[reference(resourceId('Microsoft.Compute/virtualMachineScaleSets', format('{0}-mediaNodeScaleSet', parameters('stackName'))), '2024-07-01', 'full').identity.principalId]"
+        "principalId": "[reference(resourceId('Microsoft.Compute/virtualMachineScaleSets', format('{0}-mediaNodeScaleSet', parameters('stackName'))), '2024-07-01', 'full').identity.principalId]",
+        "principalType": "ServicePrincipal"
       },
       "dependsOn": [
         "[resourceId('Microsoft.Compute/virtualMachineScaleSets', format('{0}-mediaNodeScaleSet', parameters('stackName')))]"

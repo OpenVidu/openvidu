@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.37.4.10188",
-      "templateHash": "11516095718306106611"
+      "templateHash": "5930269170537641508"
     }
   },
   "parameters": {
@@ -769,7 +769,8 @@
       "name": "[guid(format('roleAssignmentForMasterNode{0}', variables('masterNodeVMSettings').vmName))]",
       "properties": {
         "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'b24988ac-6180-42a0-ab88-20f7382dd24c')]",
-        "principalId": "[reference(resourceId('Microsoft.Compute/virtualMachines', variables('masterNodeVMSettings').vmName), '2023-09-01', 'full').identity.principalId]"
+        "principalId": "[reference(resourceId('Microsoft.Compute/virtualMachines', variables('masterNodeVMSettings').vmName), '2023-09-01', 'full').identity.principalId]",
+        "principalType": "ServicePrincipal"
       },
       "dependsOn": [
         "[resourceId('Microsoft.Compute/virtualMachines', variables('masterNodeVMSettings').vmName)]"
@@ -781,7 +782,8 @@
       "name": "[guid(format('roleAssignmentForScaleSet{0}', format('{0}-mediaNodeScaleSet', parameters('stackName'))))]",
       "properties": {
         "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'b24988ac-6180-42a0-ab88-20f7382dd24c')]",
-        "principalId": "[reference(resourceId('Microsoft.Compute/virtualMachineScaleSets', format('{0}-mediaNodeScaleSet', parameters('stackName'))), '2024-07-01', 'full').identity.principalId]"
+        "principalId": "[reference(resourceId('Microsoft.Compute/virtualMachineScaleSets', format('{0}-mediaNodeScaleSet', parameters('stackName'))), '2024-07-01', 'full').identity.principalId]",
+        "principalType": "ServicePrincipal"
       },
       "dependsOn": [
         "[resourceId('Microsoft.Compute/virtualMachineScaleSets', format('{0}-mediaNodeScaleSet', parameters('stackName')))]"
