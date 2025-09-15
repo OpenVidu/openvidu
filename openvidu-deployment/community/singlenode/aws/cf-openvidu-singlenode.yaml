@@ -35,6 +35,22 @@ Parameters:
     Description: "If certificate type is 'owncert', this parameter will be used to specify the private certificate"
     Type: String
 
+  InitialMeetAdminPassword:
+    Description: 'Initial password for the "admin" user in OpenVidu Meet. If not provided, a random password will be generated.'
+    Type: String
+    Default: ''
+    # Only allow alphanumeric characters
+    AllowedPattern: '^[A-Za-z0-9]*$'
+    ConstraintDescription: 'Must contain only alphanumeric characters (A-Z, a-z, 0-9). Leave empty to generate a random password.'
+
+  InitialMeetApiKey:
+    Description: 'Initial API key for OpenVidu Meet. If not provided, no API key will be set and the user can set it later from Meet Console.'
+    Type: String
+    Default: ''
+    # Only allow alphanumeric characters
+    AllowedPattern: '^[A-Za-z0-9]*$'
+    ConstraintDescription: 'Must contain only alphanumeric characters (A-Z, a-z, 0-9). Leave empty to not set an initial API key.'
+
   AdditionalInstallFlags:
     Description: Additional optional flags to pass to the OpenVidu installer (comma-separated, e.g., "--flag1=value, --flag2").
     Type: String
@@ -210,6 +226,11 @@ Metadata:
           - DomainName
           - OwnPublicCertificate
           - OwnPrivateCertificate
+      - Label:
+          default: OpenVidu Meet configuration
+        Parameters:
+          - InitialMeetAdminPassword
+          - InitialMeetApiKey
       - Label:
           default: EC2 Instance configuration
         Parameters:
@@ -393,6 +414,19 @@ Resources:
                 fi
                 DOMAIN="$(/usr/local/bin/store_secret.sh save DOMAIN_NAME "$DOMAIN")"
 
+                # Meet initial admin user and password
+                MEET_INITIAL_ADMIN_USER="$(/usr/local/bin/store_secret.sh save MEET_INITIAL_ADMIN_USER "admin")"
+                if [[ "${InitialMeetAdminPassword}" != '' ]]; then
+                  MEET_INITIAL_ADMIN_PASSWORD="$(/usr/local/bin/store_secret.sh save MEET_INITIAL_ADMIN_PASSWORD "${InitialMeetAdminPassword}")"
+                else
+                  MEET_INITIAL_ADMIN_PASSWORD="$(/usr/local/bin/store_secret.sh generate MEET_INITIAL_ADMIN_PASSWORD)"
+                fi
+                if [[ "${InitialMeetApiKey}" != '' ]]; then
+                  MEET_INITIAL_API_KEY="$(/usr/local/bin/store_secret.sh save MEET_INITIAL_API_KEY "${InitialMeetApiKey}")"
+                else
+                  MEET_INITIAL_API_KEY="$(/usr/local/bin/store_secret.sh save MEET_INITIAL_API_KEY "")"
+                fi
+
                 # Store usernames and generate random passwords
                 REDIS_PASSWORD="$(/usr/local/bin/store_secret.sh generate REDIS_PASSWORD)"
                 MONGO_ADMIN_USERNAME="$(/usr/local/bin/store_secret.sh save MONGO_ADMIN_USERNAME "mongoadmin")"
@@ -404,9 +438,6 @@ Resources:
                 DASHBOARD_ADMIN_PASSWORD="$(/usr/local/bin/store_secret.sh generate DASHBOARD_ADMIN_PASSWORD)"
                 GRAFANA_ADMIN_USERNAME="$(/usr/local/bin/store_secret.sh save GRAFANA_ADMIN_USERNAME "grafanaadmin")"
                 GRAFANA_ADMIN_PASSWORD="$(/usr/local/bin/store_secret.sh generate GRAFANA_ADMIN_PASSWORD)"
-                MEET_INITIAL_ADMIN_USER="$(/usr/local/bin/store_secret.sh save MEET_INITIAL_ADMIN_USER "admin")"
-                MEET_INITIAL_ADMIN_PASSWORD="$(/usr/local/bin/store_secret.sh generate MEET_INITIAL_ADMIN_PASSWORD)"
-                MEET_INITIAL_API_KEY="$(/usr/local/bin/store_secret.sh generate MEET_INITIAL_API_KEY)"
                 ENABLED_MODULES="$(/usr/local/bin/store_secret.sh save ENABLED_MODULES "observability,openviduMeet")"
                 LIVEKIT_API_KEY="$(/usr/local/bin/store_secret.sh generate LIVEKIT_API_KEY "API" 12)"
                 LIVEKIT_API_SECRET="$(/usr/local/bin/store_secret.sh generate LIVEKIT_API_SECRET)"
@@ -432,7 +463,6 @@ Resources:
                   "--dashboard-admin-password=$DASHBOARD_ADMIN_PASSWORD"
                   "--grafana-admin-user=$GRAFANA_ADMIN_USERNAME"
                   "--grafana-admin-password=$GRAFANA_ADMIN_PASSWORD"
-                  "--meet-initial-admin-user=$MEET_INITIAL_ADMIN_USER"
                   "--meet-initial-admin-password=$MEET_INITIAL_ADMIN_PASSWORD"
                   "--meet-initial-api-key=$MEET_INITIAL_API_KEY"
                   "--livekit-api-key=$LIVEKIT_API_KEY"
