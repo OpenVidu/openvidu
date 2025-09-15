@@ -294,17 +294,19 @@ Parameters:
   InitialMeetAdminPassword:
     Description: 'Initial password for the "admin" user in OpenVidu Meet. If not provided, a random password will be generated.'
     Type: String
+    NoEcho: true
     Default: ''
     # Only allow alphanumeric characters
-    AllowedPattern: '^[A-Za-z0-9]*$'
+    AllowedPattern: '^[A-Za-z0-9_-]*$'
     ConstraintDescription: 'Must contain only alphanumeric characters (A-Z, a-z, 0-9). Leave empty to generate a random password.'
 
   InitialMeetApiKey:
     Description: 'Initial API key for OpenVidu Meet. If not provided, no API key will be set and the user can set it later from Meet Console.'
     Type: String
+    NoEcho: true
     Default: ''
     # Only allow alphanumeric characters
-    AllowedPattern: '^[A-Za-z0-9]*$'
+    AllowedPattern: '^[A-Za-z0-9_-]*$'
     ConstraintDescription: 'Must contain only alphanumeric characters (A-Z, a-z, 0-9). Leave empty to not set an initial API key.'
 
   KeyName:
@@ -468,7 +470,16 @@ Resources:
       # All the values are initialized by one master node and shared with the rest of the nodes
       SecretString: |
         {
-          "ALL_SECRETS_GENERATED": "false",
+          "OPENVIDU_URL": "none",
+          "MEET_INITIAL_ADMIN_USER": "none",
+          "MEET_INITIAL_ADMIN_PASSWORD": "none",
+          "MEET_INITIAL_API_KEY": "none",
+          "LIVEKIT_URL": "none",
+          "LIVEKIT_API_KEY": "none",
+          "LIVEKIT_API_SECRET": "none",
+          "DASHBOARD_URL": "none",
+          "GRAFANA_URL": "none",
+          "MINIO_URL": "none",
           "DOMAIN_NAME": "none",
           "LIVEKIT_TURN_DOMAIN_NAME": "none",
           "OPENVIDU_PRO_LICENSE": "none",
@@ -477,26 +488,19 @@ Resources:
           "MONGO_ADMIN_USERNAME": "none",
           "MONGO_ADMIN_PASSWORD": "none",
           "MONGO_REPLICA_SET_KEY": "none",
-          "MINIO_URL": "none",
           "MINIO_ACCESS_KEY": "none",
           "MINIO_SECRET_KEY": "none",
-          "DASHBOARD_URL": "none",
           "DASHBOARD_ADMIN_USERNAME": "none",
           "DASHBOARD_ADMIN_PASSWORD": "none",
-          "GRAFANA_URL": "none",
           "GRAFANA_ADMIN_USERNAME": "none",
           "GRAFANA_ADMIN_PASSWORD": "none",
-          "MEET_INITIAL_ADMIN_USER": "none",
-          "MEET_INITIAL_ADMIN_PASSWORD": "none",
-          "MEET_INITIAL_API_KEY": "none",
-          "LIVEKIT_API_KEY": "none",
-          "LIVEKIT_API_SECRET": "none",
           "ENABLED_MODULES": "none",
           "MASTER_NODE_1_PRIVATE_IP": "none",
           "MASTER_NODE_2_PRIVATE_IP": "none",
           "MASTER_NODE_3_PRIVATE_IP": "none",
           "MASTER_NODE_4_PRIVATE_IP": "none",
-          "OPENVIDU_VERSION": "none"
+          "OPENVIDU_VERSION": "none",
+          "ALL_SECRETS_GENERATED": "false"
         }
 
   S3AppDataBucketResource:
@@ -1076,11 +1080,15 @@ Resources:
 
                 # Save access URLs
                 DOMAIN=$(echo "$SHARED_SECRET" | jq -r '.DOMAIN_NAME')
+                OPENVIDU_URL="https://${!DOMAIN}/"
+                LIVEKIT_URL="wss://${!DOMAIN}/"
                 DASHBOARD_URL="https://${!DOMAIN}/dashboard/"
                 GRAFANA_URL="https://${!DOMAIN}/grafana/"
                 MINIO_URL="https://${!DOMAIN}/minio-console/"
 
                 # Update shared secret
+                SHARED_SECRET="$(echo "$SHARED_SECRET" | jq '. + {"OPENVIDU_URL": "'"$OPENVIDU_URL"'" }')"
+                SHARED_SECRET="$(echo "$SHARED_SECRET" | jq '. + {"LIVEKIT_URL": "'"$LIVEKIT_URL"'" }')"
                 SHARED_SECRET="$(echo "$SHARED_SECRET" | jq '. + {"DOMAIN_NAME": "'"$DOMAIN"'"}')"
                 SHARED_SECRET="$(echo "$SHARED_SECRET" | jq '. + {"DASHBOARD_URL": "'"$DASHBOARD_URL"'" }')"
                 SHARED_SECRET="$(echo "$SHARED_SECRET" | jq '. + {"GRAFANA_URL": "'"$GRAFANA_URL"'" }')"
@@ -1141,13 +1149,19 @@ Resources:
                 sed -i "s/LIVEKIT_API_SECRET=.*/LIVEKIT_API_SECRET=$(echo $SHARED_SECRET | jq -r .LIVEKIT_API_SECRET)/" "${!CLUSTER_CONFIG_DIR}/openvidu.env"
                 sed -i "s/MEET_INITIAL_ADMIN_USER=.*/MEET_INITIAL_ADMIN_USER=$(echo $SHARED_SECRET | jq -r .MEET_INITIAL_ADMIN_USER)/" "${!CLUSTER_CONFIG_DIR}/master_node/meet.env"
                 sed -i "s/MEET_INITIAL_ADMIN_PASSWORD=.*/MEET_INITIAL_ADMIN_PASSWORD=$(echo $SHARED_SECRET | jq -r .MEET_INITIAL_ADMIN_PASSWORD)/" "${!CLUSTER_CONFIG_DIR}/master_node/meet.env"
-                sed -i "s/MEET_INITIAL_API_KEY=.*/MEET_INITIAL_API_KEY=$(echo $SHARED_SECRET | jq -r .MEET_INITIAL_API_KEY)/" "${!CLUSTER_CONFIG_DIR}/master_node/meet.env"
+                if [[ "${InitialMeetApiKey}" != '' ]]; then
+                  sed -i "s/MEET_INITIAL_API_KEY=.*/MEET_INITIAL_API_KEY=$(echo $SHARED_SECRET | jq -r .MEET_INITIAL_API_KEY)/" "${!CLUSTER_CONFIG_DIR}/master_node/meet.env"
+                fi
                 sed -i "s/ENABLED_MODULES=.*/ENABLED_MODULES=$(echo $SHARED_SECRET | jq -r .ENABLED_MODULES)/" "${!CLUSTER_CONFIG_DIR}/openvidu.env"
 
                 # Update URLs in secret
+                OPENVIDU_URL="https://${!DOMAIN}/"
+                LIVEKIT_URL="wss://${!DOMAIN}/"
                 DASHBOARD_URL="https://${!DOMAIN}/dashboard/"
                 GRAFANA_URL="https://${!DOMAIN}/grafana/"
                 MINIO_URL="https://${!DOMAIN}/minio-console/"
+                SHARED_SECRET="$(echo "$SHARED_SECRET" | jq '. + {"OPENVIDU_URL": "'"$OPENVIDU_URL"'" }')"
+                SHARED_SECRET="$(echo "$SHARED_SECRET" | jq '. + {"LIVEKIT_URL": "'"$LIVEKIT_URL"'" }')"
                 SHARED_SECRET="$(echo "$SHARED_SECRET" | jq '. + {"DOMAIN_NAME": "'"$DOMAIN"'" }')"
                 SHARED_SECRET="$(echo "$SHARED_SECRET" | jq '. + {"DASHBOARD_URL": "'"$DASHBOARD_URL"'" }')"
                 SHARED_SECRET="$(echo "$SHARED_SECRET" | jq '. + {"GRAFANA_URL": "'"$GRAFANA_URL"'" }')"
@@ -1193,7 +1207,9 @@ Resources:
                 SHARED_SECRET="$(echo "$SHARED_SECRET" | jq '. + {"LIVEKIT_API_SECRET": "'"$(/usr/local/bin/get_value_from_config.sh LIVEKIT_API_SECRET "${!CLUSTER_CONFIG_DIR}/openvidu.env")"'"}')"
                 SHARED_SECRET="$(echo "$SHARED_SECRET" | jq '. + {"MEET_INITIAL_ADMIN_USER": "'"$(/usr/local/bin/get_value_from_config.sh MEET_INITIAL_ADMIN_USER "${!CLUSTER_CONFIG_DIR}/master_node/meet.env")"'"}')"
                 SHARED_SECRET="$(echo "$SHARED_SECRET" | jq '. + {"MEET_INITIAL_ADMIN_PASSWORD": "'"$(/usr/local/bin/get_value_from_config.sh MEET_INITIAL_ADMIN_PASSWORD "${!CLUSTER_CONFIG_DIR}/master_node/meet.env")"'"}')"
-                SHARED_SECRET="$(echo "$SHARED_SECRET" | jq '. + {"MEET_INITIAL_API_KEY": "'"$(/usr/local/bin/get_value_from_config.sh MEET_INITIAL_API_KEY "${!CLUSTER_CONFIG_DIR}/master_node/meet.env")"'"}')"
+                if [[ "${InitialMeetApiKey}" != '' ]]; then
+                  SHARED_SECRET="$(echo "$SHARED_SECRET" | jq '. + {"MEET_INITIAL_API_KEY": "'"$(/usr/local/bin/get_value_from_config.sh MEET_INITIAL_API_KEY "${!CLUSTER_CONFIG_DIR}/master_node/meet.env")"'"}')"
+                fi
                 SHARED_SECRET="$(echo "$SHARED_SECRET" | jq '. + {"ENABLED_MODULES": "'"$(/usr/local/bin/get_value_from_config.sh ENABLED_MODULES "${!CLUSTER_CONFIG_DIR}/openvidu.env")"'"}')"
 
                 # Update shared secret
@@ -1943,6 +1959,15 @@ Resources:
           ToPort: 22
           CidrIpv6: ::/0
 
+  OpenViduLoadBalancerToMasterHTTPIngressSG:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !Ref OpenViduMasterNodeSG
+      IpProtocol: tcp
+      FromPort: 80
+      ToPort: 80
+      SourceSecurityGroupId: !Ref OpenViduLoadBalancerSG
+
   OpenViduLoadBalancerToMasterIngressSG:
     Type: AWS::EC2::SecurityGroupIngress
     Properties:
@@ -2347,6 +2372,17 @@ Resources:
         - Key: Name
           Value: !Sub ${AWS::StackName} - OpenVidu HA - TURN with TLS Load Balancer
 
+  OpenViduMasterNodeHTTPListener:
+    Type: 'AWS::ElasticLoadBalancingV2::Listener'
+    Condition: NotExperimentalTurnTLSWithMainDomain
+    Properties:
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref OpenViduMasterNodeHTTPTG
+      LoadBalancerArn: !Ref LoadBalancer
+      Port: 80
+      Protocol: TCP
+
   OpenViduMasterNodeListener:
     Type: 'AWS::ElasticLoadBalancingV2::Listener'
     Condition: NotExperimentalTurnTLSWithMainDomain
@@ -2362,6 +2398,17 @@ Resources:
 
   # ---
   # Experimental TURN TLS with main domain
+  OpenViduMasterNodeWithTurnTLSHTTPListener:
+    Type: 'AWS::ElasticLoadBalancingV2::Listener'
+    Condition: ExperimentalTurnTLSWithMainDomain
+    Properties:
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref OpenViduMasterNodeWithTurnTLSTG
+      LoadBalancerArn: !Ref LoadBalancer
+      Port: 80
+      Protocol: TCP
+
   OpenViduMasterNodeWithTurnTLSListener:
     Type: 'AWS::ElasticLoadBalancingV2::Listener'
     Condition: ExperimentalTurnTLSWithMainDomain
@@ -2400,6 +2447,42 @@ Resources:
       Protocol: TLS
       Certificates:
         - CertificateArn: !Ref TurnCertificateARN
+
+  OpenViduMasterNodeHTTPTG:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Condition: NotExperimentalTurnTLSWithMainDomain
+    Properties:
+      Name:
+        Fn::Join:
+          # Generate a not too long and unique target id
+          # Getting a unique identifier from the stack id
+          - ''
+          - - OVHTTP-
+            - !Select [4, !Split ['-', !Select [2, !Split ['/', !Ref AWS::StackId]]]]
+      TargetType: instance
+      Targets:
+        - Id: !Ref OpenViduMasterNode1
+        - Id: !Ref OpenViduMasterNode2
+        - Id: !Ref OpenViduMasterNode3
+        - Id: !Ref OpenViduMasterNode4
+      VpcId: !Ref OpenViduVPC
+      Port: 80
+      Protocol: TCP
+      Matcher:
+        HttpCode: '200'
+      HealthCheckIntervalSeconds: 10
+      HealthCheckPath: /health/caddy
+      HealthCheckProtocol: HTTP
+      HealthCheckPort: '7880'
+      HealthCheckTimeoutSeconds: 5
+      HealthyThresholdCount: 3
+      UnhealthyThresholdCount: 4
+      TargetGroupAttributes:
+        - Key: deregistration_delay.timeout_seconds
+          Value: 60
+      Tags:
+        - Key: Name
+          Value: !Sub ${AWS::StackName} - OpenVidu HA - Master HTTP Target Group
 
   OpenViduMasterNodeTG:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup

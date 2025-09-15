@@ -38,17 +38,19 @@ Parameters:
   InitialMeetAdminPassword:
     Description: 'Initial password for the "admin" user in OpenVidu Meet. If not provided, a random password will be generated.'
     Type: String
+    NoEcho: true
     Default: ''
     # Only allow alphanumeric characters
-    AllowedPattern: '^[A-Za-z0-9]*$'
+    AllowedPattern: '^[A-Za-z0-9_-]*$'
     ConstraintDescription: 'Must contain only alphanumeric characters (A-Z, a-z, 0-9). Leave empty to generate a random password.'
 
   InitialMeetApiKey:
     Description: 'Initial API key for OpenVidu Meet. If not provided, no API key will be set and the user can set it later from Meet Console.'
     Type: String
+    NoEcho: true
     Default: ''
     # Only allow alphanumeric characters
-    AllowedPattern: '^[A-Za-z0-9]*$'
+    AllowedPattern: '^[A-Za-z0-9_-]*$'
     ConstraintDescription: 'Must contain only alphanumeric characters (A-Z, a-z, 0-9). Leave empty to not set an initial API key.'
 
   AdditionalInstallFlags:
@@ -651,7 +653,9 @@ Resources:
                 sed -i "s/LIVEKIT_API_SECRET=.*/LIVEKIT_API_SECRET=$(echo $SHARED_SECRET | jq -r .LIVEKIT_API_SECRET)/" "${!CONFIG_DIR}/openvidu.env"
                 sed -i "s/MEET_INITIAL_ADMIN_USER=.*/MEET_INITIAL_ADMIN_USER=$(echo $SHARED_SECRET | jq -r .MEET_INITIAL_ADMIN_USER)/" "${!CONFIG_DIR}/meet.env"
                 sed -i "s/MEET_INITIAL_ADMIN_PASSWORD=.*/MEET_INITIAL_ADMIN_PASSWORD=$(echo $SHARED_SECRET | jq -r .MEET_INITIAL_ADMIN_PASSWORD)/" "${!CONFIG_DIR}/meet.env"
-                sed -i "s/MEET_INITIAL_API_KEY=.*/MEET_INITIAL_API_KEY=$(echo $SHARED_SECRET | jq -r .MEET_INITIAL_API_KEY)/" "${!CONFIG_DIR}/meet.env"
+                if [[ "${InitialMeetApiKey}" != '' ]]; then
+                  sed -i "s/MEET_INITIAL_API_KEY=.*/MEET_INITIAL_API_KEY=$(echo $SHARED_SECRET | jq -r .MEET_INITIAL_API_KEY)/" "${!CONFIG_DIR}/meet.env"
+                fi
                 sed -i "s/ENABLED_MODULES=.*/ENABLED_MODULES=$(echo $SHARED_SECRET | jq -r .ENABLED_MODULES)/" "${!CONFIG_DIR}/openvidu.env"
 
                 # Update URLs in secret
@@ -704,7 +708,9 @@ Resources:
                 SHARED_SECRET="$(echo "$SHARED_SECRET" | jq '. + {"LIVEKIT_API_SECRET": "'"$(/usr/local/bin/get_value_from_config.sh LIVEKIT_API_SECRET "${!CONFIG_DIR}/openvidu.env")"'"}')"
                 SHARED_SECRET="$(echo "$SHARED_SECRET" | jq '. + {"MEET_INITIAL_ADMIN_USER": "'"$(/usr/local/bin/get_value_from_config.sh MEET_INITIAL_ADMIN_USER "${!CONFIG_DIR}/meet.env")"'"}')"
                 SHARED_SECRET="$(echo "$SHARED_SECRET" | jq '. + {"MEET_INITIAL_ADMIN_PASSWORD": "'"$(/usr/local/bin/get_value_from_config.sh MEET_INITIAL_ADMIN_PASSWORD "${!CONFIG_DIR}/meet.env")"'"}')"
-                SHARED_SECRET="$(echo "$SHARED_SECRET" | jq '. + {"MEET_INITIAL_API_KEY": "'"$(/usr/local/bin/get_value_from_config.sh MEET_INITIAL_API_KEY "${!CONFIG_DIR}/meet.env")"'"}')"
+                if [[ "${InitialMeetApiKey}" != '' ]]; then
+                  SHARED_SECRET="$(echo "$SHARED_SECRET" | jq '. + {"MEET_INITIAL_API_KEY": "'"$(/usr/local/bin/get_value_from_config.sh MEET_INITIAL_API_KEY "${!CONFIG_DIR}/meet.env")"'"}')"
+                fi
                 SHARED_SECRET="$(echo "$SHARED_SECRET" | jq '. + {"ENABLED_MODULES": "'"$(/usr/local/bin/get_value_from_config.sh ENABLED_MODULES "${!CONFIG_DIR}/openvidu.env")"'"}')"
 
                 # Update shared secret
