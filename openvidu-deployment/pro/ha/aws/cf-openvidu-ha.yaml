@@ -974,6 +974,11 @@ Resources:
                 GRAFANA_ADMIN_PASSWORD=$(echo "$SHARED_SECRET" | jq -r '.GRAFANA_ADMIN_PASSWORD')
                 MEET_INITIAL_ADMIN_USER=$(echo "$SHARED_SECRET" | jq -r '.MEET_INITIAL_ADMIN_USER')
                 MEET_INITIAL_ADMIN_PASSWORD=$(echo "$SHARED_SECRET" | jq -r '.MEET_INITIAL_ADMIN_PASSWORD')
+                if [[ "${InitialMeetApiKey}" != '' ]]; then
+                  MEET_INITIAL_API_KEY=$(echo "$SHARED_SECRET" | jq -r '.MEET_INITIAL_API_KEY')
+                else
+                  MEET_INITIAL_API_KEY=""
+                fi
                 MEET_INITIAL_API_KEY=$(echo "$SHARED_SECRET" | jq -r '.MEET_INITIAL_API_KEY')
                 LIVEKIT_API_KEY=$(echo "$SHARED_SECRET" | jq -r '.LIVEKIT_API_KEY')
                 LIVEKIT_API_SECRET=$(echo "$SHARED_SECRET" | jq -r '.LIVEKIT_API_SECRET')
