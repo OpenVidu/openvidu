@@ -179,13 +179,23 @@ locals {
     RANDOM_DOMAIN_STRING=$(tr -dc 'a-z' < /dev/urandom | head -c 8)
     DOMAIN=openvidu-$RANDOM_DOMAIN_STRING-$(echo $EXTERNAL_IP | tr '.' '-').sslip.io
     TURN_DOMAIN_NAME_SSLIP_IO=turn-$RANDOM_DOMAIN_STRING-$(echo $EXTERNAL_IP | tr '.' '-').sslip.io
-    echo $RANDOM_DOMAIN_STRING > /usr/share/openvidu/random-domain-string
-    echo $EXTERNAL_IP > /usr/share/openvidu/old-host-name
   else
     DOMAIN="${var.domainName}"
   fi
-  
   DOMAIN="$(/usr/local/bin/store_secret.sh save DOMAIN_NAME "$DOMAIN")"
+
+  # Meet initial admin user and password
+  MEET_INITIAL_ADMIN_USER="$(/usr/local/bin/store_secret.sh save MEET_INITIAL_ADMIN_USER "admin")"
+  if [[ "${var.initialMeetAdminPassword}" != '' ]]; then
+    MEET_INITIAL_ADMIN_PASSWORD="$(/usr/local/bin/store_secret.sh save MEET_INITIAL_ADMIN_PASSWORD "${var.initialMeetAdminPassword}")"
+  else
+    MEET_INITIAL_ADMIN_PASSWORD="$(/usr/local/bin/store_secret.sh generate MEET_INITIAL_ADMIN_PASSWORD)"
+  fi
+  if [[ "${InitialMeetApiKey}" != '' ]]; then
+    MEET_INITIAL_API_KEY="$(/usr/local/bin/store_secret.sh save MEET_INITIAL_API_KEY "${InitialMeetApiKey}")"
+  else
+    MEET_INITIAL_API_KEY="$(/usr/local/bin/store_secret.sh save MEET_INITIAL_API_KEY "")"
+  fi
 
   # Store usernames and generate random passwords
   REDIS_PASSWORD="$(/usr/local/bin/store_secret.sh generate REDIS_PASSWORD)"
@@ -198,13 +208,6 @@ locals {
   DASHBOARD_ADMIN_PASSWORD="$(/usr/local/bin/store_secret.sh generate DASHBOARD_ADMIN_PASSWORD)"
   GRAFANA_ADMIN_USERNAME="$(/usr/local/bin/store_secret.sh save GRAFANA_ADMIN_USERNAME "grafanaadmin")"
   GRAFANA_ADMIN_PASSWORD="$(/usr/local/bin/store_secret.sh generate GRAFANA_ADMIN_PASSWORD)"
-  MEET_INITIAL_ADMIN_USER="$(/usr/local/bin/store_secret.sh save MEET_INITIAL_ADMIN_USER "admin")"
-  if [[ "${var.meetInitialAdminPassword}" == "" ]]; then
-    MEET_INITIAL_ADMIN_PASSWORD="$(/usr/local/bin/store_secret.sh generate MEET_INITIAL_ADMIN_PASSWORD)"
-  else
-    MEET_INITIAL_ADMIN_PASSWORD="$(/usr/local/bin/store_secret.sh save MEET_INITIAL_ADMIN_PASSWORD "${var.meetInitialAdminPassword}")"
-  fi
-  MEET_INITIAL_API_KEY="$(/usr/local/bin/store_secret.sh generate MEET_INITIAL_API_KEY)"
   ENABLED_MODULES="$(/usr/local/bin/store_secret.sh save ENABLED_MODULES "observability,openviduMeet")"
   LIVEKIT_API_KEY="$(/usr/local/bin/store_secret.sh generate LIVEKIT_API_KEY "API" 12)"
   LIVEKIT_API_SECRET="$(/usr/local/bin/store_secret.sh generate LIVEKIT_API_SECRET)"
@@ -230,14 +233,13 @@ locals {
     "--dashboard-admin-password=$DASHBOARD_ADMIN_PASSWORD"
     "--grafana-admin-user=$GRAFANA_ADMIN_USERNAME"
     "--grafana-admin-password=$GRAFANA_ADMIN_PASSWORD"
-    "--meet-initial-admin-user=$MEET_INITIAL_ADMIN_USER"
     "--meet-initial-admin-password=$MEET_INITIAL_ADMIN_PASSWORD"
     "--meet-initial-api-key=$MEET_INITIAL_API_KEY"
     "--livekit-api-key=$LIVEKIT_API_KEY"
     "--livekit-api-secret=$LIVEKIT_API_SECRET"
   )
 
-  # Include additional installer flags (trimmed)
+  # Include additional installer flags provided by the user
   if [[ "${var.additionalInstallFlags}" != "" ]]; then
     IFS=',' read -ra EXTRA_FLAGS <<< "${var.additionalInstallFlags}"
     for extra_flag in "$${EXTRA_FLAGS[@]}"; do
@@ -399,11 +401,6 @@ locals {
 
   # Replace DOMAIN_NAME
   export DOMAIN=$(gcloud secrets versions access latest --secret=DOMAIN_NAME)
-  if [[ $DOMAIN == *"sslip.io"* ]] || [[ -z $DOMAIN ]]; then
-    EXTERNAL_IP=$(get_meta() "instance/network-interfaces/0/access-configs/0/nat-ip")
-    RANDOM_DOMAIN_STRING=$(cat /usr/share/openvidu/random-domain-string)
-    DOMAIN=openvidu-$RANDOM_DOMAIN_STRING-$(echo $EXTERNAL_IP | tr '.' '-').sslip.io
-  fi
   if [[ -n "$DOMAIN" ]]; then
       sed -i "s/DOMAIN_NAME=.*/DOMAIN_NAME=$DOMAIN/" "$${CONFIG_DIR}/openvidu.env"
   else
@@ -412,11 +409,6 @@ locals {
 
   # Replace LIVEKIT_TURN_DOMAIN_NAME
   export LIVEKIT_TURN_DOMAIN_NAME=$(gcloud secrets versions access latest --secret=LIVEKIT_TURN_DOMAIN_NAME)
-  if [[ $LIVEKIT_TURN_DOMAIN_NAME == *"sslip.io"* ]] || [[ -z $LIVEKIT_TURN_DOMAIN_NAME ]]; then
-    EXTERNAL_IP=$(get_meta() "instance/network-interfaces/0/access-configs/0/nat-ip")
-    RANDOM_DOMAIN_STRING=$(cat /usr/share/openvidu/random-domain-string)
-    LIVEKIT_TURN_DOMAIN_NAME=turn-$RANDOM_DOMAIN_STRING-$(echo $EXTERNAL_IP | tr '.' '-').sslip.io
-  fi
   if [[ -n "$LIVEKIT_TURN_DOMAIN_NAME" ]]; then
       sed -i "s/LIVEKIT_TURN_DOMAIN_NAME=.*/LIVEKIT_TURN_DOMAIN_NAME=$LIVEKIT_TURN_DOMAIN_NAME/" "$${CONFIG_DIR}/openvidu.env"
   fi
@@ -436,7 +428,9 @@ locals {
   export LIVEKIT_API_SECRET=$(gcloud secrets versions access latest --secret=LIVEKIT_API_SECRET)
   export MEET_INITIAL_ADMIN_USER=$(gcloud secrets versions access latest --secret=MEET_INITIAL_ADMIN_USER)
   export MEET_INITIAL_ADMIN_PASSWORD=$(gcloud secrets versions access latest --secret=MEET_INITIAL_ADMIN_PASSWORD)
-  export MEET_INITIAL_API_KEY=$(gcloud secrets versions access latest --secret=MEET_INITIAL_API_KEY)
+  if [[ "${var.initialMeetApiKey}" != '' ]]; then
+    export MEET_INITIAL_API_KEY=$(gcloud secrets versions access latest --secret=MEET_INITIAL_API_KEY)
+  fi
   export ENABLED_MODULES=$(gcloud secrets versions access latest --secret=ENABLED_MODULES)
 
 
@@ -455,7 +449,9 @@ locals {
   sed -i "s/LIVEKIT_API_SECRET=.*/LIVEKIT_API_SECRET=$LIVEKIT_API_SECRET/" "$${CONFIG_DIR}/openvidu.env"
   sed -i "s/MEET_INITIAL_ADMIN_USER=.*/MEET_INITIAL_ADMIN_USER=$MEET_INITIAL_ADMIN_USER/" "$${CONFIG_DIR}/meet.env"
   sed -i "s/MEET_INITIAL_ADMIN_PASSWORD=.*/MEET_INITIAL_ADMIN_PASSWORD=$MEET_INITIAL_ADMIN_PASSWORD/" "$${CONFIG_DIR}/meet.env"
-  sed -i "s/MEET_INITIAL_API_KEY=.*/MEET_INITIAL_API_KEY=$MEET_INITIAL_API_KEY/" "$${CONFIG_DIR}/meet.env"
+  if [[ "${var.initialMeetApiKey}" != '' ]]; then
+    sed -i "s/MEET_INITIAL_API_KEY=.*/MEET_INITIAL_API_KEY=$MEET_INITIAL_API_KEY/" "$${CONFIG_DIR}/meet.env"
+  fi
   sed -i "s/ENABLED_MODULES=.*/ENABLED_MODULES=$ENABLED_MODULES/" "$${CONFIG_DIR}/openvidu.env"
 
 
@@ -503,7 +499,9 @@ locals {
   LIVEKIT_API_SECRET="$(/usr/local/bin/get_value_from_config.sh LIVEKIT_API_SECRET "$${CONFIG_DIR}/openvidu.env")"
   MEET_INITIAL_ADMIN_USER="$(/usr/local/bin/get_value_from_config.sh MEET_INITIAL_ADMIN_USER "$${CONFIG_DIR}/meet.env")"
   MEET_INITIAL_ADMIN_PASSWORD="$(/usr/local/bin/get_value_from_config.sh MEET_INITIAL_ADMIN_PASSWORD "$${CONFIG_DIR}/meet.env")"
-  MEET_INITIAL_API_KEY="$(/usr/local/bin/get_value_from_config.sh MEET_INITIAL_API_KEY "$${CONFIG_DIR}/meet.env")"
+  if [[ "${var.initialMeetApiKey}" != '' ]]; then
+    MEET_INITIAL_API_KEY="$(/usr/local/bin/get_value_from_config.sh MEET_INITIAL_API_KEY "$${CONFIG_DIR}/meet.env")"
+  fi
   ENABLED_MODULES="$(/usr/local/bin/get_value_from_config.sh ENABLED_MODULES "$${CONFIG_DIR}/openvidu.env")"
 
 
@@ -524,7 +522,9 @@ locals {
   echo -n "$LIVEKIT_API_SECRET" | gcloud secrets versions add LIVEKIT_API_SECRET --data-file=-
   echo -n "$MEET_INITIAL_ADMIN_USER" | gcloud secrets versions add MEET_INITIAL_ADMIN_USER --data-file=-
   echo -n "$MEET_INITIAL_ADMIN_PASSWORD" | gcloud secrets versions add MEET_INITIAL_ADMIN_PASSWORD --data-file=-
-  echo -n "$MEET_INITIAL_API_KEY" | gcloud secrets versions add MEET_INITIAL_API_KEY --data-file=-
+  if [[ "${var.initialMeetApiKey}" != '' ]]; then
+    echo -n "$MEET_INITIAL_API_KEY" | gcloud secrets versions add MEET_INITIAL_API_KEY --data-file=-
+  fi
   echo -n "$ENABLED_MODULES" | gcloud secrets versions add ENABLED_MODULES --data-file=-
   EOF
 
@@ -680,7 +680,6 @@ locals {
   ${local.config_s3_script}
   CONFIG_S3_EOF
   chmod +x /usr/local/bin/config_s3.sh
-
 
   apt-get update && apt-get install -y
 
