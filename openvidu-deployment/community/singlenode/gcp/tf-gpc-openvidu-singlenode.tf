@@ -191,8 +191,8 @@ locals {
   else
     MEET_INITIAL_ADMIN_PASSWORD="$(/usr/local/bin/store_secret.sh generate MEET_INITIAL_ADMIN_PASSWORD)"
   fi
-  if [[ "${InitialMeetApiKey}" != '' ]]; then
-    MEET_INITIAL_API_KEY="$(/usr/local/bin/store_secret.sh save MEET_INITIAL_API_KEY "${InitialMeetApiKey}")"
+  if [[ "${var.initialMeetApiKey}" != '' ]]; then
+    MEET_INITIAL_API_KEY="$(/usr/local/bin/store_secret.sh save MEET_INITIAL_API_KEY "${var.initialMeetApiKey}")"
   else
     MEET_INITIAL_API_KEY="$(/usr/local/bin/store_secret.sh save MEET_INITIAL_API_KEY "")"
   fi
