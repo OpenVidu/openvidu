@@ -154,6 +154,40 @@
                     ]
                 },
                 {
+                    "name": "parameters OpenVidu Meet",
+                    "label": "OpenVidu Meet configuration",
+                    "elements": [
+                        {
+                            "name": "initialMeetAdminPassword",
+                            "type": "Microsoft.Common.PasswordBox",
+                            "label": "Initial Meet Admin Password",
+                            "toolTip": "Initial password for the 'admin' user in OpenVidu Meet. If not provided, a random password will be generated.",
+                            "constraints": {
+                                "required": false,
+                                "regex": "^[A-Za-z0-9_-]*$",
+                                "validationMessage": "Password can only contain letters, numbers, underscores and hyphens.",
+                                "validations": []
+                            },
+                            "infoMessages": [],
+                            "visible": true
+                        },
+                        {
+                            "name": "initialMeetApiKey",
+                            "type": "Microsoft.Common.PasswordBox",
+                            "label": "Initial Meet API Key",
+                            "toolTip": "Initial API key for OpenVidu Meet. If not provided, no API key will be set and the user can set it later from Meet Console.",
+                            "constraints": {
+                                "required": false,
+                                "regex": "^[A-Za-z0-9_-]*$",
+                                "validationMessage": "API key can only contain letters, numbers, underscores and hyphens.",
+                                "validations": []
+                            },
+                            "infoMessages": [],
+                            "visible": true
+                        }
+                    ]
+                },
+                {
                     "name": "parameters INSTANCE",
                     "label": "OpenVidu instance configuration",
                     "elements": [
