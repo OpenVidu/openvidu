@@ -304,16 +304,16 @@ fi
 DOMAIN="$(/usr/local/bin/store_secret.sh save DOMAIN-NAME "$DOMAIN")"
 
 # Meet initial admin user and password
-MEET_INITIAL_ADMIN_USER="$(/usr/local/bin/store_secret.sh save MEET_INITIAL_ADMIN_USER "admin")"
+MEET_INITIAL_ADMIN_USER="$(/usr/local/bin/store_secret.sh save MEET-INITIAL-ADMIN-USER "admin")"
 if [[ "${initialMeetAdminPassword}" != '' ]]; then
-  MEET_INITIAL_ADMIN_PASSWORD="$(/usr/local/bin/store_secret.sh save MEET_INITIAL_ADMIN_PASSWORD "${initialMeetAdminPassword}")"
+  MEET_INITIAL_ADMIN_PASSWORD="$(/usr/local/bin/store_secret.sh save MEET-INITIAL-ADMIN-PASSWORD "${initialMeetAdminPassword}")"
 else
-  MEET_INITIAL_ADMIN_PASSWORD="$(/usr/local/bin/store_secret.sh generate MEET_INITIAL_ADMIN_PASSWORD)"
+  MEET_INITIAL_ADMIN_PASSWORD="$(/usr/local/bin/store_secret.sh generate MEET-INITIAL-ADMIN-PASSWORD)"
 fi
 if [[ "${initialMeetApiKey}" != '' ]]; then
-  MEET_INITIAL_API_KEY="$(/usr/local/bin/store_secret.sh save MEET_INITIAL_API_KEY "${initialMeetApiKey}")"
+  MEET_INITIAL_API_KEY="$(/usr/local/bin/store_secret.sh save MEET-INITIAL-API-KEY "${initialMeetApiKey}")"
 else
-  MEET_INITIAL_API_KEY="$(/usr/local/bin/store_secret.sh save MEET_INITIAL_API_KEY "")"
+  MEET_INITIAL_API_KEY="$(/usr/local/bin/store_secret.sh save MEET-INITIAL-API_KEY "none")"
 fi
 
 REDIS_PASSWORD="$(/usr/local/bin/store_secret.sh generate REDIS-PASSWORD)"
