@@ -398,6 +398,20 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 	) {
 		this.log = this.loggerSrv.get('ToolbarComponent');
 	}
+
+	/**
+	 * @ignore
+	 */
+	get isRecordingStarted(): boolean {
+		return this.recordingStatus === this._recordingStatus.STARTED;
+	}
+
+	/**
+	 * @ignore
+	 */
+	get isBroadcastingStarted(): boolean {
+		return this.broadcastingStatus === this._broadcastingStatus.STARTED;
+	}
 	/**
 	 * @ignore
 	 */

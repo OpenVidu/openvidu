@@ -1,35 +1,44 @@
 <mat-toolbar id="toolbar" class="toolbar-container">
+	<!-- Info container (logo, room name, recording/broadcasting status) -->
 	<div id="info-container" class="info-container">
 		<div>
-			<img *ngIf="!isMinimal && showLogo" id="branding-logo" [ovLogo]="brandingLogo" />
-			<div
-				id="session-info-container"
-				[class.collapsed]="recordingStatus === _recordingStatus.STARTED || broadcastingStatus === _broadcastingStatus.STARTED"
-			>
-				<span id="session-name" *ngIf="!isMinimal && showRoomName">{{ roomName }}</span>
-				<div
-					id="activities-tag"
-					*ngIf="recordingStatus === _recordingStatus.STARTED || broadcastingStatus === _broadcastingStatus.STARTED"
-				>
-					@if (recordingStatus === _recordingStatus.STARTED) {
-						<div id="recording-tag" class="recording-tag" (click)="openRecordingActivityPanel()">
-							<mat-icon class="blink">radio_button_checked</mat-icon>
-							<span class="blink">REC</span>
-							<span *ngIf="recordingTime"> | {{ recordingTime | date: 'H:mm:ss' }}</span>
-						</div>
-					}
+			<!-- Branding Logo -->
+			@if (!isMinimal && showLogo) {
+				<img id="branding-logo" [ovLogo]="brandingLogo" />
+			}
 
-					@if (broadcastingStatus === _broadcastingStatus.STARTED) {
-						<!-- Broadcasting tag -->
-						<div id="broadcasting-tag" class="broadcasting-tag">
-							<mat-icon class="blink">sensors</mat-icon>
-							<span class="blink">LIVE</span>
-						</div>
-					}
-				</div>
+			<!-- Session Info -->
+			<div id="session-info-container" [class.collapsed]="isRecordingStarted || isBroadcastingStarted">
+				<!-- Room Name -->
+				@if (!isMinimal && showRoomName) {
+					<span id="session-name">{{ roomName }}</span>
+				}
+
+				<!-- Activities (Recording / Broadcasting) -->
+				@if (isRecordingStarted || isBroadcastingStarted) {
+					<div id="activities-tag">
+						@if (isRecordingStarted) {
+							<div id="recording-tag" class="recording-tag" (click)="openRecordingActivityPanel()">
+								<mat-icon class="blink">radio_button_checked</mat-icon>
+								<span class="blink">REC</span>
+								<span *ngIf="recordingTime"> | {{ recordingTime | date: 'H:mm:ss' }}</span>
+							</div>
+						}
+
+						@if (isBroadcastingStarted) {
+							<!-- Broadcasting tag -->
+							<div id="broadcasting-tag" class="broadcasting-tag">
+								<mat-icon class="blink">sensors</mat-icon>
+								<span class="blink">LIVE</span>
+							</div>
+						}
+					</div>
+				}
 			</div>
 		</div>
 	</div>
+
+	<!-- Media and menu buttons container -->
 	<div class="media-buttons-container" id="media-buttons-container">
 		<!-- Camera button -->
 		<button
@@ -229,6 +238,8 @@
 			<mat-icon>call_end</mat-icon>
 		</button>
 	</div>
+
+	<!-- Panel buttons (chat, participants, activities) -->
 	<div class="menu-buttons-container" id="menu-buttons-container">
 		<!-- Default activities button -->
 		<button
