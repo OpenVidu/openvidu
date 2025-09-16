@@ -154,6 +154,52 @@
                     ]
                 },
                 {
+                    "name": "parameters MEET",
+                    "label": "OpenVidu Meet configuration",
+                    "elements": [
+                        {
+                            "name": "initialMeetAdminPassword",
+                            "type": "Microsoft.Common.PasswordBox",
+                            "label": {
+                                "password": "Initial Meet Admin Password (Generated if empty, can be changed later from the Meet Console)",
+                                "confirmPassword": "Confirm Password"
+                            },
+                            "toolTip": "Initial password for the 'admin' user in OpenVidu Meet. If not provided, a random password will be generated.",
+                            "constraints": {
+                                "required": false,
+                                "regex": "^[A-Za-z0-9_-]*$",
+                                "validationMessage": "Password can only contain letters, numbers, underscores and hyphens.",
+                                "validations": []
+                            },
+                            "options": {
+                                "hideConfirmation": true
+                            },
+                            "infoMessages": [],
+                            "visible": true
+                        },
+                        {
+                            "name": "initialMeetApiKey",
+                            "type": "Microsoft.Common.PasswordBox",
+                            "label": {
+                                "password": "Initial API Key for OpenVidu Meet (optional, can be set later from the Meet Console)",
+                                "confirmPassword": "Confirm API Key"
+                            },
+                            "toolTip": "Initial API key for OpenVidu Meet. If not provided, no API key will be set and the user can set it later from Meet Console.",
+                            "constraints": {
+                                "required": false,
+                                "regex": "^[A-Za-z0-9_-]*$",
+                                "validationMessage": "API key can only contain letters, numbers, underscores and hyphens.",
+                                "validations": []
+                            },
+                            "options": {
+                                "hideConfirmation": true
+                            },
+                            "infoMessages": [],
+                            "visible": true
+                        }
+                    ]
+                },
+                {
                     "name": "parameters OPENVIDU",
                     "label": "OpenVidu Single Node PRO configuration",
                     "elements": [
@@ -418,6 +464,8 @@
                 "turnDomainName": "[steps('parameters TURN').turnDomainName]",
                 "turnOwnPublicCertificate": "[steps('parameters TURN').turnOwnPublicCertificate]",
                 "turnOwnPrivateCertificate": "[steps('parameters TURN').turnOwnPrivateCertificate]",
+                "initialMeetAdminPassword": "[steps('parameters MEET').initialMeetAdminPassword]",
+                "initialMeetApiKey": "[steps('parameters MEET').initialMeetApiKey]",
                 "instanceType": "[steps('parameters INSTANCE').instanceType]",
                 "adminUsername": "[steps('parameters INSTANCE').adminUsername]",
                 "adminSshKey": "[steps('parameters INSTANCE').adminSshKey]",

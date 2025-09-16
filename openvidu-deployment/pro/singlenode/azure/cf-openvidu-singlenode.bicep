@@ -25,6 +25,14 @@ param ownPublicCertificate string = ''
 @description('If certificate type is \'owncert\', this parameter will be used to specify the private certificate')
 param ownPrivateCertificate string = ''
 
+@description('Initial password for the \'admin\' user in OpenVidu Meet. If not provided, a random password will be generated.')
+@secure()
+param initialMeetAdminPassword string = ''
+
+@description('Initial API key for OpenVidu Meet. If not provided, no API key will be set and the user can set it later from Meet Console.')
+@secure()
+param initialMeetApiKey string = ''
+
 @description('(Optional) Domain name for the TURN server with TLS. Only needed if your users are behind restrictive firewalls')
 param turnDomainName string = ''
 
@@ -268,6 +276,8 @@ var stringInterpolationParams = {
   ownPrivateCertificate: ownPrivateCertificate
   turnOwnPublicCertificate: turnOwnPublicCertificate
   turnOwnPrivateCertificate: turnOwnPrivateCertificate
+  initialMeetAdminPassword: initialMeetAdminPassword
+  initialMeetApiKey: initialMeetApiKey
   keyVaultName: keyVaultName
   openviduLicense: openviduLicense
   rtcEngine: rtcEngine
@@ -302,6 +312,20 @@ else
 fi
 
 DOMAIN="$(/usr/local/bin/store_secret.sh save DOMAIN-NAME "$DOMAIN")"
+
+# Meet initial admin user and password
+MEET_INITIAL_ADMIN_USER="$(/usr/local/bin/store_secret.sh save MEET-INITIAL-ADMIN-USER "admin")"
+if [[ "${initialMeetAdminPassword}" != '' ]]; then
+  MEET_INITIAL_ADMIN_PASSWORD="$(/usr/local/bin/store_secret.sh save MEET-INITIAL-ADMIN-PASSWORD "${initialMeetAdminPassword}")"
+else
+  MEET_INITIAL_ADMIN_PASSWORD="$(/usr/local/bin/store_secret.sh generate MEET-INITIAL-ADMIN-PASSWORD)"
+fi
+if [[ "${initialMeetApiKey}" != '' ]]; then
+  MEET_INITIAL_API_KEY="$(/usr/local/bin/store_secret.sh save MEET-INITIAL-API-KEY "${initialMeetApiKey}")"
+else
+  MEET_INITIAL_API_KEY="$(/usr/local/bin/store_secret.sh save MEET-INITIAL-API-KEY "")"
+fi
+
 OPENVIDU_PRO_LICENSE="$(/usr/local/bin/store_secret.sh save OPENVIDU-PRO-LICENSE "${openviduLicense}")"
 OPENVIDU_RTC_ENGINE="$(/usr/local/bin/store_secret.sh save OPENVIDU-RTC-ENGINE "${rtcEngine}")"
 REDIS_PASSWORD="$(/usr/local/bin/store_secret.sh generate REDIS-PASSWORD)"
@@ -315,8 +339,6 @@ DASHBOARD_ADMIN_PASSWORD="$(/usr/local/bin/store_secret.sh generate DASHBOARD-AD
 GRAFANA_ADMIN_USERNAME="$(/usr/local/bin/store_secret.sh save GRAFANA-ADMIN-USERNAME "grafanaadmin")"
 GRAFANA_ADMIN_PASSWORD="$(/usr/local/bin/store_secret.sh generate GRAFANA-ADMIN-PASSWORD)"
 MEET_INITIAL_ADMIN_USER="$(/usr/local/bin/store_secret.sh save MEET-INITIAL-ADMIN-USER "admin")"
-MEET_INITIAL_ADMIN_PASSWORD="$(/usr/local/bin/store_secret.sh generate MEET-INITIAL-ADMIN-PASSWORD)"
-MEET_INITIAL_API_KEY="$(/usr/local/bin/store_secret.sh generate MEET-INITIAL-API-KEY)"
 LIVEKIT_API_KEY="$(/usr/local/bin/store_secret.sh generate LIVEKIT-API-KEY "API" 12)"
 LIVEKIT_API_SECRET="$(/usr/local/bin/store_secret.sh generate LIVEKIT-API-SECRET)"
 ENABLED_MODULES="$(/usr/local/bin/store_secret.sh save ENABLED-MODULES "observability,openviduMeet,v2compatibility")"
@@ -344,7 +366,6 @@ COMMON_ARGS=(
   "--dashboard-admin-password=$DASHBOARD_ADMIN_PASSWORD"
   "--grafana-admin-user=$GRAFANA_ADMIN_USERNAME"
   "--grafana-admin-password=$GRAFANA_ADMIN_PASSWORD"
-  "--meet-initial-admin-user=$MEET_INITIAL_ADMIN_USER"
   "--meet-initial-admin-password=$MEET_INITIAL_ADMIN_PASSWORD"
   "--meet-initial-api-key=$MEET_INITIAL_API_KEY"
   "--livekit-api-key=$LIVEKIT_API_KEY"
@@ -497,7 +518,9 @@ export LIVEKIT_API_KEY=$(az keyvault secret show --vault-name ${keyVaultName} --
 export LIVEKIT_API_SECRET=$(az keyvault secret show --vault-name ${keyVaultName} --name LIVEKIT-API-SECRET --query value -o tsv)
 export MEET_INITIAL_ADMIN_USER=$(az keyvault secret show --vault-name ${keyVaultName} --name MEET-INITIAL-ADMIN-USER --query value -o tsv)
 export MEET_INITIAL_ADMIN_PASSWORD=$(az keyvault secret show --vault-name ${keyVaultName} --name MEET-INITIAL-ADMIN-PASSWORD --query value -o tsv)
-export MEET_INITIAL_API_KEY=$(az keyvault secret show --vault-name ${keyVaultName} --name MEET-INITIAL-API-KEY --query value -o tsv)
+if [[ "${initialMeetApiKey}" != '' ]]; then
+  export MEET_INITIAL_API_KEY=$(az keyvault secret show --vault-name ${keyVaultName} --name MEET-INITIAL-API-KEY --query value -o tsv)
+fi
 export ENABLED_MODULES=$(az keyvault secret show --vault-name ${keyVaultName} --name ENABLED-MODULES --query value -o tsv)
 
 
@@ -518,7 +541,9 @@ sed -i "s/LIVEKIT_API_KEY=.*/LIVEKIT_API_KEY=$LIVEKIT_API_KEY/" "${CONFIG_DIR}/o
 sed -i "s/LIVEKIT_API_SECRET=.*/LIVEKIT_API_SECRET=$LIVEKIT_API_SECRET/" "${CONFIG_DIR}/openvidu.env"
 sed -i "s/MEET_INITIAL_ADMIN_USER=.*/MEET_INITIAL_ADMIN_USER=$MEET_INITIAL_ADMIN_USER/" "${CONFIG_DIR}/meet.env"
 sed -i "s/MEET_INITIAL_ADMIN_PASSWORD=.*/MEET_INITIAL_ADMIN_PASSWORD=$MEET_INITIAL_ADMIN_PASSWORD/" "${CONFIG_DIR}/meet.env"
-sed -i "s/MEET_INITIAL_API_KEY=.*/MEET_INITIAL_API_KEY=$MEET_INITIAL_API_KEY/" "${CONFIG_DIR}/meet.env"
+if [[ "${initialMeetApiKey}" != '' ]]; then
+  sed -i "s/MEET_INITIAL_API_KEY=.*/MEET_INITIAL_API_KEY=$MEET_INITIAL_API_KEY/" "${CONFIG_DIR}/meet.env"
+fi
 sed -i "s/ENABLED_MODULES=.*/ENABLED_MODULES=$ENABLED_MODULES/" "${CONFIG_DIR}/openvidu.env"
 
 
@@ -568,7 +593,9 @@ LIVEKIT_API_KEY="$(/usr/local/bin/get_value_from_config.sh LIVEKIT_API_KEY "${CO
 LIVEKIT_API_SECRET="$(/usr/local/bin/get_value_from_config.sh LIVEKIT_API_SECRET "${CONFIG_DIR}/openvidu.env")"
 MEET_INITIAL_ADMIN_USER="$(/usr/local/bin/get_value_from_config.sh MEET_INITIAL_ADMIN_USER "${CONFIG_DIR}/meet.env")"
 MEET_INITIAL_ADMIN_PASSWORD="$(/usr/local/bin/get_value_from_config.sh MEET_INITIAL_ADMIN_PASSWORD "${CONFIG_DIR}/meet.env")"
-MEET_INITIAL_API_KEY="$(/usr/local/bin/get_value_from_config.sh MEET_INITIAL_API_KEY "${CONFIG_DIR}/meet.env")"
+if [[ "${initialMeetApiKey}" != '' ]]; then
+  MEET_INITIAL_API_KEY="$(/usr/local/bin/get_value_from_config.sh MEET_INITIAL_API_KEY "${CONFIG_DIR}/meet.env")"
+fi
 ENABLED_MODULES="$(/usr/local/bin/get_value_from_config.sh ENABLED_MODULES "${CONFIG_DIR}/openvidu.env")"
 
 
@@ -591,7 +618,9 @@ az keyvault secret set --vault-name ${keyVaultName} --name LIVEKIT-API-KEY --val
 az keyvault secret set --vault-name ${keyVaultName} --name LIVEKIT-API-SECRET --value $LIVEKIT_API_SECRET
 az keyvault secret set --vault-name ${keyVaultName} --name MEET-INITIAL-ADMIN-USER --value $MEET_INITIAL_ADMIN_USER
 az keyvault secret set --vault-name ${keyVaultName} --name MEET-INITIAL-ADMIN-PASSWORD --value $MEET_INITIAL_ADMIN_PASSWORD
-az keyvault secret set --vault-name ${keyVaultName} --name MEET-INITIAL-API-KEY --value $MEET_INITIAL_API_KEY
+if [[ "${initialMeetApiKey}" != '' ]]; then
+  az keyvault secret set --vault-name ${keyVaultName} --name MEET-INITIAL-API-KEY --value $MEET_INITIAL_API_KEY
+fi
 az keyvault secret set --vault-name ${keyVaultName} --name ENABLED-MODULES --value $ENABLED_MODULES
 '''
 
