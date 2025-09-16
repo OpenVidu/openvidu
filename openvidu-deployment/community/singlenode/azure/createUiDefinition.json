@@ -154,7 +154,7 @@
                     ]
                 },
                 {
-                    "name": "parameters OpenVidu Meet",
+                    "name": "parameters MEET",
                     "label": "OpenVidu Meet configuration",
                     "elements": [
                         {
@@ -412,6 +412,8 @@
                 "turnDomainName": "[steps('parameters TURN').turnDomainName]",
                 "turnOwnPublicCertificate": "[steps('parameters TURN').turnOwnPublicCertificate]",
                 "turnOwnPrivateCertificate": "[steps('parameters TURN').turnOwnPrivateCertificate]",
+                "initialMeetAdminPassword": "[steps('parameters MEET').initialMeetAdminPassword]",
+                "initialMeetApiKey": "[steps('parameters MEET').initialMeetApiKey]",
                 "instanceType": "[steps('parameters INSTANCE').instanceType]",
                 "adminUsername": "[steps('parameters INSTANCE').adminUsername]",
                 "adminSshKey": "[steps('parameters INSTANCE').adminSshKey]",
