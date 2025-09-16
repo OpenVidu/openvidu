@@ -161,7 +161,7 @@
                             "name": "initialMeetAdminPassword",
                             "type": "Microsoft.Common.PasswordBox",
                             "label": {
-                                "password": "Initial Meet Admin Password",
+                                "password": "Initial Meet Admin Password (Generated if empty, can be changed later from the Meet Console)",
                                 "confirmPassword": "Confirm Password"
                             },
                             "toolTip": "Initial password for the 'admin' user in OpenVidu Meet. If not provided, a random password will be generated.",
@@ -181,7 +181,7 @@
                             "name": "initialMeetApiKey",
                             "type": "Microsoft.Common.PasswordBox",
                             "label": {
-                                "password": "Initial Meet API Key",
+                                "password": "Initial API Key for OpenVidu Meet (optional, can be set later from the Meet Console)",
                                 "confirmPassword": "Confirm API Key"
                             },
                             "toolTip": "Initial API key for OpenVidu Meet. If not provided, no API key will be set and the user can set it later from Meet Console.",
