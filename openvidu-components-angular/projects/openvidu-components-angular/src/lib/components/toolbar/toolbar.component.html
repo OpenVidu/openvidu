@@ -40,203 +40,48 @@
 
 	<!-- Media and menu buttons container -->
 	<div class="media-buttons-container" id="media-buttons-container">
-		<!-- Camera button -->
-		<button
-			id="camera-btn"
-			mat-icon-button
-			*ngIf="showCameraButton"
-			(click)="toggleCamera()"
-			[disabled]="isConnectionLost || !hasVideoDevices || cameraMuteChanging"
-			[class.disabled]="!isCameraEnabled"
-			[matTooltip]="isCameraEnabled ? ('TOOLBAR.STOP_VIDEO' | translate) : ('TOOLBAR.START_VIDEO' | translate)"
-			[matTooltipDisabled]="!hasVideoDevices"
-		>
-			<mat-icon *ngIf="isCameraEnabled" id="videocam"> videocam </mat-icon>
-			<mat-icon *ngIf="!isCameraEnabled" id="videocam_off"> videocam_off </mat-icon>
-		</button>
-
-		<!-- Microphone button -->
-		<button
-			id="mic-btn"
-			mat-icon-button
-			*ngIf="showMicrophoneButton"
-			(click)="toggleMicrophone()"
-			[disabled]="isConnectionLost || !hasAudioDevices || microphoneMuteChanging"
-			[class.disabled]="!isMicrophoneEnabled"
-			[matTooltip]="isMicrophoneEnabled ? ('TOOLBAR.MUTE_AUDIO' | translate) : ('TOOLBAR.UNMUTE_AUDIO' | translate)"
-			[matTooltipDisabled]="!hasAudioDevices"
-		>
-			<mat-icon *ngIf="isMicrophoneEnabled" id="mic"> mic </mat-icon>
-			<mat-icon *ngIf="!isMicrophoneEnabled" id="mic_off"> mic_off </mat-icon>
-		</button>
-
-		<!-- Enable Screenshare button -->
-		<button
-			mat-icon-button
-			*ngIf="!isMinimal && showScreenshareButton && !isScreenShareEnabled"
-			id="screenshare-btn"
-			(click)="toggleScreenShare()"
-			[disabled]="isConnectionLost"
-			matTooltip="{{ 'TOOLBAR.ENABLE_SCREEN' | translate }}"
-		>
-			<mat-icon>screen_share</mat-icon>
-		</button>
-		<!-- Screenshare button menu -->
-		<button
-			mat-icon-button
-			*ngIf="!isMinimal && showScreenshareButton && isScreenShareEnabled"
-			id="screenshare-btn"
-			[matMenuTriggerFor]="screenshareMenu"
-			[disabled]="isConnectionLost"
-			class="active-btn"
-			matTooltip="{{ 'TOOLBAR.DISABLE_SCREEN' | translate }}"
-		>
-			<mat-icon>screen_share</mat-icon>
-		</button>
-		<mat-menu #screenshareMenu="matMenu" id="screenshare-menu">
-			<button mat-menu-item (click)="replaceScreenTrack()" id="replace-screen-button">
-				<mat-icon>picture_in_picture</mat-icon>
-				<span>{{ 'STREAM.REPLACE_SCREEN' | translate }}</span>
-			</button>
-			<mat-divider class="divider"></mat-divider>
-			<button mat-menu-item (click)="toggleScreenShare()" id="disable-screen-button">
-				<mat-icon>stop_screen_share</mat-icon>
-				<span>{{ 'TOOLBAR.DISABLE_SCREEN' | translate }}</span>
-			</button>
-		</mat-menu>
-
-		<ng-container *ngIf="toolbarAdditionalButtonsTemplate && additionalButtonsPosition && additionalButtonsPosition === 'beforeMenu'">
-			<ng-container *ngTemplateOutlet="toolbarAdditionalButtonsTemplate"></ng-container>
-		</ng-container>
-
-		<!-- More options button -->
-		<button
-			mat-icon-button
-			id="more-options-btn"
-			*ngIf="!isMinimal && showMoreOptionsButton"
-			[matMenuTriggerFor]="settingsMenu"
-			[disabled]="isConnectionLost"
-			matTooltip="{{ 'TOOLBAR.MORE_OPTIONS' | translate }}"
-		>
-			<mat-icon>more_vert</mat-icon>
-		</button>
-		<mat-menu #settingsMenu="matMenu" id="more-options-menu">
-			<!-- Fullscreen button -->
-			<button *ngIf="showFullscreenButton" mat-menu-item id="fullscreen-btn" (click)="toggleFullscreen()">
-				<mat-icon *ngIf="!isFullscreenActive">fullscreen</mat-icon>
-				<span *ngIf="!isFullscreenActive">{{ 'TOOLBAR.FULLSCREEN' | translate }}</span>
-
-				<mat-icon *ngIf="isFullscreenActive">fullscreen_exit</mat-icon>
-				<span *ngIf="isFullscreenActive">{{ 'TOOLBAR.EXIT_FULLSCREEN' | translate }}</span>
-			</button>
-
-			<!-- Recording button -->
-			<button
-				*ngIf="!isMinimal && showRecordingButton"
-				mat-menu-item
-				id="recording-btn"
-				[disabled]="
-					recordingStatus === _recordingStatus.STARTING ||
-					recordingStatus === _recordingStatus.STOPPING ||
-					!hasRoomTracksPublished
-				"
-				[matTooltip]="!hasRoomTracksPublished ? ('TOOLBAR.NO_TRACKS_PUBLISHED' | translate) : ''"
-				(click)="toggleRecording()"
-			>
-				<mat-icon color="warn">radio_button_checked</mat-icon>
-				@if (
-					recordingStatus === _recordingStatus.STOPPED ||
-					recordingStatus === _recordingStatus.STOPPING ||
-					recordingStatus === _recordingStatus.FAILED
-				) {
-					<span class="blink">
-						{{ 'TOOLBAR.START_RECORDING' | translate }}
-					</span>
-				} @else if (recordingStatus === _recordingStatus.STARTED || recordingStatus === _recordingStatus.STARTING) {
-					<span>{{ 'TOOLBAR.STOP_RECORDING' | translate }}</span>
-				}
-			</button>
-
-			<!-- View recordings button -->
-			@if (!isMinimal && showViewRecordingsButton) {
-				<button mat-menu-item id="view-recordings-btn" (click)="onViewRecordingsClicked.emit()">
-					<mat-icon>video_library</mat-icon>
-					<span>{{ 'TOOLBAR.VIEW_RECORDINGS' | translate }}</span>
-				</button>
-			}
-
-			<!-- Broadcasting button -->
-			<button
-				*ngIf="!isMinimal && showBroadcastingButton"
-				mat-menu-item
-				id="toolbar-broadcasting-btn"
-				[disabled]="broadcastingStatus === _broadcastingStatus.STARTING || recordingStatus === _broadcastingStatus.STOPPING"
-				(click)="toggleBroadcasting()"
-			>
-				<mat-icon>sensors</mat-icon>
-				<span
-					*ngIf="
-						broadcastingStatus === _broadcastingStatus.STOPPED ||
-						broadcastingStatus === _broadcastingStatus.STOPPING ||
-						broadcastingStatus === _broadcastingStatus.FAILED
-					"
-				>
-					{{ 'PANEL.STREAMING.START' | translate }}
-				</span>
-				<span *ngIf="broadcastingStatus === _broadcastingStatus.STARTED || broadcastingStatus === _broadcastingStatus.STARTING">
-					{{ 'PANEL.STREAMING.STOP' | translate }}
-				</span>
-			</button>
-
-			<!-- Virtual background button -->
-			<button
-				*ngIf="!isMinimal && showBackgroundEffectsButton"
-				[disabled]="!isCameraEnabled"
-				mat-menu-item
-				id="virtual-bg-btn"
-				(click)="toggleBackgroundEffects()"
-			>
-				<mat-icon><span class="material-symbols-outlined"> background_replace </span></mat-icon>
-				<span>{{ 'TOOLBAR.BACKGROUND' | translate }}</span>
-			</button>
-
-			<!-- Captions button -->
-			<!-- <button
-				*ngIf="!isMinimal && showCaptionsButton"
-				[disabled]="isConnectionLost"
-				mat-menu-item
-				id="captions-btn"
-				(click)="toggleCaptions()"
-			>
-				<mat-icon>closed_caption</mat-icon>
-				<span *ngIf="captionsEnabled">{{ 'TOOLBAR.DISABLE_CAPTIONS' | translate }}</span>
-				<span *ngIf="!captionsEnabled">{{ 'TOOLBAR.ENABLE_CAPTIONS' | translate }}</span>
-			</button> -->
-
-			<mat-divider class="divider" *ngIf="!isMinimal && showSettingsButton"></mat-divider>
-
-			<!-- Settings button -->
-			<button *ngIf="!isMinimal && showSettingsButton" mat-menu-item id="toolbar-settings-btn" (click)="toggleSettings()">
-				<mat-icon>settings</mat-icon>
-				<span>{{ 'TOOLBAR.SETTINGS' | translate }}</span>
-			</button>
-		</mat-menu>
-
-		<!-- External additional buttons  -->
-		<ng-container *ngIf="toolbarAdditionalButtonsTemplate && additionalButtonsPosition && additionalButtonsPosition === 'afterMenu'">
-			<ng-container *ngTemplateOutlet="toolbarAdditionalButtonsTemplate"></ng-container>
-		</ng-container>
-
-		<!-- Leave session button -->
-		<button
-			mat-icon-button
-			*ngIf="showLeaveButton"
-			(click)="disconnect()"
-			id="leave-btn"
-			matTooltip="{{ 'TOOLBAR.LEAVE' | translate }}"
-		>
-			<mat-icon>call_end</mat-icon>
-		</button>
+		<ov-toolbar-media-buttons
+			[showCameraButton]="showCameraButton"
+			[isCameraEnabled]="isCameraEnabled"
+			[cameraMuteChanging]="cameraMuteChanging"
+			[showMicrophoneButton]="showMicrophoneButton"
+			[isMicrophoneEnabled]="isMicrophoneEnabled"
+			[microphoneMuteChanging]="microphoneMuteChanging"
+			[showScreenshareButton]="showScreenshareButton"
+			[isScreenShareEnabled]="isScreenShareEnabled"
+			[hasVideoDevices]="hasVideoDevices"
+			[hasAudioDevices]="hasAudioDevices"
+			[isConnectionLost]="isConnectionLost"
+			[isMinimal]="isMinimal"
+			[showMoreOptionsButton]="showMoreOptionsButton"
+			[showFullscreenButton]="showFullscreenButton"
+			[showRecordingButton]="showRecordingButton"
+			[showViewRecordingsButton]="showViewRecordingsButton"
+			[showBroadcastingButton]="showBroadcastingButton"
+			[showBackgroundEffectsButton]="showBackgroundEffectsButton"
+			[showCaptionsButton]="showCaptionsButton"
+			[showSettingsButton]="showSettingsButton"
+			[isFullscreenActive]="isFullscreenActive"
+			[recordingStatus]="recordingStatus"
+			[hasRoomTracksPublished]="hasRoomTracksPublished"
+			[broadcastingStatus]="broadcastingStatus"
+			[captionsEnabled]="captionsEnabled"
+			[showLeaveButton]="showLeaveButton"
+			[toolbarAdditionalButtonsTemplate]="toolbarAdditionalButtonsTemplate"
+			[additionalButtonsPosition]="additionalButtonsPosition"
+			(cameraToggled)="toggleCamera()"
+			(microphoneToggled)="toggleMicrophone()"
+			(screenShareToggled)="toggleScreenShare()"
+			(screenTrackReplaced)="replaceScreenTrack()"
+			(fullscreenToggled)="toggleFullscreen()"
+			(recordingToggled)="toggleRecording()"
+			(viewRecordingsClicked)="onViewRecordingsClicked.emit()"
+			(broadcastingToggled)="toggleBroadcasting()"
+			(backgroundEffectsToggled)="toggleBackgroundEffects()"
+			(captionsToggled)="onCaptionsToggle()"
+			(settingsToggled)="toggleSettings()"
+			(leaveClicked)="disconnect()"
+		></ov-toolbar-media-buttons>
 	</div>
 
 	<!-- Panel buttons (chat, participants, activities) -->

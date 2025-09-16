@@ -30,6 +30,13 @@
 		display: flex;
 		justify-content: center;
 		align-items: center;
+
+		// ov-toolbar-media-buttons {
+		// 	display: flex;
+		// 	justify-content: center;
+		// 	align-items: center;
+		// 	flex: 1;
+		// }
 	}
 	.menu-buttons-container {
 		flex: 20%;
@@ -47,40 +54,9 @@
 		max-height: 100% !important;
 	}
 
-	#media-buttons-container mat-icon {
-		font-size: 24px;
-	}
-
-	#media-buttons-container button,
 	#menu-buttons-container button {
 		border-radius: var(--ov-toolbar-buttons-radius);
 		color: var(--ov-secondary-action-color);
-
-		&.disabled {
-			background-color: var(--ov-error-color) !important;
-			color: #fff !important;
-		}
-	}
-
-	#media-buttons-container > button,
-	::ng-deep #media-buttons-container > button,
-	#media-buttons-container:not(#media-buttons-container > button) button,
-	/* Applying css for external additional buttons*/
-	::ng-deep #media-buttons-container:not(#media-buttons-container > button) button {
-		// width: 40px;
-		// height: 40px;
-		background-color: var(--ov-primary-action-color);
-		color: var(--ov-secondary-action-color);
-		margin: 6px;
-	}
-
-	#disable-screen-button > mat-icon {
-		color: var(--ov-error-color) !important;
-	}
-
-	.active-btn,
-	::ng-deep .active-btn {
-		background-color: var(--ov-accent-action-color) !important;
 	}
 
 	#branding-logo {
@@ -146,33 +122,10 @@
 		animation: blinker 1.5s linear infinite;
 	}
 
-	#leave-btn {
-		background-color: var(--ov-error-color) !important;
-		border-radius: var(--ov-leave-button-radius) !important;
-		width: 65px !important;
-		color: #ffffff !important;
-	}
 
-	.mat-mdc-icon-button[disabled] {
-		color: #fff;
-	}
+
 	::ng-deep .mat-badge-content {
 		background-color: var(--ov-warn-color);
-	}
-	.divider {
-		margin: 8px 0px;
-	}
-	::ng-deep .mat-mdc-menu-item {
-		/* margin-bottom: 10px; */
-		height: 40px;
-		line-height: 40px;
-	}
-
-	/* Animation for general blinking */
-	@keyframes blinker {
-		50% {
-			opacity: 0.3;
-		}
 	}
 
 	/* Styles for XS screens */

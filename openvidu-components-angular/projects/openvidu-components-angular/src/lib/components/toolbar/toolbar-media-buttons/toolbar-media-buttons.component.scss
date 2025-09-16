@@ -1,0 +1,123 @@
+:host {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+
+	.mat-mdc-icon-button {
+		--mat-mdc-button-persistent-ripple-color: transparent !important;
+		--mat-mdc-button-ripple-color: transparent !important;
+	}
+
+	mat-icon {
+		font-size: 24px;
+	}
+
+	button {
+		border-radius: var(--ov-toolbar-buttons-radius);
+		color: var(--ov-secondary-action-color);
+
+		&.disabled {
+			background-color: var(--ov-error-color) !important;
+			color: #fff !important;
+		}
+	}
+
+	button:not(mat-menu-item),
+	button:not(.mat-mdc-menu-item) ::ng-deep button:not(mat-menu-item),
+	::ng-deep button:not(#screenshare-menu) {
+		background-color: var(--ov-primary-action-color);
+		color: var(--ov-secondary-action-color);
+		margin: 6px;
+	}
+
+	#screenshare-menu {
+	}
+
+	#disable-screen-button > mat-icon {
+		color: var(--ov-error-color) !important;
+	}
+
+	.active-btn,
+	::ng-deep .active-btn {
+		background-color: var(--ov-accent-action-color) !important;
+	}
+
+	#leave-btn {
+		background-color: var(--ov-error-color) !important;
+		border-radius: var(--ov-leave-button-radius) !important;
+		width: 65px !important;
+		color: #ffffff !important;
+	}
+
+	.mat-mdc-icon-button[disabled] {
+		color: #fff;
+	}
+
+	.divider {
+		margin: 8px 0px;
+	}
+
+	.blink {
+		animation: blinker 1.5s linear infinite;
+	}
+
+	/* Animation for general blinking */
+	@keyframes blinker {
+		50% {
+			opacity: 0.3;
+		}
+	}
+
+	::ng-deep .mat-badge-content {
+		background-color: var(--ov-warn-color);
+	}
+
+	::ng-deep .mat-mdc-menu-item {
+		height: 40px;
+		line-height: 40px;
+		color: var(--ov-text-surface-color) !important;
+	}
+
+	::ng-deep .mat-mdc-menu-item mat-icon {
+		color: var(--ov-text-surface-color) !important;
+	}
+
+	::ng-deep #toolbar-broadcasting-btn > .mat-icon {
+		color: var(--ov-broadcasting-color) !important;
+	}
+
+	::ng-deep #recording-btn > .mat-icon {
+		color: var(--ov-recording-color) !important;
+	}
+
+	::ng-deep .mat-mdc-menu-panel {
+		border-radius: var(--ov-surface-radius) !important;
+		background-color: var(--ov-surface-color) !important;
+		box-shadow: var(--ov-border-shadow) !important;
+	}
+
+	/* Styles for XS screens */
+	@media (max-width: 599px) {
+		/* Animation for recording blinking */
+		@keyframes blinker-recording {
+			50% {
+				background-color: var(--ov-recording-color);
+			}
+		}
+
+		/* Animation for broadcasting blinking */
+		@keyframes blinker-broadcasting {
+			50% {
+				background-color: var(--ov-broadcasting-color);
+			}
+		}
+
+		/* Apply blinking animations to buttons */
+		.blinking-broadcasting-button {
+			animation: blinker-broadcasting 1.5s linear infinite;
+		}
+		.blinking-recording-button {
+			animation: blinker-recording 1.5s linear infinite;
+		}
+	}
+}

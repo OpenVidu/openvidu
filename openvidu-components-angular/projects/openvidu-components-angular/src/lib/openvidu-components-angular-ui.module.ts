@@ -11,6 +11,7 @@ import { ChatPanelComponent } from './components/panel/chat-panel/chat-panel.com
 import { SessionComponent } from './components/session/session.component';
 import { StreamComponent } from './components/stream/stream.component';
 import { ToolbarComponent } from './components/toolbar/toolbar.component';
+import { ToolbarMediaButtonsComponent } from './components/toolbar/toolbar-media-buttons/toolbar-media-buttons.component';
 import { MediaElementComponent } from './components/media-element/media-element.component';
 
 import { LinkifyPipe } from './pipes/linkify.pipe';
@@ -76,7 +77,8 @@ const privateComponents = [
   VideoDevicesComponent,
   AudioDevicesComponent,
   ParticipantNameInputComponent,
-  LangSelectorComponent
+  LangSelectorComponent,
+  ToolbarMediaButtonsComponent
 ];
 
 @NgModule({

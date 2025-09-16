@@ -651,16 +651,16 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 	/**
 	 * @ignore
 	 */
-	// toggleCaptions() {
-	// 	if (this.openviduService.isOpenViduPro()) {
-	// 		this.layoutService.toggleCaptions();
-	// 	} else {
-	// 		this.actionService.openProFeatureDialog(
-	// 			this.translateService.translate('PANEL.SETTINGS.CAPTIONS'),
-	// 			this.translateService.translate('PANEL.PRO_FEATURE')
-	// 		);
-	// 	}
-	// }
+	onCaptionsToggle() {
+		// if (this.openviduService.isOpenViduPro()) {
+		// 	this.layoutService.toggleCaptions();
+		// } else {
+		// 	this.actionService.openProFeatureDialog(
+		// 		this.translateService.translate('PANEL.SETTINGS.CAPTIONS'),
+		// 		this.translateService.translate('PANEL.PRO_FEATURE')
+		// 	);
+		// }
+	}
 
 	/**
 	 * @ignore
