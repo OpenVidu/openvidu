@@ -862,7 +862,12 @@ if [[ "$MODE" == "generate" ]]; then
 elif [[ "$MODE" == "save" ]]; then
     SECRET_KEY_NAME="$2"
     SECRET_VALUE="$3"
-    az keyvault secret set --vault-name ${keyVaultName} --name $SECRET_KEY_NAME --value $SECRET_VALUE > /dev/null
+    # If empty value, store it empty
+    if [[ -z "$SECRET_VALUE" ]]; then
+      az keyvault secret set --vault-name ${keyVaultName} --name $SECRET_KEY_NAME --file /dev/null > /dev/null
+    else
+      az keyvault secret set --vault-name ${keyVaultName} --name $SECRET_KEY_NAME --value $SECRET_VALUE > /dev/null
+    fi
     if [[ $? -ne 0 ]]; then
         echo "Error generating secret"
     fi
