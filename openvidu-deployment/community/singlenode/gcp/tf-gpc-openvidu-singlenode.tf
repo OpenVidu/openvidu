@@ -632,7 +632,7 @@ locals {
   set -eu -o pipefail
 
   # Check if installation already completed
-  if [[ -f "/tmp/openvidu_install_counter.txt" ]]; then
+  if [ -e "/tmp/openvidu_install_counter.txt" ]; then
     # restart.sh
     cat > /usr/local/bin/restart.sh << 'RESTART_EOF'
     ${local.restart_script}
