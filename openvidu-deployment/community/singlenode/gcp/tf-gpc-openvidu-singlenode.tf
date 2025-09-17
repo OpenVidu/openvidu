@@ -147,6 +147,10 @@ locals {
   METADATA_URL="http://metadata.google.internal/computeMetadata/v1"
   get_meta() { curl -s -H "Metadata-Flavor: Google" "$${METADATA_URL}/$1"; }
 
+  # Create counter file for tracking script executions
+  touch /tmp/openvidu_install_counter.txt
+  
+
   # Create all the secrets
   gcloud secrets create OPENVIDU_URL --replication-policy=automatic || true
   gcloud secrets create MEET_INITIAL_ADMIN_USER --replication-policy=automatic || true
@@ -627,90 +631,93 @@ locals {
   #!/bin/bash -x
   set -eu -o pipefail
 
-  # install.sh
-  cat > /usr/local/bin/install.sh << 'INSTALL_EOF'
-  ${local.install_script}
-  INSTALL_EOF
-  chmod +x /usr/local/bin/install.sh
+  # Check if installation already completed
+  if [ ! -f /tmp/openvidu_install_counter.txt ]; then
+    # install.sh
+    cat > /usr/local/bin/install.sh << 'INSTALL_EOF'
+    ${local.install_script}
+    INSTALL_EOF
+    chmod +x /usr/local/bin/install.sh
 
-  # after_install.sh
-  cat > /usr/local/bin/after_install.sh << 'AFTER_INSTALL_EOF'
-  ${local.after_install_script}
-  AFTER_INSTALL_EOF
-  chmod +x /usr/local/bin/after_install.sh
+    # after_install.sh
+    cat > /usr/local/bin/after_install.sh << 'AFTER_INSTALL_EOF'
+    ${local.after_install_script}
+    AFTER_INSTALL_EOF
+    chmod +x /usr/local/bin/after_install.sh
 
-  # update_config_from_secret.sh
-  cat > /usr/local/bin/update_config_from_secret.sh << 'UPDATE_CONFIG_EOF'
-  ${local.update_config_from_secret_script}
-  UPDATE_CONFIG_EOF
-  chmod +x /usr/local/bin/update_config_from_secret.sh
+    # update_config_from_secret.sh
+    cat > /usr/local/bin/update_config_from_secret.sh << 'UPDATE_CONFIG_EOF'
+    ${local.update_config_from_secret_script}
+    UPDATE_CONFIG_EOF
+    chmod +x /usr/local/bin/update_config_from_secret.sh
 
-  # update_secret_from_config.sh
-  cat > /usr/local/bin/update_secret_from_config.sh << 'UPDATE_SECRET_EOF'
-  ${local.update_secret_from_config_script}
-  UPDATE_SECRET_EOF
-  chmod +x /usr/local/bin/update_secret_from_config.sh
+    # update_secret_from_config.sh
+    cat > /usr/local/bin/update_secret_from_config.sh << 'UPDATE_SECRET_EOF'
+    ${local.update_secret_from_config_script}
+    UPDATE_SECRET_EOF
+    chmod +x /usr/local/bin/update_secret_from_config.sh
 
-  # get_value_from_config.sh
-  cat > /usr/local/bin/get_value_from_config.sh << 'GET_VALUE_EOF'
-  ${local.get_value_from_config_script}
-  GET_VALUE_EOF
-  chmod +x /usr/local/bin/get_value_from_config.sh
+    # get_value_from_config.sh
+    cat > /usr/local/bin/get_value_from_config.sh << 'GET_VALUE_EOF'
+    ${local.get_value_from_config_script}
+    GET_VALUE_EOF
+    chmod +x /usr/local/bin/get_value_from_config.sh
 
-  # store_secret.sh
-  cat > /usr/local/bin/store_secret.sh << 'STORE_SECRET_EOF'
-  ${local.store_secret_script}
-  STORE_SECRET_EOF
-  chmod +x /usr/local/bin/store_secret.sh
+    # store_secret.sh
+    cat > /usr/local/bin/store_secret.sh << 'STORE_SECRET_EOF'
+    ${local.store_secret_script}
+    STORE_SECRET_EOF
+    chmod +x /usr/local/bin/store_secret.sh
 
-  # check_app_ready.sh
-  cat > /usr/local/bin/check_app_ready.sh << 'CHECK_APP_EOF'
-  ${local.check_app_ready_script}
-  CHECK_APP_EOF
-  chmod +x /usr/local/bin/check_app_ready.sh
+    # check_app_ready.sh
+    cat > /usr/local/bin/check_app_ready.sh << 'CHECK_APP_EOF'
+    ${local.check_app_ready_script}
+    CHECK_APP_EOF
+    chmod +x /usr/local/bin/check_app_ready.sh
 
-  # restart.sh
-  cat > /usr/local/bin/restart.sh << 'RESTART_EOF'
-  ${local.restart_script}
-  RESTART_EOF
-  chmod +x /usr/local/bin/restart.sh
+    # restart.sh
+    cat > /usr/local/bin/restart.sh << 'RESTART_EOF'
+    ${local.restart_script}
+    RESTART_EOF
+    chmod +x /usr/local/bin/restart.sh
 
-  # config_s3.sh
-  cat > /usr/local/bin/config_s3.sh << 'CONFIG_S3_EOF'
-  ${local.config_s3_script}
-  CONFIG_S3_EOF
-  chmod +x /usr/local/bin/config_s3.sh
+    # config_s3.sh
+    cat > /usr/local/bin/config_s3.sh << 'CONFIG_S3_EOF'
+    ${local.config_s3_script}
+    CONFIG_S3_EOF
+    chmod +x /usr/local/bin/config_s3.sh
 
-  apt-get update && apt-get install -y
+    apt-get update && apt-get install -y
 
-  # Install google cli 
-  if ! command -v gcloud >/dev/null 2>&1; then
-    curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | gpg --dearmor -o /usr/share/keyrings/cloud.google.gpg
-    echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" | tee -a /etc/apt/sources.list.d/google-cloud-sdk.list
-    apt-get update && apt-get install -y google-cloud-cli
+    # Install google cli 
+    if ! command -v gcloud >/dev/null 2>&1; then
+      curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | gpg --dearmor -o /usr/share/keyrings/cloud.google.gpg
+      echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" | tee -a /etc/apt/sources.list.d/google-cloud-sdk.list
+      apt-get update && apt-get install -y google-cloud-cli
+    fi
+
+    # Authenticate with gcloud using instance service account
+    gcloud auth activate-service-account --key-file=/dev/null 2>/dev/null || true
+    gcloud config set account $(curl -s "http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/email" -H "Metadata-Flavor: Google")
+    gcloud config set project $(curl -s "http://metadata.google.internal/computeMetadata/v1/project/project-id" -H "Metadata-Flavor: Google")
+
+    export HOME="/root"
+
+    # Install OpenVidu
+    /usr/local/bin/install.sh || { echo "[OpenVidu] error installing OpenVidu"; exit 1; }
+
+    # Config S3 bucket
+    /usr/local/bin/config_s3.sh || { echo "[OpenVidu] error configuring S3 bucket"; exit 1; }
+
+    # Start OpenVidu
+    systemctl start openvidu || { echo "[OpenVidu] error starting OpenVidu"; exit 1; }
+
+    # Update shared secret
+    /usr/local/bin/after_install.sh || { echo "[OpenVidu] error updating shared secret"; exit 1; }
+  else
+    # Launch on reboot
+    /usr/local/bin/restart.sh || { echo "[OpenVidu] error restarting OpenVidu"; exit 1; }
   fi
-
-  # Authenticate with gcloud using instance service account
-  gcloud auth activate-service-account --key-file=/dev/null 2>/dev/null || true
-  gcloud config set account $(curl -s "http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/email" -H "Metadata-Flavor: Google")
-  gcloud config set project $(curl -s "http://metadata.google.internal/computeMetadata/v1/project/project-id" -H "Metadata-Flavor: Google")
-
-  export HOME="/root"
-
-  # Install OpenVidu
-  /usr/local/bin/install.sh || { echo "[OpenVidu] error installing OpenVidu"; exit 1; }
-
-  # Config S3 bucket
-  /usr/local/bin/config_s3.sh || { echo "[OpenVidu] error configuring S3 bucket"; exit 1; }
-
-  # Start OpenVidu
-  systemctl start openvidu || { echo "[OpenVidu] error starting OpenVidu"; exit 1; }
-
-  # Update shared secret
-  /usr/local/bin/after_install.sh || { echo "[OpenVidu] error updating shared secret"; exit 1; }
-
-  # Launch on reboot
-  echo "@reboot /usr/local/bin/restart.sh >> /var/log/openvidu-restart.log" 2>&1 | crontab
 
   # Wait for the app
   /usr/local/bin/check_app_ready.sh
