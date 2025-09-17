@@ -148,7 +148,7 @@ locals {
   get_meta() { curl -s -H "Metadata-Flavor: Google" "$${METADATA_URL}/$1"; }
 
   # Create counter file for tracking script executions
-  touch /tmp/openvidu_install_counter.txt
+  echo "1" > /tmp/openvidu_install_counter.txt
   
 
   # Create all the secrets
@@ -716,6 +716,9 @@ locals {
 
     # Update shared secret
     /usr/local/bin/after_install.sh || { echo "[OpenVidu] error updating shared secret"; exit 1; }
+    
+    # Mark installation as complete
+    echo "installation_complete" > /tmp/openvidu_install_counter.txt
   fi
 
   # Wait for the app
