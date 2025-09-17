@@ -636,55 +636,49 @@ locals {
     # install.sh
     cat > /usr/local/bin/install.sh << 'INSTALL_EOF'
     ${local.install_script}
-    INSTALL_EOF
+  INSTALL_EOF
     chmod +x /usr/local/bin/install.sh
 
     # after_install.sh
     cat > /usr/local/bin/after_install.sh << 'AFTER_INSTALL_EOF'
     ${local.after_install_script}
-    AFTER_INSTALL_EOF
+  AFTER_INSTALL_EOF
     chmod +x /usr/local/bin/after_install.sh
 
     # update_config_from_secret.sh
     cat > /usr/local/bin/update_config_from_secret.sh << 'UPDATE_CONFIG_EOF'
     ${local.update_config_from_secret_script}
-    UPDATE_CONFIG_EOF
+  UPDATE_CONFIG_EOF
     chmod +x /usr/local/bin/update_config_from_secret.sh
 
     # update_secret_from_config.sh
     cat > /usr/local/bin/update_secret_from_config.sh << 'UPDATE_SECRET_EOF'
     ${local.update_secret_from_config_script}
-    UPDATE_SECRET_EOF
+  UPDATE_SECRET_EOF
     chmod +x /usr/local/bin/update_secret_from_config.sh
 
     # get_value_from_config.sh
     cat > /usr/local/bin/get_value_from_config.sh << 'GET_VALUE_EOF'
     ${local.get_value_from_config_script}
-    GET_VALUE_EOF
+  GET_VALUE_EOF
     chmod +x /usr/local/bin/get_value_from_config.sh
 
     # store_secret.sh
     cat > /usr/local/bin/store_secret.sh << 'STORE_SECRET_EOF'
     ${local.store_secret_script}
-    STORE_SECRET_EOF
+  STORE_SECRET_EOF
     chmod +x /usr/local/bin/store_secret.sh
 
     # check_app_ready.sh
     cat > /usr/local/bin/check_app_ready.sh << 'CHECK_APP_EOF'
     ${local.check_app_ready_script}
-    CHECK_APP_EOF
+  CHECK_APP_EOF
     chmod +x /usr/local/bin/check_app_ready.sh
-
-    # restart.sh
-    cat > /usr/local/bin/restart.sh << 'RESTART_EOF'
-    ${local.restart_script}
-    RESTART_EOF
-    chmod +x /usr/local/bin/restart.sh
 
     # config_s3.sh
     cat > /usr/local/bin/config_s3.sh << 'CONFIG_S3_EOF'
     ${local.config_s3_script}
-    CONFIG_S3_EOF
+  CONFIG_S3_EOF
     chmod +x /usr/local/bin/config_s3.sh
 
     apt-get update && apt-get install -y
@@ -715,6 +709,11 @@ locals {
     # Update shared secret
     /usr/local/bin/after_install.sh || { echo "[OpenVidu] error updating shared secret"; exit 1; }
   else
+    # restart.sh
+    cat > /usr/local/bin/restart.sh << 'RESTART_EOF'
+    ${local.restart_script}
+  RESTART_EOF
+    chmod +x /usr/local/bin/restart.sh
     # Launch on reboot
     /usr/local/bin/restart.sh || { echo "[OpenVidu] error restarting OpenVidu"; exit 1; }
   fi
