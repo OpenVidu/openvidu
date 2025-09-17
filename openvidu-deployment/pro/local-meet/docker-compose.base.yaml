@@ -89,7 +89,7 @@ services:
           fi
           echo "$$URL"
         }
-     READY_CHECK_ENTRYPOINT: |
+      READY_CHECK_ENTRYPOINT: |
         #!/bin/sh
         set -e
         export LAN_DOMAIN=openvidu-local.dev
