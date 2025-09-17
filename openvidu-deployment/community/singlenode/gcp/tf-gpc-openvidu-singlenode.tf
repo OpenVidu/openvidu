@@ -632,7 +632,15 @@ locals {
   set -eu -o pipefail
 
   # Check if installation already completed
-  if [ ! -f /tmp/openvidu_install_counter.txt ]; then
+  if [[ -f "/tmp/openvidu_install_counter.txt" ]]; then
+    # restart.sh
+    cat > /usr/local/bin/restart.sh << 'RESTART_EOF'
+    ${local.restart_script}
+  RESTART_EOF
+    chmod +x /usr/local/bin/restart.sh
+    # Launch on reboot
+    /usr/local/bin/restart.sh || { echo "[OpenVidu] error restarting OpenVidu"; exit 1; }
+  else
     # install.sh
     cat > /usr/local/bin/install.sh << 'INSTALL_EOF'
     ${local.install_script}
@@ -708,14 +716,6 @@ locals {
 
     # Update shared secret
     /usr/local/bin/after_install.sh || { echo "[OpenVidu] error updating shared secret"; exit 1; }
-  else
-    # restart.sh
-    cat > /usr/local/bin/restart.sh << 'RESTART_EOF'
-    ${local.restart_script}
-  RESTART_EOF
-    chmod +x /usr/local/bin/restart.sh
-    # Launch on reboot
-    /usr/local/bin/restart.sh || { echo "[OpenVidu] error restarting OpenVidu"; exit 1; }
   fi
 
   # Wait for the app
