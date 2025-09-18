@@ -19,7 +19,6 @@ export * from './lib/components/toolbar/toolbar-media-buttons/toolbar-media-butt
 export * from './lib/components/videoconference/videoconference.component';
 export * from './lib/config/openvidu-components-angular.config';
 // Directives
-export * from './lib/directives/template/internals.directive';
 export * from './lib/directives/api/activities-panel.directive';
 export * from './lib/directives/api/admin.directive';
 export * from './lib/directives/api/api.directive.module';
@@ -28,10 +27,12 @@ export * from './lib/directives/api/participant-panel-item.directive';
 export * from './lib/directives/api/stream.directive';
 export * from './lib/directives/api/toolbar.directive';
 export * from './lib/directives/api/videoconference.directive';
+
+export * from './lib/directives/template/internals.directive';
 export * from './lib/directives/template/openvidu-components-angular.directive';
 export * from './lib/directives/template/openvidu-components-angular.directive.module';
-export * from './lib/models/broadcasting.model';
 // Models
+export * from './lib/models/broadcasting.model';
 export * from './lib/models/panel.model';
 export * from './lib/models/participant.model';
 export * from './lib/models/recording.model';

@@ -61,7 +61,8 @@ import { LangOption } from '../../models/lang.model';
 import {
 	LayoutAdditionalElementsDirective,
 	ParticipantPanelAfterLocalParticipantDirective,
-	PreJoinDirective
+	PreJoinDirective,
+	LeaveButtonDirective
 } from '../../directives/template/internals.directive';
 
 /**
@@ -122,6 +123,24 @@ export class VideoconferenceComponent implements OnDestroy, AfterViewInit {
 	 */
 	get externalToolbarAdditionalButtons(): ToolbarAdditionalButtonsDirective | undefined {
 		return this._externalToolbarAdditionalButtons;
+	}
+
+	private _externalToolbarLeaveButton?: LeaveButtonDirective;
+
+	/**
+	 * @internal
+	 */
+	@ContentChild(LeaveButtonDirective)
+	set externalToolbarLeaveButton(value: LeaveButtonDirective) {
+		this._externalToolbarLeaveButton = value;
+		this.setupTemplates();
+	}
+
+	/**
+	 * @internal
+	 */
+	get externalToolbarLeaveButton(): LeaveButtonDirective | undefined {
+		return this._externalToolbarLeaveButton;
 	}
 
 	private _externalToolbarAdditionalPanelButtons?: ToolbarAdditionalPanelButtonsDirective;
@@ -397,6 +416,12 @@ export class VideoconferenceComponent implements OnDestroy, AfterViewInit {
 	 * @internal
 	 */
 	openviduAngularToolbarAdditionalButtonsTemplate: TemplateRef<any>;
+
+	/**
+	 * @internal
+	 */
+	openviduAngularToolbarLeaveButtonTemplate: TemplateRef<any> | undefined;
+
 	/**
 	 * @internal
 	 */
@@ -744,6 +769,7 @@ export class VideoconferenceComponent implements OnDestroy, AfterViewInit {
 			toolbar: this.externalToolbar,
 			toolbarAdditionalButtons: this.externalToolbarAdditionalButtons,
 			toolbarAdditionalPanelButtons: this.externalToolbarAdditionalPanelButtons,
+			toolbarLeaveButton: this.externalToolbarLeaveButton,
 			additionalPanels: this.externalAdditionalPanels,
 			panel: this.externalPanel,
 			chatPanel: this.externalChatPanel,
@@ -799,6 +825,9 @@ export class VideoconferenceComponent implements OnDestroy, AfterViewInit {
 		// Optional templates
 		if (this.templateConfig.toolbarAdditionalButtonsTemplate) {
 			assignIfChanged('openviduAngularToolbarAdditionalButtonsTemplate', this.templateConfig.toolbarAdditionalButtonsTemplate);
+		}
+		if (this.templateConfig.toolbarLeaveButtonTemplate) {
+			assignIfChanged('openviduAngularToolbarLeaveButtonTemplate', this.templateConfig.toolbarLeaveButtonTemplate);
 		}
 		if (this.templateConfig.toolbarAdditionalPanelButtonsTemplate) {
 			assignIfChanged(

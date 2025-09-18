@@ -18,7 +18,8 @@ import {
 	LayoutAdditionalElementsDirective,
 	ParticipantPanelAfterLocalParticipantDirective,
 	ParticipantPanelParticipantBadgeDirective,
-	PreJoinDirective
+	PreJoinDirective,
+	LeaveButtonDirective
 } from './internals.directive';
 
 @NgModule({
@@ -32,6 +33,7 @@ import {
 		StreamDirective,
 		ToolbarDirective,
 		ToolbarAdditionalButtonsDirective,
+		LeaveButtonDirective,
 		ToolbarAdditionalPanelButtonsDirective,
 		ParticipantPanelItemElementsDirective,
 		ActivitiesPanelDirective,
@@ -51,6 +53,7 @@ import {
 		StreamDirective,
 		ToolbarDirective,
 		ToolbarAdditionalButtonsDirective,
+		LeaveButtonDirective,
 		ToolbarAdditionalPanelButtonsDirective,
 		ParticipantPanelItemElementsDirective,
 		ActivitiesPanelDirective,

@@ -50,6 +50,7 @@ import { CdkOverlayService } from '../../services/cdk-overlay/cdk-overlay.servic
 import { ParticipantLeftEvent, ParticipantLeftReason, ParticipantModel } from '../../models/participant.model';
 import { Room, RoomEvent } from 'livekit-client';
 import { ToolbarAdditionalButtonsPosition } from '../../models/toolbar.model';
+import { LeaveButtonDirective } from '../../directives/template/internals.directive';
 
 /**
  * The **ToolbarComponent** is hosted inside of the {@link VideoconferenceComponent}.
@@ -66,12 +67,18 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 	/**
 	 * @ignore
 	 */
-	@ContentChild('toolbarAdditionalButtons', { read: TemplateRef }) toolbarAdditionalButtonsTemplate: TemplateRef<any>;
+	@ContentChild('toolbarAdditionalButtons', { read: TemplateRef }) toolbarAdditionalButtonsTemplate: TemplateRef<any> | undefined;
 
 	/**
 	 * @ignore
 	 */
-	@ContentChild('toolbarAdditionalPanelButtons', { read: TemplateRef }) toolbarAdditionalPanelButtonsTemplate: TemplateRef<any>;
+	@ContentChild('toolbarLeaveButton', { read: TemplateRef }) toolbarLeaveButtonTemplate: TemplateRef<any> | undefined;
+	/**
+	 * @ignore
+	 */
+	@ContentChild('toolbarAdditionalPanelButtons', { read: TemplateRef }) toolbarAdditionalPanelButtonsTemplate:
+		| TemplateRef<any>
+		| undefined;
 
 	/**
 	 * @ignore
@@ -80,6 +87,17 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 	set externalAdditionalButtons(externalAdditionalButtons: ToolbarAdditionalButtonsDirective) {
 		this._externalAdditionalButtons = externalAdditionalButtons;
 		if (externalAdditionalButtons) {
+			this.updateTemplatesAndMarkForCheck();
+		}
+	}
+
+	/**
+	 * @ignore
+	 */
+	@ContentChild(LeaveButtonDirective)
+	set externalLeaveButton(externalLeaveButton: LeaveButtonDirective) {
+		this._externalLeaveButton = externalLeaveButton;
+		if (externalLeaveButton) {
 			this.updateTemplatesAndMarkForCheck();
 		}
 	}
@@ -153,12 +171,12 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 	/**
 	 * @ignore
 	 */
-	@ViewChild(MatMenuTrigger) public menuTrigger: MatMenuTrigger;
+	@ViewChild(MatMenuTrigger) public menuTrigger: MatMenuTrigger | undefined;
 
 	/**
 	 * @ignore
 	 */
-	room: Room;
+	room!: Room;
 	/**
 	 * @ignore
 	 */
@@ -186,11 +204,11 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 	/**
 	 * @ignore
 	 */
-	hasVideoDevices: boolean;
+	hasVideoDevices: boolean = true;
 	/**
 	 * @ignore
 	 */
-	hasAudioDevices: boolean;
+	hasAudioDevices: boolean = true;
 	/**
 	 * @ignore
 	 */
@@ -305,7 +323,7 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 	/**
 	 * @ignore
 	 */
-	additionalButtonsPosition: ToolbarAdditionalButtonsPosition;
+	additionalButtonsPosition: ToolbarAdditionalButtonsPosition = ToolbarAdditionalButtonsPosition.BEFORE_MENU;
 
 	/**
 	 * @ignore
@@ -357,7 +375,7 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 	/**
 	 * @ignore
 	 */
-	recordingTime: Date;
+	recordingTime: Date | undefined;
 
 	/**
 	 * @internal
@@ -367,6 +385,7 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 
 	// Store directive references for template setup
 	private _externalAdditionalButtons?: ToolbarAdditionalButtonsDirective;
+	private _externalLeaveButton?: LeaveButtonDirective;
 	private _externalAdditionalPanelButtons?: ToolbarAdditionalPanelButtonsDirective;
 
 	private log: ILogger;
@@ -416,7 +435,7 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 	 * @ignore
 	 */
 	@HostListener('window:resize', ['$event'])
-	sizeChange(event) {
+	sizeChange(_: Event) {
 		if (this.currentWindowHeight >= window.innerHeight) {
 			// The user has exit the fullscreen mode
 			this.currentWindowHeight = window.innerHeight;
@@ -474,7 +493,8 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 	private setupTemplates(): void {
 		this.templateConfig = this.templateManagerService.setupToolbarTemplates(
 			this._externalAdditionalButtons,
-			this._externalAdditionalPanelButtons
+			this._externalAdditionalPanelButtons,
+			this._externalLeaveButton
 		);
 
 		// Apply templates to component properties for backward compatibility
@@ -491,6 +511,9 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 		}
 		if (this.templateConfig.toolbarAdditionalPanelButtonsTemplate) {
 			this.toolbarAdditionalPanelButtonsTemplate = this.templateConfig.toolbarAdditionalPanelButtonsTemplate;
+		}
+		if (this.templateConfig.toolbarLeaveButtonTemplate) {
+			this.toolbarLeaveButtonTemplate = this.templateConfig.toolbarLeaveButtonTemplate;
 		}
 	}
 
@@ -518,11 +541,11 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 			this.microphoneMuteChanging = false;
 			const isMicrophoneEnabled = this.participantService.isMyMicrophoneEnabled();
 			await this.participantService.setMicrophoneEnabled(!isMicrophoneEnabled);
-		} catch (error) {
-			this.log.e('There was an error toggling microphone:', error.code, error.message);
+		} catch (error: unknown) {
+			this.log.e('There was an error toggling microphone:', (error as any).code, (error as any).message);
 			this.actionService.openDialog(
 				this.translateService.translate('ERRORS.TOGGLE_MICROPHONE'),
-				error?.error || error?.message || error
+				(error as any)?.error || (error as any)?.message || error
 			);
 		} finally {
 			this.microphoneMuteChanging = false;
@@ -541,8 +564,11 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 			}
 			await this.participantService.setCameraEnabled(!isCameraEnabled);
 		} catch (error) {
-			this.log.e('There was an error toggling camera:', error.code, error.message);
-			this.actionService.openDialog(this.translateService.translate('ERRORS.TOGGLE_CAMERA'), error?.error || error?.message || error);
+			this.log.e('There was an error toggling camera:', (error as any).code, (error as any).message);
+			this.actionService.openDialog(
+				this.translateService.translate('ERRORS.TOGGLE_CAMERA'),
+				(error as any)?.error || (error as any)?.message || error
+			);
 		} finally {
 			this.cameraMuteChanging = false;
 		}
@@ -579,8 +605,11 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 				this.onRoomDisconnected.emit();
 			}, false);
 		} catch (error) {
-			this.log.e('There was an error disconnecting:', error.code, error.message);
-			this.actionService.openDialog(this.translateService.translate('ERRORS.DISCONNECT'), error?.error || error?.message || error);
+			this.log.e('There was an error disconnecting:', (error as any).code, (error as any).message);
+			this.actionService.openDialog(
+				this.translateService.translate('ERRORS.DISCONNECT'),
+				(error as any)?.error || (error as any)?.message || error
+			);
 		}
 	}
 

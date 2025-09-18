@@ -223,6 +223,33 @@ export class ParticipantPanelAfterLocalParticipantDirective {
 }
 
 /**
+ * The ***ovLeaveButton** directive allows you to replace the default leave button with a custom template.
+ * Use this directive to provide your own button, confirm dialogs, or any custom leave logic while keeping
+ * the internal leave flow intact.
+ *
+ * Usage example:
+ * ```html
+ * <ov-videoconference>
+ *   <ng-container *ovLeaveButton>
+ *     <button class="my-leave-button" (click)="customLeave()">
+ *       Leave meeting
+ *     </button>
+ *   </ng-container>
+ * </ov-videoconference>
+ * ```
+ */
+@Directive({
+	selector: '[ovToolbarLeaveButton]',
+	standalone: false
+})
+export class LeaveButtonDirective {
+	constructor(
+		public template: TemplateRef<any>,
+		public container: ViewContainerRef
+	) {}
+}
+
+/**
  * The ***ovLayoutAdditionalElements** directive allows you to inject custom HTML or Angular templates
  * as additional layout elements within the videoconference UI.
  * This enables you to extend the layout with extra controls, banners, or any custom UI.

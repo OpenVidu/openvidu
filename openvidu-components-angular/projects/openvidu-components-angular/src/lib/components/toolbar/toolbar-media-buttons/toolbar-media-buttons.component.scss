@@ -39,10 +39,9 @@
 
 		// Mobile responsive styles
 		&.mobile-btn {
-			margin: 3px;
+			padding: 8px 0;
 			width: 36px;
 			height: 36px;
-			text-align: justify;
 
 			mat-icon {
 				font-size: 20px;
@@ -59,7 +58,8 @@
 		background-color: var(--ov-accent-action-color) !important;
 	}
 
-	#leave-btn {
+	#leave-btn,
+	::ng-deep #leave-btn {
 		background-color: var(--ov-error-color) !important;
 		border-radius: var(--ov-leave-button-radius) !important;
 		width: 65px !important;
@@ -68,7 +68,6 @@
 		&.mobile-btn {
 			width: 56px !important;
 			height: 36px !important;
-			margin: 3px;
 			text-align: center;
 		}
 	}

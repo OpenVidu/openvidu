@@ -18,7 +18,8 @@ import {
 import {
 	PreJoinDirective,
 	ParticipantPanelAfterLocalParticipantDirective,
-	LayoutAdditionalElementsDirective
+	LayoutAdditionalElementsDirective,
+	LeaveButtonDirective
 } from '../../directives/template/internals.directive';
 
 /**
@@ -29,6 +30,7 @@ export interface TemplateConfiguration {
 	toolbarTemplate: TemplateRef<any>;
 	toolbarAdditionalButtonsTemplate?: TemplateRef<any>;
 	toolbarAdditionalPanelButtonsTemplate?: TemplateRef<any>;
+	toolbarLeaveButtonTemplate?: TemplateRef<any>;
 
 	// Panel templates
 	panelTemplate: TemplateRef<any>;
@@ -69,6 +71,7 @@ export interface PanelTemplateConfiguration {
 export interface ToolbarTemplateConfiguration {
 	toolbarAdditionalButtonsTemplate?: TemplateRef<any>;
 	toolbarAdditionalPanelButtonsTemplate?: TemplateRef<any>;
+	toolbarLeaveButtonTemplate?: TemplateRef<any>;
 }
 
 /**
@@ -110,6 +113,7 @@ export interface ExternalDirectives {
 	toolbar?: ToolbarDirective;
 	toolbarAdditionalButtons?: ToolbarAdditionalButtonsDirective;
 	toolbarAdditionalPanelButtons?: ToolbarAdditionalPanelButtonsDirective;
+	toolbarLeaveButton?: LeaveButtonDirective;
 	additionalPanels?: AdditionalPanelsDirective;
 	panel?: PanelDirective;
 	chatPanel?: ChatPanelDirective;
@@ -177,6 +181,11 @@ export class TemplateManagerService {
 		if (externalDirectives.toolbarAdditionalButtons) {
 			config.toolbarAdditionalButtonsTemplate = externalDirectives.toolbarAdditionalButtons.template;
 			this.log.v('Setting EXTERNAL TOOLBAR ADDITIONAL BUTTONS');
+		}
+
+		if (externalDirectives.toolbarLeaveButton) {
+			config.toolbarLeaveButtonTemplate = externalDirectives.toolbarLeaveButton.template;
+			this.log.v('Setting EXTERNAL TOOLBAR LEAVE BUTTON');
 		}
 
 		if (externalDirectives.toolbarAdditionalPanelButtons) {
@@ -358,13 +367,15 @@ export class TemplateManagerService {
 	 */
 	setupToolbarTemplates(
 		externalAdditionalButtons?: ToolbarAdditionalButtonsDirective,
-		externalAdditionalPanelButtons?: ToolbarAdditionalPanelButtonsDirective
+		externalAdditionalPanelButtons?: ToolbarAdditionalPanelButtonsDirective,
+		externalLeaveButton?: LeaveButtonDirective
 	): ToolbarTemplateConfiguration {
 		this.log.v('Setting up toolbar templates...');
 
 		return {
 			toolbarAdditionalButtonsTemplate: externalAdditionalButtons?.template,
-			toolbarAdditionalPanelButtonsTemplate: externalAdditionalPanelButtons?.template
+			toolbarAdditionalPanelButtonsTemplate: externalAdditionalPanelButtons?.template,
+			toolbarLeaveButtonTemplate: externalLeaveButton?.template
 		};
 	}
 

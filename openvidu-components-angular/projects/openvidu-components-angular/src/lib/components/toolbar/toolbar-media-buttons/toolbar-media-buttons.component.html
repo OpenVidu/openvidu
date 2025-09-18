@@ -63,9 +63,10 @@
 	</mat-menu>
 }
 
-<ng-container *ngIf="toolbarAdditionalButtonsTemplate && additionalButtonsPosition && additionalButtonsPosition === 'beforeMenu'">
-	<ng-container *ngTemplateOutlet="toolbarAdditionalButtonsTemplate"></ng-container>
-</ng-container>
+<!-- Additional buttons injection from parent component (desktop/tablet only) -->
+@if (showAdditionalButtonsOutside() && additionalButtonsPosition === 'beforeMenu') {
+	<ng-container *ngTemplateOutlet="toolbarAdditionalButtonsTemplate; context: { $implicit: additionalButtonsPosition }"></ng-container>
+}
 
 <!-- More options button -->
 @if (showMoreOptionsButtonDirect()) {
@@ -75,35 +76,17 @@
 		[matMenuTriggerFor]="settingsMenu"
 		[disabled]="isConnectionLost"
 		[class.mobile-btn]="isMobileView()"
-		[matBadge]="hasActiveFeatures() && isMobileView() ? '!' : ''"
-		matBadgeColor="accent"
-		matBadgeSize="small"
-		[matBadgeHidden]="!hasActiveFeatures() || !isMobileView()"
 		matTooltip="{{ 'TOOLBAR.MORE_OPTIONS' | translate }}"
 	>
 		<mat-icon>more_vert</mat-icon>
 	</button>
 	<mat-menu #settingsMenu="matMenu" id="more-options-menu">
-
-		<!-- Dynamic mobile buttons -->
-		@for (button of buttonsInMoreOptions(); track button.key) {
-			@if (button.show) {
-				<button
-					mat-menu-item
-					[id]="button.key + '-btn'"
-					[disabled]="button.disabled"
-					(click)="button.action()"
-				>
-					<mat-icon [color]="button.color || ''">{{ button.icon }}</mat-icon>
-					<span>{{ button.label | translate }}</span>
-				</button>
-			}
+		<!-- Additional buttons injection inside menu (mobile only) -->
+		@if (showAdditionalButtonsInsideMenu() && additionalButtonsPosition === 'beforeMenu') {
+			<ng-container *ngTemplateOutlet="toolbarAdditionalButtonsTemplate; context: { $implicit: additionalButtonsPosition }">
+			</ng-container>
 		}
 
-		<!-- Divider if there are mobile buttons -->
-		@if (buttonsInMoreOptions().length > 0) {
-			<mat-divider class="divider"></mat-divider>
-		}
 		<!-- Fullscreen button -->
 		@if (showFullscreenButton) {
 			<button mat-menu-item id="fullscreen-btn" (click)="onFullscreenToggle()">
@@ -177,16 +160,22 @@
 
 		<!-- Captions button -->
 		<!-- <button
-    *ngIf="!isMinimal && showCaptionsButton"
-    [disabled]="isConnectionLost"
-    mat-menu-item
-    id="captions-btn"
-    (click)="onCaptionsToggle()"
-  >
-    <mat-icon>closed_caption</mat-icon>
-    <span *ngIf="captionsEnabled">{{ 'TOOLBAR.DISABLE_CAPTIONS' | translate }}</span>
-    <span *ngIf="!captionsEnabled">{{ 'TOOLBAR.ENABLE_CAPTIONS' | translate }}</span>
-  </button> -->
+			*ngIf="!isMinimal && showCaptionsButton"
+			[disabled]="isConnectionLost"
+			mat-menu-item
+			id="captions-btn"
+			(click)="onCaptionsToggle()"
+		>
+			<mat-icon>closed_caption</mat-icon>
+			<span *ngIf="captionsEnabled">{{ 'TOOLBAR.DISABLE_CAPTIONS' | translate }}</span>
+			<span *ngIf="!captionsEnabled">{{ 'TOOLBAR.ENABLE_CAPTIONS' | translate }}</span>
+		</button> -->
+
+		<!-- Additional buttons injection inside menu (mobile only) -->
+		@if (showAdditionalButtonsInsideMenu() && additionalButtonsPosition === 'afterMenu') {
+			<ng-container *ngTemplateOutlet="toolbarAdditionalButtonsTemplate; context: { $implicit: additionalButtonsPosition }">
+			</ng-container>
+		}
 
 		<!-- Divider before settings -->
 		@if (showSettingsButton) {
@@ -203,20 +192,24 @@
 	</mat-menu>
 }
 
-<!-- External additional buttons  -->
-<ng-container *ngIf="toolbarAdditionalButtonsTemplate && additionalButtonsPosition && additionalButtonsPosition === 'afterMenu'">
+<!-- Additional buttons injection from parent component (desktop/tablet only) -->
+@if (showAdditionalButtonsOutside() && additionalButtonsPosition === 'afterMenu') {
 	<ng-container *ngTemplateOutlet="toolbarAdditionalButtonsTemplate"></ng-container>
-</ng-container>
+}
 
 <!-- Leave session button -->
 @if (showLeaveButtonDirect()) {
-	<button
-		mat-icon-button
-		(click)="onLeaveClick()"
-		id="leave-btn"
-		[class.mobile-btn]="isMobileView()"
-		matTooltip="{{ 'TOOLBAR.LEAVE' | translate }}"
-	>
-		<mat-icon>call_end</mat-icon>
-	</button>
+	@if (toolbarLeaveButtonTemplate) {
+		<ng-container *ngTemplateOutlet="toolbarLeaveButtonTemplate"></ng-container>
+	} @else {
+		<button
+			mat-icon-button
+			(click)="onLeaveClick()"
+			id="leave-btn"
+			[class.mobile-btn]="isMobileView()"
+			matTooltip="{{ 'TOOLBAR.LEAVE' | translate }}"
+		>
+			<mat-icon>call_end</mat-icon>
+		</button>
+	}
 }
