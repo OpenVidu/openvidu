@@ -22,6 +22,7 @@ import { BroadcastingService } from './services/broadcasting/broadcasting.servic
 import { GlobalConfigService } from './services/config/global-config.service';
 import { OpenViduComponentsConfigService } from './services/config/directive-config.service';
 import { OpenViduComponentsUiModule } from './openvidu-components-angular-ui.module';
+import { ViewportService } from './services/viewport/viewport.service';
 
 @NgModule({
 	imports: [OpenViduComponentsUiModule],
@@ -50,6 +51,7 @@ export class OpenViduComponentsModule {
 			RecordingService,
 			StorageService,
 			VirtualBackgroundService,
+			ViewportService,
 			provideHttpClient(withInterceptorsFromDi())
 		];
 

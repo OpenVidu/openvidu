@@ -38,10 +38,11 @@ export * from './lib/models/recording.model';
 export * from './lib/models/data-topic.model';
 export * from './lib/models/room.model';
 export * from './lib/models/toolbar.model';
-export * from './lib/models/logger.model'
+export * from './lib/models/logger.model';
 export * from './lib/models/storage.model';
 export * from './lib/models/lang.model';
 export * from './lib/models/theme.model';
+export * from './lib/models/viewport.model';
 // Pipes
 export * from './lib/pipes/participant.pipe';
 export * from './lib/pipes/recording.pipe';
@@ -60,6 +61,7 @@ export * from './lib/services/logger/logger.service';
 export * from './lib/services/storage/storage.service';
 export * from './lib/services/translate/translate.service';
 export * from './lib/services/theme/theme.service';
+export * from './lib/services/viewport/viewport.service';
 //Modules
 export * from './lib/openvidu-components-angular.module';
 export * from './lib/openvidu-components-angular-ui.module';

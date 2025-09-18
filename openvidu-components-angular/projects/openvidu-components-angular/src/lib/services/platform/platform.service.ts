@@ -1,48 +1,67 @@
 import { Injectable } from '@angular/core';
 
 /**
+ * Service to detect platform, device type, and browser features.
  * @internal
  */
 @Injectable({
 	providedIn: 'root'
 })
 export class PlatformService {
+	private readonly userAgent: string = typeof navigator !== 'undefined' ? navigator.userAgent : '';
+
 	constructor() {}
 
+	// ===== Device Type =====
+
+	/**
+	 * Returns true if the device is mobile (iOS or Android)
+	 */
 	isMobile(): boolean {
 		return this.isAndroid() || this.isIos();
 	}
 
-	isFirefox(): boolean {
-		return /Firefox[\/\s](\d+\.\d+)/.test(navigator.userAgent);
-	}
-
+	/**
+	 * Detect Android Mobile
+	 */
 	isAndroid(): boolean {
-		return /\b(\w*Android\w*)\b/.test(navigator.userAgent) && /\b(\w*Mobile\w*)\b/.test(navigator.userAgent);
+		return /\b(\w*Android\w*)\b/.test(this.userAgent) && /\b(\w*Mobile\w*)\b/.test(this.userAgent);
 	}
 
+	/**
+	 * Detect iOS device (iPhone or iPad)
+	 */
 	isIos(): boolean {
-		return this.isIPhoneOrIPad(navigator?.userAgent);
-	}
-	private isIPhoneOrIPad(userAgent): boolean {
-		const isIPad = /\b(\w*Macintosh\w*)\b/.test(userAgent);
-		const isIPhone = /\b(\w*iPhone\w*)\b/.test(userAgent) && /\b(\w*Mobile\w*)\b/.test(userAgent);
-		// && /\b(\w*iPhone\w*)\b/.test(navigator.platform);
-		const isTouchable = 'ontouchend' in document;
-
-		return (isIPad || isIPhone) && isTouchable;
+		return this.isIosDevice(this.userAgent);
 	}
 
-	private isSafariIos(): boolean {
-		return this.isIos() && this.isIOSWithSafari(navigator?.userAgent);
+	/**
+	 * Detect if the device supports touch interactions
+	 */
+	isTouchDevice(): boolean {
+		return 'ontouchstart' in window || navigator.maxTouchPoints > 0;
 	}
 
-	private isIOSWithSafari(userAgent): boolean {
-		return (
-			/\b(\w*Apple\w*)\b/.test(navigator.vendor) &&
-			/\b(\w*Safari\w*)\b/.test(userAgent) &&
-			!/\b(\w*CriOS\w*)\b/.test(userAgent) &&
-			!/\b(\w*FxiOS\w*)\b/.test(userAgent)
-		);
+	/**
+	 * Detect if the device is an iPhone or iPad
+	 */
+	private isIosDevice(userAgent: string): boolean {
+		const isIPad = /\bMacintosh\b/.test(userAgent) && 'ontouchend' in document;
+		const isIPhone = /\biPhone\b/.test(userAgent) && /\bMobile\b/.test(userAgent);
+		return isIPad || isIPhone;
+	}
+
+	// ===== Browser Detection =====
+
+	isFirefox(): boolean {
+		return /Firefox[\/\s](\d+\.\d+)/.test(this.userAgent);
+	}
+
+	isSafariIos(): boolean {
+		return this.isIos() && this.isIOSWithSafari(this.userAgent);
+	}
+
+	private isIOSWithSafari(userAgent: string): boolean {
+		return /\bSafari\b/.test(userAgent) && !/\bCriOS\b/.test(userAgent) && !/\bFxiOS\b/.test(userAgent);
 	}
 }
