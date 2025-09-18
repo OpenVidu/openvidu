@@ -1,11 +1,12 @@
 <!-- Camera button -->
-@if (showCameraButton) {
+@if (showCameraButtonDirect()) {
 	<button
 		id="camera-btn"
 		mat-icon-button
 		(click)="onCameraToggle()"
 		[disabled]="isConnectionLost || !hasVideoDevices || cameraMuteChanging"
 		[class.disabled]="!isCameraEnabled"
+		[class.mobile-btn]="isMobileView()"
 		[matTooltip]="isCameraEnabled ? ('TOOLBAR.STOP_VIDEO' | translate) : ('TOOLBAR.START_VIDEO' | translate)"
 		[matTooltipDisabled]="!hasVideoDevices"
 	>
@@ -16,13 +17,14 @@
 }
 
 <!-- Microphone button -->
-@if (showMicrophoneButton) {
+@if (showMicrophoneButtonDirect()) {
 	<button
 		id="mic-btn"
 		mat-icon-button
 		(click)="onMicrophoneToggle()"
 		[disabled]="isConnectionLost || !hasAudioDevices || microphoneMuteChanging"
 		[class.disabled]="!isMicrophoneEnabled"
+		[class.mobile-btn]="isMobileView()"
 		[matTooltip]="isMicrophoneEnabled ? ('TOOLBAR.MUTE_AUDIO' | translate) : ('TOOLBAR.UNMUTE_AUDIO' | translate)"
 		[matTooltipDisabled]="!hasAudioDevices"
 	>
@@ -32,14 +34,15 @@
 	</button>
 }
 
-<!-- Enable Screenshare button -->
-@if (!isMinimal && showScreenshareButton) {
+<!-- Screenshare button - Only visible on tablet+ or when active -->
+@if (showScreenshareButtonDirect()) {
 	<button
 		mat-icon-button
 		id="screenshare-btn"
 		[matMenuTriggerFor]="isScreenShareEnabled ? screenshareMenu : null"
 		[disabled]="isConnectionLost"
 		[class.active-btn]="isScreenShareEnabled"
+		[class.mobile-btn]="isMobileView()"
 		matTooltip="{{ isScreenShareEnabled ? ('TOOLBAR.DISABLE_SCREEN' | translate) : ('TOOLBAR.ENABLE_SCREEN' | translate) }}"
 		(click)="!isScreenShareEnabled && onScreenShareToggle()"
 	>
@@ -65,17 +68,42 @@
 </ng-container>
 
 <!-- More options button -->
-@if (!isMinimal && showMoreOptionsButton) {
+@if (showMoreOptionsButtonDirect()) {
 	<button
 		mat-icon-button
 		id="more-options-btn"
 		[matMenuTriggerFor]="settingsMenu"
 		[disabled]="isConnectionLost"
+		[class.mobile-btn]="isMobileView()"
+		[matBadge]="hasActiveFeatures() && isMobileView() ? '!' : ''"
+		matBadgeColor="accent"
+		matBadgeSize="small"
+		[matBadgeHidden]="!hasActiveFeatures() || !isMobileView()"
 		matTooltip="{{ 'TOOLBAR.MORE_OPTIONS' | translate }}"
 	>
 		<mat-icon>more_vert</mat-icon>
 	</button>
 	<mat-menu #settingsMenu="matMenu" id="more-options-menu">
+
+		<!-- Dynamic mobile buttons -->
+		@for (button of buttonsInMoreOptions(); track button.key) {
+			@if (button.show) {
+				<button
+					mat-menu-item
+					[id]="button.key + '-btn'"
+					[disabled]="button.disabled"
+					(click)="button.action()"
+				>
+					<mat-icon [color]="button.color || ''">{{ button.icon }}</mat-icon>
+					<span>{{ button.label | translate }}</span>
+				</button>
+			}
+		}
+
+		<!-- Divider if there are mobile buttons -->
+		@if (buttonsInMoreOptions().length > 0) {
+			<mat-divider class="divider"></mat-divider>
+		}
 		<!-- Fullscreen button -->
 		@if (showFullscreenButton) {
 			<button mat-menu-item id="fullscreen-btn" (click)="onFullscreenToggle()">
@@ -181,8 +209,14 @@
 </ng-container>
 
 <!-- Leave session button -->
-@if (showLeaveButton) {
-	<button mat-icon-button (click)="onLeaveClick()" id="leave-btn" matTooltip="{{ 'TOOLBAR.LEAVE' | translate }}">
+@if (showLeaveButtonDirect()) {
+	<button
+		mat-icon-button
+		(click)="onLeaveClick()"
+		id="leave-btn"
+		[class.mobile-btn]="isMobileView()"
+		matTooltip="{{ 'TOOLBAR.LEAVE' | translate }}"
+	>
 		<mat-icon>call_end</mat-icon>
 	</button>
 }

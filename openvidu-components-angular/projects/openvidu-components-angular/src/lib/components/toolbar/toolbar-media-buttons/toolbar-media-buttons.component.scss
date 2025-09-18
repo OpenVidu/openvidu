@@ -2,10 +2,17 @@
 	display: flex;
 	justify-content: center;
 	align-items: center;
+	gap: 2px;
 
 	.mat-mdc-icon-button {
 		--mat-mdc-button-persistent-ripple-color: transparent !important;
 		--mat-mdc-button-ripple-color: transparent !important;
+	}
+
+	// Responsive container adjustments
+	@media (max-width: 767px) {
+		gap: 1px;
+		padding: 0 4px;
 	}
 
 	mat-icon {
@@ -28,9 +35,19 @@
 		background-color: var(--ov-primary-action-color);
 		color: var(--ov-secondary-action-color);
 		margin: 6px;
-	}
+		transition: all 0.2s ease-in-out;
 
-	#screenshare-menu {
+		// Mobile responsive styles
+		&.mobile-btn {
+			margin: 3px;
+			width: 36px;
+			height: 36px;
+			text-align: justify;
+
+			mat-icon {
+				font-size: 20px;
+			}
+		}
 	}
 
 	#disable-screen-button > mat-icon {
@@ -47,6 +64,13 @@
 		border-radius: var(--ov-leave-button-radius) !important;
 		width: 65px !important;
 		color: #ffffff !important;
+
+		&.mobile-btn {
+			width: 56px !important;
+			height: 36px !important;
+			margin: 3px;
+			text-align: center;
+		}
 	}
 
 	.mat-mdc-icon-button[disabled] {
@@ -94,6 +118,23 @@
 		border-radius: var(--ov-surface-radius) !important;
 		background-color: var(--ov-surface-color) !important;
 		box-shadow: var(--ov-border-shadow) !important;
+
+		// Mobile menu improvements
+		@media (max-width: 767px) {
+			min-width: 200px;
+			max-width: 280px;
+		}
+	}
+
+	// Mobile badge styling
+	::ng-deep .mat-badge-content {
+		background-color: var(--ov-accent-action-color) !important;
+		color: white !important;
+		font-size: 10px !important;
+		font-weight: bold !important;
+		width: 16px !important;
+		height: 16px !important;
+		line-height: 16px !important;
 	}
 
 	/* Styles for XS screens */

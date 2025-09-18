@@ -1,7 +1,8 @@
-import { Component, EventEmitter, Input, Output, TemplateRef } from '@angular/core';
+import { Component, EventEmitter, Input, Output, TemplateRef, computed, inject } from '@angular/core';
 import { RecordingStatus } from '../../../models/recording.model';
 import { BroadcastingStatus } from '../../../models/broadcasting.model';
 import { ToolbarAdditionalButtonsPosition } from '../../../models/toolbar.model';
+import { ViewportService } from '../../../services/viewport/viewport.service';
 
 @Component({
   selector: 'ov-toolbar-media-buttons',
@@ -68,6 +69,99 @@ export class ToolbarMediaButtonsComponent {
   // Status enums for template usage
   _recordingStatus = RecordingStatus;
   _broadcastingStatus = BroadcastingStatus;
+
+  // Viewport service for responsive behavior
+  private viewportService = inject(ViewportService);
+
+  // Computed properties for responsive button grouping
+  readonly isMobileView = computed(() => this.viewportService.isMobile());
+  readonly isTabletView = computed(() => this.viewportService.isTablet());
+  readonly isDesktopView = computed(() => this.viewportService.isDesktop());
+
+  // Essential buttons that always stay visible
+  readonly showCameraButtonDirect = computed(() =>
+    this.showCameraButton && !this.isMinimal
+  );
+
+  readonly showMicrophoneButtonDirect = computed(() =>
+    this.showMicrophoneButton && !this.isMinimal
+  );
+
+  // Screenshare button - visible on tablet+ or when already active
+  readonly showScreenshareButtonDirect = computed(() =>
+    this.showScreenshareButton &&
+    !this.isMinimal &&
+    (!this.isMobileView() || this.isScreenShareEnabled)
+  );
+
+  // More options button - always visible when not minimal
+  readonly showMoreOptionsButtonDirect = computed(() =>
+    this.showMoreOptionsButton && !this.isMinimal
+  );
+
+  // Leave button - always visible
+  readonly showLeaveButtonDirect = computed(() =>
+    this.showLeaveButton
+  );
+
+  // Buttons that should be moved to "More Options" on mobile
+  readonly buttonsInMoreOptions = computed(() => {
+    const buttons: Array<{
+      key: string;
+      show: boolean;
+      label: string;
+      icon: string;
+      action: () => void;
+      disabled?: boolean;
+      active?: boolean;
+      color?: string;
+    }> = [];
+
+    const isMobile = this.isMobileView();
+
+    // On mobile, screenshare goes to more options when not active
+    if (isMobile && this.showScreenshareButton && !this.isScreenShareEnabled) {
+      buttons.push({
+        key: 'screenshare',
+        show: true,
+        label: 'TOOLBAR.ENABLE_SCREEN',
+        icon: 'screen_share',
+        action: () => this.onScreenShareToggle(),
+        disabled: this.isConnectionLost
+      });
+    }
+
+    // Replace screenshare option when active on mobile
+    if (isMobile && this.showScreenshareButton && this.isScreenShareEnabled) {
+      buttons.push({
+        key: 'screenshare-replace',
+        show: true,
+        label: 'STREAM.REPLACE_SCREEN',
+        icon: 'picture_in_picture',
+        action: () => this.onScreenTrackReplace(),
+        disabled: this.isConnectionLost
+      });
+
+      buttons.push({
+        key: 'screenshare-stop',
+        show: true,
+        label: 'TOOLBAR.DISABLE_SCREEN',
+        icon: 'stop_screen_share',
+        action: () => this.onScreenShareToggle(),
+        disabled: this.isConnectionLost,
+        color: 'warn'
+      });
+    }
+
+    return buttons;
+  });
+
+  // Check if there are active features that should show a badge on More Options
+  readonly hasActiveFeatures = computed(() =>
+    this.isScreenShareEnabled ||
+    this.recordingStatus === this._recordingStatus.STARTED ||
+    this.broadcastingStatus === this._broadcastingStatus.STARTED
+  );
 
   // Media button outputs
   @Output() cameraToggled = new EventEmitter<void>();
