@@ -290,27 +290,6 @@ export class OpenViduComponentsConfigService {
 		);
 	}
 
-	/**
-	 * Compare GeneralConfig efficiently
-	 */
-	private compareGeneralConfig(prev: GeneralConfig, curr: GeneralConfig): boolean {
-		const equal =
-			prev.token === curr.token &&
-			prev.livekitUrl === curr.livekitUrl &&
-			prev.tokenError === curr.tokenError &&
-			prev.minimal === curr.minimal &&
-			prev.participantName === curr.participantName &&
-			prev.prejoin === curr.prejoin &&
-			prev.prejoinDisplayParticipantName === curr.prejoinDisplayParticipantName &&
-			prev.showDisconnectionDialog === curr.showDisconnectionDialog &&
-			prev.recordingStreamBaseUrl === curr.recordingStreamBaseUrl;
-
-		if (!equal) {
-			console.log('GeneralConfig cambió', { prev, curr });
-		}
-		return equal;
-	}
-
 	// Grouped configuration items by domain
 	private generalConfig = this.createGeneralConfigItem({
 		token: '',

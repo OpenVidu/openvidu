@@ -3,19 +3,17 @@ import { RecordingDeleteRequestedEvent, RecordingInfo } from 'openvidu-component
 import { RestService } from 'src/app/services/rest.service';
 
 @Component({
-    selector: 'app-admin-dashboard',
-    templateUrl: './admin-dashboard.component.html',
-    styleUrls: ['./admin-dashboard.component.scss'],
-    standalone: false
+	selector: 'app-admin-dashboard',
+	templateUrl: './admin-dashboard.component.html',
+	styleUrls: ['./admin-dashboard.component.scss'],
+	standalone: false
 })
 export class AdminDashboardComponent implements OnInit {
 	recordings: RecordingInfo[] = [];
 	logged: boolean;
 	error: any;
 	private continuationToken: string;
-	constructor(
-		private restService: RestService,
-	) {}
+	constructor(private restService: RestService) {}
 
 	async ngOnInit() {
 		// try {
@@ -29,7 +27,6 @@ export class AdminDashboardComponent implements OnInit {
 	}
 
 	async login(credentials: { username: string; password: string }) {
-		console.log('LOGIN', credentials);
 		try {
 			const resp: any = await this.restService.login(credentials);
 			this.logged = true;
@@ -50,7 +47,6 @@ export class AdminDashboardComponent implements OnInit {
 	}
 
 	async onRefreshRecordingsClicked() {
-		console.log('GET ALL ');
 		const response = await this.restService.getRecordings();
 		this.recordings = response.recordings;
 		this.continuationToken = response.continuationToken;

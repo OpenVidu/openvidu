@@ -957,13 +957,6 @@ export class VideoconferenceComponent implements OnDestroy, AfterViewInit {
 						isRoomReady: true,
 						showPrejoin: false
 					});
-					console.log(this.componentState);
-					console.warn(
-						this.componentState.isRoomReady &&
-							!this.componentState.showPrejoin &&
-							!this.componentState.isLoading &&
-							!this.componentState.error?.hasError
-					);
 				} else {
 					// Only update showPrejoin if user hasn't initiated join process yet
 					// This prevents prejoin from showing again after user clicked join

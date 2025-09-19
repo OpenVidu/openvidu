@@ -20,7 +20,6 @@ export class DashboardComponent implements OnInit {
 	}
 
 	staticVideosChanged(value: boolean) {
-		console.warn('VC video enabled: ', value);
 		this.areStaticVideosEnabled = value;
 	}
 }

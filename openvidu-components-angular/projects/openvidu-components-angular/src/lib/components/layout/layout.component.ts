@@ -258,7 +258,6 @@ export class LayoutComponent implements OnInit, OnDestroy, AfterViewInit {
 		const handler = (event) => {
 			if (!this.panelService.isPanelOpened()) return;
 			const { x, width } = this.localLayoutElement.nativeElement.getBoundingClientRect();
-			console.log(x);
 			const { width: parentWidth } = this.layoutContainer.element.nativeElement.getBoundingClientRect();
 			if (x === 0) {
 				// Video is at the left
