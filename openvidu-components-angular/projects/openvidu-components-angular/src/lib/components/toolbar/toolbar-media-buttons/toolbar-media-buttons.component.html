@@ -199,17 +199,17 @@
 
 <!-- Leave session button -->
 @if (showLeaveButtonDirect()) {
-	@if (toolbarLeaveButtonTemplate) {
-		<ng-container *ngTemplateOutlet="toolbarLeaveButtonTemplate"></ng-container>
-	} @else {
-		<button
-			mat-icon-button
-			(click)="onLeaveClick()"
-			id="leave-btn"
-			[class.mobile-btn]="isMobileView()"
-			matTooltip="{{ 'TOOLBAR.LEAVE' | translate }}"
-		>
-			<mat-icon>call_end</mat-icon>
-		</button>
-	}
+	<button
+		mat-icon-button
+		(click)="onLeaveClick()"
+		id="leave-btn"
+		[class.mobile-btn]="isMobileView()"
+		matTooltip="{{ 'TOOLBAR.LEAVE' | translate }}"
+	>
+		<mat-icon>call_end</mat-icon>
+	</button>
+}
+
+@if (toolbarLeaveButtonTemplate) {
+	<ng-container *ngTemplateOutlet="toolbarLeaveButtonTemplate"></ng-container>
 }
