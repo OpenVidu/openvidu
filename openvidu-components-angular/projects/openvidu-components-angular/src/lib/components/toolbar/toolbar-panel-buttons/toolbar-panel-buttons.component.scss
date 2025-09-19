@@ -1,0 +1,11 @@
+:host {
+	.panel-button {
+		border-radius: var(--ov-toolbar-buttons-radius);
+		color: var(--ov-secondary-action-color);
+	}
+
+	.active-btn,
+	::ng-deep .active-btn {
+		background-color: var(--ov-accent-action-color) !important;
+	}
+}

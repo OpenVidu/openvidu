@@ -54,11 +54,6 @@
 		max-height: 100% !important;
 	}
 
-	#menu-buttons-container button {
-		border-radius: var(--ov-toolbar-buttons-radius);
-		color: var(--ov-secondary-action-color);
-	}
-
 	#branding-logo {
 		background-color: var(--ov-primary-action-color);
 		border-radius: var(--ov-surface-radius);
@@ -121,8 +116,6 @@
 	.blink {
 		animation: blinker 1.5s linear infinite;
 	}
-
-
 
 	::ng-deep .mat-badge-content {
 		background-color: var(--ov-warn-color);

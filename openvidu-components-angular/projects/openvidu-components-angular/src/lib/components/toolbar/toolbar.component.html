@@ -85,63 +85,26 @@
 		></ov-toolbar-media-buttons>
 	</div>
 
-	<!-- Panel buttons (chat, participants, activities) -->
+	<!-- Panel buttons -->
 	<div class="menu-buttons-container" id="menu-buttons-container">
-		<!-- Default activities button -->
-		<button
-			mat-icon-button
-			id="activities-panel-btn"
-			*ngIf="!isMinimal && showActivitiesPanelButton"
-			matTooltip="{{ 'TOOLBAR.ACTIVITIES' | translate }}"
-			(click)="toggleActivitiesPanel()"
-			[disabled]="isConnectionLost"
-			[ngClass]="{
-				'blinking-recording-button': !isActivitiesOpened && recordingStatus === _recordingStatus.STARTED,
-				'blinking-broadcasting-button': !isActivitiesOpened && broadcastingStatus === _broadcastingStatus.STARTED,
-				'active-btn': isActivitiesOpened
-			}"
-		>
-			<mat-icon>category</mat-icon>
-		</button>
-
-		<!-- Default participants button -->
-		<button
-			mat-icon-button
-			id="participants-panel-btn"
-			*ngIf="!isMinimal && showParticipantsPanelButton"
-			matTooltip="{{ 'TOOLBAR.PARTICIPANTS' | translate }}"
-			(click)="toggleParticipantsPanel()"
-			[disabled]="isConnectionLost"
-			[class.active-btn]="isParticipantsOpened"
-		>
-			<mat-icon>people</mat-icon>
-		</button>
-
-		<!-- Default chat button -->
-		<button
-			mat-icon-button
-			id="chat-panel-btn"
-			*ngIf="!isMinimal && showChatPanelButton"
-			matTooltip="{{ 'TOOLBAR.CHAT' | translate }}"
-			(click)="toggleChatPanel()"
-			[disabled]="isConnectionLost"
-			[class.active-btn]="isChatOpened"
-		>
-			<mat-icon
-				matBadge="{{ unreadMessages }}"
-				[matBadgeHidden]="unreadMessages === 0"
-				matBadgePosition="above before"
-				matBadgeSize="small"
-				matBadgeColor="accent"
-				aria-hidden="false"
-			>
-				chat
-			</mat-icon>
-		</button>
-
-		<!-- External additional panel buttons  -->
-		<ng-container *ngIf="toolbarAdditionalPanelButtonsTemplate">
-			<ng-container *ngTemplateOutlet="toolbarAdditionalPanelButtonsTemplate"></ng-container>
-		</ng-container>
+		<ov-toolbar-panel-buttons
+			[isMinimal]="isMinimal"
+			[isConnectionLost]="isConnectionLost"
+			[isActivitiesOpened]="isActivitiesOpened"
+			[isParticipantsOpened]="isParticipantsOpened"
+			[isChatOpened]="isChatOpened"
+			[unreadMessages]="unreadMessages"
+			[showActivitiesPanelButton]="showActivitiesPanelButton"
+			[showParticipantsPanelButton]="showParticipantsPanelButton"
+			[showChatPanelButton]="showChatPanelButton"
+			[recordingStatus]="recordingStatus"
+			[broadcastingStatus]="broadcastingStatus"
+			[_recordingStatus]="_recordingStatus"
+			[_broadcastingStatus]="_broadcastingStatus"
+			[toolbarAdditionalPanelButtonsTemplate]="toolbarAdditionalPanelButtonsTemplate"
+			(toggleActivitiesPanel)="toggleActivitiesPanel($event)"
+			(toggleParticipantsPanel)="toggleParticipantsPanel()"
+			(toggleChatPanel)="toggleChatPanel()"
+		></ov-toolbar-panel-buttons>
 	</div>
 </mat-toolbar>

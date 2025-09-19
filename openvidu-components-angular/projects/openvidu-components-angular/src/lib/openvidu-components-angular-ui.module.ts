@@ -1,4 +1,3 @@
-
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
@@ -12,6 +11,7 @@ import { SessionComponent } from './components/session/session.component';
 import { StreamComponent } from './components/stream/stream.component';
 import { ToolbarComponent } from './components/toolbar/toolbar.component';
 import { ToolbarMediaButtonsComponent } from './components/toolbar/toolbar-media-buttons/toolbar-media-buttons.component';
+import { ToolbarPanelButtonsComponent } from './components/toolbar/toolbar-panel-buttons/toolbar-panel-buttons.component';
 import { MediaElementComponent } from './components/media-element/media-element.component';
 
 import { LinkifyPipe } from './pipes/linkify.pipe';
@@ -48,68 +48,69 @@ import { OpenViduComponentsDirectiveModule } from './directives/template/openvid
 import { AppMaterialModule } from './openvidu-components-angular.material.module';
 
 const publicComponents = [
-  AdminDashboardComponent,
-  AdminLoginComponent,
-  VideoconferenceComponent,
-  ToolbarComponent,
-  PanelComponent,
-  ActivitiesPanelComponent,
-  RecordingActivityComponent,
-  BroadcastingActivityComponent,
-  ParticipantsPanelComponent,
-  ParticipantPanelItemComponent,
-  ChatPanelComponent,
-  StreamComponent,
-  LayoutComponent
+	AdminDashboardComponent,
+	AdminLoginComponent,
+	VideoconferenceComponent,
+	ToolbarComponent,
+	PanelComponent,
+	ActivitiesPanelComponent,
+	RecordingActivityComponent,
+	BroadcastingActivityComponent,
+	ParticipantsPanelComponent,
+	ParticipantPanelItemComponent,
+	ChatPanelComponent,
+	StreamComponent,
+	LayoutComponent
 ];
 const privateComponents = [
-  PreJoinComponent,
-  SessionComponent,
-  BackgroundEffectsPanelComponent,
-  SettingsPanelComponent,
-  AudioWaveComponent,
-  DialogTemplateComponent,
-  ProFeatureDialogTemplateComponent,
-  RecordingDialogComponent,
-  DeleteDialogComponent,
-  AvatarProfileComponent,
-  MediaElementComponent,
-  VideoDevicesComponent,
-  AudioDevicesComponent,
-  ParticipantNameInputComponent,
-  LangSelectorComponent,
-  ToolbarMediaButtonsComponent
+	PreJoinComponent,
+	SessionComponent,
+	BackgroundEffectsPanelComponent,
+	SettingsPanelComponent,
+	AudioWaveComponent,
+	DialogTemplateComponent,
+	ProFeatureDialogTemplateComponent,
+	RecordingDialogComponent,
+	DeleteDialogComponent,
+	AvatarProfileComponent,
+	MediaElementComponent,
+	VideoDevicesComponent,
+	AudioDevicesComponent,
+	ParticipantNameInputComponent,
+	LangSelectorComponent,
+	ToolbarMediaButtonsComponent,
+	ToolbarPanelButtonsComponent
 ];
 
 @NgModule({
-  declarations: [
-    ...publicComponents,
-    ...privateComponents,
-    LinkifyPipe,
-    RemoteParticipantTracksPipe,
-    DurationFromSecondsPipe,
-    SearchByStringPropertyPipe,
-    ThumbnailFromUrlPipe,
-    TrackPublishedTypesPipe,
-    TranslatePipe
-  ],
-  imports: [
-    CommonModule,
-    FormsModule,
-    ReactiveFormsModule,
-    AppMaterialModule,
-    OpenViduComponentsDirectiveModule,
-    ApiDirectiveModule,
-    DragDropModule
-  ],
-  exports: [
-    ...publicComponents,
-    RemoteParticipantTracksPipe,
-    DurationFromSecondsPipe,
-    TrackPublishedTypesPipe,
-    TranslatePipe,
-    OpenViduComponentsDirectiveModule,
-    ApiDirectiveModule
-  ]
+	declarations: [
+		...publicComponents,
+		...privateComponents,
+		LinkifyPipe,
+		RemoteParticipantTracksPipe,
+		DurationFromSecondsPipe,
+		SearchByStringPropertyPipe,
+		ThumbnailFromUrlPipe,
+		TrackPublishedTypesPipe,
+		TranslatePipe
+	],
+	imports: [
+		CommonModule,
+		FormsModule,
+		ReactiveFormsModule,
+		AppMaterialModule,
+		OpenViduComponentsDirectiveModule,
+		ApiDirectiveModule,
+		DragDropModule
+	],
+	exports: [
+		...publicComponents,
+		RemoteParticipantTracksPipe,
+		DurationFromSecondsPipe,
+		TrackPublishedTypesPipe,
+		TranslatePipe,
+		OpenViduComponentsDirectiveModule,
+		ApiDirectiveModule
+	]
 })
 export class OpenViduComponentsUiModule {}
