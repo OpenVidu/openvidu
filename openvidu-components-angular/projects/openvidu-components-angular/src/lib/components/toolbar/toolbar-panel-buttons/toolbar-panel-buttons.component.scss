@@ -36,7 +36,12 @@
 }
 
 // Global styles for the collapsible panels menu
-
+::ng-deep .cdk-overlay-pane {
+	width: auto !important;
+}
+::ng-deep .cdk-overlay-connected-position-bounding-box {
+	right: 0 !important;
+}
 .panels-menu,
 ::ng-deep .panels-menu,
 .panels-menu .mat-mdc-menu-panel,
@@ -46,11 +51,10 @@
 	background-color: transparent !important;
 	box-shadow: none !important;
 	border: none !important;
-	min-width: 55px !important;
-	width: 55px !important;
-	max-width: 55px !important;
+	min-width: 50px !important;
+	width: 50px !important;
+	max-width: 50px !important;
 	padding: 4px 0 !important;
-	justify-content: flex-end !important;
 	display: grid !important;
 }
 
