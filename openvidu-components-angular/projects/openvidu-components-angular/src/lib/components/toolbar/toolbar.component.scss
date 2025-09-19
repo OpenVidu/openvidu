@@ -45,6 +45,9 @@
 		justify-content: flex-end;
 		align-items: center;
 	}
+	::ng-deep .menu-buttons-container:has(.collapsed-menu-container) {
+		flex: 0;
+	}
 
 	#info-container > div {
 		display: flex;

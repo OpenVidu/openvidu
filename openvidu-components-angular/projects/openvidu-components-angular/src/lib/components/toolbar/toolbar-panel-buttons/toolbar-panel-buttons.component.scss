@@ -8,4 +8,136 @@
 	::ng-deep .active-btn {
 		background-color: var(--ov-accent-action-color) !important;
 	}
+
+	// Collapsed menu styles for small screens
+	.collapsed-menu-container {
+		position: relative;
+		display: flex;
+		align-items: center;
+	}
+
+	.fab-menu-trigger:has(.rotated) {
+		transform: rotate(180deg);
+	}
+	// FAB-style trigger button
+	.fab-menu-trigger {
+		color: var(--ov-secondary-action-color);
+		background-color: var(--ov-primary-action-color);
+		transition: all 0.2s ease-in-out;
+		height: 36px;
+		width: 36px;
+		padding: 8px 0;
+		transition: transform 0.3s ease;
+
+		mat-icon {
+			font-size: 20px;
+		}
+	}
+}
+
+// Global styles for the collapsible panels menu
+
+.panels-menu,
+::ng-deep .panels-menu,
+.panels-menu .mat-mdc-menu-panel,
+.panels-menu .mat-mdc-menu-content,
+::ng-deep .panels-menu .mat-mdc-menu-panel,
+::ng-deep .panels-menu .mat-mdc-menu-content {
+	background-color: transparent !important;
+	box-shadow: none !important;
+	border: none !important;
+	min-width: 55px !important;
+	width: 55px !important;
+	max-width: 55px !important;
+	padding: 4px 0 !important;
+	justify-content: flex-end !important;
+	display: grid !important;
+}
+
+.panels-menu,
+::ng-deep .panels-menu {
+	.panel-menu-item {
+		background-color: var(--ov-primary-action-color) !important;
+		color: var(--ov-secondary-action-color) !important;
+		border-radius: var(--ov-toolbar-buttons-radius) !important;
+		min-height: 36px !important;
+		padding: 8px !important;
+		margin: 5px 0;
+		height: 36px !important;
+		width: 36px !important;
+		display: flex !important;
+		box-shadow: 0 2px 4px color-mix(in srgb, var(--ov-secondary-action-color) 100%, transparent);
+		transition:
+			box-shadow 0.2s ease,
+			transform 0.2s ease;
+
+		&.active-menu-item {
+			background-color: var(--ov-accent-action-color) !important;
+			color: var(--ov-text-primary-color) !important;
+		}
+
+		&:disabled {
+			opacity: 0.5;
+			cursor: not-allowed;
+		}
+
+		mat-icon {
+			font-size: 20px !important;
+			width: 20px !important;
+			height: 20px !important;
+			margin: 0 !important;
+		}
+
+		// Chat badge adjustments for menu
+		.mat-badge {
+			mat-icon {
+				font-size: 18px !important;
+				width: 18px !important;
+				height: 18px !important;
+			}
+		}
+
+		.mat-badge-content {
+			background-color: var(--ov-warn-color) !important;
+			color: var(--ov-text-primary-color) !important;
+			font-size: 10px !important;
+			min-width: 14px !important;
+			height: 14px !important;
+			line-height: 14px !important;
+			border-radius: 7px !important;
+			top: -2px !important;
+			right: -2px !important;
+		}
+
+		// Remove default mat-menu-item styles
+		.mat-mdc-menu-item-text {
+			display: none !important;
+		}
+
+		// Remove focus outline
+		&:focus {
+			outline: none !important;
+		}
+
+		// Remove ripple effect
+		.mat-mdc-menu-ripple {
+			display: none !important;
+		}
+	}
+
+	// Custom scrollbar for menu if needed
+	.mat-mdc-menu-content {
+		&::-webkit-scrollbar {
+			width: 4px;
+		}
+
+		&::-webkit-scrollbar-track {
+			background: transparent;
+		}
+
+		&::-webkit-scrollbar-thumb {
+			background: rgba(var(--ov-secondary-action-color-rgb), 0.3);
+			border-radius: 2px;
+		}
+	}
 }

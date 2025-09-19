@@ -1,4 +1,5 @@
 import { Component, EventEmitter, Input, Output, TemplateRef } from '@angular/core';
+import { ViewportService } from '../../../services/viewport/viewport.service';
 
 @Component({
 	selector: 'ov-toolbar-panel-buttons',
@@ -27,6 +28,27 @@ export class ToolbarPanelButtonsComponent {
 	@Output() toggleActivitiesPanel: EventEmitter<string | undefined> = new EventEmitter();
 	@Output() toggleParticipantsPanel: EventEmitter<void> = new EventEmitter();
 	@Output() toggleChatPanel: EventEmitter<void> = new EventEmitter();
+
+	constructor(public viewportService: ViewportService) {}
+
+	// Computed property to determine if we should show collapsed menu
+	get shouldShowCollapsed(): boolean {
+		return this.viewportService.isMobileView() || this.viewportService.isTabletDown();
+	}
+
+	// Get count of visible buttons
+	get visibleButtonsCount(): number {
+		let count = 0;
+		if (!this.isMinimal && this.showActivitiesPanelButton) count++;
+		if (!this.isMinimal && this.showParticipantsPanelButton) count++;
+		if (!this.isMinimal && this.showChatPanelButton) count++;
+		return count;
+	}
+
+	// Check if any panel is currently opened
+	get isAnyPanelOpened(): boolean {
+		return this.isActivitiesOpened || this.isParticipantsOpened || this.isChatOpened;
+	}
 
 	// Local methods that emit events
 	onToggleActivities(expand?: string) {
