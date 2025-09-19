@@ -56,7 +56,9 @@
 		"PARTICIPANTS": "Teilnehmer",
 		"CHAT": "Chat",
 		"ACTIVITIES": "Aktivitäten",
-		"NO_TRACKS_PUBLISHED": "Teile Audio oder Video, um mit der Aufnahme zu beginnen."
+		"PANELS": "Panels",
+		"NO_TRACKS_PUBLISHED": "Teile Audio oder Video, um mit der Aufnahme zu beginnen.",
+		"VIEW_RECORDINGS": "Aufnahmen anzeigen"
 	},
 	"STREAM": {
 		"SETTINGS": "Einstellungen",
