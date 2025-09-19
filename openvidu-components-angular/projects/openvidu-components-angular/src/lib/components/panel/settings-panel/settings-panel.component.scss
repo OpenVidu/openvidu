@@ -1,36 +1,189 @@
 #settings-container {
 	display: flex !important;
+	flex-direction: column;
+	height: 100%;
+	min-height: 0;
+
+	// Base layout - horizontal (desktop/tablet)
 	.settings-container {
 		display: flex;
-		padding: 10px;
 		flex: 1;
-		width: auto;
-		justify-content: space-between;
-		align-items: stretch;
-	}
-
-	.item-menu {
-		padding-right: 5px;
-		border-right: 1px solid var(--ov-border-color);
-		width: 170px;
-	}
-	.item-menu.mobile {
-		width: 50px !important;
-	}
-
-	.item-content {
+		min-height: 0;
 		padding: 16px;
-		flex-grow: 1;
-		width: min-content;
+		gap: 16px;
+		align-items: stretch;
+		box-sizing: border-box;
 	}
 
-	.lang-container button {
+	// Vertical layout for mobile
+	&.vertical-layout .settings-container {
+		flex-direction: column;
+		gap: 16px;
+		padding: 12px;
+	}
+
+	// Menu styling - Desktop/Tablet default
+	.item-menu {
+		flex-shrink: 0;
+		border-right: 1px solid var(--ov-border-color);
+		width: 180px;
+		min-width: 180px;
+		padding-right: 16px;
+
+		// Compact view (tablet)
+		&.compact {
+			width: 140px;
+			min-width: 140px;
+			padding-right: 12px;
+
+			.option {
+				display: grid;
+				justify-content: center;
+			}
+		}
+
+		// Icons only (mobile/small tablets) - ahora con mejor padding
+		&.icons-only {
+			width: 80px;
+			min-width: 80px;
+			padding-right: 8px;
+		}
+	}
+
+	// Mobile vertical layout - no side border, full width menu
+	&.vertical-layout .item-menu {
 		width: 100%;
+		min-width: auto;
+		border-right: none;
+		border-bottom: 1px solid var(--ov-border-color);
+		padding-right: 0;
+		padding-bottom: 16px;
+		margin-bottom: 4px;
+
+		// Make menu horizontal on mobile with better spacing
+		mat-selection-list {
+			display: flex;
+			flex-direction: row;
+			justify-content: space-around;
+			gap: 8px;
+			padding: 0 8px;
+		}
+
+		mat-list-option {
+			flex: 1;
+			min-width: auto;
+			min-height: 60px;
+			border-radius: var(--ov-surface-radius);
+
+			// Estructura vertical: icono arriba, texto abajo
+			::ng-deep .mdc-list-item__content {
+				display: flex !important;
+				flex-direction: column !important;
+				align-items: center !important;
+				justify-content: center !important;
+				gap: 4px;
+			}
+
+			// Resetear el margin del icono para layout vertical
+			::ng-deep .mdc-list-item--with-leading-icon .mdc-list-item__start {
+				margin-right: 0 !important;
+			}
+
+			// Mejor presentación en mobile con layout vertical
+			.option-text {
+				font-size: 11px;
+				text-align: center;
+				line-height: 1.1;
+				font-weight: 500;
+				white-space: nowrap;
+				max-width: 100%;
+				overflow: hidden;
+				text-overflow: ellipsis;
+			}
+
+			mat-icon {
+				font-size: 20px;
+				width: 20px;
+				height: 20px;
+			}
+		}
 	}
 
+	// Content area styling
+	.item-content {
+		flex: 1;
+		min-width: 0;
+		padding: 8px 16px;
+		overflow-y: auto;
+		overflow-x: hidden;
+		box-sizing: border-box;
+
+		&.full-width {
+			padding: 8px 12px;
+		}
+	}
+
+	// General settings specific styling
+	.general-settings {
+		display: flex;
+		flex-direction: column;
+		gap: 24px;
+		padding: 8px 0;
+
+		.nickname-section {
+			.input-label {
+				display: block;
+				margin-bottom: 12px;
+				font-weight: 500;
+				color: var(--ov-text-surface-color);
+				font-size: 14px;
+			}
+
+			.nickname-input-container {
+				width: 100%;
+				max-width: 100%;
+				box-sizing: border-box;
+
+				// Ensure the input takes full width of its container
+				::ng-deep ov-participant-name-input {
+					width: 100%;
+
+					.participant-name-input-container {
+						width: 100%;
+						box-sizing: border-box;
+
+						.participant-name-input {
+							width: 100% !important;
+							box-sizing: border-box;
+						}
+					}
+				}
+			}
+		}
+
+		.language-section {
+			box-sizing: border-box;
+
+			mat-list {
+				padding: 0;
+			}
+		}
+	}
+
+	// Video and Audio settings containers
+	.video-settings,
+	.audio-settings,
+	.captions-settings {
+		width: 100%;
+		max-width: 100%;
+		box-sizing: border-box;
+	}
+
+	// List option styling
 	mat-list-option[aria-selected='true'] {
 		background: var(--ov-accent-action-color) !important;
 		border-radius: var(--ov-surface-radius);
+
 		::ng-deep .mat-mdc-list-item-unscoped-content,
 		mat-icon {
 			color: var(--ov-secondary-action-color) !important;
@@ -42,23 +195,212 @@
 		mat-icon {
 			color: var(--ov-text-surface-color) !important;
 		}
+
+		&:hover {
+			background-color: rgba(var(--ov-accent-action-color-rgb), 0.1) !important;
+		}
 	}
 
+	// Icon spacing
 	::ng-deep .mdc-list-item--with-leading-icon .mdc-list-item__start {
 		margin-right: 15px !important;
 	}
 
+	// Remove focus state layer
 	.mat-mdc-list-base {
 		--mdc-list-list-item-focus-state-layer-color: transparent !important;
 	}
 
-	::ng-deep .lang-selector .expand-more-icon,
-	::ng-deep .lang-selector mat-icon {
+	// Language selector styling
+	::ng-deep .lang-selector {
+		.expand-more-icon,
+		mat-icon {
+			color: var(--ov-text-surface-color) !important;
+		}
+
+		div {
+			color: var(--ov-text-surface-color) !important;
+		}
+	}
+
+	.input-label {
 		color: var(--ov-text-surface-color) !important;
 	}
 
-	::ng-deep .lang-selector div,
-	.input-label {
-		color: var(--ov-text-surface-color) !important;
+	// Icons-only mode styling for compact menu items
+	&.compact-view .item-menu.icons-only {
+		mat-list-option {
+			min-height: 52px;
+			padding: 8px;
+			justify-content: center;
+			border-radius: var(--ov-surface-radius);
+
+			::ng-deep .mdc-list-item__content {
+				justify-content: center;
+				flex-direction: column;
+				align-items: center;
+			}
+
+			::ng-deep .mdc-list-item--with-leading-icon .mdc-list-item__start {
+				margin-right: 0 !important;
+				margin-bottom: 4px;
+			}
+
+			mat-icon {
+				font-size: 20px;
+				width: 20px;
+				height: 20px;
+			}
+		}
+	}
+
+	// Mejor transición para cambios de estado
+	mat-list-option {
+		transition: all 0.2s ease-in-out;
+
+		&:hover:not([aria-selected='true']) {
+			transform: translateY(-1px);
+			box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+		}
+	}
+
+	// Mejora en la tipografía y espaciado
+	.option-text {
+		font-weight: 500;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+}
+
+// Responsive breakpoints optimizados
+@media (max-width: 1024px) {
+	#settings-container {
+		.settings-container {
+			padding: 14px;
+			gap: 14px;
+		}
+	}
+}
+
+@media (max-width: 768px) {
+	#settings-container {
+		.settings-container {
+			padding: 12px;
+		}
+
+		.item-content {
+			padding: 8px 14px;
+		}
+
+		.general-settings {
+			gap: 20px;
+
+			.nickname-input-container {
+				max-width: none;
+			}
+		}
+
+		// Ajustes para tablet en modo portrait
+		.item-menu {
+			width: 140px;
+			min-width: 140px;
+			padding-right: 10px;
+		}
+	}
+}
+
+@media (max-width: 640px) {
+	#settings-container {
+		.settings-container {
+			padding: 10px;
+		}
+
+		.item-content {
+			padding: 8px 10px;
+		}
+
+		.general-settings {
+			gap: 18px;
+		}
+	}
+}
+
+@media (max-width: 480px) {
+	#settings-container {
+		.settings-container {
+			padding: 8px;
+		}
+
+		.item-content {
+			padding: 6px 8px;
+		}
+
+		.general-settings {
+			gap: 16px;
+			padding: 4px 0;
+		}
+
+		// Mobile horizontal menu adjustments mejorados
+		&.vertical-layout .item-menu {
+			mat-selection-list {
+				gap: 6px;
+				padding: 0 6px;
+			}
+
+			mat-list-option {
+				min-height: 56px;
+				padding: 6px 4px;
+
+				.option-text {
+					font-size: 10px;
+				}
+
+				mat-icon {
+					font-size: 18px;
+					width: 18px;
+					height: 18px;
+				}
+			}
+		}
+	}
+}
+
+// High DPI / small screens optimization
+@media (max-width: 360px) {
+	#settings-container {
+		.settings-container {
+			padding: 6px;
+		}
+
+		.item-content {
+			padding: 4px 6px;
+		}
+
+		.general-settings {
+			gap: 14px;
+
+			.nickname-section .input-label {
+				font-size: 13px;
+				margin-bottom: 10px;
+			}
+		}
+
+		&.vertical-layout .item-menu {
+			mat-list-option {
+				min-height: 52px;
+				padding: 4px 2px;
+
+				mat-icon {
+					font-size: 18px;
+					width: 18px;
+					height: 18px;
+				}
+
+				.option-text {
+					font-size: 11px;
+				}
+			}
+		}
 	}
 }

@@ -4,6 +4,7 @@ import { PanelStatusInfo, PanelSettingsOptions, PanelType } from '../../../model
 import { OpenViduComponentsConfigService } from '../../../services/config/directive-config.service';
 import { PanelService } from '../../../services/panel/panel.service';
 import { PlatformService } from '../../../services/platform/platform.service';
+import { ViewportService } from '../../../services/viewport/viewport.service';
 import { CustomDevice } from '../../../models/device.model';
 import { LangOption } from '../../../models/lang.model';
 
@@ -29,11 +30,26 @@ export class SettingsPanelComponent implements OnInit {
 	showCaptions: boolean = true;
 	isMobile: boolean = false;
 	private destroy$ = new Subject<void>();
+
 	constructor(
 		private panelService: PanelService,
 		private platformService: PlatformService,
-		private libService: OpenViduComponentsConfigService
+		private libService: OpenViduComponentsConfigService,
+		public viewportService: ViewportService
 	) {}
+
+	// Computed properties for responsive behavior
+	get isCompactView(): boolean {
+		return this.viewportService.isMobileView() || this.viewportService.isTabletDown();
+	}
+
+	get isVerticalLayout(): boolean {
+		return this.viewportService.isMobileView();
+	}
+
+	get shouldHideMenuText(): boolean {
+		return !this.viewportService.isMobileView() && this.viewportService.isTablet();
+	}
 	ngOnInit() {
 		this.isMobile = this.platformService.isMobile();
 		this.subscribeToPanelToggling();

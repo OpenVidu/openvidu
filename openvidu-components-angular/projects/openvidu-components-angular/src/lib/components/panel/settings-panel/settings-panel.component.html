@@ -1,4 +1,4 @@
-<div class="panel-container" id="settings-container">
+<div class="panel-container" id="settings-container" [class.vertical-layout]="isVerticalLayout" [class.compact-view]="isCompactView">
 	<div class="panel-header-container">
 		<h3 class="panel-title">{{ 'PANEL.SETTINGS.TITLE' | translate }}</h3>
 		<button class="panel-close-button" mat-icon-button matTooltip="{{ 'PANEL.CLOSE' | translate }}" (click)="close()">
@@ -6,8 +6,8 @@
 		</button>
 	</div>
 
-	<div class="settings-container">
-		<div class="item-menu" [ngClass]="{ mobile: isMobile }">
+	<div class="settings-container" [class.vertical-layout]="isVerticalLayout">
+		<div class="item-menu" [class.compact]="isCompactView" [class.icons-only]="shouldHideMenuText">
 			<mat-selection-list
 				#optionList
 				(selectionChange)="onSelectionChanged(optionList.selectedOptions.selected[0]?.value)"
@@ -20,9 +20,11 @@
 					id="general-opt"
 					[selected]="selectedOption === settingsOptions.GENERAL"
 					[value]="settingsOptions.GENERAL"
+					matTooltip="{{ shouldHideMenuText ? ('PANEL.SETTINGS.GENERAL' | translate) : '' }}"
+					[matTooltipDisabled]="!shouldHideMenuText"
 				>
 					<mat-icon matListItemIcon>manage_accounts</mat-icon>
-					<div *ngIf="!isMobile">{{ 'PANEL.SETTINGS.GENERAL' | translate }}</div>
+					<div *ngIf="!shouldHideMenuText" class="option-text">{{ 'PANEL.SETTINGS.GENERAL' | translate }}</div>
 				</mat-list-option>
 				<mat-list-option
 					*ngIf="showCameraButton"
@@ -30,9 +32,11 @@
 					id="video-opt"
 					[selected]="selectedOption === settingsOptions.VIDEO"
 					[value]="settingsOptions.VIDEO"
+					matTooltip="{{ shouldHideMenuText ? ('PANEL.SETTINGS.VIDEO' | translate) : '' }}"
+					[matTooltipDisabled]="!shouldHideMenuText"
 				>
 					<mat-icon matListItemIcon>videocam</mat-icon>
-					<div *ngIf="!isMobile">{{ 'PANEL.SETTINGS.VIDEO' | translate }}</div>
+					<div *ngIf="!shouldHideMenuText" class="option-text">{{ 'PANEL.SETTINGS.VIDEO' | translate }}</div>
 				</mat-list-option>
 				<mat-list-option
 					*ngIf="showMicrophoneButton"
@@ -40,9 +44,11 @@
 					id="audio-opt"
 					[selected]="selectedOption === settingsOptions.AUDIO"
 					[value]="settingsOptions.AUDIO"
+					matTooltip="{{ shouldHideMenuText ? ('PANEL.SETTINGS.AUDIO' | translate) : '' }}"
+					[matTooltipDisabled]="!shouldHideMenuText"
 				>
 					<mat-icon matListItemIcon>mic</mat-icon>
-					<div *ngIf="!isMobile">{{ 'PANEL.SETTINGS.AUDIO' | translate }}</div>
+					<div *ngIf="!shouldHideMenuText" class="option-text">{{ 'PANEL.SETTINGS.AUDIO' | translate }}</div>
 				</mat-list-option>
 				<!-- <mat-list-option
 					*ngIf="showCaptions"
@@ -50,36 +56,48 @@
 					[selected]="selectedOption === settingsOptions.CAPTIONS"
 					[value]="settingsOptions.CAPTIONS"
 					id="captions-opt"
+					matTooltip="{{ shouldHideMenuText ? ('PANEL.SETTINGS.CAPTIONS' | translate) : '' }}"
+					[matTooltipDisabled]="!shouldHideMenuText"
 				>
 					<mat-icon matListItemIcon>closed_caption</mat-icon>
-					<div mat-line *ngIf="!isMobile">{{ 'PANEL.SETTINGS.CAPTIONS' | translate }}</div>
+					<div mat-line *ngIf="!shouldHideMenuText">{{ 'PANEL.SETTINGS.CAPTIONS' | translate }}</div>
 				</mat-list-option> -->
 			</mat-selection-list>
 		</div>
 
-		<div class="item-content">
-			<div *ngIf="selectedOption === settingsOptions.GENERAL">
-				<mat-label class="input-label">{{ 'PREJOIN.NICKNAME' | translate }}</mat-label>
-				<ov-participant-name-input></ov-participant-name-input>
-				<mat-list>
-					<mat-list-item class="lang-selector">
-						<mat-icon matListItemIcon>translate</mat-icon>
-						<div matListItemTitle>{{ 'PANEL.SETTINGS.LANGUAGE' | translate }}</div>
-						<ov-lang-selector matListItemMeta (onLangChanged)="onLangChanged.emit($event)"></ov-lang-selector>
-					</mat-list-item>
-				</mat-list>
+		<div class="item-content" [class.full-width]="isVerticalLayout">
+			<div *ngIf="selectedOption === settingsOptions.GENERAL" class="general-settings">
+				<div class="nickname-section">
+					<mat-label class="input-label">{{ 'PREJOIN.NICKNAME' | translate }}</mat-label>
+					<div class="nickname-input-container">
+						<ov-participant-name-input></ov-participant-name-input>
+					</div>
+				</div>
+				<div class="language-section">
+					<mat-list>
+						<mat-list-item class="lang-selector">
+							<mat-icon matListItemIcon>translate</mat-icon>
+							<div matListItemTitle>{{ 'PANEL.SETTINGS.LANGUAGE' | translate }}</div>
+							<ov-lang-selector matListItemMeta (onLangChanged)="onLangChanged.emit($event)"></ov-lang-selector>
+						</mat-list-item>
+					</mat-list>
+				</div>
 			</div>
-			<ov-video-devices-select
-				*ngIf="showCameraButton && selectedOption === settingsOptions.VIDEO"
-				(onVideoDeviceChanged)="onVideoDeviceChanged.emit($event)"
-				(onVideoEnabledChanged)="onVideoEnabledChanged.emit($event)"
-			></ov-video-devices-select>
-			<ov-audio-devices-select
-				*ngIf="showMicrophoneButton && selectedOption === settingsOptions.AUDIO"
-				(onAudioDeviceChanged)="onAudioDeviceChanged.emit($event)"
-				(onAudioEnabledChanged)="onAudioEnabledChanged.emit($event)"
-			></ov-audio-devices-select>
-			<!-- <ov-captions-settings *ngIf="selectedOption === settingsOptions.CAPTIONS && showCaptions"></ov-captions-settings> -->
+			<div *ngIf="showCameraButton && selectedOption === settingsOptions.VIDEO" class="video-settings">
+				<ov-video-devices-select
+					(onVideoDeviceChanged)="onVideoDeviceChanged.emit($event)"
+					(onVideoEnabledChanged)="onVideoEnabledChanged.emit($event)"
+				></ov-video-devices-select>
+			</div>
+			<div *ngIf="showMicrophoneButton && selectedOption === settingsOptions.AUDIO" class="audio-settings">
+				<ov-audio-devices-select
+					(onAudioDeviceChanged)="onAudioDeviceChanged.emit($event)"
+					(onAudioEnabledChanged)="onAudioEnabledChanged.emit($event)"
+				></ov-audio-devices-select>
+			</div>
+			<!-- <div *ngIf="selectedOption === settingsOptions.CAPTIONS && showCaptions" class="captions-settings">
+				<ov-captions-settings></ov-captions-settings>
+			</div> -->
 		</div>
 	</div>
 </div>
