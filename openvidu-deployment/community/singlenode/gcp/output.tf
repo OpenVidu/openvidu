@@ -9,5 +9,5 @@ output "openvidu_public_ip" {
 }
 
 output "appdata_bucket" {
-  value = local.isEmpty ? "openvidu-appdata" : var.bucketName
+  value = local.isEmpty ? google_storage_bucket.bucket[0].name : var.bucketName
 }
