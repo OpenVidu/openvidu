@@ -1,31 +1,42 @@
-<div id="spinner" *ngIf="loading" @sessionAnimation>
-	<mat-spinner [diameter]="50"></mat-spinner>
-	<span>{{ 'ROOM.JOINING' | translate }}</span>
-</div>
-
-<div id="session-container" *ngIf="!loading" @sessionAnimation>
-	<mat-sidenav-container #container #videoContainer class="sidenav-container">
-		<mat-sidenav
-			#sidenav
-			mode="{{ sidenavMode }}"
-			position="end"
-			class="sidenav-menu"
-			[ngClass]="{big: settingsPanelOpened}"
-			fixedInViewport="true"
-			fixedTopGap="0"
-			fixedBottomGap="0"
-		>
-			<ng-container *ngTemplateOutlet="panelTemplate"></ng-container>
-		</mat-sidenav>
-
-		<mat-sidenav-content class="sidenav-main">
-			<div id="layout-container" #layoutContainer>
-				<ng-container *ngTemplateOutlet="layoutTemplate"></ng-container>
-			</div>
-		</mat-sidenav-content>
-	</mat-sidenav-container>
-
-	<div id="footer-container" *ngIf="toolbarTemplate">
-		<ng-container *ngTemplateOutlet="toolbarTemplate"></ng-container>
+@if (loading) {
+	<div id="spinner" [@inOutAnimation]>
+		<mat-spinner [diameter]="50"></mat-spinner>
+		<span>{{ 'ROOM.JOINING' | translate }}</span>
 	</div>
-</div>
+} @else {
+	@if (viewportService.orientation() === 'landscape') {
+		<!-- Landscape orientation warning -->
+		<div id="landscape-warning" [@inOutAnimation]>
+			<div class="warning-message">
+				<mat-icon class="warning-icon">screen_rotation</mat-icon>
+				<span>{{ 'ROOM.LANDSCAPE_WARNING' | translate }}</span>
+			</div>
+		</div>
+	}
+	<div id="session-container" [@inOutAnimation]>
+		<mat-sidenav-container #container #videoContainer class="sidenav-container">
+			<mat-sidenav
+				#sidenav
+				mode="{{ sidenavMode }}"
+				position="end"
+				class="sidenav-menu"
+				[ngClass]="{ big: settingsPanelOpened }"
+				fixedInViewport="true"
+				fixedTopGap="0"
+				fixedBottomGap="0"
+			>
+				<ng-container *ngTemplateOutlet="panelTemplate"></ng-container>
+			</mat-sidenav>
+
+			<mat-sidenav-content class="sidenav-main">
+				<div id="layout-container" #layoutContainer>
+					<ng-container *ngTemplateOutlet="layoutTemplate"></ng-container>
+				</div>
+			</mat-sidenav-content>
+		</mat-sidenav-container>
+
+		<div id="footer-container" *ngIf="toolbarTemplate">
+			<ng-container *ngTemplateOutlet="toolbarTemplate"></ng-container>
+		</div>
+	</div>
+}

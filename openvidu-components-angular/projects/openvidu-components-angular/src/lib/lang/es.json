@@ -22,7 +22,8 @@
 		"POWERED_BY": "Construido por"
 	},
 	"ROOM": {
-		"JOINING": "Uniéndose a la sala..."
+		"JOINING": "Uniéndose a la sala...",
+		"LANDSCAPE_WARNING": "Por favor, gira tu dispositivo a modo retrato para una mejor experiencia"
 	},
 	"PREJOIN": {
 		"NICKNAME_SECTION": "Elige tu nombre",

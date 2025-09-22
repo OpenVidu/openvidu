@@ -49,6 +49,7 @@ import {
 import { ParticipantLeftEvent, ParticipantLeftReason, ParticipantModel } from '../../models/participant.model';
 import { RecordingStatus } from '../../models/recording.model';
 import { TemplateManagerService, SessionTemplateConfiguration } from '../../services/template/template-manager.service';
+import { ViewportService } from '../../services/viewport/viewport.service';
 
 /**
  * @internal
@@ -58,14 +59,19 @@ import { TemplateManagerService, SessionTemplateConfiguration } from '../../serv
 	selector: 'ov-session',
 	templateUrl: './session.component.html',
 	styleUrls: ['./session.component.scss'],
-	animations: [trigger('sessionAnimation', [transition(':enter', [style({ opacity: 0 }), animate('50ms', style({ opacity: 1 }))])])],
+	animations: [
+		trigger('inOutAnimation', [
+			transition(':enter', [style({ opacity: 0 }), animate('200ms', style({ opacity: 1 }))]),
+			transition(':leave', [animate('200ms', style({ opacity: 0 }))])
+		])
+	],
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	standalone: false
 })
 export class SessionComponent implements OnInit, OnDestroy {
-	@ContentChild('toolbar', { read: TemplateRef }) toolbarTemplate: TemplateRef<any>;
-	@ContentChild('panel', { read: TemplateRef }) panelTemplate: TemplateRef<any>;
-	@ContentChild('layout', { read: TemplateRef }) layoutTemplate: TemplateRef<any>;
+	@ContentChild('toolbar', { read: TemplateRef }) toolbarTemplate: TemplateRef<any> | undefined;
+	@ContentChild('panel', { read: TemplateRef }) panelTemplate: TemplateRef<any> | undefined;
+	@ContentChild('layout', { read: TemplateRef }) layoutTemplate: TemplateRef<any> | undefined;
 	/**
 	 * Provides event notifications that fire when Room is created for the local participant.
 	 */
@@ -97,7 +103,7 @@ export class SessionComponent implements OnInit, OnDestroy {
 	 */
 	@Output() onParticipantLeft: EventEmitter<ParticipantLeftEvent> = new EventEmitter<ParticipantLeftEvent>();
 
-	room: Room;
+	room!: Room;
 	sideMenu: MatSidenav;
 	sidenavMode: SidenavMode = SidenavMode.SIDE;
 	settingsPanelOpened: boolean;
@@ -131,7 +137,8 @@ export class SessionComponent implements OnInit, OnDestroy {
 		// private captionService: CaptionService,
 		private backgroundService: VirtualBackgroundService,
 		private cd: ChangeDetectorRef,
-		private templateManagerService: TemplateManagerService
+		private templateManagerService: TemplateManagerService,
+		protected viewportService: ViewportService
 	) {
 		this.log = this.loggerSrv.get('SessionComponent');
 		this.setupTemplates();
@@ -236,11 +243,11 @@ export class SessionComponent implements OnInit, OnDestroy {
 		this.subscribeToVirtualBackground();
 
 		// if (this.libService.isRecordingEnabled()) {
-			// this.subscribeToRecordingEvents();
+		// this.subscribeToRecordingEvents();
 		// }
 
 		// if (this.libService.isBroadcastingEnabled()) {
-			// this.subscribeToBroadcastingEvents();
+		// this.subscribeToBroadcastingEvents();
 		// }
 		try {
 			await this.participantService.connect();

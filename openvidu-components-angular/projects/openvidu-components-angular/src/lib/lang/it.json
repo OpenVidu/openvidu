@@ -22,7 +22,8 @@
 		"POWERED_BY": "Offerto da"
 	},
 	"ROOM": {
-		"JOINING": "Unendosi alla stanza..."
+		"JOINING": "Unendosi alla stanza...",
+		"LANDSCAPE_WARNING": "Per una migliore esperienza, ruota il dispositivo in modalità verticale"
 	},
 	"PREJOIN": {
 		"NICKNAME_SECTION": "Imposta il tuo soprannome",

@@ -22,7 +22,8 @@
 		"POWERED_BY": "Alimenté par"
 	},
 	"ROOM": {
-		"JOINING": "Rejoindre la salle..."
+		"JOINING": "Rejoindre la salle...",
+		"LANDSCAPE_WARNING": "Veuillez faire pivoter votre appareil en mode portrait pour une meilleure expérience"
 	},
 	"PREJOIN": {
 		"NICKNAME_SECTION": "Définir votre surnom",

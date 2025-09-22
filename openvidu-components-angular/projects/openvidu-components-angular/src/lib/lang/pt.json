@@ -22,7 +22,8 @@
 		"POWERED_BY": "Distribuído por"
 	},
 	"ROOM": {
-		"JOINING": "Entrando na sala..."
+		"JOINING": "Entrando na sala...",
+		"LANDSCAPE_WARNING": "Por favor, gire seu dispositivo para o modo retrato para uma melhor experiência"
 	},
 	"PREJOIN": {
 		"NICKNAME_SECTION": "Defina seu apelido",

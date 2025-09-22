@@ -22,7 +22,8 @@
 		"POWERED_BY": "Unterstützt von"
 	},
 	"ROOM": {
-		"JOINING": "Raum beitreten..."
+		"JOINING": "Raum beitreten...",
+		"LANDSCAPE_WARNING": "Bitte drehen Sie Ihr Gerät für eine bessere Erfahrung in den Hochformatmodus"
 	},
 	"PREJOIN": {
 		"NICKNAME_SECTION": "Legen Sie Ihren Spitznamen fest",

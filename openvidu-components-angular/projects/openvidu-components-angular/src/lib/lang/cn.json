@@ -22,7 +22,8 @@
 		"POWERED_BY": "动力 b"
 	},
 	"ROOM": {
-		"JOINING": "正在加入房间..."
+		"JOINING": "正在加入房间...",
+		"LANDSCAPE_WARNING": "请将设备旋转到纵向以获得最佳体验"
 	},
 	"PREJOIN": {
 		"NICKNAME_SECTION": "设置你的绰号",

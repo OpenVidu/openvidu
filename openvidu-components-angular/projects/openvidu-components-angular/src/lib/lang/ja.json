@@ -22,7 +22,8 @@
 		"POWERED_BY": "Powered by"
 	},
 	"ROOM": {
-		"JOINING": "ルームに参加しています..."
+		"JOINING": "ルームに参加しています...",
+		"LANDSCAPE_WARNING": "より良い体験のために、デバイスを縦向きに回転させてください"
 	},
 	"PREJOIN": {
 		"NICKNAME_SECTION": "ニックネームを設定してください",

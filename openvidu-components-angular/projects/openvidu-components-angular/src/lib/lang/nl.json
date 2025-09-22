@@ -22,7 +22,8 @@
 		"POWERED_BY": "Aangedreven door"
 	},
 	"ROOM": {
-		"JOINING": "De ruimte betreden..."
+		"JOINING": "De ruimte betreden...",
+		"LANDSCAPE_WARNING": "Draai uw apparaat voor een betere ervaring naar portretmodus"
 	},
 	"PREJOIN": {
 		"NICKNAME_SECTION": "Stel je bijnaam in",

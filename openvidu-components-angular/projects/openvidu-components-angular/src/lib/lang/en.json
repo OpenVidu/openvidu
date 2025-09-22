@@ -34,7 +34,8 @@
 		"PREPARING": "Preparing room..."
 	},
 	"ROOM": {
-		"JOINING": "Joining room..."
+		"JOINING": "Joining room...",
+		"LANDSCAPE_WARNING": "Please rotate your device to portrait for a better experience"
 	},
 	"TOOLBAR": {
 		"MUTE_AUDIO": "Mute your audio",
