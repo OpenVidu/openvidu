@@ -30,126 +30,144 @@ export enum LayoutAlignment {
 }
 
 /**
+ * Layout position options for big elements
+ */
+export type BigFirstOption = boolean | 'column' | 'row';
+
+/**
+ * Element dimensions interface
+ */
+export interface ElementDimensions {
+	height: number;
+	width: number;
+	big?: boolean;
+}
+
+/**
+ * Layout area definition
+ */
+export interface LayoutArea {
+	top: number;
+	left: number;
+	width: number;
+	height: number;
+}
+
+/**
+ * Layout box positioning
+ */
+export interface LayoutBox extends LayoutArea {}
+
+/**
+ * Row structure for layout calculations
+ */
+export interface LayoutRow {
+	ratios: number[];
+	width: number;
+	height: number;
+}
+
+/**
+ * Best dimensions calculation result
+ */
+export interface BestDimensions {
+	maxArea: number;
+	targetCols: number;
+	targetRows: number;
+	targetHeight: number;
+	targetWidth: number;
+	ratio: number;
+}
+
+/**
+ * Extended layout options with container dimensions
+ */
+export interface ExtendedLayoutOptions extends OpenViduLayoutOptions {
+	containerWidth: number;
+	containerHeight: number;
+}
+
+/**
+ * Layout configuration constants
+ */
+export const LAYOUT_CONSTANTS = {
+	DEFAULT_VIDEO_WIDTH: 640,
+	DEFAULT_VIDEO_HEIGHT: 480,
+	DEFAULT_MAX_RATIO: 3 / 2,
+	DEFAULT_MIN_RATIO: 9 / 16,
+	DEFAULT_BIG_PERCENTAGE: 0.8,
+	UPDATE_TIMEOUT: 50,
+	ANIMATION_DURATION: '0.1s',
+	ANIMATION_EASING: 'linear'
+} as const;
+
+/**
  * @internal
  */
 export interface OpenViduLayoutOptions {
-	/**
-	 * The narrowest ratio that will be used (*2x3* by default)
-	 */
+	/** The narrowest ratio that will be used (2x3 by default) */
 	maxRatio: number;
-
-	/**
-	 * The widest ratio that will be used (*16x9* by default)
-	 */
+	/** The widest ratio that will be used (16x9 by default) */
 	minRatio: number;
-
-	/**
-	 * If this is true then the aspect ratio of the video is maintained and minRatio and maxRatio are ignored (*false* by default)
-	 */
+	/** If true, aspect ratio is maintained and minRatio/maxRatio are ignored */
 	fixedRatio: boolean;
-	/**
-	 * Whether you want to animate the transitions
-	 */
-	animate: any;
-	/**
-	 * The class to add to elements that should be sized bigger
-	 */
+	/** Whether to animate transitions */
+	animate: boolean;
+	/** Class for elements that should be sized bigger */
 	bigClass: string;
-
-	/**
-	 * The class to add to elements that should be sized smaller
-	 */
+	/** Class for elements that should be sized smaller */
 	smallClass: string;
-
-	/**
-	 * The class to add to elements that should be ignored
-	 */
+	/** Class for elements that should be ignored */
 	ignoredClass: string;
-
-	/**
-	 * The maximum percentage of space the big ones should take up
-	 */
-	bigPercentage: any;
-
-	/**
-	 * If this is set then it will scale down the big space if there is left over whitespace down to this minimum size
-	 */
+	/** Maximum percentage of space big elements should take up */
+	bigPercentage: number;
+	/** Minimum percentage for big space to scale down whitespace */
 	minBigPercentage: number;
-
-	/**
-	 * FixedRatio for the big ones
-	 */
-	bigFixedRatio: any;
-
-	/**
-	 * The narrowest ratio to use for the big elements (*2x3* by default)
-	 */
-	bigMaxRatio: any;
-
-	/**
-	 * The widest ratio to use for the big elements (*16x9* by default)
-	 */
-	bigMinRatio: any;
-
-	/**
-	 * Whether to place the big one in the top left `true` or bottom right
-	 */
-	bigFirst: boolean | 'column' | 'row';
-
-	/**
-	 *
-	 */
+	/** Fixed ratio for big elements */
+	bigFixedRatio: boolean;
+	/** Narrowest ratio for big elements */
+	bigMaxRatio: number;
+	/** Widest ratio for big elements */
+	bigMinRatio: number;
+	/** Position preference for big elements */
+	bigFirst: BigFirstOption;
+	/** Alignment for all elements */
 	alignItems: LayoutAlignment;
-	/**
-	 *
-	 */
+	/** Alignment for big elements */
 	bigAlignItems: LayoutAlignment;
-	/**
-	 *
-	 */
+	/** Alignment for small elements */
 	smallAlignItems: LayoutAlignment;
-	/**
-	 *  The maximum width of the elements
-	 */
+	/** Maximum width of elements */
 	maxWidth: number;
-	/**
-	 * The maximum height of the elements
-	 */
+	/** Maximum height of elements */
 	maxHeight: number;
+	/** Maximum width for small elements */
 	smallMaxWidth: number;
+	/** Maximum height for small elements */
 	smallMaxHeight: number;
+	/** Maximum width for big elements */
 	bigMaxWidth: number;
+	/** Maximum height for big elements */
 	bigMaxHeight: number;
-
-	/**
-	 *  If there are less elements on the last row then we can scale them up to take up more space
-	 */
-	scaleLastRow?: boolean;
-	/**
-	 * Scale last row for the big elements
-	 */
-	bigScaleLastRow?: boolean;
+	/** Scale up elements in last row if fewer elements */
+	scaleLastRow: boolean;
+	/** Scale up big elements in last row */
+	bigScaleLastRow: boolean;
 }
 
 /**
  * @internal
  */
 export class OpenViduLayout {
-	/**
-	 * @hidden
-	 */
-	private layoutContainer: HTMLElement;
-
-	/**
-	 * @hidden
-	 */
-	private opts: OpenViduLayoutOptions;
+	private layoutContainer!: HTMLElement;
+	private opts!: OpenViduLayoutOptions;
+	private dimensionsCache = new Map<string, BestDimensions>();
 
 	/**
 	 * Update the layout container
 	 * module export layout
 	 */
-	updateLayout(container: HTMLElement, opts: any) {
+	updateLayout(container: HTMLElement, opts: OpenViduLayoutOptions) {
 		setTimeout(() => {
 			this.layoutContainer = container;
 			this.opts = opts;
@@ -163,14 +181,15 @@ export class OpenViduLayout {
 				this.layoutContainer.id = id;
 			}
 
-			opts.containerHeight =
-				this.getHeight(this.layoutContainer) -
-				this.getCSSNumber(this.layoutContainer, 'border-top') -
-				this.getCSSNumber(this.layoutContainer, 'border-bottom');
-			opts.containerWidth =
-				this.getWidth(this.layoutContainer) -
-				this.getCSSNumber(this.layoutContainer, 'border-left') -
-				this.getCSSNumber(this.layoutContainer, 'border-right');
+			const extendedOpts: ExtendedLayoutOptions = {
+				...opts,
+				containerHeight: this.getHeight(this.layoutContainer) -
+					this.getCSSNumber(this.layoutContainer, 'border-top') -
+					this.getCSSNumber(this.layoutContainer, 'border-bottom'),
+				containerWidth: this.getWidth(this.layoutContainer) -
+					this.getCSSNumber(this.layoutContainer, 'border-left') -
+					this.getCSSNumber(this.layoutContainer, 'border-right')
+			};
 
 			const selector = `#${id}>*:not(.${LayoutClass.IGNORED_ELEMENT}):not(.${LayoutClass.MINIMIZED_ELEMENT})`;
 			const children = Array.prototype.filter.call(
@@ -183,7 +202,7 @@ export class OpenViduLayout {
 				return res;
 			});
 
-			const layout = this.getLayout(opts, elements);
+			const layout = this.getLayout(extendedOpts, elements);
 			layout.boxes.forEach((box, idx) => {
 				const elem = children[idx];
 				this.getCssProperty(elem, 'position', 'absolute');
@@ -211,7 +230,7 @@ export class OpenViduLayout {
 
 				this.positionElement(elem, box.left, box.top, actualWidth, actualHeight, this.opts.animate);
 			});
-		}, 50);
+		}, LAYOUT_CONSTANTS.UPDATE_TIMEOUT);
 	}
 
 	/**
@@ -220,22 +239,6 @@ export class OpenViduLayout {
 	 * @param opts
 	 */
 	initLayoutContainer(container: HTMLElement, opts: OpenViduLayoutOptions) {
-		// this.opts = this.defaults(opts, {
-		//   maxRatio: 3 / 2,
-		//   minRatio: 9 / 16,
-		//   fixedRatio: false,
-		//   animate: false,
-		//   bigClass: LayoutClass.BIG_ELEMENT,
-		//   smallClass: LayoutClass.SMALL_ELEMENT,
-		//   bigPercentage: 0.8,
-		//   bigFixedRatio: false,
-		//   bigMaxRatio: 3 / 2,
-		//   bigMinRatio: 9 / 16,
-		//   bigFirst: true,
-		//   alignItems: 'center',
-		//   bigAlignItems: 'center',
-		//   smallAlignItems: 'center'
-		// });
 		this.opts = opts;
 		this.layoutContainer = container;
 		this.updateLayout(container, opts);
@@ -246,12 +249,13 @@ export class OpenViduLayout {
 	}
 
 	/**
-	 * Set the layout configuration
-	 * @param options
+	 * Clear dimensions cache to free memory
 	 */
-	// private setLayoutOptions(options: OpenViduLayoutOptions) {
-	// 	this.opts = options;
-	// }
+	clearCache(): void {
+		this.dimensionsCache.clear();
+	}
+
+
 
 	private getCssProperty(el: HTMLVideoElement | HTMLElement, propertyName: any, value?: string): void | string {
 		if (value !== undefined) {
@@ -292,15 +296,7 @@ export class OpenViduLayout {
 		return this.getCssProperty(el, 'width');
 	}
 
-	// private defaults(custom: OpenViduLayoutOptions, defaults: OpenViduLayoutOptions): OpenViduLayoutOptions {
-	// 	var res = defaults;
-	// 	Object.keys(defaults).forEach((key) => {
-	// 		if (custom.hasOwnProperty(key)) {
-	// 			res[key] = custom[key];
-	// 		}
-	// 	});
-	// 	return res;
-	// }
+
 
 	/**
 	 * @hidden
@@ -348,12 +344,12 @@ export class OpenViduLayout {
 
 	private setElementPosition(elem: HTMLVideoElement, targetPosition: { [key: string]: string }) {
 		Object.keys(targetPosition).forEach((key) => {
-			elem.style[key] = targetPosition[key];
+			(elem.style as any)[key] = targetPosition[key];
 		});
 	}
 
 	private animateElement(elem: HTMLVideoElement, targetPosition: { [key: string]: string }) {
-		elem.style.transition = 'all .1s linear';
+		elem.style.transition = `all ${LAYOUT_CONSTANTS.ANIMATION_DURATION} ${LAYOUT_CONSTANTS.ANIMATION_EASING}`;
 		this.setElementPosition(elem, targetPosition);
 	}
 
@@ -378,8 +374,8 @@ export class OpenViduLayout {
 			}
 		}
 		return {
-			height: 480,
-			width: 640
+			height: LAYOUT_CONSTANTS.DEFAULT_VIDEO_HEIGHT,
+			width: LAYOUT_CONSTANTS.DEFAULT_VIDEO_WIDTH
 		};
 	}
 
@@ -415,241 +411,7 @@ export class OpenViduLayout {
 		return widthStr ? parseInt(widthStr, 10) : 0;
 	}
 
-	/**
-	 * @hidden
-	 */
-	// private arrange(
-	//   children: HTMLVideoElement[],
-	//   containerWidth: number,
-	//   containerHeight: number,
-	//   offsetLeft: number,
-	//   offsetTop: number,
-	//   fixedRatio: boolean,
-	//   minRatio: number,
-	//   maxRatio: number,
-	//   animate: any
-	// ) {
-	// const boxes = this.getLayout(
-	//   {
-	//     containerWidth,
-	//     containerHeight,
-	//     minRatio,
-	//     maxRatio,
-	//     fixedRatio,
-	//   },
-	//   children.map((child) => this.getVideoRatio(child))
-	// );
 
-	// boxes.forEach((box, idx) => {
-	//   const elem = children[idx];
-	//   this.css(elem, 'position', 'absolute');
-	//   const actualWidth =
-	//     box.width -
-	//     this.getCSSNumber(elem, 'paddingLeft') -
-	//     this.getCSSNumber(elem, 'paddingRight') -
-	//     this.getCSSNumber(elem, 'marginLeft') -
-	//     this.getCSSNumber(elem, 'marginRight') -
-	//     this.getCSSNumber(elem, 'borderLeft') -
-	//     this.getCSSNumber(elem, 'borderRight');
-
-	//   const actualHeight =
-	//     box.height -
-	//     this.getCSSNumber(elem, 'paddingTop') -
-	//     this.getCSSNumber(elem, 'paddingBottom') -
-	//     this.getCSSNumber(elem, 'marginTop') -
-	//     this.getCSSNumber(elem, 'marginBottom') -
-	//     this.getCSSNumber(elem, 'borderTop') -
-	//     this.getCSSNumber(elem, 'borderBottom');
-
-	//   this.positionElement(
-	//     elem,
-	//     box.left + offsetLeft,
-	//     box.top + offsetTop,
-	//     actualWidth,
-	//     actualHeight,
-	//     animate
-	//   );
-	// });
-	// }
-
-	/**
-	 * @hidden
-	 */
-	// private attachElements(
-	//   bigOnes: HTMLVideoElement[],
-	//   normalOnes: HTMLVideoElement[],
-	//   smallOnes: HTMLVideoElement[]
-	// ) {
-	//   const containerHeight =
-	//     this.getHeight(this.layoutContainer) -
-	//     this.getCSSNumber(this.layoutContainer, 'borderTop') -
-	//     this.getCSSNumber(this.layoutContainer, 'borderBottom');
-	//   const containerWidth =
-	//     this.getWidth(this.layoutContainer) -
-	//     this.getCSSNumber(this.layoutContainer, 'borderLeft') -
-	//     this.getCSSNumber(this.layoutContainer, 'borderRight');
-	//   const offsetLeft = 0;
-	//   const offsetTop = 0;
-	//   if (this.existBigAndNormalOnes(bigOnes, normalOnes, smallOnes)) {
-	//     const smallOnesAux = smallOnes.length > 0 ? smallOnes : normalOnes;
-	//     const bigOnesAux = bigOnes.length > 0 ? bigOnes : normalOnes;
-	//     this.arrangeBigAndSmallOnes(bigOnesAux, smallOnesAux, {
-	//       containerHeight,
-	//       containerWidth,
-	//     });
-	//   } else if (this.onlyExistBigOnes(bigOnes, normalOnes, smallOnes)) {
-	//     // We only have one bigOne just center it
-	//     this.arrange(
-	//       bigOnes,
-	//       containerWidth,
-	//       containerHeight,
-	//       0,
-	//       0,
-	//       this.opts.bigFixedRatio,
-	//       this.opts.bigMinRatio,
-	//       this.opts.bigMaxRatio,
-	//       this.opts.animate
-	//     );
-	//   } else if (
-	//     this.existBigAndNormalAndSmallOnes(bigOnes, normalOnes, smallOnes)
-	//   ) {
-	//     this.arrangeBigAndSmallOnes(bigOnes, normalOnes.concat(smallOnes), {
-	//       containerHeight,
-	//       containerWidth,
-	//     });
-	//   } else {
-	//     const normalOnesAux = normalOnes.concat(smallOnes);
-	//     this.arrange(
-	//       normalOnesAux,
-	//       containerWidth - offsetLeft,
-	//       containerHeight - offsetTop,
-	//       offsetLeft,
-	//       offsetTop,
-	//       this.opts.fixedRatio,
-	//       this.opts.minRatio,
-	//       this.opts.maxRatio,
-	//       this.opts.animate
-	//     );
-	//   }
-	// }
-
-	/**
-	 * @hidden
-	 */
-	// private arrangeBigAndSmallOnes(
-	//   bigOnesAux: HTMLVideoElement[],
-	//   smallOnesAux: HTMLVideoElement[],
-	//   data: { containerHeight: number; containerWidth: number }
-	// ) {
-	//   const { containerWidth, containerHeight } = data;
-	//   let offsetLeft = 0;
-	//   let offsetTop = 0;
-	//   const availableRatio = containerHeight / containerWidth;
-	//   let bigOffsetTop = 0;
-	//   let bigOffsetLeft = 0;
-	//   let bigWidth, bigHeight;
-	//   if (availableRatio > this.getVideoRatio(bigOnesAux[0])) {
-	//     // We are tall, going to take up the whole width and arrange small
-	//     // guys at the bottom
-	//     bigWidth = containerWidth;
-	//     bigHeight = Math.floor(containerHeight * this.opts.bigPercentage);
-	//     offsetTop = bigHeight;
-	//     bigOffsetTop = containerHeight - offsetTop;
-	//   } else {
-	//     // We are wide, going to take up the whole height and arrange the small
-	//     // guys on the right
-	//     bigHeight = containerHeight;
-	//     bigWidth = Math.floor(containerWidth * this.opts.bigPercentage);
-	//     offsetLeft = bigWidth;
-	//     bigOffsetLeft = containerWidth - offsetLeft;
-	//   }
-	//   if (this.opts.bigFirst) {
-	//     this.arrange(
-	//       bigOnesAux,
-	//       bigWidth,
-	//       bigHeight,
-	//       0,
-	//       0,
-	//       this.opts.bigFixedRatio,
-	//       this.opts.bigMinRatio,
-	//       this.opts.bigMaxRatio,
-	//       this.opts.animate
-	//     );
-	//     this.arrange(
-	//       smallOnesAux,
-	//       containerWidth - offsetLeft,
-	//       containerHeight - offsetTop,
-	//       offsetLeft,
-	//       offsetTop,
-	//       this.opts.fixedRatio,
-	//       this.opts.minRatio,
-	//       this.opts.maxRatio,
-	//       this.opts.animate
-	//     );
-	//   } else {
-	//     this.arrange(
-	//       smallOnesAux,
-	//       containerWidth - offsetLeft,
-	//       containerHeight - offsetTop,
-	//       0,
-	//       0,
-	//       this.opts.fixedRatio,
-	//       this.opts.minRatio,
-	//       this.opts.maxRatio,
-	//       this.opts.animate
-	//     );
-	//     this.arrange(
-	//       bigOnesAux,
-	//       bigWidth,
-	//       bigHeight,
-	//       bigOffsetLeft,
-	//       bigOffsetTop,
-	//       this.opts.bigFixedRatio,
-	//       this.opts.bigMinRatio,
-	//       this.opts.bigMaxRatio,
-	//       this.opts.animate
-	//     );
-	//   }
-	// }
-
-	/**
-	 * @hidden
-	 */
-	// private existBigAndNormalOnes(
-	//   bigOnes: HTMLVideoElement[],
-	//   normalOnes: HTMLVideoElement[],
-	//   smallOnes: HTMLVideoElement[]
-	// ) {
-	//   return (
-	//     (bigOnes.length > 0 && normalOnes.length > 0 && smallOnes.length === 0) ||
-	//     (bigOnes.length > 0 && normalOnes.length === 0 && smallOnes.length > 0) ||
-	//     (bigOnes.length === 0 && normalOnes.length > 0 && smallOnes.length > 0)
-	//   );
-	// }
-
-	/**
-	 * @hidden
-	 */
-	// private onlyExistBigOnes(
-	//   bigOnes: HTMLVideoElement[],
-	//   normalOnes: HTMLVideoElement[],
-	//   smallOnes: HTMLVideoElement[]
-	// ): boolean {
-	//   return (
-	//     bigOnes.length > 0 && normalOnes.length === 0 && smallOnes.length === 0
-	//   );
-	// }
-
-	/**
-	 * @hidden
-	 */
-	// private existBigAndNormalAndSmallOnes(
-	//   bigOnes: HTMLVideoElement[],
-	//   normalOnes: HTMLVideoElement[],
-	//   smallOnes: HTMLVideoElement[]
-	// ): boolean {
-	//   return bigOnes.length > 0 && normalOnes.length > 0 && smallOnes.length > 0;
-	// }
 
 	/**
 	 * @hidden
@@ -678,83 +440,93 @@ export class OpenViduLayout {
 		count: number,
 		maxWidth: number,
 		maxHeight: number
-	) {
-		let maxArea: number;
-		let targetCols: number;
-		let targetRows: number;
-		let targetHeight: number;
-		let targetWidth: number;
-		let tWidth: number;
-		let tHeight: number;
-		let tRatio: number;
+	): BestDimensions {
+		// Cache key for memoization
+		const cacheKey = `${minRatio}_${maxRatio}_${width}_${height}_${count}_${maxWidth}_${maxHeight}`;
+		const cached = this.dimensionsCache.get(cacheKey);
+		if (cached) {
+			return cached;
+		}
+		let bestArea = 0;
+		let bestCols = 1;
+		let bestRows = 1;
+		let bestHeight = 0;
+		let bestWidth = 0;
 
-		// Iterate through every possible combination of rows and columns
-		// and see which one has the least amount of whitespace
-		for (let i = 1; i <= count; i++) {
-			const cols = i;
+		// Optimized: limit search space based on aspect ratio constraints
+		const maxCols = Math.min(count, Math.ceil(Math.sqrt(count * width / height)));
+
+		for (let cols = 1; cols <= maxCols; cols++) {
 			const rows = Math.ceil(count / cols);
 
-			// Try taking up the whole height and width
-			tHeight = Math.floor(height / rows);
-			tWidth = Math.floor(width / cols);
+			// Early exit if too many rows for the height
+			if (rows > height / 10) continue;
 
-			tRatio = tHeight / tWidth;
-			if (tRatio > maxRatio) {
-				// We went over decrease the height
-				tRatio = maxRatio;
-				tHeight = tWidth * tRatio;
-			} else if (tRatio < minRatio) {
-				// We went under decrease the width
-				tRatio = minRatio;
-				tWidth = tHeight / tRatio;
+			let elementWidth = Math.floor(width / cols);
+			let elementHeight = Math.floor(height / rows);
+
+			const ratio = elementHeight / elementWidth;
+
+			// Apply ratio constraints
+			if (ratio > maxRatio) {
+				elementHeight = elementWidth * maxRatio;
+			} else if (ratio < minRatio) {
+				elementWidth = elementHeight / minRatio;
 			}
 
-			tWidth = Math.min(maxWidth, tWidth);
-			tHeight = Math.min(maxHeight, tHeight);
-			const area = tWidth * tHeight * count;
+			// Apply size constraints
+			elementWidth = Math.min(maxWidth, elementWidth);
+			elementHeight = Math.min(maxHeight, elementHeight);
 
-			// If this width and height takes up the most space then we're going with that
-			if (maxArea === undefined || area >= maxArea) {
-				if (!(area === maxArea && count % (cols * rows) > count % (targetRows * targetCols))) {
-					// Favour even numbers of participants in each row, eg. 2 on each row
-					// instead of 3 in one row and then 1 on the next
-					maxArea = area;
-					targetHeight = tHeight;
-					targetWidth = tWidth;
-					targetCols = cols;
-					targetRows = rows;
-				}
+			const area = elementWidth * elementHeight * count;
+
+			// Favor layouts with better utilization and fewer empty cells
+			const efficiency = count / (cols * rows);
+			const adjustedArea = area * efficiency;
+
+			if (adjustedArea > bestArea) {
+				bestArea = area;
+				bestHeight = elementHeight;
+				bestWidth = elementWidth;
+				bestCols = cols;
+				bestRows = rows;
 			}
 		}
-		return {
-			maxArea,
-			targetCols,
-			targetRows,
-			targetHeight,
-			targetWidth,
-			ratio: targetHeight / targetWidth
+
+		const result: BestDimensions = {
+			maxArea: bestArea,
+			targetCols: bestCols,
+			targetRows: bestRows,
+			targetHeight: bestHeight,
+			targetWidth: bestWidth,
+			ratio: bestHeight / bestWidth || 0
 		};
+
+		// Cache the result for future use
+		this.dimensionsCache.set(cacheKey, result);
+
+		return result;
 	}
 
-	private getVideoRatio(element: { height: number; width: number; big?: boolean }) {
+	private getVideoRatio(element: ElementDimensions): number {
 		return element.height / element.width;
 	}
-	private getLayout(opts: any, elements: { height: number; width: number; big?: boolean }[]) {
+	private getLayout(opts: ExtendedLayoutOptions, elements: ElementDimensions[]) {
 		const {
-			maxRatio = 3 / 2,
-			minRatio = 9 / 16,
+			maxRatio = LAYOUT_CONSTANTS.DEFAULT_MAX_RATIO,
+			minRatio = LAYOUT_CONSTANTS.DEFAULT_MIN_RATIO,
 			fixedRatio = false,
-			bigPercentage = 0.8,
+			bigPercentage = LAYOUT_CONSTANTS.DEFAULT_BIG_PERCENTAGE,
 			minBigPercentage = 0,
 			bigFixedRatio = false,
-			bigMaxRatio = 3 / 2,
-			bigMinRatio = 9 / 16,
+			bigMaxRatio = LAYOUT_CONSTANTS.DEFAULT_MAX_RATIO,
+			bigMinRatio = LAYOUT_CONSTANTS.DEFAULT_MIN_RATIO,
 			bigFirst = true,
-			containerWidth = 640,
-			containerHeight = 480,
-			alignItems = 'center',
-			bigAlignItems = 'center',
-			smallAlignItems = 'center',
+			containerWidth = LAYOUT_CONSTANTS.DEFAULT_VIDEO_WIDTH,
+			containerHeight = LAYOUT_CONSTANTS.DEFAULT_VIDEO_HEIGHT,
+			alignItems = LayoutAlignment.CENTER,
+			bigAlignItems = LayoutAlignment.CENTER,
+			smallAlignItems = LayoutAlignment.CENTER,
 			maxWidth = Infinity,
 			maxHeight = Infinity,
 			smallMaxWidth = Infinity,
@@ -769,10 +541,10 @@ export class OpenViduLayout {
 		let offsetTop = 0;
 		let bigOffsetTop = 0;
 		let bigOffsetLeft = 0;
-		const bigIndices = [];
-		let bigBoxes = [];
-		let smallBoxes = [];
-		let areas: { big: any; small: any } = { big: null, small: null };
+		const bigIndices: number[] = [];
+		let bigBoxes: LayoutBox[] = [];
+		let smallBoxes: LayoutBox[] = [];
+		let areas: { big: LayoutArea | null; small: LayoutArea | null } = { big: null, small: null };
 
 		// Move to Get Layout
 		const smallOnes = elements.filter((element) => !element.big);
@@ -993,7 +765,7 @@ export class OpenViduLayout {
 			);
 		}
 
-		const boxes = [];
+		const boxes: LayoutBox[] = [];
 		let bigBoxesIdx = 0;
 		let smallBoxesIdx = 0;
 		// Rebuild the array in the right order based on where the bigIndices should be
@@ -1009,16 +781,16 @@ export class OpenViduLayout {
 		return { boxes, areas };
 	}
 
-	private getLayoutAux(opts: any, elements: { height: number; width: number; big?: boolean }[]) {
+	private getLayoutAux(opts: Partial<OpenViduLayoutOptions & { containerWidth: number; containerHeight: number; offsetLeft: number; offsetTop: number }>, elements: ElementDimensions[]): LayoutBox[] {
 		const {
-			maxRatio = 3 / 2,
-			minRatio = 9 / 16,
+			maxRatio = LAYOUT_CONSTANTS.DEFAULT_MAX_RATIO,
+			minRatio = LAYOUT_CONSTANTS.DEFAULT_MIN_RATIO,
 			fixedRatio = false,
-			containerWidth = 640,
-			containerHeight = 480,
+			containerWidth = LAYOUT_CONSTANTS.DEFAULT_VIDEO_WIDTH,
+			containerHeight = LAYOUT_CONSTANTS.DEFAULT_VIDEO_HEIGHT,
 			offsetLeft = 0,
 			offsetTop = 0,
-			alignItems = 'center',
+			alignItems = LayoutAlignment.CENTER,
 			maxWidth = Infinity,
 			maxHeight = Infinity,
 			scaleLastRow = true
@@ -1032,16 +804,16 @@ export class OpenViduLayout {
 			dimensions = this.getBestDimensions(minRatio, maxRatio, containerWidth, containerHeight, count, maxWidth, maxHeight);
 		} else {
 			// Use the ratio of the first video element we find to approximate
-			const ratio = ratios.length > 0 ? ratios[0] : null;
+			const ratio = ratios.length > 0 ? ratios[0] : LAYOUT_CONSTANTS.DEFAULT_MIN_RATIO;
 			dimensions = this.getBestDimensions(ratio, ratio, containerWidth, containerHeight, count, maxWidth, maxHeight);
 		}
 
 		// Loop through each stream in the container and place it inside
 		let x = 0;
 		let y = 0;
-		const rows = [];
-		let row;
-		const boxes = [];
+		const rows: LayoutRow[] = [];
+		let row: LayoutRow | undefined;
+		const boxes: LayoutBox[] = [];
 
 		// Iterate through the children and create an array with a new item for each row
 		// and calculate the width of each row so that we know if we go over the size and need
@@ -1057,15 +829,17 @@ export class OpenViduLayout {
 				rows.push(row);
 			}
 			const ratio = ratios[i];
-			row.ratios.push(ratio);
-			let targetWidth = dimensions.targetWidth;
-			const targetHeight = dimensions.targetHeight;
-			// If we're using a fixedRatio then we need to set the correct ratio for this element
-			if (fixedRatio) {
-				targetWidth = targetHeight / ratio;
+			if (row) {
+				row.ratios.push(ratio);
+				let targetWidth = dimensions.targetWidth;
+				const targetHeight = dimensions.targetHeight;
+				// If we're using a fixedRatio then we need to set the correct ratio for this element
+				if (fixedRatio) {
+					targetWidth = targetHeight / ratio;
+				}
+				row.width += targetWidth;
+				row.height = targetHeight;
 			}
-			row.width += targetWidth;
-			row.height = targetHeight;
 		}
 		// Calculate total row height adjusting if we go too wide
 		let totalRowHeight = 0;
@@ -1132,7 +906,7 @@ export class OpenViduLayout {
 					break;
 			}
 			x = rowMarginLeft;
-			let targetHeight;
+			let targetHeight = row.height;
 			for (let j = 0; j < row.ratios.length; j++) {
 				const ratio = row.ratios[j];
 
