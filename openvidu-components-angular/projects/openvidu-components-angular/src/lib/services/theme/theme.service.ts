@@ -2,35 +2,16 @@ import { Injectable, Inject } from '@angular/core';
 import { DOCUMENT } from '@angular/common';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { OPENVIDU_DARK_THEME, OPENVIDU_LIGHT_THEME, OpenViduThemeMode, OpenViduThemeVariables } from '../../models/theme.model';
+import { StorageService } from '../storage/storage.service';
 
 /**
  * Service for managing OpenVidu component themes dynamically
  *
  * This service allows you to:
- * - Switch between light, dark, and auto themes
+ * - Switch between light, dark and classic themes
  * - Apply custom theme variables
  * - Listen to theme changes
  * - Integrate with Angular Material themes
- *
- * @example
- * ```typescript
- * // Inject the service
- * constructor(private themeService: OpenViduThemeService) {}
- *
- * // Switch to dark theme
- * this.themeService.setTheme('dark');
- *
- * // Apply custom variables
- * this.themeService.updateThemeVariables({
- *   '--ov-primary-action-color': '#ff5722',
- *   '--ov-accent-action-color': '#4caf50'
- * });
- *
- * // Listen to theme changes
- * this.themeService.currentTheme$.subscribe(theme => {
- *   console.log('Current theme:', theme);
- * });
- * ```
  *
  * @internal
  */
@@ -38,10 +19,8 @@ import { OPENVIDU_DARK_THEME, OPENVIDU_LIGHT_THEME, OpenViduThemeMode, OpenViduT
 	providedIn: 'root'
 })
 export class OpenViduThemeService {
-	private readonly THEME_STORAGE_KEY = 'openvidu-theme';
 	private readonly THEME_ATTRIBUTE = 'data-ov-theme';
-
-	private currentThemeSubject = new BehaviorSubject<OpenViduThemeMode>(OpenViduThemeMode.None);
+	private currentThemeSubject = new BehaviorSubject<OpenViduThemeMode>(OpenViduThemeMode.CLASSIC);
 	private currentVariablesSubject = new BehaviorSubject<OpenViduThemeVariables>({});
 
 	/**
@@ -54,9 +33,11 @@ export class OpenViduThemeService {
 	 */
 	public readonly currentVariables$: Observable<OpenViduThemeVariables> = this.currentVariablesSubject.asObservable();
 
-	constructor(@Inject(DOCUMENT) private document: Document) {
+	constructor(
+		@Inject(DOCUMENT) private document: Document,
+		protected storageService: StorageService
+	) {
 		this.initializeTheme();
-		this.setupSystemThemeListener();
 	}
 
 	/**
@@ -78,9 +59,9 @@ export class OpenViduThemeService {
 	 * @param theme The theme mode to apply
 	 */
 	setTheme(theme: OpenViduThemeMode): void {
-		this.currentThemeSubject.next(theme);
 		this.applyTheme(theme);
-		this.saveThemeToStorage(theme);
+		this.currentThemeSubject.next(theme);
+		this.storageService.setTheme(theme);
 	}
 
 	/**
@@ -152,17 +133,19 @@ export class OpenViduThemeService {
 	}
 
 	private initializeTheme(): void {
-		const savedTheme = this.getThemeFromStorage();
-		const initialTheme = savedTheme || OpenViduThemeMode.None;
+		const savedTheme = this.storageService.getTheme();
+		const initialTheme = savedTheme || OpenViduThemeMode.CLASSIC;
 		this.applyTheme(initialTheme);
 		this.currentThemeSubject.next(initialTheme);
 	}
 
 	private applyTheme(theme: OpenViduThemeMode): void {
 		const documentElement = this.document.documentElement;
-
-		if (theme === OpenViduThemeMode.Auto || theme === OpenViduThemeMode.None) {
+		const currentTheme = this.getCurrentTheme();
+		if (theme === OpenViduThemeMode.CLASSIC) {
 			documentElement.removeAttribute(this.THEME_ATTRIBUTE);
+			const currentVariables = this.getDefaultVariablesForTheme(currentTheme);
+			this.removeCSSVariables(currentVariables);
 		} else {
 			documentElement.setAttribute(this.THEME_ATTRIBUTE, theme);
 		}
@@ -182,57 +165,22 @@ export class OpenViduThemeService {
 		});
 	}
 
+	private removeCSSVariables(variables: OpenViduThemeVariables): void {
+		const documentElement = this.document.documentElement;
+
+		Object.keys(variables).forEach((property) => {
+			documentElement.style.removeProperty(property);
+		});
+	}
+
 	private getDefaultVariablesForTheme(theme: OpenViduThemeMode): OpenViduThemeVariables {
 		switch (theme) {
 			case OpenViduThemeMode.Light:
 				return OPENVIDU_LIGHT_THEME;
 			case OpenViduThemeMode.Dark:
 				return OPENVIDU_DARK_THEME;
-			case OpenViduThemeMode.None:
-				return {};
-			case OpenViduThemeMode.Auto:
-				// Auto theme - use system preference
-				return this.prefersDarkMode() ? OPENVIDU_DARK_THEME : OPENVIDU_LIGHT_THEME;
 			default:
 				return {};
 		}
-	}
-
-	private setupSystemThemeListener(): void {
-		if (window.matchMedia) {
-			const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-
-			const handleSystemThemeChange = (event: MediaQueryListEvent) => {
-				if (this.getCurrentTheme() === OpenViduThemeMode.Auto) {
-					const defaultVariables = this.getDefaultVariablesForTheme(OpenViduThemeMode.Auto);
-					this.applyCSSVariables(defaultVariables);
-				}
-			};
-
-			// Use the newer addEventListener if available, otherwise use the deprecated addListener
-			if (mediaQuery.addEventListener) {
-				mediaQuery.addEventListener('change', handleSystemThemeChange);
-			}
-		}
-	}
-
-	private saveThemeToStorage(theme: OpenViduThemeMode): void {
-		try {
-			localStorage.setItem(this.THEME_STORAGE_KEY, theme);
-		} catch (error) {
-			console.warn('Failed to save theme to localStorage:', error);
-		}
-	}
-
-	private getThemeFromStorage(): OpenViduThemeMode | null {
-		try {
-			const saved = localStorage.getItem(this.THEME_STORAGE_KEY) as OpenViduThemeMode;
-			if (saved && [OpenViduThemeMode.Light, OpenViduThemeMode.Dark, OpenViduThemeMode.Auto].includes(saved)) {
-				return saved;
-			}
-		} catch (error) {
-			console.warn('Failed to read theme from localStorage:', error);
-		}
-		return null;
 	}
 }

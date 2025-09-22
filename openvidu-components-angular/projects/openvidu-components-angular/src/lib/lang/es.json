@@ -106,7 +106,8 @@
 			"CAPTIONS": "Subtítulos",
 			"DISABLED_AUDIO": "Audio desactivado",
 			"DISABLED_VIDEO": "Video desactivado",
-			"CAPTIONS_LANG_TEXT": "Selecciona el idioma que usarán los participantes de la sala. Los subtítulos aparecerán en ese idioma."
+			"CAPTIONS_LANG_TEXT": "Selecciona el idioma que usarán los participantes de la sala. Los subtítulos aparecerán en ese idioma.",
+			"THEME": "Tema"
 		},
 		"BACKGROUND": {
 			"TITLE": "Efectos de fondo",

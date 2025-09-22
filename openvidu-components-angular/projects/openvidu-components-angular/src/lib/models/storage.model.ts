@@ -10,6 +10,7 @@ export enum StorageKeys {
 	LANG = 'lang',
 	CAPTION_LANG = 'captionLang',
 	BACKGROUND = 'virtualBg',
+	THEME = 'theme',
 	TAB_ID = 'tabId',
 	ACTIVE_TABS = 'activeTabs'
 }

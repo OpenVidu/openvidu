@@ -244,3 +244,101 @@
 		}
 	}
 }
+
+// Selector button mixin
+@mixin selector-button($icon-class, $name-class, $expand-class) {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 12px 16px;
+	background: var(--ov-surface-color, #ffffff);
+	border: 2px solid var(--ov-border-color, #e0e0e0);
+	border-radius: 12px;
+	transition: all 0.2s ease;
+	color: var(--ov-text-primary-color, #333);
+	font-weight: 500;
+	min-width: 150px;
+
+	.#{$name-class} {
+		text-transform: capitalize;
+	}
+
+	&:hover {
+		border-color: var(--ov-primary-action-color, #4285f4);
+		box-shadow: 0 2px 8px rgba(66, 133, 244, 0.1);
+	}
+
+	.#{$icon-class} {
+		font-size: 18px;
+		width: 18px;
+		height: 18px;
+		color: var(--ov-text-surface-color, #666);
+	}
+
+	.#{$name-class} {
+		font-size: 14px;
+		font-weight: 500;
+		display: inline-block !important;
+		color: var(--ov-text-surface-color) !important;
+	}
+
+	.#{$expand-class} {
+		font-size: 16px;
+		width: 16px;
+		min-width: 16px;
+		height: 16px;
+		min-height: 16px;
+		color: var(--ov-text-secondary-color, #666);
+		transition: transform 0.2s ease;
+		vertical-align: bottom;
+	}
+
+	&[aria-expanded='true'] .#{$expand-class} {
+		transform: rotate(180deg);
+	}
+}
+
+// selector menu mixin
+@mixin selector-menu($option-class, $option-name-class) {
+	border-radius: 12px;
+	box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+	border: 1px solid var(--ov-border-color);
+	overflow: hidden;
+	background: var(--ov-surface-color);
+
+	.#{$option-class} {
+		display: flex;
+		align-items: center;
+		gap: 12px;
+		padding: 12px 16px;
+		transition: background-color 0.2s ease;
+		font-size: 14px;
+		min-height: 48px;
+		color: var(--ov-text-surface-color);
+
+		&:hover {
+			background-color: var(--ov-hover-color);
+		}
+
+		&.selected {
+			background-color: var(--ov-active-color);
+
+			.check-icon {
+				color: var(--ov-text-surface-color);
+			}
+		}
+
+		.check-icon {
+			font-size: 18px;
+			width: 18px;
+			height: 18px;
+		}
+
+		.#{$option-name-class} {
+			text-transform: capitalize;
+
+			flex: 1;
+			font-weight: 500;
+		}
+	}
+}

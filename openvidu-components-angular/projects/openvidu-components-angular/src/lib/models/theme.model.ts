@@ -5,8 +5,7 @@
 export enum OpenViduThemeMode {
 	Light = 'light',
 	Dark = 'dark',
-	None = 'none',
-	Auto = 'auto'
+	CLASSIC = 'classic'
 }
 
 /**

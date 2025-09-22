@@ -1,0 +1,14 @@
+@use '../selector-shared' as shared;
+
+:host {
+	display: inline-block;
+	.theme-selector-container {
+		.theme-selector-button {
+			@include shared.selector-button('theme-icon', 'theme-name', 'expand-icon');
+		}
+	}
+}
+
+::ng-deep .theme-menu.mat-mdc-menu-panel {
+	@include shared.selector-menu('theme-option', 'theme-option-name');
+}

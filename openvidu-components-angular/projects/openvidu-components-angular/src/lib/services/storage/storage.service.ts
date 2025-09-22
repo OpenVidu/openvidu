@@ -10,6 +10,7 @@ import {
 } from '../../models/storage.model';
 import { LoggerService } from '../logger/logger.service';
 import { CustomDevice } from '../../models/device.model';
+import { OpenViduThemeMode } from '../../models/theme.model';
 
 /**
  * @internal
@@ -230,7 +231,7 @@ export class StorageService implements OnDestroy {
 		if (!this.isStorageAvailable) return;
 
 		// Use batch removal for better performance
-		const keysToRemove = TAB_SPECIFIC_KEYS.map(key => `${this.PREFIX_KEY}${tabId}_${key}`);
+		const keysToRemove = TAB_SPECIFIC_KEYS.map((key) => `${this.PREFIX_KEY}${tabId}_${key}`);
 
 		for (const storageKey of keysToRemove) {
 			try {
@@ -339,6 +340,18 @@ export class StorageService implements OnDestroy {
 		this.remove(StorageKeys.BACKGROUND);
 	}
 
+	setTheme(theme: OpenViduThemeMode): void {
+		this.set(StorageKeys.THEME, theme);
+	}
+
+	getTheme(): OpenViduThemeMode | null {
+		return this.get(StorageKeys.THEME);
+	}
+
+	removeTheme(): void {
+		this.remove(StorageKeys.THEME);
+	}
+
 	// Core storage methods with improved error handling and caching
 	protected set(key: string, item: any): void {
 		if (!this.isStorageAvailable) {
@@ -403,9 +416,7 @@ export class StorageService implements OnDestroy {
 	private setLocalValue(key: string, item: any, useCache: boolean = true): void {
 		if (!this.isStorageAvailable) return;
 
-		const storageKey = this.shouldUseTabSpecificKey(key)
-			? `${this.PREFIX_KEY}${this.tabId}_${key}`
-			: `${this.PREFIX_KEY}${key}`;
+		const storageKey = this.shouldUseTabSpecificKey(key) ? `${this.PREFIX_KEY}${this.tabId}_${key}` : `${this.PREFIX_KEY}${key}`;
 
 		try {
 			// Optimize serialization for primitive types
@@ -436,9 +447,7 @@ export class StorageService implements OnDestroy {
 	private getLocalValue(key: string, useCache: boolean = true): any {
 		if (!this.isStorageAvailable) return null;
 
-		const storageKey = this.shouldUseTabSpecificKey(key)
-			? `${this.PREFIX_KEY}${this.tabId}_${key}`
-			: `${this.PREFIX_KEY}${key}`;
+		const storageKey = this.shouldUseTabSpecificKey(key) ? `${this.PREFIX_KEY}${this.tabId}_${key}` : `${this.PREFIX_KEY}${key}`;
 
 		// Check cache first
 		if (useCache && this.cache.has(storageKey)) {
@@ -484,9 +493,7 @@ export class StorageService implements OnDestroy {
 	private removeLocalValue(key: string): void {
 		if (!this.isStorageAvailable) return;
 
-		const storageKey = this.shouldUseTabSpecificKey(key)
-			? `${this.PREFIX_KEY}${this.tabId}_${key}`
-			: `${this.PREFIX_KEY}${key}`;
+		const storageKey = this.shouldUseTabSpecificKey(key) ? `${this.PREFIX_KEY}${this.tabId}_${key}` : `${this.PREFIX_KEY}${key}`;
 
 		try {
 			this.localStorage.removeItem(storageKey);

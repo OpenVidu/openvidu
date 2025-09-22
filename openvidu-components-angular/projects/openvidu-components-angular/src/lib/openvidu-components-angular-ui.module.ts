@@ -46,6 +46,7 @@ import { VideoDevicesComponent } from './components/settings/video-devices/video
 import { ApiDirectiveModule } from './directives/api/api.directive.module';
 import { OpenViduComponentsDirectiveModule } from './directives/template/openvidu-components-angular.directive.module';
 import { AppMaterialModule } from './openvidu-components-angular.material.module';
+import { ThemeSelectorComponent } from './components/settings/theme-selector/theme-selector.component';
 
 const publicComponents = [
 	AdminDashboardComponent,
@@ -79,7 +80,8 @@ const privateComponents = [
 	ParticipantNameInputComponent,
 	LangSelectorComponent,
 	ToolbarMediaButtonsComponent,
-	ToolbarPanelButtonsComponent
+	ToolbarPanelButtonsComponent,
+	ThemeSelectorComponent
 ];
 
 @NgModule({

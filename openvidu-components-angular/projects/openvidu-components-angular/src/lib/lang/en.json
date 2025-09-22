@@ -106,7 +106,8 @@
 			"CAPTIONS": "Captions",
 			"DISABLED_AUDIO": "Audio disabled",
 			"DISABLED_VIDEO": "Video disabled",
-			"CAPTIONS_LANG_TEXT": "Select the language that the participants of the room will use. The captions will appear in that language."
+			"CAPTIONS_LANG_TEXT": "Select the language that the participants of the room will use. The captions will appear in that language.",
+			"THEME": "Theme"
 		},
 		"BACKGROUND": {
 			"TITLE": "Background effects",

@@ -106,7 +106,8 @@
 			"CAPTIONS": "Ondertitels",
 			"DISABLED_AUDIO": "Geen audio",
 			"DISABLED_VIDEO": "Geen video",
-			"CAPTIONS_LANG_TEXT": "Selecteer de taal die de deelnemers van de kamer zullen gebruiken. De ondertiteling zal in die taal verschijnen."
+			"CAPTIONS_LANG_TEXT": "Selecteer de taal die de deelnemers van de kamer zullen gebruiken. De ondertiteling zal in die taal verschijnen.",
+			"THEME": "Thema"
 		},
 		"BACKGROUND": {
 			"TITLE": "Achtergrondeffecten",

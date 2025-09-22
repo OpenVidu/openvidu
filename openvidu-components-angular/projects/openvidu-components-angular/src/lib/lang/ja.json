@@ -106,7 +106,8 @@
 			"CAPTIONS": "字幕",
 			"DISABLED_AUDIO": "オーディオを無効にする",
 			"DISABLED_VIDEO": "ビデオを無効にする",
-			"CAPTIONS_LANG_TEXT": "ルームの参加者が使用する言語を選択します。キャプションはその言語で表示されます。"
+			"CAPTIONS_LANG_TEXT": "ルームの参加者が使用する言語を選択します。キャプションはその言語で表示されます。",
+			"THEME": "テーマ"
 		},
 		"BACKGROUND": {
 			"TITLE": "背景効果",

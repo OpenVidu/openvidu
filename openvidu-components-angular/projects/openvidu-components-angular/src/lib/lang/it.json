@@ -106,7 +106,8 @@
 			"CAPTIONS": "Sottotitoli",
 			"DISABLED_AUDIO": "Disattiva l'audio",
 			"DISABLED_VIDEO": "Disattiva il video",
-			"CAPTIONS_LANG_TEXT": "Seleziona la lingua che i partecipanti della stanza useranno. I sottotitoli appariranno in quella lingua."
+			"CAPTIONS_LANG_TEXT": "Seleziona la lingua che i partecipanti della stanza useranno. I sottotitoli appariranno in quella lingua.",
+			"THEME": "Tema"
 		},
 		"BACKGROUND": {
 			"TITLE": "Effetti di sfondo",

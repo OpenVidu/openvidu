@@ -106,7 +106,8 @@
 			"CAPTIONS": "字幕",
 			"DISABLED_AUDIO": "没有音频设备",
 			"DISABLED_VIDEO": "没有视频设备",
-			"CAPTIONS_LANG_TEXT": "选择房间参与者将使用的语言。字幕将以该语言显示。"
+			"CAPTIONS_LANG_TEXT": "选择房间参与者将使用的语言。字幕将以该语言显示。",
+			"THEME": "主题"
 		},
 		"BACKGROUND": {
 			"TITLE": "背景效果",

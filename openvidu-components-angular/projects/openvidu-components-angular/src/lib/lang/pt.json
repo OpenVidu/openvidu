@@ -106,7 +106,8 @@
 			"CAPTIONS": "Legendas",
 			"DISABLED_AUDIO": "Áudio desativado",
 			"DISABLED_VIDEO": "Vídeo desativado",
-			"CAPTIONS_LANG_TEXT": "Selecione o idioma que os participantes da sala utilizarão. Os legendas aparecerão nesse idioma."
+			"CAPTIONS_LANG_TEXT": "Selecione o idioma que os participantes da sala utilizarão. Os legendas aparecerão nesse idioma.",
+			"THEME": "Tema"
 		},
 		"BACKGROUND": {
 			"TITLE": "Efeitos de fundo",
