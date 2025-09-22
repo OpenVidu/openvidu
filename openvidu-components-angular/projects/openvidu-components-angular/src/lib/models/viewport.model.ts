@@ -24,4 +24,7 @@ export interface ViewportInfo {
 	isDesktop: boolean;
 	isWide: boolean;
 	isTouchDevice: boolean;
+	isPhysicalMobile: boolean;
+	isPhysicalTablet: boolean;
+	shouldShowLandscapeWarning: boolean;
 }

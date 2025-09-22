@@ -1,0 +1,33 @@
+#landscape-warning {
+	width: 100%;
+	height: 100%;
+	background-color: var(--ov-background-color);
+	opacity: 95%;
+	align-content: space-evenly;
+	text-align: center;
+	color: var(--ov-text-primary-color);
+
+	.warning-message {
+		display: inline-grid;
+		display: -moz-inline-grid;
+		place-items: center;
+	}
+
+	mat-icon {
+		width: 50px;
+		height: 50px;
+		font-size: 50px;
+		margin: auto;
+		margin-bottom: 10px;
+		animation: boomerang 1.2s ease-in-out infinite alternate;
+
+		@keyframes boomerang {
+			from {
+				transform: rotate(0deg);
+			}
+			to {
+				transform: rotate(45deg);
+			}
+		}
+	}
+}

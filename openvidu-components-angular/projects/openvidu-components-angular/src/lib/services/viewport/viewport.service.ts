@@ -50,6 +50,17 @@ export class ViewportService implements OnDestroy {
 	readonly isTouchDevice = computed(() => this.platform.isTouchDevice());
 
 	/**
+	 * Whether device is physically a mobile device (orientation-independent)
+	 * This uses hardware detection, not just screen size
+	 */
+	readonly isPhysicalMobile = computed(() => this.platform.isPhysicalMobileDevice());
+
+	/**
+	 * Whether device is physically a tablet (orientation-independent)
+	 */
+	readonly isPhysicalTablet = computed(() => this.platform.isPhysicalTablet());
+
+	/**
 	 * Current viewport size category
 	 */
 	readonly viewportSize = computed<ViewportSize>(() => {
@@ -68,7 +79,8 @@ export class ViewportService implements OnDestroy {
 	});
 
 	/**
-	 * Whether current viewport is mobile size
+	 * Whether current viewport is mobile size (legacy method)
+	 * For landscape warnings, use isPhysicalMobile instead
 	 */
 	readonly isMobile = computed(() => this.viewportSize() === 'mobile' && this.platform.isTouchDevice());
 
@@ -76,6 +88,14 @@ export class ViewportService implements OnDestroy {
 	 * Whether current viewport is tablet size
 	 */
 	readonly isTablet = computed(() => this.viewportSize() === 'tablet' && this.platform.isTouchDevice());
+
+	/**
+	 * Whether device should show mobile landscape warning
+	 * This is orientation-independent and hardware-based detection
+	 */
+	readonly shouldShowLandscapeWarning = computed(() =>
+		this.isPhysicalMobile() && this.orientation() === 'landscape'
+	);
 
 	/**
 	 * Whether current viewport is desktop size
@@ -119,7 +139,10 @@ export class ViewportService implements OnDestroy {
 		isTablet: this.isTablet(),
 		isDesktop: this.isDesktop(),
 		isWide: this.isWide(),
-		isTouchDevice: this.isTouchDevice()
+		isTouchDevice: this.isTouchDevice(),
+		isPhysicalMobile: this.isPhysicalMobile(),
+		isPhysicalTablet: this.isPhysicalTablet(),
+		shouldShowLandscapeWarning: this.shouldShowLandscapeWarning()
 	}));
 
 	// ==== PUBLIC UTILITY METHODS ====

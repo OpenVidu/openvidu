@@ -47,6 +47,7 @@ import { ApiDirectiveModule } from './directives/api/api.directive.module';
 import { OpenViduComponentsDirectiveModule } from './directives/template/openvidu-components-angular.directive.module';
 import { AppMaterialModule } from './openvidu-components-angular.material.module';
 import { ThemeSelectorComponent } from './components/settings/theme-selector/theme-selector.component';
+import { LandscapeWarningComponent } from './components/landscape-warning/landscape-warning.component';
 
 const publicComponents = [
 	AdminDashboardComponent,
@@ -81,7 +82,8 @@ const privateComponents = [
 	LangSelectorComponent,
 	ToolbarMediaButtonsComponent,
 	ToolbarPanelButtonsComponent,
-	ThemeSelectorComponent
+	ThemeSelectorComponent,
+	LandscapeWarningComponent
 ];
 
 @NgModule({

@@ -18,6 +18,7 @@ export * from './lib/components/toolbar/toolbar.component';
 export * from './lib/components/toolbar/toolbar-media-buttons/toolbar-media-buttons.component';
 export * from './lib/components/toolbar/toolbar-panel-buttons/toolbar-panel-buttons.component';
 export * from './lib/components/videoconference/videoconference.component';
+export * from './lib/components/landscape-warning/landscape-warning.component';
 export * from './lib/config/openvidu-components-angular.config';
 // Directives
 export * from './lib/directives/api/activities-panel.directive';
