@@ -35,22 +35,22 @@ export class ViewportService implements OnDestroy {
 	// ==== PUBLIC REACTIVE SIGNALS ====
 
 	/**
-	 * Current viewport width (reactive)
+	 * Current viewport width
 	 */
 	readonly width = this._width.asReadonly();
 
 	/**
-	 * Current viewport height (reactive)
+	 * Current viewport height
 	 */
 	readonly height = this._height.asReadonly();
 
 	/**
-	 * Whether device supports touch interactions (reactive)
+	 * Whether device supports touch interactions
 	 */
 	readonly isTouchDevice = computed(() => this.platform.isTouchDevice());
 
 	/**
-	 * Current viewport size category (computed)
+	 * Current viewport size category
 	 */
 	readonly viewportSize = computed<ViewportSize>(() => {
 		const width = this._width();
@@ -68,47 +68,47 @@ export class ViewportService implements OnDestroy {
 	});
 
 	/**
-	 * Whether current viewport is mobile size (computed)
+	 * Whether current viewport is mobile size
 	 */
-	readonly isMobile = computed(() => this.viewportSize() === 'mobile');
+	readonly isMobile = computed(() => this.viewportSize() === 'mobile' && this.platform.isTouchDevice());
 
 	/**
-	 * Whether current viewport is tablet size (computed)
+	 * Whether current viewport is tablet size
 	 */
-	readonly isTablet = computed(() => this.viewportSize() === 'tablet');
+	readonly isTablet = computed(() => this.viewportSize() === 'tablet' && this.platform.isTouchDevice());
 
 	/**
-	 * Whether current viewport is desktop size (computed)
+	 * Whether current viewport is desktop size
 	 */
 	readonly isDesktop = computed(() => this.viewportSize() === 'desktop');
 
 	/**
-	 * Whether current viewport is wide desktop size (computed)
+	 * Whether current viewport is wide desktop size
 	 */
 	readonly isWide = computed(() => this.viewportSize() === 'wide');
 
 	/**
-	 * Whether current viewport is mobile or smaller (computed)
+	 * Whether current viewport is mobile or smaller
 	 */
 	readonly isMobileView = computed(() => this._width() < this.BREAKPOINTS.tablet);
 
 	/**
-	 * Whether current viewport is tablet or smaller (computed)
+	 * Whether current viewport is tablet or smaller
 	 */
 	readonly isTabletDown = computed(() => this._width() < this.BREAKPOINTS.desktop);
 
 	/**
-	 * Whether current viewport is tablet or larger (computed)
+	 * Whether current viewport is tablet or larger
 	 */
 	readonly isTabletUp = computed(() => this._width() >= this.BREAKPOINTS.tablet);
 
 	/**
-	 * Whether current viewport is desktop or larger (computed)
+	 * Whether current viewport is desktop or larger
 	 */
 	readonly isDesktopUp = computed(() => this._width() >= this.BREAKPOINTS.desktop);
 
 	/**
-	 * Complete viewport information (computed)
+	 * Complete viewport information
 	 */
 	readonly viewportInfo = computed<ViewportInfo>(() => ({
 		width: this._width(),

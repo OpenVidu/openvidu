@@ -4,7 +4,7 @@
 		<span>{{ 'ROOM.JOINING' | translate }}</span>
 	</div>
 } @else {
-	@if (viewportService.orientation() === 'landscape') {
+	@if (viewportService.isMobile() && viewportService.orientation() === 'landscape') {
 		<!-- Landscape orientation warning -->
 		<div id="landscape-warning" [@inOutAnimation]>
 			<div class="warning-message">

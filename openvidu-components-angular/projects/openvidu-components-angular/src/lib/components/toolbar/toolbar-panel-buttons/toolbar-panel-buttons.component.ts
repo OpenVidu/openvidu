@@ -33,7 +33,7 @@ export class ToolbarPanelButtonsComponent {
 
 	// Computed property to determine if we should show collapsed menu
 	get shouldShowCollapsed(): boolean {
-		return this.viewportService.isMobileView() || this.viewportService.isTabletDown();
+		return this.viewportService.isMobileView()
 	}
 
 	// Get count of visible buttons

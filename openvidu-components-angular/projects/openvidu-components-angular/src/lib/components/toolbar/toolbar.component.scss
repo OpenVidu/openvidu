@@ -44,6 +44,10 @@
 		display: flex;
 		justify-content: flex-end;
 		align-items: center;
+
+		ov-toolbar-panel-buttons {
+			display: contents;
+		}
 	}
 	::ng-deep .menu-buttons-container:has(.collapsed-menu-container) {
 		flex: 0;
