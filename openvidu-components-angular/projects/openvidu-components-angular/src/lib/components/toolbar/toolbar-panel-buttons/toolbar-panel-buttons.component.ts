@@ -20,8 +20,6 @@ export class ToolbarPanelButtonsComponent {
 	@Input() showChatPanelButton: boolean = true;
 	@Input() recordingStatus: any;
 	@Input() broadcastingStatus: any;
-	@Input() _recordingStatus: any;
-	@Input() _broadcastingStatus: any;
 	@Input() toolbarAdditionalPanelButtonsTemplate: TemplateRef<any> | undefined;
 
 	// Outputs back to toolbar
