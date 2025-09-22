@@ -293,6 +293,39 @@
 		}
 	}
 
+	.prejoin-container.mobile {
+		padding: 0;
+		.prejoin-main {
+			max-width: none;
+			width: 100%;
+			height: 100vh;
+			max-height: none;
+			border-radius: 0;
+			display: flex;
+			flex-direction: column;
+
+			.configuration-section {
+				padding: 20px 10px;
+				justify-content: center;
+				gap: 18px;
+			}
+		}
+
+		.video-preview-section {
+			flex: 1;
+			height: 50vh;
+			display: flex;
+			flex-direction: column;
+
+			.video-preview-container {
+				flex: 1;
+				height: 75vh;
+				aspect-ratio: unset;
+				border-radius: 0;
+			}
+		}
+	}
+
 	@keyframes slideInFromRight {
 		from {
 			opacity: 0;

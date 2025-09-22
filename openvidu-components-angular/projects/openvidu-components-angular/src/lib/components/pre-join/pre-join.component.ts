@@ -16,6 +16,7 @@ import { CdkOverlayService } from '../../services/cdk-overlay/cdk-overlay.servic
 import { OpenViduComponentsConfigService } from '../../services/config/directive-config.service';
 import { LoggerService } from '../../services/logger/logger.service';
 import { OpenViduService } from '../../services/openvidu/openvidu.service';
+import { ViewportService } from '../../services/viewport/viewport.service';
 import { TranslateService } from '../../services/translate/translate.service';
 import { LocalTrack, Track } from 'livekit-client';
 import { CustomDevice } from '../../models/device.model';
@@ -74,7 +75,7 @@ export class PreJoinComponent implements OnInit, OnDestroy {
 	@Output() onReadyToJoin = new EventEmitter<any>();
 
 	_error: string | undefined;
-	windowSize: number;
+	windowSize!: number;
 	isLoading = true;
 	participantName: string | undefined = '';
 
@@ -95,7 +96,7 @@ export class PreJoinComponent implements OnInit, OnDestroy {
 	audioTrack: LocalTrack | undefined;
 	isVideoEnabled: boolean = false;
 	hasVideoDevices: boolean = true;
-	private tracks: LocalTrack[];
+	private tracks: LocalTrack[] = [];
 	private log: ILogger;
 	private destroy$ = new Subject<void>();
 	private shouldRemoveTracksWhenComponentIsDestroyed: boolean = true;
@@ -111,7 +112,8 @@ export class PreJoinComponent implements OnInit, OnDestroy {
 		private cdkSrv: CdkOverlayService,
 		private openviduService: OpenViduService,
 		private translateService: TranslateService,
-		private changeDetector: ChangeDetectorRef
+		private changeDetector: ChangeDetectorRef,
+		protected viewportService: ViewportService
 	) {
 		this.log = this.loggerSrv.get('PreJoinComponent');
 	}

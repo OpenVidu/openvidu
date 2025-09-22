@@ -1,4 +1,4 @@
-<div class="prejoin-container" id="prejoin-container" [class.name-error]="!!_error">
+<div class="prejoin-container" id="prejoin-container" [class.mobile]="viewportService.isMobile()" [class.name-error]="!!_error">
 	<!-- Top Language Toolbar -->
 	<div class="top-toolbar" *ngIf="!isMinimal">
 		<ov-lang-selector [compact]="false" class="language-selector" (onLangChanged)="onLangChanged.emit($event)"> </ov-lang-selector>
