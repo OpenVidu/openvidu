@@ -90,10 +90,20 @@
 	position: absolute;
 }
 
-@media only screen and (max-width: 600px) {
+@media only screen and (max-width: 768px) {
 	#session-container {
 		width: 100%;
 		/* position: fixed; */
+	}
+
+	.sidenav-menu {
+		width: 100% !important;
+		max-width: 100% !important;
+	}
+
+	.big {
+		width: 100% !important;
+		max-width: 100% !important;
 	}
 }
 

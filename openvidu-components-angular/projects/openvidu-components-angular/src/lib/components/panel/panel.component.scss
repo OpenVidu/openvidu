@@ -9,6 +9,16 @@
 	align-items: stretch;
 }
 
+// Mobile responsiveness - ensure panels occupy full width on mobile devices
+@media only screen and (max-width: 768px) {
+	.panel-container {
+		margin: 8px;
+		max-height: calc(100% - 16px);
+		min-height: calc(100% - 16px);
+		border-radius: 8px;
+	}
+}
+
 .panel-header-container {
 	padding: 10px;
 	flex: inherit;
