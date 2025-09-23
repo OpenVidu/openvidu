@@ -41,7 +41,7 @@
 				padding: 0 16px;
 				border: none;
 				outline: none;
-				background: transparent;
+				background: var(--ov-input-background, #f8f9fa);
 				font-size: 16px;
 				font-weight: 500;
 				color: var(--ov-text-surface-color, #666);

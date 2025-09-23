@@ -285,50 +285,61 @@
 
 	// Mobile Layout Optimization
 	.prejoin-container.mobile {
+		all: unset;
 		padding: 0;
-		align-items: stretch;
+		display: content;
+		height: 100vh;
+		min-height: 100vh;
+		max-height: 100vh;
+		overflow: hidden;
 
 		.prejoin-content {
-			max-width: none;
-			height: 100vh;
+			height: 100%;
+			display: flex;
+			flex-direction: column;
 
 			.prejoin-main {
 				width: 100%;
-				height: 100vh;
 				border-radius: 0;
+				flex: 1;
 				display: flex;
 				flex-direction: column;
 
 				.video-preview-section {
-					// Video section takes remaining space after configuration
-					flex: 1;
-					min-height: 0; // Allow flexbox to shrink
+					// Video takes all remaining space
+					flex: 1 1 auto;
+					min-height: 0;
+					overflow: hidden;
 
 					.video-preview-container {
 						width: 100%;
 						height: 100%;
-						aspect-ratio: unset;
 						border-radius: 0;
 					}
 				}
 
 				.configuration-section {
-					// Configuration section adapts to content
 					flex: 0 0 auto;
 					padding: 16px;
 					gap: 16px;
+					background: var(--ov-surface-color, #ffffff);
 
-					// Ensure minimum usable space but allow growth
-					min-height: fit-content;
-					max-height: 40vh; // Prevent taking too much space
-					overflow-y: auto; // Scroll if content is too tall
+					// Ensure content is displayed in column
+					display: flex;
+					flex-direction: column;
+
+					.join-section .join-button {
+						height: 48px;
+						min-height: 48px;
+					}
 				}
 
 				.vb-container {
-					// Virtual background panel also adapts to content
+					// Virtual background panel - also adapts to content
 					flex: 0 0 auto;
-					max-height: 40vh;
+					max-height: 60vh;
 					overflow-y: auto;
+					background: var(--ov-surface-color, #ffffff);
 				}
 			}
 		}
