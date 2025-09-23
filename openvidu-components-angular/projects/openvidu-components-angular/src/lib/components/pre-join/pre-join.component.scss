@@ -21,13 +21,18 @@
 		}
 
 		.prejoin-content {
-			display: flex;
-			justify-content: center;
 			width: 100%;
+			max-width: 520px;
+			margin: 0 auto;
 
 			.prejoin-main {
-				max-width: 480px;
 				width: 100%;
+				background: var(--ov-surface-color, #ffffff);
+				border-radius: var(--ov-surface-radius);
+				overflow: hidden;
+				box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+				animation: fadeIn 0.3s ease-out;
+				transform: translateZ(0);
 			}
 		}
 
@@ -75,253 +80,256 @@
 			}
 		}
 
-		// Main Content
-		.prejoin-main {
-			width: 100%;
-			max-width: 520px;
-			max-height: 544px;
-			background: var(--ov-surface-color, #ffffff);
-			border-radius: var(--ov-surface-radius);
-			overflow: hidden;
-			display: flex;
-			flex-direction: column;
-			box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
-			animation: fadeIn 0.3s ease-out;
-			transform: translateZ(0);
+		// Video Preview Section
+		.video-preview-section {
+			.video-preview-container {
+				position: relative;
+				width: 100%;
+				aspect-ratio: 4/3;
+				border-radius: var(--ov-surface-radius) var(--ov-surface-radius) 0 0;
+				overflow: hidden;
+				background: var(--ov-video-background);
 
-			// Video Preview Section
-			.video-preview-section {
-				padding: 0;
-				.video-preview-container {
-					position: relative;
+				.video-frame {
 					width: 100%;
-					aspect-ratio: 4/3;
-					border-radius: var(--ov-surface-radius) var(--ov-surface-radius) 0 0;
-					overflow: hidden;
-					background: var(--ov-video-background);
-					.video-frame {
+					height: 100%;
+					position: relative;
+
+					::ng-deep .video-element {
 						width: 100%;
 						height: 100%;
-						position: relative;
+						object-fit: cover;
+						display: block;
 
-						::ng-deep .video-element {
+						video {
 							width: 100%;
 							height: 100%;
 							object-fit: cover;
-							display: block;
-
-							video {
-								width: 100%;
-								height: 100%;
-								object-fit: cover;
-								border-radius: 0;
-							}
-						}
-					}
-
-					.video-overlay {
-						position: absolute;
-						bottom: 0;
-						left: 0;
-						right: 0;
-						padding: 16px;
-						z-index: 9999;
-						display: flex;
-						justify-content: center;
-						align-items: flex-end;
-
-						.device-controls {
-							display: flex;
-							gap: 12px;
-						}
-
-						.background-control {
-							position: absolute;
-							bottom: 16px;
-							left: 16px;
-
-							.background-button {
-								width: 48px;
-								height: 48px;
-								min-width: 48px;
-								min-height: 48px;
-								background: var(--ov-primary-action-color);
-								color: var(--ov-secondary-action-color);
-								border-radius: 16px;
-								padding: 0;
-
-								&.mat-mdc-button-disabled {
-									background: var(--ov-disabled-background);
-									color: var(--ov-text-disabled-color);
-									cursor: not-allowed;
-
-									&:hover {
-										transform: none;
-									}
-								}
-
-								mat-icon {
-									font-size: 22px;
-									width: 22px;
-									height: 22px;
-									opacity: 0.9;
-									transition: opacity 0.2s ease;
-									margin: 0;
-								}
-							}
+							border-radius: 0;
 						}
 					}
 				}
-			}
 
-			.vb-container {
-				height: fit-content;
-				overflow: hidden;
-			}
+				.video-overlay {
+					position: absolute;
+					bottom: 0;
+					left: 0;
+					right: 0;
+					padding: 16px;
+					z-index: 9999;
+					display: flex;
+					justify-content: center;
+					align-items: flex-end;
 
-			// Configuration Section
-			.configuration-section {
-				padding: 24px 24px 24px; // Added top padding since video has no padding
-				display: flex;
-				flex-direction: column;
-				gap: 20px;
+					.device-controls {
+						display: flex;
+						gap: 12px;
+					}
 
-				.input-section {
-					::ng-deep .name-input {
-						.mat-mdc-form-field {
-							width: 100%;
+					.background-control {
+						position: absolute;
+						bottom: 16px;
+						left: 16px;
 
-							.mat-mdc-text-field-wrapper {
-								border-radius: var(--ov-surface-radius);
-								background-color: var(--ov-input-background, #f8f9fa);
-								border: 1px solid var(--ov-border-color, #e0e0e0);
-								transition: all 0.2s ease;
+						.background-button {
+							width: 48px;
+							height: 48px;
+							min-width: 48px;
+							min-height: 48px;
+							background: var(--ov-primary-action-color);
+							color: var(--ov-secondary-action-color);
+							border-radius: 16px;
+							padding: 0;
+
+							&.mat-mdc-button-disabled {
+								background: var(--ov-disabled-background);
+								color: var(--ov-text-disabled-color);
+								cursor: not-allowed;
 
 								&:hover {
-									border-color: var(--ov-primary-action-color, #4285f4);
-								}
-
-								&.mdc-text-field--focused {
-									border-color: var(--ov-primary-action-color, #4285f4);
-									box-shadow: 0 0 0 3px rgba(66, 133, 244, 0.1);
+									transform: none;
 								}
 							}
 
-							.mat-mdc-form-field-subscript-wrapper {
-								display: none;
-							}
-
-							input {
-								font-size: 16px;
-								font-weight: 500;
-								color: var(--ov-text-surface-color, #666);
-								padding: 16px;
-
-								&::placeholder {
-									color: var(--ov-text-surface-color, #666);
-									font-weight: 400;
-								}
+							mat-icon {
+								font-size: 22px;
+								width: 22px;
+								height: 22px;
+								opacity: 0.9;
+								transition: opacity 0.2s ease;
+								margin: 0;
 							}
 						}
 					}
 				}
+			}
+		}
 
-				.error-message {
+		.vb-container {
+			height: fit-content;
+			overflow: hidden;
+		}
+
+		// Configuration Section
+		.configuration-section {
+			display: flex;
+			padding: 24px;
+			gap: 10px;
+			flex-flow: column;
+
+			.input-section {
+				::ng-deep .name-input {
+					.mat-mdc-form-field {
+						width: 100%;
+
+						.mat-mdc-text-field-wrapper {
+							border-radius: var(--ov-surface-radius);
+							background-color: var(--ov-input-background, #f8f9fa);
+							border: 1px solid var(--ov-border-color, #e0e0e0);
+							transition: all 0.2s ease;
+
+							&:hover {
+								border-color: var(--ov-primary-action-color, #4285f4);
+							}
+
+							&.mdc-text-field--focused {
+								border-color: var(--ov-primary-action-color, #4285f4);
+								box-shadow: 0 0 0 3px rgba(66, 133, 244, 0.1);
+							}
+						}
+
+						.mat-mdc-form-field-subscript-wrapper {
+							display: none;
+						}
+
+						input {
+							font-size: 16px;
+							font-weight: 500;
+							color: var(--ov-text-surface-color, #666);
+							padding: 16px;
+
+							&::placeholder {
+								color: var(--ov-text-surface-color, #666);
+								font-weight: 400;
+							}
+						}
+					}
+				}
+			}
+
+			.error-message {
+				display: flex;
+				align-items: center;
+				gap: 8px;
+				padding: 12px 16px;
+				background-color: rgba(244, 67, 54, 0.08);
+				border: 1px solid rgba(244, 67, 54, 0.2);
+				border-radius: var(--ov-surface-radius);
+				color: var(--ov-error-color, #d32f2f);
+
+				.error-icon {
+					font-size: 18px;
+					width: 18px;
+					height: 18px;
+				}
+
+				.error-text {
+					font-size: 14px;
+					font-weight: 500;
+				}
+			}
+
+			.join-section {
+				.join-button {
+					width: 100%;
+					height: 56px;
+					background: var(--ov-focus-color, #4285f4);
+					color: white;
+					border-radius: var(--ov-surface-radius);
+					font-size: 16px;
+					font-weight: 600;
+					letter-spacing: 0.5px;
+					transition: all 0.2s ease;
 					display: flex;
 					align-items: center;
+					justify-content: center;
 					gap: 8px;
-					padding: 12px 16px;
-					background-color: rgba(244, 67, 54, 0.08);
-					border: 1px solid rgba(244, 67, 54, 0.2);
-					border-radius: var(--ov-surface-radius);
-					color: var(--ov-error-color, #d32f2f);
+					box-shadow: 0 2px 8px rgba(66, 133, 244, 0.2);
 
-					.error-icon {
-						font-size: 18px;
-						width: 18px;
-						height: 18px;
+					&:hover:not([disabled]) {
+						background: var(--ov-primary-action-hover, #3367d6);
+						transform: translateY(-1px);
+						box-shadow: 0 4px 16px rgba(66, 133, 244, 0.3);
 					}
 
-					.error-text {
-						font-size: 14px;
-						font-weight: 500;
+					&:active:not([disabled]) {
+						transform: translateY(0);
 					}
-				}
 
-				.join-section {
-					.join-button {
-						width: 100%;
-						height: 56px;
-						background: var(--ov-focus-color, #4285f4);
-						color: white;
-						border-radius: var(--ov-surface-radius);
-						font-size: 16px;
-						font-weight: 600;
-						letter-spacing: 0.5px;
-						transition: all 0.2s ease;
-						display: flex;
-						align-items: center;
-						justify-content: center;
-						gap: 8px;
-						box-shadow: 0 2px 8px rgba(66, 133, 244, 0.2);
+					&[disabled] {
+						background: var(--ov-disabled-color, #ccc);
+						color: var(--ov-disabled-text-color, #999);
+						cursor: not-allowed;
+						box-shadow: none;
+					}
 
-						&:hover:not([disabled]) {
-							background: var(--ov-primary-action-hover, #3367d6);
-							transform: translateY(-1px);
-							box-shadow: 0 4px 16px rgba(66, 133, 244, 0.3);
-						}
-
-						&:active:not([disabled]) {
-							transform: translateY(0);
-						}
-
-						&[disabled] {
-							background: var(--ov-disabled-color, #ccc);
-							color: var(--ov-disabled-text-color, #999);
-							cursor: not-allowed;
-							box-shadow: none;
-						}
-
-						.join-icon {
-							font-size: 20px;
-							width: 20px;
-							height: 20px;
-						}
+					.join-icon {
+						font-size: 20px;
+						width: 20px;
+						height: 20px;
 					}
 				}
 			}
 		}
 	}
 
+	// Mobile Layout Optimization
 	.prejoin-container.mobile {
 		padding: 0;
-		.prejoin-main {
+		align-items: stretch;
+
+		.prejoin-content {
 			max-width: none;
-			width: 100%;
 			height: 100vh;
-			max-height: none;
-			border-radius: 0;
-			display: flex;
-			flex-direction: column;
 
-			.configuration-section {
-				padding: 20px 10px;
-				justify-content: center;
-				gap: 18px;
-			}
-		}
-
-		.video-preview-section {
-			flex: 1;
-			height: 50vh;
-			display: flex;
-			flex-direction: column;
-
-			.video-preview-container {
-				flex: 1;
-				height: 75vh;
-				aspect-ratio: unset;
+			.prejoin-main {
+				width: 100%;
+				height: 100vh;
 				border-radius: 0;
+				display: flex;
+				flex-direction: column;
+
+				.video-preview-section {
+					// Video section takes remaining space after configuration
+					flex: 1;
+					min-height: 0; // Allow flexbox to shrink
+
+					.video-preview-container {
+						width: 100%;
+						height: 100%;
+						aspect-ratio: unset;
+						border-radius: 0;
+					}
+				}
+
+				.configuration-section {
+					// Configuration section adapts to content
+					flex: 0 0 auto;
+					padding: 16px;
+					gap: 16px;
+
+					// Ensure minimum usable space but allow growth
+					min-height: fit-content;
+					max-height: 40vh; // Prevent taking too much space
+					overflow-y: auto; // Scroll if content is too tall
+				}
+
+				.vb-container {
+					// Virtual background panel also adapts to content
+					flex: 0 0 auto;
+					max-height: 40vh;
+					overflow-y: auto;
+				}
 			}
 		}
 	}
@@ -337,71 +345,66 @@
 		}
 	}
 
-	// Responsive Design
-	@media (max-width: 640px) {
-		.prejoin-container {
+	// Responsive Design for Desktop/Tablet
+	@media (max-width: 640px) and (min-height: 640px) {
+		.prejoin-container:not(.mobile) {
 			padding: 16px;
-			min-height: 100vh;
-		}
 
-		.prejoin-main {
-			max-width: 100%;
-			border-radius: var(--ov-surface-radius);
-		}
+			.prejoin-content {
+				max-width: 100%;
 
-		.video-preview-section {
-			padding: 0px 0px 12px;
-
-			.video-preview-container {
-				aspect-ratio: 4/3;
-			}
-		}
-
-		.configuration-section {
-			padding: 0 20px 20px;
-			gap: 16px;
-		}
-
-		.top-toolbar {
-			padding: 16px 20px;
-		}
-	}
-
-	@media (max-width: 480px) {
-		.prejoin-container {
-			padding: 12px;
-		}
-
-		.configuration-section {
-			padding: 0 16px 16px;
-		}
-
-		.video-overlay .device-controls {
-			gap: 8px;
-
-			::ng-deep .device-selector .mat-mdc-icon-button {
-				width: 44px;
-				height: 44px;
-
-				mat-icon {
-					font-size: 18px;
+				.prejoin-main {
+					border-radius: var(--ov-surface-radius);
 				}
 			}
-		}
 
-		.top-toolbar {
-			padding: 12px 16px;
+			.configuration-section {
+				padding: 20px;
+				gap: 16px;
+			}
+
+			.top-toolbar {
+				padding: 16px 20px;
+			}
 		}
 	}
 
-	@media (max-height: 640px) {
-		.prejoin-container {
-			align-items: flex-start;
-			padding-top: 60px; // Add space for top toolbar
-		}
+	@media (max-width: 480px) and (min-height: 640px) {
+		.prejoin-container:not(.mobile) {
+			padding: 12px;
 
-		.video-preview-section .video-preview-container {
-			aspect-ratio: 4/3; // Keep the taller aspect ratio even on small screens
+			.configuration-section {
+				padding: 16px;
+			}
+
+			.video-overlay .device-controls {
+				gap: 8px;
+
+				::ng-deep .device-selector .mat-mdc-icon-button {
+					width: 44px;
+					height: 44px;
+
+					mat-icon {
+						font-size: 18px;
+					}
+				}
+			}
+
+			.top-toolbar {
+				padding: 12px 16px;
+			}
+		}
+	}
+
+	// Short screens - optimize for horizontal space
+	@media (max-height: 640px) and (min-width: 640px) {
+		.prejoin-container:not(.mobile) {
+			align-items: flex-start;
+			padding-top: 60px; // Space for top toolbar
+
+			.video-preview-section .video-preview-container {
+				aspect-ratio: 16/9; // Wider aspect ratio for short screens
+			}
 		}
 	}
 
