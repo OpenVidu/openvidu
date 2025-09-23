@@ -83,7 +83,7 @@
     "doc:serve": "npx compodoc -c ../openvidu-components-angular/projects/openvidu-components-angular/doc/.compodocrc.json --serve --port 7000",
     "doc:serve-watch": "npm-watch doc:serve",
     "lib:serve": "ng build openvidu-components-angular --watch",
-    "lib:build": "ng build openvidu-components-angular --configuration production && cd ./dist/openvidu-components-angular",
+    "lib:build": "ng build openvidu-components-angular --configuration production",
     "lib:pack": "cd ./dist/openvidu-components-angular && npm pack",
     "lib:copy": "cp dist/openvidu-components-angular/openvidu-components-angular-*.tgz ../../openvidu-call/frontend",
     "lib:test": "ng test openvidu-components-angular --no-watch --code-coverage",
