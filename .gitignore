@@ -27,3 +27,8 @@ nbactions.xml
 */.tscache/*
 
 .factorypath
+.terraform
+.terraform.lock.hcl
+*.tfstate
+*.tfstate.backup
+*.tfstate.lock.info
