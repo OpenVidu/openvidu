@@ -42,7 +42,6 @@ resource "google_project_iam_member" "iam_project_role" {
   member  = "serviceAccount:${google_service_account.service_account.email}"
 }
 
-# Firewall (similar ports to your AWS SG)
 resource "google_compute_firewall" "firewall" {
   name    = lower("${var.stackName}-firewall")
   network = "default"
@@ -311,7 +310,7 @@ FINAL_COMMAND="$INSTALL_COMMAND $(printf "%s " "$${COMMON_ARGS[@]}") $(printf "%
 
 # Execute installation
 exec bash -c "$FINAL_COMMAND"
-  EOF
+EOF
 
   config_s3_script = <<-EOF
 #!/bin/bash -x
