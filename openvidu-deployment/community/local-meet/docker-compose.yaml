@@ -138,7 +138,7 @@ services:
         condition: service_completed_successfully
 
   egress:
-    image: docker.io/livekit/egress:v1.10.0
+    image: docker.io/openvidu/egress:main
     platform: linux/amd64
     restart: unless-stopped
     extra_hosts:

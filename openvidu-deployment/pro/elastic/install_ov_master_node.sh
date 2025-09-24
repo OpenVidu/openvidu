@@ -1,8 +1,8 @@
 #!/bin/sh
 # Docker & Docker Compose will need to be installed on the machine
 set -eu
-export DOCKER_VERSION="${DOCKER_VERSION:-28.1.1}"
-export DOCKER_COMPOSE_VERSION="${DOCKER_COMPOSE_VERSION:-v2.35.1}"
+export DOCKER_VERSION="${DOCKER_VERSION:-28.3.3}"
+export DOCKER_COMPOSE_VERSION="${DOCKER_COMPOSE_VERSION:-v2.39.4}"
 export OPENVIDU_VERSION="${OPENVIDU_VERSION:-main}"
 export INSTALLER_IMAGE="${INSTALLER_IMAGE:-docker.io/openvidu/openvidu-installer:${OPENVIDU_VERSION}}"
 export MINIO_SERVER_IMAGE="${MINIO_SERVER_IMAGE:-docker.io/openvidu/minio:2025.5.24-debian-12-r1}"
@@ -21,7 +21,7 @@ export OPENVIDU_DASHBOARD_IMAGE="${OPENVIDU_DASHBOARD_IMAGE:-docker.io/openvidu/
 export OPENVIDU_V2COMPATIBILITY_IMAGE="${OPENVIDU_V2COMPATIBILITY_IMAGE:-docker.io/openvidu/openvidu-v2compatibility:${OPENVIDU_VERSION}}"
 export OPENVIDU_AGENT_SPEECH_PROCESSING_IMAGE="${OPENVIDU_AGENT_SPEECH_PROCESSING_IMAGE:-docker.io/openvidu/agent-speech-processing:${OPENVIDU_VERSION}}"
 export LIVEKIT_INGRESS_SERVER_IMAGE="${LIVEKIT_INGRESS_SERVER_IMAGE:-docker.io/openvidu/ingress:${OPENVIDU_VERSION}}"
-export LIVEKIT_EGRESS_SERVER_IMAGE="${LIVEKIT_EGRESS_SERVER_IMAGE:-docker.io/livekit/egress:v1.10.0}"
+export LIVEKIT_EGRESS_SERVER_IMAGE="${LIVEKIT_EGRESS_SERVER_IMAGE:-docker.io/openvidu/egress:${OPENVIDU_VERSION}}"
 export PROMETHEUS_IMAGE="${PROMETHEUS_IMAGE:-docker.io/prom/prometheus:v3.4.0}"
 export PROMTAIL_IMAGE="${PROMTAIL_IMAGE:-docker.io/grafana/promtail:3.5.1}"
 export LOKI_IMAGE="${LOKI_IMAGE:-docker.io/grafana/loki:3.5.1}"
