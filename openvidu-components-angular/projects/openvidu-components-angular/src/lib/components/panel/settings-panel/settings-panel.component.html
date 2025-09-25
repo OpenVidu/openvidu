@@ -82,15 +82,17 @@
 						</mat-list-item>
 					</mat-list>
 				</div>
-				<div class="theme-section">
-					<mat-list>
-						<mat-list-item class="theme-selector">
-							<mat-icon matListItemIcon class="material-symbols-outlined">routine</mat-icon>
-							<div matListItemTitle>{{ 'PANEL.SETTINGS.THEME' | translate }}</div>
-							<ov-theme-selector matListItemMeta></ov-theme-selector>
-						</mat-list-item>
-					</mat-list>
-				</div>
+				@if (showThemeSelector) {
+					<div class="theme-section">
+						<mat-list>
+							<mat-list-item class="theme-selector">
+								<mat-icon matListItemIcon class="material-symbols-outlined">routine</mat-icon>
+								<div matListItemTitle>{{ 'PANEL.SETTINGS.THEME' | translate }}</div>
+								<ov-theme-selector matListItemMeta></ov-theme-selector>
+							</mat-list-item>
+						</mat-list>
+					</div>
+				}
 			</div>
 			<div *ngIf="showCameraButton && selectedOption === settingsOptions.VIDEO" class="video-settings">
 				<ov-video-devices-select

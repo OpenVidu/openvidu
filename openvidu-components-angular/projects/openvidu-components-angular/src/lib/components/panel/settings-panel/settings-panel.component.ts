@@ -28,6 +28,7 @@ export class SettingsPanelComponent implements OnInit {
 	showCameraButton: boolean = true;
 	showMicrophoneButton: boolean = true;
 	showCaptions: boolean = true;
+	showThemeSelector: boolean = false;
 	isMobile: boolean = false;
 	private destroy$ = new Subject<void>();
 
@@ -72,6 +73,7 @@ export class SettingsPanelComponent implements OnInit {
 		this.libService.cameraButton$.pipe(takeUntil(this.destroy$)).subscribe((value: boolean) => (this.showCameraButton = value));
 		this.libService.microphoneButton$.pipe(takeUntil(this.destroy$)).subscribe((value: boolean) => (this.showMicrophoneButton = value));
 		this.libService.captionsButton$.pipe(takeUntil(this.destroy$)).subscribe((value: boolean) => (this.showCaptions = value));
+		this.libService.showThemeSelector$.pipe(takeUntil(this.destroy$)).subscribe((value: boolean) => (this.showThemeSelector = value));
 	}
 
 	private subscribeToPanelToggling() {

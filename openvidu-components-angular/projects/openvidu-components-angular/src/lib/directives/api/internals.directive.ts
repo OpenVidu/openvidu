@@ -524,3 +524,49 @@ export class ToolbarRoomNameDirective implements AfterViewInit, OnDestroy {
 		this.libService.updateToolbarConfig({ roomName: this._roomName || '' });
 	}
 }
+
+/**
+ * @internal
+ *
+ * The **showThemeSelector** directive allows to enable or disable the theme selector control.
+ * When disabled, users won't be able to change the UI theme.
+ *
+ * Default: `false`
+ *
+ * Usage:
+ * <ov-videoconference [showThemeSelector]="false"></ov-videoconference>
+ */
+@Directive({
+	selector: 'ov-videoconference[showThemeSelector]',
+	standalone: false
+})
+export class ShowThemeSelectorDirective implements AfterViewInit, OnDestroy {
+	@Input() set showThemeSelector(value: boolean) {
+		this._value = value;
+		this.update(this._value);
+	}
+
+	private _value: boolean = false;
+
+	constructor(
+		public elementRef: ElementRef,
+		private libService: OpenViduComponentsConfigService
+	) {}
+
+	ngAfterViewInit() {
+		this.update(this._value);
+	}
+
+	ngOnDestroy(): void {
+		this.clear();
+	}
+
+	private clear() {
+		this._value = true;
+		this.update(this._value);
+	}
+
+	private update(value: boolean) {
+		this.libService.updateGeneralConfig({ showThemeSelector: value });
+	}
+}

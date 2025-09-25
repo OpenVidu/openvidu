@@ -94,6 +94,7 @@ interface GeneralConfig {
 	prejoin: boolean;
 	prejoinDisplayParticipantName: boolean;
 	showDisconnectionDialog: boolean;
+	showThemeSelector: boolean;
 	recordingStreamBaseUrl: string;
 }
 
@@ -300,6 +301,7 @@ export class OpenViduComponentsConfigService {
 		prejoin: true,
 		prejoinDisplayParticipantName: true,
 		showDisconnectionDialog: true,
+		showThemeSelector: false,
 		recordingStreamBaseUrl: 'call/api/recordings'
 	});
 
@@ -397,6 +399,12 @@ export class OpenViduComponentsConfigService {
 	);
 	showDisconnectionDialog$: Observable<boolean> = this.generalConfig.observable$.pipe(
 		map((config) => config.showDisconnectionDialog),
+		distinctUntilChanged(),
+		shareReplay(1)
+	);
+
+	showThemeSelector$: Observable<boolean> = this.generalConfig.observable$.pipe(
+		map((config) => config.showThemeSelector),
 		distinctUntilChanged(),
 		shareReplay(1)
 	);

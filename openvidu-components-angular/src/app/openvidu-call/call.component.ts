@@ -66,6 +66,7 @@ export class CallComponent implements OnInit {
 	public recordingActivityStartStopRecordingButton: boolean = true;
 	toolbarViewRecordingsButton: boolean = false;
 	private redirectToHomeOnLeaves: boolean = true;
+	private showThemeSelector: boolean = false;
 
 	private staticVideos = [
 		'https://videos.pexels.com/video-files/4089575/4089575-hd_1280_720_50fps.mp4',
@@ -159,6 +160,7 @@ export class CallComponent implements OnInit {
 			} else {
 				this.redirectToHomeOnLeaves = params['redirectToHome'] === 'true';
 			}
+			if(params['showThemeSelector'] !== undefined) this.showThemeSelector = params['showThemeSelector'] === 'true';
 			this.configReady = true;
 
 			if (this.areStaticVideosEnabled) {

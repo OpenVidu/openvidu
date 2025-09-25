@@ -81,4 +81,17 @@ describe('Testing Internal Directives', () => {
 		await utils.clickOn('#recording-activity');
 		expect(await utils.isPresent('#start-recording-btn')).toBeTrue();
 	});
+
+	it('should show/hide theme selector with showThemeSelector directive', async () => {
+		await browser.get(`${url}&prejoin=false&showThemeSelector=true`);
+		await utils.checkSessionIsPresent();
+		await utils.toggleToolbarMoreOptions();
+		expect(await utils.isPresent('.theme-selector-container')).toBeTrue();
+
+		await browser.get(`${url}&prejoin=false`);
+		await browser.navigate().refresh();
+		await utils.checkSessionIsPresent();
+		await utils.toggleToolbarMoreOptions();
+		expect(await utils.isPresent('.theme-selector-container')).toBeFalse();
+	});
 });
