@@ -64,6 +64,7 @@ import {
 	PreJoinDirective,
 	LeaveButtonDirective
 } from '../../directives/template/internals.directive';
+import { OpenViduThemeService } from '../../services/theme/theme.service';
 
 /**
  * The **VideoconferenceComponent** is the parent of all OpenVidu components.
@@ -710,7 +711,8 @@ export class VideoconferenceComponent implements OnDestroy, AfterViewInit {
 		private openviduService: OpenViduService,
 		private actionService: ActionService,
 		private libService: OpenViduComponentsConfigService,
-		private templateManagerService: TemplateManagerService
+		private templateManagerService: TemplateManagerService,
+		private themeService: OpenViduThemeService
 	) {
 		this.log = this.loggerSrv.get('VideoconferenceComponent');
 
@@ -726,6 +728,7 @@ export class VideoconferenceComponent implements OnDestroy, AfterViewInit {
 			error: { hasError: false }
 		});
 
+		this.themeService.initializeTheme();
 		this.subscribeToVideconferenceDirectives();
 	}
 

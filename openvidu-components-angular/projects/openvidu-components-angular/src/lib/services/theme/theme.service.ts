@@ -41,8 +41,13 @@ export class OpenViduThemeService {
 	constructor(
 		@Inject(DOCUMENT) private document: Document,
 		protected storageService: StorageService
-	) {
-		this.initializeTheme();
+	) {}
+
+	initializeTheme(): void {
+		const savedTheme = this.storageService.getTheme();
+		const initialTheme = savedTheme || OpenViduThemeMode.CLASSIC;
+		this.applyTheme(initialTheme);
+		this.currentThemeSubject.next(initialTheme);
 	}
 
 	/**
@@ -135,13 +140,6 @@ export class OpenViduThemeService {
 	 */
 	prefersDarkMode(): boolean {
 		return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-	}
-
-	private initializeTheme(): void {
-		const savedTheme = this.storageService.getTheme();
-		const initialTheme = savedTheme || OpenViduThemeMode.CLASSIC;
-		this.applyTheme(initialTheme);
-		this.currentThemeSubject.next(initialTheme);
 	}
 
 	private applyTheme(theme: OpenViduThemeMode): void {
