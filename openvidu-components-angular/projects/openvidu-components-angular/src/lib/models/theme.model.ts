@@ -75,7 +75,7 @@ export interface OpenViduThemeVariables {
  * Predefined theme configurations
  * @internal
  */
-export const OPENVIDU_LIGHT_THEME: OpenViduThemeVariables = {
+export const OPENVIDU_COMPONENTS_LIGHT_THEME: OpenViduThemeVariables = {
 	'--ov-background-color': '#f0f0f0',
 	'--ov-surface-color': '#ffffff',
 	'--ov-surface-container-color': '#f8f9fa',
@@ -108,7 +108,7 @@ export const OPENVIDU_LIGHT_THEME: OpenViduThemeVariables = {
  * Predefined dark theme configuration
  * @internal
  */
-export const OPENVIDU_DARK_THEME: OpenViduThemeVariables = {
+export const OPENVIDU_COMPONENTS_DARK_THEME: OpenViduThemeVariables = {
 	'--ov-background-color': '#1f2020',
 	'--ov-surface-color': '#2d2d2d',
 	'--ov-surface-container-color': '#3a3a3a',

@@ -1,7 +1,12 @@
 import { Injectable, Inject } from '@angular/core';
 import { DOCUMENT } from '@angular/common';
 import { BehaviorSubject, Observable } from 'rxjs';
-import { OPENVIDU_DARK_THEME, OPENVIDU_LIGHT_THEME, OpenViduThemeMode, OpenViduThemeVariables } from '../../models/theme.model';
+import {
+	OPENVIDU_COMPONENTS_DARK_THEME,
+	OPENVIDU_COMPONENTS_LIGHT_THEME,
+	OpenViduThemeMode,
+	OpenViduThemeVariables
+} from '../../models/theme.model';
 import { StorageService } from '../storage/storage.service';
 
 /**
@@ -176,9 +181,9 @@ export class OpenViduThemeService {
 	private getDefaultVariablesForTheme(theme: OpenViduThemeMode): OpenViduThemeVariables {
 		switch (theme) {
 			case OpenViduThemeMode.Light:
-				return OPENVIDU_LIGHT_THEME;
+				return OPENVIDU_COMPONENTS_LIGHT_THEME;
 			case OpenViduThemeMode.Dark:
-				return OPENVIDU_DARK_THEME;
+				return OPENVIDU_COMPONENTS_DARK_THEME;
 			default:
 				return {};
 		}
