@@ -85,13 +85,13 @@ describe('Testing Internal Directives', () => {
 	it('should show/hide theme selector with showThemeSelector directive', async () => {
 		await browser.get(`${url}&prejoin=false&showThemeSelector=true`);
 		await utils.checkSessionIsPresent();
-		await utils.toggleToolbarMoreOptions();
+		await utils.togglePanel('settings');
 		expect(await utils.isPresent('.theme-selector-container')).toBeTrue();
 
 		await browser.get(`${url}&prejoin=false`);
 		await browser.navigate().refresh();
 		await utils.checkSessionIsPresent();
-		await utils.toggleToolbarMoreOptions();
+		await utils.togglePanel('settings');
 		expect(await utils.isPresent('.theme-selector-container')).toBeFalse();
 	});
 });
