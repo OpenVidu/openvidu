@@ -936,7 +936,7 @@ Resources:
   IMDSv2LaunchTemplate:
     Type: AWS::EC2::LaunchTemplate
     Properties:
-        LaunchTemplateName: IMDSV2
+        LaunchTemplateName: !Sub openvidu-singlenode-${AWS::Region}-${AWS::StackName}
         LaunchTemplateData:
           MetadataOptions:
             HttpEndpoint: enabled
