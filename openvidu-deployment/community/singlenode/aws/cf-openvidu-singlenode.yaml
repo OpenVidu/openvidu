@@ -830,7 +830,7 @@ Resources:
       ImageId: !Ref AmiId
       LaunchTemplate:
         # Enable IMDSv2 by default
-        LaunchTemplateName: !Ref IMDSv2LaunchTemplate
+        LaunchTemplateId: !Ref IMDSv2LaunchTemplate
         Version: !GetAtt IMDSv2LaunchTemplate.DefaultVersionNumber
       InstanceType: !Ref InstanceType
       IamInstanceProfile: !Ref OpenViduServerInstanceProfile
