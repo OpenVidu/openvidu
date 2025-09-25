@@ -50,6 +50,10 @@ export class OpenViduThemeService {
 		this.currentThemeSubject.next(initialTheme);
 	}
 
+	getAllThemes(): OpenViduThemeMode[] {
+		return Object.values(OpenViduThemeMode);
+	}
+
 	/**
 	 * Gets the current theme mode
 	 */

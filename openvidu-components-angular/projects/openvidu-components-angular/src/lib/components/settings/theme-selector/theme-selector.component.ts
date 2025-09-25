@@ -42,8 +42,12 @@ import { OpenViduThemeMode } from '../../../models/theme.model';
 	styleUrl: './theme-selector.component.scss'
 })
 export class ThemeSelectorComponent {
-	protected predefinedThemes: OpenViduThemeMode[] = Object.values(OpenViduThemeMode);
+	protected predefinedThemes: OpenViduThemeMode[] = [];
 	constructor(private themeService: OpenViduThemeService) {}
+
+	ngOnInit() {
+		this.predefinedThemes = this.themeService.getAllThemes();
+	}
 
 	get currentTheme() {
 		return this.themeService.getCurrentTheme();

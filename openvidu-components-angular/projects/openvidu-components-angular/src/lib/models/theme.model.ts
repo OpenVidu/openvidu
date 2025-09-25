@@ -101,7 +101,12 @@ export const OPENVIDU_COMPONENTS_LIGHT_THEME: OpenViduThemeVariables = {
 	'--ov-border-focus-color': '#4285f4',
 	'--ov-activity-status-color': '#c8cdd6',
 	'--ov-broadcasting-color': '#8837f1',
-	'--ov-video-background': '#000000'
+	'--ov-video-background': '#000000',
+
+	'--ov-toolbar-buttons-radius': '50%',
+	'--ov-leave-button-radius': '10px',
+	'--ov-video-radius': '5px',
+	'--ov-surface-radius': '5px'
 };
 
 /**
@@ -134,5 +139,10 @@ export const OPENVIDU_COMPONENTS_DARK_THEME: OpenViduThemeVariables = {
 	'--ov-border-focus-color': '#5294ff',
 	'--ov-activity-status-color': '#c8cdd6ff',
 	'--ov-broadcasting-color': '#9d5af3ff',
-	'--ov-video-background': '#000000'
+	'--ov-video-background': '#000000',
+
+	'--ov-toolbar-buttons-radius': '50%',
+	'--ov-leave-button-radius': '10px',
+	'--ov-video-radius': '5px',
+	'--ov-surface-radius': '5px'
 };
