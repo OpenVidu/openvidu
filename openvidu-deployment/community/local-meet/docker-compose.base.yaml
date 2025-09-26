@@ -247,6 +247,15 @@ services:
             track_composite_cpu_cost: 0.01
             track_cpu_cost: 0.01
 
+        openvidu:
+            # Allocation strategy for new egress requests
+            # - cpuload: the node with the lowest CPU load will be selected. Distributes the CPU load evenly across all nodes.
+            # - binpack: some node already hosting at least one Egress will be selected. Fills up nodes before assigning work to new ones.
+            allocation_strategy: cpuload
+            # Disables the automatic killing of the most expensive egress when CPU is overloaded.
+            # The default "false" value helps keeping the node stable, but may cause unexpected egress terminations under high load.
+            disable_cpu_overload_killer: false
+
   setup:
     image: docker.io/busybox:1.37.0
     platform: linux/amd64
