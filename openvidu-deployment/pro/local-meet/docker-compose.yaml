@@ -196,7 +196,7 @@ services:
       - MEET_INITIAL_ADMIN_PASSWORD=${MEET_INITIAL_ADMIN_PASSWORD:-admin}
       - MEET_COOKIE_SECURE=false
       - MEET_INITIAL_WEBHOOK_ENABLED=true
-      - MEET_INITIAL_WEBHOOK_URL=http://host.docker.internal:5080/webhook
+      - MEET_INITIAL_WEBHOOK_URL=http://host.docker.internal:6080/webhook
       - LIVEKIT_URL_PRIVATE=ws://openvidu:7880/
       - LIVEKIT_API_KEY=${LIVEKIT_API_KEY:-devkey}
       - LIVEKIT_API_SECRET=${LIVEKIT_API_SECRET:-secret}
