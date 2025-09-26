@@ -25,7 +25,7 @@
 	// Menu styling - Desktop/Tablet default
 	.item-menu {
 		flex-shrink: 0;
-		border-right: 1px solid var(--ov-border-color);
+		border-right: 1px solid var(--ov-border-color, var(--ov-secondary-action-color));
 		width: 180px;
 		min-width: 180px;
 		padding-right: 16px;
@@ -186,7 +186,7 @@
 
 		::ng-deep .mat-mdc-list-item-unscoped-content,
 		mat-icon {
-			color: var(--ov-secondary-action-color) !important;
+			color: var(--ov-text-primary-color) !important;
 		}
 	}
 

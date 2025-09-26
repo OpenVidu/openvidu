@@ -137,7 +137,7 @@
 							min-width: 48px;
 							min-height: 48px;
 							background: var(--ov-primary-action-color);
-							color: var(--ov-secondary-action-color);
+							color: var(--ov-text-primary-color);
 							border-radius: 16px;
 							padding: 0;
 
@@ -243,8 +243,8 @@
 				.join-button {
 					width: 100%;
 					height: 56px;
-					background: var(--ov-focus-color, #4285f4);
-					color: white;
+					background: var(--ov-primary-action-color);
+					color: var(--ov-text-primary-color);
 					border-radius: var(--ov-surface-radius);
 					font-size: 16px;
 					font-weight: 600;
@@ -257,7 +257,7 @@
 					box-shadow: 0 2px 8px rgba(66, 133, 244, 0.2);
 
 					&:hover:not([disabled]) {
-						background: var(--ov-primary-action-hover, #3367d6);
+						background: color-mix(in srgb, var(--ov-primary-action-color), var(--ov-secondary-action-color) 10%);
 						transform: translateY(-1px);
 						box-shadow: 0 4px 16px rgba(66, 133, 244, 0.3);
 					}

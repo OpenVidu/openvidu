@@ -9,7 +9,7 @@
 }
 
 #broadcasting-icon {
-	color: var(--ov-broadcasting-color) !important;
+	color: var(--ov-broadcasting-color, #5903ca) !important;
 }
 
 .broadcasting-duration {
@@ -26,12 +26,12 @@
 }
 
 .started {
-	background-color: var(--ov-broadcasting-color) !important;
+	background-color: var(--ov-broadcasting-color, #5903ca) !important;
 	color: var(--ov-text-primary-color);
 }
 
 .activity-icon.started {
-	background-color: var(--ov-broadcasting-color) !important;
+	background-color: var(--ov-broadcasting-color, #5903ca) !important;
 	color: var(--ov-text-primary-color);
 }
 

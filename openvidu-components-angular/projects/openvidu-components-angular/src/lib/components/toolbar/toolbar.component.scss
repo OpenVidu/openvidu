@@ -109,7 +109,7 @@
 		background-color: var(--ov-error-color);
 	}
 	.broadcasting-tag {
-		background-color: var(--ov-broadcasting-color);
+		background-color: var(--ov-broadcasting-color, #5903ca);
 	}
 
 	.recording-tag mat-icon,
@@ -138,14 +138,14 @@
 		/* Animation for recording blinking */
 		@keyframes blinker-recording {
 			50% {
-				background-color: var(--ov-recording-color);
+				background-color: var(--ov-recording-color, var(--ov-error-color));
 			}
 		}
 
 		/* Animation for broadcasting blinking */
 		@keyframes blinker-broadcasting {
 			50% {
-				background-color: var(--ov-broadcasting-color);
+				background-color: var(--ov-broadcasting-color, #5903ca);
 			}
 		}
 
@@ -198,10 +198,10 @@
 	color: var(--ov-text-surface-color) !important;
 }
 ::ng-deep #toolbar-broadcasting-btn > .mat-icon {
-	color: var(--ov-broadcasting-color) !important;
+	color: var(--ov-broadcasting-color, #5903ca) !important;
 }
 ::ng-deep #recording-btn > .mat-icon {
-	color: var(--ov-recording-color) !important;
+	color: var(--ov-recording-color, var(--ov-error-color)) !important;
 }
 
 ::ng-deep .mat-mdc-menu-panel {

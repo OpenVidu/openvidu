@@ -31,10 +31,10 @@
 				transition: all 0.2s ease;
 
 				&.device-enabled {
-					color: var(--ov-focus-color);
+					color: var(--ov-text-primary-color);
 
 					mat-icon {
-						color: var(--ov-focus-color);
+						color: var(--ov-text-primary-color);
 					}
 				}
 
@@ -224,7 +224,7 @@
 			}
 
 			&.selected {
-				background-color: var(--ov-active-color);
+				background-color: var(--ov-secondary-action-color);
 
 				mat-icon {
 					color: var(--ov-text-surface-color);
@@ -321,7 +321,7 @@
 		}
 
 		&.selected {
-			background-color: var(--ov-active-color);
+			background-color: var(--ov-secondary-action-color);
 
 			.check-icon {
 				color: var(--ov-text-surface-color);

@@ -1,7 +1,7 @@
 :host {
 	.panel-button {
 		border-radius: var(--ov-toolbar-buttons-radius);
-		color: var(--ov-secondary-action-color);
+		color: var(--ov-text-primary-color);
 	}
 
 	.active-btn,
@@ -21,8 +21,8 @@
 	}
 	// FAB-style trigger button
 	.fab-menu-trigger {
-		color: var(--ov-secondary-action-color);
 		background-color: var(--ov-primary-action-color);
+		color: var(--ov-text-primary-color);
 		transition: all 0.2s ease-in-out;
 		height: 36px;
 		width: 36px;
@@ -62,7 +62,7 @@
 ::ng-deep .panels-menu {
 	.panel-menu-item {
 		background-color: var(--ov-primary-action-color) !important;
-		color: var(--ov-secondary-action-color) !important;
+		color: var(--ov-text-primary-color) !important;
 		border-radius: var(--ov-toolbar-buttons-radius) !important;
 		min-height: 36px !important;
 		padding: 8px !important;
@@ -70,7 +70,7 @@
 		height: 36px !important;
 		width: 36px !important;
 		display: flex !important;
-		box-shadow: 0 2px 4px color-mix(in srgb, var(--ov-secondary-action-color) 100%, transparent);
+		box-shadow: 0 2px 4px color-mix(in srgb, var(--ov-text-primary-color) 100%, transparent);
 		transition:
 			box-shadow 0.2s ease,
 			transform 0.2s ease;

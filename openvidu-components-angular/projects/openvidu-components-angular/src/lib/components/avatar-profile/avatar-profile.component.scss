@@ -20,7 +20,7 @@
     width: 70px;
 	border-radius: var(--ov-video-radius);
 	border: 2px solid var(--ov-text-primary-color);
-	color: var(--ov-video-background);
+	color: var(--ov-video-background, var(--ov-text-primary-color));
 }
 
 #poster-text {

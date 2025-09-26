@@ -21,7 +21,7 @@
 
 	button {
 		border-radius: var(--ov-toolbar-buttons-radius);
-		color: var(--ov-secondary-action-color);
+		color: var(--ov-text-primary-color);
 
 		&.disabled {
 			background-color: var(--ov-error-color) !important;
@@ -33,7 +33,7 @@
 	button:not(.mat-mdc-menu-item) ::ng-deep button:not(mat-menu-item),
 	::ng-deep button:not(#screenshare-menu) {
 		background-color: var(--ov-primary-action-color);
-		color: var(--ov-secondary-action-color);
+		color: var(--ov-text-primary-color);
 		margin: 6px;
 		transition: all 0.2s ease-in-out;
 
@@ -106,11 +106,11 @@
 	}
 
 	::ng-deep #toolbar-broadcasting-btn > .mat-icon {
-		color: var(--ov-broadcasting-color) !important;
+		color: var(--ov-broadcasting-color, #5903ca) !important;
 	}
 
 	::ng-deep #recording-btn > .mat-icon {
-		color: var(--ov-recording-color) !important;
+		color: var(--ov-recording-color, var(--ov-error-color)) !important;
 	}
 
 	::ng-deep .mat-mdc-menu-panel {
@@ -141,14 +141,14 @@
 		/* Animation for recording blinking */
 		@keyframes blinker-recording {
 			50% {
-				background-color: var(--ov-recording-color);
+				background-color: var(--ov-recording-color, var(--ov-error-color));
 			}
 		}
 
 		/* Animation for broadcasting blinking */
 		@keyframes blinker-broadcasting {
 			50% {
-				background-color: var(--ov-broadcasting-color);
+				background-color: var(--ov-broadcasting-color, #5903ca);
 			}
 		}
 

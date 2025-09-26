@@ -27,8 +27,8 @@
 .input-container {
 	height: 65px;
 	display: flex;
-	background-color: var(--ov-input-background);
-	border: 1px solid var(--ov-border-color);
+	background-color: var(--ov-input-background, var(--ov-secondary-action-color));
+	border: 1px solid var(--ov-border-color, var(--ov-secondary-action-color));
 	padding: 10px 5px 10px 10px;
 	margin: 10px;
 	border-radius: var(--ov-surface-radius);
@@ -90,13 +90,13 @@
 	max-width: 95%;
 	font-size: 14px;
 	word-break: break-all;
-	background-color: var(--ov-primary-action-color);
+	background-color: var(--ov-secondary-action-color);
 }
 
 #send-btn {
-	border-radius: var(--ov-surface-radius);
-	color: var(--ov-secondary-action-color);
 	background-color: var(--ov-primary-action-color);
+	color: var(--ov-text-primary-color);
+	border-radius: var(--ov-surface-radius);
 	align-self: center;
 	height: 75px;
 }
