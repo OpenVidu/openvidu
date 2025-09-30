@@ -166,7 +166,7 @@ wait_for_docker
 
 # Create random temp directory
 TMP_DIR=$(mktemp -d)
-docker pull "${INSTALLER_IMAGE}"
+RUNNING_SYSTEMD=false docker pull "${INSTALLER_IMAGE}"
 
 # Generate installation scripts
 COMMON_DOCKER_OPTIONS="--network=host -v ${TMP_DIR}:/output \
