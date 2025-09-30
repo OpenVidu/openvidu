@@ -25,7 +25,7 @@ import { StorageService } from '../storage/storage.service';
 })
 export class OpenViduThemeService {
 	private readonly THEME_ATTRIBUTE = 'data-ov-theme';
-	private currentThemeSubject = new BehaviorSubject<OpenViduThemeMode>(OpenViduThemeMode.CLASSIC);
+	private currentThemeSubject = new BehaviorSubject<OpenViduThemeMode>(OpenViduThemeMode.Classic);
 	private currentVariablesSubject = new BehaviorSubject<OpenViduThemeVariables>({});
 
 	/**
@@ -45,7 +45,7 @@ export class OpenViduThemeService {
 
 	initializeTheme(): void {
 		const savedTheme = this.storageService.getTheme();
-		const initialTheme = savedTheme || OpenViduThemeMode.CLASSIC;
+		const initialTheme = savedTheme || OpenViduThemeMode.Classic;
 		this.applyTheme(initialTheme);
 		this.currentThemeSubject.next(initialTheme);
 	}
@@ -149,7 +149,7 @@ export class OpenViduThemeService {
 	private applyTheme(theme: OpenViduThemeMode): void {
 		const documentElement = this.document.documentElement;
 		const currentTheme = this.getCurrentTheme();
-		if (theme === OpenViduThemeMode.CLASSIC) {
+		if (theme === OpenViduThemeMode.Classic) {
 			documentElement.removeAttribute(this.THEME_ATTRIBUTE);
 			const currentVariables = this.getDefaultVariablesForTheme(currentTheme);
 			this.removeCSSVariables(currentVariables);
