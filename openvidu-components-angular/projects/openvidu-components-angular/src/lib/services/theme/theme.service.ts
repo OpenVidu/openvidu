@@ -69,7 +69,7 @@ export class OpenViduThemeService {
 	}
 
 	/**
-	 * Sets the theme mode (light, dark, or auto)
+	 * Sets the theme mode to apply {@link OpenViduThemeMode}
 	 * @param theme The theme mode to apply
 	 */
 	setTheme(theme: OpenViduThemeMode): void {
