@@ -13,13 +13,16 @@
 
 			<!-- Content section with name and status -->
 			<div class="participant-content">
-				<div class="participant-name">
-					{{ participantDisplayName }}
-					<span *ngIf="isLocalParticipant" class="local-indicator">
-						{{ 'PANEL.PARTICIPANTS.YOU' | translate }}
-					</span>
+				<!-- Name row with better space management -->
+				<div class="participant-name-row">
+					<div class="participant-name">
+						<span class="participant-name-text">{{ participantDisplayName }}</span>
+						<span *ngIf="isLocalParticipant" class="local-indicator">
+							{{ 'PANEL.PARTICIPANTS.YOU' | translate }}
+						</span>
+					</div>
 
-					<!-- Participant badges -->
+					<!-- Participant badges in separate container -->
 					<div class="participant-badges">
 						<ng-container *ngTemplateOutlet="participantBadgeTemplate"></ng-container>
 					</div>
@@ -28,11 +31,6 @@
 				<div class="participant-subtitle">
 					<span class="status-indicator">
 						{{ _participant | tracksPublishedTypes }}
-					</span>
-					<!-- Additional status indicators -->
-					<span *ngIf="_participant?.isMutedForcibly" class="status-indicator">
-						<mat-icon>volume_off</mat-icon>
-						{{ 'PANEL.PARTICIPANTS.MUTED' | translate }}
 					</span>
 				</div>
 			</div>
