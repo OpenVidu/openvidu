@@ -186,8 +186,14 @@ DEPLOYMENT_ENVIRONMENT="$(grep environment "${INSTALL_PREFIX}/deployment-info.ya
 if printf '%s\n%s\n' "3.2.0" "$OPENVIDU_VERSION" | sort -V -C; then
   if [ -f /usr/local/bin/store_secret.sh ] &&
     [ "$DEPLOYMENT_ENVIRONMENT" != "on_premise" ]; then
-    echo "Updating OpenVidu version in Cloud provider..."
-    /usr/local/bin/store_secret.sh save OPENVIDU_VERSION "${OPENVIDU_VERSION}"
+    if [ "$DEPLOYMENT_ENVIRONMENT" = "azure" ]; then
+      # In Azure, the secret is named with a hyphen instead of an underscore
+      echo "Updating OpenVidu version in Azure..."
+      /usr/local/bin/store_secret.sh save OPENVIDU-VERSION "${OPENVIDU_VERSION}"
+    else
+      echo "Updating OpenVidu version in Cloud provider..."
+      /usr/local/bin/store_secret.sh save OPENVIDU_VERSION "${OPENVIDU_VERSION}"
+    fi
   fi
 fi
 
