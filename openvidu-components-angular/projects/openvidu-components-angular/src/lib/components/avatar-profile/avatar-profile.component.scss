@@ -1,7 +1,7 @@
 .poster {
 	height: 100%;
 	width: 100%;
-	background-color: var(--ov-video-background);
+	background-color: var(--ov-video-background, var(--ov-primary-action-color));
 	position: absolute;
 	z-index: 888;
 	border-radius: var(--ov-video-radius);

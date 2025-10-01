@@ -7,11 +7,9 @@
 		--ov-background-color: #{mat.get-theme-color($theme, background)};
 		--ov-surface-color: #{mat.get-theme-color($theme, surface)};
 		--ov-surface-container-color: #{mat.get-theme-color($theme, surface-container)};
-		--ov-surface-container-high-color: #{mat.get-theme-color($theme, surface-container-high)};
 
 		// === Action Colors (Primary, Secondary, Accent) ===
 		--ov-primary-action-color: #{mat.get-theme-color($theme, primary)};
-		--ov-primary-action-color-lighter: #{mat.get-theme-color($theme, primary-container)};
 		--ov-secondary-action-color: #{mat.get-theme-color($theme, secondary)};
 		--ov-accent-action-color: #{mat.get-theme-color($theme, tertiary)};
 
@@ -28,15 +26,11 @@
 
 		// === Interactive States ===
 		--ov-hover-color: #{mat.get-theme-color($theme, surface-container-highest)};
-		--ov-active-color: #{mat.get-theme-color($theme, primary-container)};
-		--ov-focus-color: #{mat.get-theme-color($theme, primary)};
 		--ov-disabled-background: #{mat.get-theme-color($theme, surface-container-low)};
 		--ov-disabled-border-color: #{mat.get-theme-color($theme, outline-variant)};
 
 		// === Input & Form Colors ===
-		--ov-input-background: #{mat.get-theme-color($theme, surface-container)};
 		--ov-border-color: #{mat.get-theme-color($theme, outline-variant)};
-		--ov-border-focus-color: #{mat.get-theme-color($theme, primary)};
 	}
 }
 
@@ -47,11 +41,9 @@
 		--ov-background-color: #1f2020;
 		--ov-surface-color: #2d2d2d;
 		--ov-surface-container-color: #3a3a3a;
-		--ov-surface-container-high-color: #474747;
 
 		// === Action Colors ===
 		--ov-primary-action-color: #4a5a5d;
-		--ov-primary-action-color-lighter: #5a6a6d;
 		--ov-secondary-action-color: #e1e1e1;
 		--ov-accent-action-color: #00b3d6;
 
@@ -68,15 +60,11 @@
 
 		// === Interactive States ===
 		--ov-hover-color: #4a4a4a;
-		--ov-active-color: rgba(66, 133, 244, 0.2);
-		--ov-focus-color: #5294ff;
 		--ov-disabled-background: #3a3a3a;
 		--ov-disabled-border-color: #555555;
 
 		// === Input & Form Colors ===
-		--ov-input-background: #3a3a3a;
 		--ov-border-color: #555555;
-		--ov-border-focus-color: #5294ff;
 	}
 }
 
@@ -87,11 +75,9 @@
 		--ov-background-color: #ffffff;
 		--ov-surface-color: #ffffff;
 		--ov-surface-container-color: #f8f9fa;
-		--ov-surface-container-high-color: #f0f0f0;
 
 		// === Action Colors ===
 		--ov-primary-action-color: #273235;
-		--ov-primary-action-color-lighter: #394649;
 		--ov-secondary-action-color: #6c757d;
 		--ov-accent-action-color: #0089ab;
 
@@ -108,15 +94,11 @@
 
 		// === Interactive States ===
 		--ov-hover-color: #f8f9fa;
-		--ov-active-color: rgba(66, 133, 244, 0.08);
-		--ov-focus-color: #4285f4;
 		--ov-disabled-background: #f8f9fa;
 		--ov-disabled-border-color: #dee2e6;
 
 		// === Input & Form Colors ===
-		--ov-input-background: #ffffff;
 		--ov-border-color: #ced4da;
-		--ov-border-focus-color: #4285f4;
 	}
 }
 

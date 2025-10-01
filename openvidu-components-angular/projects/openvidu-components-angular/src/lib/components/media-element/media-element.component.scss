@@ -9,5 +9,5 @@ video {
 	border: 0;
 	font-size: 100%;
 	border-radius: var(--ov-video-radius);
-	background-color: var(--ov-video-background);
+	background-color: var(--ov-video-background, var(--ov-primary-action-color));
 }

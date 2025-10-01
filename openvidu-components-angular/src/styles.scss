@@ -40,11 +40,9 @@ body {
 	--ov-background-color: var(--mat-sys-background, #1f2020);
 	--ov-surface-color: var(--mat-sys-surface, #ffffff);
 	--ov-surface-container-color: var(--mat-sys-surface-container, #f3f3f3);
-	--ov-surface-container-high-color: var(--mat-sys-surface-container-high, #e6e6e6);
 
 	// === Action Colors (Primary, Secondary, Accent) ===
 	--ov-primary-action-color: var(--mat-sys-primary, #273235);
-	--ov-primary-action-color-lighter: var(--mat-sys-primary-container, #394649);
 	--ov-secondary-action-color: var(--mat-sys-secondary, #f1f1f1);
 	--ov-accent-action-color: var(--mat-sys-tertiary, #0089ab);
 
@@ -61,21 +59,11 @@ body {
 
 	// === Interactive States ===
 	--ov-hover-color: var(--mat-sys-surface-container-highest, #f5f5f5);
-	--ov-active-color: var(--mat-sys-primary-container, rgba(66, 133, 244, 0.08));
-	--ov-focus-color: var(--mat-sys-primary, #4285f4);
 	--ov-disabled-background: var(--mat-sys-surface-container-low, #f5f5f5);
 	--ov-disabled-border-color: var(--mat-sys-outline-variant, #ddd);
 
 	// === Input & Form Colors ===
-	--ov-input-background: var(--mat-sys-surface-container, #f8f9fa);
 	--ov-border-color: var(--mat-sys-outline-variant, #e0e0e0);
-	--ov-border-focus-color: var(--mat-sys-primary, #4285f4);
-
-	// === Shadow & Elevation ===
-	--ov-shadow-low: 0 2px 8px rgba(0, 0, 0, 0.1);
-	--ov-shadow-medium: 0 4px 20px rgba(0, 0, 0, 0.1);
-	--ov-shadow-high: 0 8px 32px rgba(0, 0, 0, 0.12);
-	--ov-border-shadow: 1px 1px 5px 0px rgba(0, 0, 0, 0.2);
 
 	// === Layout & Spacing ===
 	--ov-toolbar-buttons-radius: 50%;
@@ -91,20 +79,8 @@ body {
 	--ov-selection-color-btn: #afafaf;
 	--ov-activity-status-color: #afafaf;
 
-	// === Alpha/Transparency Variants ===
-	--ov-primary-alpha-08: rgba(66, 133, 244, 0.08);
-	--ov-primary-alpha-10: rgba(66, 133, 244, 0.1);
-	--ov-error-alpha-10: rgba(211, 47, 47, 0.1);
-	--ov-warning-alpha-10: rgba(255, 193, 7, 0.1);
-	--ov-warning-alpha-30: rgba(255, 193, 7, 0.3);
-	--ov-black-alpha-10: rgba(0, 0, 0, 0.1);
-	--ov-white-alpha-70: rgba(255, 255, 255, 0.7);
-	--ov-white-alpha-90: rgba(255, 255, 255, 0.9);
-	--ov-gray-alpha-50: rgba(150, 150, 150, 0.5);
-	--ov-gray-alpha-80: rgba(150, 150, 150, 0.8);
 
 	// === Video/Media Specific ===
 	--ov-video-background: #000000;
-	--ov-audio-wave-color: var(--ov-accent-action-color);
 	--ov-captions-height: 250px;
 }

@@ -171,7 +171,7 @@
 	}
 
 	.recording-card {
-		background: var(--ov-surface-container-color);
+		background: var(--ov-surface-container-color, var(--ov-surface-color));
 		border: 1px solid rgba(0, 102, 204, 0.1);
 		border-radius: var(--ov-surface-radius);
 		padding: 8px;

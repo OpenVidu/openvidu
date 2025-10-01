@@ -40,7 +40,7 @@
 
 // Video-specific additional styles
 ::ng-deep .mdc-text-field--filled:not(.mdc-text-field--disabled) .mdc-line-ripple::after {
-	border-bottom-color: var(--ov-primary-action-color-lighter) !important;
+	border-bottom-color: var(--ov-primary-action-color) !important;
 }
 
 ::ng-deep .mat-mdc-option.mdc-list-item--selected:not(.mdc-list-item--disabled):not(.mat-mdc-option-multiple) {

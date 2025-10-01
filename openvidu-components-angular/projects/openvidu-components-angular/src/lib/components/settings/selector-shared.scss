@@ -15,7 +15,6 @@
 			border-radius: 12px;
 			overflow: hidden;
 			transition: all 0.2s ease;
-			box-shadow: var(--ov-shadow-low);
 
 			.toggle-section {
 				display: flex;
@@ -47,12 +46,6 @@
 					}
 				}
 
-				&[disabled] {
-					background: var(--ov-gray-alpha-50);
-					color: var(--ov-gray-alpha-80);
-					cursor: not-allowed;
-				}
-
 				mat-icon {
 					font-size: 20px;
 					width: 20px;
@@ -70,7 +63,6 @@
 				height: 48px;
 				border: none;
 				background: transparent;
-				border-left: 1px solid var(--ov-black-alpha-10);
 				border-radius: 0;
 				padding: 0;
 				color: var(--ov-text-secondary-color, #666);

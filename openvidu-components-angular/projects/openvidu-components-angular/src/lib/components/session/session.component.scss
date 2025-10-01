@@ -85,7 +85,7 @@
 	width: 100%;
 	height: 100%;
 	z-index: 1000;
-	background-color: var(--ov-video-background);
+	background-color: var(--ov-video-background, var(--ov-primary-action-color));
 	opacity: 80%;
 	position: absolute;
 }
@@ -112,10 +112,10 @@
 }
 
 ::ng-deep .mat-mdc-input-element {
-	caret-color: var(--ov-video-background);
+	caret-color: var(--ov-video-background, var(--ov-primary-action-color));
 }
 ::ng-deep .mat-primary .mat-mdc-option.mat-selected:not(.mat-option-disabled) {
-	color: var(--ov-video-background);
+	color: var(--ov-video-background, var(--ov-primary-action-color)) !important;
 }
 
 /* TODO(mdc-migration): The following rule targets internal classes of form-field that may no longer apply for the MDC version. */

@@ -134,7 +134,6 @@ this.themeService.currentVariables$.subscribe(variables => {
 | `--ov-background-color` | Primary background color | `#ffffff` | `#1f2020` |
 | `--ov-surface-color` | Surface/card background | `#ffffff` | `#2d2d2d` |
 | `--ov-surface-container-color` | Container surfaces | `#f8f9fa` | `#3a3a3a` |
-| `--ov-surface-container-high-color` | Elevated surfaces | `#f0f0f0` | `#474747` |
 
 ### Action Colors
 
@@ -167,8 +166,6 @@ this.themeService.currentVariables$.subscribe(variables => {
 | Variable | Description | Light Default | Dark Default |
 |----------|-------------|---------------|--------------|
 | `--ov-hover-color` | Hover background | `#f8f9fa` | `#4a4a4a` |
-| `--ov-active-color` | Active state | `rgba(66, 133, 244, 0.08)` | `rgba(66, 133, 244, 0.2)` |
-| `--ov-focus-color` | Focus ring color | `#4285f4` | `#5294ff` |
 | `--ov-disabled-background` | Disabled background | `#f8f9fa` | `#3a3a3a` |
 | `--ov-disabled-border-color` | Disabled borders | `#dee2e6` | `#555555` |
 
@@ -176,9 +173,7 @@ this.themeService.currentVariables$.subscribe(variables => {
 
 | Variable | Description | Light Default | Dark Default |
 |----------|-------------|---------------|--------------|
-| `--ov-input-background` | Input backgrounds | `#ffffff` | `#3a3a3a` |
 | `--ov-border-color` | Default borders | `#ced4da` | `#555555` |
-| `--ov-border-focus-color` | Focused borders | `#4285f4` | `#5294ff` |
 
 ### Layout & Spacing
 
@@ -205,17 +200,8 @@ this.themeService.currentVariables$.subscribe(variables => {
 | Variable | Description | Default |
 |----------|-------------|---------|
 | `--ov-video-background` | Video element background | `#000000` |
-| `--ov-audio-wave-color` | Audio wave visualization | `var(--ov-accent-action-color)` |
 | `--ov-captions-height` | Captions panel height | `250px` |
 
-### Shadow & Elevation
-
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `--ov-shadow-low` | Low elevation shadow | `0 2px 8px rgba(0, 0, 0, 0.1)` |
-| `--ov-shadow-medium` | Medium elevation shadow | `0 4px 20px rgba(0, 0, 0, 0.1)` |
-| `--ov-shadow-high` | High elevation shadow | `0 8px 32px rgba(0, 0, 0, 0.12)` |
-| `--ov-border-shadow` | Border shadow | `1px 1px 5px 0px rgba(0, 0, 0, 0.2)` |
 
 ## Angular Material Integration
 

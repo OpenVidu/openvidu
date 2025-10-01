@@ -88,7 +88,7 @@
 				aspect-ratio: 4/3;
 				border-radius: var(--ov-surface-radius) var(--ov-surface-radius) 0 0;
 				overflow: hidden;
-				background: var(--ov-video-background);
+				background: var(--ov-video-background, var(--ov-primary-action-color));
 
 				.video-frame {
 					width: 100%;
@@ -184,7 +184,6 @@
 
 						.mat-mdc-text-field-wrapper {
 							border-radius: var(--ov-surface-radius);
-							background-color: var(--ov-input-background, #f8f9fa);
 							border: 1px solid var(--ov-border-color, #e0e0e0);
 							transition: all 0.2s ease;
 
