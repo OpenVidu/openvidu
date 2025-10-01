@@ -15,5 +15,5 @@
 		"livekit-client": "^2.15.0",
 		"@livekit/track-processors": "^0.6.0"
 	},
-	"version": "3.3.0"
+	"version": "3.4.0"
 }
