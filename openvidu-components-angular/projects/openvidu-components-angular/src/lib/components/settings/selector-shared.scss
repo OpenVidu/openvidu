@@ -40,10 +40,10 @@
 
 				&.device-disabled {
 					background: var(--ov-error-color);
-					color: var(--ov-surface-color);
+					color: var(--ov-text-surface-color);
 
 					mat-icon {
-						color: var(--ov-surface-color);
+						color: var(--ov-text-surface-color);
 					}
 				}
 
