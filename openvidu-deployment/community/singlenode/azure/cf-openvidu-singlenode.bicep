@@ -275,7 +275,7 @@ var stringInterpolationParams = {
 
 var installScriptTemplate = '''
 #!/bin/bash -x
-OPENVIDU_VERSION=3.4.0
+OPENVIDU_VERSION=main
 DOMAIN=
 
 apt-get update && apt-get install -y \
