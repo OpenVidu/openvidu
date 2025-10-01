@@ -12,7 +12,7 @@
     "@angular/material": "^16.0.0 || ^17.0.0",
     "autolinker": "^4.0.0",
     "buffer": "^6.0.3",
-    "openvidu-browser-v2compatibility": "3.1.0"
+    "openvidu-browser-v2compatibility": "^3.4.0"
   },
-  "version": "3.3.0"
+  "version": "3.4.0"
 }
