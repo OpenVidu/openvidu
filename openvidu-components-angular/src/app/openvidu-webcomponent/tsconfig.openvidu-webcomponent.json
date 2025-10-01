@@ -7,7 +7,8 @@
         "openvidu-angular": [
           "dist/openvidu-angular"
         ]
-      }
+      },
+      "skipLibCheck": true
     },
     "files": [
       "./openvidu-webcomponent.main.ts",
