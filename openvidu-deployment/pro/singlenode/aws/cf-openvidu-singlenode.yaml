@@ -406,7 +406,7 @@ Resources:
             '/usr/local/bin/install.sh':
               content: !Sub |
                 #!/bin/bash -x
-                OPENVIDU_VERSION=main
+                OPENVIDU_VERSION=3.4.0
                 DOMAIN=
                 YQ_VERSION=v4.44.5
 
