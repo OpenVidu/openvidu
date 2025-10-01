@@ -89,6 +89,10 @@
 		display: none !important;
 	}
 
+	::ng-deep .mat-expansion-indicator svg {
+		fill: var(--ov-text-surface-color) !important;
+	}
+
 	::ng-deep
 		.mdc-list-item--with-leading-icon.mdc-list-item--with-two-lines.mdc-list-item--with-trailing-meta
 		.mdc-list-item__end::before {

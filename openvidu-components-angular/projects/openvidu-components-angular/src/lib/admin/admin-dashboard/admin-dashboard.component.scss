@@ -4,7 +4,7 @@
 
 .header {
 	height: 50px;
-	background-color: var(--ov-secondary-action-color);
+	background-color: var(--ov-primary-action-color);
 	color: var(--ov-text-primary-color);
 }
 
@@ -42,7 +42,7 @@
 #sort-menu-btn {
 	margin-left: 5px;
 	background-color: var(--ov-surface-color);
-	color: var(--ov-text-primary-color);
+	color: var(--ov-text-surface-color);
 }
 
 .search-bar {
@@ -140,7 +140,7 @@
 }
 
 .video-btns button #play {
-	color: var(--ov-text-primary-color);
+	color: var(--ov-primary-action-color);
 }
 .video-btns button #download {
 	color: var(--ov-accent-action-color);
@@ -167,7 +167,7 @@
 
 .video-card-tag {
 	font-size: 13px;
-	color: var(--ov-text-primary-color);
+	color: var(--ov-text-surface-color);
 	font-weight: bold;
 }
 
@@ -236,13 +236,11 @@
 	text-align: center;
 	color: var(--ov-text-primary-color);
 }
-/* TODO(mdc-migration): The following rule targets internal classes of form-field that may no longer apply for the MDC version. */
 ::ng-deep .mat-form-field-appearance-fill .mat-form-field-flex {
 	padding: 0px !important;
 	background-color: var(--ov-light-color) !important;
 }
 
-/* TODO(mdc-migration): The following rule targets internal classes of form-field that may no longer apply for the MDC version. */
 ::ng-deep .mat-form-field-wrapper {
 	height: 100% !important;
 }

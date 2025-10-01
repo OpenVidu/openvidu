@@ -45,10 +45,8 @@
 	.activity-icon.started,
 	.failed {
 		background-color: var(--ov-error-color) !important;
-		// color: var(--ov-secondary-action-color);
 	}
 	.stopped {
-		// background-color: var(--ov-secondary-action-color);
 		color: var(--ov-text-surface-color) !important;
 	}
 
@@ -545,8 +543,8 @@
 
 	#view-recordings-btn {
 		width: 100%;
-		background-color: var(--ov-accent-action-color);
-		color: var(--ov-secondary-action-color);
+		background-color: var(--ov-secondary-action-color);
+		color: var(--ov-text-surface-color);
 		border-radius: var(--ov-surface-radius);
 		margin-bottom: 10px;
 
@@ -569,7 +567,7 @@
 
 	#reset-recording-status-btn {
 		width: 100%;
-		background-color: var(--ov-accent-action-color);
+		background-color: var(--ov-primary-action-color);
 		border-radius: var(--ov-surface-radius);
 	}
 

@@ -27,15 +27,14 @@
 .input-container {
 	height: 65px;
 	display: flex;
-	background-color: var(--ov-input-background, var(--ov-secondary-action-color));
-	border: 1px solid var(--ov-border-color, var(--ov-secondary-action-color));
+	border: 1px solid var(--ov-secondary-action-color);
 	padding: 10px 5px 10px 10px;
 	margin: 10px;
 	border-radius: var(--ov-surface-radius);
 	order: 3;
 	justify-content: space-evenly;
 	align-items: none;
-
+	color: var(--ov-text-surface-color);
 }
 
 .input-container textarea {
@@ -57,6 +56,10 @@
 	box-shadow: none;
 	font-family: 'Roboto', 'RobotoDraft', Helvetica, Arial, sans-serif;
 	color: var(--ov-text-surface-color);
+
+	&::placeholder {
+		color: var(--ov-text-surface-color);
+	}
 }
 
 .message {
@@ -124,5 +127,6 @@
 }
 
 ::ng-deep a:-webkit-any-link {
-	color: var(--ov-accent-action-color);
+	color: var(--ov-primary-action-color);
+	font-weight: 600;
 }

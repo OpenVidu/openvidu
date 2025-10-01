@@ -17,21 +17,21 @@
 		}
 
 		// Video-specific overrides for normal mode
-		&:not(.compact) {
-			.normal-device-selector {
-				.device-input-selector {
-					&:not(.disabled) {
-						.selector-button {
-							// Video-specific hover effect with box-shadow
-							&:hover:not([disabled]) {
-								background-color: var(--ov-surface-color) !important;
-								border-color: var(--ov-primary-action-color);
-							}
-						}
-					}
-				}
-			}
-		}
+		// &:not(.compact) {
+		// 	.normal-device-selector {
+		// 		.device-input-selector {
+		// 			&:not(.disabled) {
+		// 				.selector-button {
+		// 					// Video-specific hover effect with box-shadow
+		// 					&:hover:not([disabled]) {
+		// 						background-color: var(--ov-surface-color) !important;
+		// 						border-color: var(--ov-primary-action-color);
+		// 					}
+		// 				}
+		// 			}
+		// 		}
+		// 	}
+		// }
 	}
 }
 

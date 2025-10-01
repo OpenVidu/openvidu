@@ -106,7 +106,7 @@
 						height: 48px;
 						padding: 0 16px;
 						background: var(--ov-surface-color, #ffffff);
-						border: 2px solid var(--ov-border-color, #e0e0e0);
+						border: 1px solid var(--ov-secondary-action-color, #e0e0e0);
 						border-radius: 8px;
 						color: var(--ov-text-surface-color);
 						font-size: 14px;
@@ -159,7 +159,7 @@
 						height: 48px;
 						padding: 0 16px;
 						background: var(--ov-disabled-background, #f5f5f5);
-						border: 2px solid var(--ov-disabled-border-color, #ddd);
+						border: 1px solid var(--ov-disabled-border-color, #ddd);
 						border-radius: 8px;
 						color: var(--ov-disabled-text-color, #999);
 						font-size: 14px;
@@ -206,7 +206,7 @@
 	::ng-deep .device-menu.mat-mdc-menu-panel {
 		border-radius: 12px;
 		box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
-		border: 1px solid var(--ov-border-color, #e0e0e0);
+		border: 1px solid var(--ov-secondary-action-color, #e0e0e0);
 		overflow: hidden;
 		background-color: var(--ov-surface-color);
 
@@ -224,7 +224,7 @@
 			}
 
 			&.selected {
-				background-color: var(--ov-secondary-action-color);
+				background-color: var(--ov-accent-action-color);
 
 				mat-icon {
 					color: var(--ov-text-surface-color);
@@ -252,8 +252,8 @@
 	gap: 8px;
 	padding: 12px 16px;
 	background: var(--ov-surface-color, #ffffff);
-	border: 2px solid var(--ov-border-color, #e0e0e0);
-	border-radius: 12px;
+	border: 1px solid var(--ov-secondary-action-color, #e0e0e0);
+	border-radius: var(--ov-surface-radius, 8px);
 	transition: all 0.2s ease;
 	color: var(--ov-text-primary-color, #333);
 	font-weight: 500;
@@ -264,7 +264,6 @@
 	}
 
 	&:hover {
-		border-color: var(--ov-primary-action-color, #4285f4);
 		box-shadow: 0 2px 8px rgba(66, 133, 244, 0.1);
 	}
 
@@ -300,9 +299,9 @@
 
 // selector menu mixin
 @mixin selector-menu($option-class, $option-name-class) {
-	border-radius: 12px;
+	border-radius: var(--ov-surface-radius, 8px);
 	box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
-	border: 1px solid var(--ov-border-color);
+	border: 1px solid var(--ov-secondary-action-color);
 	overflow: hidden;
 	background: var(--ov-surface-color);
 
@@ -321,7 +320,7 @@
 		}
 
 		&.selected {
-			background-color: var(--ov-secondary-action-color);
+			background-color: var(--ov-accent-action-color);
 
 			.check-icon {
 				color: var(--ov-text-surface-color);

@@ -33,7 +33,7 @@ import { RecordingDialogData } from '../../models/dialog.model';
 			.mat-mdc-button,
 			.mat-mdc-button:not(:disabled),
 			::ng-deep .mat-mdc-button .mat-mdc-button-persistent-ripple::before {
-				color: var(--ov-secondary-action-color);
+				color: var(--ov-text-primary-color);
 				background-color: var(--ov-primary-action-color) !important;
 				border-radius: var(--ov-surface-radius);
 			}

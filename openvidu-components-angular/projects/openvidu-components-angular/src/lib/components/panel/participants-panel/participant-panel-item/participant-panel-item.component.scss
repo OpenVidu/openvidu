@@ -116,14 +116,14 @@
 		.local-indicator {
 			font-size: 10px;
 			font-weight: 600;
-			color: var(--ov-focus-color);
+			color: var(--ov-text-surface-color);
 			background-color: var(--ov-surface-color);
 			padding: 4px 8px;
 			border-radius: var(--ov-surface-radius);
 			text-transform: uppercase;
 			letter-spacing: 0.5px;
 			flex-shrink: 0;
-			border: 1px solid var(--ov-border-focus-color);
+			border: 1px solid var(--ov-accent-action-color);
 			white-space: nowrap;
 		}
 	}

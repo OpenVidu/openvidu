@@ -8,18 +8,18 @@
 		.input-wrapper {
 			display: flex;
 			align-items: center;
-			background: var(--ov-input-background, #f8f9fa);
-			border: 2px solid var(--ov-border-color, #e0e0e0);
-			border-radius: 12px;
+			background: var(--ov-surface-color, #f8f9fa);
+			border: 1px solid var(--ov-secondary-action-color, #e0e0e0);
+			border-radius: var(--pv-surface-radius, 10px);
 			padding: 0;
 			transition: all 0.2s ease;
 			position: relative;
 			overflow: hidden;
 
-			&:focus-within {
-				border-color: var(--ov-primary-action-color, #4285f4);
-				box-shadow: 0 0 0 3px rgba(66, 133, 244, 0.1);
-			}
+			// &:focus-within {
+			// 	border-color: var(--ov-primary-action-color, #4285f4);
+			// 	box-shadow: 0 0 0 3px rgba(66, 133, 244, 0.1);
+			// }
 
 			.input-icon {
 				display: flex;
@@ -27,7 +27,7 @@
 				justify-content: center;
 				width: 48px;
 				height: 56px;
-				background: var(--ov-surface-color, #f0f0f0);
+				background: var(--ov-secondary-action-color, #f0f0f0);
 				color: var(--ov-text-secondary-color, #666);
 				font-size: 20px;
 				border-top-left-radius: 10px;
@@ -41,7 +41,7 @@
 				padding: 0 16px;
 				border: none;
 				outline: none;
-				background: var(--ov-input-background, #f8f9fa);
+				background: var(--ov-surface-color, #f8f9fa);
 				font-size: 16px;
 				font-weight: 500;
 				color: var(--ov-text-surface-color, #666);
@@ -52,7 +52,6 @@
 				}
 
 				&:disabled {
-					background: var(--ov-disabled-background, #f5f5f5);
 					color: var(--ov-disabled-text-color, #999);
 					cursor: not-allowed;
 				}

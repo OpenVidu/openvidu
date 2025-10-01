@@ -26,12 +26,12 @@ import { MatDialogRef } from '@angular/material/dialog';
 			}
 			#delete-recording-confirm-btn {
 				background-color: var(--ov-error-color) !important;
-				color: var(--ov-secondary-action-color);
+				color: var(--ov-primary-action-color);
 			}
 			.mat-mdc-button,
 			.mat-mdc-button:not(:disabled),
 			::ng-deep .mat-mdc-button .mat-mdc-button-persistent-ripple::before {
-				color: var(--ov-secondary-action-color);
+				color: var(--ov-text-primary-color) !important;
 				background-color: var(--ov-primary-action-color) !important;
 				border-radius: var(--ov-surface-radius);
 			}

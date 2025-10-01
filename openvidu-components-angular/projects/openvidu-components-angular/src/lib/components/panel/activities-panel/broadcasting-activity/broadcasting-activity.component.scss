@@ -12,18 +12,6 @@
 	color: var(--ov-broadcasting-color, #5903ca) !important;
 }
 
-.broadcasting-duration {
-	background-color: var(--ov-secondary-action-color);
-	padding: 4px 8px;
-	border-radius: var(--ov-surface-radius);
-	font-weight: 500;
-}
-
-.broadcasting-duration mat-icon {
-	font-size: 18px;
-	width: 18px;
-	height: 18px;
-}
 
 .started {
 	background-color: var(--ov-broadcasting-color, #5903ca) !important;

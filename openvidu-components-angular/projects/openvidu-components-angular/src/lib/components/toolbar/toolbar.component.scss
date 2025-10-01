@@ -62,7 +62,7 @@
 	}
 
 	#branding-logo {
-		background-color: var(--ov-primary-action-color);
+		background-color: var(--ov-secondary-action-color);
 		border-radius: var(--ov-surface-radius);
 		max-width: 35px;
 		max-height: 35px;
@@ -207,5 +207,10 @@
 ::ng-deep .mat-mdc-menu-panel {
 	border-radius: var(--ov-surface-radius) !important;
 	background-color: var(--ov-surface-color) !important;
-	box-shadow: var(--ov-border-shadow) !important;
+	border: 1px solid var(--ov-secondary-action-color) !important;
+
+	.mat-divider {
+		color: var(--ov-secondary-action-color) !important;
+		border-top-color: var(--ov-secondary-action-color) !important;
+	}
 }

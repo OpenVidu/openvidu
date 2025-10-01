@@ -76,10 +76,6 @@
 		color: #fff;
 	}
 
-	.divider {
-		margin: 8px 0px;
-	}
-
 	.blink {
 		animation: blinker 1.5s linear infinite;
 	}
@@ -116,7 +112,7 @@
 	::ng-deep .mat-mdc-menu-panel {
 		border-radius: var(--ov-surface-radius) !important;
 		background-color: var(--ov-surface-color) !important;
-		box-shadow: var(--ov-border-shadow) !important;
+		border: 1px solid var(--ov-secondary-action-color) !important;
 
 		// Mobile menu improvements
 		@media (max-width: 767px) {

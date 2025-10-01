@@ -8,20 +8,20 @@
 		@include shared.device-selector-base();
 
 		// Audio-specific overrides for normal mode
-		&:not(.compact) {
-			.normal-device-selector {
-				.device-input-selector {
-					&:not(.disabled) {
-						.selector-button {
-							// Audio-specific hover effect (simpler than video)
-							&:hover:not([disabled]) {
-								border-color: var(--ov-primary-action-color, #4285f4);
-							}
-						}
-					}
-				}
-			}
-		}
+		// &:not(.compact) {
+		// 	.normal-device-selector {
+		// 		.device-input-selector {
+		// 			&:not(.disabled) {
+		// 				.selector-button {
+		// 					// Audio-specific hover effect (simpler than video)
+		// 					&:hover:not([disabled]) {
+		// 						border-color: var(--ov-primary-action-color, #4285f4);
+		// 					}
+		// 				}
+		// 			}
+		// 		}
+		// 	}
+		// }
 	}
 }
 
