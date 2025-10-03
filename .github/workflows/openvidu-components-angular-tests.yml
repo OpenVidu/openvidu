@@ -42,7 +42,7 @@ jobs:
           curl -X POST \
           -H "Accept: application/vnd.github+json" \
           -H "Authorization: Bearer ${GITHUB_TOKEN}" \
-          https://api.github.com/repos/OpenVidu/openvidu-call/dispatches \
+          https://api.github.com/repos/OpenVidu/openvidu-tutorials/dispatches \
           -d '{"event_type":"openvidu-components-angular","client_payload":{"commit-message":"'"$COMMIT_MESSAGE"'","commit-ref":"'"$COMMIT_URL"'", "branch-name":"'"$BRANCH_NAME"'"}}'
 
   nested_events:
