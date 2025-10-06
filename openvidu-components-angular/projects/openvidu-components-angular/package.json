@@ -1,8 +1,8 @@
 {
+	"name": "openvidu-components-angular",
 	"dependencies": {
 		"tslib": "^2.3.0"
 	},
-	"name": "openvidu-components-angular",
 	"peerDependencies": {
 		"@angular/animations": "^17.0.0 || ^18.0.0 || ^19.0.0 || ^20.0.0",
 		"@angular/cdk": "^17.0.0 || ^18.0.0 || ^19.0.0 || ^20.0.0",
