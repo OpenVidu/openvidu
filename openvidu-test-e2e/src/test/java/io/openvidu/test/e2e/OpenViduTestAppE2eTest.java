@@ -650,7 +650,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		user.getDriver().findElement(By.id("trackPublish-videoCodec")).click();
 		Thread.sleep(300);
 		user.getDriver().findElement(By.id("mat-option-" + codec.toLowerCase())).click();
-		user.getDriver().findElement(By.id("close-dialog-btn")).click();
+		this.waitForBackdropAndClick(user, "#close-dialog-btn");
 		Thread.sleep(300);
 
 		this.addSubscriber(user, false);
@@ -2570,7 +2570,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		} finally {
 			// Close dialog
 			user.getWaiter().until(ExpectedConditions.presenceOfElementLocated(By.cssSelector("#close-dialog-btn")));
-			user.getDriver().findElement(By.cssSelector("#close-dialog-btn")).click();
+			this.waitForBackdropAndClick(user, "#close-dialog-btn");
 			try {
 				Thread.sleep(500);
 			} catch (InterruptedException e) {
@@ -2586,7 +2586,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 			// Dialog already opened
 			if (!user.getDriver().findElement(By.cssSelector("#subtitle")).getText().equals(videoId)) {
 				// Wrong dialog
-				user.getDriver().findElement(By.cssSelector("#close-dialog-btn")).click();
+				this.waitForBackdropAndClick(user, "#close-dialog-btn");
 				user.getDriver().findElement(By.cssSelector("#" + videoId + " ~ .bottom-div .video-track-info"))
 						.click();
 			}
@@ -2685,29 +2685,30 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 			Thread.sleep(300);
 		}
 		user.getDriver().findElement(By.xpath("//button[contains(@title,'Room API')]")).click();
-		Thread.sleep(300);
 		if (preset != null) {
-			user.getDriver().findElement(By.cssSelector("#ingress-preset-select")).click();
+			this.waitForBackdropAndClick(user, "#ingress-preset-select");
 			Thread.sleep(300);
 			user.getDriver().findElement(By.cssSelector("#mat-option-" + preset.toUpperCase())).click();
 		} else {
 			if (!simulcast) {
 				user.getDriver().findElement(By.cssSelector("#ingress-simulcast")).click();
+				Thread.sleep(300);
 			}
-			user.getDriver().findElement(By.cssSelector("#ingress-video-codec-select")).click();
+			this.waitForBackdropAndClick(user, "#ingress-video-codec-select");
 			Thread.sleep(300);
 			user.getDriver().findElement(By.cssSelector("#mat-option-" + codec.toUpperCase())).click();
 		}
 		if (urlType != null) {
-			user.getDriver().findElement(By.cssSelector("#ingress-url-type-select")).click();
+			this.waitForBackdropAndClick(user, "#ingress-url-type-select");
 			Thread.sleep(300);
 			user.getDriver().findElement(By.cssSelector("#mat-option-" + urlType.toUpperCase())).click();
 		}
 		if (urlUri != null) {
 			user.getDriver().findElement(By.cssSelector("#ingress-url-uri-field")).sendKeys(urlUri);
+			Thread.sleep(300);
 		}
 		user.getDriver().findElement(By.cssSelector("#create-ingress-api-btn")).click();
-		user.getDriver().findElement(By.cssSelector("#close-dialog-btn")).click();
+		this.waitForBackdropAndClick(user, "#close-dialog-btn");
 		Thread.sleep(300);
 	}
 
@@ -2728,6 +2729,49 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 			user.getDriver().findElement(By.id("trackPublish-scalabilityMode")).click();
 			user.getDriver().findElement(By.className("mode-" + scalabilityMode)).click();
 		}
+	}
+
+	/**
+	 * Waits for any Material Design backdrop overlays to disappear and then clicks the element.
+	 * This prevents ElementClickInterceptedException caused by overlay backdrops.
+	 */
+	private void waitForBackdropAndClick(OpenViduTestappUser user, String cssSelector) {
+		WebDriverWait wait = new WebDriverWait(user.getDriver(), Duration.ofSeconds(10));
+		
+		// Wait for any existing backdrop to disappear - try multiple selectors
+		try {
+			wait.until(ExpectedConditions.invisibilityOfElementLocated(
+				By.cssSelector(".cdk-overlay-backdrop")));
+		} catch (Exception e) {
+			// Backdrop might not exist, continue
+		}
+		
+		// Additional wait for transparent backdrops specifically
+		try {
+			wait.until(ExpectedConditions.invisibilityOfElementLocated(
+				By.cssSelector(".cdk-overlay-transparent-backdrop")));
+		} catch (Exception e) {
+			// Backdrop might not exist, continue
+		}
+		
+		// Additional wait for showing backdrops
+		try {
+			wait.until(ExpectedConditions.invisibilityOfElementLocated(
+				By.cssSelector(".cdk-overlay-backdrop-showing")));
+		} catch (Exception e) {
+			// Backdrop might not exist, continue
+		}
+		
+		// Small additional wait to ensure animations complete
+		try {
+			Thread.sleep(100);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+		
+		// Wait for the element to be clickable
+		WebElement element = wait.until(ExpectedConditions.elementToBeClickable(By.cssSelector(cssSelector)));
+		element.click();
 	}
 
 }
