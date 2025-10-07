@@ -1,29 +1,31 @@
 <div>
-    <div class="top-div">
-        <div class="controls-div">
-            <button id="add-user-btn" mat-raised-button color="primary" (click)="addUser()">ADD USER</button>
-            <button id="remove-user-btn" mat-raised-button color="primary" (click)="removeUser()"
-                [disabled]="!users.length">REMOVE
-                USER</button>
-            <button id="remove-all-users-btn" mat-raised-button color="primary" (click)="removeAllUsers()"
-                [disabled]="!users.length">REMOVE
-                ALL</button>
-        </div>
-        <div class="scenario-div">
-            <mat-checkbox id="auto-join-checkbox" class="auto-join-check" [(ngModel)]="autoJoin" name="autoJoin">Auto
-                join</mat-checkbox>
-            <button id="one2one-btn" mat-raised-button color="primary" (click)="loadScenario(numberParticipants,0,0)">{{numberParticipants}}:{{numberParticipants}}</button>
-            <button id="one2many-btn" mat-raised-button color="primary"
-                (click)="loadScenario(0,1,numberParticipants)">1 PUB : {{numberParticipants}} SUB</button>
-            <mat-form-field>
-                <input id="one2many-input" matInput type="number" min=1 max=100 [(ngModel)]="numberParticipants">
-            </mat-form-field>
-        </div>
+  <div class="top-div">
+    <div class="controls-div">
+      <button id="add-user-btn" mat-raised-button color="primary" (click)="addUser()">ADD USER</button>
+      <button id="remove-user-btn" mat-raised-button color="primary" (click)="removeUser()"
+        [disabled]="!users.length">REMOVE
+      USER</button>
+      <button id="remove-all-users-btn" mat-raised-button color="primary" (click)="removeAllUsers()"
+        [disabled]="!users.length">REMOVE
+      ALL</button>
     </div>
+    <div class="scenario-div">
+      <mat-checkbox id="auto-join-checkbox" class="auto-join-check" [(ngModel)]="autoJoin" name="autoJoin">Auto
+      join</mat-checkbox>
+      <button id="one2one-btn" mat-raised-button color="primary" (click)="loadScenario(numberParticipants,0,0)">{{numberParticipants}}:{{numberParticipants}}</button>
+      <button id="one2many-btn" mat-raised-button color="primary"
+      (click)="loadScenario(0,1,numberParticipants)">1 PUB : {{numberParticipants}} SUB</button>
+      <mat-form-field>
+        <input id="one2many-input" matInput type="number" min=1 max=100 [(ngModel)]="numberParticipants">
+      </mat-form-field>
+    </div>
+  </div>
 
-    <div class="instance-div">
-        <app-openvidu-instance @fadeAnimation *ngFor="let user of users; let i=index" [attr.id]="'openvidu-instance-' + i" [roomConf]="user" [index]="i">
-        </app-openvidu-instance>
-    </div>
+  <div class="instance-div">
+    @for (user of users; track user; let i = $index) {
+      <app-openvidu-instance @fadeAnimation [attr.id]="'openvidu-instance-' + i" [roomConf]="user" [index]="i">
+      </app-openvidu-instance>
+    }
+  </div>
 
 </div>

@@ -25,30 +25,30 @@
       <button mat-button id="list-rooms-api-btn" (click)="listRooms()">List Rooms</button>
       <span style="display: inline-block" matTooltip='"Room" required' [matTooltipDisabled]="!!apiRoomName">
         <button mat-button id="delete-room-api-btn" (click)="deleteRoom()" [disabled]="!apiRoomName">Delete
-          Room</button>
+        Room</button>
       </span>
       <span style="display: inline-block" matTooltip='"Room" required' [matTooltipDisabled]="!!apiRoomName">
         <button mat-button id="list-participants-api-btn" (click)="listParticipants()" [disabled]="!apiRoomName">List
-          participants</button>
+        participants</button>
       </span>
       <span style="display: inline-block" matTooltip='"Room" and "Participant" required'
         [matTooltipDisabled]="!!apiRoomName && !!apiParticipantIdentity">
         <button mat-button id="get-participant-api-btn" (click)="getParticipant()"
-          [disabled]="!apiRoomName || !apiParticipantIdentity">Get participant</button>
+        [disabled]="!apiRoomName || !apiParticipantIdentity">Get participant</button>
       </span>
       <span style="display: inline-block" matTooltip='"Room" and "Participant" required'
         [matTooltipDisabled]="!!apiRoomName && !!apiParticipantIdentity">
         <button mat-button id="remove-participant-api-btn" (click)="removeParticipant()"
-          [disabled]="!apiRoomName || !apiParticipantIdentity">Remove participant</button>
+        [disabled]="!apiRoomName || !apiParticipantIdentity">Remove participant</button>
       </span>
       <span style="display: inline-block" matTooltip='"Room", "Participant" and "Track" required'
         [matTooltipDisabled]="!!apiRoomName && !!apiParticipantIdentity && !!apiTrackSid">
         <button mat-button id="force-unpublish-api-btn" (click)="mutePublishedTrack()"
           [disabled]="!apiRoomName || !apiParticipantIdentity || !apiTrackSid">Mute
-          track</button>
+        track</button>
       </span>
       <mat-checkbox class="subscriber-checkbox" name="subscriber" [(ngModel)]="muteTrack"
-        [disabled]="!apiRoomName || !apiParticipantIdentity || !apiTrackSid">Mute</mat-checkbox>
+      [disabled]="!apiRoomName || !apiParticipantIdentity || !apiTrackSid">Mute</mat-checkbox>
       <span style="display: inline-block">
         <button mat-button id="delete-all-rooms-api-btn" (click)="deleteAllRooms()" style="font-style: italic; font-size: 0.75rem; margin-left: 5px;">Delete all</button>
       </span>
@@ -80,18 +80,18 @@
       <button mat-button id="list-egress-api-btn" (click)="listEgress()">List Egress</button>
       <span style="display: inline-block" matTooltip='"Room" required' [matTooltipDisabled]="!!egressRoomName">
         <button mat-button id="start-room-composite-egress-api-btn" (click)="startRoomCompositeEgress()"
-          [disabled]="!egressRoomName">Start Room Composite Egress</button>
+        [disabled]="!egressRoomName">Start Room Composite Egress</button>
       </span>
       <span style="display: inline-block" matTooltip='"Room", "Audio Track" and "Video Track" required'
         [matTooltipDisabled]="!(!egressRoomName || !audioTrackId || !videoTrackId)">
         <button mat-button id="start-track-composite-egress-api-btn" (click)="startTrackCompositeEgress()"
-          [disabled]="!egressRoomName || !audioTrackId || !videoTrackId">Start Track Composite Egress</button>
+        [disabled]="!egressRoomName || !audioTrackId || !videoTrackId">Start Track Composite Egress</button>
       </span>
       <span style="display: inline-block" matTooltip='"Room" and only one of "Audio Track" or "Video Track" required'
         [matTooltipDisabled]="!(!egressRoomName || (!!audioTrackId && !!videoTrackId || !audioTrackId && !videoTrackId))">
         <button mat-button id="start-track-egress-api-btn" (click)="startTrackEgress()"
           [disabled]="!egressRoomName || (!!audioTrackId && !!videoTrackId || !audioTrackId && !videoTrackId)">Start
-          Track Egress</button>
+        Track Egress</button>
       </span>
       <span style="display: inline-block" matTooltip='"Egress ID" required' [matTooltipDisabled]="!!egressId">
         <button mat-button id="stop-egress-api-btn" (click)="stopEgress()" [disabled]="!egressId">Stop Egress</button>
@@ -103,9 +103,11 @@
       <mat-form-field id="room-composite-layout-select">
         <mat-label>Layout</mat-label>
         <mat-select [(value)]="roomCompositeLayoutSelected">
-          <mat-option *ngFor="let layout of ROOM_COMPOSITE_LAYOUTS" [value]="layout">
-            {{layout}}
-          </mat-option>
+          @for (layout of ROOM_COMPOSITE_LAYOUTS; track layout) {
+            <mat-option [value]="layout">
+              {{layout}}
+            </mat-option>
+          }
         </mat-select>
       </mat-form-field>
       <mat-checkbox id="room-composite-audio-only" [(ngModel)]="roomCompositeAudioOnly">Audio only</mat-checkbox>
@@ -116,34 +118,42 @@
     <div class="egress-output">
       <div class="egress-output-container">
         <mat-checkbox id="file-output-checkbox" [(ngModel)]="fileOutputSelected">MP4 file output</mat-checkbox>
-        <mat-form-field id="s3-endpoint" *ngIf="fileOutputSelected">
-          <mat-label>S3 endpoint</mat-label>
-          <input matInput type="url" placeholder="S3 endpoint" [(ngModel)]="s3Endpoint">
-        </mat-form-field>
+        @if (fileOutputSelected) {
+          <mat-form-field id="s3-endpoint">
+            <mat-label>S3 endpoint</mat-label>
+            <input matInput type="url" placeholder="S3 endpoint" [(ngModel)]="s3Endpoint">
+          </mat-form-field>
+        }
       </div>
       <div class="egress-output-container">
         <mat-checkbox id="stream-output-checkbox" [(ngModel)]="streamOutputSelected">RTMP stream output</mat-checkbox>
-        <mat-form-field *ngIf="streamOutputSelected" id="rmpt-urls" class="example-chip-list">
-          <mat-label>RTMP urls</mat-label>
-          <mat-chip-grid #chipGrid aria-label="Enter fruits">
-            <mat-chip-row *ngFor="let url of rtmpUrls" (removed)="removeRtmpUrl(url)">
-              {{url}}
-              <button class="remove-element-btn" matChipRemove aria-label="Remove URL">
-                <mat-icon class="remove-element-icon">cancel</mat-icon>
-              </button>
-            </mat-chip-row>
-            <input placeholder="New URL" [matChipInputFor]="chipGrid"
-              [matChipInputSeparatorKeyCodes]="separatorKeysCodes" [matChipInputAddOnBlur]="addOnBlur"
-              (matChipInputTokenEnd)="addRtmpUrl($event)" />
-          </mat-chip-grid>
-        </mat-form-field>
+        @if (streamOutputSelected) {
+          <mat-form-field id="rmpt-urls" class="example-chip-list">
+            <mat-label>RTMP urls</mat-label>
+            <mat-chip-grid #chipGrid aria-label="Enter fruits">
+              @for (url of rtmpUrls; track url) {
+                <mat-chip-row (removed)="removeRtmpUrl(url)">
+                  {{url}}
+                  <button class="remove-element-btn" matChipRemove aria-label="Remove URL">
+                    <mat-icon class="remove-element-icon">cancel</mat-icon>
+                  </button>
+                </mat-chip-row>
+              }
+              <input placeholder="New URL" [matChipInputFor]="chipGrid"
+                [matChipInputSeparatorKeyCodes]="separatorKeysCodes" [matChipInputAddOnBlur]="addOnBlur"
+                (matChipInputTokenEnd)="addRtmpUrl($event)" />
+            </mat-chip-grid>
+          </mat-form-field>
+        }
       </div>
       <div class="egress-output-container">
         <mat-checkbox id="segment-output-checkbox" [(ngModel)]="segmentOutputSelected">HLS segment output</mat-checkbox>
-        <mat-form-field id="segment-duration" *ngIf="segmentOutputSelected">
-          <mat-label>Segment duration (s)</mat-label>
-          <input matInput type="number" min="1" placeholder="Segment duration" [(ngModel)]="segmentDuration">
-        </mat-form-field>
+        @if (segmentOutputSelected) {
+          <mat-form-field id="segment-duration">
+            <mat-label>Segment duration (s)</mat-label>
+            <input matInput type="number" min="1" placeholder="Segment duration" [(ngModel)]="segmentDuration">
+          </mat-form-field>
+        }
       </div>
     </div>
 
@@ -166,18 +176,20 @@
       <span style="display: inline-block" [matTooltip]="!ingressRoomName ? 'Room required' : 'At least one of audio and video required'"
         [matTooltipDisabled]="!!ingressRoomName && (ingressWithAudio || ingressWithVideo)">
         <button mat-button id="create-ingress-api-btn" (click)="createIngress()"
-          [disabled]="!ingressRoomName || (!ingressWithAudio && !ingressWithVideo)">Create Ingress</button>
+        [disabled]="!ingressRoomName || (!ingressWithAudio && !ingressWithVideo)">Create Ingress</button>
       </span>
       <span style="display: inline-block" matTooltip='"Ingress ID" required' [matTooltipDisabled]="!!ingressId">
         <button mat-button id="delete-ingress-api-btn" (click)="deleteIngress()" [disabled]="!ingressId">Delete
-          Ingress</button>
+        Ingress</button>
       </span>
       <mat-form-field id="ingress-input-type-select">
         <mat-label>Input Type</mat-label>
         <mat-select [(value)]="inputTypeSelected">
-          <mat-option *ngFor="let inputType of INGRESS_INPUT_TYPES" [value]="inputType.value">
-            {{inputType.viewValue}}
-          </mat-option>
+          @for (inputType of INGRESS_INPUT_TYPES; track inputType) {
+            <mat-option [value]="inputType.value">
+              {{inputType.viewValue}}
+            </mat-option>
+          }
         </mat-select>
       </mat-form-field>
       <span style="display: inline-block">
@@ -192,7 +204,7 @@
       <span style="display: inline-block" [matTooltip]="!ingressWithVideo ? 'Only with video' : 'Preset overrides this value'"
         [matTooltipDisabled]="!!ingressWithVideo && ingressVideoEncodingPresetSelected == undefined">
         <mat-checkbox id="ingress-simulcast" [(ngModel)]="ingressSimulcast"
-          [disabled]="!ingressWithVideo || ingressVideoEncodingPresetSelected != undefined">Simulcast</mat-checkbox>
+        [disabled]="!ingressWithVideo || ingressVideoEncodingPresetSelected != undefined">Simulcast</mat-checkbox>
       </span>
       <span style="display: inline-block" matTooltip="Only for WHIP" [matTooltipDisabled]="inputTypeSelected === 1">
         <mat-checkbox id="ingress-transcoding" [(ngModel)]="ingressEnableTranscoding" [disabled]="inputTypeSelected !== 1">Transcoding</mat-checkbox>
@@ -201,9 +213,11 @@
         <mat-form-field id="ingress-url-type-select">
           <mat-label>URL type</mat-label>
           <mat-select [(value)]="ingressUrlType" [disabled]="inputTypeSelected !== 2">
-            <mat-option *ngFor="let urlType of INGRESS_URL_TYPES" [value]="urlType" [id]="'mat-option-' + urlType">
-              {{urlType}}
-            </mat-option>
+            @for (urlType of INGRESS_URL_TYPES; track urlType) {
+              <mat-option [value]="urlType" [id]="'mat-option-' + urlType">
+                {{urlType}}
+              </mat-option>
+            }
           </mat-select>
         </mat-form-field>
       </span>
@@ -212,9 +226,11 @@
         <mat-form-field id="ingress-video-codec-select">
           <mat-label>Codec</mat-label>
           <mat-select [(value)]="ingressVideoCodecSelected" [disabled]="!ingressWithVideo || ingressVideoEncodingPresetSelected != undefined">
-            <mat-option *ngFor="let codec of INGRESS_VIDEO_CODECS" [value]="codec.value" [id]="'mat-option-' + codec.viewValue">
-              {{codec.viewValue}}
-            </mat-option>
+            @for (codec of INGRESS_VIDEO_CODECS; track codec) {
+              <mat-option [value]="codec.value" [id]="'mat-option-' + codec.viewValue">
+                {{codec.viewValue}}
+              </mat-option>
+            }
           </mat-select>
         </mat-form-field>
       </span>
@@ -222,9 +238,11 @@
         <mat-form-field id="ingress-preset-select">
           <mat-label>Preset</mat-label>
           <mat-select [(value)]="ingressVideoEncodingPresetSelected" [disabled]="!ingressWithVideo">
-            <mat-option *ngFor="let preset of INGRESS_VIDEO_ENCODING_PRESETS" [value]="preset.value" [id]="'mat-option-' + preset.viewValue">
-              {{preset.viewValue}}
-            </mat-option>
+            @for (preset of INGRESS_VIDEO_ENCODING_PRESETS; track preset) {
+              <mat-option [value]="preset.value" [id]="'mat-option-' + preset.viewValue">
+                {{preset.viewValue}}
+              </mat-option>
+            }
           </mat-select>
         </mat-form-field>
       </span>

@@ -1,28 +1,38 @@
 <table class="mat-elevation-z8">
-    <tr class="mat-row">
-        <th class="mat-cell">
-            <p id="number-of-streams">STREAMS</p>
-            <p>
-                <span [matBadge]="numberOfStreamsOut()" matBadgeOverlap="false">OUT</span>
-            </p>
-            <p>
-                <span [matBadge]="numberOfStreamsIn()" matBadgeOverlap="false">IN</span>
-            </p>
-        </th>
-        <th *ngFor="let publisher of users | callback: filterPublishers" class="mat-cell">
-            <p>{{publisher.room.localParticipant.identity}}</p>
-            <app-table-video *ngIf="publisher.localTracks.audio || publisher.localTracks.video"
-                [tracks]="publisher.localTracks"
-                [videoId]="'pub-' + publisher.room.localParticipant.identity">
+  <tr class="mat-row">
+    <th class="mat-cell">
+      <p id="number-of-streams">STREAMS</p>
+      <p>
+        <span [matBadge]="numberOfStreamsOut()" matBadgeOverlap="false">OUT</span>
+      </p>
+      <p>
+        <span [matBadge]="numberOfStreamsIn()" matBadgeOverlap="false">IN</span>
+      </p>
+    </th>
+    @for (publisher of users | callback: filterPublishers; track publisher) {
+      <th class="mat-cell">
+        <p>{{publisher.room.localParticipant.identity}}</p>
+        @if (publisher.localTracks.audio || publisher.localTracks.video) {
+          <app-table-video
+            [tracks]="publisher.localTracks"
+            [videoId]="'pub-' + publisher.room.localParticipant.identity">
+          </app-table-video>
+        }
+      </th>
+    }
+  </tr>
+  @for (subscriber of users | callback: filterSubscribers; track subscriber) {
+    <tr class="mat-cell">
+      <td class="mat-cell">{{subscriber.room.localParticipant.identity}}</td>
+      @for (publisher of users | callback: filterPublishers; track publisher) {
+        <td class="mat-cell">
+          @if (subscriber.room.localParticipant.identity !== publisher.room.localParticipant.identity && getRemoteTracksForPublisher(subscriber, publisher); as remoteTracks) {
+            <app-table-video
+              [tracks]="remoteTracks" [videoId]="'sub-' + subscriber.room.localParticipant.identity + '-of-pub-' + publisher.room.localParticipant.identity">
             </app-table-video>
-        </th>
-    </tr>
-    <tr *ngFor="let subscriber of users | callback: filterSubscribers" class="mat-cell">
-        <td class="mat-cell">{{subscriber.room.localParticipant.identity}}</td>
-        <td *ngFor="let publisher of users | callback: filterPublishers" class="mat-cell">
-            <app-table-video *ngIf="subscriber.room.localParticipant.identity !== publisher.room.localParticipant.identity && getRemoteTracksForPublisher(subscriber, publisher) as remoteTracks"
-                [tracks]="remoteTracks" [videoId]="'sub-' + subscriber.room.localParticipant.identity + '-of-pub-' + publisher.room.localParticipant.identity">
-            </app-table-video>
+          }
         </td>
+      }
     </tr>
+  }
 </table>

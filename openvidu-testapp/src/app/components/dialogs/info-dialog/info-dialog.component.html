@@ -1,6 +1,8 @@
 <div>
   <h2 mat-dialog-title>{{ title }}</h2>
-  <p *ngIf="subtitle" id="subtitle">{{ subtitle }}</p>
+  @if (subtitle) {
+    <p id="subtitle">{{ subtitle }}</p>
+  }
 
   <mat-dialog-content>
     <mat-form-field>

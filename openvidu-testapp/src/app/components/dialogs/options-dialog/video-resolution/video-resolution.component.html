@@ -1,19 +1,21 @@
 <div class="resolution-div">
-    <p *ngIf="showTitle" class="resolution-title">Resolution</p>
-    <mat-form-field class="inner-text-input">
-        <mat-label>width</mat-label>
-        <input matInput [id]="componentId+'-width'" type="number" placeholder="width" [(ngModel)]="width" (ngModelChange)="emitChanges()"/>
-    </mat-form-field>
-    <mat-form-field class="inner-text-input">
-        <mat-label>height</mat-label>
-        <input matInput [id]="componentId+'-height'" type="number" placeholder="height" [(ngModel)]="height" (ngModelChange)="emitChanges()"/>
-    </mat-form-field>
-    <mat-form-field class="inner-text-input">
-        <mat-label>frameRate</mat-label>
-        <input matInput [id]="componentId+'-frameRate'" type="number" placeholder="frameRate" [(ngModel)]="frameRate" (ngModelChange)="emitChanges()"/>
-    </mat-form-field>
-    <mat-form-field class="inner-text-input">
-        <mat-label>aspectRatio</mat-label>
-        <input matInput [id]="componentId+'-aspectRatio'" type="number" placeholder="aspectRatio" [(ngModel)]="aspectRatio" (ngModelChange)="emitChanges()"/>
-    </mat-form-field>
+  @if (showTitle) {
+    <p class="resolution-title">Resolution</p>
+  }
+  <mat-form-field class="inner-text-input">
+    <mat-label>width</mat-label>
+    <input matInput [id]="componentId+'-width'" type="number" placeholder="width" [(ngModel)]="width" (ngModelChange)="emitChanges()"/>
+  </mat-form-field>
+  <mat-form-field class="inner-text-input">
+    <mat-label>height</mat-label>
+    <input matInput [id]="componentId+'-height'" type="number" placeholder="height" [(ngModel)]="height" (ngModelChange)="emitChanges()"/>
+  </mat-form-field>
+  <mat-form-field class="inner-text-input">
+    <mat-label>frameRate</mat-label>
+    <input matInput [id]="componentId+'-frameRate'" type="number" placeholder="frameRate" [(ngModel)]="frameRate" (ngModelChange)="emitChanges()"/>
+  </mat-form-field>
+  <mat-form-field class="inner-text-input">
+    <mat-label>aspectRatio</mat-label>
+    <input matInput [id]="componentId+'-aspectRatio'" type="number" placeholder="aspectRatio" [(ngModel)]="aspectRatio" (ngModelChange)="emitChanges()"/>
+  </mat-form-field>
 </div>

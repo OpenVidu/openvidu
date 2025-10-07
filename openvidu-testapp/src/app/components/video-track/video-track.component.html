@@ -1,46 +1,60 @@
 <div class="parent-div">
-    <video #mediaElement [id]="finalElementRefId" [ngClass]="getTrackOrigin()"></video>
-    <div class="bottom-div">
-        <button *ngIf="localParticipant" (click)="muteUnmuteVideo()" class="video-btn mute-unmute-video" matTooltip="Mute/Unmute video"
-            matTooltipClass="custom-tooltip">
-            <mat-icon aria-label="Mute/Unmute video" class="mat-icon material-icons" role="img"
-                aria-hidden="true">{{muteVideoIcon}}</mat-icon>
-        </button>
-        <button *ngIf="localParticipant" (click)="unpublishTrack()" class="video-btn publish-unpublish-video" matTooltip="Unpublish track"
-            matTooltipClass="custom-tooltip">
-            <mat-icon aria-label="Unpublish track" class="mat-icon material-icons" role="img"
-                aria-hidden="true">stop</mat-icon>
-        </button>
-        <button *ngIf="!localParticipant" (click)="toggleEnableTrack()" class="video-btn toggle-video-enabled" matTooltip="Toggle track enabled"
-            matTooltipClass="custom-tooltip">
-            <mat-icon aria-label="Toggle track enabled" class="mat-icon material-icons" role="img"
-                aria-hidden="true">{{trackEnabled ? 'toggle_off' : 'toggle_on'}}</mat-icon>
-        </button>
-        <button *ngIf="!localParticipant" (click)="toggleSubscribeTrack()" class="video-btn toggle-video-subscribed" matTooltip="Toggle track subscription"
-            matTooltipClass="custom-tooltip">
-            <mat-icon aria-label="Toggle track subscription" class="mat-icon material-icons" role="img"
-                aria-hidden="true">{{trackSubscribed ? 'stop' : 'play_arrow'}}</mat-icon>
-        </button>
-        <mat-form-field *ngIf="!localParticipant" id="max-video-quality" class="video-btn quality-option"  matTooltip="Set video quality" matTooltipClass="custom-tooltip">
-            <mat-select [(value)]="maxVideoQuality" (selectionChange)="onQualityChange()">
-              <mat-option *ngFor="let q of ['LOW', 'MEDIUM', 'HIGH']" [value]="q" [ngClass]="'mode-' + q">{{q}}</mat-option>
-            </mat-select>
-        </mat-form-field>
-        <button (click)="openInfoDialog()" class="video-btn video-track-info" matTooltip="Open info dialog"
-            matTooltipClass="custom-tooltip">
-            <mat-icon aria-label="Open info dialog" class="mat-icon material-icons" role="img"
-                aria-hidden="true">info</mat-icon>
-        </button>
-        <!--<button *ngIf="isLocal" (click)="blur()" class="video-btn">
-            <mat-icon aria-label="Blur video" class="mat-icon material-icons" role="img"
-                aria-hidden="true">{{blurIcon}}</mat-icon>
-        </button>-->
-    </div>
-    <div class="top-right-div">
-        <button *ngIf="!localParticipant" (click)="toggleVideoZoom()" class="video-btn toggle-video-zoom" matTooltip="Toggle video zoom"
-            matTooltipClass="custom-tooltip">
-            <mat-icon aria-label="Toggle video zoom" class="mat-icon material-icons" role="img"
-                aria-hidden="true">{{videoZoom ? 'zoom_out' : 'zoom_in'}}</mat-icon>
-        </button>
-    </div>
+  <video #mediaElement [id]="finalElementRefId" [ngClass]="getTrackOrigin()"></video>
+  <div class="bottom-div">
+    @if (localParticipant) {
+      <button (click)="muteUnmuteVideo()" class="video-btn mute-unmute-video" matTooltip="Mute/Unmute video"
+        matTooltipClass="custom-tooltip">
+        <mat-icon aria-label="Mute/Unmute video" class="mat-icon material-icons" role="img"
+        aria-hidden="true">{{muteVideoIcon}}</mat-icon>
+      </button>
+    }
+    @if (localParticipant) {
+      <button (click)="unpublishTrack()" class="video-btn publish-unpublish-video" matTooltip="Unpublish track"
+        matTooltipClass="custom-tooltip">
+        <mat-icon aria-label="Unpublish track" class="mat-icon material-icons" role="img"
+        aria-hidden="true">stop</mat-icon>
+      </button>
+    }
+    @if (!localParticipant) {
+      <button (click)="toggleEnableTrack()" class="video-btn toggle-video-enabled" matTooltip="Toggle track enabled"
+        matTooltipClass="custom-tooltip">
+        <mat-icon aria-label="Toggle track enabled" class="mat-icon material-icons" role="img"
+        aria-hidden="true">{{trackEnabled ? 'toggle_off' : 'toggle_on'}}</mat-icon>
+      </button>
+    }
+    @if (!localParticipant) {
+      <button (click)="toggleSubscribeTrack()" class="video-btn toggle-video-subscribed" matTooltip="Toggle track subscription"
+        matTooltipClass="custom-tooltip">
+        <mat-icon aria-label="Toggle track subscription" class="mat-icon material-icons" role="img"
+        aria-hidden="true">{{trackSubscribed ? 'stop' : 'play_arrow'}}</mat-icon>
+      </button>
+    }
+    @if (!localParticipant) {
+      <mat-form-field id="max-video-quality" class="video-btn quality-option"  matTooltip="Set video quality" matTooltipClass="custom-tooltip">
+        <mat-select [(value)]="maxVideoQuality" (selectionChange)="onQualityChange()">
+          @for (q of ['LOW', 'MEDIUM', 'HIGH']; track q) {
+            <mat-option [value]="q" [ngClass]="'mode-' + q">{{q}}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+    }
+    <button (click)="openInfoDialog()" class="video-btn video-track-info" matTooltip="Open info dialog"
+      matTooltipClass="custom-tooltip">
+      <mat-icon aria-label="Open info dialog" class="mat-icon material-icons" role="img"
+      aria-hidden="true">info</mat-icon>
+    </button>
+    <!--<button *ngIf="isLocal" (click)="blur()" class="video-btn">
+    <mat-icon aria-label="Blur video" class="mat-icon material-icons" role="img"
+    aria-hidden="true">{{blurIcon}}</mat-icon>
+  </button>-->
+</div>
+<div class="top-right-div">
+  @if (!localParticipant) {
+    <button (click)="toggleVideoZoom()" class="video-btn toggle-video-zoom" matTooltip="Toggle video zoom"
+      matTooltipClass="custom-tooltip">
+      <mat-icon aria-label="Toggle video zoom" class="mat-icon material-icons" role="img"
+      aria-hidden="true">{{videoZoom ? 'zoom_out' : 'zoom_in'}}</mat-icon>
+    </button>
+  }
+</div>
 </div>

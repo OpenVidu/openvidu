@@ -1,99 +1,100 @@
 <div class="div-wrapper">
-    <div class="config-half">
-        <mat-card class="config-card">
+  <div class="config-half">
+    <mat-card class="config-card">
 
-            <mat-card-content>
-                <div class="row no-wrap-row">
+      <mat-card-content>
+        <div class="row no-wrap-row">
 
-                    <mat-form-field style="margin-right: 8px" class="custom-mat-form-field">
-                        <mat-label>Room</mat-label>
-                        <input matInput placeholder="Room name" [id]="'room-name-input-' + index" [(ngModel)]="roomName"
-                            [disabled]="!!room">
-                    </mat-form-field>
+          <mat-form-field style="margin-right: 8px" class="custom-mat-form-field">
+            <mat-label>Room</mat-label>
+            <input matInput placeholder="Room name" [id]="'room-name-input-' + index" [(ngModel)]="roomName"
+              [disabled]="!!room">
+          </mat-form-field>
 
-                    <mat-form-field class="custom-mat-form-field">
-                        <mat-label>Participant</mat-label>
-                        <input matInput placeholder="Participant name" [id]="'participant-name-input-'+ index"
-                            [(ngModel)]="participantName" [disabled]="!!room">
-                    </mat-form-field>
+          <mat-form-field class="custom-mat-form-field">
+            <mat-label>Participant</mat-label>
+            <input matInput placeholder="Participant name" [id]="'participant-name-input-'+ index"
+              [(ngModel)]="participantName" [disabled]="!!room">
+          </mat-form-field>
 
-                    <div class="room-btns-div">
-                        <button mat-icon-button title="Room options" [id]="'room-options-btn-' + index"
-                            class="mat-icon-custom" (click)="openOptionsDialog()" [disabled]="room">
-                            <mat-icon class="mat-icon-custom-ic" aria-label="Room options button">settings</mat-icon>
-                        </button>
-                        <button mat-icon-button title="Room API" [id]="'room-api-btn-' + index" class="mat-icon-custom"
-                            (click)="openRoomApiDialog()">
-                            <mat-icon class="mat-icon-custom-ic" aria-label="Room API button">cloud_circle</mat-icon>
-                        </button>
-                        <button mat-icon-button title="Room events" [id]="'room-events-btn-' + index"
-                            class="mat-icon-custom" (click)="openRoomEventsDialog()">
-                            <mat-icon class="mat-icon-custom-ic"
-                                aria-label="Room events button">notifications</mat-icon>
-                        </button>
-                    </div>
+          <div class="room-btns-div">
+            <button mat-icon-button title="Room options" [id]="'room-options-btn-' + index"
+              class="mat-icon-custom" (click)="openOptionsDialog()" [disabled]="room">
+              <mat-icon class="mat-icon-custom-ic" aria-label="Room options button">settings</mat-icon>
+            </button>
+            <button mat-icon-button title="Room API" [id]="'room-api-btn-' + index" class="mat-icon-custom"
+              (click)="openRoomApiDialog()">
+              <mat-icon class="mat-icon-custom-ic" aria-label="Room API button">cloud_circle</mat-icon>
+            </button>
+            <button mat-icon-button title="Room events" [id]="'room-events-btn-' + index"
+              class="mat-icon-custom" (click)="openRoomEventsDialog()">
+              <mat-icon class="mat-icon-custom-ic"
+              aria-label="Room events button">notifications</mat-icon>
+            </button>
+          </div>
 
-                </div>
+        </div>
 
-                <div class="row no-wrap-row">
-                    <button class="connect-btn" mat-button (click)="createTokenAndConnectRoom()"
-                        [disabled]="!!room">CONNECT</button>
-                    <mat-checkbox class="subscriber-checkbox" name="subscriber" [(ngModel)]="roomConf.subscriber"
-                        [disabled]="!!room">Subscriber</mat-checkbox>
-                    <mat-checkbox class="publisher-checkbox" name="publisher" [(ngModel)]="roomConf.publisher"
-                        [disabled]="!!room">Publisher</mat-checkbox>
-                </div>
-            </mat-card-content>
+        <div class="row no-wrap-row">
+          <button class="connect-btn" mat-button (click)="createTokenAndConnectRoom()"
+          [disabled]="!!room">CONNECT</button>
+          <mat-checkbox class="subscriber-checkbox" name="subscriber" [(ngModel)]="roomConf.subscriber"
+          [disabled]="!!room">Subscriber</mat-checkbox>
+          <mat-checkbox class="publisher-checkbox" name="publisher" [(ngModel)]="roomConf.publisher"
+          [disabled]="!!room">Publisher</mat-checkbox>
+        </div>
+      </mat-card-content>
 
-        </mat-card>
+    </mat-card>
+  </div>
+
+  @if (room) {
+    <div class="room-half">
+      <mat-card class="room-card">
+        <mat-card-header style="margin-bottom: 7px">
+          <div class="row">
+            <mat-card-title class="room-mat-card-title">{{room.name}}</mat-card-title>
+            <div class="room-actions">
+              <button class="peer-info-btn" (click)="openInfoDialog()" title="PCTransports info">
+                <mat-icon aria-label="PCTransports info button">info</mat-icon>
+              </button>
+              <button class="message-btn" (click)="sendData()" title="Broadcast message to room">
+                <mat-icon aria-label="Send message button">chat</mat-icon>
+              </button>
+              <button class="disconnect-btn" (click)="disconnectRoom()" title="Disconnect room">
+                <mat-icon aria-label="Disconnect button">clear</mat-icon>
+              </button>
+            </div>
+          </div>
+        </mat-card-header>
+        <mat-card-content class="room-card-content">
+          <div class="event-list-flex">
+            <div class="event-list scroll-custom">
+              <mat-accordion [attr.id]="'room-events-' + room.localParticipant.identity">
+                @for (event of events; track event) {
+                  <mat-expansion-panel [ngClass]="event.eventCategory">
+                    <mat-expansion-panel-header
+                      [ngClass]="event.eventType + '-' + room.localParticipant.identity"
+                      [collapsedHeight]="'20px'" [expandedHeight]="'20px'">
+                      {{event.eventType}}
+                    </mat-expansion-panel-header>
+                    <div class="event-content">{{event.eventDescription}}</div>
+                  </mat-expansion-panel>
+                }
+              </mat-accordion>
+            </div>
+          </div>
+          <div>
+            <app-participant class="local-participant" [participant]="room.localParticipant" [room]="room"
+            [index]="index"></app-participant>
+            @for (participant of room.remoteParticipants | keyvalue; track participant) {
+              <app-participant class="remote-participant"
+              [participant]="participant.value" [room]="room" [index]="index" (sendDataToOneParticipant)="sendData($event)"></app-participant>
+            }
+          </div>
+        </mat-card-content>
+      </mat-card>
     </div>
-
-    <div *ngIf="room" class="room-half">
-
-        <mat-card class="room-card">
-
-            <mat-card-header style="margin-bottom: 7px">
-                <div class="row">
-                    <mat-card-title class="room-mat-card-title">{{room.name}}</mat-card-title>
-                    <div class="room-actions">
-                        <button class="peer-info-btn" (click)="openInfoDialog()" title="PCTransports info">
-                            <mat-icon aria-label="PCTransports info button">info</mat-icon>
-                        </button>
-                        <button class="message-btn" (click)="sendData()" title="Broadcast message to room">
-                            <mat-icon aria-label="Send message button">chat</mat-icon>
-                        </button>
-                        <button class="disconnect-btn" (click)="disconnectRoom()" title="Disconnect room">
-                            <mat-icon aria-label="Disconnect button">clear</mat-icon>
-                        </button>
-                    </div>
-                </div>
-            </mat-card-header>
-
-            <mat-card-content class="room-card-content">
-                <div class="event-list-flex">
-                    <div class="event-list scroll-custom">
-                        <mat-accordion [attr.id]="'room-events-' + room.localParticipant.identity">
-                            <mat-expansion-panel *ngFor="let event of events" [ngClass]="event.eventCategory">
-                                <mat-expansion-panel-header
-                                    [ngClass]="event.eventType + '-' + room.localParticipant.identity"
-                                    [collapsedHeight]="'20px'" [expandedHeight]="'20px'">
-                                    {{event.eventType}}
-                                </mat-expansion-panel-header>
-                                <div class="event-content">{{event.eventDescription}}</div>
-                            </mat-expansion-panel>
-                        </mat-accordion>
-                    </div>
-                </div>
-                <div>
-                    <app-participant class="local-participant" [participant]="room.localParticipant" [room]="room"
-                        [index]="index"></app-participant>
-                    <app-participant class="remote-participant" *ngFor="let participant of room.remoteParticipants | keyvalue"
-                        [participant]="participant.value" [room]="room" [index]="index" (sendDataToOneParticipant)="sendData($event)"></app-participant>
-                </div>
-            </mat-card-content>
-
-        </mat-card>
-
-    </div>
+  }
 
 </div>

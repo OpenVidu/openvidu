@@ -14,12 +14,14 @@
   </div>
   <div>
     <button mat-icon-button id="scenario-options-btn" title="Scenario options" class="mat-icon-custom" (click)="openScenarioOptionsDialog()" [disabled]="scenarioPlaying">
-        <mat-icon class="mat-icon-custom-ic" aria-label="Room options button">settings</mat-icon>
+      <mat-icon class="mat-icon-custom-ic" aria-label="Room options button">settings</mat-icon>
     </button>
     <button id="finish-btn" mat-raised-button color="primary" (click)="endScenario()" [disabled]="!scenarioPlaying">FINISH</button>
   </div>
 </div>
 
 <div class="instance-div">
-  <app-users-table *ngIf="!!users.length" [users]="users"></app-users-table>
+  @if (!!users.length) {
+    <app-users-table [users]="users"></app-users-table>
+  }
 </div>

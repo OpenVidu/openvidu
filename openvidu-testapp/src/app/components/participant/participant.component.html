@@ -1,61 +1,85 @@
 <div class="participant-container">
-    <div class="participant-actions">
-        <p class="participant-identity" [ngClass]="{'local-participant-identity' : participant.isLocal}">
-            {{participant.identity}}</p>
-        <div class="participant-buttons">
-            <button *ngIf="participant.isLocal" class="add-audio-btn" (click)="addAudioTrack()" title="New audio track"
-                matTooltip="New audio track" matTooltipClass="custom-tooltip">
-                <mat-icon aria-label="New audio track">microphone</mat-icon>
-            </button>
-            <button *ngIf="participant.isLocal" class="options-audio-btn" (click)="openAudioTrackOptionsDialog()"
-                title="Video track options" matTooltip="Audio track options" matTooltipClass="custom-tooltip">
-                <mat-icon aria-label="Audio options">more_vert</mat-icon>
-            </button>
-            <button *ngIf="participant.isLocal" class="add-video-btn" (click)="addVideoTrack()" title="New video track"
-                matTooltip="New video track" matTooltipClass="custom-tooltip">
-                <mat-icon aria-label="New video track">videocam</mat-icon>
-            </button>
-            <button *ngIf="participant.isLocal" class="options-video-btn" (click)="openVideoTrackOptionsDialog()"
-                title="Video track options" matTooltip="Video track options" matTooltipClass="custom-tooltip">
-                <mat-icon aria-label="Video options">more_vert</mat-icon>
-            </button>
-            <button *ngIf="participant.isLocal" class="add-screen-btn" (click)="addScreenTrack()"
-                title="New screen track" matTooltip="New screen track" matTooltipClass="custom-tooltip">
-                <mat-icon aria-label="New screen track">present_to_all</mat-icon>
-            </button>
-            <button *ngIf="participant.isLocal" class="options-screen-btn" (click)="openScreenTrackOptionsDialog()"
-                title="Screen track options" matTooltip="Screen track options" matTooltipClass="custom-tooltip">
-                <mat-icon aria-label="Screen options">more_vert</mat-icon>
-            </button>
-            <button *ngIf="participant.isLocal" class="options-track-publish-btn" (click)="openTrackPublishOptionsDialog()"
-                title="Track publish options" matTooltip="Track publish options" matTooltipClass="custom-tooltip">
-                <mat-icon aria-label="Track publish options">settings</mat-icon>
-            </button>
-            <button *ngIf="!participant.isLocal" class="message-btn" (click)="sendData()" title="Send message to this participant">
-                <mat-icon aria-label="Send message button">chat</mat-icon>
-            </button>
-        </div>
+  <div class="participant-actions">
+    <p class="participant-identity" [ngClass]="{'local-participant-identity' : participant.isLocal}">
+    {{participant.identity}}</p>
+    <div class="participant-buttons">
+      @if (participant.isLocal) {
+        <button class="add-audio-btn" (click)="addAudioTrack()" title="New audio track"
+          matTooltip="New audio track" matTooltipClass="custom-tooltip">
+          <mat-icon aria-label="New audio track">microphone</mat-icon>
+        </button>
+      }
+      @if (participant.isLocal) {
+        <button class="options-audio-btn" (click)="openAudioTrackOptionsDialog()"
+          title="Video track options" matTooltip="Audio track options" matTooltipClass="custom-tooltip">
+          <mat-icon aria-label="Audio options">more_vert</mat-icon>
+        </button>
+      }
+      @if (participant.isLocal) {
+        <button class="add-video-btn" (click)="addVideoTrack()" title="New video track"
+          matTooltip="New video track" matTooltipClass="custom-tooltip">
+          <mat-icon aria-label="New video track">videocam</mat-icon>
+        </button>
+      }
+      @if (participant.isLocal) {
+        <button class="options-video-btn" (click)="openVideoTrackOptionsDialog()"
+          title="Video track options" matTooltip="Video track options" matTooltipClass="custom-tooltip">
+          <mat-icon aria-label="Video options">more_vert</mat-icon>
+        </button>
+      }
+      @if (participant.isLocal) {
+        <button class="add-screen-btn" (click)="addScreenTrack()"
+          title="New screen track" matTooltip="New screen track" matTooltipClass="custom-tooltip">
+          <mat-icon aria-label="New screen track">present_to_all</mat-icon>
+        </button>
+      }
+      @if (participant.isLocal) {
+        <button class="options-screen-btn" (click)="openScreenTrackOptionsDialog()"
+          title="Screen track options" matTooltip="Screen track options" matTooltipClass="custom-tooltip">
+          <mat-icon aria-label="Screen options">more_vert</mat-icon>
+        </button>
+      }
+      @if (participant.isLocal) {
+        <button class="options-track-publish-btn" (click)="openTrackPublishOptionsDialog()"
+          title="Track publish options" matTooltip="Track publish options" matTooltipClass="custom-tooltip">
+          <mat-icon aria-label="Track publish options">settings</mat-icon>
+        </button>
+      }
+      @if (!participant.isLocal) {
+        <button class="message-btn" (click)="sendData()" title="Send message to this participant">
+          <mat-icon aria-label="Send message button">chat</mat-icon>
+        </button>
+      }
     </div>
-    <div *ngIf="participant" class="participant-content">
-        <div class="event-list scroll-custom">
-            <mat-accordion [attr.id]="index + '-participant-events-' + participant.identity">
-                <mat-expansion-panel *ngFor="let event of events"
-                    [ngClass]="event.eventCategory">
-                    <mat-expansion-panel-header [ngClass]="event.eventType + '-' + participant.identity"
-                        [collapsedHeight]="'20px'" [expandedHeight]="'20px'">
-                        {{event.eventType}}
-                    </mat-expansion-panel-header>
-                    <div class="event-content">{{event.eventDescription}}</div>
-                </mat-expansion-panel>
-            </mat-accordion>
-        </div>
-        <div class="audio-tracks-container">
-            <app-audio-track *ngFor="let trackPublication of participant.audioTrackPublications| keyvalue"
-                [index]="index" [trackPublication]="trackPublication.value" [track]="trackPublication.value.audioTrack"
-                [localParticipant]="localParticipant" (newTrackEvent)="events.push($event)"></app-audio-track>
-        </div>
-        <app-video-track *ngFor="let trackPublication of participant.videoTrackPublications | keyvalue"
-            [index]="index" [trackPublication]="trackPublication.value" [track]="trackPublication.value.videoTrack"
-            [localParticipant]="localParticipant" (newTrackEvent)="events.push($event)"></app-video-track>
+  </div>
+  @if (participant) {
+    <div class="participant-content">
+      <div class="event-list scroll-custom">
+        <mat-accordion [attr.id]="index + '-participant-events-' + participant.identity">
+          @for (event of events; track event) {
+            <mat-expansion-panel
+              [ngClass]="event.eventCategory">
+              <mat-expansion-panel-header [ngClass]="event.eventType + '-' + participant.identity"
+                [collapsedHeight]="'20px'" [expandedHeight]="'20px'">
+                {{event.eventType}}
+              </mat-expansion-panel-header>
+              <div class="event-content">{{event.eventDescription}}</div>
+            </mat-expansion-panel>
+          }
+        </mat-accordion>
+      </div>
+      <div class="audio-tracks-container">
+        @for (trackPublication of participant.audioTrackPublications| keyvalue; track trackPublication) {
+          <app-audio-track
+            [index]="index" [trackPublication]="trackPublication.value" [track]="trackPublication.value.audioTrack"
+          [localParticipant]="localParticipant" (newTrackEvent)="events.push($event)"></app-audio-track>
+        }
+      </div>
+      @for (trackPublication of participant.videoTrackPublications | keyvalue; track trackPublication) {
+        <app-video-track
+          [index]="index" [trackPublication]="trackPublication.value" [track]="trackPublication.value.videoTrack"
+        [localParticipant]="localParticipant" (newTrackEvent)="events.push($event)"></app-video-track>
+      }
     </div>
+  }
 </div>

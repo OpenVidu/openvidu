@@ -1,16 +1,20 @@
 <div class="parent-div">
-    <audio #mediaElement [id]="finalElementRefId" [ngClass]="getTrackOrigin()"></audio>
-    <span>{{trackPublication.source}}</span>
-    <div class="bottom-div">
-        <button *ngIf="localParticipant" (click)="muteUnmuteAudio()" class="audio-btn" matTooltip="Mute/Unmute audio"
-            matTooltipClass="custom-tooltip">
-            <mat-icon aria-label="Mute/Unmute audio" class="mat-icon material-icons" role="img"
-                aria-hidden="true">{{muteAudioIcon}}</mat-icon>
-        </button>
-        <button *ngIf="localParticipant" (click)="unpublishTrack()" class="audio-btn" matTooltip="Unpublish track"
-            matTooltipClass="custom-tooltip">
-            <mat-icon aria-label="Unpublish track" class="mat-icon material-icons" role="img"
-                aria-hidden="true">stop</mat-icon>
-        </button>
-    </div>
+  <audio #mediaElement [id]="finalElementRefId" [ngClass]="getTrackOrigin()"></audio>
+  <span>{{trackPublication.source}}</span>
+  <div class="bottom-div">
+    @if (localParticipant) {
+      <button (click)="muteUnmuteAudio()" class="audio-btn" matTooltip="Mute/Unmute audio"
+        matTooltipClass="custom-tooltip">
+        <mat-icon aria-label="Mute/Unmute audio" class="mat-icon material-icons" role="img"
+        aria-hidden="true">{{muteAudioIcon}}</mat-icon>
+      </button>
+    }
+    @if (localParticipant) {
+      <button (click)="unpublishTrack()" class="audio-btn" matTooltip="Unpublish track"
+        matTooltipClass="custom-tooltip">
+        <mat-icon aria-label="Unpublish track" class="mat-icon material-icons" role="img"
+        aria-hidden="true">stop</mat-icon>
+      </button>
+    }
+  </div>
 </div>
