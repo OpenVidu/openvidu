@@ -1,4 +1,4 @@
-import { Component, HostListener, Input } from '@angular/core';
+import { Component, HostListener, Inject, Input } from '@angular/core';
 
 import { RoomConf } from '../test-sessions/test-sessions.component';
 import { LivekitParamsService } from 'src/app/services/livekit-params.service';
@@ -38,14 +38,14 @@ import {
   TestAppEvent,
   TestFeedService,
 } from 'src/app/services/test-feed.service';
-import { RoomEventCallbacks } from 'livekit-client/dist/src/room/Room';
 import { MatDialog } from '@angular/material/dialog';
 import { RoomApiDialogComponent } from '../dialogs/room-api-dialog/room-api-dialog.component';
 import { RoomApiService } from 'src/app/services/room-api.service';
 import { EventsDialogComponent } from '../dialogs/events-dialog/events-dialog.component';
 import { OptionsDialogComponent } from '../dialogs/options-dialog/options-dialog.component';
-import PCTransport from 'livekit-client/dist/src/room/PCTransport';
 import { InfoDialogComponent } from '../dialogs/info-dialog/info-dialog.component';
+import { RoomEventCallbacks } from 'node_modules/livekit-client/dist/src/room/Room';
+import PCTransport from 'node_modules/livekit-client/dist/src/room/PCTransport';
 
 @Component({
   selector: 'app-openvidu-instance',
@@ -117,7 +117,7 @@ export class OpenviduInstanceComponent {
     private livekitParamsService: LivekitParamsService,
     private testFeedService: TestFeedService,
     private roomApiService: RoomApiService,
-    private dialog: MatDialog
+    @Inject(MatDialog) private dialog: MatDialog
   ) {
     const roomForDefaults = new Room(this.roomOptions);
     this.roomOptions = roomForDefaults.options;

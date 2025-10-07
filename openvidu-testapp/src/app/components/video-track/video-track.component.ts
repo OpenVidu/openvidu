@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, Inject } from '@angular/core';
 import {
   LocalTrack,
   VideoTrack,
@@ -25,7 +25,7 @@ export class VideoTrackComponent extends TrackComponent {
 
   constructor(
     protected override testFeedService: TestFeedService,
-    private dialog: MatDialog
+    @Inject(MatDialog) private dialog: MatDialog
   ) {
     super(testFeedService);
   }

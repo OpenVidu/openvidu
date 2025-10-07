@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Component, EventEmitter, Input, Output, Inject } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import {
   AudioCaptureOptions,
@@ -26,13 +26,13 @@ import {
   createLocalScreenTracks,
   createLocalVideoTrack,
 } from 'livekit-client';
-import { ParticipantEventCallbacks } from 'livekit-client/dist/src/room/participant/Participant';
 import { ParticipantPermission } from 'livekit-server-sdk';
 import {
   TestAppEvent,
   TestFeedService,
 } from 'src/app/services/test-feed.service';
 import { OptionsDialogComponent } from '../dialogs/options-dialog/options-dialog.component';
+import { ParticipantEventCallbacks } from 'node_modules/livekit-client/dist/src/room/participant/Participant';
 
 @Component({
     selector: 'app-participant',
@@ -65,7 +65,7 @@ export class ParticipantComponent {
 
   constructor(
     private testFeedService: TestFeedService,
-    private dialog: MatDialog
+    @Inject(MatDialog) private dialog: MatDialog
   ) {}
 
   ngOnInit() {
