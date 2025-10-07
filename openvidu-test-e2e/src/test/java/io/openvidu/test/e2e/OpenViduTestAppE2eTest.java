@@ -2736,42 +2736,42 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 	 * This prevents ElementClickInterceptedException caused by overlay backdrops.
 	 */
 	private void waitForBackdropAndClick(OpenViduTestappUser user, String cssSelector) {
-		WebDriverWait wait = new WebDriverWait(user.getDriver(), Duration.ofSeconds(10));
+		final long startTime = System.currentTimeMillis();
+		final long timeoutMillis = 10000; // 10 seconds total timeout
+		final long retryIntervalMillis = 500; // 500ms between retries
 		
-		// Wait for any existing backdrop to disappear - try multiple selectors
-		try {
-			wait.until(ExpectedConditions.invisibilityOfElementLocated(
-				By.cssSelector(".cdk-overlay-backdrop")));
-		} catch (Exception e) {
-			// Backdrop might not exist, continue
+		WebElement element = null;
+		
+		while (System.currentTimeMillis() - startTime < timeoutMillis) {
+			try {
+				// Try to find and click the element immediately
+				element = user.getDriver().findElement(By.cssSelector(cssSelector));
+				if (element.isDisplayed() && element.isEnabled()) {
+					element.click();
+					return; // Success! Exit the method
+				}
+			} catch (org.openqa.selenium.ElementClickInterceptedException e) {
+				// Element is being intercepted by overlay, continue retrying
+			} catch (org.openqa.selenium.NoSuchElementException e) {
+				// Element not found, wait a bit and retry
+			} catch (org.openqa.selenium.StaleElementReferenceException e) {
+				// Element reference is stale, retry with fresh element
+			} catch (Exception e) {
+				// Any other exception, continue retrying
+			}
+			
+			// Wait before next retry
+			try {
+				Thread.sleep(retryIntervalMillis);
+			} catch (InterruptedException e) {
+				Thread.currentThread().interrupt();
+				throw new RuntimeException("Thread interrupted while waiting for backdrop to clear", e);
+			}
 		}
 		
-		// Additional wait for transparent backdrops specifically
-		try {
-			wait.until(ExpectedConditions.invisibilityOfElementLocated(
-				By.cssSelector(".cdk-overlay-transparent-backdrop")));
-		} catch (Exception e) {
-			// Backdrop might not exist, continue
-		}
-		
-		// Additional wait for showing backdrops
-		try {
-			wait.until(ExpectedConditions.invisibilityOfElementLocated(
-				By.cssSelector(".cdk-overlay-backdrop-showing")));
-		} catch (Exception e) {
-			// Backdrop might not exist, continue
-		}
-		
-		// Small additional wait to ensure animations complete
-		try {
-			Thread.sleep(100);
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
-		
-		// Wait for the element to be clickable
-		WebElement element = wait.until(ExpectedConditions.elementToBeClickable(By.cssSelector(cssSelector)));
-		element.click();
+		// If we get here, we've timed out
+		throw new RuntimeException("Timeout waiting for element '" + cssSelector + 
+			"' to be clickable without backdrop interference after " + timeoutMillis + "ms");
 	}
 
 }
