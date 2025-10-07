@@ -57,6 +57,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
+import io.minio.BucketExistsArgs;
 import io.minio.ListObjectsArgs;
 import io.minio.MinioClient;
 import io.minio.Result;
@@ -1579,7 +1580,11 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 		JsonObject egress = this.waitUntilEgressStatus(user, egressId, "EGRESS_COMPLETE", 10000);
 
-		this.checkRecordingInBucket(egress);
+		if (isMinioAvailable()) {
+			this.checkRecordingInBucket(egress);
+		} else {
+			this.checkRecordingInEgressBackupFolder(egress);
+		}
 
 		// TODO: UNCOMMENT WHEN MEDIASOUP IS ABLE TO MANAGE ABRUPT
 		// CONNECTIONSTATECHANGED DISOCONNECTED/FAILED
@@ -1636,6 +1641,17 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		return egressObject;
 	}
 
+	private boolean isMinioAvailable() {
+		MinioClient minioClient = MinioClient.builder().endpoint("localhost", 9000, false)
+				.credentials("minioadmin", "minioadmin").build();
+		try {
+			minioClient.bucketExists(BucketExistsArgs.builder().bucket("openvidu-appdata").build());
+			return true;
+		} catch (Exception e) {
+			return false;
+		}
+	}
+
 	private void checkRecordingInBucket(JsonObject egress) {
 		MinioClient minioClient = MinioClient.builder().endpoint("localhost", 9000, false)
 				.credentials("minioadmin", "minioadmin").build();
@@ -1667,6 +1683,61 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		}
 		if (!videoFound[0]) {
 			Assertions.fail("Recording media file not found in Minio");
+		}
+	}
+
+	private void checkRecordingInEgressBackupFolder(JsonObject egress) {
+		final boolean[] metadataFound = { false };
+		final boolean[] videoFound = { false };
+
+		try {
+			// Execute docker command to list files in the egress container's backup_storage
+			// directory
+			Process process = Runtime.getRuntime()
+					.exec(new String[] { "docker", "exec", "egress", "ls", "/home/egress/backup_storage" });
+
+			// Read the output
+			java.io.BufferedReader reader = new java.io.BufferedReader(
+					new java.io.InputStreamReader(process.getInputStream()));
+			String line;
+
+			String expectedMetadataFileName = egress.get("egressId").getAsString() + ".json";
+			String expectedVideoFileName = egress.get("file").getAsJsonObject().get("filename").getAsString();
+
+			while ((line = reader.readLine()) != null) {
+				String fileName = line.trim();
+				if (expectedMetadataFileName.equals(fileName)) {
+					metadataFound[0] = true;
+				}
+				if (expectedVideoFileName.equals(fileName)) {
+					videoFound[0] = true;
+				}
+			}
+
+			int exitCode = process.waitFor();
+			if (exitCode != 0) {
+				// Read error stream if command failed
+				java.io.BufferedReader errorReader = new java.io.BufferedReader(
+						new java.io.InputStreamReader(process.getErrorStream()));
+				StringBuilder errorOutput = new StringBuilder();
+				String errorLine;
+				while ((errorLine = errorReader.readLine()) != null) {
+					errorOutput.append(errorLine).append("\n");
+				}
+				Assertions.fail("Error accessing egress container backup folder. Exit code: " + exitCode + ", Error: "
+						+ errorOutput.toString());
+			}
+
+		} catch (Exception e) {
+			e.printStackTrace();
+			Assertions.fail("Error executing docker command to check egress backup folder: " + e.getMessage());
+		}
+
+		if (!metadataFound[0]) {
+			Assertions.fail("Recording metadata file not found in egress backup folder");
+		}
+		if (!videoFound[0]) {
+			Assertions.fail("Recording media file not found in egress backup folder");
 		}
 	}
 
@@ -2691,7 +2762,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 			user.getDriver().findElement(By.cssSelector("#mat-option-" + preset.toUpperCase())).click();
 		} else {
 			if (!simulcast) {
-				user.getDriver().findElement(By.cssSelector("#ingress-simulcast")).click();
+				this.waitForBackdropAndClick(user, "#ingress-simulcast");
 				Thread.sleep(300);
 			}
 			this.waitForBackdropAndClick(user, "#ingress-video-codec-select");
@@ -2732,16 +2803,17 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 	}
 
 	/**
-	 * Waits for any Material Design backdrop overlays to disappear and then clicks the element.
-	 * This prevents ElementClickInterceptedException caused by overlay backdrops.
+	 * Waits for any Material Design backdrop overlays to disappear and then clicks
+	 * the element. This prevents ElementClickInterceptedException caused by overlay
+	 * backdrops.
 	 */
 	private void waitForBackdropAndClick(OpenViduTestappUser user, String cssSelector) {
 		final long startTime = System.currentTimeMillis();
 		final long timeoutMillis = 10000; // 10 seconds total timeout
 		final long retryIntervalMillis = 500; // 500ms between retries
-		
+
 		WebElement element = null;
-		
+
 		while (System.currentTimeMillis() - startTime < timeoutMillis) {
 			try {
 				// Try to find and click the element immediately
@@ -2759,7 +2831,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 			} catch (Exception e) {
 				// Any other exception, continue retrying
 			}
-			
+
 			// Wait before next retry
 			try {
 				Thread.sleep(retryIntervalMillis);
@@ -2768,10 +2840,10 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 				throw new RuntimeException("Thread interrupted while waiting for backdrop to clear", e);
 			}
 		}
-		
+
 		// If we get here, we've timed out
-		throw new RuntimeException("Timeout waiting for element '" + cssSelector + 
-			"' to be clickable without backdrop interference after " + timeoutMillis + "ms");
+		throw new RuntimeException("Timeout waiting for element '" + cssSelector
+				+ "' to be clickable without backdrop interference after " + timeoutMillis + "ms");
 	}
 
 }
