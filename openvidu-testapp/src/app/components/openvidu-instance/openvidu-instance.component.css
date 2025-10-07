@@ -90,7 +90,7 @@ mat-expansion-panel-header {
 }
 
 button.mat-icon-custom {
-    --mdc-icon-button-state-layer-size: 24px;
+    --mat-icon-button-state-layer-size: 24px;
     padding: 0;
     margin-bottom: -4px;
 }

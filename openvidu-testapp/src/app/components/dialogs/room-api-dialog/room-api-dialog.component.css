@@ -51,7 +51,7 @@ mat-dialog-content button {
 
 mat-checkbox {
   font-size: 12px;
-  --mdc-checkbox-state-layer-size: 16px;
+  --mat-checkbox-state-layer-size: 16px;
 }
 
 mat-checkbox ::ng-deep .mdc-checkbox__background {
@@ -112,7 +112,7 @@ mat-checkbox ::ng-deep .mdc-checkbox__background {
 
 mat-chip-row {
   font-size: 13px;
-  --mdc-chip-container-height: 25px !important;
+  --mat-chip-container-height: 25px !important;
 }
 
 #segment-duration {
