@@ -54,11 +54,7 @@ resource "google_compute_firewall" "firewall_master" {
 
   allow {
     protocol = "tcp"
-    ports    = ["22", "80", "443", "1935", "7881", "6379", "27017", "9000", "3000"]
-  }
-  allow {
-    protocol = "udp"
-    ports    = ["443", "7885", "50000-60000"]
+    ports    = ["22", "80", "443", "1935", "9000"]
   }
 
   source_ranges = ["0.0.0.0/0"]
@@ -71,36 +67,47 @@ resource "google_compute_firewall" "firewall_media" {
 
   allow {
     protocol = "tcp"
-    ports    = ["22", "7880", "1935", "7881"]
+    ports    = ["22", "7881", "50000-60000"]
   }
   allow {
     protocol = "udp"
-    ports    = ["7885", "50000-60000"]
+    ports    = ["443", "7885", "50000-60000"]
   }
 
   source_ranges = ["0.0.0.0/0"]
   target_tags   = [lower("${var.stackName}-media-node")]
 }
 
-resource "google_compute_firewall" "firewall_internal" {
-  name    = lower("${var.stackName}-internal-firewall")
+resource "google_compute_firewall" "firewall_media_to_master" {
+  name    = lower("${var.stackName}-firewall-media-to-master")
   network = "default"
 
   allow {
     protocol = "tcp"
-    ports    = ["0-65535"]
-  }
-  allow {
-    protocol = "udp"
-    ports    = ["0-65535"]
+    ports    = ["7000", "9100", "20000", "3100", "9009", "4443", "6080"]
   }
 
   source_tags = [
-    lower("${var.stackName}-master-node"),
     lower("${var.stackName}-media-node")
   ]
   target_tags = [
     lower("${var.stackName}-master-node"),
+  ]
+}
+
+resource "google_compute_firewall" "firewall_master_to_media" {
+  name    = lower("${var.stackName}-firewall-master-to-media")
+  network = "default"
+
+  allow {
+    protocol = "tcp"
+    ports    = ["1935", "5349", "7880", "8080"]
+  }
+
+  source_tags = [
+    lower("${var.stackName}-master-node"),
+  ]
+  target_tags = [
     lower("${var.stackName}-media-node")
   ]
 }
@@ -990,69 +997,7 @@ fi
 echo "Graceful shutdown completed."
 EOF
 
-  user_data_media = <<-EOF
-#!/bin/bash -x
-set -eu -o pipefail
-
-# restart.sh
-cat > /usr/local/bin/restart.sh << 'RESTART_EOF'
-${local.restart_script}
-RESTART_EOF
-chmod +x /usr/local/bin/restart.sh
-
-# graceful_shutdown.sh
-cat > /usr/local/bin/graceful_shutdown.sh << 'SHUTDOWN_EOF'
-${local.graceful_shutdown_script}
-SHUTDOWN_EOF
-chmod +x /usr/local/bin/graceful_shutdown.sh
-
-# Check if installation already completed
-if [ -f /usr/local/bin/openvidu_install_counter.txt ]; then
-  # Launch on reboot
-  /usr/local/bin/restart.sh || { echo "[OpenVidu] error restarting OpenVidu"; exit 1; }
-else
-  # install.sh (media node)
-  cat > /usr/local/bin/install.sh << 'INSTALL_EOF'
-${local.install_script_media}
-INSTALL_EOF
-  chmod +x /usr/local/bin/install.sh
-
-  # store_secret.sh
-  cat > /usr/local/bin/store_secret.sh << 'STORE_SECRET_EOF'
-${local.store_secret_script}
-STORE_SECRET_EOF
-  chmod +x /usr/local/bin/store_secret.sh
-
-  # check_app_ready.sh
-  cat > /usr/local/bin/check_app_ready.sh << 'CHECK_APP_EOF'
-${local.check_app_ready_script}
-CHECK_APP_EOF
-  chmod +x /usr/local/bin/check_app_ready.sh
-
-  apt-get update && apt-get install -y
-  
-  # Install google cli 
-  if ! command -v gcloud >/dev/null 2>&1; then
-    curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | gpg --dearmor -o /usr/share/keyrings/cloud.google.gpg
-    echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" | tee -a /etc/apt/sources.list.d/google-cloud-sdk.list
-    apt-get update && apt-get install -y google-cloud-cli
-  fi
-
-  # Authenticate with gcloud using instance service account
-  gcloud auth activate-service-account --key-file=/dev/null 2>/dev/null || true
-  gcloud config set account $(curl -s "http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/email" -H "Metadata-Flavor: Google")
-  gcloud config set project $(curl -s "http://metadata.google.internal/computeMetadata/v1/project/project-id" -H "Metadata-Flavor: Google")
-  
-  export HOME="/root"
-  
-  # Install OpenVidu Media Node
-  /usr/local/bin/install.sh || { echo "[OpenVidu] error installing OpenVidu Media Node"; exit 1; }
-  
-  # Start OpenVidu
-  systemctl start openvidu || { echo "[OpenVidu] error starting OpenVidu"; exit 1; }
-
-  # Set up graceful shutdown service
-  cat > /etc/systemd/system/openvidu-graceful-shutdown.service << 'SERVICE_EOF'
+  graceful_shutdown_service = <<-EOF
 [Unit]
 Description=OpenVidu Media Node Graceful Shutdown
 DefaultDependencies=false
@@ -1063,18 +1008,12 @@ Type=oneshot
 RemainAfterExit=true
 ExecStart=/bin/true
 ExecStop=/usr/local/bin/graceful_shutdown.sh
-TimeoutStopSec=30
 
 [Install]
 WantedBy=multi-user.target
-SERVICE_EOF
+EOF
 
-  systemctl daemon-reload
-  systemctl enable openvidu-graceful-shutdown.service
-  systemctl start openvidu-graceful-shutdown.service
-
-  # Set up preemption monitoring
-  cat > /etc/systemd/system/preemption-monitor.service << 'PREEMPT_EOF'
+  preemption_monitor_service = <<-EOF
 [Unit]
 Description=GCP Preemption Monitor
 After=network.target
@@ -1087,21 +1026,66 @@ ExecStart=/bin/bash -c 'while true; do if curl -H "Metadata-Flavor: Google" "htt
 
 [Install]
 WantedBy=multi-user.target
-PREEMPT_EOF
-
-  systemctl daemon-reload
-  systemctl enable preemption-monitor.service
-  systemctl start preemption-monitor.service
-
-  # restart.sh
-  echo "@reboot /usr/local/bin/restart.sh >> /var/log/openvidu-restart.log" 2>&1 | crontab
-  
-  # Mark installation as complete
-  echo "installation_complete" > /usr/local/bin/openvidu_install_counter.txt
-fi
-
-# Wait for the app
-/usr/local/bin/check_app_ready.sh
 EOF
 
+  user_data_media = <<-EOF
+#!/bin/bash -x
+set -eu -o pipefail
+
+# graceful_shutdown.sh
+cat > /usr/local/bin/graceful_shutdown.sh << 'SHUTDOWN_EOF'
+${local.graceful_shutdown_script}
+SHUTDOWN_EOF
+chmod +x /usr/local/bin/graceful_shutdown.sh
+
+# install.sh (media node)
+cat > /usr/local/bin/install.sh << 'INSTALL_EOF'
+${local.install_script_media}
+INSTALL_EOF
+chmod +x /usr/local/bin/install.sh
+
+
+apt-get update && apt-get install -y
+
+# Install google cli 
+if ! command -v gcloud >/dev/null 2>&1; then
+  curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | gpg --dearmor -o /usr/share/keyrings/cloud.google.gpg
+  echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" | tee -a /etc/apt/sources.list.d/google-cloud-sdk.list
+  apt-get update && apt-get install -y google-cloud-cli
+fi
+
+# Authenticate with gcloud using instance service account
+gcloud auth activate-service-account --key-file=/dev/null 2>/dev/null || true
+gcloud config set account $(curl -s "http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/email" -H "Metadata-Flavor: Google")
+gcloud config set project $(curl -s "http://metadata.google.internal/computeMetadata/v1/project/project-id" -H "Metadata-Flavor: Google")
+
+export HOME="/root"
+
+# Install OpenVidu Media Node
+/usr/local/bin/install.sh || { echo "[OpenVidu] error installing OpenVidu Media Node"; exit 1; }
+
+
+cat > /etc/systemd/system/openvidu-graceful-shutdown.service << 'SERVICE_EOF'
+${local.graceful_shutdown_service}
+SERVICE_EOF
+
+systemctl daemon-reload
+systemctl enable openvidu-graceful-shutdown.service
+systemctl start openvidu-graceful-shutdown.service
+
+# Set up preemption monitoring
+cat > /etc/systemd/system/preemption-monitor.service << 'PREEMPT_EOF'
+${local.preemption_monitor_service}
+PREEMPT_EOF
+
+systemctl daemon-reload
+systemctl enable preemption-monitor.service
+systemctl start preemption-monitor.service
+
+# Mark installation as complete
+echo "installation_complete" > /usr/local/bin/openvidu_install_counter.txt
+
+# Start OpenVidu
+systemctl start openvidu || { echo "[OpenVidu] error starting OpenVidu"; exit 1; }
+EOF
 }
