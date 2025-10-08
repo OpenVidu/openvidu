@@ -2658,12 +2658,11 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 			if (!user.getDriver().findElement(By.cssSelector("#subtitle")).getText().equals(videoId)) {
 				// Wrong dialog
 				this.waitForBackdropAndClick(user, "#close-dialog-btn");
-				user.getDriver().findElement(By.cssSelector("#" + videoId + " ~ .bottom-div .video-track-info"))
-						.click();
+				this.waitForBackdropAndClick(user, "#" + videoId + " ~ .bottom-div .video-track-info");
 			}
 		} else {
 			// Dialog is not opened
-			user.getDriver().findElement(By.cssSelector("#" + videoId + " ~ .bottom-div .video-track-info")).click();
+			this.waitForBackdropAndClick(user, "#" + videoId + " ~ .bottom-div .video-track-info");
 		}
 		try {
 			Thread.sleep(300);
