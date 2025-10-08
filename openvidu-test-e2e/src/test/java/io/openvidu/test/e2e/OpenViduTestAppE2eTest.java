@@ -2752,7 +2752,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 	private void createIngress(OpenViduTestappUser user, String preset, String codec, boolean simulcast, String urlType,
 			String urlUri) throws InterruptedException {
 		if (!user.getDriver().findElements(By.id("close-dialog-btn")).isEmpty()) {
-			user.getDriver().findElement(By.id("close-dialog-btn")).click();
+			this.waitForBackdropAndClick(user, "#close-dialog-btn");
 			Thread.sleep(300);
 		}
 		user.getDriver().findElement(By.xpath("//button[contains(@title,'Room API')]")).click();
@@ -2778,7 +2778,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 			user.getDriver().findElement(By.cssSelector("#ingress-url-uri-field")).sendKeys(urlUri);
 			Thread.sleep(300);
 		}
-		user.getDriver().findElement(By.cssSelector("#create-ingress-api-btn")).click();
+		this.waitForBackdropAndClick(user, "#create-ingress-api-btn");
 		this.waitForBackdropAndClick(user, "#close-dialog-btn");
 		Thread.sleep(300);
 	}
