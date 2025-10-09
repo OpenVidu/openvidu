@@ -14,8 +14,12 @@
 		"module": "es2020",
 		"lib": ["es2021", "dom"],
 		"allowSyntheticDefaultImports": true,
-		"types": ["dom-mediacapture-transform"],
+		"resolveJsonModule": true,
+		"types": ["node", "dom-mediacapture-transform"],
 		"skipDefaultLibCheck": true, // Livekit track processors fails with typescript types checking
 		///"skipLibCheck": true // Livekit track processors fails with typescript types checking
+		"paths": {
+			"openvidu-components-angular": ["projects/openvidu-components-angular/src/public-api"]
+		}
 	}
 }

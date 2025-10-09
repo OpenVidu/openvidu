@@ -1,12 +1,7 @@
 {
   "extends": "./tsconfig.base.json",
   "compilerOptions": {
-    "outDir": "./out-tsc/app",
-    "paths": {
-      "openvidu-components-angular": [
-        "dist/openvidu-components-angular"
-      ]
-    }
+    "outDir": "./out-tsc/app"
   },
   "files": [
     "src/main.ts"

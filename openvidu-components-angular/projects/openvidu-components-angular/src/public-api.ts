@@ -46,6 +46,7 @@ export * from './lib/models/storage.model';
 export * from './lib/models/lang.model';
 export * from './lib/models/theme.model';
 export * from './lib/models/viewport.model';
+export * from './lib/models/device.model';
 // Pipes
 export * from './lib/pipes/participant.pipe';
 export * from './lib/pipes/recording.pipe';

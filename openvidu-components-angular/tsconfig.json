@@ -5,17 +5,17 @@
   To learn more about this file see: https://angular.io/config/solution-tsconfig.
 */
 {
-  "files": [],
-  "compilerOptions": {
-    "baseUrl": "./",
-    "esModuleInterop": true
-  },
-  "references": [
-    {
-      "path": "./tsconfig.app.json"
-    },
-    {
-      "path": "./tsconfig.spec.json"
-    }
-  ]
+	"files": [],
+	"compilerOptions": {
+		"baseUrl": "./",
+		"esModuleInterop": true
+	},
+	"references": [
+		{
+			"path": "./tsconfig.app.json"
+		},
+		{
+			"path": "./tsconfig.spec.json"
+		}
+	]
 }

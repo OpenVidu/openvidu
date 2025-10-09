@@ -6,13 +6,14 @@ import {
 	RecordingStartRequestedEvent,
 	RecordingStopRequestedEvent,
 	Room,
-	RoomEvent
+	RoomEvent,
+	CustomDevice,
+	LangOption,
+	ParticipantLeftEvent,
+	ParticipantModel
 } from 'openvidu-components-angular';
 import { RestService } from '../services/rest.service';
-import { CustomDevice } from 'dist/openvidu-components-angular/lib/models/device.model';
-import { LangOption } from 'dist/openvidu-components-angular/lib/models/lang.model';
 import { ActivatedRoute, Router } from '@angular/router';
-import { ParticipantLeftEvent, ParticipantModel } from '../../../projects/openvidu-components-angular/src/lib/models/participant.model';
 import { monkeyPatchMediaDevices } from '../utils/media-devices';
 
 @Component({
@@ -160,7 +161,7 @@ export class CallComponent implements OnInit {
 			} else {
 				this.redirectToHomeOnLeaves = params['redirectToHome'] === 'true';
 			}
-			if(params['showThemeSelector'] !== undefined) this.showThemeSelector = params['showThemeSelector'] === 'true';
+			if (params['showThemeSelector'] !== undefined) this.showThemeSelector = params['showThemeSelector'] === 'true';
 			this.configReady = true;
 
 			if (this.areStaticVideosEnabled) {
