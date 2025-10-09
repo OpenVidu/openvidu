@@ -13,7 +13,7 @@
     "@types/dom-mediacapture-transform": "^0.1.11",
     "autolinker": "4.0.0",
     "livekit-client": "2.11.4",
-    "rxjs": "7.8.1",
+    "rxjs": "7.8.2",
     "tslib": "2.7.0",
     "zone.js": "^0.15.1"
   },
