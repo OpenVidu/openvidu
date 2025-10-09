@@ -2,20 +2,26 @@
 {
 	"extends": "../../tsconfig.json",
 	"compilerOptions": {
-		"outDir": "../../dist/openvidu-components-angular",
-		"module": "esnext",
-		"target": "ES2021",
-		"moduleResolution": "node",
-		"lib": ["ES2021", "DOM"],
-		"emitDecoratorMetadata": true,
-		"experimentalDecorators": true,
-		"declaration": true,
-		"sourceMap": true,
-		"declarationMap": true,
-		"inlineSources": true,
-		"resolveJsonModule": true,
-		"types": ["node", "dom-mediacapture-transform"],
-		"allowSyntheticDefaultImports": true
-	},
+    "outDir": "../../dist/openvidu-components-angular",
+    "module": "esnext",
+    "target": "ES2021",
+    "moduleResolution": "bundler",
+    "lib": [
+      "ES2021",
+      "DOM"
+    ],
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "declaration": true,
+    "sourceMap": true,
+    "declarationMap": true,
+    "inlineSources": true,
+    "resolveJsonModule": true,
+    "types": [
+      "node",
+      "dom-mediacapture-transform"
+    ],
+    "allowSyntheticDefaultImports": true
+  },
 	"exclude": ["node_modules", "src/test.ts", "**/*.spec.ts", "**/*.mock.ts"]
 }

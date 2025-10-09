@@ -3,13 +3,19 @@
   "extends": "../../tsconfig.json",
   "compilerOptions": {
     "outDir": "../../out-tsc/spec",
-    "lib": ["ES2021", "DOM"],
-    "types": ["jasmine", "node", "dom-mediacapture-transform"],
-    "moduleResolution": "node",
+    "lib": [
+      "ES2021",
+      "DOM"
+    ],
+    "types": [
+      "jasmine",
+      "node",
+      "dom-mediacapture-transform"
+    ],
+    "moduleResolution": "bundler",
     "experimentalDecorators": true,
     "resolveJsonModule": true,
-    "skipDefaultLibCheck": true // Livekit track processors fails with typescript types checking
-    //"skipLibCheck": true // Livekit track processors fails with typescript types checking
+    "skipDefaultLibCheck": true
   },
   "files": [
     "src/test.ts"

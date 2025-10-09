@@ -43,7 +43,7 @@ mat-spinner {
 }
 
 ::ng-deep .mat-mdc-progress-spinner {
-	--mdc-circular-progress-active-indicator-color: var(--ov-accent-action-color);
+	--mat-progress-spinner-active-indicator-color: var(--ov-accent-action-color);
 }
 
 /*
