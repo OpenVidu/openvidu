@@ -1766,6 +1766,29 @@ resource openviduMasterNodeASG 'Microsoft.Network/applicationSecurityGroups@2024
   location: location
 }
 
+resource mediaToMasterClusterIngress 'Microsoft.Network/networkSecurityGroups/securityRules@2023-11-01' = {
+  parent: openviduMasterNodeNSG
+  name: 'mediaNode_to_masterNode_CLUSTER_INGRESS'
+  properties: {
+    protocol: 'Tcp'
+    sourceApplicationSecurityGroups: [
+      {
+        id: openviduMediaNodeASG.id
+      }
+    ]
+    sourcePortRange: '*'
+    destinationApplicationSecurityGroups: [
+      {
+        id: openviduMasterNodeASG.id
+      }
+    ]
+    destinationPortRange: '7880'
+    access: 'Allow'
+    priority: 145
+    direction: 'Inbound'
+  }
+}
+
 resource mediaToMasterRedisIngress 'Microsoft.Network/networkSecurityGroups/securityRules@2023-11-01' = {
   parent: openviduMasterNodeNSG
   name: 'mediaNode_to_masterNode_REDIS_INGRESS'

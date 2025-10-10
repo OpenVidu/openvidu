@@ -1991,6 +1991,15 @@ Resources:
       ToPort: 7001
       SourceSecurityGroupId: !Ref OpenViduMasterNodeSG
 
+  OpenViduMediaNodeToMasterNodeClusterPortIngress:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !Ref OpenViduMasterNodeSG
+      IpProtocol: tcp
+      FromPort: 7880
+      ToPort: 7880
+      SourceSecurityGroupId: !Ref OpenViduMediaNodeSG
+
   OpenViduMediaNodeToMasterRedisIngressSG:
     Type: AWS::EC2::SecurityGroupIngress
     Properties:

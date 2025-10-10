@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.37.4.10188",
-      "templateHash": "715418153284332793"
+      "templateHash": "9275960504660161817"
     }
   },
   "parameters": {
@@ -1619,6 +1619,33 @@
         "destinationPortRange": "443",
         "access": "Allow",
         "priority": 110,
+        "direction": "Inbound"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/applicationSecurityGroups', format('{0}-masterNodeASG', parameters('stackName')))]",
+        "[resourceId('Microsoft.Network/networkSecurityGroups', format('{0}-masterNodeNSG', parameters('stackName')))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Network/networkSecurityGroups/securityRules",
+      "apiVersion": "2023-11-01",
+      "name": "[format('{0}/{1}', format('{0}-masterNodeNSG', parameters('stackName')), 'masterNode_to_masterNode_CLUSTER_INGRESS')]",
+      "properties": {
+        "protocol": "Tcp",
+        "sourceApplicationSecurityGroups": [
+          {
+            "id": "[resourceId('Microsoft.Network/applicationSecurityGroups', format('{0}-masterNodeASG', parameters('stackName')))]"
+          }
+        ],
+        "sourcePortRange": "7880",
+        "destinationApplicationSecurityGroups": [
+          {
+            "id": "[resourceId('Microsoft.Network/applicationSecurityGroups', format('{0}-masterNodeASG', parameters('stackName')))]"
+          }
+        ],
+        "destinationPortRange": "7880",
+        "access": "Allow",
+        "priority": 115,
         "direction": "Inbound"
       },
       "dependsOn": [

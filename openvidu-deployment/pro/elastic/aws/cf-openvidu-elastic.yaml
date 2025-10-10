@@ -1678,6 +1678,15 @@ Resources:
           ToPort: 1935
           CidrIpv6: ::/0
 
+  OpenViduMediaNodeToMasterNodeClusterPortIngress:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !GetAtt OpenViduMasterNodeSG.GroupId
+      IpProtocol: tcp
+      FromPort: 7880
+      ToPort: 7880
+      SourceSecurityGroupId: !GetAtt OpenViduMediaNodeSG.GroupId
+
   OpenViduMediaNodeToMasterNodeRedisIngress:
     Type: AWS::EC2::SecurityGroupIngress
     Properties:

@@ -2396,6 +2396,29 @@ resource loadBalancerToMasterIngress 'Microsoft.Network/networkSecurityGroups/se
   }
 }
 
+resource masterToMasterClusterIngress 'Microsoft.Network/networkSecurityGroups/securityRules@2023-11-01' = {
+  parent: openviduMasterNodeNSG
+  name: 'masterNode_to_masterNode_CLUSTER_INGRESS'
+  properties: {
+    protocol: 'Tcp'
+    sourceApplicationSecurityGroups: [
+      {
+        id: openviduMasterNodeASG.id
+      }
+    ]
+    sourcePortRange: '7880'
+    destinationApplicationSecurityGroups: [
+      {
+        id: openviduMasterNodeASG.id
+      }
+    ]
+    destinationPortRange: '7880'
+    access: 'Allow'
+    priority: 115
+    direction: 'Inbound'
+  }
+}
+
 resource masterToMasterRedisIngress 'Microsoft.Network/networkSecurityGroups/securityRules@2023-11-01' = {
   parent: openviduMasterNodeNSG
   name: 'masterNode_to_masterNode_REDIS_INGRESS'

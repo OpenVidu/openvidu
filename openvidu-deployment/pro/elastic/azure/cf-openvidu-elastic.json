@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.37.4.10188",
-      "templateHash": "2817356128446679614"
+      "templateHash": "10094209354917441049"
     }
   },
   "parameters": {
@@ -1054,6 +1054,34 @@
       "apiVersion": "2024-03-01",
       "name": "[format('{0}-masterNodeASG', parameters('stackName'))]",
       "location": "[variables('location')]"
+    },
+    {
+      "type": "Microsoft.Network/networkSecurityGroups/securityRules",
+      "apiVersion": "2023-11-01",
+      "name": "[format('{0}/{1}', format('{0}-masterNoderNSG', parameters('stackName')), 'mediaNode_to_masterNode_CLUSTER_INGRESS')]",
+      "properties": {
+        "protocol": "Tcp",
+        "sourceApplicationSecurityGroups": [
+          {
+            "id": "[resourceId('Microsoft.Network/applicationSecurityGroups', format('{0}-mediaNodeASG', parameters('stackName')))]"
+          }
+        ],
+        "sourcePortRange": "*",
+        "destinationApplicationSecurityGroups": [
+          {
+            "id": "[resourceId('Microsoft.Network/applicationSecurityGroups', format('{0}-masterNodeASG', parameters('stackName')))]"
+          }
+        ],
+        "destinationPortRange": "7880",
+        "access": "Allow",
+        "priority": 145,
+        "direction": "Inbound"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/applicationSecurityGroups', format('{0}-masterNodeASG', parameters('stackName')))]",
+        "[resourceId('Microsoft.Network/networkSecurityGroups', format('{0}-masterNoderNSG', parameters('stackName')))]",
+        "[resourceId('Microsoft.Network/applicationSecurityGroups', format('{0}-mediaNodeASG', parameters('stackName')))]"
+      ]
     },
     {
       "type": "Microsoft.Network/networkSecurityGroups/securityRules",
