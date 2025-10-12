@@ -4,8 +4,40 @@ export INSTALL_PREFIX="${INSTALL_PREFIX:-/opt/openvidu}"
 export DOCKER_VERSION="${DOCKER_VERSION:-28.3.3}"
 export DOCKER_COMPOSE_VERSION="${DOCKER_COMPOSE_VERSION:-v2.39.4}"
 export OPENVIDU_VERSION="${OPENVIDU_VERSION:-main}"
-export REGISTRY="${REGISTRY:-docker.io}"
-export UPDATER_IMAGE="${UPDATER_IMAGE:-${REGISTRY}/openvidu/openvidu-updater:${OPENVIDU_VERSION}}"
+export UPDATER_IMAGE="${UPDATER_IMAGE:-docker.io/openvidu/openvidu-updater:${OPENVIDU_VERSION}}"
+export MINIO_SERVER_IMAGE="${MINIO_SERVER_IMAGE:-docker.io/openvidu/minio:2025.5.24-debian-12-r1}"
+export MINIO_CLIENT_IMAGE="${MINIO_CLIENT_IMAGE:-docker.io/minio/mc:RELEASE.2025-05-21T01-59-54Z}"
+export MONGO_SERVER_IMAGE="${MONGO_SERVER_IMAGE:-docker.io/mongo:8.0.9}"
+export REDIS_SERVER_IMAGE="${REDIS_SERVER_IMAGE:-docker.io/redis:7.4.4-alpine}"
+export BUSYBOX_IMAGE="${BUSYBOX_IMAGE:-docker.io/busybox:1.37.0}"
+export CADDY_SERVER_IMAGE="${CADDY_SERVER_IMAGE:-docker.io/openvidu/openvidu-caddy:${OPENVIDU_VERSION}}"
+export CADDY_SERVER_PRO_IMAGE="${CADDY_SERVER_PRO_IMAGE:-docker.io/openvidu/openvidu-pro-caddy:${OPENVIDU_VERSION}}"
+export OPENVIDU_OPERATOR_IMAGE="${OPENVIDU_OPERATOR_IMAGE:-docker.io/openvidu/openvidu-operator:${OPENVIDU_VERSION}}"
+export OPENVIDU_SERVER_PRO_IMAGE="${OPENVIDU_SERVER_PRO_IMAGE:-docker.io/openvidu/openvidu-server-pro:${OPENVIDU_VERSION}}"
+export OPENVIDU_SERVER_IMAGE="${OPENVIDU_SERVER_IMAGE:-docker.io/openvidu/openvidu-server:${OPENVIDU_VERSION}}"
+export OPENVIDU_MEET_SERVER_IMAGE="${OPENVIDU_MEET_SERVER_IMAGE:-docker.io/openvidu/openvidu-meet:${OPENVIDU_VERSION}}"
+export OPENVIDU_DASHBOARD_PRO_IMAGE="${OPENVIDU_DASHBOARD_PRO_IMAGE:-docker.io/openvidu/openvidu-pro-dashboard:${OPENVIDU_VERSION}}"
+export OPENVIDU_DASHBOARD_IMAGE="${OPENVIDU_DASHBOARD_IMAGE:-docker.io/openvidu/openvidu-dashboard:${OPENVIDU_VERSION}}"
+export OPENVIDU_V2COMPATIBILITY_IMAGE="${OPENVIDU_V2COMPATIBILITY_IMAGE:-docker.io/openvidu/openvidu-v2compatibility:${OPENVIDU_VERSION}}"
+export OPENVIDU_AGENT_SPEECH_PROCESSING_IMAGE="${OPENVIDU_AGENT_SPEECH_PROCESSING_IMAGE:-docker.io/openvidu/agent-speech-processing:${OPENVIDU_VERSION}}"
+export LIVEKIT_INGRESS_SERVER_IMAGE="${LIVEKIT_INGRESS_SERVER_IMAGE:-docker.io/openvidu/ingress:${OPENVIDU_VERSION}}"
+export LIVEKIT_EGRESS_SERVER_IMAGE="${LIVEKIT_EGRESS_SERVER_IMAGE:-docker.io/openvidu/egress:${OPENVIDU_VERSION}}"
+export PROMETHEUS_IMAGE="${PROMETHEUS_IMAGE:-docker.io/prom/prometheus:v3.4.0}"
+export PROMTAIL_IMAGE="${PROMTAIL_IMAGE:-docker.io/grafana/promtail:3.5.1}"
+export LOKI_IMAGE="${LOKI_IMAGE:-docker.io/grafana/loki:3.5.1}"
+export MIMIR_IMAGE="${MIMIR_IMAGE:-docker.io/openvidu/grafana-mimir:2.16.0}"
+export GRAFANA_IMAGE="${GRAFANA_IMAGE:-docker.io/grafana/grafana:11.6.2}"
+
+get_next_version() {
+  case "$1" in
+    "3.0.0") echo "3.1.0" ;;
+    "3.1.0") echo "3.2.0" ;;
+    "3.2.0") echo "3.3.0" ;;
+    "3.3.0") echo "3.4.0" ;;
+    "3.4.0") echo "3.4.1" ;;
+    *) echo "" ;;
+  esac
+}
 
 # Function to compare two version strings
 compare_versions() {
@@ -50,11 +82,53 @@ wait_for_docker() {
     done
 }
 
+# Validate upgrade path
+validate_upgrade() {
+  current="$1"
+  target="$2"
+
+  if [ "$target" = "main" ]; then
+    echo "WARNING: You are trying to upgrade to 'main' version."
+    echo "This version is for OpenVidu developers and may be unstable."
+    printf "Are you sure you want to continue? [y/N]: "
+    read -r response
+    if [ "$response" != "y" ] && [ "$response" != "Y" ]; then
+      echo "Update cancelled"
+      exit 1
+    fi
+    return 0
+  fi
+
+  next_version="$(get_next_version "$current")"
+  if [ -z "$next_version" ]; then
+    echo "ERROR: No upgrade path defined for version $current"
+    exit 1
+  fi
+
+  if [ "$target" = "$next_version" ]; then
+    return 0
+  else
+    echo "ERROR: Version $current can only be upgraded to version $next_version"
+    echo "Please upgrade first to version $next_version"
+    echo "You can do it by running the following command:"
+    echo ""
+    echo ""
+    echo "    sh <(curl -fsSL http://get.openvidu.io/update/$next_version/update.sh)"
+    echo ""
+    echo ""
+    exit 1
+  fi
+}
+
 # Check if executing as root
 if [ "$(id -u)" -ne 0 ]; then
   echo "Please run as root"
   exit 1
 fi
+
+# Validate the upgrade path
+CURRENT_VERSION="$(grep version "${INSTALL_PREFIX}/deployment-info.yaml" | cut -d':' -f2 | sed 's/^ *"//;s/"$//')"
+validate_upgrade "$CURRENT_VERSION" "$OPENVIDU_VERSION"
 
 # Stop OpenVidu service
 echo "Stopping OpenVidu service..."
@@ -159,7 +233,6 @@ COMMON_DOCKER_OPTIONS="--network=host \
     -v ${INSTALL_PREFIX}:${INSTALL_PREFIX} \
     -v ${TMP_DIR}:${TMP_DIR} \
     ${UPDATER_IMAGE} \
-    --docker-registry=${REGISTRY} \
     --install-prefix=${INSTALL_PREFIX} \
     --post-update-script="${TMP_DIR}/post-update.sh" \
     $*"
