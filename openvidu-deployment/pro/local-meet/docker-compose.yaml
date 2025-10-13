@@ -1,6 +1,6 @@
 services:
   caddy-proxy:
-    image: docker.io/openvidu/openvidu-caddy-local:3.4.0
+    image: docker.io/openvidu/openvidu-caddy-local::3.4.1
     platform: linux/amd64
     restart: unless-stopped
     extra_hosts:
@@ -86,7 +86,7 @@ services:
         condition: service_completed_successfully
 
   dashboard:
-    image: docker.io/openvidu/openvidu-dashboard:3.4.0
+    image: docker.io/openvidu/openvidu-dashboard::3.4.1
     platform: linux/amd64
     restart: unless-stopped
     environment:
@@ -99,7 +99,7 @@ services:
         condition: service_completed_successfully
 
   openvidu:
-    image: docker.io/openvidu/openvidu-server-pro:3.4.0
+    image: docker.io/openvidu/openvidu-server-pro::3.4.1
     platform: linux/amd64
     restart: unless-stopped
     extra_hosts:
@@ -122,7 +122,7 @@ services:
         condition: service_completed_successfully
 
   ingress:
-    image: docker.io/openvidu/ingress:3.4.0
+    image: docker.io/openvidu/ingress::3.4.1
     platform: linux/amd64
     restart: unless-stopped
     extra_hosts:
@@ -140,7 +140,7 @@ services:
         condition: service_completed_successfully
 
   egress:
-    image: docker.io/openvidu/egress:3.4.0
+    image: docker.io/openvidu/egress::3.4.1
     platform: linux/amd64
     restart: unless-stopped
     extra_hosts:
@@ -154,7 +154,7 @@ services:
       setup:
         condition: service_completed_successfully
   operator:
-    image: docker.io/openvidu/openvidu-operator:3.4.0
+    image: docker.io/openvidu/openvidu-operator::3.4.1
     platform: linux/amd64
     restart: unless-stopped
     volumes:
@@ -179,7 +179,7 @@ services:
 
 
   openvidu-meet:
-    image: docker.io/openvidu/openvidu-meet:3.4.0
+    image: docker.io/openvidu/openvidu-meet::3.4.1
     platform: linux/amd64
     restart: on-failure
     ports:
@@ -219,7 +219,7 @@ services:
         condition: service_completed_successfully
 
   openvidu-v2compatibility:
-    image: docker.io/openvidu/openvidu-v2compatibility:3.4.0
+    image: docker.io/openvidu/openvidu-v2compatibility::3.4.1
     platform: linux/amd64
     restart: unless-stopped
     entrypoint: /bin/sh /scripts/entrypoint_openvidu_v2_compat.sh
@@ -256,7 +256,7 @@ services:
         condition: service_completed_successfully
 
   openvidu-meet-init:
-    image: docker.io/openvidu/openvidu-operator:3.4.0
+    image: docker.io/openvidu/openvidu-operator::3.4.1
     platform: linux/amd64
     restart: on-failure
     environment:
