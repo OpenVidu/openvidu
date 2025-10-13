@@ -684,7 +684,7 @@ Resources:
               content: !Sub |
                 #!/bin/bash
                 set -e
-                OPENVIDU_VERSION=main
+                OPENVIDU_VERSION=3.4.1
                 DOMAIN=
                 YQ_VERSION=v4.44.5
 
