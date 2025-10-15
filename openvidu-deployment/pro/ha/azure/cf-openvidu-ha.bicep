@@ -22,8 +22,6 @@ param ownPublicCertificate string = ''
 @description('If certificate type is \'owncert\', this parameter will be used to specify the private certificate')
 param ownPrivateCertificate string = ''
 
-
-
 @description('Name of the PublicIPAddress resource in Azure when using certificateType \'owncert\' or \'letsencrypt\'')
 param publicIpAddressObject object
 
@@ -1099,7 +1097,7 @@ var update_config_from_secretScriptMaster = reduce(
 
 var get_public_ip_script = reduce(
   items(stringInterpolationParamsMaster1),
-  { value: get_public_ip},
+  { value: get_public_ip },
   (curr, next) => { value: replace(curr.value, '\${${next.key}}', next.value) }
 ).value
 
@@ -1899,7 +1897,7 @@ module webhookModule '../../shared/webhookdeployment.json' = {
 }
 
 resource actionGroupScaleIn 'Microsoft.Insights/actionGroups@2023-01-01' = {
-  name: 'actiongrouptest'
+  name: 'actiongroupScaleIn'
   location: 'global'
   properties: {
     groupShortName: 'scaleinag'
@@ -1972,7 +1970,7 @@ var lbBackendPoolNameMasterNode = 'LoadBalancerBackEndMasterNode'
 
 var ipExists = publicIpAddressObject.newOrExistingOrNone == 'existing'
 
-resource publicIP_OV_ifExisting'Microsoft.Network/publicIPAddresses@2023-11-01' existing = if (ipExists == true) {
+resource publicIP_OV_ifExisting 'Microsoft.Network/publicIPAddresses@2023-11-01' existing = if (ipExists == true) {
   name: publicIpAddressObject.name
 }
 
@@ -2007,9 +2005,11 @@ resource LoadBalancer 'Microsoft.Network/loadBalancers@2024-05-01' = {
       {
         name: lbFrontEndName
         properties: {
-          publicIPAddress: isEmptyIp ? null : {
-            id: ipNew ? publicIP_OV_ifNew.id : publicIP_OV_ifExisting.id
-          }
+          publicIPAddress: isEmptyIp
+            ? null
+            : {
+                id: ipNew ? publicIP_OV_ifNew.id : publicIP_OV_ifExisting.id
+              }
         }
       }
     ]

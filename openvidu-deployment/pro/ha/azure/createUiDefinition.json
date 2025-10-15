@@ -80,7 +80,7 @@
                                 "publicIpAddress": "Previously created Public IP address for the OpenVidu Deployment. Blank will generate a public IP"
                             },
                             "defaultValue": {
-                                "publicIpAddressName": "defaultName"
+                                "publicIpAddressName": "ov-publicIpAddress"
                             },
                             "options": {
                                 "hideNone": true,

@@ -945,7 +945,7 @@ var after_installScriptMaster = reduce(
 
 var get_public_ip_script = reduce(
   items(stringInterpolationParamsMaster),
-  { value: get_public_ip},
+  { value: get_public_ip },
   (curr, next) => { value: replace(curr.value, '\${${next.key}}', next.value) }
 ).value
 
@@ -1530,7 +1530,7 @@ module webhookModule '../../shared/webhookdeployment.json' = {
 }
 
 resource actionGroupScaleIn 'Microsoft.Insights/actionGroups@2023-01-01' = {
-  name: 'actiongrouptest'
+  name: 'actiongroupScaleIn'
   location: 'global'
   properties: {
     groupShortName: 'scaleinag'
@@ -1675,9 +1675,11 @@ resource netInterfaceMasterNode 'Microsoft.Network/networkInterfaces@2023-11-01'
               id: openviduMasterNodeASG.id
             }
           ]
-          publicIPAddress: isEmptyIp ? null : {
-            id: ipNew ? publicIP_OV_ifNew.id : publicIP_OV_ifExisting.id
-          }
+          publicIPAddress: isEmptyIp
+            ? null
+            : {
+                id: ipNew ? publicIP_OV_ifNew.id : publicIP_OV_ifExisting.id
+              }
         }
       }
     ]
