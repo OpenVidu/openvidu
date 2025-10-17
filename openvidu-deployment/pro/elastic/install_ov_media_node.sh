@@ -1,14 +1,14 @@
 #!/bin/sh
 # Docker & Docker Compose will need to be installed on the machine
 set -eu
-export DOCKER_VERSION="${DOCKER_VERSION:-28.3.3}"
+export DOCKER_VERSION="${DOCKER_VERSION:-28.5.1}"
 export DOCKER_COMPOSE_VERSION="${DOCKER_COMPOSE_VERSION:-v2.39.4}"
 export OPENVIDU_VERSION="${OPENVIDU_VERSION:-main}"
 export INSTALLER_IMAGE="${INSTALLER_IMAGE:-docker.io/openvidu/openvidu-installer:${OPENVIDU_VERSION}}"
-export MINIO_SERVER_IMAGE="${MINIO_SERVER_IMAGE:-docker.io/openvidu/minio:2025.5.24-debian-12-r1}"
-export MINIO_CLIENT_IMAGE="${MINIO_CLIENT_IMAGE:-docker.io/minio/mc:RELEASE.2025-05-21T01-59-54Z}"
-export MONGO_SERVER_IMAGE="${MONGO_SERVER_IMAGE:-docker.io/mongo:8.0.9}"
-export REDIS_SERVER_IMAGE="${REDIS_SERVER_IMAGE:-docker.io/redis:7.4.4-alpine}"
+export MINIO_SERVER_IMAGE="${MINIO_SERVER_IMAGE:-docker.io/openvidu/minio:2025.9.7-debian-12-r3}"
+export MINIO_CLIENT_IMAGE="${MINIO_CLIENT_IMAGE:-docker.io/minio/mc:RELEASE.2025-08-13T08-35-41Z}"
+export MONGO_SERVER_IMAGE="${MONGO_SERVER_IMAGE:-docker.io/mongo:8.0.15}"
+export REDIS_SERVER_IMAGE="${REDIS_SERVER_IMAGE:-docker.io/redis:8.2.2-alpine}"
 export BUSYBOX_IMAGE="${BUSYBOX_IMAGE:-docker.io/busybox:1.37.0}"
 export CADDY_SERVER_IMAGE="${CADDY_SERVER_IMAGE:-docker.io/openvidu/openvidu-caddy:${OPENVIDU_VERSION}}"
 export CADDY_SERVER_PRO_IMAGE="${CADDY_SERVER_PRO_IMAGE:-docker.io/openvidu/openvidu-pro-caddy:${OPENVIDU_VERSION}}"
@@ -22,11 +22,11 @@ export OPENVIDU_V2COMPATIBILITY_IMAGE="${OPENVIDU_V2COMPATIBILITY_IMAGE:-docker.
 export OPENVIDU_AGENT_SPEECH_PROCESSING_IMAGE="${OPENVIDU_AGENT_SPEECH_PROCESSING_IMAGE:-docker.io/openvidu/agent-speech-processing:${OPENVIDU_VERSION}}"
 export LIVEKIT_INGRESS_SERVER_IMAGE="${LIVEKIT_INGRESS_SERVER_IMAGE:-docker.io/openvidu/ingress:${OPENVIDU_VERSION}}"
 export LIVEKIT_EGRESS_SERVER_IMAGE="${LIVEKIT_EGRESS_SERVER_IMAGE:-docker.io/openvidu/egress:${OPENVIDU_VERSION}}"
-export PROMETHEUS_IMAGE="${PROMETHEUS_IMAGE:-docker.io/prom/prometheus:v3.4.0}"
-export PROMTAIL_IMAGE="${PROMTAIL_IMAGE:-docker.io/grafana/promtail:3.5.1}"
-export LOKI_IMAGE="${LOKI_IMAGE:-docker.io/grafana/loki:3.5.1}"
-export MIMIR_IMAGE="${MIMIR_IMAGE:-docker.io/openvidu/grafana-mimir:2.16.0}"
-export GRAFANA_IMAGE="${GRAFANA_IMAGE:-docker.io/grafana/grafana:11.6.2}"
+export PROMETHEUS_IMAGE="${PROMETHEUS_IMAGE:-docker.io/prom/prometheus:v3.7.1}"
+export PROMTAIL_IMAGE="${PROMTAIL_IMAGE:-docker.io/grafana/promtail:3.5.7}"
+export LOKI_IMAGE="${LOKI_IMAGE:-docker.io/grafana/loki:3.5.7}"
+export MIMIR_IMAGE="${MIMIR_IMAGE:-docker.io/openvidu/grafana-mimir:2.17.1}"
+export GRAFANA_IMAGE="${GRAFANA_IMAGE:-docker.io/grafana/grafana:12.2.0}"
 
 # Function to compare two version strings
 compare_versions() {
