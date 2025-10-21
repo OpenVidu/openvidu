@@ -1,5 +1,6 @@
 
-import { Inject, Injectable, DOCUMENT } from '@angular/core';
+import { Inject, Injectable } from '@angular/core';
+import { DOCUMENT } from '@angular/common';
 import { ParticipantFactoryFunction, OpenViduComponentsConfig } from '../../config/openvidu-components-angular.config';
 
 /**
