@@ -38,7 +38,7 @@ export class OpenViduComponentsModule {
 			BroadcastingService,
 			// CaptionService,
 			CdkOverlayContainer,
-			{ provide: OverlayContainer, useClass: CdkOverlayContainer },
+			{ provide: OverlayContainer, useExisting: CdkOverlayContainer },
 			ChatService,
 			DeviceService,
 			DocumentService,

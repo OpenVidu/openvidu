@@ -1,7 +1,9 @@
 import { OverlayContainer } from '@angular/cdk/overlay';
 import { Injectable } from '@angular/core';
 
-@Injectable()
+@Injectable({
+	providedIn: 'root'
+})
 export class CdkOverlayContainer extends OverlayContainer {
 	private readonly cdkContainerClass: string = '.cdk-overlay-container';
 	private defaultSelector = 'body';
