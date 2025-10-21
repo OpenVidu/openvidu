@@ -1,5 +1,8 @@
 {
 	"name": "openvidu-components-angular",
+	"main": "dist/fesm2022/openvidu-components-angular.mjs",
+	"module": "dist/fesm2022/openvidu-components-angular.mjs",
+	"typings": "dist/index.d.ts",
 	"dependencies": {
 		"tslib": "^2.3.0"
 	},

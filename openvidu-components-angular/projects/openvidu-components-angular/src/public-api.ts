@@ -68,6 +68,7 @@ export * from './lib/services/theme/theme.service';
 export * from './lib/services/viewport/viewport.service';
 //Modules
 export * from './lib/openvidu-components-angular.module';
+export * from './lib/config/custom-cdk-overlay';
 export * from './lib/openvidu-components-angular-ui.module';
 
 export * from 'livekit-client';
