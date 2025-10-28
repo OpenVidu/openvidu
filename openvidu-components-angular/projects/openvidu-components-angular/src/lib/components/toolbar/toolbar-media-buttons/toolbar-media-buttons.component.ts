@@ -96,9 +96,6 @@ export class ToolbarMediaButtonsComponent {
 	// More options button - always visible when not minimal
 	readonly showMoreOptionsButtonDirect = computed(() => this.showMoreOptionsButton && !this.isMinimal);
 
-	// Leave button
-	readonly showLeaveButtonDirect = computed(() => this.showLeaveButton);
-
 	// Check if there are active features that should show a badge on More Options
 	readonly hasActiveFeatures = computed(
 		() =>
