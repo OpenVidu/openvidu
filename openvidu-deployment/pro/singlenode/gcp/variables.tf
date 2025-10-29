@@ -88,7 +88,7 @@ variable "initialMeetApiKey" {
 variable "instanceType" {
   description = "Specifies the GCE machine type for your OpenVidu instance"
   type        = string
-  default     = "e2-standard-8"
+  default     = "e2-standard-2"
   validation {
     condition     = can(regex("^(e2-(micro|small|medium|standard-[2-9]|standard-1[0-6]|highmem-[2-9]|highmem-1[0-6]|highcpu-[2-9]|highcpu-1[0-6])|n1-(standard-[1-9]|standard-[1-9][0-9]|highmem-[2-9]|highmem-[1-9][0-9]|highcpu-[1-9]|highcpu-[1-9][0-9])|n2-(standard-[2-9]|standard-[1-9][0-9]|standard-1[0-2][0-8]|highmem-[2-9]|highmem-[1-9][0-9]|highmem-1[0-2][0-8]|highcpu-[1-9][0-9]|highcpu-1[0-2][0-8])|n2d-(standard-[2-9]|standard-[1-9][0-9]|standard-2[0-2][0-4]|highmem-[2-9]|highmem-[1-9][0-9]|highmem-9[0-6]|highcpu-[1-9][0-9]|highcpu-2[0-2][0-4])|c2-(standard-[4-9]|standard-[1-5][0-9]|standard-60)|c2d-(standard-[2-9]|standard-[1-9][0-9]|standard-1[0-1][0-2]|highmem-[2-9]|highmem-[1-9][0-9]|highmem-1[0-1][0-2]|highcpu-[1-9][0-9]|highcpu-1[0-1][0-2])|m1-(ultramem-[4-9][0-9]|ultramem-160)|m2-(ultramem-208|ultramem-416|megamem-416)|m3-(ultramem-32|ultramem-64|ultramem-128|megamem-64|megamem-128)|a2-(standard-[1-9]|standard-[1-9][0-9]|standard-96|highmem-1g|ultramem-1g|megamem-1g)|a3-(standard-[1-9]|standard-[1-9][0-9]|standard-80|highmem-1g|megamem-1g)|g2-(standard-[4-9]|standard-[1-9][0-9]|standard-96)|t2d-(standard-[1-9]|standard-[1-9][0-9]|standard-60)|t2a-(standard-[1-9]|standard-[1-9][0-9]|standard-48)|h3-(standard-88)|f1-(micro)|t4g-(micro|small|medium|standard-[1-9]|standard-[1-9][0-9]))$", var.instanceType))
     error_message = "The instance type is not valid"
@@ -99,6 +99,22 @@ variable "bucketName" {
   description = "Name of the S3 bucket to store data and recordings. If empty, a bucket will be created"
   type        = string
   default     = ""
+}
+
+variable "openviduLicense" {
+  description = "Visit https://openvidu.io/account"
+  type        = string
+  sensitive   = true
+}
+
+variable "RTCEngine" {
+  description = "RTCEngine media engine to use. Allowed values are 'pion' and 'mediasoup'."
+  type        = string
+  default     = "pion"
+  validation {
+    condition     = contains(["pion", "mediasoup"], var.RTCEngine)
+    error_message = "RTCEngine must be one of: pion, mediasoup"
+  }
 }
 
 variable "additionalInstallFlags" {
@@ -127,24 +143,4 @@ variable "turnOwnPrivateCertificate" {
   description = "(Optional) This setting is applicable if the certificate type is set to 'owncert' and the TurnDomainName is specified."
   type        = string
   default     = ""
-}
-
-variable "openviduLicense" {
-  description = "Visit https://openvidu.io/account"
-  type        = string
-  validation {
-    condition     = can(regex("^(?!\\s*$).+$", var.openviduLicense))
-    error_message = "OpenVidu Pro License is mandatory."
-  }
-  sensitive = true
-}
-
-variable "RTCEngine" {
-  description = "RTCEngine media engine to use. Allowed values are 'pion' and 'mediasoup'."
-  type        = string
-  default     = "pion"
-  validation {
-    condition     = contains(["pion", "mediasoup"], var.RTCEngine)
-    error_message = "RTCEngine must be one of: pion, mediasoup"
-  }
 }

@@ -8,6 +8,24 @@ resource "google_project_service" "cloudresourcemanager_api" { service = "cloudr
 
 resource "random_id" "bucket_suffix" { byte_length = 3 }
 
+# Secret Manager secrets for OpenVidu deployment information
+resource "google_secret_manager_secret" "openvidu_shared_info" {
+  for_each = toset([
+    "OPENVIDU_URL", "MEET_INITIAL_ADMIN_USER", "MEET_INITIAL_ADMIN_PASSWORD",
+    "MEET_INITIAL_API_KEY", "LIVEKIT_URL", "LIVEKIT_API_KEY", "LIVEKIT_API_SECRET",
+    "DASHBOARD_URL", "GRAFANA_URL", "MINIO_URL", "DOMAIN_NAME", "LIVEKIT_TURN_DOMAIN_NAME",
+    "OPENVIDU_PRO_LICENSE", "OPENVIDU_RTC_ENGINE", "REDIS_PASSWORD", "MONGO_ADMIN_USERNAME",
+    "MONGO_ADMIN_PASSWORD", "MONGO_REPLICA_SET_KEY", "MINIO_ACCESS_KEY", "MINIO_SECRET_KEY",
+    "DASHBOARD_ADMIN_USERNAME", "DASHBOARD_ADMIN_PASSWORD", "GRAFANA_ADMIN_USERNAME",
+    "GRAFANA_ADMIN_PASSWORD", "ENABLED_MODULES"
+  ])
+
+  secret_id = each.key
+  replication {
+    auto {}
+  }
+}
+
 # GCS bucket
 resource "google_storage_bucket" "bucket" {
   count                       = 1
@@ -56,7 +74,7 @@ resource "google_compute_firewall" "firewall" {
   }
 
   source_ranges = ["0.0.0.0/0"]
-  target_tags   = [lower("${var.stackName}-vm-ce")]
+  target_tags   = [lower("${var.stackName}-vm-pro")]
 }
 
 # Create Public Ip address (if not provided)
@@ -68,11 +86,11 @@ resource "google_compute_address" "public_ip_address" {
 
 # Compute instance for OpenVidu
 resource "google_compute_instance" "openvidu_server" {
-  name         = lower("${var.stackName}-vm-ce")
+  name         = lower("${var.stackName}-vm-pro")
   machine_type = var.instanceType
   zone         = var.zone
 
-  tags = [lower("${var.stackName}-vm-ce")]
+  tags = [lower("${var.stackName}-vm-pro")]
 
   boot_disk {
     initialize_params {
@@ -148,33 +166,6 @@ get_meta() { curl -s -H "Metadata-Flavor: Google" "$${METADATA_URL}/$1"; }
 
 # Create counter file for tracking script executions
 echo 1 > /usr/local/bin/openvidu_install_counter.txt
-
-# Create all the secrets
-gcloud secrets create OPENVIDU_URL --replication-policy=automatic || true
-gcloud secrets create MEET_INITIAL_ADMIN_USER --replication-policy=automatic || true
-gcloud secrets create MEET_INITIAL_ADMIN_PASSWORD --replication-policy=automatic || true
-gcloud secrets create MEET_INITIAL_API_KEY --replication-policy=automatic || true
-gcloud secrets create LIVEKIT_URL --replication-policy=automatic || true
-gcloud secrets create LIVEKIT_API_KEY --replication-policy=automatic || true
-gcloud secrets create LIVEKIT_API_SECRET --replication-policy=automatic || true
-gcloud secrets create DASHBOARD_URL --replication-policy=automatic || true
-gcloud secrets create GRAFANA_URL --replication-policy=automatic || true
-gcloud secrets create MINIO_URL --replication-policy=automatic || true
-gcloud secrets create DOMAIN_NAME --replication-policy=automatic || true
-gcloud secrets create LIVEKIT_TURN_DOMAIN_NAME --replication-policy=automatic || true
-gcloud secrets create OPENVIDU_PRO_LICENSE --replication-policy=automatic || true
-gcloud secrets create OPENVIDU_RTC_ENGINE --replication-policy=automatic || true
-gcloud secrets create REDIS_PASSWORD --replication-policy=automatic || true
-gcloud secrets create MONGO_ADMIN_USERNAME --replication-policy=automatic || true 
-gcloud secrets create MONGO_ADMIN_PASSWORD --replication-policy=automatic || true 
-gcloud secrets create MONGO_REPLICA_SET_KEY --replication-policy=automatic || true
-gcloud secrets create MINIO_ACCESS_KEY --replication-policy=automatic || true
-gcloud secrets create MINIO_SECRET_KEY --replication-policy=automatic || true
-gcloud secrets create DASHBOARD_ADMIN_USERNAME --replication-policy=automatic || true
-gcloud secrets create DASHBOARD_ADMIN_PASSWORD --replication-policy=automatic || true
-gcloud secrets create GRAFANA_ADMIN_USERNAME --replication-policy=automatic || true
-gcloud secrets create GRAFANA_ADMIN_PASSWORD --replication-policy=automatic || true
-gcloud secrets create ENABLED_MODULES --replication-policy=automatic || true
 
 # Configure domain
 if [[ "${var.domainName}" == "" ]]; then
