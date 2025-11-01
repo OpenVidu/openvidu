@@ -55,6 +55,7 @@ public class SecurityConfig {
 			.authorizeHttpRequests(auth -> {
 				auth.requestMatchers(HttpMethod.GET, RequestMappings.API + "/config/openvidu-publicurl").permitAll()
 					.requestMatchers(HttpMethod.GET, RequestMappings.ACCEPT_CERTIFICATE).permitAll()
+					.requestMatchers("/openvidu/**").permitAll()  // Allow WebSocket connections
 					.requestMatchers(RequestMappings.API + "/**").hasRole("ADMIN")
 					.requestMatchers(HttpMethod.GET, RequestMappings.CDR + "/**").hasRole("ADMIN")
 					.requestMatchers(HttpMethod.GET, RequestMappings.FRONTEND_CE + "/**").hasRole("ADMIN")
