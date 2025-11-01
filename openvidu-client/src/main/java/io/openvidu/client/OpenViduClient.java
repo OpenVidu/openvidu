@@ -101,7 +101,7 @@ public class OpenViduClient {
       public void reconnecting() {
         log.warn("JsonRpcWebsocket connection: is reconnecting");
       }
-    }, new SslContextFactory(true)));
+    }, new SslContextFactory.Client(true)));
   }
 
   public OpenViduClient(JsonRpcClient client) {

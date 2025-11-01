@@ -22,7 +22,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.NoSuchElementException;
 
-import javax.annotation.PostConstruct;
+import jakarta.annotation.PostConstruct;
 
 import org.kurento.client.KurentoClient;
 import org.kurento.commons.exception.KurentoException;

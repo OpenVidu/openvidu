@@ -37,6 +37,7 @@ import javax.net.ssl.X509ExtendedTrustManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpMethod;
+import static org.springframework.http.HttpMethod.*;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -290,36 +291,27 @@ public class CustomHttpClient {
 		if (body != null && !body.isEmpty()) {
 			body = body.replaceAll("'", "\"");
 			BodyPublisher bodyPublisher = HttpRequest.BodyPublishers.ofString(body);
-			switch (method) {
-			case POST:
+			if (POST.equals(method)) {
 				builder = builder.POST(bodyPublisher);
-				break;
-			case PUT:
+			} else if (PUT.equals(method)) {
 				builder = builder.PUT(bodyPublisher);
-				break;
-			case PATCH:
-			default:
+			} else if (PATCH.equals(method)) {
 				builder = builder.method("PATCH", bodyPublisher);
-				break;
+			} else {
+				builder = builder.method("PATCH", bodyPublisher);
 			}
 			builder.setHeader("Content-Type", "application/json");
 		} else {
-			switch (method) {
-			case GET:
+			if (GET.equals(method)) {
 				builder = builder.GET();
 				builder.setHeader("Content-Type", "application/x-www-form-urlencoded");
-				break;
-			case POST:
+			} else if (POST.equals(method)) {
 				builder = builder.POST(HttpRequest.BodyPublishers.noBody());
-				break;
-			case DELETE:
+			} else if (DELETE.equals(method)) {
 				builder = builder.DELETE();
 				builder.setHeader("Content-Type", "application/x-www-form-urlencoded");
-				break;
-			case PUT:
+			} else if (PUT.equals(method)) {
 				builder = builder.PUT(HttpRequest.BodyPublishers.noBody());
-			default:
-				break;
 			}
 		}
 

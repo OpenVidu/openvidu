@@ -24,7 +24,7 @@ public class EdgeUser extends BrowserUser {
 		options.addArguments("--disable-infobars");
 
 		if (REMOTE_URL != null) {
-			options.setHeadless(true);
+			options.addArguments("--headless=new");
 			log.info("Using URL {} to connect to remote web driver", REMOTE_URL);
 			try {
 				this.driver = new RemoteWebDriver(new URL(REMOTE_URL), options);

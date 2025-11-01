@@ -6,13 +6,14 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.event.EventListener;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @SpringBootApplication
-public class CustomLayoutHandler extends WebSecurityConfigurerAdapter implements WebMvcConfigurer {
+public class CustomLayoutHandler implements WebMvcConfigurer {
 
 	private static ConfigurableApplicationContext context;
 	public static CountDownLatch initLatch;
@@ -24,9 +25,10 @@ public class CustomLayoutHandler extends WebSecurityConfigurerAdapter implements
 				.run(args);
 	}
 
-	@Override
-	protected void configure(HttpSecurity security) throws Exception {
-		security.httpBasic().disable();
+	@Bean
+	public SecurityFilterChain filterChain(HttpSecurity security) throws Exception {
+		security.httpBasic(httpBasic -> httpBasic.disable());
+		return security.build();
 	}
 
 	@EventListener(ApplicationReadyEvent.class)

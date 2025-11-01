@@ -48,7 +48,7 @@ public class FirefoxUser extends BrowserUser {
 		}
 
 		if (REMOTE_URL != null) {
-			options.setHeadless(true);
+			options.addArguments("--headless");
 			log.info("Using URL {} to connect to remote web driver", REMOTE_URL);
 			try {
 				this.driver = new RemoteWebDriver(new URL(REMOTE_URL), options);

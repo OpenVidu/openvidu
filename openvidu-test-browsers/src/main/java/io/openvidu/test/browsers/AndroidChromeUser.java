@@ -8,9 +8,6 @@ import org.openqa.selenium.remote.CapabilityType;
 import org.openqa.selenium.remote.DesiredCapabilities;
 import org.openqa.selenium.remote.RemoteWebDriver;
 
-import io.appium.java_client.remote.MobileCapabilityType;
-import io.appium.java_client.remote.MobilePlatform;
-
 // Run Docker Android:
 // docker run --privileged --rm --name android-chrome -p 6080:6080 -p 5554:5554 -p 5555:5555 -p 4723:4723 -e DEVICE="Samsung Galaxy S10" -e APPIUM=true -e APPIUM_HOST=172.17.0.1 -e APPIUM_PORT=4723 -e MOBILE_WEB_TEST=true -e RELAXED_SECURITY=true budtmo/docker-android-x86-12.0
 // 
@@ -41,7 +38,7 @@ public class AndroidChromeUser extends BrowserUser {
 				"autoplay-policy=no-user-gesture-required");
 
 		DesiredCapabilities capabilities = new DesiredCapabilities();
-		capabilities.setCapability(MobileCapabilityType.PLATFORM_NAME, MobilePlatform.ANDROID);
+		capabilities.setCapability("platformName", "Android");
 		capabilities.setCapability(ChromeOptions.CAPABILITY, options);
 		capabilities.setCapability(CapabilityType.BROWSER_NAME, "Chrome");
 		capabilities.setCapability("appium:automationName", "UiAutomator2");

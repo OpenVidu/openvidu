@@ -4,15 +4,15 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.servlet.Filter;
-import javax.servlet.FilterChain;
-import javax.servlet.FilterConfig;
-import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletRequestWrapper;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.Filter;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.FilterConfig;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.ServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequestWrapper;
+import jakarta.servlet.http.HttpServletResponse;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -120,25 +120,25 @@ public class ApiRestPathRewriteFilter implements Filter {
 			ExpressionUrlAuthorizationConfigurer<HttpSecurity>.ExpressionInterceptUrlRegistry conf,
 			OpenviduConfig openviduConf) throws Exception {
 
-		conf.antMatchers("/api/**").hasRole("ADMIN")
+		conf.requestMatchers("/api/**").hasRole("ADMIN")
 				// /config
-				.antMatchers(HttpMethod.GET, "/config/openvidu-publicurl").permitAll()
-				.antMatchers(HttpMethod.GET, "/config/**").hasRole("ADMIN")
+				.requestMatchers(HttpMethod.GET, "/config/openvidu-publicurl").permitAll()
+				.requestMatchers(HttpMethod.GET, "/config/**").hasRole("ADMIN")
 				// /cdr
-				.antMatchers(HttpMethod.GET, "/cdr/**").hasRole("ADMIN")
+				.requestMatchers(HttpMethod.GET, "/cdr/**").hasRole("ADMIN")
 				// /accept-certificate
-				.antMatchers(HttpMethod.GET, "/accept-certificate").permitAll()
+				.requestMatchers(HttpMethod.GET, "/accept-certificate").permitAll()
 				// Dashboard
-				.antMatchers(HttpMethod.GET, "/dashboard/**").hasRole("ADMIN");
+				.requestMatchers(HttpMethod.GET, "/dashboard/**").hasRole("ADMIN");
 
 		// Security for recording layouts
-		conf.antMatchers("/layouts/**").hasRole("ADMIN");
+		conf.requestMatchers("/layouts/**").hasRole("ADMIN");
 
 		// Security for recorded video files
 		if (openviduConf.getOpenViduRecordingPublicAccess()) {
-			conf = conf.antMatchers("/recordings/**").permitAll();
+			conf = conf.requestMatchers("/recordings/**").permitAll();
 		} else {
-			conf = conf.antMatchers("/recordings/**").hasRole("ADMIN");
+			conf = conf.requestMatchers("/recordings/**").hasRole("ADMIN");
 		}
 	}
 

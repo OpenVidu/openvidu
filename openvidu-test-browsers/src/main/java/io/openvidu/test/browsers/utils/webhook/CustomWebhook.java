@@ -32,10 +32,11 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.event.EventListener;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -175,11 +176,17 @@ public class CustomWebhook {
 	}
 
 	@Configuration
-	public class SecurityConfig extends WebSecurityConfigurerAdapter {
-		@Override
-		protected void configure(HttpSecurity http) throws Exception {
-			http.requiresChannel().antMatchers("/webhook").requiresInsecure();
-			http.csrf().disable().authorizeRequests().antMatchers("/webhook").permitAll();
+	public class SecurityConfig {
+		@Bean
+		public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+			http.requiresChannel(channel -> channel
+					.requestMatchers("/webhook").requiresInsecure()
+			);
+			http.csrf(csrf -> csrf.disable())
+				.authorizeHttpRequests(auth -> auth
+					.requestMatchers("/webhook").permitAll()
+				);
+			return http.build();
 		}
 	}
 
