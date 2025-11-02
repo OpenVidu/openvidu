@@ -44,7 +44,7 @@
 	<properties>
 
 		<version.spring-boot>3.4.0</version.spring-boot>
-		<version.kurento>7.2.1-LOCAL</version.kurento>
+		<version.kurento>7.2.1-SNAPSHOT</version.kurento>
 		<version.openvidu.java.client>2.31.0</version.openvidu.java.client>
 		<version.openvidu.client>1.1.0</version.openvidu.client>
 		<version.openvidu.test.browsers>1.1.0</version.openvidu.test.browsers>
