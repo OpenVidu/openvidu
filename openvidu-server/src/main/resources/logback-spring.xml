@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
 
-	<springProperty scope="context" name="cdrEnabled" source="OPENVIDU_CDR" />
-	<springProperty scope="context" name="cdrPath" source="OPENVIDU_CDR_PATH" />
+	<springProperty scope="context" name="cdrEnabled" source="OPENVIDU_CDR" defaultValue="false" />
+	<springProperty scope="context" name="cdrPath" source="OPENVIDU_CDR_PATH" defaultValue="/opt/openvidu/cdr" />
+	<springProperty scope="context" name="logging.colors" source="logging.colors" defaultValue="false" />
 	<timestamp key="myTimestamp" timeReference="contextBirth" datePattern="HH-mm-ss" />
 
 	<appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
