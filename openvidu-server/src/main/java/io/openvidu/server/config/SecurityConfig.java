@@ -49,28 +49,46 @@ public class SecurityConfig {
 
 	@Bean
 	public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-
-		http.cors(cors -> cors.disable())
-			.csrf(csrf -> csrf.disable())
-			.authorizeHttpRequests(auth -> {
-				auth.requestMatchers(HttpMethod.GET, RequestMappings.API + "/config/openvidu-publicurl").permitAll()
-					.requestMatchers(HttpMethod.GET, RequestMappings.ACCEPT_CERTIFICATE).permitAll()
-					.requestMatchers("/openvidu/**").permitAll()  // Allow WebSocket connections
-					.requestMatchers(RequestMappings.API + "/**").hasRole("ADMIN")
-					.requestMatchers(HttpMethod.GET, RequestMappings.CDR + "/**").hasRole("ADMIN")
-					.requestMatchers(HttpMethod.GET, RequestMappings.FRONTEND_CE + "/**").hasRole("ADMIN")
-					.requestMatchers(HttpMethod.GET, RequestMappings.CUSTOM_LAYOUTS + "/**").hasRole("ADMIN");
-
-				// Secure recordings depending on OPENVIDU_RECORDING_PUBLIC_ACCESS
-				if (openviduConf.getOpenViduRecordingPublicAccess()) {
-					auth.requestMatchers(HttpMethod.GET, RequestMappings.RECORDINGS + "/**").permitAll();
-				} else {
-					auth.requestMatchers(HttpMethod.GET, RequestMappings.RECORDINGS + "/**").hasRole("ADMIN");
-				}
-			})
-			.httpBasic(httpBasic -> {});
+		// Configure CORS and CSRF
+		configureHttpSecurity(http);
+		
+		// Configure authorization rules
+		configureAuthorization(http);
+		
+		// Configure HTTP Basic authentication
+		http.httpBasic(httpBasic -> {});
 
 		return http.build();
+	}
+
+	/**
+	 * Configure CORS and CSRF settings. Can be overridden by subclasses.
+	 */
+	protected void configureHttpSecurity(HttpSecurity http) throws Exception {
+		http.cors(cors -> cors.disable())
+			.csrf(csrf -> csrf.disable());
+	}
+
+	/**
+	 * Configure authorization rules for CE. Can be extended by PRO subclass.
+	 */
+	protected void configureAuthorization(HttpSecurity http) throws Exception {
+		http.authorizeHttpRequests(auth -> {
+			auth.requestMatchers(HttpMethod.GET, RequestMappings.API + "/config/openvidu-publicurl").permitAll()
+				.requestMatchers(HttpMethod.GET, RequestMappings.ACCEPT_CERTIFICATE).permitAll()
+				.requestMatchers("/openvidu/**").permitAll()  // Allow WebSocket connections
+				.requestMatchers(RequestMappings.API + "/**").hasRole("ADMIN")
+				.requestMatchers(HttpMethod.GET, RequestMappings.CDR + "/**").hasRole("ADMIN")
+				.requestMatchers(HttpMethod.GET, RequestMappings.FRONTEND_CE + "/**").hasRole("ADMIN")
+				.requestMatchers(HttpMethod.GET, RequestMappings.CUSTOM_LAYOUTS + "/**").hasRole("ADMIN");
+
+			// Secure recordings depending on OPENVIDU_RECORDING_PUBLIC_ACCESS
+			if (openviduConf.getOpenViduRecordingPublicAccess()) {
+				auth.requestMatchers(HttpMethod.GET, RequestMappings.RECORDINGS + "/**").permitAll();
+			} else {
+				auth.requestMatchers(HttpMethod.GET, RequestMappings.RECORDINGS + "/**").hasRole("ADMIN");
+			}
+		});
 	}
 
 	@Bean
