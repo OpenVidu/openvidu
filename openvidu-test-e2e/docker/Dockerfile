@@ -16,7 +16,7 @@ RUN apt-get update && apt-get -y upgrade && \
     iproute2 \
     lsb-release \
     maven \
-    openjdk-11-jdk \
+    openjdk-21-jdk \
     rsync \
     software-properties-common \
     sudo && \
@@ -31,8 +31,8 @@ RUN apt-get update && apt-get -y upgrade && \
     rm -rf /var/lib/apt/lists/* && \
     apt-get autoremove --purge -y && apt-get autoclean
 
-# Change openjdk-11 as the default java
-RUN update-alternatives --set java /usr/lib/jvm/java-11-openjdk-amd64/bin/java
+# Change openjdk-21 as the default java
+RUN update-alternatives --set java /usr/lib/jvm/java-21-openjdk-amd64/bin/java
 
 # Docker
 RUN sudo mkdir -p /etc/apt/keyrings && \
