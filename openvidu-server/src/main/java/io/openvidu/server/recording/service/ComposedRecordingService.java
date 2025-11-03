@@ -175,7 +175,7 @@ public class ComposedRecordingService extends RecordingService {
 		this.sessionsContainers.put(session.getSessionId(), containerId);
 
 		try {
-			this.waitForVideoFileNotEmpty(recording);
+			this.waitForVideoFileNotEmpty(recording, session);
 		} catch (Exception e) {
 			this.cleanRecordingMaps(recording);
 			throw this.failStartRecording(session, recording,
@@ -397,9 +397,22 @@ public class ComposedRecordingService extends RecordingService {
 	}
 
 	protected void updateRecordingAttributes(Recording recording) {
+		String infoFilePath = this.openviduConfig.getOpenViduRecordingPath()
+				+ recording.getId() + "/" + recording.getId() + RecordingService.COMPOSED_INFO_FILE_EXTENSION;
+		
+		// Check if info file exists before trying to process it
+		java.nio.file.Path path = java.nio.file.Paths.get(infoFilePath);
+		if (!java.nio.file.Files.exists(path)) {
+			log.warn("Recording info file does not exist at {}. Recording {} may have failed to start properly.", 
+					infoFilePath, recording.getId());
+			recording.setStatus(io.openvidu.java.client.Recording.Status.failed);
+			// Don't return early - we need to continue so that sealRecordingMetadataFileAsReady()
+			// gets called in downloadComposedRecording(), which triggers the webhook
+			return;
+		}
+		
 		try {
-			RecordingInfoUtils infoUtils = new RecordingInfoUtils(this.openviduConfig.getOpenViduRecordingPath()
-					+ recording.getId() + "/" + recording.getId() + RecordingService.COMPOSED_INFO_FILE_EXTENSION);
+			RecordingInfoUtils infoUtils = new RecordingInfoUtils(infoFilePath);
 
 			if (!infoUtils.hasVideo()) {
 				log.error("COMPOSED recording {} with hasVideo=true has not video track", recording.getId());
@@ -421,11 +434,14 @@ public class ComposedRecordingService extends RecordingService {
 		}
 	}
 
-	protected void waitForVideoFileNotEmpty(Recording recording) throws Exception {
+	protected void waitForVideoFileNotEmpty(Recording recording, Session session) throws Exception {
 		final String VIDEO_FILE = this.openviduConfig
 				.getOpenViduRecordingPath(recording.getRecordingProperties().mediaNode()) + recording.getId() + "/"
 				+ recording.getName() + RecordingService.COMPOSED_RECORDING_EXTENSION;
-		this.fileManager.waitForFileToExistAndNotEmpty(recording.getRecordingProperties().mediaNode(), VIDEO_FILE);
+		
+		// Check if session was closed while we're waiting for the video file
+		fileManager.waitForFileToExistAndNotEmpty(recording.getRecordingProperties().mediaNode(), VIDEO_FILE,
+				() -> !session.isClosed());
 		log.info("File {} exists and is not empty", VIDEO_FILE);
 	}
 

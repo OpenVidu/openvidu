@@ -23,6 +23,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.util.Properties;
+import java.util.function.BooleanSupplier;
 
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
@@ -122,6 +123,9 @@ public abstract class CustomFileManager {
 	}
 
 	public abstract void waitForFileToExistAndNotEmpty(String mediaNodeId, String absolutePathToFile) throws Exception;
+
+	public abstract void waitForFileToExistAndNotEmpty(String mediaNodeId, String absolutePathToFile,
+			BooleanSupplier shouldContinueWaiting) throws Exception;
 
 	public abstract int maxSecondsWaitForFile();
 

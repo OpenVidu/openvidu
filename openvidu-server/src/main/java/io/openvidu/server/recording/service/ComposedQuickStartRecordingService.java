@@ -102,7 +102,7 @@ public class ComposedQuickStartRecordingService extends ComposedRecordingService
 		this.sessionsContainers.put(session.getSessionId(), containerId);
 
 		try {
-			this.waitForVideoFileNotEmpty(recording);
+			this.waitForVideoFileNotEmpty(recording, session);
 		} catch (Exception e) {
 			this.cleanRecordingMaps(recording);
 			throw this.failStartRecording(session, recording,
@@ -133,13 +133,18 @@ public class ComposedQuickStartRecordingService extends ComposedRecordingService
 					recording.getId());
 		}
 
-		try {
-			dockerManager.runCommandInContainerSync(recording.getRecordingProperties().mediaNode(), containerId,
-					"./composed_quick_start.sh --stop-recording", 10);
-		} catch (IOException e1) {
-			log.error("Error stopping COMPOSED_QUICK_START recording {}: {}", recording.getId(), e1.getMessage());
-			failRecordingCompletion(recording, containerId, true,
-					new OpenViduException(Code.RECORDING_COMPLETION_ERROR_CODE, e1.getMessage()));
+		if (containerId != null) {
+			try {
+				dockerManager.runCommandInContainerSync(recording.getRecordingProperties().mediaNode(), containerId,
+						"./composed_quick_start.sh --stop-recording", 10);
+			} catch (IOException e1) {
+				log.error("Error stopping COMPOSED_QUICK_START recording {}: {}", recording.getId(), e1.getMessage());
+				failRecordingCompletion(recording, containerId, true,
+						new OpenViduException(Code.RECORDING_COMPLETION_ERROR_CODE, e1.getMessage()));
+			}
+		} else {
+			log.warn("No container ID found for session {} when stopping recording {}. Container may have already been cleaned up or never created.",
+					recording.getSessionId(), recording.getId());
 		}
 
 		if (this.openviduConfig.isRecordingComposedExternal()) {

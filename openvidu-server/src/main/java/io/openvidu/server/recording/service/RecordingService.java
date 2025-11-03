@@ -201,6 +201,11 @@ public abstract class RecordingService {
 
 		this.recordingManager.startingRecordings.remove(recording.getId());
 		this.recordingManager.sessionsRecordingsStarting.remove(session.getSessionId());
+		
+		// Send "failed" webhook event
+		this.cdr.recordRecordingStatusChanged(recording, null, System.currentTimeMillis(),
+				io.openvidu.java.client.Recording.Status.failed);
+		
 		this.stopRecording(session, recording, null);
 		return new OpenViduException(Code.RECORDING_START_ERROR_CODE, errorMessage);
 	}
