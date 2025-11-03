@@ -3526,8 +3526,8 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		restClient.rest(HttpMethod.POST, "/openvidu/api/recordings/start", body, HttpURLConnection.HTTP_CONFLICT);
 
 		/** POST /openvidu/api/recordings/stop **/
-		// 405
-		restClient.rest(HttpMethod.POST, "/openvidu/api/recordings/stop", body, HttpURLConnection.HTTP_BAD_METHOD);
+		// 403
+		restClient.rest(HttpMethod.POST, "/openvidu/api/recordings/stop", body, HttpURLConnection.HTTP_FORBIDDEN);
 
 		// 404
 		restClient.rest(HttpMethod.POST, "/openvidu/api/recordings/stop/NOT_EXISTS", body,
@@ -3549,7 +3549,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		user.getEventManager().waitUntilEventReaches("recordingStopped", 2);
 
 		/** DELETE /openvidu/api/recordings **/
-		restClient.rest(HttpMethod.DELETE, "/openvidu/api/recordings", HttpURLConnection.HTTP_BAD_METHOD);
+		restClient.rest(HttpMethod.DELETE, "/openvidu/api/recordings", HttpURLConnection.HTTP_FORBIDDEN);
 		restClient.rest(HttpMethod.DELETE, "/openvidu/api/recordings/NOT_EXISTS", HttpURLConnection.HTTP_NOT_FOUND);
 		restClient.rest(HttpMethod.DELETE, "/openvidu/api/recordings/CUSTOM_SESSION_ID",
 				HttpURLConnection.HTTP_NO_CONTENT);
@@ -3612,7 +3612,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 				HttpURLConnection.HTTP_NO_CONTENT);
 
 		/** DELETE /openvidu/api/sessions **/
-		restClient.rest(HttpMethod.DELETE, "/openvidu/api/sessions", HttpURLConnection.HTTP_BAD_METHOD);
+		restClient.rest(HttpMethod.DELETE, "/openvidu/api/sessions", HttpURLConnection.HTTP_FORBIDDEN);
 		restClient.rest(HttpMethod.DELETE, "/openvidu/api/sessions/NOT_EXISTS", HttpURLConnection.HTTP_NOT_FOUND);
 		restClient.rest(HttpMethod.DELETE, "/openvidu/api/sessions/CUSTOM_SESSION_ID",
 				HttpURLConnection.HTTP_NO_CONTENT);
