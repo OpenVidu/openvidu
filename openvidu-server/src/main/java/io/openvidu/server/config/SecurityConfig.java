@@ -74,17 +74,25 @@ public class SecurityConfig {
 	 */
 	protected void configureAuthorization(HttpSecurity http) throws Exception {
 		http.authorizeHttpRequests(auth -> {
-			configureProtectedEndpoints(auth);
+			// 1. Public endpoints first (most specific)
 			configurePublicEndpoints(auth);
+			// 2. Protected endpoints second (less specific /api/**)
+			configureProtectedEndpoints(auth);
+			// 3. WebSocket endpoints last (least specific)
 			configureWebSocketEndpoints(auth);
 		});
 	}
 
 	/**
 	 * Configure public endpoints. Can be overridden by subclasses.
+	 * MUST be called BEFORE configureProtectedEndpoints to ensure specific public paths
+	 * are not caught by broader protected patterns like /api/**
 	 */
 	protected void configurePublicEndpoints(org.springframework.security.config.annotation.web.configurers.AuthorizeHttpRequestsConfigurer<?>.AuthorizationManagerRequestMatcherRegistry auth) {
-		// Public endpoints
+		// Allow CORS preflight requests FIRST
+		auth.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll();
+		
+		// Public API endpoints (must come before /api/** pattern)
 		auth.requestMatchers(HttpMethod.GET, RequestMappings.API + "/config/openvidu-publicurl").permitAll()
 			.requestMatchers(HttpMethod.GET, RequestMappings.ACCEPT_CERTIFICATE).permitAll();
 		
@@ -94,16 +102,14 @@ public class SecurityConfig {
 		} else {
 			auth.requestMatchers(HttpMethod.GET, RequestMappings.RECORDINGS + "/**").hasRole("ADMIN");
 		}
-
-		// Allow CORS preflight requests
-		auth.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll();
 	}
 
 	/**
 	 * Configure protected API endpoints. Can be extended by subclasses.
+	 * MUST be called AFTER configurePublicEndpoints to avoid catching specific public paths.
 	 */
 	protected void configureProtectedEndpoints(org.springframework.security.config.annotation.web.configurers.AuthorizeHttpRequestsConfigurer<?>.AuthorizationManagerRequestMatcherRegistry auth) {
-		// Protected API endpoints (must come before WebSocket to take precedence)
+		// Protected API endpoints - uses broader patterns so must come AFTER public endpoints
 		auth.requestMatchers(RequestMappings.API + "/**").hasRole("ADMIN")
 			.requestMatchers(HttpMethod.GET, RequestMappings.CDR + "/**").hasRole("ADMIN")
 			.requestMatchers(HttpMethod.GET, RequestMappings.FRONTEND_CE + "/**").hasRole("ADMIN")
