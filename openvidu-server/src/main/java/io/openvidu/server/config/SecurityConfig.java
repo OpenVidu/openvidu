@@ -74,21 +74,45 @@ public class SecurityConfig {
 	 */
 	protected void configureAuthorization(HttpSecurity http) throws Exception {
 		http.authorizeHttpRequests(auth -> {
-			auth.requestMatchers(HttpMethod.GET, RequestMappings.API + "/config/openvidu-publicurl").permitAll()
-				.requestMatchers(HttpMethod.GET, RequestMappings.ACCEPT_CERTIFICATE).permitAll()
-				.requestMatchers("/openvidu/**").permitAll()  // Allow WebSocket connections
-				.requestMatchers(RequestMappings.API + "/**").hasRole("ADMIN")
-				.requestMatchers(HttpMethod.GET, RequestMappings.CDR + "/**").hasRole("ADMIN")
-				.requestMatchers(HttpMethod.GET, RequestMappings.FRONTEND_CE + "/**").hasRole("ADMIN")
-				.requestMatchers(HttpMethod.GET, RequestMappings.CUSTOM_LAYOUTS + "/**").hasRole("ADMIN");
-
-			// Secure recordings depending on OPENVIDU_RECORDING_PUBLIC_ACCESS
-			if (openviduConf.getOpenViduRecordingPublicAccess()) {
-				auth.requestMatchers(HttpMethod.GET, RequestMappings.RECORDINGS + "/**").permitAll();
-			} else {
-				auth.requestMatchers(HttpMethod.GET, RequestMappings.RECORDINGS + "/**").hasRole("ADMIN");
-			}
+			configurePublicEndpoints(auth);
+			configureProtectedEndpoints(auth);
+			configureWebSocketEndpoints(auth);
 		});
+	}
+
+	/**
+	 * Configure public endpoints. Can be overridden by subclasses.
+	 */
+	protected void configurePublicEndpoints(org.springframework.security.config.annotation.web.configurers.AuthorizeHttpRequestsConfigurer<?>.AuthorizationManagerRequestMatcherRegistry auth) {
+		// Public endpoints
+		auth.requestMatchers(HttpMethod.GET, RequestMappings.API + "/config/openvidu-publicurl").permitAll()
+			.requestMatchers(HttpMethod.GET, RequestMappings.ACCEPT_CERTIFICATE).permitAll();
+		
+		// Secure recordings depending on OPENVIDU_RECORDING_PUBLIC_ACCESS
+		if (openviduConf.getOpenViduRecordingPublicAccess()) {
+			auth.requestMatchers(HttpMethod.GET, RequestMappings.RECORDINGS + "/**").permitAll();
+		} else {
+			auth.requestMatchers(HttpMethod.GET, RequestMappings.RECORDINGS + "/**").hasRole("ADMIN");
+		}
+	}
+
+	/**
+	 * Configure protected API endpoints. Can be extended by subclasses.
+	 */
+	protected void configureProtectedEndpoints(org.springframework.security.config.annotation.web.configurers.AuthorizeHttpRequestsConfigurer<?>.AuthorizationManagerRequestMatcherRegistry auth) {
+		// Protected API endpoints (must come before WebSocket to take precedence)
+		auth.requestMatchers(RequestMappings.API + "/**").hasRole("ADMIN")
+			.requestMatchers(HttpMethod.GET, RequestMappings.CDR + "/**").hasRole("ADMIN")
+			.requestMatchers(HttpMethod.GET, RequestMappings.FRONTEND_CE + "/**").hasRole("ADMIN")
+			.requestMatchers(HttpMethod.GET, RequestMappings.CUSTOM_LAYOUTS + "/**").hasRole("ADMIN");
+	}
+
+	/**
+	 * Configure WebSocket endpoints. Should be called last to avoid interfering with more specific rules.
+	 */
+	protected void configureWebSocketEndpoints(org.springframework.security.config.annotation.web.configurers.AuthorizeHttpRequestsConfigurer<?>.AuthorizationManagerRequestMatcherRegistry auth) {
+		// WebSocket endpoints: allow without authentication
+		auth.requestMatchers("/openvidu", "/openvidu/info").permitAll();
 	}
 
 	@Bean
