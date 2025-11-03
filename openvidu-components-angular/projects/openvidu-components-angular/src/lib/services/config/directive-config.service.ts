@@ -96,6 +96,7 @@ interface GeneralConfig {
 	showDisconnectionDialog: boolean;
 	showThemeSelector: boolean;
 	recordingStreamBaseUrl: string;
+	e2eeKey?: string;
 }
 
 /**
@@ -302,7 +303,8 @@ export class OpenViduComponentsConfigService {
 		prejoinDisplayParticipantName: true,
 		showDisconnectionDialog: true,
 		showThemeSelector: false,
-		recordingStreamBaseUrl: 'call/api/recordings'
+		recordingStreamBaseUrl: 'call/api/recordings',
+		e2eeKey: undefined
 	});
 
 	private toolbarConfig = this.createToolbarConfigItem({
@@ -410,6 +412,11 @@ export class OpenViduComponentsConfigService {
 	);
 	recordingStreamBaseUrl$: Observable<string> = this.generalConfig.observable$.pipe(
 		map((config) => config.recordingStreamBaseUrl),
+		distinctUntilChanged(),
+		shareReplay(1)
+	);
+	e2eeKey$: Observable<string | undefined> = this.generalConfig.observable$.pipe(
+		map((config) => config.e2eeKey),
 		distinctUntilChanged(),
 		shareReplay(1)
 	);
@@ -563,6 +570,10 @@ export class OpenViduComponentsConfigService {
 		// Add trailing slash if not present
 		baseUrl += baseUrl.endsWith('/') ? '' : '/';
 		return baseUrl;
+	}
+
+	getE2EEKey(): string | undefined {
+		return this.generalConfig.subject.getValue().e2eeKey;
 	}
 
 	// Stream configuration methods

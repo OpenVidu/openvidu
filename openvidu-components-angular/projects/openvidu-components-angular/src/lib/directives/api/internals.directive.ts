@@ -570,3 +570,51 @@ export class ShowThemeSelectorDirective implements AfterViewInit, OnDestroy {
 		this.libService.updateGeneralConfig({ showThemeSelector: value });
 	}
 }
+
+/**
+ * @internal
+ *
+ * The **e2eeKey** directive allows to configure end-to-end encryption for the videoconference.
+ * When provided, the room will be configured with E2EE using an external key provider.
+ *
+ * Default: `undefined`
+ *
+ * Usage:
+ * <ov-videoconference [e2eeKey]="yourEncryptionKey"></ov-videoconference>
+ */
+@Directive({
+	selector: 'ov-videoconference[e2eeKey]',
+	standalone: false
+})
+export class E2EEKeyDirective implements AfterViewInit, OnDestroy {
+	@Input() set e2eeKey(value: string | undefined) {
+		this._value = value;
+		this.update(this._value);
+	}
+
+	private _value: string | undefined;
+
+	constructor(
+		public elementRef: ElementRef,
+		private libService: OpenViduComponentsConfigService
+	) {}
+
+	ngAfterViewInit() {
+		this.update(this._value);
+	}
+
+	ngOnDestroy(): void {
+		this.clear();
+	}
+
+	private clear() {
+		this._value = undefined;
+		this.update(this._value);
+	}
+
+	private update(value: string | undefined) {
+		// Only update if value is valid (not undefined, not null, not empty string)
+		const validValue = value && value.trim() !== '' ? value.trim() : undefined;
+		this.libService.updateGeneralConfig({ e2eeKey: validValue });
+	}
+}

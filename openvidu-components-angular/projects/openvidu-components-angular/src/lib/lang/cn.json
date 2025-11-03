@@ -175,6 +175,8 @@
 		"MEDIA_ERR_GENERIC": "加载视频时发生错误。",
 		"MEDIA_ERR_NETWORK": "网络错误导致视频下载中途失败。",
 		"MEDIA_ERR_DECODE": "由于损坏问题或视频使用了您的浏览器不支持的功能，视频播放被中止。",
-		"MEDIA_ERR_SRC_NOT_SUPPORTED": "流媒体录制错误：无法访问 S3。"
+		"MEDIA_ERR_SRC_NOT_SUPPORTED": "流媒体录制错误：无法访问 S3。",
+		"E2EE_ERROR_TITLE": "房间密码错误",
+		"E2EE_ERROR_CONTENT": "此参与者使用了不同的安全密钥。无法显示视频。"
 	}
 }

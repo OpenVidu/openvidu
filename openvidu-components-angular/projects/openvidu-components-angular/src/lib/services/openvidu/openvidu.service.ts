@@ -6,6 +6,7 @@ import {
 	AudioCaptureOptions,
 	ConnectionState,
 	CreateLocalTracksOptions,
+	ExternalE2EEKeyProvider,
 	LocalAudioTrack,
 	LocalTrack,
 	LocalVideoTrack,
@@ -17,6 +18,7 @@ import {
 	createLocalTracks
 } from 'livekit-client';
 import { StorageService } from '../storage/storage.service';
+import { OpenViduComponentsConfigService } from '../config/directive-config.service';
 
 @Injectable({
 	providedIn: 'root'
@@ -31,6 +33,7 @@ export class OpenViduService {
 	// private _isSttReady: BehaviorSubject<boolean> = new BehaviorSubject(true);
 
 	private room: Room;
+	private keyProvider: ExternalE2EEKeyProvider | undefined;
 
 	/**
 	 * @internal
@@ -53,7 +56,8 @@ export class OpenViduService {
 	constructor(
 		private loggerSrv: LoggerService,
 		private deviceService: DeviceService,
-		private storageService: StorageService
+		private storageService: StorageService,
+		private configService: OpenViduComponentsConfigService
 	) {
 		this.log = this.loggerSrv.get('OpenViduService');
 		// this.isSttReadyObs = this._isSttReady.asObservable();
@@ -64,14 +68,25 @@ export class OpenViduService {
 	 * @internal
 	 */
 	initRoom(): void {
-		// If room already exists, don't recreate it
-		if (this.room) {
+		// Check if E2EE configuration needs to be applied
+		const e2eeKey = this.configService.getE2EEKey();
+		const needsE2EEConfig = e2eeKey && e2eeKey.trim() !== '' && !this.keyProvider;
+
+		// If room already exists and doesn't need E2EE reconfiguration, don't recreate it
+		if (this.room && !needsE2EEConfig) {
 			this.log.d('Room already initialized, skipping re-initialization');
 			return;
 		}
 
+		// If room exists but needs E2EE configuration, we need to recreate it
+		if (this.room && needsE2EEConfig) {
+			this.log.d('Room needs E2EE configuration, recreating room');
+			this.room = null as any;
+		}
+
 		const videoDeviceId = this.deviceService.getCameraSelected()?.device ?? undefined;
 		const audioDeviceId = this.deviceService.getMicrophoneSelected()?.device ?? undefined;
+
 		const roomOptions: RoomOptions = {
 			adaptiveStream: true,
 			dynacast: true,
@@ -93,15 +108,35 @@ export class OpenViduService {
 			stopLocalTrackOnUnpublish: true,
 			disconnectOnPageLeave: true
 		};
+
+		// Configure E2EE if key is provided
+		if (e2eeKey && e2eeKey.trim() !== '') {
+			this.log.d('Configuring E2EE with provided key');
+			this.keyProvider = new ExternalE2EEKeyProvider();
+			// Create worker using the copied livekit-client e2ee worker from assets
+			roomOptions.e2ee = {
+				keyProvider: this.keyProvider,
+				worker: new Worker('./assets/livekit/livekit-client.e2ee.worker.mjs', { type: 'module' })
+			};
+		}
+
 		this.room = new Room(roomOptions);
 		this.log.d('Room initialized successfully');
-	}
-
-	/**
+	} /**
 	 * Connects local participant to the room
 	 */
 	async connectRoom(): Promise<void> {
 		try {
+			// Configure E2EE if key provider was initialized
+			if (this.keyProvider) {
+				const e2eeKey = this.configService.getE2EEKey();
+				if (e2eeKey) {
+					this.log.d('Setting E2EE key and enabling encryption');
+					await this.keyProvider.setKey(e2eeKey);
+					await this.room.setE2EEEnabled(true);
+					this.log.d('E2EE successfully enabled');
+				}
+			}
 			await this.room.connect(this.livekitUrl, this.livekitToken);
 			this.log.d(`Successfully connected to room ${this.room.name}`);
 			const participantName = this.storageService.getParticipantName();

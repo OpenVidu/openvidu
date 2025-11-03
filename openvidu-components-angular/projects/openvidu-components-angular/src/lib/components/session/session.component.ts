@@ -230,7 +230,8 @@ export class SessionComponent implements OnInit, OnDestroy {
 		}
 
 		// this.subscribeToCaptionLanguage();
-		this.subcribeToActiveSpeakersChanged();
+		this.subscribeToEncryptionErrors();
+		this.subscribeToActiveSpeakersChanged();
 		this.subscribeToParticipantConnected();
 		this.subscribeToTrackSubscribed();
 		this.subscribeToTrackUnsubscribed();
@@ -261,7 +262,17 @@ export class SessionComponent implements OnInit, OnDestroy {
 			this.actionService.openDialog(this.translateService.translate('ERRORS.SESSION'), error?.error || error?.message || error);
 		}
 	}
-	subcribeToActiveSpeakersChanged() {
+
+	protected subscribeToEncryptionErrors() {
+		// TODO: LiveKit does not provide the participant who has the encryption error yet.
+		// Waiting for this issue to be solved: https://github.com/livekit/client-sdk-js/issues/1722
+		this.room.on(RoomEvent.EncryptionError, (error: Error, participant?: RemoteParticipant) => {
+			if (!participant) return;
+			this.participantService.setEncryptionError(participant?.sid, true);
+		});
+	}
+
+	protected subscribeToActiveSpeakersChanged() {
 		this.room.on(RoomEvent.ActiveSpeakersChanged, (speakers: Participant[]) => {
 			this.participantService.setSpeaking(speakers);
 		});

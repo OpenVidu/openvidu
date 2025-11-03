@@ -170,6 +170,8 @@
 		"MEDIA_ERR_GENERIC": "Beim Laden des Videos ist ein Fehler aufgetreten.",
 		"MEDIA_ERR_NETWORK": "Ein Netzwerkfehler führte dazu, dass der Video-Download teilweise fehlschlug.",
 		"MEDIA_ERR_DECODE": "Die Videowiedergabe wurde aufgrund eines Korruptionsproblems oder weil das Video Funktionen verwendet, die Ihr Browser nicht unterstützt, abgebrochen.",
-		"MEDIA_ERR_SRC_NOT_SUPPORTED": "Fehler beim Streaming der Aufnahme: S3 konnte nicht erreicht werden."
+		"MEDIA_ERR_SRC_NOT_SUPPORTED": "Fehler beim Streaming der Aufnahme: S3 konnte nicht erreicht werden.",
+		"E2EE_ERROR_TITLE": "Raum-Passwortfehler",
+		"E2EE_ERROR_CONTENT": "Dieser Teilnehmer verwendet einen anderen Sicherheitsschlüssel. Video kann nicht angezeigt werden."
 	}
 }
