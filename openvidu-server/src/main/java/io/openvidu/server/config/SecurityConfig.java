@@ -74,8 +74,8 @@ public class SecurityConfig {
 	 */
 	protected void configureAuthorization(HttpSecurity http) throws Exception {
 		http.authorizeHttpRequests(auth -> {
-			configurePublicEndpoints(auth);
 			configureProtectedEndpoints(auth);
+			configurePublicEndpoints(auth);
 			configureWebSocketEndpoints(auth);
 		});
 	}
@@ -94,6 +94,9 @@ public class SecurityConfig {
 		} else {
 			auth.requestMatchers(HttpMethod.GET, RequestMappings.RECORDINGS + "/**").hasRole("ADMIN");
 		}
+
+		// Allow CORS preflight requests
+		auth.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll();
 	}
 
 	/**
