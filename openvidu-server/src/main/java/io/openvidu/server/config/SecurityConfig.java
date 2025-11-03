@@ -94,6 +94,7 @@ public class SecurityConfig {
 		
 		// Public API endpoints (must come before /api/** pattern)
 		auth.requestMatchers(HttpMethod.GET, RequestMappings.API + "/config/openvidu-publicurl").permitAll()
+			.requestMatchers(HttpMethod.HEAD, RequestMappings.API + "/config/openvidu-publicurl").permitAll()
 			.requestMatchers(HttpMethod.GET, RequestMappings.ACCEPT_CERTIFICATE).permitAll();
 		
 		// Secure recordings depending on OPENVIDU_RECORDING_PUBLIC_ACCESS
