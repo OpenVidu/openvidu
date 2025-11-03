@@ -65,7 +65,7 @@ public class SecurityConfig {
 	 * Configure CORS and CSRF settings. Can be overridden by subclasses.
 	 */
 	protected void configureHttpSecurity(HttpSecurity http) throws Exception {
-		http.cors(cors -> cors.disable())
+		http.cors(cors -> {})  // Uses below CorsFilter bean
 			.csrf(csrf -> csrf.disable());
 	}
 
