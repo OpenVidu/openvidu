@@ -86,7 +86,7 @@ function environmentLaunch {
             -DOPENVIDU_WEBHOOK_ENDPOINT=http://127.0.0.1:7777/webhook \
             /opt/openvidu/openvidu-server-*.jar &>/opt/openvidu/openvidu-server-"${MEDIA_SERVER}".log &
     fi
-    until $(curl --insecure --output /dev/null --silent --head --fail https://OPENVIDUAPP:MY_SECRET@localhost:4443/openvidu/api/config/openvidu-publicurl); do
+    until $(curl --insecure --output /dev/null --silent --head --fail https://localhost:4443/openvidu/api/config/openvidu-publicurl); do
         echo "Waiting for openvidu-server..."
         sleep 2
     done
