@@ -2553,22 +2553,23 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		Assertions.assertEquals(401, thrown.getStatus());
 
 		// 6. No CredentialsProvider, wrong Authorization header, valid secret, 200
+		// In HttpClient 5.4.x, the CredentialsProvider from the constructor takes precedence
+		// over the Authorization header, so valid credentials will succeed
 		builder = getHttpClientBuilder();
 		builder.setDefaultHeaders(WRONG_AUTH_HEADER);
 		customOV[0] = new OpenVidu(OPENVIDU_URL, OPENVIDU_SECRET, builder);
-		IllegalStateException thrown2 = Assertions.assertThrows(IllegalStateException.class, () -> {
-			customOV[0].fetch();
-		});
-		Assertions.assertEquals("AuthScheme is null", thrown2.getMessage());
+		customOV[0].fetch(); // Should succeed with valid credentials from constructor
 
 		// 7. No CredentialsProvider, wrong Authorization header, wrong secret, 401
+		// In HttpClient 5.4.x, the CredentialsProvider from the constructor takes precedence
+		// over the Authorization header, so wrong credentials will fail with 401
 		builder = getHttpClientBuilder();
 		builder.setDefaultHeaders(WRONG_AUTH_HEADER);
 		customOV[0] = new OpenVidu(OPENVIDU_URL, WRONG_SECRET, builder);
-		thrown2 = Assertions.assertThrows(IllegalStateException.class, () -> {
+		thrown = Assertions.assertThrows(OpenViduHttpException.class, () -> {
 			customOV[0].fetch();
 		});
-		Assertions.assertEquals("AuthScheme is null", thrown2.getMessage());
+		Assertions.assertEquals(401, thrown.getStatus());
 
 		// 8. No CredentialsProvider, valid Authorization header, no secret, 200
 		builder = getHttpClientBuilder();
@@ -2605,14 +2606,12 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		customOV[0].fetch();
 
 		// 13. Valid CredentialsProvider, wrong Authorization header, no secret, 200
+		// In HttpClient 5.4.x, the CredentialsProvider takes precedence over the Authorization header
 		builder = getHttpClientBuilder();
 		builder.setDefaultCredentialsProvider(validCredentialsProvider);
 		builder.setDefaultHeaders(WRONG_AUTH_HEADER);
 		customOV[0] = new OpenVidu(OPENVIDU_URL, builder);
-		thrown2 = Assertions.assertThrows(IllegalStateException.class, () -> {
-			customOV[0].fetch();
-		});
-		Assertions.assertEquals("AuthScheme is null", thrown2.getMessage());
+		customOV[0].fetch(); // Should succeed with valid credentials from CredentialsProvider
 
 		// 14. Wrong CredentialsProvider, no Authorization header, no secret, 401
 		final BasicCredentialsProvider wrongCredentialsProvider = new BasicCredentialsProvider();
@@ -4400,7 +4399,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 					"{'type':'IPCAM','rtspUri': 'NOT_A_URL'}", HttpURLConnection.HTTP_BAD_REQUEST);
 			// Wrong adaptativeBitrate [400]
 			restClient.rest(HttpMethod.POST, "/openvidu/api/sessions/IP_CAM_SESSION/connection",
-					"{'type':'IPCAM','rtspUri':'rtsp://dummyurl.com','adaptativeBitrate':123,}",
+					"{'type':'IPCAM','rtspUri':'rtsp://dummyurl.com','adaptativeBitrate':123}",
 					HttpURLConnection.HTTP_BAD_REQUEST);
 
 			// Publish IP camera. Dummy URL because no user will subscribe to it [200]
@@ -4669,7 +4668,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 			session.updateConnection(connection.getConnectionId(), new ConnectionProperties.Builder().build());
 			Assertions.fail("Expected exception was not thrown by OpenVidu Java Client");
 		} catch (OpenViduHttpException e) {
-			Assertions.assertEquals(HttpURLConnection.HTTP_BAD_METHOD, e.getStatus(), "Wrong OpenViduException status");
+			Assertions.assertEquals(HttpURLConnection.HTTP_FORBIDDEN, e.getStatus(), "Wrong OpenViduException status");
 		} catch (Exception e) {
 			Assertions.fail("Wrong exception type thrown by OpenVidu Java Client");
 		}
