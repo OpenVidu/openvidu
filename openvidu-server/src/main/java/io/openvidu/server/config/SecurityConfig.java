@@ -37,7 +37,6 @@ import org.springframework.web.filter.CorsFilter;
 import io.openvidu.server.rest.RequestMappings;
 
 @Configuration()
-@ConditionalOnMissingBean(name = "securityConfigPro")
 @Order(Ordered.LOWEST_PRECEDENCE)
 public class SecurityConfig {
 
@@ -48,6 +47,7 @@ public class SecurityConfig {
 	protected Environment environment;
 
 	@Bean
+	@ConditionalOnMissingBean(name = "securityConfigPro")
 	public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 		// Configure CORS and CSRF
 		configureHttpSecurity(http);

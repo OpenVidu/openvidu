@@ -775,7 +775,7 @@ public class RecordingManager {
 		}
 	}
 
-	protected void checkRecordingPaths(String openviduRecordingPath, String openviduRecordingCustomLayout)
+	public void checkRecordingPaths(String openviduRecordingPath, String openviduRecordingCustomLayout)
 			throws OpenViduException {
 		log.info("Initializing recording paths");
 

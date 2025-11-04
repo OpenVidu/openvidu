@@ -64,7 +64,7 @@ public class ComposedQuickStartRecordingService extends ComposedRecordingService
 	}
 
 	@Override
-	protected Recording startRecordingWithVideo(Session session, Recording recording, RecordingProperties properties)
+	public Recording startRecordingWithVideo(Session session, Recording recording, RecordingProperties properties)
 			throws OpenViduException {
 
 		log.info("Starting COMPOSED_QUICK_START ({}) recording {} of session {}",
@@ -117,7 +117,7 @@ public class ComposedQuickStartRecordingService extends ComposedRecordingService
 	}
 
 	@Override
-	protected Recording stopRecordingWithVideo(Session session, Recording recording, EndReason reason) {
+	public Recording stopRecordingWithVideo(Session session, Recording recording, EndReason reason) {
 		log.info("Stopping COMPOSED_QUICK_START ({}) recording {} of session {}. Reason: {}",
 				recording.hasAudio() ? "video + audio" : "audio-only", recording.getId(), recording.getSessionId(),
 				RecordingManager.finalReason(reason));

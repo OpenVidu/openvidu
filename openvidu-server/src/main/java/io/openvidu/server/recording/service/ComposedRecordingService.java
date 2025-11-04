@@ -128,7 +128,7 @@ public class ComposedRecordingService extends RecordingService {
 		compositeWrapper.disconnectPublisherEndpoint(streamId);
 	}
 
-	protected Recording startRecordingWithVideo(Session session, Recording recording, RecordingProperties properties)
+	public Recording startRecordingWithVideo(Session session, Recording recording, RecordingProperties properties)
 			throws OpenViduException {
 
 		log.info("Starting composed ({}) recording {} of session {}",
@@ -217,7 +217,7 @@ public class ComposedRecordingService extends RecordingService {
 		return recording;
 	}
 
-	protected Recording stopRecordingWithVideo(Session session, Recording recording, EndReason reason) {
+	public Recording stopRecordingWithVideo(Session session, Recording recording, EndReason reason) {
 
 		log.info("Stopping composed ({}) recording {} of session {}. Reason: {}",
 				recording.hasAudio() ? "video + audio" : "video-only", recording.getId(), recording.getSessionId(),
@@ -396,7 +396,7 @@ public class ComposedRecordingService extends RecordingService {
 		dockerManager.removeContainer(recording.getRecordingProperties().mediaNode(), containerId, false);
 	}
 
-	protected void updateRecordingAttributes(Recording recording) {
+	public void updateRecordingAttributes(Recording recording) {
 		String infoFilePath = this.openviduConfig.getOpenViduRecordingPath()
 				+ recording.getId() + "/" + recording.getId() + RecordingService.COMPOSED_INFO_FILE_EXTENSION;
 		
@@ -457,7 +457,7 @@ public class ComposedRecordingService extends RecordingService {
 		throw e;
 	}
 
-	protected void downloadComposedRecording(final Session session, final Recording recording, final EndReason reason) {
+	public void downloadComposedRecording(final Session session, final Recording recording, final EndReason reason) {
 		try {
 			this.recordingDownloader.downloadRecording(recording, null, () -> {
 
