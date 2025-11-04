@@ -17,8 +17,8 @@ import org.kurento.client.ServerInfo;
 import org.kurento.client.ServerManager;
 import org.kurento.client.ServerType;
 import org.mockito.Mockito;
-import org.powermock.reflect.Whitebox;
 import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.context.annotation.Bean;
 
 import io.openvidu.server.kurento.core.KurentoSessionManager;
@@ -52,7 +52,7 @@ public class IntegrationTestConfiguration {
 
 				LoadManager loadManager = null;
 				try {
-					loadManager = Whitebox.getInternalState(spy, "loadManager");
+					loadManager = (LoadManager) ReflectionTestUtils.getField(spy, "loadManager");
 				} catch (Exception e) {
 					Assertions.fail("Error getting private property from stubbed object: " + e.getMessage());
 				}
