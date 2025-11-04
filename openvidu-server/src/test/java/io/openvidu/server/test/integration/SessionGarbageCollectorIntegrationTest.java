@@ -27,8 +27,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.web.WebAppConfiguration;
 
@@ -55,7 +55,7 @@ public class SessionGarbageCollectorIntegrationTest {
 
 	private static final Logger log = LoggerFactory.getLogger(SessionGarbageCollectorIntegrationTest.class);
 
-	@SpyBean
+	@MockitoSpyBean
 	private KmsManager kmsManager;
 
 	@Autowired
