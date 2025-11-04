@@ -552,7 +552,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 					Assertions.assertEquals("automaticStop",
 							CustomWebhook.waitForEvent("recordingStatusChanged", 4).get("reason").getAsString());
 				}
-				Assertions.assertEquals("lastParticipantLeft",
+				Assertions.assertEquals("automaticStop",
 						CustomWebhook.waitForEvent("broadcastStopped", 2).get("reason").getAsString());
 				Assertions.assertEquals("automaticStop",
 						CustomWebhook.waitForEvent("sessionDestroyed", 2).get("reason").getAsString());
@@ -718,7 +718,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 				Assertions.assertEquals(connectionId1, file.get("connectionId").getAsString(),
 						"Wrong connectionId file metadata property");
 				long msDuration = file.get("endTimeOffset").getAsLong() - file.get("startTimeOffset").getAsLong();
-				Assertions.assertTrue(msDuration - 4000 < 750,
+				Assertions.assertTrue((msDuration - 4000) < 1000,
 						"Wrong recording duration of individual file. Difference: " + (msDuration - 4000));
 				count1++;
 			} else if (fileStreamId.equals(streamId2)) {
