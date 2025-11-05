@@ -75,6 +75,7 @@ if [[ -n ${1:-} ]]; then
     --build-openvidu-server-pro)
         BUILD_OV_SERVER_PRO=true
         ;;
+
     --check-and-prepare-kurento-snapshot)
         CHECK_AND_PREPARE_KURENTO_SNAPSHOT=true
         ;;

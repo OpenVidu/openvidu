@@ -10,17 +10,12 @@ set -eu -o pipefail
 PREPARE_TEST_ENVIRONMENT=false
 USE_SPECIFIC_KURENTO_JAVA_COMMIT=false
 SERVE_OV_TESTAPP=false
-CHECK_AND_PREPARE_KURENTO_SNAPSHOT=false
 
 if [[ -n ${1:-} ]]; then
     case "${1:-}" in
 
     --prepare-test-environment)
         PREPARE_TEST_ENVIRONMENT=true
-        ;;
-
-    --check-and-prepare-kurento-snapshot)
-        CHECK_AND_PREPARE_KURENTO_SNAPSHOT=true
         ;;
 
     --use-specific-kurento-java-commit)
