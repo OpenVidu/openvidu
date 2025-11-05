@@ -112,7 +112,7 @@ services:
                 max-size: "${DOCKER_LOGS_MAX_SIZE:-100M}"
 
     metricbeat:
-        image: docker.elastic.co/beats/metricbeat-oss:7.8.0
+        image: docker.elastic.co/beats/metricbeat-oss:7.12.1
         network_mode: host
         restart: always
         user: root
@@ -152,7 +152,7 @@ services:
                 max-size: "${DOCKER_LOGS_MAX_SIZE:-100M}"
 
     filebeat:
-        image: docker.elastic.co/beats/filebeat-oss:7.8.0
+        image: docker.elastic.co/beats/filebeat-oss:7.12.1
         network_mode: host
         restart: always
         user: root

@@ -111,7 +111,7 @@ services:
 
 
     elasticsearch:
-        image: openvidu/openvidu-elasticsearch:7.8.0
+        image: docker.elastic.co/elasticsearch/elasticsearch:7.17.29
         restart: always
         environment:
             - discovery.type=single-node
@@ -131,7 +131,7 @@ services:
                 max-size: "${DOCKER_LOGS_MAX_SIZE:-100M}"
 
     kibana:
-        image: docker.elastic.co/kibana/kibana:7.8.0
+        image: docker.elastic.co/kibana/kibana:7.17.29
         restart: always
         environment:
             - SERVER_BASEPATH="/kibana"
@@ -145,7 +145,7 @@ services:
                 max-size: "${DOCKER_LOGS_MAX_SIZE:-100M}"
 
     metricbeat:
-        image: docker.elastic.co/beats/metricbeat-oss:7.8.0
+        image: docker.elastic.co/beats/metricbeat-oss:7.12.1
         network_mode: host
         restart: always
         user: root
@@ -185,7 +185,7 @@ services:
                 max-size: "${DOCKER_LOGS_MAX_SIZE:-100M}"
 
     filebeat:
-        image: docker.elastic.co/beats/filebeat-oss:7.8.0
+        image: docker.elastic.co/beats/filebeat-oss:7.12.1
         network_mode: host
         restart: always
         user: root

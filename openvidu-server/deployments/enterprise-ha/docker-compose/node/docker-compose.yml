@@ -136,8 +136,8 @@ services:
             - MEDIA_NODE_CONTROLLER_RECORDINGS_PATH=/opt/openvidu/mncontroller/recordings
             - KMS_IMAGE=kurento/kurento-media-server:7.1.1
             - MEDIASOUP_IMAGE=openvidu/mediasoup-controller:2.31.0
-            - METRICBEAT_IMAGE=docker.elastic.co/beats/metricbeat-oss:7.8.0
-            - FILEBEAT_IMAGE=docker.elastic.co/beats/filebeat-oss:7.8.0
+            - METRICBEAT_IMAGE=docker.elastic.co/beats/metricbeat-oss:7.12.1
+            - FILEBEAT_IMAGE=docker.elastic.co/beats/filebeat-oss:7.12.1
             - OPENVIDU_RECORDING_IMAGE=openvidu/openvidu-recording:2.31.0
             - COTURN_IMAGE=openvidu/openvidu-coturn:2.31.0
             - SPEECH_TO_TEXT_IMAGE=openvidu/speech-to-text-service:2.31.0
