@@ -176,6 +176,8 @@
 		"MEDIA_ERR_GENERIC": "Ocorreu um erro ao carregar o vídeo.",
 		"MEDIA_ERR_NETWORK": "Um erro de rede fez com que o download do vídeo falhasse parcialmente.",
 		"MEDIA_ERR_DECODE": "A reprodução do vídeo foi interrompida devido a um problema de corrupção ou porque o vídeo usou recursos que o seu navegador não suportava.",
-		"MEDIA_ERR_SRC_NOT_SUPPORTED": "Erro ao transmitir a gravação: não foi possível acessar o S3."
+		"MEDIA_ERR_SRC_NOT_SUPPORTED": "Erro ao transmitir a gravação: não foi possível acessar o S3.",
+		"E2EE_ERROR_TITLE": "Erro de senha da sala",
+		"E2EE_ERROR_CONTENT": "Este participante está usando uma chave de criptografia diferente. O vídeo não pode ser exibido."
 	}
 }

@@ -175,6 +175,8 @@
 		"MEDIA_ERR_GENERIC": "Er is een fout opgetreden bij het laden van de video.",
 		"MEDIA_ERR_NETWORK": "Een netwerkfout heeft ertoe geleid dat het downloaden van de video halverwege is mislukt.",
 		"MEDIA_ERR_DECODE": "Het afspelen van de video is afgebroken vanwege een corruptieprobleem of omdat de video functies gebruikte die uw browser niet ondersteunde.",
-		"MEDIA_ERR_SRC_NOT_SUPPORTED": "Fout bij het streamen van de opname: S3 kon niet worden bereikt."
+		"MEDIA_ERR_SRC_NOT_SUPPORTED": "Fout bij het streamen van de opname: S3 kon niet worden bereikt.",
+		"E2EE_ERROR_TITLE": "Kamerwachtwoordfout",
+		"E2EE_ERROR_CONTENT": "Deze deelnemer gebruikt een andere beveiligingssleutel. Video kan niet worden weergegeven."
 	}
 }

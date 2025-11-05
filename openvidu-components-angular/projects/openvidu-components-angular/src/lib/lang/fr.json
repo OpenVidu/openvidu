@@ -175,6 +175,8 @@
 		"MEDIA_ERR_GENERIC": "Une erreur s'est produite lors du chargement de la vidéo.",
 		"MEDIA_ERR_NETWORK": "Une erreur de réseau a causé l'échec du téléchargement de la vidéo en cours de route.",
 		"MEDIA_ERR_DECODE": "La lecture de la vidéo a été interrompue en raison d'un problème de corruption ou parce que la vidéo utilise des fonctionnalités que votre navigateur ne prend pas en charge.",
-		"MEDIA_ERR_SRC_NOT_SUPPORTED": "Erreur de diffusion de l'enregistrement : S3 n'a pas pu être atteint."
+		"MEDIA_ERR_SRC_NOT_SUPPORTED": "Erreur de diffusion de l'enregistrement : S3 n'a pas pu être atteint.",
+		"E2EE_ERROR_TITLE": "Erreur de mot de passe de la salle",
+		"E2EE_ERROR_CONTENT": "Ce participant utilise une clé de sécurité différente. La vidéo ne peut pas être affichée."
 	}
 }

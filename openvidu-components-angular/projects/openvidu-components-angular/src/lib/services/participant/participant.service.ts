@@ -285,6 +285,26 @@ export class ParticipantService {
 	}
 
 	/**
+	 * Sets the encryption error state for a participant.
+	 * This is called when a participant cannot decrypt video streams due to an incorrect encryption key.
+	 * @param participantSid - The SID of the participant with the encryption error
+	 * @param hasError - Whether the participant has an encryption error
+	 * @internal
+	 */
+	setEncryptionError(participantSid: string, hasError: boolean) {
+		if (this.localParticipant?.sid === participantSid) {
+			this.localParticipant.setEncryptionError(hasError);
+			this.updateLocalParticipant();
+		} else {
+			const participant = this.remoteParticipants.find((p) => p.sid === participantSid);
+			if (participant) {
+				participant.setEncryptionError(hasError);
+				this.updateRemoteParticipants();
+			}
+		}
+	}
+
+	/**
 	 * Returns the local participant name.
 	 */
 	getMyName(): string | undefined {

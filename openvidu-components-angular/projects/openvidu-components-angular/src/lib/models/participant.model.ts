@@ -128,6 +128,7 @@ export class ParticipantModel {
 	private room: Room | undefined;
 	private speaking: boolean = false;
 	private customVideoTrack: Partial<ParticipantTrackPublication>;
+	private _hasEncryptionError: boolean = false;
 
 	constructor(props: ParticipantProperties) {
 		this.participant = props.participant;
@@ -549,5 +550,23 @@ export class ParticipantModel {
 	 */
 	setMutedForcibly(muted: boolean) {
 		this.tracks.forEach((track) => (track.isMutedForcibly = muted));
+	}
+
+	/**
+	 * Gets whether this participant has an encryption error.
+	 * This indicates that the participant cannot decrypt the video stream due to an incorrect encryption key.
+	 * @returns boolean
+	 */
+	get hasEncryptionError(): boolean {
+		return this._hasEncryptionError;
+	}
+
+	/**
+	 * Sets the encryption error state for this participant.
+	 * @param hasError - Whether the participant has an encryption error
+	 * @internal
+	 */
+	setEncryptionError(hasError: boolean) {
+		this._hasEncryptionError = hasError;
 	}
 }

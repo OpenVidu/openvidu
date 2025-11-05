@@ -175,6 +175,8 @@
 		"MEDIA_ERR_GENERIC": "Si è verificato un errore durante il caricamento del video.",
 		"MEDIA_ERR_NETWORK": "Un errore di rete ha causato l'interruzione del download del video a metà strada.",
 		"MEDIA_ERR_DECODE": "La riproduzione del video è stata interrotta a causa di un problema di corruzione o perché il video utilizzava funzionalità non supportate dal tuo browser.",
-		"MEDIA_ERR_SRC_NOT_SUPPORTED": "Errore nello streaming della registrazione: impossibile raggiungere S3."
+		"MEDIA_ERR_SRC_NOT_SUPPORTED": "Errore nello streaming della registrazione: impossibile raggiungere S3.",
+		"E2EE_ERROR_TITLE": "Errore password della stanza",
+		"E2EE_ERROR_CONTENT": "Questo partecipante sta utilizzando una chiave di crittografia diversa. Il video non può essere visualizzato."
 	}
 }

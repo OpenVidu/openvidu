@@ -30,7 +30,6 @@ import { VideoconferenceComponent } from './components/videoconference/videoconf
 
 import { AdminDashboardComponent } from './admin/admin-dashboard/admin-dashboard.component';
 import { AdminLoginComponent } from './admin/admin-login/admin-login.component';
-import { AvatarProfileComponent } from './components/avatar-profile/avatar-profile.component';
 // import { CaptionsComponent } from './components/captions/captions.component';
 import { ProFeatureDialogTemplateComponent } from './components/dialogs/pro-feature-dialog.component';
 import { ActivitiesPanelComponent } from './components/panel/activities-panel/activities-panel.component';
@@ -48,6 +47,7 @@ import { OpenViduComponentsDirectiveModule } from './directives/template/openvid
 import { AppMaterialModule } from './openvidu-components-angular.material.module';
 import { ThemeSelectorComponent } from './components/settings/theme-selector/theme-selector.component';
 import { LandscapeWarningComponent } from './components/landscape-warning/landscape-warning.component';
+import { VideoPosterComponent } from './components/video-poster/video-poster.component';
 
 const publicComponents = [
 	AdminDashboardComponent,
@@ -74,7 +74,7 @@ const privateComponents = [
 	ProFeatureDialogTemplateComponent,
 	RecordingDialogComponent,
 	DeleteDialogComponent,
-	AvatarProfileComponent,
+	VideoPosterComponent,
 	MediaElementComponent,
 	VideoDevicesComponent,
 	AudioDevicesComponent,

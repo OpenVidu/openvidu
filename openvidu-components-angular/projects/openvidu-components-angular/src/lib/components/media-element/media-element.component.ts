@@ -8,7 +8,13 @@ import { Track } from 'livekit-client';
 @Component({
 	selector: 'ov-media-element',
 	template: `
-		<ov-avatar-profile @posterAnimation *ngIf="showAvatar" [name]="avatarName" [color]="avatarColor"></ov-avatar-profile>
+		<ov-video-poster
+			@posterAnimation
+			[showAvatar]="showAvatar"
+			[nickname]="avatarName"
+			[color]="avatarColor"
+			[hasEncryptionError]="hasEncryptionError"
+		></ov-video-poster>
 		<video #videoElement *ngIf="_track?.kind === 'video'" class="OV_video-element" [attr.id]="_track?.sid"></video>
 		<audio #audioElement *ngIf="_track?.kind === 'audio'" [attr.id]="_track?.sid"></audio>
 	`,
@@ -29,10 +35,11 @@ export class MediaElementComponent implements AfterViewInit, OnDestroy {
 	private _muted: boolean = false;
 	private previousTrack: Track | null = null;
 
-	@Input() showAvatar: boolean;
-	@Input() avatarColor: string;
-	@Input() avatarName: string;
-	@Input() isLocal: boolean;
+	@Input() showAvatar: boolean = false;
+	@Input() avatarColor: string = '#000000';
+	@Input() avatarName: string = 'User';
+	@Input() isLocal: boolean = false;
+	@Input() hasEncryptionError: boolean = false;
 
 	@ViewChild('videoElement', { static: false })
 	set videoElement(element: ElementRef) {

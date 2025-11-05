@@ -1,0 +1,31 @@
+@if (hasEncryptionError) {
+	<div class="encryption-error-poster">
+		<div class="encryption-error-content">
+			<svg
+				xmlns="http://www.w3.org/2000/svg"
+				width="48"
+				height="48"
+				viewBox="0 0 24 24"
+				fill="none"
+				stroke="currentColor"
+				stroke-width="2"
+				stroke-linecap="round"
+				stroke-linejoin="round"
+			>
+				<rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+				<path d="M7 11V7a5 5 0 0 1 9.9-1"></path>
+				<line x1="12" y1="16" x2="12" y2="18"></line>
+			</svg>
+			<h3>{{ 'ERRORS.E2EE_ERROR_TITLE' | translate }}</h3>
+			<p>{{ 'ERRORS.E2EE_ERROR_CONTENT' | translate }}</p>
+		</div>
+	</div>
+} @else if (showAvatar) {
+	<div class="poster" id="video-poster">
+		@if (letter) {
+			<div class="initial" [ngStyle]="{ 'background-color': color }">
+				<span id="poster-text">{{ letter }}</span>
+			</div>
+		}
+	</div>
+}

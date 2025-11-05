@@ -34,47 +34,50 @@
 		[avatarName]="_track.participant.name"
 		[muted]="_track.isMutedForcibly"
 		[isLocal]="_track.participant.isLocal"
+		[hasEncryptionError]="_track.participant.hasEncryptionError"
 	></ov-media-element>
 
-	<div class="status-icons">
-		<mat-icon id="status-mic" fontIcon="mic_off" *ngIf="!_track.participant?.isMicrophoneEnabled"></mat-icon>
-		<mat-icon id="status-muted-forcibly" fontIcon="volume_off" *ngIf="_track.isMutedForcibly"></mat-icon>
-		<mat-icon id="status-pinned" fontIcon="push_pin" *ngIf="_track.isPinned"></mat-icon>
-	</div>
-
-	<div class="stream-video-controls" *ngIf="!isMinimal && showVideoControls && mouseHovering">
-		<div class="flex-container">
-			<button
-				mat-icon-button
-				id="pin-btn"
-				(click)="toggleVideoPinned()"
-				[matTooltip]="_track.isPinned ? ('STREAM.UNPIN' | translate) : ('STREAM.PIN' | translate)"
-			>
-				<mat-icon *ngIf="_track.isPinned" fontSet="material-symbols-outlined" fontIcon="keep">keep_off</mat-icon>
-				<mat-icon *ngIf="!_track.isPinned" id="status-pinned" fontIcon="push_pin"></mat-icon>
-			</button>
-			<button
-				*ngIf="!_track.participant.isLocal"
-				mat-icon-button
-				id="silence-btn"
-				(click)="toggleMuteForcibly()"
-				[class.muted-btn]="_track.isMutedForcibly"
-				[matTooltip]="_track.isMutedForcibly ? ('STREAM.UNMUTE_SOUND' | translate) : ('STREAM.MUTE_SOUND' | translate)"
-			>
-				<mat-icon *ngIf="_track.isMutedForcibly">volume_off</mat-icon>
-				<mat-icon *ngIf="!_track.isMutedForcibly">volume_up</mat-icon>
-			</button>
-			<button
-				*ngIf="_track.participant.isLocal"
-				mat-icon-button
-				id="minimize-btn"
-				[disabled]="_track.isPinned"
-				(click)="toggleMinimize()"
-				[matTooltip]="_track.isMinimized ? ('STREAM.MAXIMIZE' | translate) : ('STREAM.MINIMIZE' | translate)"
-			>
-				<mat-icon *ngIf="_track.isMinimized">open_in_full</mat-icon>
-				<mat-icon *ngIf="!_track.isMinimized">close_fullscreen</mat-icon>
-			</button>
+	@if (!_track.participant.hasEncryptionError) {
+		<div class="status-icons">
+			<mat-icon id="status-mic" fontIcon="mic_off" *ngIf="!_track.participant?.isMicrophoneEnabled"></mat-icon>
+			<mat-icon id="status-muted-forcibly" fontIcon="volume_off" *ngIf="_track.isMutedForcibly"></mat-icon>
+			<mat-icon id="status-pinned" fontIcon="push_pin" *ngIf="_track.isPinned"></mat-icon>
 		</div>
-	</div>
+
+		<div class="stream-video-controls" *ngIf="!isMinimal && showVideoControls && mouseHovering">
+			<div class="flex-container">
+				<button
+					mat-icon-button
+					id="pin-btn"
+					(click)="toggleVideoPinned()"
+					[matTooltip]="_track.isPinned ? ('STREAM.UNPIN' | translate) : ('STREAM.PIN' | translate)"
+				>
+					<mat-icon *ngIf="_track.isPinned" fontSet="material-symbols-outlined" fontIcon="keep">keep_off</mat-icon>
+					<mat-icon *ngIf="!_track.isPinned" id="status-pinned" fontIcon="push_pin"></mat-icon>
+				</button>
+				<button
+					*ngIf="!_track.participant.isLocal"
+					mat-icon-button
+					id="silence-btn"
+					(click)="toggleMuteForcibly()"
+					[class.muted-btn]="_track.isMutedForcibly"
+					[matTooltip]="_track.isMutedForcibly ? ('STREAM.UNMUTE_SOUND' | translate) : ('STREAM.MUTE_SOUND' | translate)"
+				>
+					<mat-icon *ngIf="_track.isMutedForcibly">volume_off</mat-icon>
+					<mat-icon *ngIf="!_track.isMutedForcibly">volume_up</mat-icon>
+				</button>
+				<button
+					*ngIf="_track.participant.isLocal"
+					mat-icon-button
+					id="minimize-btn"
+					[disabled]="_track.isPinned"
+					(click)="toggleMinimize()"
+					[matTooltip]="_track.isMinimized ? ('STREAM.MAXIMIZE' | translate) : ('STREAM.MINIMIZE' | translate)"
+				>
+					<mat-icon *ngIf="_track.isMinimized">open_in_full</mat-icon>
+					<mat-icon *ngIf="!_track.isMinimized">close_fullscreen</mat-icon>
+				</button>
+			</div>
+		</div>
+	}
 </div>
