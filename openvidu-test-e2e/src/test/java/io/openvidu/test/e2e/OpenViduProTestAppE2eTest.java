@@ -552,7 +552,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 					Assertions.assertEquals("automaticStop",
 							CustomWebhook.waitForEvent("recordingStatusChanged", 4).get("reason").getAsString());
 				}
-				Assertions.assertEquals("automaticStop",
+				Assertions.assertEquals("lastParticipantLeft",
 						CustomWebhook.waitForEvent("broadcastStopped", 2).get("reason").getAsString());
 				Assertions.assertEquals("automaticStop",
 						CustomWebhook.waitForEvent("sessionDestroyed", 2).get("reason").getAsString());
