@@ -65,6 +65,7 @@ import {
 	LeaveButtonDirective
 } from '../../directives/template/internals.directive';
 import { OpenViduThemeService } from '../../services/theme/theme.service';
+import { E2eeService } from '../../services/e2ee/e2ee.service';
 
 /**
  * The **VideoconferenceComponent** is the parent of all OpenVidu components.
@@ -712,7 +713,8 @@ export class VideoconferenceComponent implements OnDestroy, AfterViewInit {
 		private actionService: ActionService,
 		private libService: OpenViduComponentsConfigService,
 		private templateManagerService: TemplateManagerService,
-		private themeService: OpenViduThemeService
+		private themeService: OpenViduThemeService,
+		private e2eeService: E2eeService
 	) {
 		this.log = this.loggerSrv.get('VideoconferenceComponent');
 
@@ -1042,9 +1044,9 @@ export class VideoconferenceComponent implements OnDestroy, AfterViewInit {
 			}
 		});
 
-		this.libService.participantName$.pipe(takeUntil(this.destroy$)).subscribe((name: string) => {
+		this.libService.participantName$.pipe(takeUntil(this.destroy$)).subscribe(async (name: string) => {
 			if (name) {
-				this.latestParticipantName = name;
+				this.latestParticipantName = await this.e2eeService.decrypt(name);
 				this.storageSrv.setParticipantName(name);
 
 				// If we're waiting for a participant name to proceed with joining, do it now

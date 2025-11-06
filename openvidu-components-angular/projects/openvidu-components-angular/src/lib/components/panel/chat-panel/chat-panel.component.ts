@@ -110,7 +110,7 @@ export class ChatPanelComponent implements OnInit, AfterViewInit {
 	}
 
 	private subscribeToMessages() {
-		this.chatService.messagesObs.pipe(takeUntil(this.destroy$)).subscribe((messages: ChatMessage[]) => {
+		this.chatService.chatMessages$.pipe(takeUntil(this.destroy$)).subscribe((messages: ChatMessage[]) => {
 			this.messageList = messages;
 			if (this.panelService.isChatPanelOpened()) {
 				this.scrollToBottom();

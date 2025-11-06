@@ -66,6 +66,7 @@ export * from './lib/services/storage/storage.service';
 export * from './lib/services/translate/translate.service';
 export * from './lib/services/theme/theme.service';
 export * from './lib/services/viewport/viewport.service';
+export * from './lib/services/e2ee/e2ee.service';
 //Modules
 export * from './lib/openvidu-components-angular.module';
 export * from './lib/config/custom-cdk-overlay';

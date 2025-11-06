@@ -50,6 +50,7 @@ import { ParticipantLeftEvent, ParticipantLeftReason, ParticipantModel } from '.
 import { RecordingStatus } from '../../models/recording.model';
 import { TemplateManagerService, SessionTemplateConfiguration } from '../../services/template/template-manager.service';
 import { ViewportService } from '../../services/viewport/viewport.service';
+import { E2eeService } from '../../services/e2ee/e2ee.service';
 
 /**
  * @internal
@@ -138,7 +139,8 @@ export class SessionComponent implements OnInit, OnDestroy {
 		private backgroundService: VirtualBackgroundService,
 		private cd: ChangeDetectorRef,
 		private templateManagerService: TemplateManagerService,
-		protected viewportService: ViewportService
+		protected viewportService: ViewportService,
+		private e2eeService: E2eeService
 	) {
 		this.log = this.loggerSrv.get('SessionComponent');
 		this.setupTemplates();
@@ -461,13 +463,38 @@ export class SessionComponent implements OnInit, OnDestroy {
 	private subscribeToDataMessage() {
 		this.room.on(
 			RoomEvent.DataReceived,
-			(payload: Uint8Array, participant?: RemoteParticipant, _?: DataPacket_Kind, topic?: string) => {
-				const event = JSON.parse(new TextDecoder().decode(payload));
-				this.log.d(`Data event received: ${topic}`);
+			async (payload: Uint8Array, participant?: RemoteParticipant, _?: DataPacket_Kind, topic?: string) => {
+				const storedParticipant = this.participantService.getRemoteParticipantBySid(participant?.sid || '');
+				if (!storedParticipant) {
+					this.log.w('DataReceived from unknown participant', participant);
+					return;
+				}
+
+				const { identity: participantIdentity, name: participantName } = storedParticipant;
+				// Decrypt payload if it's a CHAT message and E2EE is enabled
+				let decryptedPayload: Uint8Array = payload;
+				if (topic === DataTopic.CHAT && this.e2eeService.isEnabled) {
+					decryptedPayload = await this.e2eeService.decryptOrMask(
+						payload,
+						participantIdentity,
+						JSON.stringify({ message: '******' }) // The fallback text must be a valid JSON
+					);
+				}
+
+				// Decode and parse the JSON event
+				let event: any;
+				try {
+					event = JSON.parse(new TextDecoder().decode(decryptedPayload));
+					this.log.d(`Data event received: ${topic}`);
+				} catch (parseError) {
+					this.log.e('Error parsing data message:', parseError);
+					return; // Can't process malformed data
+				}
+
+				// Handle the event based on topic
 				switch (topic) {
 					case DataTopic.CHAT:
-						const participantName = participant?.name || 'Unknown';
-						this.chatService.addRemoteMessage(event.message, participantName);
+						this.chatService.addRemoteMessage(event.message, participantName || participantIdentity || 'Unknown');
 						break;
 					case DataTopic.RECORDING_STARTING:
 						this.log.d('Recording is starting', event);

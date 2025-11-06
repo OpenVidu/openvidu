@@ -535,8 +535,10 @@ export class ParticipantNameDirective implements AfterViewInit, OnDestroy {
 	/**
 	 * @ignore
 	 */
-	update(value: string) {
-		if (value) this.libService.updateGeneralConfig({ participantName: value });
+	update(participantName: string) {
+		if (participantName) {
+			this.libService.updateGeneralConfig({ participantName });
+		}
 	}
 }
 

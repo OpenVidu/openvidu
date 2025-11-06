@@ -766,7 +766,7 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 	}
 
 	private subscribeToChatMessages() {
-		this.chatService.messagesObs.pipe(skip(1), takeUntil(this.destroy$)).subscribe((messages) => {
+		this.chatService.chatMessages$.pipe(skip(1), takeUntil(this.destroy$)).subscribe((messages) => {
 			if (!this.panelService.isChatPanelOpened()) {
 				this.unreadMessages++;
 			}

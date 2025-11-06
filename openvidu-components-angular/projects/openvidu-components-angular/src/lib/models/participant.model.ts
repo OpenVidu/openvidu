@@ -129,6 +129,7 @@ export class ParticipantModel {
 	private speaking: boolean = false;
 	private customVideoTrack: Partial<ParticipantTrackPublication>;
 	private _hasEncryptionError: boolean = false;
+	private _decryptedName: string | undefined;
 
 	constructor(props: ParticipantProperties) {
 		this.participant = props.participant;
@@ -171,8 +172,7 @@ export class ParticipantModel {
 	 * @returns string
 	 */
 	get name(): string | undefined {
-		return this.participant.name;
-		// return this.identity;
+		return this._decryptedName ?? this.participant.name;
 	}
 
 	/**
@@ -568,5 +568,14 @@ export class ParticipantModel {
 	 */
 	setEncryptionError(hasError: boolean) {
 		this._hasEncryptionError = hasError;
+	}
+
+	/**
+	 * Sets the decrypted name for this participant.
+	 * @param decryptedName - The decrypted participant name
+	 * @internal
+	 */
+	setDecryptedName(decryptedName: string | undefined) {
+		this._decryptedName = decryptedName;
 	}
 }

@@ -23,6 +23,7 @@ import { GlobalConfigService } from './services/config/global-config.service';
 import { OpenViduComponentsConfigService } from './services/config/directive-config.service';
 import { OpenViduComponentsUiModule } from './openvidu-components-angular-ui.module';
 import { ViewportService } from './services/viewport/viewport.service';
+import { E2eeService } from './services/e2ee/e2ee.service';
 
 @NgModule({
 	imports: [OpenViduComponentsUiModule],
@@ -52,6 +53,7 @@ export class OpenViduComponentsModule {
 			StorageService,
 			VirtualBackgroundService,
 			ViewportService,
+			E2eeService,
 			provideHttpClient(withInterceptorsFromDi())
 		];
 

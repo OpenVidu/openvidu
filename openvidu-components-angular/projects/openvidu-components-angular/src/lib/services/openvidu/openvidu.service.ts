@@ -6,6 +6,7 @@ import {
 	AudioCaptureOptions,
 	ConnectionState,
 	CreateLocalTracksOptions,
+	E2EEOptions,
 	ExternalE2EEKeyProvider,
 	LocalAudioTrack,
 	LocalTrack,
@@ -109,20 +110,29 @@ export class OpenViduService {
 			disconnectOnPageLeave: true
 		};
 
-		// Configure E2EE if key is provided
-		if (e2eeKey && e2eeKey.trim() !== '') {
-			this.log.d('Configuring E2EE with provided key');
-			this.keyProvider = new ExternalE2EEKeyProvider();
+		// Configure E2EE if key is provided and keyProvider exists
+		if (needsE2EEConfig) {
 			// Create worker using the copied livekit-client e2ee worker from assets
-			roomOptions.e2ee = {
-				keyProvider: this.keyProvider,
-				worker: new Worker('./assets/livekit/livekit-client.e2ee.worker.mjs', { type: 'module' })
-			};
+			roomOptions.e2ee = this.buildE2EEOptions();
+			// !This config enables the data channel encryption
+			// (roomOptions as any).encryption = this.buildE2EEOptions();
 		}
 
 		this.room = new Room(roomOptions);
 		this.log.d('Room initialized successfully');
-	} /**
+	}
+
+	private buildE2EEOptions(): E2EEOptions {
+		this.log.d('Configuring E2EE with provided key');
+		this.keyProvider = new ExternalE2EEKeyProvider();
+		// Create worker using the copied livekit-client e2ee worker from assets
+		return {
+			keyProvider: this.keyProvider,
+			worker: new Worker('./assets/livekit/livekit-client.e2ee.worker.mjs', { type: 'module' })
+		};
+	}
+
+	/**
 	 * Connects local participant to the room
 	 */
 	async connectRoom(): Promise<void> {
@@ -139,6 +149,7 @@ export class OpenViduService {
 			}
 			await this.room.connect(this.livekitUrl, this.livekitToken);
 			this.log.d(`Successfully connected to room ${this.room.name}`);
+
 			const participantName = this.storageService.getParticipantName();
 			if (participantName) {
 				this.room.localParticipant.setName(participantName);
@@ -469,11 +480,10 @@ export class OpenViduService {
 			}
 		} catch (error) {
 			this.log.e('Failed to create new video track:', error);
-			throw new Error(`Failed to switch camera: ${error.message}`);
+			const message = error instanceof Error ? error.message : 'Unknown error';
+			throw new Error(`Failed to switch camera: ${message}`);
 		}
-	}
-
-	/**
+	} /**
 	 * Switches the microphone device when the room is not connected (prejoin page)
 	 * @param deviceId new audio device to use
 	 * @internal
@@ -520,7 +530,8 @@ export class OpenViduService {
 			}
 		} catch (error) {
 			this.log.e('Failed to create new audio track:', error);
-			throw new Error(`Failed to switch microphone: ${error.message}`);
+			const message = error instanceof Error ? error.message : 'Unknown error';
+			throw new Error(`Failed to switch microphone: ${message}`);
 		}
 	}
 

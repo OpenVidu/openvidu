@@ -20,6 +20,7 @@ import {
 	VideoPresets
 } from 'livekit-client';
 import { StorageService } from '../storage/storage.service';
+import { E2eeService } from '../e2ee/e2ee.service';
 
 @Injectable({
 	providedIn: 'root'
@@ -50,7 +51,8 @@ export class ParticipantService {
 		private directiveService: OpenViduComponentsConfigService,
 		private openviduService: OpenViduService,
 		private storageSrv: StorageService,
-		private loggerSrv: LoggerService
+		private loggerSrv: LoggerService,
+		private e2eeService: E2eeService
 	) {
 		this.log = this.loggerSrv.get('ParticipantService');
 		this.localParticipant$ = this.localParticipantBS.asObservable();
@@ -553,11 +555,45 @@ export class ParticipantService {
 		}
 	}
 
-	private newParticipant(props: ParticipantProperties) {
+	private newParticipant(props: ParticipantProperties): ParticipantModel {
+		let participant: ParticipantModel;
 		if (this.globalService.hasParticipantFactory()) {
-			return this.globalService.getParticipantFactory().apply(this, [props]);
+			participant = this.globalService.getParticipantFactory().apply(this, [props]);
+		} else {
+			participant = new ParticipantModel(props);
 		}
-		return new ParticipantModel(props);
+
+		// Decrypt participant name asynchronously if E2EE is enabled
+		this.decryptParticipantName(participant);
+
+		return participant;
+	}
+
+	/**
+	 * Decrypts the participant name if E2EE is enabled.
+	 * Updates the participant model asynchronously.
+	 * @param participant - The participant model to decrypt the name for
+	 * @private
+	 */
+	private async decryptParticipantName(participant: ParticipantModel): Promise<void> {
+		const originalName = participant.name;
+		if (!originalName) {
+			return;
+		}
+
+		try {
+			const decryptedName = await this.e2eeService.decryptOrMask(originalName, participant.identity);
+			participant.setDecryptedName(decryptedName);
+
+			// Update observables to reflect the decrypted name
+			if (participant.isLocal) {
+				this.updateLocalParticipant();
+			} else {
+				this.updateRemoteParticipants();
+			}
+		} catch (error) {
+			this.log.w('Failed to decrypt participant name:', error);
+		}
 	}
 
 	private getScreenCaptureOptions(): ScreenShareCaptureOptions {
