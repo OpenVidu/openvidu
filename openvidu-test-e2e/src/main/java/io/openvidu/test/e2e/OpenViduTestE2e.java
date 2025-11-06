@@ -471,7 +471,14 @@ public class OpenViduTestE2e {
 				container.stop();
 			}
 			if (!containerAlreadyRunning) {
-				container.start();
+				try {
+					container.start();
+				} catch (Exception e) {
+					log.error("Error starting container {}: {}", dockerImage, e.getMessage());
+					String logs = commandLine.executeCommand("docker logs " + container.getContainerId(), 10);
+					log.info("Container {} logs:\n{}", dockerImage, logs);
+					return false;
+				}
 				try {
 					// Avoid error starting container
 					Thread.sleep(5000);
