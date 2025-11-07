@@ -206,21 +206,27 @@ public class BrowserUser {
 	}
 
 	private boolean hasAudioTracks(WebElement videoElement, String parentSelector) {
-		String script = "return ((document.querySelector('" + parentSelector + (parentSelector.isEmpty() ? "" : " ")
-				+ "#" + videoElement.getAttribute("id") + "').srcObject.getAudioTracks().length > 0)"
-				+ " && (document.querySelector('" + parentSelector + (parentSelector.isEmpty() ? "" : " ") + "#"
-				+ videoElement.getAttribute("id") + "').srcObject.getAudioTracks()[0].enabled))";
-		boolean audioTracks = (boolean) ((JavascriptExecutor) driver).executeScript(script);
-		return audioTracks;
+		String selector = (parentSelector.isEmpty() ? "" : parentSelector + " ") + "#"
+				+ videoElement.getAttribute("id");
+		String script = "const el = document.querySelector('" + selector + "');" +
+				"if (!el || !el.srcObject) return false;" +
+				"const tracks = el.srcObject.getAudioTracks();" +
+				"if (tracks.length === 0) return false;" +
+				"const t = tracks[0];" +
+				"return !!(t.enabled && t.readyState === 'live' && !t.muted);";
+		return (Boolean) ((JavascriptExecutor) driver).executeScript(script);
 	}
 
 	private boolean hasVideoTracks(WebElement videoElement, String parentSelector) {
-		String script = "return ((document.querySelector('" + parentSelector + (parentSelector.isEmpty() ? "" : " ")
-				+ "#" + videoElement.getAttribute("id") + "').srcObject.getVideoTracks().length > 0)"
-				+ " && (document.querySelector('" + parentSelector + (parentSelector.isEmpty() ? "" : " ") + "#"
-				+ videoElement.getAttribute("id") + "').srcObject.getVideoTracks()[0].enabled))";
-		boolean videoTracks = (boolean) ((JavascriptExecutor) driver).executeScript(script);
-		return videoTracks;
+		String selector = (parentSelector.isEmpty() ? "" : parentSelector + " ") + "#"
+				+ videoElement.getAttribute("id");
+		String script = "const el = document.querySelector('" + selector + "');" +
+				"if (!el || !el.srcObject) return false;" +
+				"const tracks = el.srcObject.getVideoTracks();" +
+				"if (tracks.length === 0) return false;" +
+				"const t = tracks[0];" +
+				"return t.enabled && t.readyState === 'live' && !t.muted && el.videoWidth > 0 && el.videoHeight > 0;";
+		return (Boolean) ((JavascriptExecutor) driver).executeScript(script);
 	}
 
 	private boolean waitUntilSrcObjectDefined(WebElement videoElement, String parentSelector, int maxMsWait) {
