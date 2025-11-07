@@ -68,13 +68,18 @@ public class OpenViduTestE2e {
 	private static class AndroidContainerWaitStrategy extends AbstractWaitStrategy {
 		@Override
 		protected void waitUntilReady() {
+			int[] retryCount = { 0 };
 			retryUntilSuccess(600, TimeUnit.SECONDS, () -> {
 				String deviceStatus = this.waitStrategyTarget.execInContainer("bash", "-c", "cat device_status")
 						.getStdout();
-				log.info("Device status: {}", deviceStatus);
+				if (retryCount[0] % 10 == 0) {
+					log.info("Android container device status: {}", deviceStatus.trim());
+				}
+				retryCount[0]++;
 				if (!"READY".equals(deviceStatus.trim())) {
 					throw new Exception();
 				}
+				log.info("Android container device status: {}", deviceStatus.trim());
 				return true;
 			});
 		}
@@ -117,7 +122,6 @@ public class OpenViduTestE2e {
 	// https://hub.docker.com/r/selenium/standalone-edge/tags
 	protected static String EDGE_VERSION = "latest";
 
-	protected static String OPENVIDU_DEPLOYMENT = "http://localhost:5000/";
 	protected static String DOCKER_ANDROID_IMAGE = "budtmo/docker-android:latest";
 
 	protected static Exception ex = null;
@@ -214,12 +218,23 @@ public class OpenViduTestE2e {
 	}
 
 	private static GenericContainer<?> androidContainer(String image, long shmSize) {
-		GenericContainer<?> android = new GenericContainer<>(DockerImageName.parse(image)).withEnv(Map.of(
-				"EMULATOR_DEVICE", "Samsung Galaxy S10", "APPIUM", "true", "APPIUM_HOST", "172.17.0.1", "APPIUM_PORT",
-				"4723", "APPIUM_ADDITIONAL_ARGS",
-				"--log /var/log/supervisor/appium.log --relaxed-security --allow-cors --allow-insecure=chromedriver_autodownload",
-				"MOBILE_WEB_TEST", "true", "RELAXED_SECURITY", "true", "WEB_VNC", "true", "WEB_LOG", "false",
-				"DATAPARTITION", "2500m")).withPrivilegedMode(true).withSharedMemorySize(shmSize)
+		Map<String, String> envVars = new java.util.HashMap<>();
+		envVars.put("EMULATOR_DEVICE", "Samsung Galaxy S10");
+		envVars.put("APPIUM", "true");
+		envVars.put("APPIUM_HOST", "172.17.0.1");
+		envVars.put("APPIUM_PORT", "4723");
+		envVars.put("APPIUM_ADDITIONAL_ARGS",
+				"--log /var/log/supervisor/appium.log --relaxed-security --allow-cors --allow-insecure=chromedriver_autodownload");
+		envVars.put("MOBILE_WEB_TEST", "true");
+		envVars.put("RELAXED_SECURITY", "true");
+		envVars.put("WEB_VNC", "true");
+		envVars.put("WEB_LOG", "false");
+		envVars.put("DATAPARTITION", "8192m");
+		envVars.put("EMULATOR_ARGS", "-gpu swiftshader_indirect -no-snapshot -no-audio -memory 8192 -partition-size 8192");
+
+		GenericContainer<?> android = new GenericContainer<>(DockerImageName.parse(image))
+				.withEnv(envVars)
+				.withPrivilegedMode(true).withSharedMemorySize(shmSize)
 				.withExposedPorts(6080, 5554, 5555, 4723).withFileSystemBind("/dev/kvm", "/dev/kvm")
 				.withFileSystemBind("/opt/openvidu/android", "/opt/openvidu/android").withReuse(true)
 				.waitingFor(new AndroidContainerWaitStrategy());
@@ -369,12 +384,6 @@ public class OpenViduTestE2e {
 			DOCKER_ANDROID_IMAGE = dockerAndroidImage;
 		}
 		log.info("Using Docker Android image {}", DOCKER_ANDROID_IMAGE);
-
-		String openviduDeployment = System.getProperty("OPENVIDU_DEPLOYMENT");
-		if (openviduDeployment != null) {
-			OPENVIDU_DEPLOYMENT = openviduDeployment;
-		}
-		log.info("Using URL {} to connect to OpenVidu deployment", OPENVIDU_DEPLOYMENT);
 	}
 
 	protected BrowserUser setupBrowser(String browser) throws Exception {
@@ -446,15 +455,16 @@ public class OpenViduTestE2e {
 				break;
 			case "ionicApp":
 				container = setupDockerAndroidContainer();
-				browserUser = new AndroidAppUser("TestUser", 50, "/opt/openvidu/android/openvidu-ionic.apk");
+				browserUser = new AndroidAppUser("TestUser", 50, "/opt/openvidu/android/openvidu-ionic.apk", true);
 				break;
 			case "reactNativeApp":
 				container = setupDockerAndroidContainer();
-				browserUser = new AndroidAppUser("TestUser", 50, "/opt/openvidu/android/openvidu-react-native.apk");
+				browserUser = new AndroidAppUser("TestUser", 50, "/opt/openvidu/android/openvidu-react-native.apk",
+						false);
 				break;
 			case "androidApp":
 				container = setupDockerAndroidContainer();
-				browserUser = new AndroidAppUser("TestUser", 50, "/opt/openvidu/android/openvidu-android.apk");
+				browserUser = new AndroidAppUser("TestUser", 50, "/opt/openvidu/android/openvidu-android.apk", false);
 				break;
 			default:
 				log.error("Browser {} not recognized", browser);

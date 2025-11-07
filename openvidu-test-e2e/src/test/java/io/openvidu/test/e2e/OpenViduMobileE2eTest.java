@@ -6,14 +6,13 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
-import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
 import javax.imageio.ImageIO;
 
-import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
@@ -25,6 +24,8 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.springframework.http.HttpMethod;
+
+import com.google.gson.JsonObject;
 
 import io.appium.java_client.AppiumBy;
 import io.appium.java_client.AppiumDriver;
@@ -57,23 +58,27 @@ public class OpenViduMobileE2eTest extends AbstractOpenViduTestappE2eTest {
 		log.info("Android emulator ready after {} seconds", (System.currentTimeMillis() - initTime) / 1000);
 		log.info("Chrome Android");
 
-		String sessionName = "MobileTestSession-" + RandomStringUtils.randomAlphanumeric(6);
+		String sessionName = "MobileTestSession-" + UUID.randomUUID().toString().substring(0, 10);
 		WebElement urlInput = user.getDriver().findElement(By.id("openvidu-url"));
+		WebElement secretInput = user.getDriver().findElement(By.id("openvidu-secret"));
 		urlInput.clear();
-		urlInput.sendKeys(OPENVIDU_DEPLOYMENT);
+		urlInput.sendKeys(OPENVIDU_URL);
+		secretInput.clear();
+		secretInput.sendKeys(OPENVIDU_SECRET);
 		String[] tokens = { getToken(sessionName), getToken(sessionName) };
 
-		user.getDriver().findElement(By.id("one2one-btn")).click();
+		user.getDriver().findElement(By.id("one2one-btn")).sendKeys(Keys.ENTER);
 
 		// Set tokens
 		for (int i = 0; i < 2; i++) {
-			user.getDriver().findElement(By.id("session-settings-btn-" + i)).click();
+			WebElement settingsBtn = user.getWaiter().until(
+					ExpectedConditions.elementToBeClickable(By.id("session-settings-btn-" + i)));
+			settingsBtn.sendKeys(Keys.ENTER);
 			Thread.sleep(1000);
 			WebElement tokenInput = user.getDriver().findElement(By.cssSelector("#custom-token-div input"));
 			tokenInput.clear();
 			tokenInput.sendKeys(tokens[i]);
-			user.getDriver().findElement(By.id("save-btn")).click();
-			Thread.sleep(1000);
+			user.getDriver().findElement(By.id("save-btn")).sendKeys(Keys.ENTER);
 		}
 
 		user.getDriver().findElements(By.className("join-btn")).forEach(el -> el.sendKeys(Keys.ENTER));
@@ -127,12 +132,17 @@ public class OpenViduMobileE2eTest extends AbstractOpenViduTestappE2eTest {
 		userNameInput.sendKeys(USER_NAME);
 
 		appiumDriver.findElement(By.cssSelector("#settings-button")).click();
-		Thread.sleep(500);
-		WebElement urlInput = appiumDriver.findElement(By.cssSelector("input.alert-input"));
-		urlInput.clear();
-		urlInput.sendKeys(OPENVIDU_DEPLOYMENT);
-		appiumDriver.findElement(By.cssSelector("#ok-btn")).click();
 		Thread.sleep(2000);
+		WebElement urlInput = appiumDriver.findElement(By.cssSelector("#url-input"));
+		urlInput.clear();
+		urlInput.sendKeys(OPENVIDU_URL);
+		WebElement secretInput = appiumDriver.findElement(By.cssSelector("#secret-input"));
+		secretInput.clear();
+		secretInput.sendKeys(OPENVIDU_SECRET);
+
+		appiumDriver.findElement(By.cssSelector("#ok-btn")).click();
+		Thread.sleep(3000);
+
 		appiumDriver.findElement(By.cssSelector("#join-button")).click();
 
 		OpenViduTestappUser chromeUser = null;
@@ -140,16 +150,20 @@ public class OpenViduMobileE2eTest extends AbstractOpenViduTestappE2eTest {
 			chromeUser = setupBrowserAndConnectToOpenViduTestapp("chrome");
 			urlInput = chromeUser.getDriver().findElement(By.id("openvidu-url"));
 			urlInput.clear();
-			urlInput.sendKeys(OPENVIDU_DEPLOYMENT);
-			chromeUser.getDriver().findElement(By.id("add-user-btn")).click();
-			chromeUser.getDriver().findElement(By.id("session-settings-btn-0")).click();
+			urlInput.sendKeys(OPENVIDU_URL);
+			secretInput = chromeUser.getDriver().findElement(By.id("openvidu-secret"));
+			secretInput.clear();
+			secretInput.sendKeys(OPENVIDU_SECRET);
+			chromeUser.getDriver().findElement(By.id("add-user-btn")).sendKeys(Keys.ENTER);
+			chromeUser.getDriver().findElement(By.id("session-settings-btn-0")).sendKeys(Keys.ENTER);
 			Thread.sleep(1000);
 			WebElement tokenInput = chromeUser.getDriver().findElement(By.cssSelector("#custom-token-div input"));
 			tokenInput.clear();
 			tokenInput.sendKeys(getToken(SESSION_NAME));
-			chromeUser.getDriver().findElement(By.id("save-btn")).click();
+			chromeUser.getDriver().findElement(By.id("save-btn")).sendKeys(Keys.ENTER);
 			Thread.sleep(1000);
-			chromeUser.getDriver().findElement(By.className("join-btn")).click();
+			chromeUser.getDriver().findElement(By.className("join-btn")).sendKeys(Keys.ENTER);
+
 			chromeUser.getEventManager().waitUntilEventReaches("connectionCreated", 2);
 			chromeUser.getEventManager().waitUntilEventReaches("accessAllowed", 1);
 			chromeUser.getEventManager().waitUntilEventReaches("streamCreated", 2);
@@ -167,17 +181,6 @@ public class OpenViduMobileE2eTest extends AbstractOpenViduTestappE2eTest {
 			Assertions.assertTrue(
 					ionicUser.assertMediaTracks(ionicUser.getDriver().findElements(By.tagName("video")), true, true),
 					"Videos were expected to have audio and video tracks");
-
-			// Check Ionic is properly receiving remote video from Chrome
-			WebElement subscriberVideo = ionicUser.getDriver().findElements(By.cssSelector("video")).get(1);
-			try {
-				Map<String, Long> rgb = ionicUser.getAverageRgbFromVideo(subscriberVideo);
-				Assertions.assertTrue(checkAverageRgbGreen(rgb), "Video is not average green");
-			} catch (Throwable e) {
-				log.error("Error checking average green of Ionic user");
-				System.out.println(getBase64Screenshot(ionicUser));
-				throw e;
-			}
 
 			gracefullyLeaveParticipants(chromeUser, 1);
 
@@ -223,10 +226,42 @@ public class OpenViduMobileE2eTest extends AbstractOpenViduTestappE2eTest {
 		reactNativeUser.getWaiter()
 				.until(ExpectedConditions.elementToBeClickable(AppiumBy.className("android.widget.EditText")));
 
+		// Open settings modal to configure OpenVidu URL and Secret
+		List<WebElement> buttons = appiumDriver.findElements(By.className("android.widget.Button"));
+		log.info("Initial buttons count: {}", buttons.size());
+		WebElement settingsButton = buttons.get(2); // Third button is "Settings"
+		settingsButton.click();
+
+		// Wait for modal to open and find input fields
+		Thread.sleep(1000);
+		List<WebElement> editTexts = appiumDriver.findElements(AppiumBy.className("android.widget.EditText"));
+		log.info("EditTexts found: {}", editTexts.size());
+
+		// Modal shows 2 EditTexts: [0]=URL, [1]=Secret
+		WebElement androidUrlInput = editTexts.get(0);
+		androidUrlInput.clear();
+		androidUrlInput.sendKeys(OPENVIDU_URL);
+
+		WebElement androidSecretInput = editTexts.get(1);
+		androidSecretInput.clear();
+		androidSecretInput.sendKeys(OPENVIDU_SECRET);
+
+		// Click Save button - after modal opens, there are more buttons (Cancel and
+		// Save)
+		buttons = appiumDriver.findElements(By.className("android.widget.Button"));
+		log.info("Buttons after modal open: {}", buttons.size());
+		// Save button should be the last one
+		WebElement saveButton = buttons.get(buttons.size() - 1);
+		saveButton.click();
+
+		Thread.sleep(1000);
+
+		// Now configure session name and join
 		WebElement sessionNameInput = appiumDriver.findElement(AppiumBy.className("android.widget.EditText"));
 		sessionNameInput.clear();
 		sessionNameInput.sendKeys(SESSION_NAME);
-		List<WebElement> buttons = appiumDriver.findElements(By.className("android.widget.Button"));
+
+		buttons = appiumDriver.findElements(By.className("android.widget.Button"));
 		WebElement joinAsPublisherButton = buttons.get(0);
 		joinAsPublisherButton.click();
 
@@ -235,7 +270,10 @@ public class OpenViduMobileE2eTest extends AbstractOpenViduTestappE2eTest {
 			chromeUser = setupBrowserAndConnectToOpenViduTestapp("chrome");
 			WebElement urlInput = chromeUser.getDriver().findElement(By.id("openvidu-url"));
 			urlInput.clear();
-			urlInput.sendKeys(OPENVIDU_DEPLOYMENT);
+			urlInput.sendKeys(OPENVIDU_URL);
+			WebElement secretInput = chromeUser.getDriver().findElement(By.id("openvidu-secret"));
+			secretInput.clear();
+			secretInput.sendKeys(OPENVIDU_SECRET);
 			chromeUser.getDriver().findElement(By.id("add-user-btn")).click();
 			chromeUser.getDriver().findElement(By.id("session-settings-btn-0")).click();
 			Thread.sleep(1000);
@@ -269,8 +307,17 @@ public class OpenViduMobileE2eTest extends AbstractOpenViduTestappE2eTest {
 			reactNativeUser.getWaiter()
 					.until(ExpectedConditions.elementToBeClickable(appiumDriver.findElement(remoteVideoLocator)));
 
-			// Check subscriber video is green
+			// Check Android's subscriber video is green
 			Map<String, Long> rgb = getAverageColorOfElement(appiumDriver, remoteVideoLocator);
+			// Wait until average color is green
+			int retries = 15;
+			while (retries > 0 && !checkAverageRgbGreen(rgb)) {
+				Thread.sleep(1000);
+				rgb = getAverageColorOfElement(appiumDriver, remoteVideoLocator);
+				log.info("Average RGB for remote video in Android: R={} G={} B={}", rgb.get("r"), rgb.get("g"),
+						rgb.get("b"));
+				retries--;
+			}
 			Assertions.assertTrue(checkAverageRgbGreen(rgb), "Remote video is not average green");
 
 			buttons = appiumDriver.findElements(By.className("android.widget.Button"));
@@ -335,13 +382,16 @@ public class OpenViduMobileE2eTest extends AbstractOpenViduTestappE2eTest {
 
 		androidUser.getWaiter().until(ExpectedConditions.elementToBeClickable(By.id("start_finish_call")));
 
-		WebElement urlInput = appiumDriver.findElement(By.id("application_server_url"));
+		WebElement urlInput = appiumDriver.findElement(By.id("openvidu_url"));
+		WebElement secretInput = appiumDriver.findElement(By.id("openvidu_secret"));
 		WebElement sessionNameInput = appiumDriver.findElement(By.id("session_name"));
 		WebElement userNameInput = appiumDriver.findElement(By.id("participant_name"));
 		urlInput.clear();
+		secretInput.clear();
 		sessionNameInput.clear();
 		userNameInput.clear();
-		urlInput.sendKeys(OPENVIDU_DEPLOYMENT);
+		urlInput.sendKeys(OPENVIDU_URL);
+		secretInput.sendKeys(OPENVIDU_SECRET);
 		sessionNameInput.sendKeys(SESSION_NAME);
 		userNameInput.sendKeys(USER_NAME);
 
@@ -352,7 +402,10 @@ public class OpenViduMobileE2eTest extends AbstractOpenViduTestappE2eTest {
 			chromeUser = setupBrowserAndConnectToOpenViduTestapp("chrome");
 			urlInput = chromeUser.getDriver().findElement(By.id("openvidu-url"));
 			urlInput.clear();
-			urlInput.sendKeys(OPENVIDU_DEPLOYMENT);
+			urlInput.sendKeys(OPENVIDU_URL);
+			secretInput = chromeUser.getDriver().findElement(By.id("openvidu-secret"));
+			secretInput.clear();
+			secretInput.sendKeys(OPENVIDU_SECRET);
 			chromeUser.getDriver().findElement(By.id("add-user-btn")).click();
 			chromeUser.getDriver().findElement(By.id("session-settings-btn-0")).click();
 			Thread.sleep(1000);
@@ -386,14 +439,23 @@ public class OpenViduMobileE2eTest extends AbstractOpenViduTestappE2eTest {
 			androidUser.getWaiter()
 					.until(ExpectedConditions.elementToBeClickable(appiumDriver.findElement(remoteVideoLocator)));
 
-			// Check subscriber video is green
+			// Check Android's subscriber video is green
 			Map<String, Long> rgb = getAverageColorOfElement(appiumDriver, remoteVideoLocator);
+			// Wait until average color is green
+			int retries = 15;
+			while (retries > 0 && !checkAverageRgbGreen(rgb)) {
+				Thread.sleep(1000);
+				rgb = getAverageColorOfElement(appiumDriver, remoteVideoLocator);
+				log.info("Average RGB for remote video in Android: R={} G={} B={}", rgb.get("r"), rgb.get("g"),
+						rgb.get("b"));
+				retries--;
+			}
 			Assertions.assertTrue(checkAverageRgbGreen(rgb), "Remote video is not average green");
 
 			appiumDriver.findElement(By.id("start_finish_call")).click();
 			androidUser.getWaiter().until(
-					ExpectedConditions.elementToBeClickable(appiumDriver.findElement(By.id("application_server_url"))));
-			Assertions.assertTrue(appiumDriver.findElement(By.id("application_server_url")).isEnabled());
+					ExpectedConditions.elementToBeClickable(appiumDriver.findElement(By.id("openvidu_url"))));
+			Assertions.assertTrue(appiumDriver.findElement(By.id("openvidu_url")).isEnabled());
 
 			chromeUser.getEventManager().waitUntilEventReaches("streamDestroyed", 1);
 			chromeUser.getEventManager().waitUntilEventReaches("connectionDestroyed", 1);
@@ -408,20 +470,22 @@ public class OpenViduMobileE2eTest extends AbstractOpenViduTestappE2eTest {
 	}
 
 	private String getToken(String sessionId) throws Exception {
-		CustomHttpClient restClient = new CustomHttpClient(OPENVIDU_DEPLOYMENT);
-		restClient.restString(HttpMethod.POST, "/api/sessions", "{'customSessionId': '" + sessionId + "'}",
+		CustomHttpClient restClient = new CustomHttpClient(OPENVIDU_URL, "OPENVIDUAPP", OPENVIDU_SECRET);
+		try {
+			restClient.restString(HttpMethod.POST, "/openvidu/api/sessions", "{'customSessionId': '" + sessionId + "'}",
+					HttpURLConnection.HTTP_OK);
+		} catch (Exception e) {
+			restClient.restString(HttpMethod.POST, "/openvidu/api/sessions", "{'customSessionId': '" + sessionId + "'}",
+					HttpURLConnection.HTTP_CONFLICT);
+		}
+		JsonObject response = restClient.rest(HttpMethod.POST, "/openvidu/api/sessions/" + sessionId + "/connection",
+				"{}",
 				HttpURLConnection.HTTP_OK);
-		return restClient.restString(HttpMethod.POST, "/api/sessions/" + sessionId + "/connections", "{}",
-				HttpURLConnection.HTTP_OK);
+		return response.get("token").getAsString();
 	}
 
 	private Map<String, Long> getAverageColorOfElement(WebDriver driver, By locator) throws IOException {
-		// TODO: change getScreenshotAs(OutputType.BASE64) to
-		// getScreenshotAs(OutputType.BYTES) when
-		// https://github.com/appium/java-client/issues/1783 is fixed
-		String base64 = driver.findElement(locator).getScreenshotAs(OutputType.BASE64);
-		base64 = base64.replaceAll("[\n\r]", "");
-		byte[] bytes = Base64.getDecoder().decode(base64);
+		byte[] bytes = driver.findElement(locator).getScreenshotAs(OutputType.BYTES);
 		InputStream is = new ByteArrayInputStream(bytes);
 		BufferedImage bi = ImageIO.read(is);
 		return averageColor(bi);

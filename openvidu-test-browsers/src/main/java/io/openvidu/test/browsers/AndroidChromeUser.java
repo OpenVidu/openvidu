@@ -33,15 +33,32 @@ public class AndroidChromeUser extends BrowserUser {
 		}
 
 		ChromeOptions options = new ChromeOptions();
-		options.addArguments("no-first-run", "disable-infobars", "use-fake-ui-for-media-stream",
-				"use-fake-device-for-media-stream", "ignore-certificate-errors",
-				"autoplay-policy=no-user-gesture-required");
+		options.addArguments(
+				// Media stream fake devices
+				"use-fake-ui-for-media-stream",
+				"use-fake-device-for-media-stream",
+				// Skip Chrome welcome/setup screens
+				"no-first-run",
+				"disable-infobars",
+				"no-default-browser-check",
+				// Allow self-signed certificates (for test app)
+				"ignore-certificate-errors",
+				// Auto-play policy for media
+				"autoplay-policy=no-user-gesture-required",
+				// Basic stability
+				"no-sandbox",
+				"disable-dev-shm-usage"
+		);
+		// Enable W3C protocol
+		options.setExperimentalOption("w3c", true);
 
 		DesiredCapabilities capabilities = new DesiredCapabilities();
 		capabilities.setCapability("platformName", "Android");
 		capabilities.setCapability(ChromeOptions.CAPABILITY, options);
 		capabilities.setCapability(CapabilityType.BROWSER_NAME, "Chrome");
 		capabilities.setCapability("appium:automationName", "UiAutomator2");
+		// Grant permissions at Android level instead of Chrome prefs
+		capabilities.setCapability("appium:autoGrantPermissions", true);
 
 		URL url = null;
 		try {
