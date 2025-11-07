@@ -453,9 +453,11 @@ public class OpenViduMobileE2eTest extends AbstractOpenViduTestappE2eTest {
 			Assertions.assertTrue(checkAverageRgbGreen(rgb), "Remote video is not average green");
 
 			appiumDriver.findElement(By.id("start_finish_call")).click();
-			androidUser.getWaiter().until(
-					ExpectedConditions.elementToBeClickable(appiumDriver.findElement(By.id("openvidu_url"))));
-			Assertions.assertTrue(appiumDriver.findElement(By.id("openvidu_url")).isEnabled());
+			
+			// Wait for the form to be visible again after leaving the session
+			WebElement urlInputAfterLeave = androidUser.getWaiter().until(
+					ExpectedConditions.elementToBeClickable(By.id("openvidu_url")));
+			Assertions.assertTrue(urlInputAfterLeave.isEnabled());
 
 			chromeUser.getEventManager().waitUntilEventReaches("streamDestroyed", 1);
 			chromeUser.getEventManager().waitUntilEventReaches("connectionDestroyed", 1);
