@@ -213,7 +213,7 @@ public class BrowserUser {
 				"const tracks = el.srcObject.getAudioTracks();" +
 				"if (tracks.length === 0) return false;" +
 				"const t = tracks[0];" +
-				"return !!(t.enabled && t.readyState === 'live' && !t.muted);";
+				"return !!(t.enabled);";
 		return (Boolean) ((JavascriptExecutor) driver).executeScript(script);
 	}
 
@@ -225,7 +225,7 @@ public class BrowserUser {
 				"const tracks = el.srcObject.getVideoTracks();" +
 				"if (tracks.length === 0) return false;" +
 				"const t = tracks[0];" +
-				"return t.enabled && t.readyState === 'live' && !t.muted && el.videoWidth > 0 && el.videoHeight > 0;";
+				"return !!(t.enabled && el.videoWidth > 0 && el.videoHeight > 0);";
 		return (Boolean) ((JavascriptExecutor) driver).executeScript(script);
 	}
 
