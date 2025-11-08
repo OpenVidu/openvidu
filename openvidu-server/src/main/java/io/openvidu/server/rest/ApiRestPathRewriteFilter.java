@@ -17,8 +17,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpMethod;
-import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configurers.ExpressionUrlAuthorizationConfigurer;
+import org.springframework.security.config.annotation.web.configurers.AuthorizeHttpRequestsConfigurer;
 import org.springframework.web.util.WebUtils;
 
 import io.openvidu.server.config.OpenviduConfig;
@@ -116,29 +115,23 @@ public class ApiRestPathRewriteFilter implements Filter {
 		}
 	}
 
-	public static void protectOldPathsCe(
-			ExpressionUrlAuthorizationConfigurer<HttpSecurity>.ExpressionInterceptUrlRegistry conf,
-			OpenviduConfig openviduConf) throws Exception {
+    public static void protectOldPathsCe(
+		AuthorizeHttpRequestsConfigurer<?>.AuthorizationManagerRequestMatcherRegistry conf,
+		OpenviduConfig openviduConf) throws Exception {
 
 		conf.requestMatchers("/api/**").hasRole("ADMIN")
-				// /config
 				.requestMatchers(HttpMethod.GET, "/config/openvidu-publicurl").permitAll()
 				.requestMatchers(HttpMethod.GET, "/config/**").hasRole("ADMIN")
-				// /cdr
 				.requestMatchers(HttpMethod.GET, "/cdr/**").hasRole("ADMIN")
-				// /accept-certificate
 				.requestMatchers(HttpMethod.GET, "/accept-certificate").permitAll()
-				// Dashboard
 				.requestMatchers(HttpMethod.GET, "/dashboard/**").hasRole("ADMIN");
 
-		// Security for recording layouts
 		conf.requestMatchers("/layouts/**").hasRole("ADMIN");
 
-		// Security for recorded video files
 		if (openviduConf.getOpenViduRecordingPublicAccess()) {
-			conf = conf.requestMatchers("/recordings/**").permitAll();
+			conf.requestMatchers("/recordings/**").permitAll();
 		} else {
-			conf = conf.requestMatchers("/recordings/**").hasRole("ADMIN");
+			conf.requestMatchers("/recordings/**").hasRole("ADMIN");
 		}
 	}
 

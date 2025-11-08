@@ -27,16 +27,19 @@ import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.core.env.Environment;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configurers.AuthorizeHttpRequestsConfigurer;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CorsFilter;
 
+import io.openvidu.server.rest.ApiRestPathRewriteFilter;
 import io.openvidu.server.rest.RequestMappings;
 
-@Configuration()
+@Configuration
 @Order(Ordered.LOWEST_PRECEDENCE)
 public class SecurityConfig {
 
@@ -49,55 +52,43 @@ public class SecurityConfig {
 	@Bean
 	@ConditionalOnMissingBean(name = "securityConfigPro")
 	public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-		// Configure CORS and CSRF
-		configureHttpSecurity(http);
-		
-		// Configure authorization rules
-		configureAuthorization(http);
-		
-		// Configure HTTP Basic authentication
-		http.httpBasic(httpBasic -> {});
+		return buildFilterChain(http);
+	}
 
+	protected SecurityFilterChain buildFilterChain(HttpSecurity http) throws Exception {
+		configureHttpSecurity(http);
+		applyHeaders(http);
+		configureAuthorization(http);
+		configureHttpBasic(http);
 		return http.build();
 	}
 
-	/**
-	 * Configure CORS and CSRF settings. Can be overridden by subclasses.
-	 */
 	protected void configureHttpSecurity(HttpSecurity http) throws Exception {
-		http.cors(cors -> {})  // Uses below CorsFilter bean
-			.csrf(csrf -> csrf.disable());
+		http.cors(cors -> {
+			// Rely on bean defined below
+		}).csrf(csrf -> csrf.disable());
 	}
 
-	/**
-	 * Configure authorization rules for CE. Can be extended by PRO subclass.
-	 */
+	protected void applyHeaders(HttpSecurity http) throws Exception {
+		// Default CE configuration does not customize headers
+	}
+
 	protected void configureAuthorization(HttpSecurity http) throws Exception {
-		http.authorizeHttpRequests(auth -> {
-			// 1. Public endpoints first (most specific)
-			configurePublicEndpoints(auth);
-			// 2. Protected endpoints second (less specific /api/**)
-			configureProtectedEndpoints(auth);
-			// 3. WebSocket endpoints last (least specific)
-			configureWebSocketEndpoints(auth);
-		});
+		http.authorizeHttpRequests(auth -> configureAuthorizationRules(auth));
 	}
 
-	/**
-	 * Configure public endpoints. Can be overridden by subclasses.
-	 * MUST be called BEFORE configureProtectedEndpoints to ensure specific public paths
-	 * are not caught by broader protected patterns like /api/**
-	 */
-	protected void configurePublicEndpoints(org.springframework.security.config.annotation.web.configurers.AuthorizeHttpRequestsConfigurer<?>.AuthorizationManagerRequestMatcherRegistry auth) {
-		// Allow CORS preflight requests FIRST
-		auth.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll();
-		
-		// Public API endpoints (must come before /api/** pattern)
+	protected void configureAuthorizationRules(AuthorizeHttpRequestsConfigurer<?>.AuthorizationManagerRequestMatcherRegistry auth) {
+		configurePublicEndpoints(auth);
+		configureProtectedEndpoints(auth);
+		configureWebSocketEndpoints(auth);
+		configureDeprecatedApiEndpoints(auth);
+	}
+
+	protected void configurePublicEndpoints(AuthorizeHttpRequestsConfigurer<?>.AuthorizationManagerRequestMatcherRegistry auth) {
 		auth.requestMatchers(HttpMethod.GET, RequestMappings.API + "/config/openvidu-publicurl").permitAll()
 			.requestMatchers(HttpMethod.HEAD, RequestMappings.API + "/config/openvidu-publicurl").permitAll()
 			.requestMatchers(HttpMethod.GET, RequestMappings.ACCEPT_CERTIFICATE).permitAll();
-		
-		// Secure recordings depending on OPENVIDU_RECORDING_PUBLIC_ACCESS
+
 		if (openviduConf.getOpenViduRecordingPublicAccess()) {
 			auth.requestMatchers(HttpMethod.GET, RequestMappings.RECORDINGS + "/**").permitAll();
 		} else {
@@ -105,24 +96,29 @@ public class SecurityConfig {
 		}
 	}
 
-	/**
-	 * Configure protected API endpoints. Can be extended by subclasses.
-	 * MUST be called AFTER configurePublicEndpoints to avoid catching specific public paths.
-	 */
-	protected void configureProtectedEndpoints(org.springframework.security.config.annotation.web.configurers.AuthorizeHttpRequestsConfigurer<?>.AuthorizationManagerRequestMatcherRegistry auth) {
-		// Protected API endpoints - uses broader patterns so must come AFTER public endpoints
+	protected void configureProtectedEndpoints(AuthorizeHttpRequestsConfigurer<?>.AuthorizationManagerRequestMatcherRegistry auth) {
 		auth.requestMatchers(RequestMappings.API + "/**").hasRole("ADMIN")
 			.requestMatchers(HttpMethod.GET, RequestMappings.CDR + "/**").hasRole("ADMIN")
 			.requestMatchers(HttpMethod.GET, RequestMappings.FRONTEND_CE + "/**").hasRole("ADMIN")
 			.requestMatchers(HttpMethod.GET, RequestMappings.CUSTOM_LAYOUTS + "/**").hasRole("ADMIN");
 	}
 
-	/**
-	 * Configure WebSocket endpoints. Should be called last to avoid interfering with more specific rules.
-	 */
-	protected void configureWebSocketEndpoints(org.springframework.security.config.annotation.web.configurers.AuthorizeHttpRequestsConfigurer<?>.AuthorizationManagerRequestMatcherRegistry auth) {
-		// WebSocket endpoints: allow without authentication
-		auth.requestMatchers("/openvidu", "/openvidu/info").permitAll();
+	protected void configureWebSocketEndpoints(AuthorizeHttpRequestsConfigurer<?>.AuthorizationManagerRequestMatcherRegistry auth) {
+		auth.requestMatchers(RequestMappings.WS_RPC, RequestMappings.WS_INFO).permitAll();
+	}
+
+	protected void configureDeprecatedApiEndpoints(AuthorizeHttpRequestsConfigurer<?>.AuthorizationManagerRequestMatcherRegistry auth) {
+		if (Boolean.valueOf(environment.getProperty("SUPPORT_DEPRECATED_API"))) {
+			try {
+				ApiRestPathRewriteFilter.protectOldPathsCe(auth, openviduConf);
+			} catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		}
+	}
+
+	protected void configureHttpBasic(HttpSecurity http) throws Exception {
+		http.httpBasic(Customizer.withDefaults());
 	}
 
 	@Bean
