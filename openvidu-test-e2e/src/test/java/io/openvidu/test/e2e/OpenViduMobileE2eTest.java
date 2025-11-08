@@ -380,19 +380,28 @@ public class OpenViduMobileE2eTest extends AbstractOpenViduTestappE2eTest {
 		final String SESSION_NAME = "NativeAndroidTestSession";
 		final String USER_NAME = "NativeAndroidUser";
 
-		androidUser.getWaiter().until(ExpectedConditions.elementToBeClickable(By.id("start_finish_call")));
-
-		WebElement urlInput = appiumDriver.findElement(By.id("openvidu_url"));
-		WebElement secretInput = appiumDriver.findElement(By.id("openvidu_secret"));
-		WebElement sessionNameInput = appiumDriver.findElement(By.id("session_name"));
-		WebElement userNameInput = appiumDriver.findElement(By.id("participant_name"));
+		WebElement urlInput = androidUser.getWaiter()
+				.until(ExpectedConditions.elementToBeClickable(By.id("openvidu_url")));
 		urlInput.clear();
-		secretInput.clear();
-		sessionNameInput.clear();
-		userNameInput.clear();
+		Thread.sleep(500);
 		urlInput.sendKeys(OPENVIDU_URL);
+
+		WebElement secretInput = androidUser.getWaiter()
+				.until(ExpectedConditions.elementToBeClickable(By.id("openvidu_secret")));
+		secretInput.clear();
+		Thread.sleep(500);
 		secretInput.sendKeys(OPENVIDU_SECRET);
+
+		WebElement sessionNameInput = androidUser.getWaiter()
+				.until(ExpectedConditions.elementToBeClickable(By.id("session_name")));
+		sessionNameInput.clear();
+		Thread.sleep(500);
 		sessionNameInput.sendKeys(SESSION_NAME);
+
+		WebElement userNameInput = androidUser.getWaiter()
+				.until(ExpectedConditions.elementToBeClickable(By.id("participant_name")));
+		userNameInput.clear();
+		Thread.sleep(500);
 		userNameInput.sendKeys(USER_NAME);
 
 		appiumDriver.findElement(By.id("start_finish_call")).click();
@@ -453,7 +462,7 @@ public class OpenViduMobileE2eTest extends AbstractOpenViduTestappE2eTest {
 			Assertions.assertTrue(checkAverageRgbGreen(rgb), "Remote video is not average green");
 
 			appiumDriver.findElement(By.id("start_finish_call")).click();
-			
+
 			// Wait for the form to be visible again after leaving the session
 			WebElement urlInputAfterLeave = androidUser.getWaiter().until(
 					ExpectedConditions.elementToBeClickable(By.id("openvidu_url")));
