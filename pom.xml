@@ -43,40 +43,41 @@
 
 	<properties>
 
-		<version.spring-boot>3.4.0</version.spring-boot>
+		<version.spring-boot>3.5.7</version.spring-boot>
 		<version.kurento>7.2.1-SNAPSHOT</version.kurento>
 		<version.openvidu.java.client>2.31.0</version.openvidu.java.client>
 		<version.openvidu.client>1.1.0</version.openvidu.client>
 		<version.openvidu.test.browsers>1.1.0</version.openvidu.test.browsers>
 		<version.openvidu.test.e2e>1.1.1</version.openvidu.test.e2e>
 
-		<version.junit>5.11.4</version.junit>
-		<version.selenium>4.26.0</version.selenium>
-		<version.mockito.core>5.14.2</version.mockito.core>
+		<version.junit>5.12.2</version.junit>
+		<version.selenium>4.38.0</version.selenium>
+		<version.mockito.core>5.20.0</version.mockito.core>
 		<version.janino>3.1.12</version.janino>
 		<version.dockerjava>3.6.0</version.dockerjava>
 		<!-- When upgrading also upgrade in openvidu-java-client pom.xml -->
-		<version.slf4j>2.0.16</version.slf4j>
+		<version.slf4j>2.0.17</version.slf4j>
 		<!-- When upgrading also upgrade in openvidu-java-client pom.xml -->
-		<version.gson>2.11.0</version.gson>
+		<version.gson>2.13.2</version.gson>
 		<version.jcodec>0.2.5</version.jcodec>
-		<version.testcontainers>1.20.4</version.testcontainers>
-		<version.appium>9.3.0</version.appium>
-		<version.stringsimilarity>2.0.0</version.stringsimilarity>		<!-- fixed patched versions -->
-		<version.logback>1.5.12</version.logback>
-		<version.jackson>2.18.1</version.jackson>
+		<version.testcontainers>2.0.1</version.testcontainers>
+		<version.appium>10.0.0</version.appium>
+		<version.stringsimilarity>2.0.0</version.stringsimilarity>
+		<version.logback>1.5.20</version.logback>
+		<version.jackson>3.0.2</version.jackson>
+		<version.jackson-annotations>2.20</version.jackson-annotations>
 
-		<version.compiler.plugin>3.13.0</version.compiler.plugin>
-		<version.enforcer.plugin>3.5.0</version.enforcer.plugin>
-		<version.extra.enforcer.rules.plugin>1.8.0</version.extra.enforcer.rules.plugin>
+		<version.compiler.plugin>3.14.1</version.compiler.plugin>
+		<version.enforcer.plugin>3.6.2</version.enforcer.plugin>
+		<version.extra.enforcer.rules.plugin>1.11.0</version.extra.enforcer.rules.plugin>
 		<version.source.plugin>3.3.1</version.source.plugin>
 		<version.assembly.plugin>3.7.1</version.assembly.plugin>
-		<version.surefire.plugin>3.5.2</version.surefire.plugin>
-		<version.gpg.plugin>3.2.7</version.gpg.plugin>
+		<version.surefire.plugin>3.5.4</version.surefire.plugin>
+		<version.gpg.plugin>3.2.8</version.gpg.plugin>
 		<version.nexus.staging.plugin>1.7.0</version.nexus.staging.plugin>
-		<version.exec.plugin>3.5.0</version.exec.plugin>
-		<version.javadoc.plugin>3.11.1</version.javadoc.plugin>
-		<version.maven.artifact>3.9.9</version.maven.artifact>
+		<version.exec.plugin>3.6.2</version.exec.plugin>
+		<version.javadoc.plugin>3.12.0</version.javadoc.plugin>
+		<version.maven.artifact>3.9.11</version.maven.artifact>
 		<openvidu.scm.url>https://github.com/OpenVidu/openvidu</openvidu.scm.url>
 		<openvidu.scm.connection>git@github.com:OpenVidu/openvidu.git</openvidu.scm.connection>
 
@@ -96,7 +97,7 @@
 		<maven.compiler.release>${java.version}</maven.compiler.release>
 
 		<!-- maven-enforcer-plugin -->
-		<maven.min.version>3.0.3</maven.min.version>
+		<maven.min.version>3.9.0</maven.min.version>
 
 	</properties>
 

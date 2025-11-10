@@ -2,7 +2,7 @@ package io.openvidu.test.browsers;
 
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.concurrent.TimeUnit;
+import java.time.Duration;
 
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.remote.Browser;
@@ -39,7 +39,7 @@ public class OperaUser extends BrowserUser {
 			// this.driver = new OperaDriver(options);
 		}
 
-		this.driver.manage().timeouts().setScriptTimeout(timeOfWaitInSeconds, TimeUnit.SECONDS);
+		this.driver.manage().timeouts().scriptTimeout(Duration.ofSeconds(timeOfWaitInSeconds));
 		this.configureDriver(new org.openqa.selenium.Dimension(1920, 1080));
 	}
 
