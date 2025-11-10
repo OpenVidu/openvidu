@@ -12,7 +12,7 @@
 	#streamContainer
 >
 	<div
-		*ngIf="!isMinimal && showParticipantName"
+		*ngIf="!isMinimal && showParticipantName && !_track.isAudioTrack || (_track.isAudioTrack && _track.participant.onlyHasAudioTracks)"
 		id="participant-name-container"
 		class="participant-name"
 		[class.fullscreen]="isFullscreen"
