@@ -1,21 +1,23 @@
 FROM openvidu/openvidu-test-e2e:24.04
 
-RUN apt-get -y update && \
-    apt-get install -y wget unzip
+ENV DEBIAN_FRONTEND=noninteractive \
+    ANDROID_SDK_ROOT=/opt/android-sdk \
+    ANDROID_HOME=/opt/android-sdk \
+    CMDLINE_TOOLS_VERSION=11076708 \
+    ANDROID_PLATFORM=android-34
 
-# Install Android sdkmanager
-RUN mkdir /usr/lib/android-sdk && cd /usr/lib/android-sdk && \
-    wget https://dl.google.com/android/repository/commandlinetools-linux-9123335_latest.zip && \
-    unzip commandlinetools-linux*.zip && \
-    rm commandlinetools-linux*.zip && \
-    mkdir latest && mv cmdline-tools/* ./latest && mv latest ./cmdline-tools/.
+ENV PATH="$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH"
 
-# Install Android SDK using sdkmanager
-RUN yes | /usr/lib/android-sdk/cmdline-tools/latest/bin/sdkmanager "platform-tools" "platforms;android-32"
-
-# Export ANDROID_HOME env variable
-ENV ANDROID_HOME=/usr/lib/android-sdk
-
-# Cleanup
-RUN rm -rf /var/lib/apt/lists/*
-RUN apt-get autoremove --purge -y && apt-get autoclean
+RUN set -eux; \
+    apt-get update; \
+    apt-get install -y --no-install-recommends unzip; \
+    mkdir -p "$ANDROID_SDK_ROOT"; \
+    curl -fsSLo /tmp/cmdline-tools.zip "https://dl.google.com/android/repository/commandlinetools-linux-${CMDLINE_TOOLS_VERSION}_latest.zip"; \
+    unzip /tmp/cmdline-tools.zip -d "$ANDROID_SDK_ROOT"; \
+    rm /tmp/cmdline-tools.zip; \
+    mv "$ANDROID_SDK_ROOT"/cmdline-tools "$ANDROID_SDK_ROOT"/cmdline-tools-temp; \
+    mkdir -p "$ANDROID_SDK_ROOT"/cmdline-tools; \
+    mv "$ANDROID_SDK_ROOT"/cmdline-tools-temp "$ANDROID_SDK_ROOT"/cmdline-tools/latest; \
+    yes | "$ANDROID_SDK_ROOT"/cmdline-tools/latest/bin/sdkmanager --sdk_root="$ANDROID_SDK_ROOT" "platform-tools" "platforms;${ANDROID_PLATFORM}"; \
+    apt-get purge -y --auto-remove unzip; \
+    rm -rf /var/lib/apt/lists/*
