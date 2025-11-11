@@ -51,6 +51,7 @@ import { RecordingStatus } from '../../models/recording.model';
 import { TemplateManagerService, SessionTemplateConfiguration } from '../../services/template/template-manager.service';
 import { ViewportService } from '../../services/viewport/viewport.service';
 import { E2eeService } from '../../services/e2ee/e2ee.service';
+import { safeJsonParse } from '../../utils/utils';
 
 /**
  * @internal
@@ -464,103 +465,136 @@ export class SessionComponent implements OnInit, OnDestroy {
 		this.room.on(
 			RoomEvent.DataReceived,
 			async (payload: Uint8Array, participant?: RemoteParticipant, _?: DataPacket_Kind, topic?: string) => {
-				const storedParticipant = this.participantService.getRemoteParticipantBySid(participant?.sid || '');
-				if (!storedParticipant) {
-					this.log.w('DataReceived from unknown participant', participant);
-					return;
-				}
-
-				const { identity: participantIdentity, name: participantName } = storedParticipant;
-				// Decrypt payload if it's a CHAT message and E2EE is enabled
-				let decryptedPayload: Uint8Array = payload;
-				if (topic === DataTopic.CHAT && this.e2eeService.isEnabled) {
-					decryptedPayload = await this.e2eeService.decryptOrMask(
-						payload,
-						participantIdentity,
-						JSON.stringify({ message: '******' }) // The fallback text must be a valid JSON
-					);
-				}
-
-				// Decode and parse the JSON event
-				let event: any;
 				try {
-					event = JSON.parse(new TextDecoder().decode(decryptedPayload));
+					const rawText = new TextDecoder().decode(payload);
+					this.log.d('DataReceived (raw)', { topic });
+
+					const message = safeJsonParse(rawText);
+					if (!message) {
+						this.log.w('Discarding data: malformed JSON', rawText);
+						return;
+					}
+
+					const fromServer = participant === undefined;
+
+					// Validate source and resolve participant info
+					const storedParticipant = participant
+						? this.participantService.getRemoteParticipantBySid(participant.sid || '')
+						: undefined;
+					if (participant && !storedParticipant) {
+						this.log.w('DataReceived from unknown participant', participant);
+						return;
+					}
+					if (!fromServer && !participant) {
+						this.log.w('DataReceived from unknown source', payload);
+						return;
+					}
+
+					const participantIdentity = storedParticipant?.identity || '';
+					const participantName = storedParticipant?.name || '';
+
+					// Decrypt if required
+					const decryptedPayload = await this.decryptIfNeeded(topic, payload, participantIdentity);
+
+					// Parse event payload after possible decryption
+					const event = safeJsonParse(new TextDecoder().decode(decryptedPayload));
+					if (!event) {
+						this.log.e('Error parsing data message after decryption');
+						return;
+					}
 					this.log.d(`Data event received: ${topic}`);
-				} catch (parseError) {
-					this.log.e('Error parsing data message:', parseError);
-					return; // Can't process malformed data
-				}
 
-				// Handle the event based on topic
-				switch (topic) {
-					case DataTopic.CHAT:
-						this.chatService.addRemoteMessage(event.message, participantName || participantIdentity || 'Unknown');
-						break;
-					case DataTopic.RECORDING_STARTING:
-						this.log.d('Recording is starting', event);
-						this.recordingService.setRecordingStarting();
-						break;
-					case DataTopic.RECORDING_STARTED:
-						this.log.d('Recording has been started', event);
-						this.recordingService.setRecordingStarted(event);
-						break;
-					case DataTopic.RECORDING_STOPPING:
-						this.log.d('Recording is stopping', event);
-						this.recordingService.setRecordingStopping();
-						break;
-					case DataTopic.RECORDING_STOPPED:
-						this.log.d('RECORDING_STOPPED', event);
-						this.recordingService.setRecordingStopped(event);
-						break;
-
-					case DataTopic.RECORDING_DELETED:
-						this.log.d('RECORDING_DELETED', event);
-						this.recordingService.deleteRecording(event);
-						break;
-
-					case DataTopic.RECORDING_FAILED:
-						this.log.d('RECORDING_FAILED', event);
-						this.recordingService.setRecordingFailed(event.error);
-						break;
-
-					case DataTopic.BROADCASTING_STARTING:
-						this.broadcastingService.setBroadcastingStarting();
-						break;
-					case DataTopic.BROADCASTING_STARTED:
-						this.log.d('Broadcasting has been started', event);
-						this.broadcastingService.setBroadcastingStarted(event);
-						break;
-
-					case DataTopic.BROADCASTING_STOPPING:
-						this.broadcastingService.setBroadcastingStopping();
-						break;
-					case DataTopic.BROADCASTING_STOPPED:
-						this.broadcastingService.setBroadcastingStopped();
-						break;
-
-					case DataTopic.BROADCASTING_FAILED:
-						this.broadcastingService.setBroadcastingFailed(event.error);
-						break;
-
-					case DataTopic.ROOM_STATUS:
-						const { recordingList, isRecordingStarted, isBroadcastingStarted, broadcastingId } = event as RoomStatusData;
-
-						if (this.libService.showRecordingActivityRecordingsList()) {
-							this.recordingService.setRecordingList(recordingList);
-						}
-						if (isRecordingStarted) {
-							const recordingActive = recordingList.find((recording) => recording.status === RecordingStatus.STARTED);
-							this.recordingService.setRecordingStarted(recordingActive);
-						}
-						if (isBroadcastingStarted) {
-							this.broadcastingService.setBroadcastingStarted(broadcastingId);
-						}
-
-					default:
-						break;
+					// Dispatch handling
+					this.handleDataEvent(topic, event, participantName || participantIdentity || 'Unknown');
+				} catch (err) {
+					this.log.e('Unhandled error processing DataReceived', err);
 				}
 			}
 		);
+	}
+
+	private handleDataEvent(topic: string | undefined, event: any, participantName: string) {
+		// Handle the event based on topic
+		switch (topic) {
+			case DataTopic.CHAT:
+				this.chatService.addRemoteMessage(event.message, participantName);
+				break;
+			case DataTopic.RECORDING_STARTING:
+				this.log.d('Recording is starting', event);
+				this.recordingService.setRecordingStarting();
+				break;
+			case DataTopic.RECORDING_STARTED:
+				this.log.d('Recording has been started', event);
+				this.recordingService.setRecordingStarted(event);
+				break;
+			case DataTopic.RECORDING_STOPPING:
+				this.log.d('Recording is stopping', event);
+				this.recordingService.setRecordingStopping();
+				break;
+			case DataTopic.RECORDING_STOPPED:
+				this.log.d('RECORDING_STOPPED', event);
+				this.recordingService.setRecordingStopped(event);
+				break;
+
+			case DataTopic.RECORDING_DELETED:
+				this.log.d('RECORDING_DELETED', event);
+				this.recordingService.deleteRecording(event);
+				break;
+
+			case DataTopic.RECORDING_FAILED:
+				this.log.d('RECORDING_FAILED', event);
+				this.recordingService.setRecordingFailed(event.error);
+				break;
+
+			case DataTopic.BROADCASTING_STARTING:
+				this.broadcastingService.setBroadcastingStarting();
+				break;
+			case DataTopic.BROADCASTING_STARTED:
+				this.log.d('Broadcasting has been started', event);
+				this.broadcastingService.setBroadcastingStarted(event);
+				break;
+
+			case DataTopic.BROADCASTING_STOPPING:
+				this.broadcastingService.setBroadcastingStopping();
+				break;
+			case DataTopic.BROADCASTING_STOPPED:
+				this.broadcastingService.setBroadcastingStopped();
+				break;
+
+			case DataTopic.BROADCASTING_FAILED:
+				this.broadcastingService.setBroadcastingFailed(event.error);
+				break;
+
+			case DataTopic.ROOM_STATUS:
+				const { recordingList, isRecordingStarted, isBroadcastingStarted, broadcastingId } = event as RoomStatusData;
+
+				if (this.libService.showRecordingActivityRecordingsList()) {
+					this.recordingService.setRecordingList(recordingList);
+				}
+				if (isRecordingStarted) {
+					const recordingActive = recordingList.find((recording) => recording.status === RecordingStatus.STARTED);
+					this.recordingService.setRecordingStarted(recordingActive);
+				}
+				if (isBroadcastingStarted) {
+					this.broadcastingService.setBroadcastingStarted(broadcastingId);
+				}
+
+			default:
+				break;
+		}
+	}
+
+	private async decryptIfNeeded(topic: string | undefined, payload: Uint8Array, identity: string): Promise<Uint8Array> {
+		if (topic === DataTopic.CHAT && this.e2eeService.isEnabled) {
+			try {
+				return await this.e2eeService.decryptOrMask(payload, identity, JSON.stringify({ message: '******' }));
+			} catch (e) {
+				this.log.e('Error decrypting payload, using masked fallback', e);
+				// In case of decryption error, return a masked JSON so subsequent parsing won't crash
+				return new TextEncoder().encode(JSON.stringify({ message: '******' }));
+			}
+		}
+		return payload;
 	}
 
 	private subscribeToReconnection() {
