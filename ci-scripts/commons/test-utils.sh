@@ -129,13 +129,14 @@ if [[ "${USE_SPECIFIC_KURENTO_JAVA_COMMIT}" == true ]]; then
     git clone https://github.com/Kurento/kurento.git
     pushd kurento/clients/java
     git checkout -f "${KURENTO_JAVA_COMMIT}"
-    MVN_VERSION=$(mvn -q -Dexec.executable=echo -Dexec.args='${project.version}' --non-recursive exec:exec)
+    TEST_LOCAL_TMP_VERSION="KURENTO-LOCAL-VERSION-$RANDOM"
+    mvn -f qa-pom/pom.xml versions:set -DnewVersion=${TEST_LOCAL_TMP_VERSION} -DgenerateBackupPoms=false && mvn -f parent-pom/pom.xml versions:set -DnewVersion=${TEST_LOCAL_TMP_VERSION} -DgenerateBackupPoms=false -DprocessParent=true
     mvn -B -Dmaven.artifact.threads=1 clean install
     popd
     rm -rf kurento
     mvn -B versions:set-property \
         -Dproperty=version.kurento \
-        -DnewVersion="${MVN_VERSION}"
+        -DnewVersion="${TEST_LOCAL_TMP_VERSION}"
 
 fi
 
