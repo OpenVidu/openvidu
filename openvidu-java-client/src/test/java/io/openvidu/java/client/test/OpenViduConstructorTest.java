@@ -18,8 +18,9 @@ import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManagerBuil
 import org.apache.hc.client5.http.impl.routing.DefaultProxyRoutePlanner;
 import org.apache.hc.client5.http.io.HttpClientConnectionManager;
 import org.apache.hc.client5.http.protocol.HttpClientContext;
-import org.apache.hc.client5.http.ssl.SSLConnectionSocketFactory;
-import org.apache.hc.client5.http.ssl.SSLConnectionSocketFactoryBuilder;
+import org.apache.hc.client5.http.ssl.DefaultClientTlsStrategy;
+import org.apache.hc.client5.http.ssl.HostnameVerificationPolicy;
+import org.apache.hc.client5.http.ssl.NoopHostnameVerifier;
 import org.apache.hc.core5.http.HttpHeaders;
 import org.apache.hc.core5.http.HttpHost;
 import org.apache.hc.core5.http.message.BasicHeader;
@@ -70,16 +71,17 @@ public class OpenViduConstructorTest {
 		builder.setRoutePlanner(routePlanner);
 
 		// Custom SSLContext
-		SSLContext sslContext = null;
+		SSLContext sslContext;
 		try {
 			sslContext = SSLContext.getInstance("TLSv1.2");
 			sslContext.init(null, null, null);
 		} catch (Exception e) {
+			throw new RuntimeException(e);
 		}
-		final SSLConnectionSocketFactory sslSocketFactory = SSLConnectionSocketFactoryBuilder.create()
-				.setSslContext(sslContext).build();
+		final DefaultClientTlsStrategy tlsStrategy = new DefaultClientTlsStrategy(sslContext,
+				HostnameVerificationPolicy.CLIENT, NoopHostnameVerifier.INSTANCE);
 		final HttpClientConnectionManager connectionManager = PoolingHttpClientConnectionManagerBuilder.create()
-				.setSSLSocketFactory(sslSocketFactory).build();
+			.setTlsSocketStrategy(tlsStrategy).build();
 		builder.setConnectionManager(connectionManager);
 
 		// Custom CredentialsProvider

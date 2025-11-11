@@ -9,6 +9,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 
 import io.openvidu.java.client.ConnectionProperties;
+import io.openvidu.java.client.GsonTypes;
 
 public class ConnectionPropertiesTest {
 
@@ -96,7 +97,7 @@ public class ConnectionPropertiesTest {
 	}
 
 	private Map<String, ?> mapFromJsonString(String json) {
-		return new Gson().fromJson(json, Map.class);
+		return new Gson().fromJson(json, GsonTypes.STRING_OBJECT_MAP);
 	}
 
 	private void assertException(Map<String, ?> params, String containsError) {

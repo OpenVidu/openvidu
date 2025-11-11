@@ -727,8 +727,8 @@ public class Session {
 				.recordingMode(RecordingMode.valueOf(json.get("recordingMode").getAsString()));
 		if (json.has("defaultRecordingProperties")) {
 			String jsonString = json.get("defaultRecordingProperties").getAsJsonObject().toString();
-			RecordingProperties.Builder recBuilder = RecordingProperties
-					.fromJson(new Gson().fromJson(jsonString, Map.class), null);
+			Map<String, Object> recordingProps = new Gson().fromJson(jsonString, GsonTypes.STRING_OBJECT_MAP);
+			RecordingProperties.Builder recBuilder = RecordingProperties.fromJson(recordingProps, null);
 			builder.defaultRecordingProperties(recBuilder.build());
 		}
 		if (json.has("customSessionId")) {

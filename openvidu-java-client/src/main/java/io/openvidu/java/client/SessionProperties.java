@@ -17,14 +17,12 @@
 
 package io.openvidu.java.client;
 
-import java.lang.reflect.Type;
 import java.util.Map;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonPrimitive;
-import com.google.gson.reflect.TypeToken;
 
 /**
  * See {@link io.openvidu.java.client.OpenVidu#createSession(SessionProperties)}
@@ -376,8 +374,8 @@ public class SessionProperties {
 				JsonObject defaultRecordingPropertiesJson = null;
 				if (params.get("defaultRecordingProperties") != null) {
 					try {
-						defaultRecordingPropertiesJson = new Gson()
-								.toJsonTree(params.get("defaultRecordingProperties"), Map.class).getAsJsonObject();
+						defaultRecordingPropertiesJson = new Gson().toJsonTree(params.get("defaultRecordingProperties"),
+								GsonTypes.STRING_OBJECT_MAP).getAsJsonObject();
 					} catch (Exception e) {
 						throw new IllegalArgumentException(
 								"Error in parameter 'defaultRecordingProperties'. It is not a valid JSON object");
@@ -386,8 +384,9 @@ public class SessionProperties {
 				if (defaultRecordingPropertiesJson != null) {
 					try {
 						String jsonString = defaultRecordingPropertiesJson.toString();
-						RecordingProperties.Builder recBuilder = RecordingProperties
-								.fromJson(new Gson().fromJson(jsonString, Map.class), null);
+						Map<String, Object> recordingProps = new Gson().fromJson(jsonString,
+								GsonTypes.STRING_OBJECT_MAP);
+							RecordingProperties.Builder recBuilder = RecordingProperties.fromJson(recordingProps, null);
 						RecordingProperties defaultRecordingProperties = recBuilder.build();
 						builder = builder.defaultRecordingProperties(defaultRecordingProperties);
 					} catch (Exception e) {
@@ -419,9 +418,7 @@ public class SessionProperties {
 			} catch (Exception e) {
 				try {
 					Gson gson = new Gson();
-					Type gsonType = new TypeToken<Map>() {
-					}.getType();
-					String gsonString = gson.toJson(params.get("mediaNode"), gsonType);
+					String gsonString = gson.toJson(params.get("mediaNode"), GsonTypes.STRING_OBJECT_MAP);
 					mediaNodeJson = JsonParser.parseString(gsonString).getAsJsonObject();
 				} catch (Exception e2) {
 					throw new IllegalArgumentException("Error in parameter 'mediaNode'. It is not a valid JSON object");

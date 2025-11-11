@@ -123,8 +123,8 @@ public class Recording {
 		}
 		this.status = Recording.Status.valueOf(json.get("status").getAsString());
 
-		RecordingProperties.Builder builder = RecordingProperties
-				.fromJson(new Gson().fromJson(json.toString(), Map.class), null);
+		Map<String, Object> recordingProps = new Gson().fromJson(json.toString(), GsonTypes.STRING_OBJECT_MAP);
+		RecordingProperties.Builder builder = RecordingProperties.fromJson(recordingProps, null);
 		this.recordingProperties = builder.build();
 	}
 
