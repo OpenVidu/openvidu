@@ -244,7 +244,6 @@ if [[ "${CHECK_AND_PREPARE_KURENTO_SNAPSHOT}" == true ]]; then
         elif [[ -n "${M2_HOME:-}" ]]; then
             cp ~/.m2/settings.xml "${M2_HOME}/conf/settings.xml"
         fi
-        popd
     else
         echo "Kurento version is not a SNAPSHOT: ${KURENTO_VERSION}"
     fi
