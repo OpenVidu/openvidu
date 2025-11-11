@@ -22,19 +22,16 @@ import java.io.IOException;
 import java.net.Inet4Address;
 import java.net.Inet6Address;
 import java.net.InetAddress;
-import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URL;
 import java.net.UnknownHostException;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -678,8 +675,9 @@ public class OpenviduConfig {
 
 		if (coturnIp == null || this.coturnIp.isEmpty()) {
 			try {
-				this.coturnIp = new URL(this.getFinalUrl()).getHost();
-			} catch (MalformedURLException e) {
+				URI finalUri = new URI(this.getFinalUrl());
+				this.coturnIp = finalUri.getHost();
+			} catch (URISyntaxException e) {
 				log.error("Can't get Domain name from OpenVidu public Url: " + e.getMessage());
 			}
 		}
@@ -945,7 +943,8 @@ public class OpenviduConfig {
 		}
 	}
 
-	protected Integer asOptionalIntegerBetweenRanges(String property, Range<Integer>... ranges) {
+	@SafeVarargs
+	protected final Integer asOptionalIntegerBetweenRanges(String property, Range<Integer>... ranges) {
 		try {
 			String value = getValue(property);
 			if (value == null || value.isEmpty()) {
@@ -1087,12 +1086,17 @@ public class OpenviduConfig {
 
 	public URI checkWebsocketUri(String uri) throws Exception {
 		try {
-			if (!StringUtils.startsWithAny(uri, "ws://", "wss://")) {
+			if (!(uri.startsWith("ws://") || uri.startsWith("wss://"))) {
 				throw new Exception("WebSocket protocol not found");
 			}
 			String parsedUri = uri.replaceAll("^ws://", "http://").replaceAll("^wss://", "https://");
-			return new URL(parsedUri).toURI();
-		} catch (Exception e) {
+			URI parsed = new URI(parsedUri);
+			String scheme = parsed.getScheme();
+			if (!"http".equalsIgnoreCase(scheme) && !"https".equalsIgnoreCase(scheme)) {
+				throw new Exception("Unsupported protocol " + scheme);
+			}
+			return parsed;
+		} catch (URISyntaxException e) {
 			throw new RuntimeException(
 					"URI '" + uri + "' has not a valid WebSocket endpoint format: " + e.getMessage());
 		}
@@ -1100,8 +1104,14 @@ public class OpenviduConfig {
 
 	protected void checkUrl(String url) throws Exception {
 		try {
-			new URL(url).toURI();
-		} catch (MalformedURLException | URISyntaxException e) {
+			URI uri = new URI(url);
+			if (uri.getScheme() == null || uri.getScheme().isEmpty()) {
+				throw new Exception("Missing URL scheme");
+			}
+			if (uri.getHost() == null || uri.getHost().isEmpty()) {
+				throw new Exception("Missing URL host");
+			}
+		} catch (URISyntaxException e) {
 			throw new Exception("String '" + url + "' has not a valid URL format: " + e.getMessage());
 		}
 	}
@@ -1283,30 +1293,37 @@ public class OpenviduConfig {
 		if (RecordingLayout.CUSTOM.equals(recordingProperties.recordingLayout())) {
 			String layout = recordingProperties.customLayout();
 			if (!layout.isEmpty()) {
+				URI layoutUri = null;
 				try {
-					URL url = new URL(layout);
-					log.info("\"customLayout\" property has a URL format ({}). Using it to connect to custom layout",
-							url.toString());
-					return processCustomLayoutUrlFormat(url, sessionId);
-				} catch (MalformedURLException e) {
-					String layoutPath = this.getOpenviduRecordingCustomLayout() + layout;
-					layoutPath = layoutPath.endsWith("/") ? layoutPath : (layoutPath + "/");
+					layoutUri = new URI(layout);
+				} catch (URISyntaxException e) {
+					layoutUri = null;
+				}
+				boolean layoutIsAbsoluteUrl = layoutUri != null && layoutUri.getScheme() != null
+						&& layoutUri.getHost() != null;
+				if (layoutIsAbsoluteUrl) {
 					log.info(
-							"\"customLayout\" property is defined as \"{}\". Using a different custom layout than the default one. Expected path: {}",
-							layout, layoutPath + "index.html");
-					try {
-						final File indexHtml = new File(layoutPath + "index.html");
-						if (!indexHtml.exists()) {
-							throw new IOException();
-						}
-						log.info("Custom layout path \"{}\" is valid. Found file {}", layout,
-								indexHtml.getAbsolutePath());
-					} catch (IOException e1) {
-						final String error = "Custom layout path " + layout + " is not valid. Expected file "
-								+ layoutPath + "index.html to exist and be readable";
-						log.error(error);
-						throw new OpenViduException(Code.RECORDING_PATH_NOT_VALID, error);
+							"\"customLayout\" property has a URL format ({}). Using it to connect to custom layout",
+							layoutUri.toString());
+					return processCustomLayoutUrlFormat(layoutUri, sessionId);
+				}
+				String layoutPath = this.getOpenviduRecordingCustomLayout() + layout;
+				layoutPath = layoutPath.endsWith("/") ? layoutPath : (layoutPath + "/");
+				log.info(
+						"\"customLayout\" property is defined as \"{}\". Using a different custom layout than the default one. Expected path: {}",
+						layout, layoutPath + "index.html");
+				try {
+					final File indexHtml = new File(layoutPath + "index.html");
+					if (!indexHtml.exists()) {
+						throw new IOException();
 					}
+					log.info("Custom layout path \"{}\" is valid. Found file {}", layout,
+							indexHtml.getAbsolutePath());
+				} catch (IOException e1) {
+					final String error = "Custom layout path " + layout + " is not valid. Expected file "
+							+ layoutPath + "index.html to exist and be readable";
+					log.error(error);
+					throw new OpenViduException(Code.RECORDING_PATH_NOT_VALID, error);
 				}
 			}
 		}
@@ -1340,8 +1357,12 @@ public class OpenviduConfig {
 			layout = recordingProperties.recordingLayout().name().toLowerCase().replaceAll("_", "-");
 			int port = startsWithHttp ? 80 : 443;
 			try {
-				port = new URL(this.getFinalUrl()).getPort();
-			} catch (MalformedURLException e) {
+				URI finalUri = new URI(this.getFinalUrl());
+				int uriPort = finalUri.getPort();
+				if (uriPort != -1) {
+					port = uriPort;
+				}
+			} catch (URISyntaxException e) {
 				log.error(e.getMessage());
 			}
 			String defaultPathForDefaultLayout = recordingComposedUrlDefined ? ""
@@ -1354,53 +1375,63 @@ public class OpenviduConfig {
 		return finalUrl;
 	}
 
-	private String processCustomLayoutUrlFormat(URL url, String shortSessionId) {
-		String finalUrl = url.getProtocol() + "://" + url.getAuthority();
-		if (!url.getPath().isEmpty()) {
-			finalUrl += url.getPath();
+	private String processCustomLayoutUrlFormat(URI url, String shortSessionId) {
+		StringBuilder finalUrl = new StringBuilder();
+		String scheme = url.getScheme();
+		if (scheme != null && !scheme.isEmpty()) {
+			finalUrl.append(scheme).append("://");
 		}
-		finalUrl = finalUrl.endsWith("/") ? finalUrl.substring(0, finalUrl.length() - 1) : finalUrl;
-		if (url.getQuery() != null) {
-			URI uri;
-			try {
-				uri = url.toURI();
-				finalUrl += "?";
-			} catch (URISyntaxException e) {
-				String error = "\"customLayout\" property has URL format and query params (" + url.toString()
-						+ "), but does not comply with RFC2396 URI format";
-				log.error(error);
-				throw new OpenViduException(Code.RECORDING_PATH_NOT_VALID, error);
-			}
-			List<NameValuePair> params = URLEncodedUtils.parse(uri, Charset.forName("UTF-8"));
-			Iterator<NameValuePair> it = params.iterator();
+		String authority = url.getRawAuthority();
+		if (authority != null) {
+			finalUrl.append(authority);
+		}
+		String path = url.getRawPath();
+		if (path != null && !path.isEmpty()) {
+			finalUrl.append(path);
+		}
+		int length = finalUrl.length();
+		if (length > 0 && finalUrl.charAt(length - 1) == '/') {
+			finalUrl.deleteCharAt(length - 1);
+		}
+		String query = url.getRawQuery();
+		if (query != null) {
+			finalUrl.append('?');
+			List<NameValuePair> params = URLEncodedUtils.parse(url, StandardCharsets.UTF_8);
 			boolean hasSessionId = false;
 			boolean hasSecret = false;
-			while (it.hasNext()) {
-				NameValuePair param = it.next();
-				finalUrl += param.getName() + "=" + param.getValue();
-				if (it.hasNext()) {
-					finalUrl += "&";
+			for (int i = 0; i < params.size(); i++) {
+				NameValuePair param = params.get(i);
+				finalUrl.append(param.getName()).append('=').append(param.getValue());
+				if (i < params.size() - 1) {
+					finalUrl.append('&');
 				}
-				if (!hasSessionId) {
-					hasSessionId = param.getName().equals("sessionId");
+				if (!hasSessionId && "sessionId".equals(param.getName())) {
+					hasSessionId = true;
 				}
-				if (!hasSecret) {
-					hasSecret = param.getName().equals("secret");
+				if (!hasSecret && "secret".equals(param.getName())) {
+					hasSecret = true;
 				}
 			}
+			boolean hasAppendedParams = !params.isEmpty();
 			if (!hasSessionId) {
-				finalUrl += "&sessionId=" + shortSessionId;
+				if (hasAppendedParams) {
+					finalUrl.append('&');
+				}
+				finalUrl.append("sessionId=").append(shortSessionId);
+				hasAppendedParams = true;
 			}
 			if (!hasSecret) {
-				finalUrl += "&secret=" + this.getOpenViduSecret();
+				if (hasAppendedParams) {
+					finalUrl.append('&');
+				}
+				finalUrl.append("secret=").append(this.getOpenViduSecret());
 			}
 		}
-
-		if (url.getRef() != null) {
-			finalUrl += "#" + url.getRef();
+		String fragment = url.getRawFragment();
+		if (fragment != null) {
+			finalUrl.append('#').append(fragment);
 		}
-
-		return finalUrl;
+		return finalUrl.toString();
 	}
 
 }

@@ -27,7 +27,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.function.Function;
 
-import org.apache.commons.lang3.RandomStringUtils;
 import org.kurento.client.Continuation;
 import org.kurento.client.Endpoint;
 import org.kurento.client.ErrorEvent;
@@ -57,6 +56,7 @@ import io.openvidu.server.kurento.endpoint.MediaEndpoint;
 import io.openvidu.server.kurento.endpoint.PublisherEndpoint;
 import io.openvidu.server.kurento.endpoint.SubscriberEndpoint;
 import io.openvidu.server.recording.service.RecordingManager;
+import io.openvidu.server.utils.RandomIdGenerator;
 import io.openvidu.server.utils.RemoteOperationUtils;
 
 public class KurentoParticipant extends Participant {
@@ -436,7 +436,7 @@ public class KurentoParticipant extends Participant {
 	public String generateStreamId(MediaOptions mediaOptions) {
 		String type = mediaOptions.hasVideo() ? mediaOptions.getTypeOfVideo() : "MICRO";
 		return IdentifierPrefixes.STREAM_ID + type.substring(0, Math.min(type.length(), 3)) + "_"
-				+ RandomStringUtils.randomAlphabetic(1).toUpperCase() + RandomStringUtils.randomAlphanumeric(3) + "_"
+				+ RandomIdGenerator.alphabetic(1).toUpperCase() + RandomIdGenerator.alphanumeric(3) + "_"
 				+ this.getParticipantPublicId();
 	}
 

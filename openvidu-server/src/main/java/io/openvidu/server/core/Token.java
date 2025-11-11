@@ -20,8 +20,6 @@ package io.openvidu.server.core;
 import java.net.MalformedURLException;
 import java.util.List;
 
-import org.apache.commons.lang3.RandomStringUtils;
-
 import com.google.gson.JsonArray;
 import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
@@ -33,6 +31,7 @@ import io.openvidu.java.client.KurentoOptions;
 import io.openvidu.java.client.OpenViduRole;
 import io.openvidu.server.core.Participant.ParticipantStatus;
 import io.openvidu.server.coturn.TurnCredentials;
+import io.openvidu.server.utils.RandomIdGenerator;
 
 public class Token {
 
@@ -43,7 +42,7 @@ public class Token {
 	private TurnCredentials turnCredentials;
 
 	private String connectionId = IdentifierPrefixes.PARTICIPANT_PUBLIC_ID
-			+ RandomStringUtils.randomAlphabetic(1).toUpperCase() + RandomStringUtils.randomAlphanumeric(9);
+			+ RandomIdGenerator.alphabetic(1).toUpperCase() + RandomIdGenerator.alphanumeric(9);
 
 	public Token(String token, String sessionId, ConnectionProperties connectionProperties,
 			TurnCredentials turnCredentials) {

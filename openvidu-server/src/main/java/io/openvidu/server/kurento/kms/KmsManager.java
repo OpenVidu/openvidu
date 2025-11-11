@@ -32,7 +32,6 @@ import java.util.stream.Collectors;
 
 import jakarta.annotation.PostConstruct;
 
-import org.apache.commons.lang3.RandomStringUtils;
 import org.kurento.client.KurentoClient;
 import org.kurento.commons.exception.KurentoException;
 import org.kurento.jsonrpc.JsonRpcClientClosedException;
@@ -53,6 +52,7 @@ import io.openvidu.server.core.SessionEventsHandler;
 import io.openvidu.server.core.SessionManager;
 import io.openvidu.server.kurento.core.KurentoSession;
 import io.openvidu.server.utils.MediaNodeManager;
+import io.openvidu.server.utils.RandomIdGenerator;
 import io.openvidu.server.utils.RemoteOperationUtils;
 import io.openvidu.server.utils.UpdatableTimerTask;
 
@@ -408,8 +408,8 @@ public abstract class KmsManager {
 	}
 
 	public static String generateKmsId() {
-		return IdentifierPrefixes.MEDIA_NODE_ID + RandomStringUtils.randomAlphabetic(1).toUpperCase()
-				+ RandomStringUtils.randomAlphanumeric(7);
+		return IdentifierPrefixes.MEDIA_NODE_ID + RandomIdGenerator.alphabetic(1).toUpperCase()
+				+ RandomIdGenerator.alphanumeric(7);
 	}
 
 	public void nodeCrashedHandler(Kms kms, boolean mustRemoveMediaNode) {

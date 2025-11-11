@@ -24,6 +24,7 @@ import com.google.gson.JsonObject;
  * @deprecated Use {@link io.openvidu.java.client.ConnectionProperties
  *             ConnectionProperties} instead
  */
+@Deprecated
 public class TokenOptions {
 
 	private OpenViduRole role;
@@ -34,6 +35,7 @@ public class TokenOptions {
 	 * @deprecated Use {@link io.openvidu.java.client.ConnectionProperties.Builder
 	 *             ConnectionProperties.Builder} instead
 	 */
+	@Deprecated
 	public static class Builder {
 
 		private OpenViduRole role = OpenViduRole.PUBLISHER;

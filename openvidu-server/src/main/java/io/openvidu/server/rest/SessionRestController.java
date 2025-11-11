@@ -28,7 +28,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.stream.Collectors;
 
-import org.apache.commons.lang3.RandomStringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -70,6 +69,7 @@ import io.openvidu.server.core.Token;
 import io.openvidu.server.kurento.core.KurentoMediaOptions;
 import io.openvidu.server.recording.Recording;
 import io.openvidu.server.recording.service.RecordingManager;
+import io.openvidu.server.utils.RandomIdGenerator;
 import io.openvidu.server.utils.RestUtils;
 
 /**
@@ -149,8 +149,8 @@ public class SessionRestController {
 					}
 				}
 			} else {
-				sessionId = IdentifierPrefixes.SESSION_ID + RandomStringUtils.randomAlphabetic(1).toUpperCase()
-						+ RandomStringUtils.randomAlphanumeric(9);
+				sessionId = IdentifierPrefixes.SESSION_ID + RandomIdGenerator.alphabetic(1).toUpperCase()
+						+ RandomIdGenerator.alphanumeric(9);
 			}
 
 			Session sessionNotActive = sessionManager.storeSessionNotActive(sessionId, sessionProperties);
@@ -288,13 +288,13 @@ public class SessionRestController {
 					HttpStatus.BAD_REQUEST);
 		}
 		switch (connectionProperties.getType()) {
-		case WEBRTC:
-			return this.newWebrtcConnection(session, connectionProperties);
-		case IPCAM:
-			return this.newIpcamConnection(session, connectionProperties);
-		default:
-			return SessionRestController.generateErrorResponse("Wrong type parameter",
-					"/sessions/" + sessionId + "/connection", HttpStatus.BAD_REQUEST);
+			case WEBRTC:
+				return this.newWebrtcConnection(session, connectionProperties);
+			case IPCAM:
+				return this.newIpcamConnection(session, connectionProperties);
+			default:
+				return SessionRestController.generateErrorResponse("Wrong type parameter",
+						"/sessions/" + sessionId + "/connection", HttpStatus.BAD_REQUEST);
 		}
 	}
 
@@ -652,11 +652,26 @@ public class SessionRestController {
 
 		String sessionId;
 		String type;
-		ArrayList<String> to;
+		List<String> to = null;
 		String data;
 		try {
 			sessionId = (String) params.get("session");
-			to = (ArrayList<String>) params.get("to");
+			Object toParam = params.get("to");
+			if (toParam instanceof List<?> rawList) {
+				List<String> target = new ArrayList<>(rawList.size());
+				for (Object element : rawList) {
+					if (element == null) {
+						target.add(null);
+					} else if (element instanceof String stringValue) {
+						target.add(stringValue);
+					} else {
+						throw new ClassCastException("Expected String elements in 'to' parameter");
+					}
+				}
+				to = target;
+			} else if (toParam != null) {
+				throw new ClassCastException("Expected 'to' parameter to be a list");
+			}
 			type = (String) params.get("type");
 			data = (String) params.get("data");
 		} catch (ClassCastException e) {
@@ -814,13 +829,13 @@ public class SessionRestController {
 				builder = builder.forcedVideoCodec(forcedVideoCodec);
 				if (forcedVideoCodec == VideoCodec.MEDIA_SERVER_PREFERRED) {
 					switch (openviduConfig.getMediaServer()) {
-					case mediasoup:
-						builder = builder.forcedVideoCodecResolved(VideoCodec.NONE);
-						break;
-					case kurento:
-					default:
-						builder = builder.forcedVideoCodecResolved(VideoCodec.VP8);
-						break;
+						case mediasoup:
+							builder = builder.forcedVideoCodecResolved(VideoCodec.NONE);
+							break;
+						case kurento:
+						default:
+							builder = builder.forcedVideoCodecResolved(VideoCodec.VP8);
+							break;
 					}
 				} else {
 					builder = builder.forcedVideoCodecResolved(forcedVideoCodec);

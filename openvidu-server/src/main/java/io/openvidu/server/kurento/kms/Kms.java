@@ -17,8 +17,8 @@
 
 package io.openvidu.server.kurento.kms;
 
-import java.net.MalformedURLException;
-import java.net.URL;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
@@ -82,13 +82,13 @@ public class Kms {
 		this.uri = props.getUri();
 
 		String parsedUri = uri.replaceAll("^ws://", "http://").replaceAll("^wss://", "https://");
-		URL url = null;
 		try {
-			url = new URL(parsedUri);
-		} catch (MalformedURLException e) {
+			URI url = new URI(parsedUri);
+			this.ip = url.getHost();
+		} catch (URISyntaxException e) {
 			log.error(e.getMessage());
+			this.ip = null;
 		}
-		this.ip = url.getHost();
 
 		this.loadManager = loadManager;
 		this.kmsManager = kmsManager;

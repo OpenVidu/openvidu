@@ -17,7 +17,6 @@
 
 package io.openvidu.server.recording;
 
-import org.apache.commons.lang3.StringUtils;
 import org.kurento.client.RecorderEndpoint;
 
 import com.google.gson.JsonObject;
@@ -61,8 +60,12 @@ public class RecorderEndpointWrapper {
 
 	public RecorderEndpointWrapper(JsonObject json, String fileExtension) {
 		String nameAux = json.get("name").getAsString();
-		// If the name includes the extension, remove it
-		this.name = StringUtils.removeEnd(nameAux, fileExtension);
+		// If the name includes the extension, remove it without relying on deprecated helpers
+		if (fileExtension != null && !fileExtension.isEmpty() && nameAux.endsWith(fileExtension)) {
+			this.name = nameAux.substring(0, nameAux.length() - fileExtension.length());
+		} else {
+			this.name = nameAux;
+		}
 		this.fileExtension = fileExtension;
 		this.connectionId = json.get("connectionId").getAsString();
 		this.streamId = json.get("streamId").getAsString();

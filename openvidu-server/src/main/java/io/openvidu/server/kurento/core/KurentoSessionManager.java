@@ -30,7 +30,6 @@ import java.util.concurrent.TimeUnit;
 
 import jakarta.annotation.PreDestroy;
 
-import org.apache.commons.lang3.RandomStringUtils;
 import org.kurento.client.GenericMediaElement;
 import org.kurento.client.GenericMediaEvent;
 import org.kurento.client.IceCandidate;
@@ -77,6 +76,7 @@ import io.openvidu.server.kurento.kms.KmsManager;
 import io.openvidu.server.rpc.RpcHandler;
 import io.openvidu.server.utils.GeoLocation;
 import io.openvidu.server.utils.JsonUtils;
+import io.openvidu.server.utils.RandomIdGenerator;
 import io.openvidu.server.utils.RecordingUtils;
 import io.openvidu.server.utils.SDPMunging;
 
@@ -1169,15 +1169,15 @@ public class KurentoSessionManager extends SessionManager {
 		}
 
 		String rtspConnectionId = kMediaOptions.getTypeOfVideo() + "_" + protocol + "_"
-				+ RandomStringUtils.randomAlphanumeric(4).toUpperCase() + "_" + uri.getHost()
+				+ RandomIdGenerator.alphanumeric(4).toUpperCase() + "_" + uri.getHost()
 				+ (uri.getPort() != -1 ? (":" + uri.getPort()) : "") + uri.getPath();
 		rtspConnectionId = rtspConnectionId.replace("/", "_").replace("-", "").replace(".", "_").replace(":", "_");
 		rtspConnectionId = IdentifierPrefixes.IPCAM_ID + rtspConnectionId;
 
 		// Store a "fake" participant for the IpCam connection
 		this.newInsecureParticipant(rtspConnectionId);
-		String token = IdentifierPrefixes.TOKEN_ID + RandomStringUtils.randomAlphabetic(1).toUpperCase()
-				+ RandomStringUtils.randomAlphanumeric(15);
+		String token = IdentifierPrefixes.TOKEN_ID + RandomIdGenerator.alphabetic(1).toUpperCase()
+				+ RandomIdGenerator.alphanumeric(15);
 
 		this.newTokenForInsecureUser(session, token, connectionProperties, null);
 		final Token tokenObj = session.consumeToken(token);

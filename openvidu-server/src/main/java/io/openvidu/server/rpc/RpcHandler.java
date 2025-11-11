@@ -27,7 +27,6 @@ import java.util.concurrent.ConcurrentMap;
 import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.HttpSession;
 
-import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.maven.artifact.versioning.DefaultArtifactVersion;
 import org.kurento.jsonrpc.DefaultJsonRpcHandler;
 import org.kurento.jsonrpc.Session;
@@ -60,6 +59,7 @@ import io.openvidu.server.core.SessionManager;
 import io.openvidu.server.core.Token;
 import io.openvidu.server.utils.GeoLocation;
 import io.openvidu.server.utils.GeoLocationByIp;
+import io.openvidu.server.utils.RandomIdGenerator;
 import io.openvidu.server.utils.VersionComparator;
 import io.openvidu.server.utils.VersionComparator.VersionMismatchException;
 
@@ -283,8 +283,8 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 
 			sessionManager.newInsecureParticipant(participantPrivateId);
 
-			token = IdentifierPrefixes.TOKEN_ID + RandomStringUtils.randomAlphabetic(1).toUpperCase()
-					+ RandomStringUtils.randomAlphanumeric(15);
+			token = IdentifierPrefixes.TOKEN_ID + RandomIdGenerator.alphabetic(1).toUpperCase()
+					+ RandomIdGenerator.alphanumeric(15);
 			ConnectionProperties connectionProperties = new ConnectionProperties.Builder().type(ConnectionType.WEBRTC)
 					.role(OpenViduRole.SUBSCRIBER).build();
 
