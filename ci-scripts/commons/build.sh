@@ -242,6 +242,7 @@ if [[ "${CHECK_AND_PREPARE_KURENTO_SNAPSHOT}" == true ]]; then
         rm -f settings.xml
         curl https://raw.githubusercontent.com/OpenVidu/openvidu/v2/ci-scripts/kurento-snapshots.xml -o settings.xml
         sed -i "s|KURENTO_SNAPSHOTS_URL|${KURENTO_SNAPSHOTS_URL}|g" settings.xml
+        ln -sf /etc/maven/settings.xml ~/.m2/settings.xml # Link to user maven settings
         popd
     else
         echo "Kurento version is not a SNAPSHOT: ${KURENTO_VERSION}"
