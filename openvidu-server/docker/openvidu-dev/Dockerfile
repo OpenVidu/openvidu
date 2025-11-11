@@ -2,20 +2,20 @@ FROM ubuntu:24.04
 LABEL maintainer="info@openvidu.io"
 
 # Update and install dependencies
-RUN apt-get update && apt-get -y upgrade && \
-	apt-get install -y gnupg2 && \
+RUN apt update && apt -y upgrade && \
+	apt install -y gnupg2 && \
 	rm -rf /var/lib/apt/lists/*
 
 # Install Kurento Media Server (KMS)
-RUN echo "deb [arch=amd64] http://ubuntu.openvidu.io/7.1.1 noble main" | tee /etc/apt/sources.list.d/kurento.list && \
+RUN echo "deb [arch=amd64] http://ubuntu.openvidu.io/7.2.0 noble main" | tee /etc/apt/sources.list.d/kurento.list && \
 	apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 234821A61B67740F89BFD669FC8A16625AFA7A83 && \
-	apt-get update && \
-	apt-get -y install kurento-media-server && \
+	apt update && \
+	apt -y install kurento-media-server && \
 	rm -rf /var/lib/apt/lists/*
 
 # Install Java, supervisor and netstat
-RUN apt-get update && apt-get install -y \
-	openjdk-11-jre \
+RUN apt update && apt install -y \
+	openjdk-21-jre \
 	supervisor && \
 	rm -rf /var/lib/apt/lists/*
 

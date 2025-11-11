@@ -5,7 +5,7 @@ MAINTAINER info@openvidu.io
 RUN apt-get update && apt-get install -y \
   curl \
   wget \
-  openjdk-11-jre \
+  openjdk-21-jre \
   dnsutils \
 && rm -rf /var/lib/apt/lists/*
 
