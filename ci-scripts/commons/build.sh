@@ -236,13 +236,14 @@ if [[ "${CHECK_AND_PREPARE_KURENTO_SNAPSHOT}" == true ]]; then
     KURENTO_VERSION=$(awk -F'[<>]' '/<version.kurento>/ {print $3}' pom.xml)
     if [[ "${KURENTO_VERSION}" == *"-SNAPSHOT" ]] && [[ -n "${KURENTO_SNAPSHOTS_URL:-}" ]]; then
         echo "Kurento version is a SNAPSHOT: ${KURENTO_VERSION}"
-        mkdir -p /etc/maven
-        chmod -R 777 /etc/maven
-        pushd /etc/maven
-        rm -f settings.xml
-        curl https://raw.githubusercontent.com/OpenVidu/openvidu/v2/ci-scripts/kurento-snapshots.xml -o settings.xml
-        sed -i "s|KURENTO_SNAPSHOTS_URL|${KURENTO_SNAPSHOTS_URL}|g" settings.xml
-        ln -sf /etc/maven/settings.xml ~/.m2/settings.xml # Link to user maven settings
+        mkdir -p ~/.m2
+        curl https://raw.githubusercontent.com/OpenVidu/openvidu/v2/ci-scripts/kurento-snapshots.xml -o ~/.m2/settings.xml
+        sed -i "s|KURENTO_SNAPSHOTS_URL|${KURENTO_SNAPSHOTS_URL}|g" ~/.m2/settings.xml
+        if [[ -n "${MAVEN_HOME:-}" ]]; then
+            cp ~/.m2/settings.xml "${MAVEN_HOME}/conf/settings.xml"
+        elif [[ -n "${M2_HOME:-}" ]]; then
+            cp ~/.m2/settings.xml "${M2_HOME}/conf/settings.xml"
+        fi
         popd
     else
         echo "Kurento version is not a SNAPSHOT: ${KURENTO_VERSION}"
