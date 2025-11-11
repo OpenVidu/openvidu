@@ -36,7 +36,7 @@ public class OpenViduConstructorTest {
 		RuntimeException thrown = Assertions.assertThrows(RuntimeException.class, () -> {
 			new OpenVidu("WRONG_URL", "MY_SECRET");
 		});
-		Assertions.assertEquals("The hostname \"WRONG_URL\" is not a valid URL: no protocol: WRONG_URL",
+		Assertions.assertEquals("The hostname \"WRONG_URL\" is not a valid URL: URI is not absolute",
 				thrown.getMessage());
 	}
 
