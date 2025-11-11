@@ -45,7 +45,7 @@ services:
                 max-size: "${DOCKER_LOGS_MAX_SIZE:-100M}"
 
     kms:
-        image: ${KMS_IMAGE:-kurento/kurento-media-server:7.1.1}
+        image: ${KMS_IMAGE:-kurento/kurento-media-server:7.2.0}
         restart: always
         network_mode: host
         ulimits:
