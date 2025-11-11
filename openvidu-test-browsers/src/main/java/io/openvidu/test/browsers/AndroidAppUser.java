@@ -45,16 +45,16 @@ public class AndroidAppUser extends BrowserUser {
 							"--autoplay-policy=no-user-gesture-required")));
 		}
 
-		URL url = null;
+		URL url;
 		try {
 			url = URI.create(REMOTE_URL).toURL();
-		} catch (MalformedURLException e) {
-			e.printStackTrace();
+		} catch (IllegalArgumentException | MalformedURLException e) {
+			throw new IllegalArgumentException("Invalid REMOTE_URL_ANDROID value: " + REMOTE_URL, e);
 		}
 
 		this.driver = new AndroidDriver(url, options);
 
-		this.configureDriver();
+		super.configureDriver();
 	}
 
 }

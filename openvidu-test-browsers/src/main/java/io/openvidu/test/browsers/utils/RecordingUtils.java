@@ -53,7 +53,8 @@ public class RecordingUtils {
 		Picture frame;
 		try {
 			// Get a frame at 75% duration and check that it has the expected color
-			frame = FrameGrab.getFrameAtSec(file, (double) (recording.getDuration() * 0.75));
+			double targetSecond = recording.getDuration() * 0.75;
+			frame = FrameGrab.getFrameAtSec(file, targetSecond);
 			BufferedImage image = AWTUtil.toBufferedImage(frame);
 			Map<String, Long> colorMap = this.averageColor(image);
 
@@ -165,7 +166,7 @@ public class RecordingUtils {
 			for (int i = 0; i < syncArray.size(); i++) {
 				JsonObject j = syncArray.get(i).getAsJsonObject();
 				if (webmFile.getName().contains(j.get("streamId").getAsString())) {
-					durationInSeconds = (double) (j.get("endTimeOffset").getAsDouble()
+					durationInSeconds = (j.get("endTimeOffset").getAsDouble()
 							- j.get("startTimeOffset").getAsDouble()) / 1000;
 					found = true;
 					break;
@@ -273,9 +274,9 @@ public class RecordingUtils {
 		}
 		int num = w * h;
 		Map<String, Long> colorMap = new HashMap<>();
-		colorMap.put("r", (long) (sumr / num));
-		colorMap.put("g", (long) (sumg / num));
-		colorMap.put("b", (long) (sumb / num));
+		colorMap.put("r", sumr / num);
+		colorMap.put("g", sumg / num);
+		colorMap.put("b", sumb / num);
 		return colorMap;
 	}
 

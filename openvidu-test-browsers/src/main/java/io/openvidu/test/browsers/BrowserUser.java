@@ -21,6 +21,7 @@ import java.awt.Point;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -114,7 +115,7 @@ public class BrowserUser {
 				+ "rgb.g += data.data[i + 1];" + "rgb.b += data.data[i + 2];" + "}" + "rgb.r = ~~(rgb.r / count);"
 				+ "rgb.g = ~~(rgb.g / count);" + "rgb.b = ~~(rgb.b / count);" + "callback(rgb);" + "};";
 		Object averageRgb = ((JavascriptExecutor) driver).executeAsyncScript(script);
-		return (Map<String, Long>) averageRgb;
+		return toLongChannelMap(averageRgb);
 	}
 
 	public Map<String, Long> getAverageColorFromPixels(WebElement videoElement, List<Point> pixelPercentagePositions) {
@@ -148,13 +149,31 @@ public class BrowserUser {
 		}
 		points += "]";
 		Object averageRgb = ((JavascriptExecutor) driver).executeAsyncScript(script, points);
-		return (Map<String, Long>) averageRgb;
+		return toLongChannelMap(averageRgb);
 	}
 
 	public String getDimensionOfViewport() {
 		String dimension = (String) ((JavascriptExecutor) driver)
 				.executeScript("return (JSON.stringify({width: window.innerWidth, height: window.innerHeight - 1}))");
 		return dimension;
+	}
+
+	private Map<String, Long> toLongChannelMap(Object scriptResult) {
+		if (!(scriptResult instanceof Map<?, ?> rawMap)) {
+			throw new IllegalStateException("Script result is not a map: " + scriptResult);
+		}
+		Map<String, Long> converted = new HashMap<>();
+		converted.put("r", toLong(rawMap.get("r")));
+		converted.put("g", toLong(rawMap.get("g")));
+		converted.put("b", toLong(rawMap.get("b")));
+		return converted;
+	}
+
+	private long toLong(Object value) {
+		if (value instanceof Number number) {
+			return number.longValue();
+		}
+		throw new IllegalStateException("Value is not numeric: " + value);
 	}
 
 	public void stopVideoTracksOfVideoElement(WebElement videoElement, String parentSelector) {

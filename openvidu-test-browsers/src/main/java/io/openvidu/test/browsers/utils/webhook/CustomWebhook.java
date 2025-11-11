@@ -179,13 +179,9 @@ public class CustomWebhook {
 	public class SecurityConfig {
 		@Bean
 		public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-			http.requiresChannel(channel -> channel
-					.requestMatchers("/webhook").requiresInsecure()
-			);
 			http.csrf(csrf -> csrf.disable())
-				.authorizeHttpRequests(auth -> auth
-					.requestMatchers("/webhook").permitAll()
-				);
+					.authorizeHttpRequests(auth -> auth
+							.requestMatchers("/webhook").permitAll());
 			return http.build();
 		}
 	}

@@ -24,8 +24,6 @@ import java.net.HttpURLConnection;
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
-import java.security.cert.CertificateException;
-import java.security.cert.X509Certificate;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.Collection;
@@ -33,6 +31,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -42,7 +41,6 @@ import java.util.stream.Collectors;
 
 import javax.net.ssl.SSLContext;
 
-import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.hc.client5.http.auth.AuthScope;
 import org.apache.hc.client5.http.auth.UsernamePasswordCredentials;
 import org.apache.hc.client5.http.impl.auth.BasicCredentialsProvider;
@@ -50,12 +48,9 @@ import org.apache.hc.client5.http.impl.classic.HttpClientBuilder;
 import org.apache.hc.client5.http.impl.classic.HttpClients;
 import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManagerBuilder;
 import org.apache.hc.client5.http.io.HttpClientConnectionManager;
+import org.apache.hc.client5.http.ssl.DefaultClientTlsStrategy;
+import org.apache.hc.client5.http.ssl.HostnameVerificationPolicy;
 import org.apache.hc.client5.http.ssl.NoopHostnameVerifier;
-import org.apache.hc.client5.http.ssl.SSLConnectionSocketFactory;
-import org.apache.hc.client5.http.ssl.SSLConnectionSocketFactoryBuilder;
-import org.apache.hc.core5.http.Header;
-import org.apache.hc.core5.http.HttpHeaders;
-import org.apache.hc.core5.http.message.BasicHeader;
 import org.apache.hc.core5.ssl.SSLContextBuilder;
 import org.apache.hc.core5.ssl.TrustStrategy;
 import org.junit.jupiter.api.Assertions;
@@ -65,6 +60,9 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.apache.hc.core5.http.Header;
+import org.apache.hc.core5.http.HttpHeaders;
+import org.apache.hc.core5.http.message.BasicHeader;
 import org.openqa.selenium.Alert;
 import org.openqa.selenium.By;
 import org.openqa.selenium.Dimension;
@@ -1523,22 +1521,24 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 			user.getEventManager().waitUntilEventReaches("streamPlaying", 4);
 			checkDockerContainerRunning("openvidu/openvidu-recording", 1);
 
-		OV.fetch();
-		session = OV.getActiveSessions().get(0);
-		session.close();
+			OV.fetch();
+			session = OV.getActiveSessions().get(0);
+			session.close();
 
-		// Recording hasn't had time to start. Should trigger stopped, then failed immediately
-		event = CustomWebhook.waitForEvent("recordingStatusChanged", 1); // stopped
-		Assertions.assertEquals("stopped", event.get("status").getAsString(),
-				"Wrong status in recordingStatusChanged event");
-		
-		event = CustomWebhook.waitForEvent("recordingStatusChanged", 5); // failed
-		Assertions.assertEquals("failed", event.get("status").getAsString(),
-				"Wrong status in recordingStatusChanged event");
-		Assertions.assertEquals(Recording.Status.failed, OV.getRecording(sessionName + "~2").getStatus(),
-				"Wrong recording status");
+			// Recording hasn't had time to start. Should trigger stopped, then failed
+			// immediately
+			event = CustomWebhook.waitForEvent("recordingStatusChanged", 1); // stopped
+			Assertions.assertEquals("stopped", event.get("status").getAsString(),
+					"Wrong status in recordingStatusChanged event");
 
-		checkDockerContainerRunning("openvidu/openvidu-recording", 0);		} finally {
+			event = CustomWebhook.waitForEvent("recordingStatusChanged", 5); // failed
+			Assertions.assertEquals("failed", event.get("status").getAsString(),
+					"Wrong status in recordingStatusChanged event");
+			Assertions.assertEquals(Recording.Status.failed, OV.getRecording(sessionName + "~2").getStatus(),
+					"Wrong recording status");
+
+			checkDockerContainerRunning("openvidu/openvidu-recording", 0);
+		} finally {
 			CustomWebhook.shutDown();
 		}
 	}
@@ -2455,22 +2455,17 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 	private HttpClientBuilder getHttpClientBuilder() {
 		HttpClientBuilder builder = HttpClients.custom();
-		TrustStrategy trustStrategy = new TrustStrategy() {
-			@Override
-			public boolean isTrusted(X509Certificate[] chain, String authType) throws CertificateException {
-				return true;
-			}
-		};
+		TrustStrategy trustStrategy = (chain, authType) -> true;
 		SSLContext sslContext;
 		try {
 			sslContext = new SSLContextBuilder().loadTrustMaterial(null, trustStrategy).build();
 		} catch (KeyManagementException | NoSuchAlgorithmException | KeyStoreException e) {
 			throw new RuntimeException(e);
 		}
-		final SSLConnectionSocketFactory sslSocketFactory = SSLConnectionSocketFactoryBuilder.create()
-				.setSslContext(sslContext).setHostnameVerifier(NoopHostnameVerifier.INSTANCE).build();
+		final DefaultClientTlsStrategy tlsStrategy = new DefaultClientTlsStrategy(sslContext,
+				HostnameVerificationPolicy.CLIENT, NoopHostnameVerifier.INSTANCE);
 		final HttpClientConnectionManager connectionManager = PoolingHttpClientConnectionManagerBuilder.create()
-				.setSSLSocketFactory(sslSocketFactory).build();
+				.setTlsSocketStrategy(tlsStrategy).build();
 		builder.setConnectionManager(connectionManager);
 		return builder;
 	}
@@ -2485,7 +2480,8 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		// present and wrong and no present; in combination with custom Authorization
 		// header present and valid, present and wrong and no present
 
-		final String WRONG_SECRET = "WRONG_SECRET_" + RandomStringUtils.randomAlphanumeric(10);
+		final String WRONG_SECRET = "WRONG_SECRET_"
+				+ UUID.randomUUID().toString().replace("-", "").substring(0, 10);
 
 		final String VALID_BASIC_AUTH = "Basic "
 				+ Base64.getEncoder().encodeToString(("OPENVIDUAPP:" + OPENVIDU_SECRET).getBytes());
@@ -2739,10 +2735,10 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		final int numberOfVideos = user.getDriver().findElements(By.tagName("video")).size();
 		Assertions.assertEquals(2, numberOfVideos, "Wrong number of videos");
 		Assertions.assertTrue(user.getBrowserUser().assertMediaTracks(
-				(WebElement) user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 video")), false, true,
+				user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 video")), false, true,
 				"#openvidu-instance-0"), "Moderator video was expected to have audio only track");
 		Assertions.assertTrue(user.getBrowserUser().assertMediaTracks(
-				(WebElement) user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 video")), true, true,
+				user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 video")), true, true,
 				"#openvidu-instance-1"), "Subscriber video was expected to have audio and video tracks");
 
 		Assertions.assertTrue(OV.fetch(), "Session.fetch() should return true after users connected");

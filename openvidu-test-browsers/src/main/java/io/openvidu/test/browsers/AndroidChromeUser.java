@@ -1,6 +1,7 @@
 package io.openvidu.test.browsers;
 
 import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URL;
 
 import org.openqa.selenium.chrome.ChromeOptions;
@@ -47,8 +48,7 @@ public class AndroidChromeUser extends BrowserUser {
 				"autoplay-policy=no-user-gesture-required",
 				// Basic stability
 				"no-sandbox",
-				"disable-dev-shm-usage"
-		);
+				"disable-dev-shm-usage");
 		// Enable W3C protocol
 		options.setExperimentalOption("w3c", true);
 
@@ -60,15 +60,15 @@ public class AndroidChromeUser extends BrowserUser {
 		// Grant permissions at Android level instead of Chrome prefs
 		capabilities.setCapability("appium:autoGrantPermissions", true);
 
-		URL url = null;
+		URL url;
 		try {
-			url = new URL(REMOTE_URL);
-		} catch (MalformedURLException e) {
-			e.printStackTrace();
+			url = URI.create(REMOTE_URL).toURL();
+		} catch (IllegalArgumentException | MalformedURLException e) {
+			throw new IllegalArgumentException("Invalid REMOTE_URL_ANDROID value: " + REMOTE_URL, e);
 		}
 		this.driver = new RemoteWebDriver(url, capabilities);
 
-		this.configureDriver();
+		super.configureDriver();
 	}
 
 }

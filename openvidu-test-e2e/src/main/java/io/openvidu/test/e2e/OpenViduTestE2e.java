@@ -34,6 +34,7 @@ import org.openqa.selenium.support.ui.ExpectedCondition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpMethod;
+import org.testcontainers.containers.BindMode;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.wait.strategy.AbstractWaitStrategy;
 import org.testcontainers.containers.wait.strategy.Wait;
@@ -165,9 +166,12 @@ public class OpenViduTestE2e {
 			map.put("SE_NODE_OVERRIDE_MAX_SESSIONS", "true");
 			map.put("SE_NODE_MAX_SESSIONS", String.valueOf(maxBrowserSessions));
 		}
-		GenericContainer<?> chrome = new GenericContainer<>(DockerImageName.parse(image)).withSharedMemorySize(shmSize)
-				.withFileSystemBind("/opt/openvidu", "/opt/openvidu").withEnv(map).withExposedPorts(4444)
-				.waitingFor(waitBrowser);
+		GenericContainer<?> chrome = new GenericContainer<>(DockerImageName.parse(image));
+		chrome.withSharedMemorySize(shmSize);
+		chrome.withFileSystemBind("/opt/openvidu", "/opt/openvidu", BindMode.READ_WRITE);
+		chrome.withEnv(map);
+		chrome.withExposedPorts(4444);
+		chrome.waitingFor(waitBrowser);
 		chrome.setPortBindings(Arrays.asList("6666:4444"));
 		return chrome;
 	}
@@ -181,9 +185,12 @@ public class OpenViduTestE2e {
 			map.put("SE_NODE_OVERRIDE_MAX_SESSIONS", "true");
 			map.put("SE_NODE_MAX_SESSIONS", String.valueOf(maxBrowserSessions));
 		}
-		GenericContainer<?> firefox = new GenericContainer<>(DockerImageName.parse(image)).withSharedMemorySize(shmSize)
-				.withFileSystemBind("/opt/openvidu", "/opt/openvidu").withEnv(map).withExposedPorts(4444)
-				.waitingFor(waitBrowser);
+		GenericContainer<?> firefox = new GenericContainer<>(DockerImageName.parse(image));
+		firefox.withSharedMemorySize(shmSize);
+		firefox.withFileSystemBind("/opt/openvidu", "/opt/openvidu", BindMode.READ_WRITE);
+		firefox.withEnv(map);
+		firefox.withExposedPorts(4444);
+		firefox.waitingFor(waitBrowser);
 		firefox.setPortBindings(Arrays.asList("6667:4444"));
 		return firefox;
 	}
@@ -194,9 +201,12 @@ public class OpenViduTestE2e {
 			map.put("SE_NODE_OVERRIDE_MAX_SESSIONS", "true");
 			map.put("SE_NODE_MAX_SESSIONS", String.valueOf(maxBrowserSessions));
 		}
-		GenericContainer<?> opera = new GenericContainer<>(DockerImageName.parse(image)).withSharedMemorySize(shmSize)
-				.withFileSystemBind("/opt/openvidu", "/opt/openvidu").withEnv(map).withExposedPorts(4444)
-				.waitingFor(waitBrowser);
+		GenericContainer<?> opera = new GenericContainer<>(DockerImageName.parse(image));
+		opera.withSharedMemorySize(shmSize);
+		opera.withFileSystemBind("/opt/openvidu", "/opt/openvidu", BindMode.READ_WRITE);
+		opera.withEnv(map);
+		opera.withExposedPorts(4444);
+		opera.waitingFor(waitBrowser);
 		opera.setPortBindings(Arrays.asList("6668:4444"));
 		return opera;
 	}
@@ -210,9 +220,12 @@ public class OpenViduTestE2e {
 			map.put("SE_NODE_OVERRIDE_MAX_SESSIONS", "true");
 			map.put("SE_NODE_MAX_SESSIONS", String.valueOf(maxBrowserSessions));
 		}
-		GenericContainer<?> edge = new GenericContainer<>(DockerImageName.parse(image)).withSharedMemorySize(shmSize)
-				.withFileSystemBind("/opt/openvidu", "/opt/openvidu").withEnv(map).withExposedPorts(4444)
-				.waitingFor(waitBrowser);
+		GenericContainer<?> edge = new GenericContainer<>(DockerImageName.parse(image));
+		edge.withSharedMemorySize(shmSize);
+		edge.withFileSystemBind("/opt/openvidu", "/opt/openvidu", BindMode.READ_WRITE);
+		edge.withEnv(map);
+		edge.withExposedPorts(4444);
+		edge.waitingFor(waitBrowser);
 		edge.setPortBindings(Arrays.asList("6669:4444"));
 		return edge;
 	}
@@ -230,14 +243,18 @@ public class OpenViduTestE2e {
 		envVars.put("WEB_VNC", "true");
 		envVars.put("WEB_LOG", "false");
 		envVars.put("DATAPARTITION", "8192m");
-		envVars.put("EMULATOR_ARGS", "-gpu swiftshader_indirect -no-snapshot -no-audio -memory 8192 -partition-size 8192");
+		envVars.put("EMULATOR_ARGS",
+				"-gpu swiftshader_indirect -no-snapshot -no-audio -memory 8192 -partition-size 8192");
 
-		GenericContainer<?> android = new GenericContainer<>(DockerImageName.parse(image))
-				.withEnv(envVars)
-				.withPrivilegedMode(true).withSharedMemorySize(shmSize)
-				.withExposedPorts(6080, 5554, 5555, 4723).withFileSystemBind("/dev/kvm", "/dev/kvm")
-				.withFileSystemBind("/opt/openvidu/android", "/opt/openvidu/android").withReuse(true)
-				.waitingFor(new AndroidContainerWaitStrategy());
+		GenericContainer<?> android = new GenericContainer<>(DockerImageName.parse(image));
+		android.withEnv(envVars);
+		android.withPrivilegedMode(true);
+		android.withSharedMemorySize(shmSize);
+		android.withExposedPorts(6080, 5554, 5555, 4723);
+		android.withFileSystemBind("/dev/kvm", "/dev/kvm", BindMode.READ_WRITE);
+		android.withFileSystemBind("/opt/openvidu/android", "/opt/openvidu/android", BindMode.READ_WRITE);
+		android.withReuse(true);
+		android.waitingFor(new AndroidContainerWaitStrategy());
 		android.setPortBindings(Arrays.asList("6080:6080", "5554:5554", "5555:5555", "4723:4723"));
 		return android;
 	}

@@ -1,6 +1,7 @@
 package io.openvidu.test.browsers;
 
 import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URL;
 import java.time.Duration;
 
@@ -27,9 +28,10 @@ public class EdgeUser extends BrowserUser {
 			options.addArguments("--headless=new");
 			log.info("Using URL {} to connect to remote web driver", REMOTE_URL);
 			try {
-				this.driver = new RemoteWebDriver(new URL(REMOTE_URL), options);
-			} catch (MalformedURLException e) {
-				e.printStackTrace();
+				URL remoteUrl = URI.create(REMOTE_URL).toURL();
+				this.driver = new RemoteWebDriver(remoteUrl, options);
+			} catch (IllegalArgumentException | MalformedURLException e) {
+				throw new IllegalArgumentException("Invalid REMOTE_URL_EDGE value: " + REMOTE_URL, e);
 			}
 		} else {
 			log.info("Using local web driver");
@@ -37,7 +39,7 @@ public class EdgeUser extends BrowserUser {
 		}
 
 		this.driver.manage().timeouts().scriptTimeout(Duration.ofSeconds(timeOfWaitInSeconds));
-		this.configureDriver(new org.openqa.selenium.Dimension(1920, 1080));
+		super.configureDriver(new org.openqa.selenium.Dimension(1920, 1080));
 	}
 
 }
