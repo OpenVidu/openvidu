@@ -67,6 +67,7 @@ import org.openqa.selenium.Alert;
 import org.openqa.selenium.By;
 import org.openqa.selenium.Dimension;
 import org.openqa.selenium.Keys;
+import org.openqa.selenium.OutputType;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.ExpectedCondition;
@@ -599,8 +600,10 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 		user.getWaiter()
 				.until(ExpectedConditions.not(ExpectedConditions.attributeToBeNotEmpty(subscriberVideo, "srcObject")));
-		Assertions.assertFalse(user.getBrowserUser().hasMediaStream(subscriberVideo, "#openvidu-instance-0"),
-				"Subscriber video should not have srcObject defined after unsubscribe");
+		final WebElement subscriberVideoFinal = subscriberVideo;
+		user.getWaiter().until((ExpectedCondition<Boolean>) driver -> {
+			return !user.getBrowserUser().hasMediaStream(subscriberVideoFinal, "#openvidu-instance-0");
+		});
 
 		subBtn.click();
 		user.getEventManager().waitUntilEventReaches("streamPlaying", 3);
@@ -669,8 +672,10 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		for (WebElement video : user.getDriver().findElements(By.tagName("video"))) {
 			user.getWaiter()
 					.until(ExpectedConditions.not(ExpectedConditions.attributeToBeNotEmpty(video, "srcObject")));
-			Assertions.assertFalse(user.getBrowserUser().hasMediaStream(video, ""),
-					"Videos were expected to lack srcObject property");
+			final WebElement videoFinal = video;
+			user.getWaiter().until((ExpectedCondition<Boolean>) driver -> {
+				return !user.getBrowserUser().hasMediaStream(videoFinal, "");
+			});
 		}
 
 		for (WebElement el : publishButtons) {
@@ -843,14 +848,26 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 			return;
 		}
 
+		Thread.sleep(1000);
+
 		WebElement publisherVideo = user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 video"));
 		WebElement subscriberVideo = user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 video"));
 		Map<String, Long> rgbPublisher = user.getBrowserUser().getAverageRgbFromVideo(publisherVideo);
 		Map<String, Long> rgbSubscriber = user.getBrowserUser().getAverageRgbFromVideo(subscriberVideo);
-		Assertions.assertTrue(RecordingUtils.checkVideoAverageRgbLightGray(rgbPublisher),
-				"Publisher video is not average gray");
-		Assertions.assertTrue(RecordingUtils.checkVideoAverageRgbLightGray(rgbSubscriber),
-				"Subscriber video is not average gray");
+		if (!RecordingUtils.checkVideoAverageRgbLightGray(rgbPublisher)) {
+			String publisherScreenshot = publisherVideo.getScreenshotAs(OutputType.BASE64);
+			log.error("Publisher video is not average gray. Screenshot (base64): {}", publisherScreenshot);
+			log.error("Publisher video RGB averages: R={} G={} B={}", rgbPublisher.get("r"), rgbPublisher.get("g"),
+					rgbPublisher.get("b"));
+			Assertions.fail("Publisher video is not average gray");
+		}
+		if (!RecordingUtils.checkVideoAverageRgbLightGray(rgbSubscriber)) {
+			String subscriberScreenshot = subscriberVideo.getScreenshotAs(OutputType.BASE64);
+			log.error("Subscriber video is not average gray. Screenshot (base64): {}", subscriberScreenshot);
+			log.error("Subscriber video RGB averages: R={} G={} B={}", rgbSubscriber.get("r"), rgbSubscriber.get("g"),
+					rgbSubscriber.get("b"));
+			Assertions.fail("Subscriber video is not average gray");
+		}
 	}
 
 	@Test
