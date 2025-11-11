@@ -544,6 +544,7 @@ public class RecordingProperties {
 		Boolean ignoreFailedStreamsParam;
 
 		try {
+			@SuppressWarnings("unused")
 			String session = (String) params.get("session");
 			nameParam = (String) params.get("name");
 			hasAudioParam = (Boolean) params.get("hasAudio");

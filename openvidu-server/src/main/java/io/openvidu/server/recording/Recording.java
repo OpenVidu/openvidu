@@ -59,7 +59,7 @@ public class Recording {
 		try {
 			this.duration = json.get("duration").getAsDouble();
 		} catch (Exception e) {
-			this.duration = Long.valueOf((long) json.get("duration").getAsLong()).doubleValue();
+			this.duration = Long.valueOf(json.get("duration").getAsLong()).doubleValue();
 		}
 		if (json.get("url").isJsonNull()) {
 			this.url = null;

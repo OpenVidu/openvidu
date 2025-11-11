@@ -1,6 +1,7 @@
 package io.openvidu.server.test.integration.config;
 
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -44,7 +45,7 @@ public class IntegrationTestConfiguration {
 			List<Kms> successfullyConnectedKmss = new ArrayList<>();
 			List<KmsProperties> kmsProperties = null;
 			try {
-				kmsProperties = invocation.getArgument(0);
+				kmsProperties = invocation.<List<KmsProperties>>getArgument(0);
 			} catch (Exception e) {
 				Assertions.fail("Error getting argument from stubbed method: " + e.getMessage());
 			}
@@ -63,13 +64,13 @@ public class IntegrationTestConfiguration {
 					Thread.sleep((long) (Math.random() * 1000));
 					Continuation<MediaPipeline> continuation = null;
 					try {
-						continuation = i.getArgument(0);
+						continuation = i.<Continuation<MediaPipeline>>getArgument(0);
 					} catch (Exception e) {
 						System.err.println("Error getting argument from stubbed method: " + e.getMessage());
 					}
 					continuation.onSuccess(mock(MediaPipeline.class));
 					return null;
-				}).when(kClient).createMediaPipeline((Continuation<MediaPipeline>) any());
+				}).when(kClient).createMediaPipeline(Mockito.<Continuation<MediaPipeline>>any());
 
 				ServerManager serverManagerMock = mock(ServerManager.class);
 				ServerInfo serverInfoMock = new ServerInfo("6.16.0", new ArrayList<>(), ServerType.KMS,
@@ -85,7 +86,7 @@ public class IntegrationTestConfiguration {
 				successfullyConnectedKmss.add(kms);
 			}
 			return successfullyConnectedKmss;
-		}).when(spy).initializeKurentoClients(any(List.class), any(Boolean.class));
+		}).when(spy).initializeKurentoClients(anyList(), anyBoolean());
 		return spy;
 	}
 

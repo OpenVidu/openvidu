@@ -353,7 +353,7 @@ public class PublisherEndpoint extends MediaEndpoint {
 
 	public JsonElement execMethod(String method, JsonObject params) throws OpenViduException {
 		Props props = new JsonUtils().fromJsonObjectToProps(params);
-		return (JsonElement) ((GenericMediaElement) this.filter).invoke(method, props, JsonElement.class);
+		return (JsonElement) this.filter.invoke(method, props, JsonElement.class);
 	}
 
 	public synchronized void mute(TrackType muteType) {
