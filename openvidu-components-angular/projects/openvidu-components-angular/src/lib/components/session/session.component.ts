@@ -267,11 +267,12 @@ export class SessionComponent implements OnInit, OnDestroy {
 	}
 
 	protected subscribeToEncryptionErrors() {
-		// TODO: LiveKit does not provide the participant who has the encryption error yet.
-		// Waiting for this issue to be solved: https://github.com/livekit/client-sdk-js/issues/1722
-		this.room.on(RoomEvent.EncryptionError, (error: Error, participant?: RemoteParticipant) => {
-			if (!participant) return;
-			this.participantService.setEncryptionError(participant?.sid, true);
+		this.room.on(RoomEvent.EncryptionError, (error: Error, participant?: Participant) => {
+			if (!participant) {
+				this.log.w('Encryption error received without participant info:', error);
+				return;
+			}
+			this.participantService.setEncryptionError(participant.sid, true);
 		});
 	}
 
