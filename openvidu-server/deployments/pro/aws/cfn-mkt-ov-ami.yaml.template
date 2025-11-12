@@ -139,7 +139,7 @@ Resources:
           Ebs:
             VolumeType: gp3
             DeleteOnTermination: true
-            VolumeSize: 12
+            VolumeSize: 15
       UserData:
         "Fn::Base64":
           !Sub |
