@@ -1229,7 +1229,7 @@ Resources:
       Handler: index.handler
       Role:
         !GetAtt LambdaOnDeleteRole.Arn
-      Runtime: python3.11
+      Runtime: python3.13
       Timeout: 900
 
   LambdaOnDeleteInvoke:
@@ -1353,7 +1353,7 @@ Resources:
       Handler: index.handler
       Role:
         !GetAtt LambdaOnCreateRole.Arn
-      Runtime: python3.11
+      Runtime: python3.13
       Timeout: 900
 
   LambdaOnCreateInvoke:
