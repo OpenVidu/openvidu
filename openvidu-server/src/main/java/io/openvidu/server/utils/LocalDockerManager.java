@@ -75,12 +75,12 @@ public class LocalDockerManager implements DockerManager {
 	public DockerManager init() {
 		DockerClientConfig dockerClientConfig = DefaultDockerClientConfig.createDefaultConfigBuilder().build();
 		DockerHttpClient dockerHttpClient = new ZerodepDockerHttpClient.Builder()
-			.dockerHost(dockerClientConfig.getDockerHost())
-			.sslConfig(dockerClientConfig.getSSLConfig())
-			.build();
+				.dockerHost(dockerClientConfig.getDockerHost())
+				.sslConfig(dockerClientConfig.getSSLConfig())
+				.build();
 		this.dockerClient = DockerClientBuilder.getInstance(dockerClientConfig)
-			.withDockerHttpClient(dockerHttpClient)
-			.build();
+				.withDockerHttpClient(dockerHttpClient)
+				.build();
 		return this;
 	}
 
@@ -247,9 +247,9 @@ public class LocalDockerManager implements DockerManager {
 
 	public String getContainerIp(String containerId) {
 		try {
-			return CommandExecutor.execCommand(5000, "/bin/sh", "-c",
-					"docker inspect -f \"{{ .NetworkSettings.IPAddress }}\" " + containerId);
-		} catch (IOException | InterruptedException e) {
+			return dockerClient.inspectContainerCmd(containerId).exec().getNetworkSettings().getNetworks()
+					.get("bridge").getIpAddress();
+		} catch (Exception e) {
 			log.error(e.getMessage());
 			return null;
 		}
