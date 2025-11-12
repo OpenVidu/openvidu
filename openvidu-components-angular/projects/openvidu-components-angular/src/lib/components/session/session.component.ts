@@ -467,17 +467,8 @@ export class SessionComponent implements OnInit, OnDestroy {
 			RoomEvent.DataReceived,
 			async (payload: Uint8Array, participant?: RemoteParticipant, _?: DataPacket_Kind, topic?: string) => {
 				try {
-					const rawText = new TextDecoder().decode(payload);
-					this.log.d('DataReceived (raw)', { topic });
-
-					const message = safeJsonParse(rawText);
-					if (!message) {
-						this.log.w('Discarding data: malformed JSON', rawText);
-						return;
-					}
-
+					const decoder = new TextDecoder();
 					const fromServer = participant === undefined;
-
 					// Validate source and resolve participant info
 					const storedParticipant = participant
 						? this.participantService.getRemoteParticipantBySid(participant.sid || '')
@@ -494,19 +485,23 @@ export class SessionComponent implements OnInit, OnDestroy {
 					const participantIdentity = storedParticipant?.identity || '';
 					const participantName = storedParticipant?.name || '';
 
-					// Decrypt if required
-					const decryptedPayload = await this.decryptIfNeeded(topic, payload, participantIdentity);
+					if (this.e2eeService.isEnabled) {
+						payload = await this.decryptIfNeeded(topic, payload, participantIdentity);
+					}
 
-					// Parse event payload after possible decryption
-					const event = safeJsonParse(new TextDecoder().decode(decryptedPayload));
-					if (!event) {
-						this.log.e('Error parsing data message after decryption');
+					const rawText = decoder.decode(payload);
+					this.log.d('DataReceived (raw)', { topic });
+
+					const eventMessage = safeJsonParse(rawText);
+					if (!eventMessage) {
+						this.log.w('Discarding data: malformed JSON', rawText);
 						return;
 					}
+
 					this.log.d(`Data event received: ${topic}`);
 
 					// Dispatch handling
-					this.handleDataEvent(topic, event, participantName || participantIdentity || 'Unknown');
+					this.handleDataEvent(topic, eventMessage, participantName || participantIdentity || 'Unknown');
 				} catch (err) {
 					this.log.e('Unhandled error processing DataReceived', err);
 				}
