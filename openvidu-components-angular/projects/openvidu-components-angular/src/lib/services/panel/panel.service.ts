@@ -14,7 +14,7 @@ export class PanelService {
 	panelStatusObs: Observable<PanelStatusInfo>;
 	private log: ILogger;
 	private isExternalOpened: boolean = false;
-	private externalType: string;
+	private externalType: string = '';
 	private _panelOpened = <BehaviorSubject<PanelStatusInfo>>new BehaviorSubject({ isOpened: false });
 	private panelTypes: string[] = Object.values(PanelType);
 

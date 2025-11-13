@@ -179,23 +179,15 @@ export class DeviceService {
 	 * @returns A promise that resolves to an array of `MediaDeviceInfo` objects representing the available local devices.
 	 */
 	private async getLocalDevices(): Promise<MediaDeviceInfo[]> {
-		// Forcing media permissions request.
-		const strategies = [
-			{ audio: true, video: true },
-			{ audio: true, video: false },
-			{ audio: false, video: true }
-		];
+		const strategies = this.getPermissionStrategies();
 
 		for (const strategy of strategies) {
 			try {
 				this.log.d(`Trying strategy: audio=${strategy.audio}, video=${strategy.video}`);
-				const localTracks = await createLocalTracks(strategy);
-				localTracks.forEach((track) => track.stop());
-
-				// Permission granted
-				const devices = this.platformSrv.isFirefox() ? await this.getMediaDevicesFirefox() : await Room.getLocalDevices();
-
-				return devices.filter((d: MediaDeviceInfo) => d.label && d.deviceId && d.deviceId !== 'default');
+				const devices = await this.tryPermissionStrategy(strategy);
+				if (devices) {
+					return this.filterValidDevices(devices);
+				}
 			} catch (error: any) {
 				this.log.w(`Strategy failed: audio=${strategy.audio}, video=${strategy.video}`, error);
 
@@ -209,6 +201,38 @@ export class DeviceService {
 		return [];
 	}
 
+	/**
+	 * @internal
+	 * Get the list of permission strategies to try
+	 */
+	protected getPermissionStrategies(): Array<{ audio: boolean; video: boolean }> {
+		return [
+			{ audio: true, video: true },
+			{ audio: true, video: false },
+			{ audio: false, video: true }
+		];
+	}
+
+	/**
+	 * @internal
+	 * Try a specific permission strategy and return devices if successful
+	 */
+	protected async tryPermissionStrategy(strategy: { audio: boolean; video: boolean }): Promise<MediaDeviceInfo[] | null> {
+		const localTracks = await createLocalTracks(strategy);
+		localTracks.forEach((track) => track.stop());
+
+		// Permission granted
+		return this.platformSrv.isFirefox() ? await this.getMediaDevicesFirefox() : await Room.getLocalDevices();
+	}
+
+	/**
+	 * @internal
+	 * Filter devices to remove default and invalid entries
+	 */
+	protected filterValidDevices(devices: MediaDeviceInfo[]): MediaDeviceInfo[] {
+		return devices.filter((d: MediaDeviceInfo) => d.label && d.deviceId && d.deviceId !== 'default');
+	}
+
 	private async getMediaDevicesFirefox(): Promise<MediaDeviceInfo[]> {
 		// Firefox requires to get user media to get the devices
 		await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
@@ -219,20 +243,28 @@ export class DeviceService {
 		this.log.w('All permission strategies failed, trying device enumeration without permissions');
 
 		try {
-			if (error?.name === 'NotReadableError' || error?.name === 'AbortError') {
-				this.log.w('Device busy, using enumerateDevices() instead');
-				const devices = await navigator.mediaDevices.enumerateDevices();
-				return devices.filter((d) => d.deviceId && d.deviceId !== 'default');
-			}
-			if (error?.name === 'NotAllowedError' || error?.name === 'SecurityError') {
-				this.log.w('Permission denied to access devices');
-				this.deviceAccessDeniedError = true;
-			}
-			return [];
+			return await this.handleFallbackByErrorType(error);
 		} catch (error) {
 			this.log.e('Complete failure getting devices', error);
 			this.deviceAccessDeniedError = true;
 			return [];
 		}
+	}
+
+	/**
+	 * @internal
+	 * Handle fallback based on error type
+	 */
+	protected async handleFallbackByErrorType(error: any): Promise<MediaDeviceInfo[]> {
+		if (error?.name === 'NotReadableError' || error?.name === 'AbortError') {
+			this.log.w('Device busy, using enumerateDevices() instead');
+			const devices = await navigator.mediaDevices.enumerateDevices();
+			return devices.filter((d) => d.deviceId && d.deviceId !== 'default');
+		}
+		if (error?.name === 'NotAllowedError' || error?.name === 'SecurityError') {
+			this.log.w('Permission denied to access devices');
+			this.deviceAccessDeniedError = true;
+		}
+		return [];
 	}
 }
