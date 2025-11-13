@@ -87,6 +87,9 @@
 			"MESSAGE_SENT_NOTIFICATION": "messaggio inviato",
 			"OPEN_CHAT": "APRI"
 		},
+		"ACTIVITIES": {
+			"TITLE": "Attività"
+		},
 		"PARTICIPANTS": {
 			"TITLE": "Partecipanti",
 			"CAMERA": "CAMERA",

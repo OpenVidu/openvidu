@@ -87,6 +87,9 @@
 			"MESSAGE_SENT_NOTIFICATION": "संदेश भेजा गया",
 			"OPEN_CHAT": "खोलें"
 		},
+		"ACTIVITIES": {
+			"TITLE": "गतिविधियाँ"
+		},
 		"PARTICIPANTS": {
 			"TITLE": "सदस्य",
 			"CAMERA": "कैमरा",

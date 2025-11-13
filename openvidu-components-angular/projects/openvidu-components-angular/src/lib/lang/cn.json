@@ -87,6 +87,9 @@
 			"MESSAGE_SENT_NOTIFICATION": "消息已发送",
 			"OPEN_CHAT": "打开"
 		},
+		"ACTIVITIES": {
+			"TITLE": "活动"
+		},
 		"PARTICIPANTS": {
 			"TITLE": "参与者",
 			"CAMERA": "摄像头",

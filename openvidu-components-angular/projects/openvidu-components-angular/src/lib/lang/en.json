@@ -97,6 +97,9 @@
 			"MUTE": "Mute",
 			"UNMUTE": "Unmute"
 		},
+		"ACTIVITIES": {
+			"TITLE": "Activities"
+		},
 		"SETTINGS": {
 			"TITLE": "Settings",
 			"GENERAL": "General",

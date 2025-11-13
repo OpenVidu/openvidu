@@ -87,6 +87,9 @@
 			"MESSAGE_SENT_NOTIFICATION": "bericht verzonden",
 			"OPEN_CHAT": "OPENEN"
 		},
+		"ACTIVITIES": {
+			"TITLE": "Activiteiten"
+		},
 		"PARTICIPANTS": {
 			"TITLE": "Deelnemers",
 			"CAMERA": "CAMERA",
