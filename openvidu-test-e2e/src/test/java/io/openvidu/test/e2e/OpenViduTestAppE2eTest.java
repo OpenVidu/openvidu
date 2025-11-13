@@ -1646,7 +1646,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		String recPath = recordingsPath + sessionName + "/";
 
 		Recording recording = new OpenVidu(OPENVIDU_URL, OPENVIDU_SECRET).getRecording(sessionName);
-		this.recordingUtils.checkIndividualRecording(recPath, recording, 2, "opus", "vp8", true);
+		this.recordingUtils.checkIndividualRecording(recPath, recording, 2, "opus", "vp8", true, 2);
 
 		// Try to get the stopped recording
 		user.getDriver().findElement(By.id("get-recording-btn")).click();
@@ -1853,17 +1853,17 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		String recPath = recordingsPath + SESSION_NAME + "/";
 		Recording recording = new OpenVidu(OPENVIDU_URL, OPENVIDU_SECRET).getRecording(SESSION_NAME);
 		this.recordingUtils.checkMultimediaFile(new File(recPath + recording.getName() + ".mp4"), false, true,
-				recording.getDuration(), recording.getResolution(), recording.getFrameRate(), null, "h264", true);
+				recording.getDuration(), recording.getResolution(), recording.getFrameRate(), null, "h264", true, 2);
 
 		// Check video-only INDIVIDUAL recording
 		recPath = recordingsPath + SESSION_NAME + "~1/";
 		recording = new OpenVidu(OPENVIDU_URL, OPENVIDU_SECRET).getRecording(SESSION_NAME + "~1");
-		this.recordingUtils.checkIndividualRecording(recPath, recording, 3, "opus", "vp8", true);
+		this.recordingUtils.checkIndividualRecording(recPath, recording, 3, "opus", "vp8", true, 2);
 
 		// Check audio-only INDIVIDUAL recording
 		recPath = recordingsPath + SESSION_NAME + "~2/";
 		recording = new OpenVidu(OPENVIDU_URL, OPENVIDU_SECRET).getRecording(SESSION_NAME + "~2");
-		this.recordingUtils.checkIndividualRecording(recPath, recording, 2, "opus", "vp8", true);
+		this.recordingUtils.checkIndividualRecording(recPath, recording, 2, "opus", "vp8", true, 2);
 
 		user.getDriver().findElement(By.id("close-dialog-btn")).click();
 		Thread.sleep(500);
@@ -1945,7 +1945,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		// Check audio-only COMPOSED recording
 		Recording recording = new OpenVidu(OPENVIDU_URL, OPENVIDU_SECRET).getRecording(SESSION_NAME);
 		this.recordingUtils.checkMultimediaFile(new File(recordingFilePath), true, false, recording.getDuration(), null,
-				null, "opus", null, true);
+				null, "opus", null, true, 2);
 
 		user.getDriver().findElement(By.id("close-dialog-btn")).click();
 		Thread.sleep(500);
@@ -2970,7 +2970,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		Assertions.assertFalse(OV.fetch(), "OpenVidu.fetch() should return false");
 
 		this.recordingUtils.checkIndividualRecording("/opt/openvidu/recordings/" + customSessionId + "/", recording, 2,
-				"opus", "vp8", false);
+				"opus", "vp8", false, 2);
 
 		// Not recorded session
 		try {
@@ -3991,7 +3991,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 			Assertions.assertTrue(rec.getSize() > 0, "Recording size is 0");
 
 			this.recordingUtils.checkIndividualRecording("/opt/openvidu/recordings/TestSession/", rec, 1, "opus", "vp8",
-					true);
+					true, 10);
 
 			user.getDriver().findElement(By.id("remove-all-users-btn")).click();
 			user.getEventManager().clearAllCurrentEvents();
@@ -4075,7 +4075,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 			Assertions.assertTrue(rec.getSize() > 0, "Recording size is 0");
 
 			this.recordingUtils.checkIndividualRecording("/opt/openvidu/recordings/TestSession/", rec, 1, "opus", "vp8",
-					true);
+					true, 10);
 
 			OV.fetch();
 			sessions = OV.getActiveSessions();
@@ -4569,7 +4569,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 			CustomWebhook.waitForEvent("recordingStatusChanged", 10); // Ready
 
 			Recording recording = new OpenVidu(OPENVIDU_URL, OPENVIDU_SECRET).getRecording(recId);
-			this.recordingUtils.checkIndividualRecording(recPath + recId + "/", recording, 1, "opus", "vp8", true);
+			this.recordingUtils.checkIndividualRecording(recPath + recId + "/", recording, 1, "opus", "vp8", true, 2);
 
 			// Test IPCAM individual recording (IPCAM video only, recording audio and video)
 

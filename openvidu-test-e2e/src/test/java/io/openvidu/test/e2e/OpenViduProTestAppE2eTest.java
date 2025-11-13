@@ -58,12 +58,14 @@ import io.openvidu.java.client.OpenViduRole;
 import io.openvidu.java.client.Recording;
 import io.openvidu.java.client.RecordingProperties;
 import io.openvidu.java.client.Session;
+import io.openvidu.test.browsers.ChromeUser;
 import io.openvidu.test.browsers.utils.CustomHttpClient;
 import io.openvidu.test.browsers.utils.RecordingUtils;
 import io.openvidu.test.browsers.utils.Unzipper;
 import io.openvidu.test.browsers.utils.layout.CustomLayoutHandler;
 import io.openvidu.test.browsers.utils.webhook.CustomWebhook;
 import io.openvidu.test.e2e.utils.TestUtils;
+import io.openvidu.test.e2e.annotations.OnlyKurento;
 
 public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
@@ -649,10 +651,13 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 			}
 		}
 
+		long accumulatedTimesWhenSartingRecordings = 0;
+
 		// Start the recording of the sessions
 		restClient.rest(HttpMethod.POST, "/openvidu/api/recordings/start",
 				"{'session':'" + sessionName + "','outputMode':'INDIVIDUAL'}", HttpURLConnection.HTTP_OK);
 		user.getEventManager().waitUntilEventReaches("recordingStarted", 3);
+
 		Thread.sleep(1000);
 
 		// Get connectionId and streamId for one of the users configured to NOT be
@@ -671,20 +676,39 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 			}
 		}
 
+		long timeBeforeOp = System.currentTimeMillis();
+
 		// Generate 3 total recordings of 1 second length for the stream of the user
 		// configured to NOT be recorded
 		restClient.rest(HttpMethod.PATCH, "/openvidu/api/sessions/" + sessionName + "/connection/" + connectionId2,
 				"{'record':true}", HttpURLConnection.HTTP_OK);
+		user.getEventManager().waitUntilEventReaches("connectionPropertyChanged", 1);
+
+		accumulatedTimesWhenSartingRecordings += System.currentTimeMillis() - timeBeforeOp;
+
 		Thread.sleep(1000);
+
+		timeBeforeOp = System.currentTimeMillis();
+
 		restClient.rest(HttpMethod.PATCH, "/openvidu/api/sessions/" + sessionName + "/connection/" + connectionId2,
 				"{'record':false}", HttpURLConnection.HTTP_OK);
 		restClient.rest(HttpMethod.PATCH, "/openvidu/api/sessions/" + sessionName + "/connection/" + connectionId2,
 				"{'record':true}", HttpURLConnection.HTTP_OK);
+		user.getEventManager().waitUntilEventReaches("connectionPropertyChanged", 3);
+
+		accumulatedTimesWhenSartingRecordings += System.currentTimeMillis() - timeBeforeOp;
+
 		Thread.sleep(1000);
+
+		timeBeforeOp = System.currentTimeMillis();
 		restClient.rest(HttpMethod.PATCH, "/openvidu/api/sessions/" + sessionName + "/connection/" + connectionId2,
 				"{'record':false}", HttpURLConnection.HTTP_OK);
 		restClient.rest(HttpMethod.PATCH, "/openvidu/api/sessions/" + sessionName + "/connection/" + connectionId2,
 				"{'record':true}", HttpURLConnection.HTTP_OK);
+		user.getEventManager().waitUntilEventReaches("connectionPropertyChanged", 5);
+
+		accumulatedTimesWhenSartingRecordings += System.currentTimeMillis() - timeBeforeOp;
+
 		Thread.sleep(1000);
 
 		restClient.rest(HttpMethod.POST, "/openvidu/api/recordings/stop/" + sessionName, HttpURLConnection.HTTP_OK);
@@ -695,7 +719,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		String recPath = "/opt/openvidu/recordings/" + sessionName + "/";
 		Recording recording = new OpenVidu(OpenViduTestAppE2eTest.OPENVIDU_URL, OpenViduTestAppE2eTest.OPENVIDU_SECRET)
 				.getRecording(sessionName);
-		this.recordingUtils.checkIndividualRecording(recPath, recording, 4, "opus", "vp8", true);
+		this.recordingUtils.checkIndividualRecording(recPath, recording, 4, "opus", "vp8", true, 5);
 
 		// Analyze INDIVIDUAL recording metadata
 		new Unzipper().unzipFile(recPath, recording.getName() + ".zip");
@@ -718,8 +742,9 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 				Assertions.assertEquals(connectionId1, file.get("connectionId").getAsString(),
 						"Wrong connectionId file metadata property");
 				long msDuration = file.get("endTimeOffset").getAsLong() - file.get("startTimeOffset").getAsLong();
-				Assertions.assertTrue((msDuration - 4000) < 1000,
-						"Wrong recording duration of individual file. Difference: " + (msDuration - 4000));
+				long differenceInDuration = msDuration - 4000 - accumulatedTimesWhenSartingRecordings;
+				Assertions.assertTrue(differenceInDuration < 750,
+						"Wrong recording duration of individual file. Difference: " + differenceInDuration);
 				count1++;
 			} else if (fileStreamId.equals(streamId2)) {
 				// Dynamically recorded user
@@ -751,6 +776,137 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		Assertions.assertEquals(1, count1, "Wrong number of recording files for stream " + streamId1);
 		Assertions.assertEquals(3, count2, "Wrong number of recording files for stream " + streamId2);
 		Assertions.assertTrue(regexNames.isEmpty(), "Some expected file name didn't existed: " + regexNames.toString());
+	}
+
+	@Test
+	@DisplayName("Individual record with abrupt user disconnection")
+	void individualRecordWithAbruptUserDisconnectionTest() throws Exception {
+		isRecordingTest = true;
+
+		log.info("Individual record with abrupt user disconnection");
+
+		CustomHttpClient restClient = new CustomHttpClient(OpenViduTestAppE2eTest.OPENVIDU_URL, "OPENVIDUAPP",
+				OpenViduTestAppE2eTest.OPENVIDU_SECRET);
+		JsonObject config = restClient.rest(HttpMethod.GET, "/openvidu/api/config", HttpURLConnection.HTTP_OK);
+
+		String defaultOpenViduWebhookEndpoint = null;
+		Integer defaultOpenViduRecordingAutostopTimeout = null;
+		if (config.has("OPENVIDU_WEBHOOK_ENDPOINT")) {
+			defaultOpenViduWebhookEndpoint = config.get("OPENVIDU_WEBHOOK_ENDPOINT").getAsString();
+		}
+		if (config.has("OPENVIDU_RECORDING_AUTOSTOP_TIMEOUT")) {
+			defaultOpenViduRecordingAutostopTimeout = config.get("OPENVIDU_RECORDING_AUTOSTOP_TIMEOUT").getAsInt();
+		}
+
+		CountDownLatch initLatch = new CountDownLatch(1);
+		io.openvidu.test.browsers.utils.webhook.CustomWebhook.main(new String[0], initLatch);
+
+		try {
+
+			if (!initLatch.await(30, TimeUnit.SECONDS)) {
+				Assertions.fail("Timeout waiting for webhook springboot app to start");
+				CustomWebhook.shutDown();
+				return;
+			}
+
+			Map<String, Object> newConfig = Map.of("OPENVIDU_PRO_NETWORK_QUALITY", false,
+					"OPENVIDU_PRO_SPEECH_TO_TEXT", "disabled", "OPENVIDU_WEBHOOK", true,
+					"OPENVIDU_WEBHOOK_ENDPOINT", "http://127.0.0.1:7777/webhook",
+					"OPENVIDU_RECORDING_AUTOSTOP_TIMEOUT", 0);
+			restartOpenViduServer(newConfig);
+
+			OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
+
+			final String sessionName = "AbruptStopOfIndividualRecording";
+			final String recordingName = "ABRUPT_STOP_OF_INDIVIDUAL_RECORDING";
+
+			user.getDriver().findElement(By.id("add-user-btn")).click();
+			user.getDriver().findElement(By.id("session-name-input-0")).clear();
+			user.getDriver().findElement(By.id("session-name-input-0")).sendKeys(sessionName);
+			user.getDriver().findElement(By.className("join-btn")).click();
+
+			user.getEventManager().waitUntilEventReaches("connectionCreated", 1);
+			user.getEventManager().waitUntilEventReaches("accessAllowed", 1);
+			user.getEventManager().waitUntilEventReaches("streamCreated", 1);
+			user.getEventManager().waitUntilEventReaches("streamPlaying", 1);
+
+			int numberOfVideos = user.getDriver().findElements(By.tagName("video")).size();
+			Assertions.assertEquals(1, numberOfVideos, "Expected 1 video but found " + numberOfVideos);
+			Assertions.assertTrue(
+					user.getBrowserUser().assertMediaTracks(user.getDriver().findElements(By.tagName("video")), true,
+							true),
+					"Video was expected to have audio and video tracks");
+
+			user.getDriver().findElement(By.id("session-api-btn-0")).click();
+			Thread.sleep(1000);
+			user.getDriver().findElement(By.id("rec-properties-btn")).click();
+			Thread.sleep(500);
+
+			// Set recording name
+			user.getDriver().findElement(By.id("recording-name-field")).sendKeys(recordingName);
+			// Set OutputMode to INDIVIDUAL
+			user.getDriver().findElement(By.id("rec-outputmode-select")).click();
+			Thread.sleep(500);
+			user.getDriver().findElement(By.id("option-INDIVIDUAL")).click();
+			Thread.sleep(500);
+
+			user.getDriver().findElement(By.id("start-recording-btn")).click();
+
+			user.getWaiter().until(ExpectedConditions.attributeToBe(By.id("api-response-text-area"), "value",
+					"Recording started [" + sessionName + "]"));
+
+			user.getEventManager().waitUntilEventReaches("recordingStarted", 1);
+
+			Thread.sleep(3000);
+
+			CustomWebhook.clean();
+
+			((ChromeUser) user.getBrowserUser()).simulateCrash();
+
+			JsonObject event = CustomWebhook.waitForEvent("webrtcConnectionDestroyed", 20);
+			Assertions.assertEquals("networkDisconnect", event.get("reason").getAsString(),
+					"Wrong reason for webrtcConnectionDestroyed event");
+
+			event = CustomWebhook.waitForEvent("participantLeft", 1);
+			Assertions.assertEquals("networkDisconnect", event.get("reason").getAsString(),
+					"Wrong reason for participantLeft event");
+
+			event = CustomWebhook.waitForEvent("recordingStatusChanged", 1);
+			Assertions.assertEquals("lastParticipantLeft", event.get("reason").getAsString(),
+					"Wrong reason for recordingStatusChanged event");
+			Assertions.assertEquals("stopped", event.get("status").getAsString(),
+					"Wrong status in recordingStatusChanged event");
+
+			event = CustomWebhook.waitForEvent("sessionDestroyed", 1);
+			Assertions.assertEquals("lastParticipantLeft", event.get("reason").getAsString(),
+					"Wrong reason for sessionDestroyed event");
+
+			event = CustomWebhook.waitForEvent("recordingStatusChanged", 1);
+			Assertions.assertEquals("lastParticipantLeft", event.get("reason").getAsString(),
+					"Wrong reason for recordingStatusChanged event");
+			Assertions.assertEquals("ready", event.get("status").getAsString(),
+					"Wrong status in recordingStatusChanged event");
+
+			// Check that the INDIVIDUAL recording has been properly saved and is healthy
+			// even after Chrome crash
+			String recPath = "/opt/openvidu/recordings/" + sessionName + "/";
+			Recording recording = new OpenVidu(OpenViduTestAppE2eTest.OPENVIDU_URL,
+					OpenViduTestAppE2eTest.OPENVIDU_SECRET)
+					.getRecording(sessionName);
+			this.recordingUtils.checkIndividualRecording(recPath, recording, 1, "opus", "vp8", true, 15);
+
+		} finally {
+			Map<String, Object> oldConfig = new HashMap<>();
+			oldConfig.put("OPENVIDU_WEBHOOK", false);
+			if (defaultOpenViduWebhookEndpoint != null) {
+				oldConfig.put("OPENVIDU_WEBHOOK_ENDPOINT", defaultOpenViduWebhookEndpoint);
+			}
+			if (defaultOpenViduRecordingAutostopTimeout != null) {
+				oldConfig.put("OPENVIDU_RECORDING_AUTOSTOP_TIMEOUT", defaultOpenViduRecordingAutostopTimeout);
+			}
+			restartOpenViduServer(oldConfig);
+			CustomWebhook.shutDown();
+		}
 	}
 
 	@Test
@@ -1143,6 +1299,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 	}
 
 	@Test
+	@OnlyKurento
 	@DisplayName("Network quality test")
 	void networkQualityTest() throws Exception {
 
@@ -1290,7 +1447,8 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 		filterOptionsInput = user.getDriver().findElement(By.id("filter-options-field"));
 		filterOptionsInput.clear();
-		filterOptionsInput.sendKeys("{\"url\": \"https://upload.wikimedia.org/wikipedia/commons/thumb/6/62/Solid_red.svg/1024px-Solid_red.svg.png\"}");
+		filterOptionsInput.sendKeys(
+				"{\"url\": \"https://upload.wikimedia.org/wikipedia/commons/thumb/6/62/Solid_red.svg/1024px-Solid_red.svg.png\"}");
 		user.getDriver().findElement(By.id("apply-filter-btn")).click();
 		user.getWaiter().until(
 				ExpectedConditions.attributeContains(By.id("operation-response-text-area"), "value", "Filter applied"));
@@ -1326,7 +1484,8 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 		// Blue
 		filterParamsInput.clear();
-		filterParamsInput.sendKeys("{\"url\": \"https://png.pngtree.com/thumb_back/fw800/background/20210207/pngtree-blue-pure-color-simple-background-image_557085.jpg\"}");
+		filterParamsInput.sendKeys(
+				"{\"url\": \"https://png.pngtree.com/thumb_back/fw800/background/20210207/pngtree-blue-pure-color-simple-background-image_557085.jpg\"}");
 		user.getDriver().findElement(By.id("exec-filter-btn")).click();
 		user.getWaiter().until(ExpectedConditions.attributeContains(By.id("operation-response-text-area"), "value",
 				"Filter method executed"));

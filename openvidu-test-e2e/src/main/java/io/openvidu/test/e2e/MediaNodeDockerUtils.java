@@ -45,7 +45,7 @@ public class MediaNodeDockerUtils {
 		DockerClient dockerClient = getDockerClient();
 		ExecCreateCmdResponse execCreateCmdResponse = dockerClient.execCreateCmd(containerId).withAttachStdout(true)
 				.withAttachStderr(true)
-				.withCmd("bash", "-c", "docker stop kms && sleep " + (millisStop / 1000) + " && docker start kms")
+				.withCmd("bash", "-c", "docker kill kms && sleep " + (millisStop / 1000) + " && docker start kms")
 				.exec();
 		dockerClient.execStartCmd(execCreateCmdResponse.getId()).exec(new ResultCallback.Adapter<>() {
 		});

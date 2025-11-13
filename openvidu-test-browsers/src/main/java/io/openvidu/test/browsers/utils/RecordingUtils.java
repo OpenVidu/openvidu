@@ -47,7 +47,7 @@ public class RecordingUtils {
 	private boolean recordedFileFine(File file, Recording recording,
 			Function<Map<String, Long>, Boolean> colorCheckFunction) throws IOException {
 		this.checkMultimediaFile(file, recording.hasAudio(), recording.hasVideo(), recording.getDuration(),
-				recording.getResolution(), recording.getFrameRate(), "aac", "h264", true);
+				recording.getResolution(), recording.getFrameRate(), "aac", "h264", true, 2);
 
 		boolean isFine = false;
 		Picture frame;
@@ -115,7 +115,8 @@ public class RecordingUtils {
 	}
 
 	public void checkIndividualRecording(String recPath, Recording recording, int numberOfVideoFiles,
-			String audioDecoder, String videoDecoder, boolean checkAudio) throws IOException {
+			String audioDecoder, String videoDecoder, boolean checkAudio, long durationToleranceInSeconds)
+			throws IOException {
 
 		// Should be only 2 files: zip and metadata
 		File folder = new File(recPath);
@@ -179,7 +180,8 @@ public class RecordingUtils {
 			log.info("Duration of {} according to sync metadata json file: {} s", webmFile.getName(),
 					durationInSeconds);
 			this.checkMultimediaFile(webmFile, recording.hasAudio(), recording.hasVideo(), durationInSeconds,
-					recording.getResolution(), recording.getFrameRate(), audioDecoder, videoDecoder, checkAudio);
+					recording.getResolution(), recording.getFrameRate(), audioDecoder, videoDecoder, checkAudio,
+					durationToleranceInSeconds);
 			webmFile.delete();
 		}
 
@@ -190,7 +192,9 @@ public class RecordingUtils {
 	}
 
 	public void checkMultimediaFile(File file, boolean hasAudio, boolean hasVideo, double duration, String resolution,
-			Integer frameRate, String audioDecoder, String videoDecoder, boolean checkAudio) throws IOException {
+			Integer frameRate, String audioDecoder, String videoDecoder, boolean checkAudio,
+			long durationToleranceInSeconds)
+			throws IOException {
 		// Check tracks, duration, resolution, framerate and decoders
 		MultimediaFileMetadata metadata = new MultimediaFileMetadata(file.getAbsolutePath());
 
@@ -225,11 +229,11 @@ public class RecordingUtils {
 		df.setRoundingMode(RoundingMode.UP);
 		log.info("Duration of {} according to ffmpeg: {} s", file.getName(), metadata.getDuration());
 		log.info("Duration of {} according to 'duration' property: {} s", file.getName(), duration);
-		log.info("Difference in s duration: {}", Math.abs(metadata.getDuration() - duration));
-		final double difference = 10;
-		Assertions.assertTrue(Math.abs((metadata.getDuration() - duration)) < difference,
+		log.info("Difference in s duration: {}", Math.abs(duration - metadata.getDuration()));
+		Assertions.assertTrue(Math.abs((duration - metadata.getDuration())) < durationToleranceInSeconds,
 				"Difference between recording entity duration (" + duration + ") and real video duration ("
-						+ metadata.getDuration() + ") is greater than " + difference + "  in file " + file.getName());
+						+ metadata.getDuration() + ") is greater than " + durationToleranceInSeconds + "  in file "
+						+ file.getName());
 	}
 
 	public boolean thumbnailIsFine(File file, Function<Map<String, Long>, Boolean> colorCheckFunction) {
