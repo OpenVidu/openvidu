@@ -60,7 +60,7 @@
 		<!-- When upgrading also upgrade in openvidu-java-client pom.xml -->
 		<version.gson>2.13.2</version.gson>
 		<version.jcodec>0.2.5</version.jcodec>
-		<version.testcontainers>2.0.1</version.testcontainers>
+		<version.testcontainers>2.0.2</version.testcontainers>
 		<version.appium>10.0.0</version.appium>
 		<version.stringsimilarity>2.0.0</version.stringsimilarity>
 		<version.logback>1.5.20</version.logback>
