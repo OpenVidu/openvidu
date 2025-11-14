@@ -26,6 +26,8 @@ import java.net.http.HttpResponse;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.X509Certificate;
+
+import java.time.Duration;
 import java.util.Base64;
 import java.util.Map.Entry;
 
@@ -100,7 +102,10 @@ public class CustomHttpClient {
 			throw new RuntimeException(e);
 		}
 
-		this.client = HttpClient.newBuilder().sslContext(sslContext).build();
+		this.client = HttpClient.newBuilder()
+				.sslContext(sslContext)
+				.connectTimeout(Duration.ofSeconds(20))
+				.build();
 	}
 
 	public int getAndReturnStatus(String path, String credentials) throws Exception {
@@ -287,7 +292,9 @@ public class CustomHttpClient {
 	public String commonRestString(HttpMethod method, String path, String body, int status) throws Exception {
 		path = openviduUrl + (path.startsWith("/") ? path : ("/" + path));
 
-		HttpRequest.Builder builder = HttpRequest.newBuilder().uri(new URI(path));
+		HttpRequest.Builder builder = HttpRequest.newBuilder()
+				.uri(new URI(path))
+				.timeout(Duration.ofSeconds(20));
 		if (body != null && !body.isEmpty()) {
 			body = body.replaceAll("'", "\"");
 			BodyPublisher bodyPublisher = HttpRequest.BodyPublishers.ofString(body);
