@@ -681,9 +681,27 @@ describe('Stream UI controls and interaction features', () => {
 
 		await browser.switchTo().window(tabs[0]);
 
-		await utils.waitForElement('.OV_stream.remote.speaking');
+		// Wait with retries for audio detection to appear (handles timing issues)
+		const maxRetries = 5;
+		const retryInterval = 1000;
+		let audioDetected = false;
+
+		for (let i = 0; i < maxRetries && !audioDetected; i++) {
+			await browser.sleep(retryInterval);
+			const remoteSpeakingCount = await utils.getNumberOfElements('.OV_stream.remote.speaking');
+			if (remoteSpeakingCount >= 1) {
+				audioDetected = true;
+				console.log(`[Audio Detection] Detected after ${i + 1} attempt(s)`);
+			} else {
+				console.log(`[Audio Detection] Attempt ${i + 1}/${maxRetries}: No audio detected yet`);
+			}
+		}
+
 		// Ensure at least one remote speaker element is present (timing-sensitive)
-		expect(await utils.getNumberOfElements('.OV_stream.remote.speaking')).toBeGreaterThanOrEqual(1);
+		expect(audioDetected).toBeTrue();
+		if (!audioDetected) {
+			console.error('Audio detection indicator did not appear within timeout');
+		}
 
 		// The local participant is muted; poll briefly to ensure the local stream is not
 		// marked as speaking. This handles timing races where classes may be applied
@@ -701,6 +719,9 @@ describe('Stream UI controls and interaction features', () => {
 			await browser.sleep(interval);
 		}
 		expect(localNotSpeaking).toBeTrue();
+		if (!localNotSpeaking) {
+			console.error('Local stream should not be marked as speaking when muted');
+		}
 	});
 });
 
