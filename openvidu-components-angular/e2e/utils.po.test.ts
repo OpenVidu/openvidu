@@ -279,4 +279,49 @@ export class OpenViduComponentsPO {
 		// fs.writeFileSync('diff.png', PNG.sync.write(diff));
 		// expect(numDiffPixels).to.be.greaterThan(500, 'The virtual background was not applied correctly');
 	}
+
+	/**
+	 * Pins or unpins a stream by clicking on it
+	 * @param streamSelector CSS selector for the stream element (e.g., '.screen-type', '.camera-type')
+	 */
+	async toggleStreamPin(streamSelector: string): Promise<void> {
+		const stream = await this.waitForElement(streamSelector);
+		await stream.click();
+		await this.browser.sleep(300);
+	}
+
+	/**
+	 * Gets the number of pinned streams (elements with class .OV_big)
+	 */
+	async getNumberOfPinnedStreams(): Promise<number> {
+		return await this.getNumberOfElements('.OV_big');
+	}
+
+	/**
+	 * Checks if a specific stream is pinned
+	 * @param streamSelector CSS selector for the stream element
+	 */
+	async isStreamPinned(streamSelector: string): Promise<boolean> {
+		try {
+			const stream = await this.waitForElement(streamSelector);
+			const classes = await stream.getAttribute('class');
+			return classes.includes('OV_big');
+		} catch (error) {
+			return false;
+		}
+	}
+
+	/**
+	 * Gets all screen share streams
+	 */
+	async getScreenShareStreams(): Promise<WebElement[]> {
+		return await this.browser.findElements(By.css('.screen-type'));
+	}
+
+	/**
+	 * Gets all camera streams
+	 */
+	async getCameraStreams(): Promise<WebElement[]> {
+		return await this.browser.findElements(By.css('.camera-type'));
+	}
 }
