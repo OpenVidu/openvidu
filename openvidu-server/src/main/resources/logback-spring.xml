@@ -6,18 +6,25 @@
 	<springProperty scope="context" name="logging.colors" source="logging.colors" defaultValue="false" />
 	<timestamp key="myTimestamp" timeReference="contextBirth" datePattern="HH-mm-ss" />
 
-	<appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
-		<encoder>
-			<if condition='property("logging.colors").equalsIgnoreCase("true")'>
-				<then>
+	<if condition='property("logging.colors").equalsIgnoreCase("true")'>
+		<then>
+			<appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+				<encoder>
 					<pattern>%black(%highlight([%p]) %d{dd MMM HH:mm:ss.SSS} %magenta([%.80t]) \(%file:%line\) - %msg%n)</pattern>
-				</then>
-				<else>
+				</encoder>
+			</appender>
+		</then>
+	</if>
+
+	<if condition='!property("logging.colors").equalsIgnoreCase("true")'>
+		<then>
+			<appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+				<encoder>
 					<pattern>[%p] %d [%.80t] %c - %msg%n</pattern>
-				</else>
-			</if>
-		</encoder>
-	</appender>
+				</encoder>
+			</appender>
+		</then>
+	</if>
 
 	<!--
 	<appender name="CUSTOMCLASS"
@@ -33,13 +40,11 @@
 	</logger>
 	-->
 
-	<logger name="org.kurento.jsonrpc.client">
-		<level value="ERROR"></level>
+	<logger name="org.kurento.jsonrpc.client" level="error">
 		<appender-ref ref="STDOUT" />
 	</logger>
 
-	<root>
-		<level value="INFO" />
+	<root level="info">
 		<appender-ref ref="STDOUT" />
 	</root>
 
@@ -57,8 +62,7 @@
 					<pattern>%m\n</pattern>
 				</encoder>
 			</appender>
-			<logger name="io.openvidu.server.cdr.CDRLoggerFile">
-				<level value="INFO" />
+			<logger name="io.openvidu.server.cdr.CDRLoggerFile" level="info">
 				<appender-ref ref="CDR" />
 			</logger>
 		</then>
