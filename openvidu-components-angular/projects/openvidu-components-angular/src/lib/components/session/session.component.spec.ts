@@ -3,7 +3,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 
 import { ActionService } from '../../services/action/action.service';
-import { ActionServiceMock } from '../../services/action/action.service.mock';
+import { ActionServiceMock } from '../../../test-helpers/action.service.mock';
 
 import { ChatService } from '../../services/chat/chat.service';
 import { ChatServiceMock } from '../../services/chat/chat.service.mock';

@@ -19,9 +19,8 @@ export class ActionService {
 	private dialogRef:
 		| MatDialogRef<DialogTemplateComponent | RecordingDialogComponent | DeleteDialogComponent | ProFeatureDialogTemplateComponent>
 		| undefined;
-	private dialogSubscription: Subscription;
 	private connectionDialogRef: MatDialogRef<DialogTemplateComponent> | undefined;
-	private isConnectionDialogOpen: boolean = false;
+	private isConnectionDialogOpen = false;
 
 	constructor(
 		private snackBar: MatSnackBar,
@@ -29,7 +28,7 @@ export class ActionService {
 		private translateService: TranslateService
 	) {}
 
-	launchNotification(options: INotificationOptions, callback): void {
+	launchNotification(options: INotificationOptions, callback?: () => void): void {
 		if (!options.config) {
 			options.config = {
 				duration: 3000,
@@ -41,28 +40,23 @@ export class ActionService {
 
 		const notification = this.snackBar.open(options.message, options.buttonActionText, options.config);
 		if (callback) {
-			notification.onAction().subscribe(() => {
+			// subscribe and complete immediately after calling callback
+			const sub = notification.onAction().subscribe(() => {
+				sub.unsubscribe();
 				callback();
 			});
 		}
 	}
 
 	openDialog(titleMessage: string, descriptionMessage: string, allowClose = true) {
-		try {
-			this.closeDialog();
-		} catch (error) {
-		} finally {
-			const config: MatDialogConfig = {
-				minWidth: '250px',
-				data: { title: titleMessage, description: descriptionMessage, showActionButtons: allowClose },
-				disableClose: !allowClose
-			};
-			this.dialogRef = this.dialog.open(DialogTemplateComponent, config);
-			this.dialogSubscription = this.dialogRef.afterClosed().subscribe((result) => {
-				this.dialogRef = undefined;
-				if (this.dialogSubscription) this.dialogSubscription.unsubscribe();
-			});
-		}
+		this.closeDialog();
+		const config: MatDialogConfig = {
+			minWidth: '250px',
+			data: { title: titleMessage, description: descriptionMessage, showActionButtons: allowClose },
+			disableClose: !allowClose
+		};
+		this.dialogRef = this.dialog.open(DialogTemplateComponent, config);
+		this.dialogRef.afterClosed().subscribe(() => (this.dialogRef = undefined));
 	}
 
 	openConnectionDialog(titleMessage: string, descriptionMessage: string, allowClose = false) {
@@ -75,47 +69,44 @@ export class ActionService {
 
 		this.connectionDialogRef = this.dialog.open(DialogTemplateComponent, config);
 		this.isConnectionDialogOpen = true;
+		this.connectionDialogRef.afterClosed().subscribe(() => {
+			this.isConnectionDialogOpen = false;
+			this.connectionDialogRef = undefined;
+		});
 	}
 
-	openDeleteRecordingDialog(succsessCallback) {
-		try {
-			this.closeDialog();
-		} catch (error) {
-		} finally {
-			this.dialogRef = this.dialog.open(DeleteDialogComponent);
-
-			this.dialogSubscription = this.dialogRef.afterClosed().subscribe((result) => {
-				if (result) {
-					succsessCallback();
-					if (this.dialogSubscription) this.dialogSubscription.unsubscribe();
-				}
-			});
-		}
+	openDeleteRecordingDialog(successCallback: () => void) {
+		this.closeDialog();
+		this.dialogRef = this.dialog.open(DeleteDialogComponent);
+		this.dialogRef.afterClosed().subscribe((result) => {
+			if (result) {
+				successCallback();
+			}
+			this.dialogRef = undefined;
+		});
 	}
 
 	openRecordingPlayerDialog(src: string, allowClose = true) {
-		try {
-			this.closeDialog();
-		} catch (error) {
-		} finally {
-			const config: MatDialogConfig = {
-				minWidth: '250px',
-				data: { src, showActionButtons: allowClose },
-				disableClose: !allowClose
-			};
-			this.dialogRef = this.dialog.open(RecordingDialogComponent, config);
-
-			this.dialogSubscription = this.dialogRef.afterClosed().subscribe((data: { manageError: boolean; error: MediaError | null }) => {
-				if (data.manageError) {
-					this.handleRecordingPlayerError(data.error);
-				}
-				if (this.dialogSubscription) this.dialogSubscription.unsubscribe();
-			});
-		}
+		this.closeDialog();
+		const config: MatDialogConfig = {
+			minWidth: '250px',
+			data: { src, showActionButtons: allowClose },
+			disableClose: !allowClose
+		};
+		this.dialogRef = this.dialog.open(RecordingDialogComponent, config);
+		this.dialogRef.afterClosed().subscribe((data: { manageError: boolean; error: MediaError | null }) => {
+			if (data && data.manageError) {
+				this.handleRecordingPlayerError(data.error);
+			}
+			this.dialogRef = undefined;
+		});
 	}
 
 	closeDialog() {
-		this.dialogRef?.close();
+		if (this.dialogRef) {
+			this.dialogRef.close();
+			this.dialogRef = undefined;
+		}
 	}
 
 	closeConnectionDialog() {
