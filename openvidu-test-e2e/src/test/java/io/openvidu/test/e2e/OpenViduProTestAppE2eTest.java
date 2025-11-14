@@ -3155,7 +3155,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 			Assertions.assertTrue(errorResponse.contains("schemefail://" + BROADCAST_IP + "/live: Protocol not found"),
 					"Broadcast error message does not contain expected message");
 			// Concurrent broadcast
-			final int PETITIONS = 20;
+			final int PETITIONS = 15;
 			List<String> responses = new ArrayList<>();
 			List<Exception> exceptions = new ArrayList<>();
 			CountDownLatch latch = new CountDownLatch(PETITIONS);

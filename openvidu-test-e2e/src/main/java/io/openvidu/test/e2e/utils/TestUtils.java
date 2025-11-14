@@ -28,7 +28,7 @@ public class TestUtils {
 	public static String startRtmpServer() throws IOException, TimeoutException, InterruptedException {
 		File file = writeRtmpServerConfigInFile();
 		String dockerRunCommand = "docker run -d --name broadcast-nginx -p 1935:1935 -v " + file.getAbsolutePath()
-				+ ":/etc/nginx/nginx.conf tiangolo/nginx-rtmp";
+				+ ":/etc/nginx/nginx.conf tiangolo/nginx-rtmp:latest";
 		commandLine.executeCommand(dockerRunCommand, 30);
 		return waitForContainerIpAddress("broadcast-nginx", 10);
 	}
