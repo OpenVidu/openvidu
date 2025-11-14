@@ -429,23 +429,23 @@ public class OpenviduConfig {
 	public Set<OpenViduRole> getRolesFromRecordingNotification() {
 		Set<OpenViduRole> roles = new HashSet<>();
 		switch (this.openviduRecordingNotification) {
-		case none:
-			break;
-		case moderator:
-			roles.add(OpenViduRole.MODERATOR);
-			break;
-		case publisher_moderator:
-			roles.add(OpenViduRole.PUBLISHER);
-			roles.add(OpenViduRole.MODERATOR);
-			break;
-		case all:
-			roles.add(OpenViduRole.SUBSCRIBER);
-			roles.add(OpenViduRole.PUBLISHER);
-			roles.add(OpenViduRole.MODERATOR);
-			break;
-		default:
-			roles.add(OpenViduRole.PUBLISHER);
-			roles.add(OpenViduRole.MODERATOR);
+			case none:
+				break;
+			case moderator:
+				roles.add(OpenViduRole.MODERATOR);
+				break;
+			case publisher_moderator:
+				roles.add(OpenViduRole.PUBLISHER);
+				roles.add(OpenViduRole.MODERATOR);
+				break;
+			case all:
+				roles.add(OpenViduRole.SUBSCRIBER);
+				roles.add(OpenViduRole.PUBLISHER);
+				roles.add(OpenViduRole.MODERATOR);
+				break;
+			default:
+				roles.add(OpenViduRole.PUBLISHER);
+				roles.add(OpenViduRole.MODERATOR);
 		}
 		return roles;
 	}
@@ -677,7 +677,7 @@ public class OpenviduConfig {
 			try {
 				URI finalUri = new URI(this.getFinalUrl());
 				this.coturnIp = finalUri.getHost();
-			} catch (URISyntaxException e) {
+			} catch (Exception e) {
 				log.error("Can't get Domain name from OpenVidu public Url: " + e.getMessage());
 			}
 		}

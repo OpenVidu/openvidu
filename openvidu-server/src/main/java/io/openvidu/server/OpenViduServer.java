@@ -302,8 +302,21 @@ public class OpenViduServer implements JsonRpcConfigurer {
 		argsAux[argsAux.length - 2] = "--spring.main.banner-mode=off";
 		argsAux[argsAux.length - 1] = "--spring.main.allow-circular-references=true";
 
-		SpringApplication.run(OpenViduServer.class, argsAux);
-
+		try {
+			SpringApplication.run(OpenViduServer.class, argsAux);
+		} catch (org.springframework.context.ApplicationContextException e) {
+			Throwable rootCause = e;
+			while (rootCause.getCause() != null) {
+				rootCause = rootCause.getCause();
+			}
+			if (rootCause instanceof java.net.BindException) {
+				log.error("Cannot start OpenVidu Server on port {}: {}."
+						+ " You can modify the port used by OpenVidu Server with the 'HTTPS_PORT' configuration property.",
+						System.getProperty("server.port"), rootCause.getMessage());
+			} else {
+				throw e;
+			}
+		}
 	}
 
 	public static <T> Map<String, String> checkConfigProperties(Class<T> configClass) throws InterruptedException {
