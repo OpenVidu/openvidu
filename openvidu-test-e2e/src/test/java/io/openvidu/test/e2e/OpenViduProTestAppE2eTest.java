@@ -2270,8 +2270,10 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 		this.sttSubUser(user, 0, 0, "en-US", true, false);
 		for (int i = 0; i < LOOPS; i++) {
+			log.info("Loop " + i);
 			this.sttUnsubUser(user, 0, 0, false, false);
 			this.sttSubUser(user, 0, 0, "en-US", false, false);
+			log.info("Unsubscribed and subscribed STT " + (i + 1) + " times");
 		}
 
 		Assertions.assertEquals(1, user.getEventManager().getNumEvents("connectionCreated").get(),
