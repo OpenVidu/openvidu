@@ -80,6 +80,10 @@ if [[ -n ${1:-} ]]; then
         CHECK_AND_PREPARE_KURENTO_SNAPSHOT=true
         ;;
 
+    --use-specific-kurento-java-commit)
+        USE_SPECIFIC_KURENTO_JAVA_COMMIT=true
+        ;;
+
     *)
         echo "Unrecognized method $1"
         exit 1
@@ -247,4 +251,23 @@ if [[ "${CHECK_AND_PREPARE_KURENTO_SNAPSHOT}" == true ]]; then
     else
         echo "Kurento version is not a SNAPSHOT: ${KURENTO_VERSION}"
     fi
+fi
+
+# -------------
+# Use a specific kurento-java commit other than the configured in openvidu-parent pom.xml
+# -------------
+if [[ "${USE_SPECIFIC_KURENTO_JAVA_COMMIT}" == true ]]; then
+
+    git clone https://github.com/Kurento/kurento.git
+    pushd kurento/clients/java
+    git checkout -f "${KURENTO_JAVA_COMMIT}"
+    COMMIT_VERSION="kurento-$(git rev-parse --short HEAD)"
+    mvn -f qa-pom/pom.xml versions:set -DnewVersion="${COMMIT_VERSION}" -DgenerateBackupPoms=false && mvn -f parent-pom/pom.xml versions:set -DnewVersion="${COMMIT_VERSION}" -DgenerateBackupPoms=false -DprocessParent=true
+    mvn -B -Dmaven.artifact.threads=1 clean install
+    popd
+    rm -rf kurento
+    mvn -B versions:set-property \
+        -Dproperty=version.kurento \
+        -DnewVersion="${COMMIT_VERSION}"
+
 fi
