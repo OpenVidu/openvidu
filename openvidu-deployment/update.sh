@@ -215,12 +215,13 @@ if [ "$DOCKER_COMPOSE_NEEDED" = true ]; then
   ln -sf /usr/local/bin/docker-compose /usr/local/lib/docker/cli-plugins/docker-compose
 fi
 
-# Restart Docker and wait for it to start
-systemctl enable docker
-systemctl stop docker
-systemctl start docker
-wait_for_docker
-
+# Check if docker is running with docker info
+if ! docker info >/dev/null 2>&1; then
+  echo "Docker is not running. Starting Docker..."
+  systemctl enable docker
+  systemctl start docker
+  wait_for_docker
+fi
 
 # Pull updater image
 docker pull "${UPDATER_IMAGE}"
