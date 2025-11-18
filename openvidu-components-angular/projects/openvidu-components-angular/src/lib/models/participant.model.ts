@@ -176,6 +176,15 @@ export class ParticipantModel {
 	}
 
 	/**
+	 * Returns the room name where the participant is.
+	 * @return string | undefined
+	 * @internal
+	 */
+	get roomName(): string | undefined {
+		return this.room?.name;
+	}
+
+	/**
 	 * Returns if the participant has enabled its camera.
 	 */
 	get isCameraEnabled(): boolean {
