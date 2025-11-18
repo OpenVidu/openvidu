@@ -2,7 +2,7 @@
 # Docker & Docker Compose will need to be installed on the machine
 set -eu
 export DOCKER_VERSION="${DOCKER_VERSION:-29.0.0}"
-export DOCKER_COMPOSE_VERSION="${DOCKER_COMPOSE_VERSION:-2.40.3}"
+export DOCKER_COMPOSE_VERSION="${DOCKER_COMPOSE_VERSION:-v2.40.3}"
 export OPENVIDU_VERSION="${OPENVIDU_VERSION:-main}"
 export INSTALLER_IMAGE="${INSTALLER_IMAGE:-docker.io/openvidu/openvidu-installer:${OPENVIDU_VERSION}}"
 export MINIO_SERVER_IMAGE="${MINIO_SERVER_IMAGE:-docker.io/openvidu/minio:2025.9.7-debian-12-r3}"
