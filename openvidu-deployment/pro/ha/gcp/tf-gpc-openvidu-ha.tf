@@ -171,10 +171,24 @@ resource "google_compute_firewall" "master_to_media_services" {
   target_tags = [lower("${var.stackName}-media-node")]
 }
 
-# Regional static IP for the Network Load Balancer
+
+# Regional static IP for the Network Load Balancer (conditional creation)
 resource "google_compute_address" "nlb_ip" {
+  count  = var.publicIpAddress == "" ? 1 : 0
   name   = lower("${var.stackName}-nlb-ip")
   region = var.region
+}
+
+# Data source for existing IP address when publicIpAddress is provided
+data "google_compute_address" "existing_nlb_ip" {
+  count  = var.publicIpAddress != "" ? 1 : 0
+  name   = var.publicIpAddress
+  region = var.region
+}
+
+# Local value to get the correct IP address
+locals {
+  nlb_ip_address = var.publicIpAddress != "" ? data.google_compute_address.existing_nlb_ip[0].address : google_compute_address.nlb_ip[0].address
 }
 
 # Health check for backend instances
@@ -215,7 +229,7 @@ resource "google_compute_forwarding_rule" "tcp_443" {
   backend_service       = google_compute_region_backend_service.tcp_backend.id
   port_range            = "443"
   ip_protocol           = "TCP"
-  ip_address            = google_compute_address.nlb_ip.address
+  ip_address            = local.nlb_ip_address
 }
 
 # Forwarding rule for TCP 80
@@ -226,7 +240,7 @@ resource "google_compute_forwarding_rule" "tcp_80" {
   backend_service       = google_compute_region_backend_service.tcp_backend.id
   port_range            = "80"
   ip_protocol           = "TCP"
-  ip_address            = google_compute_address.nlb_ip.address
+  ip_address            = local.nlb_ip_address
 }
 
 # Forwarding rule for TCP 1935
@@ -237,7 +251,7 @@ resource "google_compute_forwarding_rule" "tcp_1935" {
   backend_service       = google_compute_region_backend_service.tcp_backend.id
   port_range            = "1935"
   ip_protocol           = "TCP"
-  ip_address            = google_compute_address.nlb_ip.address
+  ip_address            = local.nlb_ip_address
 }
 
 

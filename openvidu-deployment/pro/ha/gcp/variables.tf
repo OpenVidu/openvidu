@@ -2,7 +2,7 @@
 
 # Variables used by the configuration
 variable "projectId" {
-  description = "GCP project id where the resources will be created."
+  description = "GCP project id where the resourw es will be created."
   type        = string
 }
 
@@ -28,8 +28,18 @@ variable "certificateType" {
   type        = string
   default     = "letsencrypt"
   validation {
-    condition     = can(regex("^(selfsigned|owncert|letsencrypt)$", var.certificateType))
-    error_message = "certificateType must be 'selfsigned', 'owncert', or 'letsencrypt'."
+    condition     = contains(["selfsigned", "owncert", "letsencrypt"], var.certificateType)
+    error_message = "certificateType must be one of: selfsigned, owncert, letsencrypt"
+  }
+}
+
+variable "publicIpAddress" {
+  description = "Previously created Public IP address for the OpenVidu Deployment. Blank will generate a public IP."
+  type        = string
+  default     = ""
+  validation {
+    condition     = can(regex("^$|^([01]?\\d{1,2}|2[0-4]\\d|25[0-5])\\.([01]?\\d{1,2}|2[0-4]\\d|25[0-5])\\.([01]?\\d{1,2}|2[0-4]\\d|25[0-5])\\.([01]?\\d{1,2}|2[0-4]\\d|25[0-5])$", var.publicIpAddress))
+    error_message = "The Public Elastic IP does not have a valid IPv4 format"
   }
 }
 
@@ -39,7 +49,7 @@ variable "domainName" {
   default     = ""
   validation {
     condition     = can(regex("^$|^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\\.)+[a-z0-9][a-z0-9-]{0,61}[a-z0-9]$", var.domainName))
-    error_message = "domainName must be a valid domain name or empty."
+    error_message = "The domain name does not have a valid domain name format"
   }
 }
 
@@ -60,8 +70,8 @@ variable "initialMeetAdminPassword" {
   type        = string
   default     = ""
   validation {
-    condition     = can(regex("^$|^[A-Za-z0-9]+$", var.initialMeetAdminPassword))
-    error_message = "initialMeetAdminPassword must contain only alphanumeric characters or be empty."
+    condition     = can(regex("^[A-Za-z0-9_-]*$", var.initialMeetAdminPassword))
+    error_message = "Must contain only alphanumeric characters (A-Z, a-z, 0-9). Leave empty to generate a random password."
   }
 }
 
@@ -70,18 +80,18 @@ variable "initialMeetApiKey" {
   type        = string
   default     = ""
   validation {
-    condition     = can(regex("^$|^[A-Za-z0-9]+$", var.initialMeetApiKey))
-    error_message = "initialMeetApiKey must contain only alphanumeric characters or be empty."
+    condition     = can(regex("^[A-Za-z0-9_-]*$", var.initialMeetApiKey))
+    error_message = "Must contain only alphanumeric characters (A-Z, a-z, 0-9). Leave empty to not set an initial API key."
   }
 }
 
 variable "masterNodesInstanceType" {
-  description = "Specifies the GCE machine type for your OpenVidu Master Nodes"
+  description = "Specifies the GCE machine type for your OpenVidu Master Node"
   type        = string
   default     = "e2-standard-2"
   validation {
-    condition     = can(regex("^(e2-standard-[248]|e2-highmem-[248]|n1-standard-[1248]|n1-highmem-[248]|n2-standard-[248]|n2-highmem-[248])$", var.masterNodesInstanceType))
-    error_message = "masterNodesInstanceType must be a valid GCE machine type."
+    condition     = can(regex("^(e2-(micro|small|medium|standard-[2-9]|standard-1[0-6]|highmem-[2-9]|highmem-1[0-6]|highcpu-[2-9]|highcpu-1[0-6])|n1-(standard-[1-9]|standard-[1-9][0-9]|highmem-[2-9]|highmem-[1-9][0-9]|highcpu-[1-9]|highcpu-[1-9][0-9])|n2-(standard-[2-9]|standard-[1-9][0-9]|standard-1[0-2][0-8]|highmem-[2-9]|highmem-[1-9][0-9]|highmem-1[0-2][0-8]|highcpu-[1-9][0-9]|highcpu-1[0-2][0-8])|n2d-(standard-[2-9]|standard-[1-9][0-9]|standard-2[0-2][0-4]|highmem-[2-9]|highmem-[1-9][0-9]|highmem-9[0-6]|highcpu-[1-9][0-9]|highcpu-2[0-2][0-4])|c2-(standard-[4-9]|standard-[1-5][0-9]|standard-60)|c2d-(standard-[2-9]|standard-[1-9][0-9]|standard-1[0-1][0-2]|highmem-[2-9]|highmem-[1-9][0-9]|highmem-1[0-1][0-2]|highcpu-[1-9][0-9]|highcpu-1[0-1][0-2])|m1-(ultramem-[4-9][0-9]|ultramem-160)|m2-(ultramem-208|ultramem-416|megamem-416)|m3-(ultramem-32|ultramem-64|ultramem-128|megamem-64|megamem-128)|a2-(standard-[1-9]|standard-[1-9][0-9]|standard-96|highmem-1g|ultramem-1g|megamem-1g)|a3-(standard-[1-9]|standard-[1-9][0-9]|standard-80|highmem-1g|megamem-1g)|g2-(standard-[4-9]|standard-[1-9][0-9]|standard-96)|t2d-(standard-[1-9]|standard-[1-9][0-9]|standard-60)|t2a-(standard-[1-9]|standard-[1-9][0-9]|standard-48)|h3-(standard-88)|f1-(micro)|t4g-(micro|small|medium|standard-[1-9]|standard-[1-9][0-9]))$", var.masterNodeInstanceType))
+    error_message = "The instance type is not valid"
   }
 }
 
@@ -90,8 +100,8 @@ variable "masterNodesDiskSize" {
   type        = number
   default     = 100
   validation {
-    condition     = var.masterNodesDiskSize >= 50
-    error_message = "masterNodesDiskSize must be at least 50 GB."
+    condition     = var.masterNodesDiskSize >= 70
+    error_message = "masterNodesDiskSize must be at least 70 GB."
   }
 }
 
@@ -100,8 +110,8 @@ variable "mediaNodeInstanceType" {
   type        = string
   default     = "e2-standard-2"
   validation {
-    condition     = can(regex("^(e2-standard-[248]|e2-highmem-[248]|n1-standard-[1248]|n1-highmem-[248]|n2-standard-[248]|n2-highmem-[248])$", var.mediaNodeInstanceType))
-    error_message = "mediaNodeInstanceType must be a valid GCE machine type."
+    condition     = can(regex("^(e2-(micro|small|medium|standard-[2-9]|standard-1[0-6]|highmem-[2-9]|highmem-1[0-6]|highcpu-[2-9]|highcpu-1[0-6])|n1-(standard-[1-9]|standard-[1-9][0-9]|highmem-[2-9]|highmem-[1-9][0-9]|highcpu-[1-9]|highcpu-[1-9][0-9])|n2-(standard-[2-9]|standard-[1-9][0-9]|standard-1[0-2][0-8]|highmem-[2-9]|highmem-[1-9][0-9]|highmem-1[0-2][0-8]|highcpu-[1-9][0-9]|highcpu-1[0-2][0-8])|n2d-(standard-[2-9]|standard-[1-9][0-9]|standard-2[0-2][0-4]|highmem-[2-9]|highmem-[1-9][0-9]|highmem-9[0-6]|highcpu-[1-9][0-9]|highcpu-2[0-2][0-4])|c2-(standard-[4-9]|standard-[1-5][0-9]|standard-60)|c2d-(standard-[2-9]|standard-[1-9][0-9]|standard-1[0-1][0-2]|highmem-[2-9]|highmem-[1-9][0-9]|highmem-1[0-1][0-2]|highcpu-[1-9][0-9]|highcpu-1[0-1][0-2])|m1-(ultramem-[4-9][0-9]|ultramem-160)|m2-(ultramem-208|ultramem-416|megamem-416)|m3-(ultramem-32|ultramem-64|ultramem-128|megamem-64|megamem-128)|a2-(standard-[1-9]|standard-[1-9][0-9]|standard-96|highmem-1g|ultramem-1g|megamem-1g)|a3-(standard-[1-9]|standard-[1-9][0-9]|standard-80|highmem-1g|megamem-1g)|g2-(standard-[4-9]|standard-[1-9][0-9]|standard-96)|t2d-(standard-[1-9]|standard-[1-9][0-9]|standard-60)|t2a-(standard-[1-9]|standard-[1-9][0-9]|standard-48)|h3-(standard-88)|f1-(micro)|t4g-(micro|small|medium|standard-[1-9]|standard-[1-9][0-9]))$", var.mediaNodeInstanceType))
+    error_message = "The instance type is not valid"
   }
 }
 
@@ -120,7 +130,7 @@ variable "minNumberOfMediaNodes" {
 variable "maxNumberOfMediaNodes" {
   description = "Maximum number of media nodes to deploy"
   type        = number
-  default     = 5
+  default     = 2
 }
 
 variable "scaleTargetCPU" {
@@ -152,8 +162,8 @@ variable "rtcEngine" {
   type        = string
   default     = "pion"
   validation {
-    condition     = can(regex("^(pion|mediasoup)$", var.rtcEngine))
-    error_message = "rtcEngine must be 'pion' or 'mediasoup'."
+    condition     = contains(["pion", "mediasoup"], var.rtcEngine)
+    error_message = "rtcEngine must be one of: pion, mediasoup"
   }
 }
 
@@ -162,8 +172,8 @@ variable "additionalInstallFlags" {
   type        = string
   default     = ""
   validation {
-    condition     = can(regex("^$|^(\\s*--[a-zA-Z0-9_-]+(=[^,]*)?\\s*,?\\s*)*$", var.additionalInstallFlags))
-    error_message = "additionalInstallFlags must be a comma-separated list of flags or empty."
+    condition     = can(regex("^[A-Za-z0-9, =_.\\-]*$", var.additionalInstallFlags))
+    error_message = "Must be a comma-separated list of flags (for example, --flag=value, --bool-flag)."
   }
 }
 
