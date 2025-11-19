@@ -15,7 +15,7 @@
             "index": "src/index.html",
             "main": "src/main.ts",
             "tsConfig": "src/tsconfig.app.json",
-            "polyfills": "src/polyfills.ts",
+            "polyfills": ["src/polyfills.ts"],
             "assets": [
               "src/assets",
               "src/favicon.ico"
@@ -23,20 +23,20 @@
             "styles": [
               "src/styles.css"
             ],
-            "scripts": [],
-            "vendorChunk": true,
-            "extractLicenses": false,
-            "buildOptimizer": false,
-            "sourceMap": true,
-            "optimization": false,
-            "namedChunks": true
+            "scripts": []
           },
           "configurations": {
             "production": {
               "budgets": [
                 {
+                  "type": "initial",
+                  "maximumWarning": "1.5MB",
+                  "maximumError": "2MB"
+                },
+                {
                   "type": "anyComponentStyle",
-                  "maximumWarning": "6kb"
+                  "maximumWarning": "35kB",
+                  "maximumError": "50kB"
                 }
               ],
               "optimization": true,
@@ -44,17 +44,20 @@
               "sourceMap": false,
               "namedChunks": false,
               "extractLicenses": true,
-              "vendorChunk": false,
-              "buildOptimizer": true,
               "fileReplacements": [
                 {
                   "replace": "src/environments/environment.ts",
                   "with": "src/environments/environment.prod.ts"
                 }
               ]
+            },
+            "development": {
+              "optimization": false,
+              "extractLicenses": false,
+              "sourceMap": true
             }
           },
-          "defaultConfiguration": ""
+          "defaultConfiguration": "development"
         },
         "serve": {
           "builder": "@angular-devkit/build-angular:dev-server",
@@ -88,20 +91,6 @@
               "src/assets",
               "src/favicon.ico"
             ]
-          }
-        }
-      }
-    },
-    "openvidu-server-frontend-e2e": {
-      "root": "",
-      "sourceRoot": "",
-      "projectType": "application",
-      "architect": {
-        "e2e": {
-          "builder": "@angular-devkit/build-angular:protractor",
-          "options": {
-            "protractorConfig": "./protractor.conf.js",
-            "devServerTarget": "openvidu-server-frontend:serve"
           }
         }
       }

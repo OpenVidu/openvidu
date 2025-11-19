@@ -1,21 +1,31 @@
 {
   "compileOnSave": false,
   "compilerOptions": {
-    "module": "es2020",
+    "module": "ES2022",
     "outDir": "./dist/out-tsc",
     "baseUrl": "src",
     "sourceMap": true,
     "declaration": false,
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "experimentalDecorators": true,
     "target": "ES2022",
     "typeRoots": [
       "node_modules/@types"
     ],
     "lib": [
-      "es2016",
+      "ES2022",
       "dom"
     ],
-    "useDefineForClassFields": false
+    "useDefineForClassFields": false,
+    "resolveJsonModule": true,
+    "esModuleInterop": true,
+    "strict": false
+  },
+  "angularCompilerOptions": {
+    "enableI18nLegacyMessageIdFormat": false,
+    "strictInjectionParameters": true,
+    "strictInputAccessModifiers": true,
+    "strictTemplates": false,
+    "allowJs": false
   }
 }

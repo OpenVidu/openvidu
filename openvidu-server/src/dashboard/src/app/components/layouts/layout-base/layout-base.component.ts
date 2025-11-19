@@ -21,7 +21,8 @@ import { OpenViduLayout, OpenViduLayoutOptions } from '../openvidu-layout';
   selector: 'app-layout-base',
   templateUrl: './layout-base.component.html',
   styleUrls: ['./layout-base.component.css'],
-  encapsulation: ViewEncapsulation.None
+  encapsulation: ViewEncapsulation.None,
+  standalone: false
 })
 export class LayoutBaseComponent implements OnInit, OnDestroy {
 

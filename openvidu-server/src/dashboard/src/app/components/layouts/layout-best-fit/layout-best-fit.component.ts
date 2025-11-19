@@ -5,7 +5,8 @@ import { LayoutBaseComponent } from '../layout-base/layout-base.component';
   selector: 'app-layout-best-fit',
   templateUrl: '../layout-base/layout-base.component.html',
   styleUrls: ['../layout-base/layout-base.component.css'],
-  encapsulation: ViewEncapsulation.None
+  encapsulation: ViewEncapsulation.None,
+  standalone: false
 })
 export class LayoutBestFitComponent extends LayoutBaseComponent {
 

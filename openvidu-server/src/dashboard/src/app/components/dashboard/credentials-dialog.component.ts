@@ -46,6 +46,7 @@ import { MatDialogRef } from '@angular/material/dialog';
             float: right;
         }
     `],
+    standalone: false
 })
 export class CredentialsDialogComponent {
 

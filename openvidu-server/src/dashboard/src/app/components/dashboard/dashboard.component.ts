@@ -12,6 +12,7 @@ import { CredentialsDialogComponent } from './credentials-dialog.component';
   selector: 'app-dashboard',
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.css'],
+  standalone: false
 })
 export class DashboardComponent implements OnInit, OnDestroy {
 

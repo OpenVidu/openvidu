@@ -3,7 +3,8 @@ import { Subscriber } from 'openvidu-browser';
 
 @Component({
     selector: 'app-ov-video',
-    template: '<video #videoElement></video>'
+    template: '<video #videoElement></video>',
+    standalone: false
 })
 export class OpenViduVideoComponent implements AfterViewInit {
 
