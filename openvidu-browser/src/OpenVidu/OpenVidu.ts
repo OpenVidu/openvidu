@@ -132,7 +132,7 @@ export class OpenVidu {
     /**
      * @hidden
      */
-    sendBrowserLogs: OpenViduLoggerConfiguration = OpenViduLoggerConfiguration.disabled;
+    sendBrowserLogs: OpenViduLoggerConfiguration = 'disabled' as OpenViduLoggerConfiguration;
     /**
      * @hidden
      */
