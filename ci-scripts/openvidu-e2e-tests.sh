@@ -29,7 +29,7 @@ function environmentLaunch {
     DOCKER_HOST_IP="$(docker inspect bridge --format '{{with index .IPAM.Config 0}}{{or .Gateway .Subnet}}{{end}}' | sed -r 's|\.0/[[:digit:]]+$|.1|')"
 
     if [[ "${MEDIA_SERVER}" == "kurento" ]]; then
-        docker run -e KMS_UID=$(id -u) --network=host --detach=true --volume=/opt/openvidu/recordings:/opt/openvidu/recordings "${KURENTO_MEDIA_SERVER_IMAGE}"
+        docker run -e KMS_UID=$(id -u) --network=host --detach=true --volume=/opt/openvidu/recordings:/opt/openvidu/recordings --ulimit core=-1 "${KURENTO_MEDIA_SERVER_IMAGE}"
         while true; do
             RC="$(curl \
                 --silent \
