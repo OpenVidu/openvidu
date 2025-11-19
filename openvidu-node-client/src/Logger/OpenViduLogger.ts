@@ -20,7 +20,7 @@ export class OpenViduLogger {
      */
     log(...args: any[]) {
         if (!this.isProdMode) {
-            this.defaultConsoleLogger.log.apply(this.defaultConsoleLogger.logger, arguments);
+            this.defaultConsoleLogger.log.apply(this.defaultConsoleLogger.logger, args);
         }
     }
 
@@ -29,7 +29,7 @@ export class OpenViduLogger {
      */
     debug(...args: any[]) {
         if (!this.isProdMode) {
-            this.defaultConsoleLogger.debug.apply(this.defaultConsoleLogger.logger, arguments);
+            this.defaultConsoleLogger.debug.apply(this.defaultConsoleLogger.logger, args);
         }
     }
 
@@ -38,7 +38,7 @@ export class OpenViduLogger {
      */
     info(...args: any[]) {
         if (!this.isProdMode) {
-            this.defaultConsoleLogger.info.apply(this.defaultConsoleLogger.logger, arguments);
+            this.defaultConsoleLogger.info.apply(this.defaultConsoleLogger.logger, args);
         }
     }
 
@@ -46,14 +46,14 @@ export class OpenViduLogger {
      * @hidden
      */
     warn(...args: any[]) {
-        this.defaultConsoleLogger.warn.apply(this.defaultConsoleLogger.logger, arguments);
+        this.defaultConsoleLogger.warn.apply(this.defaultConsoleLogger.logger, args);
     }
 
     /**
      * @hidden
      */
     error(...args: any[]) {
-        this.defaultConsoleLogger.error.apply(this.defaultConsoleLogger.logger, arguments);
+        this.defaultConsoleLogger.error.apply(this.defaultConsoleLogger.logger, args);
     }
 
     enableProdMode() {

@@ -114,7 +114,10 @@ export class OpenVidu {
      *
      * @param secret Secret configured in your OpenVidu deployment
      */
-    constructor(private hostname: string, secret: string) {
+    constructor(
+        private hostname: string,
+        secret: string
+    ) {
         this.setHostnameAndPort();
         this.basicAuth = this.getBasicAuth(secret);
     }
@@ -136,7 +139,7 @@ export class OpenVidu {
             const session = new Session(this, properties);
             session
                 .getSessionHttp()
-                .then((response) => {
+                .then((_response) => {
                     this.activeSessions.push(session);
                     resolve(session);
                 })
@@ -542,7 +545,7 @@ export class OpenVidu {
                         res.data.content.forEach((jsonSession) => {
                             const fetchedSession: Session = new Session(this, jsonSession);
                             fetchedSessionIds.push(fetchedSession.sessionId);
-                            let storedSession = this.activeSessions.find((s) => s.sessionId === fetchedSession.sessionId);
+                            const storedSession = this.activeSessions.find((s) => s.sessionId === fetchedSession.sessionId);
 
                             if (!!storedSession) {
                                 // 2. Update existing Session
@@ -559,8 +562,8 @@ export class OpenVidu {
                         });
 
                         // 4. Remove closed sessions from local collection
-                        for (var i = this.activeSessions.length - 1; i >= 0; --i) {
-                            let sessionId = this.activeSessions[i].sessionId;
+                        for (let i = this.activeSessions.length - 1; i >= 0; --i) {
+                            const sessionId = this.activeSessions[i].sessionId;
                             if (!fetchedSessionIds.includes(sessionId)) {
                                 logger.log("Removing closed session '" + sessionId + "'");
                                 hasChanged = true;
@@ -587,7 +590,7 @@ export class OpenVidu {
      * @returns A map paring every existing sessionId with true or false depending on whether it has changed or not
      */
     fetchWebRtc(): Promise<any> {
-        // tslint:disable:no-string-literal
+        /* eslint-disable dot-notation */
         const addWebRtcStatsToConnections = (connection: Connection, connectionsExtendedInfo: any) => {
             const connectionExtended = connectionsExtendedInfo.find((c) => c.connectionId === connection.connectionId);
             if (!!connectionExtended) {
@@ -679,7 +682,7 @@ export class OpenVidu {
                                 addWebRtcStatsToConnections(connection, jsonSession.connections.content);
                             });
                             fetchedSessionIds.push(fetchedSession.sessionId);
-                            let storedSession = this.activeSessions.find((s) => s.sessionId === fetchedSession.sessionId);
+                            const storedSession = this.activeSessions.find((s) => s.sessionId === fetchedSession.sessionId);
 
                             if (!!storedSession) {
                                 // 2. Update existing Session
@@ -713,8 +716,8 @@ export class OpenVidu {
                         });
 
                         // 4. Remove closed sessions from local collection
-                        for (var i = this.activeSessions.length - 1; i >= 0; --i) {
-                            let sessionId = this.activeSessions[i].sessionId;
+                        for (let i = this.activeSessions.length - 1; i >= 0; --i) {
+                            const sessionId = this.activeSessions[i].sessionId;
                             if (!fetchedSessionIds.includes(sessionId)) {
                                 logger.log("Removing closed session '" + sessionId + "'");
                                 sessionChanges[sessionId] = true;
@@ -736,7 +739,7 @@ export class OpenVidu {
                 });
         });
     }
-    // tslint:enable:no-string-literal
+    /* eslint-enable dot-notation */
 
     /**
      * Disable all logging except error level

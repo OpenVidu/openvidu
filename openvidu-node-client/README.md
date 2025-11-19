@@ -5,8 +5,7 @@
 
 [![][OpenViduLogo]](https://openvidu.io)
 
-openvidu-node-client
-===
+# openvidu-node-client
 
 - **Description**: Library for your NODE server. It is a fully compatible and simple alternative to the REST API exposed by OpenVidu Server.
 

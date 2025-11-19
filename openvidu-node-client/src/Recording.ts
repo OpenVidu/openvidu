@@ -62,7 +62,7 @@ export class Recording {
      */
     properties: RecordingProperties;
 
-    /* tslint:disable:no-string-literal */
+    /* eslint-disable dot-notation */
     /**
      * @hidden
      */
@@ -105,7 +105,7 @@ export class Recording {
                     : Recording.DefaultRecordingPropertiesValues.ignoreFailedStreams;
         }
     }
-    /* tslint:enable:no-string-literal */
+    /* eslint-enable dot-notation */
 }
 
 export namespace Recording {

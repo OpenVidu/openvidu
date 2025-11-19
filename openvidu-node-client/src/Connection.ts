@@ -162,7 +162,7 @@ export class Connection {
             json.publishers.forEach((jsonPublisher) => {
                 const publisherObj: Publisher = new Publisher(jsonPublisher);
                 fetchedPublisherIds.push(publisherObj.streamId);
-                let storedPublisher = this.publishers.find((c) => c.streamId === publisherObj.streamId);
+                const storedPublisher = this.publishers.find((c) => c.streamId === publisherObj.streamId);
 
                 if (!!storedPublisher) {
                     // 2. Update existing Publisher
@@ -174,7 +174,7 @@ export class Connection {
             });
 
             // 4. Remove closed Publishers from local collection
-            for (var i = this.publishers.length - 1; i >= 0; --i) {
+            for (let i = this.publishers.length - 1; i >= 0; --i) {
                 if (!fetchedPublisherIds.includes(this.publishers[i].streamId)) {
                     this.publishers.splice(i, 1);
                 }
@@ -194,7 +194,7 @@ export class Connection {
             });
 
             // 3. Remove closed Subscribers from local collection
-            for (var i = this.subscribers.length - 1; i >= 0; --i) {
+            for (let i = this.subscribers.length - 1; i >= 0; --i) {
                 if (!fetchedSubscriberIds.includes(this.subscribers[i])) {
                     this.subscribers.splice(i, 1);
                 }

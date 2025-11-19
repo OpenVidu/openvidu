@@ -85,7 +85,10 @@ export class Session {
     /**
      * @hidden
      */
-    constructor(private ov: OpenVidu, propertiesOrJson?) {
+    constructor(
+        private ov: OpenVidu,
+        propertiesOrJson?
+    ) {
         if (!!propertiesOrJson) {
             // Defined parameter
             if (!!propertiesOrJson.sessionId) {
@@ -315,11 +318,11 @@ export class Session {
                             connectionClosed.publishers.forEach((publisher) => {
                                 this.connections.forEach((con) => {
                                     con.subscribers = con.subscribers.filter((subscriber) => {
-                                        // tslint:disable:no-string-literal
+                                        /* eslint-disable dot-notation */
                                         if (!!subscriber['streamId']) {
                                             // Subscriber with advanced webRtc configuration properties
                                             return subscriber['streamId'] !== publisher.streamId;
-                                            // tslint:enable:no-string-literal
+                                            /* eslint-enable dot-notation */
                                         } else {
                                             // Regular string subscribers
                                             return subscriber !== publisher.streamId;
@@ -381,11 +384,11 @@ export class Session {
                             connection.publishers = connection.publishers.filter((pub) => pub.streamId !== streamId);
                             // Try to remove the Publisher from the Connection subscribers collection
                             if (!!connection.subscribers && connection.subscribers.length > 0) {
-                                // tslint:disable:no-string-literal
+                                /* eslint-disable dot-notation */
                                 if (!!connection.subscribers[0]['streamId']) {
                                     // Subscriber with advanced webRtc configuration properties
                                     connection.subscribers = connection.subscribers.filter((sub) => sub['streamId'] !== streamId);
-                                    // tslint:enable:no-string-literal
+                                    /* eslint-enable dot-notation */
                                 } else {
                                     // Regular string subscribers
                                     connection.subscribers = connection.subscribers.filter((sub) => sub !== streamId);
@@ -570,7 +573,7 @@ export class Session {
         json.connections.content.forEach((jsonConnection) => {
             const connectionObj: Connection = new Connection(jsonConnection);
             fetchedConnectionIds.push(connectionObj.connectionId);
-            let storedConnection = this.connections.find((c) => c.connectionId === connectionObj.connectionId);
+            const storedConnection = this.connections.find((c) => c.connectionId === connectionObj.connectionId);
 
             if (!!storedConnection) {
                 // 2. Update existing Connection
@@ -582,7 +585,7 @@ export class Session {
         });
 
         // 4. Remove closed sessions from local collection
-        for (var i = this.connections.length - 1; i >= 0; --i) {
+        for (let i = this.connections.length - 1; i >= 0; --i) {
             if (!fetchedConnectionIds.includes(this.connections[i].connectionId)) {
                 this.connections.splice(i, 1);
             }
