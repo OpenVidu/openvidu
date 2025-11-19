@@ -16,7 +16,7 @@
  */
 
 import freeice = require('freeice');
-import { v4 as uuidv4 } from 'uuid';
+import { v4 as uuid } from 'uuid';
 import { TypeOfVideo } from '../Enums/TypeOfVideo';
 import { ExceptionEventName } from '../Events/ExceptionEvent';
 import { OpenViduLogger } from '../Logger/OpenViduLogger';
@@ -391,7 +391,8 @@ export class WebRtcPeer {
                         offerToReceiveAudio: offerAudio,
                         offerToReceiveVideo: offerVideo
                     };
-                    (this.pc as RTCPeerConnection).createAnswer(constraints)
+                    (this.pc as RTCPeerConnection)
+                        .createAnswer(constraints)
                         .then((sdpAnswer) => resolve(sdpAnswer))
                         .catch((error) => reject(error));
                 }
@@ -574,7 +575,7 @@ export class WebRtcPeer {
      * @hidden
      */
     generateUniqueId(): string {
-        return uuidv4();
+        return uuid();
     }
 }
 

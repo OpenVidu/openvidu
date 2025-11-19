@@ -1,0 +1,5 @@
+lib
+node_modules
+static
+ts4.4
+openvidu-browser-*.tgz

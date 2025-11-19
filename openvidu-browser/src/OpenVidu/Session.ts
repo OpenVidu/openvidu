@@ -44,7 +44,13 @@ import { OpenViduError, OpenViduErrorName } from '../OpenViduInternal/Enums/Open
 import { VideoInsertMode } from '../OpenViduInternal/Enums/VideoInsertMode';
 import { OpenViduLogger } from '../OpenViduInternal/Logger/OpenViduLogger';
 import { PlatformUtils } from '../OpenViduInternal/Utils/Platform';
-import { StreamPropertyChangedEventReason, ChangedPropertyType, RecordingEventReason, ConnectionEventReason, StreamEventReason } from '../OpenViduInternal/Events/Types/Types';
+import {
+    StreamPropertyChangedEventReason,
+    ChangedPropertyType,
+    RecordingEventReason,
+    ConnectionEventReason,
+    StreamEventReason
+} from '../OpenViduInternal/Events/Types/Types';
 /**
  * @hidden
  */
@@ -183,12 +189,12 @@ export class Session extends EventDispatcher {
                     new OpenViduError(
                         OpenViduErrorName.BROWSER_NOT_SUPPORTED,
                         'Browser ' +
-                        platform.getName() +
-                        ' (version ' +
-                        platform.getVersion() +
-                        ') for ' +
-                        platform.getFamily() +
-                        ' is not supported in OpenVidu'
+                            platform.getName() +
+                            ' (version ' +
+                            platform.getVersion() +
+                            ') for ' +
+                            platform.getFamily() +
+                            ' is not supported in OpenVidu'
                     )
                 );
             }
@@ -471,7 +477,7 @@ export class Session extends EventDispatcher {
                 return reject(
                     new Error(
                         'The associated Connection object of this Publisher is not your local Connection.  ' +
-                        "Only moderators can force unpublish on remote Streams via 'forceUnpublish' method"
+                            "Only moderators can force unpublish on remote Streams via 'forceUnpublish' method"
                     )
                 );
             } else {
@@ -652,7 +658,7 @@ export class Session extends EventDispatcher {
      *
      * @param stream - The Stream for which you want to start receiving {@link SpeechToTextEvent}.
      * @param lang - The language of the Stream's audio track. It must be a valid [BCP-47](https://tools.ietf.org/html/bcp47) language tag like "en-US" or "es-ES".
-     * 
+     *
      * @returns A Promise (to which you can optionally subscribe to) that is resolved if the speech-to-text subscription
      * was successful and rejected with an Error object if not.
      */
@@ -949,11 +955,11 @@ export class Session extends EventDispatcher {
             this.getConnection(
                 event.from,
                 "Connection '" +
-                event.from +
-                "' unknown when 'onNewMessage'. Existing remote connections: " +
-                JSON.stringify(this.remoteConnections.keys()) +
-                '. Existing local connection: ' +
-                this.connection.connectionId
+                    event.from +
+                    "' unknown when 'onNewMessage'. Existing remote connections: " +
+                    JSON.stringify(this.remoteConnections.keys()) +
+                    '. Existing local connection: ' +
+                    this.connection.connectionId
             )
 
                 .then((connection) => {
@@ -977,7 +983,13 @@ export class Session extends EventDispatcher {
     /**
      * @hidden
      */
-    onStreamPropertyChanged(event: { connectionId: string; streamId: string; property: ChangedPropertyType; newValue: any; reason: StreamPropertyChangedEventReason }): void {
+    onStreamPropertyChanged(event: {
+        connectionId: string;
+        streamId: string;
+        property: ChangedPropertyType;
+        newValue: any;
+        reason: StreamPropertyChangedEventReason;
+    }): void {
         const callback = (connection: Connection) => {
             if (!!connection.stream && connection.stream.streamId === event.streamId) {
                 const stream = connection.stream;
@@ -993,7 +1005,7 @@ export class Session extends EventDispatcher {
                         event.newValue = event.newValue === 'true';
                         stream.videoActive = event.newValue;
                         const videoTrack = stream?.getMediaStream()?.getVideoTracks()?.[0];
-                        if(videoTrack && !videoTrack.enabled && stream.videoActive){
+                        if (videoTrack && !videoTrack.enabled && stream.videoActive) {
                             videoTrack.enabled = true;
                         }
                         break;
@@ -1034,10 +1046,10 @@ export class Session extends EventDispatcher {
             } else {
                 logger.error(
                     "No stream with streamId '" +
-                    event.streamId +
-                    "' found for connection '" +
-                    event.connectionId +
-                    "' on 'streamPropertyChanged' event"
+                        event.streamId +
+                        "' found for connection '" +
+                        event.connectionId +
+                        "' on 'streamPropertyChanged' event"
                 );
             }
         };
@@ -1123,11 +1135,11 @@ export class Session extends EventDispatcher {
         this.getConnection(
             event.senderConnectionId,
             'Connection not found for connectionId ' +
-            event.senderConnectionId +
-            ' owning endpoint ' +
-            event.endpointName +
-            '. Ice candidate will be ignored: ' +
-            iceCandidate
+                event.senderConnectionId +
+                ' owning endpoint ' +
+                event.endpointName +
+                '. Ice candidate will be ignored: ' +
+                iceCandidate
         )
             .then((connection) => {
                 const stream: Stream = connection.stream!;
@@ -1232,7 +1244,8 @@ export class Session extends EventDispatcher {
             const stream: Stream = connection.stream!;
             if (!stream || !stream.filter) {
                 return logger.error(
-                    `Filter event of type "${event.eventType}" dispatched for stream ${stream.streamId} but there is no ${!stream ? 'stream' : 'filter'
+                    `Filter event of type "${event.eventType}" dispatched for stream ${stream.streamId} but there is no ${
+                        !stream ? 'stream' : 'filter'
                     } defined`
                 );
             }
@@ -1356,7 +1369,7 @@ export class Session extends EventDispatcher {
         lang: string;
     }): Promise<void> {
         const connection = await this.getConnection(event.connectionId, 'No connection found for connectionId ' + event.connectionId);
-        const ev = new SpeechToTextEvent(this, connection, event.text, <any>(event.reason).toLowerCase(), event.raw, event.lang);
+        const ev = new SpeechToTextEvent(this, connection, event.text, <any>event.reason.toLowerCase(), event.raw, event.lang);
         this.ee.emitEvent('speechToTextMessage', [ev]);
     }
 
@@ -1503,12 +1516,12 @@ export class Session extends EventDispatcher {
         } else {
             logger.error(
                 'Browser ' +
-                platform.getName() +
-                ' (version ' +
-                platform.getVersion() +
-                ') for ' +
-                platform.getFamily() +
-                ' is not supported in OpenVidu for Network Quality'
+                    platform.getName() +
+                    ' (version ' +
+                    platform.getVersion() +
+                    ') for ' +
+                    platform.getFamily() +
+                    ' is not supported in OpenVidu for Network Quality'
             );
         }
     }
@@ -1783,15 +1796,15 @@ export class Session extends EventDispatcher {
         if (semverMajor(opts.version) !== semverMajor(this.openvidu.libraryVersion) || !(minorDifference == 0 || minorDifference == 1)) {
             logger.error(
                 `openvidu-browser (${this.openvidu.libraryVersion}) and openvidu-server (${opts.version}) versions are incompatible. ` +
-                'Errors are likely to occur. openvidu-browser SDK is only compatible with the same version or the immediately following minor version of an OpenVidu deployment'
+                    'Errors are likely to occur. openvidu-browser SDK is only compatible with the same version or the immediately following minor version of an OpenVidu deployment'
             );
         } else if (minorDifference == 1) {
             logger.warn(
                 `openvidu-browser version ${this.openvidu.libraryVersion} does not match openvidu-server version ${opts.version}. ` +
-                `These versions are still compatible with each other, but openvidu-browser version must be updated as soon as possible to ${semverMajor(
-                    opts.version
-                )}.${semverMinor(opts.version)}.x. ` +
-                `This client using openvidu-browser ${this.openvidu.libraryVersion} will become incompatible with the next release of openvidu-server`
+                    `These versions are still compatible with each other, but openvidu-browser version must be updated as soon as possible to ${semverMajor(
+                        opts.version
+                    )}.${semverMinor(opts.version)}.x. ` +
+                    `This client using openvidu-browser ${this.openvidu.libraryVersion} will become incompatible with the next release of openvidu-server`
             );
         }
 

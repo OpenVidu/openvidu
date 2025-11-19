@@ -71,7 +71,6 @@ export abstract class Event {
      * by calling {@link Subscriber.createVideoElement}). For every video removed, the Subscriber object will also dispatch a `videoElementDestroyed` event.
      */
     preventDefault() {
-        // tslint:disable-next-line:no-empty
         this.callDefaultBehavior = () => {};
         this.hasBeenPrevented = true;
     }

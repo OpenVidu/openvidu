@@ -7,13 +7,9 @@
         "allowJs": true,
         "allowSyntheticDefaultImports": true,
         "emitBOM": false,
+        "esModuleInterop": true,
         "forceConsistentCasingInFileNames": true,
-        "lib": [
-            "dom",
-            "es2015.promise",
-            "es5",
-            "scripthost"
-        ],
+        "lib": ["dom", "es2015", "scripthost"],
         "module": "commonjs",
         "noFallthroughCasesInSwitch": true,
         //"noImplicitAny": true,
@@ -29,8 +25,6 @@
         "skipLibCheck": true,
         "sourceMap": true,
         "strictNullChecks": true,
-        "suppressExcessPropertyErrors": true,
-        "suppressImplicitAnyIndexErrors": true,
-        "target": "es5"
+        "target": "es2015"
     }
 }

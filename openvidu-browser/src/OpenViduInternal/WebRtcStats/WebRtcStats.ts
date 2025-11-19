@@ -15,8 +15,6 @@
  *
  */
 
-// tslint:disable:no-string-literal
-
 import { Stream } from '../../OpenVidu/Stream';
 import { OpenViduLogger } from '../Logger/OpenViduLogger';
 import { PlatformUtils } from '../Utils/Platform';
@@ -108,7 +106,7 @@ export class WebRtcStats {
     private readonly STATS_ITEM_NAME = 'webrtc-stats-config';
 
     private webRtcStatsEnabled = false;
-    private webRtcStatsIntervalId: NodeJS.Timer;
+    private webRtcStatsIntervalId: ReturnType<typeof setInterval>;
     private statsInterval = 1;
     private POST_URL: string;
 
@@ -126,8 +124,7 @@ export class WebRtcStats {
         // accessing localStorage in a third-party iframe throws a DOMException.
         try {
             webrtcObj = localStorage.getItem(this.STATS_ITEM_NAME);
-        }
-        catch(e){}
+        } catch (e) {}
 
         if (!!webrtcObj) {
             this.webRtcStatsEnabled = true;

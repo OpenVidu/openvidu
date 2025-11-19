@@ -63,7 +63,7 @@ export class Publisher extends StreamManager {
 
     private accessDenied = false;
     protected properties: PublisherProperties;
-    private permissionDialogTimeout: NodeJS.Timer;
+    private permissionDialogTimeout: ReturnType<typeof setTimeout>;
 
     /**
      * @hidden
@@ -76,7 +76,7 @@ export class Publisher extends StreamManager {
     /**
      * @hidden
      */
-    screenShareResizeInterval: NodeJS.Timer;
+    screenShareResizeInterval: ReturnType<typeof setInterval>;
 
     /**
      * @hidden
@@ -172,11 +172,11 @@ export class Publisher extends StreamManager {
      *
      * @param enabled `true` to publish the video stream, `false` to unpublish it
      * @param resource
-     * 
+     *
      * If parameter **`enabled`** is `false`, this optional parameter is of type boolean. It can be set to `true` to forcibly free the hardware resource associated to the video track, or can be set to `false` to keep the access to the hardware resource.
      * Not freeing the resource makes the operation much more efficient, but depending on the platform two side-effects can be introduced: the video device may not be accessible by other applications and the access light of
      * webcams may remain on. This is platform-dependent: some browsers will not present the side-effects even when not freeing the resource.
-     * 
+     *
      * If parameter **`enabled`** is `true`, this optional parameter is of type [MediaStreamTrack](https://developer.mozilla.org/docs/Web/API/MediaStreamTrack). It can be set to force the restoration of the video track with a custom track. This may be
      * useful if the Publisher was unpublished freeing the hardware resource, and openvidu-browser is not able to successfully re-create the video track as it was before unpublishing. In this way previous track settings will be ignored and this MediaStreamTrack
      * will be used instead.
@@ -470,8 +470,7 @@ export class Publisher extends StreamManager {
                         };
 
                         if (this.stream.isSendScreen()) {
-
-                            if(this.stream.isSendAudio() && mediaStream.getAudioTracks().length === 0){
+                            if (this.stream.isSendAudio() && mediaStream.getAudioTracks().length === 0) {
                                 // If sending audio is enabled and there are no audio tracks in the mediaStream, disable audio for screen sharing.
                                 this.stream.audioActive = false;
                                 this.stream.hasAudio = false;
@@ -653,7 +652,10 @@ export class Publisher extends StreamManager {
 
                     try {
                         if (this.stream.isSendScreen() && navigator.mediaDevices['getDisplayMedia'] && !platform.isElectron()) {
-                            const mediaStream = await navigator.mediaDevices['getDisplayMedia']({ video: true, audio: this.properties.audioSource === 'screen' });
+                            const mediaStream = await navigator.mediaDevices['getDisplayMedia']({
+                                video: true,
+                                audio: this.properties.audioSource === 'screen'
+                            });
                             this.openvidu.addAlreadyProvidedTracks(myConstraints, mediaStream);
                             await getMediaSuccess(mediaStream, definedAudioConstraint);
                         } else {
@@ -709,7 +711,8 @@ export class Publisher extends StreamManager {
     getVideoDimensions(): Promise<{ width: number; height: number }> {
         return new Promise((resolve, reject) => {
             // Ionic iOS and Safari iOS supposedly require the video element to actually exist inside the DOM
-            const requiresDomInsertion: boolean = (platform.isIonicIos() || platform.isIOSWithSafari()) && (this.videoReference.readyState < 1);
+            const requiresDomInsertion: boolean =
+                (platform.isIonicIos() || platform.isIOSWithSafari()) && this.videoReference.readyState < 1;
 
             let loadedmetadataListener;
             const resolveDimensions = () => {

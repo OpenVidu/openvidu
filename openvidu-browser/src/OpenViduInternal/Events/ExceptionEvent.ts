@@ -87,7 +87,7 @@ export enum ExceptionEventName {
      *
      * {@link ExceptionEvent} objects with this {@link ExceptionEvent.name} will have as {@link ExceptionEvent.origin} property a {@link Session} object.
      */
-    SPEECH_TO_TEXT_DISCONNECTED = 'SPEECH_TO_TEXT_DISCONNECTED',
+    SPEECH_TO_TEXT_DISCONNECTED = 'SPEECH_TO_TEXT_DISCONNECTED'
 }
 
 /**
@@ -131,6 +131,6 @@ export class ExceptionEvent extends Event {
     /**
      * @hidden
      */
-    // tslint:disable-next-line:no-empty
-    callDefaultBehavior() { }
+
+    callDefaultBehavior() {}
 }

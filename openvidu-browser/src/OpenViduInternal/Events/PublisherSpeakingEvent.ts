@@ -49,6 +49,6 @@ export class PublisherSpeakingEvent extends Event {
     /**
      * @hidden
      */
-    // tslint:disable-next-line:no-empty
+
     callDefaultBehavior() {}
 }

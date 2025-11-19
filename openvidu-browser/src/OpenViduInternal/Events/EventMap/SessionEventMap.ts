@@ -63,7 +63,7 @@ export interface SessionEventMap extends EventMap {
      * and
      * <a href="https://docs.openvidu.io/en/stable/openvidu-enterprise/" style="display: inline-block; background-color: rgb(156, 39, 176); color: white; font-weight: bold; padding: 0px 5px; margin: 0 2px 0 2px; border-radius: 3px; font-size: 13px; line-height:21px; text-decoration: none; font-family: Montserrat, sans-serif">ENTERPRISE</a>
      * editions**
-     * 
+     *
      * Event dispatched when a property of the local {@link Connection} object changes.
      *
      * It is fired only for the local user.
@@ -162,7 +162,7 @@ export interface SessionEventMap extends EventMap {
      * and
      * <a href="https://docs.openvidu.io/en/stable/openvidu-enterprise/" style="display: inline-block; background-color: rgb(156, 39, 176); color: white; font-weight: bold; padding: 0px 5px; margin: 0 2px 0 2px; border-radius: 3px; font-size: 13px; line-height:21px; text-decoration: none; font-family: Montserrat, sans-serif">ENTERPRISE</a>
      * editions**
-     * 
+     *
      * Event dispatched when the session has started being broadcasted. See [Broadcast to YouTube/Twitch](/en/stable/advanced-features/broadcast/)
      */
     broadcastStarted: never;
@@ -173,7 +173,7 @@ export interface SessionEventMap extends EventMap {
      * and
      * <a href="https://docs.openvidu.io/en/stable/openvidu-enterprise/" style="display: inline-block; background-color: rgb(156, 39, 176); color: white; font-weight: bold; padding: 0px 5px; margin: 0 2px 0 2px; border-radius: 3px; font-size: 13px; line-height:21px; text-decoration: none; font-family: Montserrat, sans-serif">ENTERPRISE</a>
      * editions**
-     * 
+     *
      * Event dispatched when the session has stopped being broadcasted. See [Broadcast to YouTube/Twitch](/en/stable/advanced-features/broadcast/)
      */
     broadcastStopped: never;
@@ -195,7 +195,7 @@ export interface SessionEventMap extends EventMap {
      * and
      * <a href="https://docs.openvidu.io/en/stable/openvidu-enterprise/" style="display: inline-block; background-color: rgb(156, 39, 176); color: white; font-weight: bold; padding: 0px 5px; margin: 0 2px 0 2px; border-radius: 3px; font-size: 13px; line-height:21px; text-decoration: none; font-family: Montserrat, sans-serif">ENTERPRISE</a>
      * editions**
-     * 
+     *
      * Event dispatched when a speech-to-text message has been received for certain Stream. See [Speech To Text](/en/stable/advanced-features/speech-to-text/).
      */
     speechToTextMessage: SpeechToTextEvent;

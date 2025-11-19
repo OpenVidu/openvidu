@@ -24,7 +24,6 @@ import { SpeechToTextEventReason } from './Types/Types';
  * Triggered by {@link SessionEventMap.speechToTextMessage}
  */
 export class SpeechToTextEvent extends Event {
-
     /**
      * The {@link Connection} owning the Stream that produced the speech-to-text event.
      * In other words, this is the participant that spoke and produced this transcription event.
@@ -37,7 +36,7 @@ export class SpeechToTextEvent extends Event {
     text: string;
 
     /**
-     * All speech-to-text events are generated 
+     * All speech-to-text events are generated
      */
     reason: SpeechToTextEventReason;
 
@@ -67,6 +66,6 @@ export class SpeechToTextEvent extends Event {
     /**
      * @hidden
      */
-    // tslint:disable-next-line:no-empty
-    callDefaultBehavior() { }
+
+    callDefaultBehavior() {}
 }

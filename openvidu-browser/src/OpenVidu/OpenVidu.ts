@@ -220,8 +220,8 @@ export class OpenVidu {
                     typeof MediaStreamTrack !== 'undefined' && properties.videoSource instanceof MediaStreamTrack
                         ? undefined
                         : typeof properties.frameRate !== 'undefined'
-                            ? properties.frameRate
-                            : undefined,
+                          ? properties.frameRate
+                          : undefined,
                 insertMode:
                     typeof properties.insertMode !== 'undefined'
                         ? typeof properties.insertMode === 'string'
@@ -235,8 +235,8 @@ export class OpenVidu {
                     typeof MediaStreamTrack !== 'undefined' && properties.videoSource instanceof MediaStreamTrack
                         ? undefined
                         : typeof properties.resolution !== 'undefined'
-                            ? properties.resolution
-                            : '640x480',
+                          ? properties.resolution
+                          : '640x480',
                 videoSource: typeof properties.videoSource !== 'undefined' ? properties.videoSource : undefined,
                 videoSimulcast: properties.videoSimulcast,
                 filter: properties.filter
@@ -567,7 +567,10 @@ export class OpenVidu {
                         if (navigator.mediaDevices['getDisplayMedia'] && !platform.isElectron()) {
                             // getDisplayMedia supported
                             try {
-                                const mediaStream = await navigator.mediaDevices['getDisplayMedia']({ video: true, audio: options.audioSource === 'screen' });
+                                const mediaStream = await navigator.mediaDevices['getDisplayMedia']({
+                                    video: true,
+                                    audio: options.audioSource === 'screen'
+                                });
                                 this.addAlreadyProvidedTracks(myConstraints, mediaStream);
                                 if (mustAskForAudioTrackLater) {
                                     return await askForAudioStreamOnly(mediaStream, <MediaStreamConstraints>myConstraints.constraints);
@@ -587,9 +590,7 @@ export class OpenVidu {
                     }
                 }
                 // Use already calculated constraints
-                const constraintsAux = mustAskForAudioTrackLater
-                    ? { video: myConstraints.constraints!.video }
-                    : myConstraints.constraints;
+                const constraintsAux = mustAskForAudioTrackLater ? { video: myConstraints.constraints!.video } : myConstraints.constraints;
                 try {
                     const mediaStream = await navigator.mediaDevices.getUserMedia(constraintsAux);
                     this.addAlreadyProvidedTracks(myConstraints, mediaStream);
@@ -614,14 +615,12 @@ export class OpenVidu {
         }
     }
 
-    /* tslint:disable:no-empty */
     /**
      * Disable all logging except error level
      */
     enableProdMode(): void {
         logger.enableProdMode();
     }
-    /* tslint:enable:no-empty */
 
     /**
      * Set OpenVidu advanced configuration options. `configuration` is an object of type {@link OpenViduAdvancedConfiguration}. Call this method to override previous values at any moment.
@@ -642,7 +641,12 @@ export class OpenVidu {
     /**
      * @hidden
      */
-    sendNewVideoDimensionsIfRequired(publisher: Publisher, reason: StreamPropertyChangedEventReason, WAIT_INTERVAL: number, MAX_ATTEMPTS: number) {
+    sendNewVideoDimensionsIfRequired(
+        publisher: Publisher,
+        reason: StreamPropertyChangedEventReason,
+        WAIT_INTERVAL: number,
+        MAX_ATTEMPTS: number
+    ) {
         let attempts = 0;
         const oldWidth = publisher?.stream?.videoDimensions?.width || 0;
         const oldHeight = publisher?.stream?.videoDimensions?.height || 0;
@@ -1025,7 +1029,9 @@ export class OpenVidu {
             if (!this.isScreenShare(videoSource)) {
                 this.setVideoSource(myConstraints, videoSource);
                 if (audioSource === 'screen') {
-                    logger.warn('Parameter "audioSource" is set to "screen", which means rquesting audio from screen sharing source. But "videoSource" is not set to "screen". No audio source will be requested');
+                    logger.warn(
+                        'Parameter "audioSource" is set to "screen", which means rquesting audio from screen sharing source. But "videoSource" is not set to "screen". No audio source will be requested'
+                    );
                     myConstraints.constraints!.audio = false;
                 }
             } else {
@@ -1035,9 +1041,9 @@ export class OpenVidu {
                     const error = new OpenViduError(
                         OpenViduErrorName.SCREEN_SHARING_NOT_SUPPORTED,
                         'You can only screen share in desktop Chrome, Firefox, Opera, Safari (>=13.0), Edge (>= 80) or Electron. Detected client: ' +
-                        platform.getName() +
-                        ' ' +
-                        platform.getVersion()
+                            platform.getName() +
+                            ' ' +
+                            platform.getVersion()
                     );
                     logger.error(error);
                     return reject(error);

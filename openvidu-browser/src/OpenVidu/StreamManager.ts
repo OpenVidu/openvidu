@@ -388,14 +388,14 @@ export abstract class StreamManager extends EventDispatcher {
             typeof publisherSpeakingEventsOptions.interval === 'number'
                 ? publisherSpeakingEventsOptions.interval
                 : typeof currentHarkOptions.interval === 'number'
-                ? currentHarkOptions.interval
-                : 100;
+                  ? currentHarkOptions.interval
+                  : 100;
         const newThreshold =
             typeof publisherSpeakingEventsOptions.threshold === 'number'
                 ? publisherSpeakingEventsOptions.threshold
                 : typeof currentHarkOptions.threshold === 'number'
-                ? currentHarkOptions.threshold
-                : -50;
+                  ? currentHarkOptions.threshold
+                  : -50;
         this.stream.harkOptions = {
             interval: newInterval,
             threshold: newThreshold

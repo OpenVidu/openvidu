@@ -95,7 +95,10 @@ export class Connection {
     /**
      * @hidden
      */
-    constructor(private session: Session, connectionOptions: LocalConnectionOptions | RemoteConnectionOptions) {
+    constructor(
+        private session: Session,
+        connectionOptions: LocalConnectionOptions | RemoteConnectionOptions
+    ) {
         let msg = "'Connection' created ";
         if (!!(<LocalConnectionOptions>connectionOptions).role) {
             // Connection is local
@@ -129,7 +132,6 @@ export class Connection {
      * @hidden
      */
     sendIceCandidate(candidate: RTCIceCandidate): void {
-
         if (!this.disposed) {
             logger.debug((!!this.stream!.outboundStreamOpts ? 'Local' : 'Remote') + 'candidate for' + this.connectionId, candidate);
 

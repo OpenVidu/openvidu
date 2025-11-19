@@ -182,8 +182,6 @@ export class PlatformUtils {
         );
     }
 
-
-
     /**
      * @hidden
      */
