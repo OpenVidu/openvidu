@@ -155,6 +155,9 @@ services:
         restart: always
         ulimits:
             core: -1
+            nofile:
+                soft: 65536
+                hard: 65536
         environment:
             - MEDIA_NODE_CONTROLLER_RECORDINGS_PATH=/opt/openvidu/mncontroller/recordings
             - KMS_IMAGE=kurento/kurento-media-server:7.2.0

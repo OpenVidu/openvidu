@@ -20,6 +20,9 @@ services:
         restart: always
         ulimits:
             core: -1
+            nofile:
+                soft: 65536
+                hard: 65536
         entrypoint: ['/bin/sh', '-c', '/beats/copy_config_files.sh && /usr/local/bin/entrypoint.sh']
         environment:
             - KMS_IMAGE=kurento/kurento-media-server:7.2.0
