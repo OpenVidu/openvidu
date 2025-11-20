@@ -1,7 +1,7 @@
 #!/bin/sh
 # Docker & Docker Compose will need to be installed on the machine
 set -eu
-export DOCKER_VERSION="${DOCKER_VERSION:-29.0.0}"
+export DOCKER_VERSION="${DOCKER_VERSION:-29.0.2}"
 export DOCKER_COMPOSE_VERSION="${DOCKER_COMPOSE_VERSION:-v2.40.3}"
 export OPENVIDU_VERSION="${OPENVIDU_VERSION:-main}"
 export INSTALLER_IMAGE="${INSTALLER_IMAGE:-docker.io/openvidu/openvidu-installer:${OPENVIDU_VERSION}}"
