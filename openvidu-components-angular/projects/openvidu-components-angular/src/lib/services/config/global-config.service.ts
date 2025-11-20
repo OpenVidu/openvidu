@@ -17,7 +17,6 @@ export class GlobalConfigService {
 		@Inject(DOCUMENT) private document: Document
 	) {
 		this.configuration = config;
-		console.log(this.configuration);
 		if (this.isProduction()) console.log('OpenVidu Angular Production Mode');
 	}
 
