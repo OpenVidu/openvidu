@@ -91,7 +91,9 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
-		<java.version>21</java.version>
+		<!-- Require JDK 25 for building, but emit bytecode compatible with Java 17 -->
+		<java.build.version>25</java.build.version>
+		<java.version>17</java.version>
 
 		<!-- maven-compiler-plugin -->
 		<maven.compiler.release>${java.version}</maven.compiler.release>
@@ -145,9 +147,9 @@
 						<configuration>
 							<rules>
 								<requireJavaVersion>
-									<message>To build this project JDK ${java.version} (or greater)
+									<message>To build this project JDK ${java.build.version} (or greater)
 										is required. Please install it.</message>
-									<version>${java.version}</version>
+									<version>${java.build.version}</version>
 								</requireJavaVersion>
 							</rules>
 						</configuration>
