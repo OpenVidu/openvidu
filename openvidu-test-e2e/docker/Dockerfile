@@ -18,7 +18,7 @@ RUN set -eux; \
         gnupg \
         iproute2 \
         lsb-release \
-        openjdk-21-jdk \
+        openjdk-25-jdk \
         rsync \
         software-properties-common \
         sudo; \
@@ -37,7 +37,7 @@ RUN set -eux; \
         docker-compose-plugin \
         nodejs; \
     npm install -g http-server@latest; \
-    update-alternatives --set java /usr/lib/jvm/java-21-openjdk-amd64/bin/java; \
+    update-alternatives --set java /usr/lib/jvm/java-25-openjdk-amd64/bin/java; \
     apt clean; \
     rm -rf /var/lib/apt/lists/*
 
