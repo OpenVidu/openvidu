@@ -88,88 +88,6 @@ export interface ExtendedLayoutOptions extends OpenViduLayoutOptions {
 }
 
 /**
- * Strategy interface for layout area calculations
- * @internal
- */
-interface LayoutStrategy {
-	calculateAreas(
-		containerWidth: number,
-		containerHeight: number,
-		bigPercentage: number,
-		bigWidth: number,
-		bigHeight: number
-	): { big: LayoutArea; small: LayoutArea; offsetLeft: number; offsetTop: number };
-
-	determineBigFirst(bigFirst: BigFirstOption): boolean;
-}
-
-/**
- * Tall layout strategy: arrange small elements at bottom
- * @internal
- */
-class TallLayoutStrategy implements LayoutStrategy {
-	calculateAreas(
-		containerWidth: number,
-		containerHeight: number,
-		bigPercentage: number,
-		bigWidth: number,
-		bigHeight: number
-	): { big: LayoutArea; small: LayoutArea; offsetLeft: number; offsetTop: number } {
-		const offsetTop = bigHeight;
-		return {
-			big: { top: 0, left: 0, width: bigWidth, height: bigHeight },
-			small: {
-				top: offsetTop,
-				left: 0,
-				width: containerWidth,
-				height: containerHeight - offsetTop
-			},
-			offsetLeft: 0,
-			offsetTop
-		};
-	}
-
-	determineBigFirst(bigFirst: BigFirstOption): boolean {
-		if (bigFirst === 'column') return false;
-		if (bigFirst === 'row') return true;
-		return !!bigFirst;
-	}
-}
-
-/**
- * Wide layout strategy: arrange small elements on right
- * @internal
- */
-class WideLayoutStrategy implements LayoutStrategy {
-	calculateAreas(
-		containerWidth: number,
-		containerHeight: number,
-		bigPercentage: number,
-		bigWidth: number,
-		bigHeight: number
-	): { big: LayoutArea; small: LayoutArea; offsetLeft: number; offsetTop: number } {
-		const offsetLeft = bigWidth;
-		return {
-			big: { top: 0, left: 0, width: bigWidth, height: bigHeight },
-			small: {
-				top: 0,
-				left: offsetLeft,
-				width: containerWidth - offsetLeft,
-				height: containerHeight
-			},
-			offsetLeft,
-			offsetTop: 0
-		};
-	}
-
-	determineBigFirst(bigFirst: BigFirstOption): boolean {
-		if (bigFirst === 'column') return true;
-		if (bigFirst === 'row') return false;
-		return !!bigFirst;
-	}
-}
-
-/**
  * Layout configuration constants
  */
 export const LAYOUT_CONSTANTS = {
@@ -177,10 +95,10 @@ export const LAYOUT_CONSTANTS = {
 	DEFAULT_VIDEO_HEIGHT: 480,
 	DEFAULT_MAX_RATIO: 3 / 2,
 	DEFAULT_MIN_RATIO: 9 / 16,
-	DEFAULT_BIG_PERCENTAGE: 0.85,
+	DEFAULT_BIG_PERCENTAGE: 0.8,
 	UPDATE_TIMEOUT: 50,
-	ANIMATION_DURATION: '0.15s',
-	ANIMATION_EASING: 'ease-in-out'
+	ANIMATION_DURATION: '0.1s',
+	ANIMATION_EASING: 'linear'
 } as const;
 
 /**
@@ -244,8 +162,6 @@ export class OpenViduLayout {
 	private layoutContainer!: HTMLElement;
 	private opts!: OpenViduLayoutOptions;
 	private dimensionsCache = new Map<string, BestDimensions>();
-	private layoutCache = new Map<string, { boxes: LayoutBox[]; areas: any }>();
-	private readonly CACHE_SIZE_LIMIT = 100;
 
 	/**
 	 * Update the layout container
@@ -337,31 +253,6 @@ export class OpenViduLayout {
 	 */
 	clearCache(): void {
 		this.dimensionsCache.clear();
-		this.layoutCache.clear();
-	}
-
-	/**
-	 * Manage cache size to prevent unlimited growth
-	 * @hidden
-	 */
-	private manageCacheSize(cache: Map<any, any>): void {
-		if (cache.size > this.CACHE_SIZE_LIMIT) {
-			const firstKey = cache.keys().next().value;
-			if (firstKey !== undefined) {
-				cache.delete(firstKey);
-			}
-		}
-	}
-
-	/**
-	 * Generate cache key for layout calculations
-	 * @hidden
-	 */
-	private getLayoutCacheKey(opts: ExtendedLayoutOptions, elements: ElementDimensions[]): string {
-		const elementKey = elements
-			.map(e => `${e.width}x${e.height}x${e.big ? '1' : '0'}`)
-			.join('_');
-		return `${opts.containerWidth}x${opts.containerHeight}_${elementKey}_${opts.bigPercentage}`;
 	}
 
 
@@ -439,22 +330,27 @@ export class OpenViduLayout {
 		if (animate) {
 			setTimeout(() => {
 				// animation added in css transition: all .1s linear;
-				elem.style.transition = `all ${LAYOUT_CONSTANTS.ANIMATION_DURATION} ${LAYOUT_CONSTANTS.ANIMATION_EASING}`;
-				Object.entries(targetPosition).forEach(([key, value]) => {
-					(elem.style as any)[key] = value;
-				});
+				this.animateElement(elem, targetPosition);
 				this.fixAspectRatio(elem, width);
 			}, 10);
 		} else {
-			elem.style.transition = 'none';
-			Object.entries(targetPosition).forEach(([key, value]) => {
-				(elem.style as any)[key] = value;
-			});
+			this.setElementPosition(elem, targetPosition);
 			if (!elem.classList.contains(LayoutClass.CLASS_NAME)) {
 				elem.classList.add(LayoutClass.CLASS_NAME);
 			}
 		}
 		this.fixAspectRatio(elem, width);
+	}
+
+	private setElementPosition(elem: HTMLVideoElement, targetPosition: { [key: string]: string }) {
+		Object.keys(targetPosition).forEach((key) => {
+			(elem.style as any)[key] = targetPosition[key];
+		});
+	}
+
+	private animateElement(elem: HTMLVideoElement, targetPosition: { [key: string]: string }) {
+		elem.style.transition = `all ${LAYOUT_CONSTANTS.ANIMATION_DURATION} ${LAYOUT_CONSTANTS.ANIMATION_EASING}`;
+		this.setElementPosition(elem, targetPosition);
 	}
 
 	/**
@@ -551,9 +447,6 @@ export class OpenViduLayout {
 		if (cached) {
 			return cached;
 		}
-
-		// Manage cache size before adding new entry
-		this.manageCacheSize(this.dimensionsCache);
 		let bestArea = 0;
 		let bestCols = 1;
 		let bestRows = 1;
@@ -618,173 +511,7 @@ export class OpenViduLayout {
 	private getVideoRatio(element: ElementDimensions): number {
 		return element.height / element.width;
 	}
-
-	/**
-	 * Calculate big element dimensions with minimum percentage constraints
-	 * @hidden
-	 */
-	private calculateBigDimensions(
-		bigOnes: ElementDimensions[],
-		bigWidth: number,
-		bigHeight: number,
-		bigFixedRatio: boolean,
-		bigMinRatio: number,
-		bigMaxRatio: number,
-		bigMaxWidth: number,
-		bigMaxHeight: number,
-		minBigPercentage: number,
-		containerWidth: number,
-		containerHeight: number,
-		minRatio: number,
-		maxRatio: number,
-		smallOnes: ElementDimensions[],
-		smallMaxWidth: number,
-		smallMaxHeight: number,
-		isTall: boolean
-	): number {
-		if (minBigPercentage <= 0) {
-			return isTall ? bigHeight : bigWidth;
-		}
-
-		// Find the best size for the big area
-		const bigDimensions = !bigFixedRatio
-			? this.getBestDimensions(bigMinRatio, bigMaxRatio, bigWidth, bigHeight, bigOnes.length, bigMaxWidth, bigMaxHeight)
-			: this.getBestDimensions(
-					bigOnes[0].height / bigOnes[0].width,
-					bigOnes[0].height / bigOnes[0].width,
-					bigWidth,
-					bigHeight,
-					bigOnes.length,
-					bigMaxWidth,
-					bigMaxHeight
-			  );
-
-		const minSize = isTall ? containerHeight * minBigPercentage : containerWidth * minBigPercentage;
-		const calculatedSize = isTall
-			? bigDimensions.targetHeight * bigDimensions.targetRows
-			: bigDimensions.targetWidth * bigDimensions.targetCols;
-		let adjustedSize = Math.max(minSize, Math.min(isTall ? bigHeight : bigWidth, calculatedSize));
-
-		// Don't awkwardly scale the small area bigger than we need to
-		const smallDimensions = isTall
-			? this.getBestDimensions(minRatio, maxRatio, containerWidth, containerHeight - adjustedSize, smallOnes.length, smallMaxWidth, smallMaxHeight)
-			: this.getBestDimensions(minRatio, maxRatio, containerWidth - adjustedSize, containerHeight, smallOnes.length, smallMaxWidth, smallMaxHeight);
-
-		const smallCalculatedSize = isTall
-			? smallDimensions.targetRows * smallDimensions.targetHeight
-			: smallDimensions.targetCols * smallDimensions.targetWidth;
-
-		adjustedSize = Math.max(adjustedSize, (isTall ? containerHeight : containerWidth) - smallCalculatedSize);
-
-		return adjustedSize;
-	}
-
-	/**
-	 * Get layout strategy based on container and video ratios
-	 * @hidden
-	 */
-	private getLayoutStrategy(availableRatio: number, videoRatio: number): LayoutStrategy {
-		return availableRatio > videoRatio ? new TallLayoutStrategy() : new WideLayoutStrategy();
-	}
-
-	/**
-	 * Calculate layout areas for big and small elements using Strategy Pattern
-	 * @hidden
-	 */
-	private calculateLayoutAreas(
-		availableRatio: number,
-		videoRatio: number,
-		containerWidth: number,
-		containerHeight: number,
-		bigPercentage: number,
-		bigFirst: BigFirstOption,
-		bigOnes: ElementDimensions[],
-		smallOnes: ElementDimensions[],
-		opts: ExtendedLayoutOptions
-	): { big: LayoutArea | null; small: LayoutArea | null; bigFirst: boolean } {
-		const strategy = this.getLayoutStrategy(availableRatio, videoRatio);
-		const isTall = availableRatio > videoRatio;
-
-		// Calculate initial big dimensions
-		const initialBigWidth = isTall ? containerWidth : Math.floor(containerWidth * bigPercentage);
-		const initialBigHeight = isTall ? Math.floor(containerHeight * bigPercentage) : containerHeight;
-
-		// Calculate final big dimensions with constraints
-		const bigWidth = isTall ? initialBigWidth : this.calculateBigDimensions(
-			bigOnes,
-			initialBigWidth,
-			initialBigHeight,
-			opts.bigFixedRatio,
-			opts.bigMinRatio,
-			opts.bigMaxRatio,
-			opts.bigMaxWidth,
-			opts.bigMaxHeight,
-			opts.minBigPercentage,
-			containerWidth,
-			containerHeight,
-			opts.minRatio,
-			opts.maxRatio,
-			smallOnes,
-			opts.smallMaxWidth,
-			opts.smallMaxHeight,
-			false
-		);
-
-		const bigHeight = isTall ? this.calculateBigDimensions(
-			bigOnes,
-			initialBigWidth,
-			initialBigHeight,
-			opts.bigFixedRatio,
-			opts.bigMinRatio,
-			opts.bigMaxRatio,
-			opts.bigMaxWidth,
-			opts.bigMaxHeight,
-			opts.minBigPercentage,
-			containerWidth,
-			containerHeight,
-			opts.minRatio,
-			opts.maxRatio,
-			smallOnes,
-			opts.smallMaxWidth,
-			opts.smallMaxHeight,
-			true
-		) : initialBigHeight;
-
-		// Use strategy to calculate areas
-		const { big, small, offsetLeft, offsetTop } = strategy.calculateAreas(
-			containerWidth,
-			containerHeight,
-			bigPercentage,
-			bigWidth,
-			bigHeight
-		);
-
-		const showBigFirst = strategy.determineBigFirst(bigFirst);
-
-		if (showBigFirst) {
-			return { big, small, bigFirst: true };
-		} else {
-			// Swap positions for bigFirst=false
-			const bigOffsetLeft = containerWidth - offsetLeft;
-			const bigOffsetTop = containerHeight - offsetTop;
-			return {
-				big: { left: bigOffsetLeft, top: bigOffsetTop, width: bigWidth, height: bigHeight },
-				small: { top: 0, left: 0, width: containerWidth - offsetLeft, height: containerHeight - offsetTop },
-				bigFirst: false
-			};
-		}
-	}
 	private getLayout(opts: ExtendedLayoutOptions, elements: ElementDimensions[]) {
-		// Check cache first
-		const cacheKey = this.getLayoutCacheKey(opts, elements);
-		const cached = this.layoutCache.get(cacheKey);
-		if (cached) {
-			return cached;
-		}
-
-		// Manage cache size before adding new entry
-		this.manageCacheSize(this.layoutCache);
-
 		const {
 			maxRatio = LAYOUT_CONSTANTS.DEFAULT_MAX_RATIO,
 			minRatio = LAYOUT_CONSTANTS.DEFAULT_MIN_RATIO,
@@ -809,8 +536,17 @@ export class OpenViduLayout {
 			scaleLastRow = true,
 			bigScaleLastRow = true
 		} = opts;
-		// Separate big and small elements
+		const availableRatio = containerHeight / containerWidth;
+		let offsetLeft = 0;
+		let offsetTop = 0;
+		let bigOffsetTop = 0;
+		let bigOffsetLeft = 0;
 		const bigIndices: number[] = [];
+		let bigBoxes: LayoutBox[] = [];
+		let smallBoxes: LayoutBox[] = [];
+		let areas: { big: LayoutArea | null; small: LayoutArea | null } = { big: null, small: null };
+
+		// Move to Get Layout
 		const smallOnes = elements.filter((element) => !element.big);
 		const bigOnes = elements.filter((element, idx) => {
 			if (element.big) {
@@ -819,38 +555,176 @@ export class OpenViduLayout {
 			}
 			return false;
 		});
+		//TODO: Habia un codigo personalizado que servía para
+		//TODO: tener videos grandes, pequeños y normales
+		//.filter((x) => !smallOnes.includes(x));
 
-		// Determine layout areas based on element distribution
-		let areas: { big: LayoutArea | null; small: LayoutArea | null };
-		let bigBoxes: LayoutBox[] = [];
-		let smallBoxes: LayoutBox[] = [];
-
+		// const normalOnes: HTMLVideoElement[] = Array.prototype.filter
+		//   .call(
+		//     this.layoutContainer.querySelectorAll(
+		//       `#${id}>*:not(.${this.opts.bigClass})`
+		//     ),
+		//     () => this.filterDisplayNone
+		//   )
+		//   .filter((x) => !smallOnes.includes(x));
+		// this.attachElements(bigOnes, normalOnes, smallOnes);
 		if (bigOnes.length > 0 && smallOnes.length > 0) {
-			// Mixed layout: calculate areas for both big and small elements
-			const availableRatio = containerHeight / containerWidth;
-			const layoutAreas = this.calculateLayoutAreas(
-				availableRatio,
-				this.getVideoRatio(bigOnes[0]),
-				containerWidth,
-				containerHeight,
-				bigPercentage,
-				bigFirst,
-				bigOnes,
-				smallOnes,
-				opts
-			);
-			areas = { big: layoutAreas.big, small: layoutAreas.small };
-		} else if (bigOnes.length > 0) {
-			// Only big elements: use full container
-			areas = {
-				big: { top: 0, left: 0, width: containerWidth, height: containerHeight },
-				small: null
+			let bigWidth;
+			let bigHeight;
+			let showBigFirst = bigFirst;
+
+			if (availableRatio > this.getVideoRatio(bigOnes[0])) {
+				// We are tall, going to take up the whole width and arrange small
+				// guys at the bottom
+				bigWidth = containerWidth;
+				bigHeight = Math.floor(containerHeight * bigPercentage);
+				if (minBigPercentage > 0) {
+					// Find the best size for the big area
+					let bigDimensions;
+					if (!bigFixedRatio) {
+						bigDimensions = this.getBestDimensions(
+							bigMinRatio,
+							bigMaxRatio,
+							bigWidth,
+							bigHeight,
+							bigOnes.length,
+							bigMaxWidth,
+							bigMaxHeight
+						);
+					} else {
+						// Use the ratio of the first video element we find to approximate
+						const ratio = bigOnes[0].height / bigOnes[0].width;
+						bigDimensions = this.getBestDimensions(
+							ratio,
+							ratio,
+							bigWidth,
+							bigHeight,
+							bigOnes.length,
+							bigMaxWidth,
+							bigMaxHeight
+						);
+					}
+					bigHeight = Math.max(
+						containerHeight * minBigPercentage,
+						Math.min(bigHeight, bigDimensions.targetHeight * bigDimensions.targetRows)
+					);
+					// Don't awkwardly scale the small area bigger than we need to and end up with floating
+					// videos in the middle
+					const smallDimensions = this.getBestDimensions(
+						minRatio,
+						maxRatio,
+						containerWidth,
+						containerHeight - bigHeight,
+						smallOnes.length,
+						smallMaxWidth,
+						smallMaxHeight
+					);
+					bigHeight = Math.max(bigHeight, containerHeight - smallDimensions.targetRows * smallDimensions.targetHeight);
+				}
+				offsetTop = bigHeight;
+				bigOffsetTop = containerHeight - offsetTop;
+				if (bigFirst === 'column') {
+					showBigFirst = false;
+				} else if (bigFirst === 'row') {
+					showBigFirst = true;
+				}
+			} else {
+				// We are wide, going to take up the whole height and arrange the small
+				// guys on the right
+				bigHeight = containerHeight;
+				bigWidth = Math.floor(containerWidth * bigPercentage);
+				if (minBigPercentage > 0) {
+					// Find the best size for the big area
+					let bigDimensions;
+					if (!bigFixedRatio) {
+						bigDimensions = this.getBestDimensions(
+							bigMinRatio,
+							bigMaxRatio,
+							bigWidth,
+							bigHeight,
+							bigOnes.length,
+							bigMaxWidth,
+							bigMaxHeight
+						);
+					} else {
+						// Use the ratio of the first video element we find to approximate
+						const ratio = bigOnes[0].height / bigOnes[0].width;
+						bigDimensions = this.getBestDimensions(
+							ratio,
+							ratio,
+							bigWidth,
+							bigHeight,
+							bigOnes.length,
+							bigMaxWidth,
+							bigMaxHeight
+						);
+					}
+					bigWidth = Math.max(
+						containerWidth * minBigPercentage,
+						Math.min(bigWidth, bigDimensions.targetWidth * bigDimensions.targetCols)
+					);
+					// Don't awkwardly scale the small area bigger than we need to and end up with floating
+					// videos in the middle
+					const smallDimensions = this.getBestDimensions(
+						minRatio,
+						maxRatio,
+						containerWidth - bigWidth,
+						containerHeight,
+						smallOnes.length,
+						smallMaxWidth,
+						smallMaxHeight
+					);
+					bigWidth = Math.max(bigWidth, containerWidth - smallDimensions.targetCols * smallDimensions.targetWidth);
+				}
+				offsetLeft = bigWidth;
+				bigOffsetLeft = containerWidth - offsetLeft;
+				if (bigFirst === 'column') {
+					showBigFirst = true;
+				} else if (bigFirst === 'row') {
+					showBigFirst = false;
+				}
+			}
+			if (showBigFirst) {
+				areas.big = {
+					top: 0,
+					left: 0,
+					width: bigWidth,
+					height: bigHeight
+				};
+				areas.small = {
+					top: offsetTop,
+					left: offsetLeft,
+					width: containerWidth - offsetLeft,
+					height: containerHeight - offsetTop
+				};
+			} else {
+				areas.big = {
+					left: bigOffsetLeft,
+					top: bigOffsetTop,
+					width: bigWidth,
+					height: bigHeight
+				};
+				areas.small = {
+					top: 0,
+					left: 0,
+					width: containerWidth - offsetLeft,
+					height: containerHeight - offsetTop
+				};
+			}
+		} else if (bigOnes.length > 0 && smallOnes.length === 0) {
+			// We only have one bigOne just center it
+			areas.big = {
+				top: 0,
+				left: 0,
+				width: containerWidth,
+				height: containerHeight
 			};
 		} else {
-			// Only small elements: use full container
-			areas = {
-				big: null,
-				small: { top: 0, left: 0, width: containerWidth, height: containerHeight }
+			areas.small = {
+				top: offsetTop,
+				left: offsetLeft,
+				width: containerWidth - offsetLeft,
+				height: containerHeight - offsetTop
 			};
 		}
 
@@ -904,123 +778,7 @@ export class OpenViduLayout {
 				smallBoxesIdx += 1;
 			}
 		});
-
-		const result = { boxes, areas };
-		// Cache the result for future use
-		this.layoutCache.set(cacheKey, result);
-		return result;
-	}
-
-	/**
-	 * Build layout rows from element ratios
-	 * @hidden
-	 */
-	private buildLayoutRows(
-		ratios: number[],
-		dimensions: BestDimensions,
-		fixedRatio: boolean,
-		containerWidth: number,
-		maxHeight: number
-	): { rows: LayoutRow[]; totalRowHeight: number } {
-		const rows: LayoutRow[] = [];
-		let row: LayoutRow | undefined;
-
-		// Create rows and calculate their dimensions
-		for (let i = 0; i < ratios.length; i++) {
-			if (i % dimensions.targetCols === 0) {
-				row = { ratios: [], width: 0, height: 0 };
-				rows.push(row);
-			}
-
-			if (row) {
-				const ratio = ratios[i];
-				row.ratios.push(ratio);
-				const targetWidth = fixedRatio ? dimensions.targetHeight / ratio : dimensions.targetWidth;
-				row.width += targetWidth;
-				row.height = dimensions.targetHeight;
-			}
-		}
-
-		// Adjust rows that exceed container width
-		let totalRowHeight = 0;
-		for (const r of rows) {
-			if (r.width > containerWidth) {
-				r.height = Math.floor(r.height * (containerWidth / r.width));
-				r.width = containerWidth;
-			}
-			totalRowHeight += r.height;
-		}
-
-		return { rows, totalRowHeight };
-	}
-
-	/**
-	 * Scale rows to fill container height if needed
-	 * @hidden
-	 */
-	private scaleRowsToFit(
-		rows: LayoutRow[],
-		totalRowHeight: number,
-		containerWidth: number,
-		containerHeight: number,
-		maxHeight: number
-	): number {
-		let remainingShortRows = rows.filter(r => r.width < containerWidth && r.height < maxHeight).length;
-		if (remainingShortRows === 0) return totalRowHeight;
-
-		let remainingHeightDiff = containerHeight - totalRowHeight;
-		let adjustedTotalHeight = 0;
-
-		for (const row of rows) {
-			if (row.width < containerWidth && remainingShortRows > 0) {
-				let extraHeight = remainingHeightDiff / remainingShortRows;
-				const maxExtraHeight = Math.floor(((containerWidth - row.width) / row.width) * row.height);
-
-				if (extraHeight > maxExtraHeight) {
-					extraHeight = maxExtraHeight;
-				}
-
-				row.width += Math.floor((extraHeight / row.height) * row.width);
-				row.height += extraHeight;
-				remainingHeightDiff -= extraHeight;
-				remainingShortRows -= 1;
-			}
-			adjustedTotalHeight += row.height;
-		}
-
-		return adjustedTotalHeight;
-	}
-
-	/**
-	 * Calculate vertical offset based on alignment
-	 * @hidden
-	 */
-	private calculateVerticalOffset(alignItems: LayoutAlignment, containerHeight: number, totalRowHeight: number): number {
-		switch (alignItems) {
-			case LayoutAlignment.START:
-				return 0;
-			case LayoutAlignment.END:
-				return containerHeight - totalRowHeight;
-			case LayoutAlignment.CENTER:
-			default:
-				return (containerHeight - totalRowHeight) / 2;
-		}
-	}
-
-	/**
-	 * Calculate horizontal offset based on alignment
-	 * @hidden
-	 */
-	private calculateHorizontalOffset(alignItems: LayoutAlignment, containerWidth: number, rowWidth: number): number {
-		switch (alignItems) {
-			case LayoutAlignment.START:
-				return 0;
-			case LayoutAlignment.END:
-				return containerWidth - rowWidth;
-			case LayoutAlignment.CENTER:
-			default:
-				return (containerWidth - rowWidth) / 2;
-		}
+		return { boxes, areas };
 	}
 
 	private getLayoutAux(opts: Partial<OpenViduLayoutOptions & { containerWidth: number; containerHeight: number; offsetLeft: number; offsetTop: number }>, elements: ElementDimensions[]): LayoutBox[] {
@@ -1040,33 +798,125 @@ export class OpenViduLayout {
 		const ratios = elements.map((element) => element.height / element.width);
 		const count = ratios.length;
 
-		// Calculate target dimensions for elements
-		const targetRatio = fixedRatio && ratios.length > 0 ? ratios[0] : null;
-		const dimensions = targetRatio
-			? this.getBestDimensions(targetRatio, targetRatio, containerWidth, containerHeight, count, maxWidth, maxHeight)
-			: this.getBestDimensions(minRatio, maxRatio, containerWidth, containerHeight, count, maxWidth, maxHeight);
+		let dimensions;
 
-		// Build and adjust rows
-		const { rows, totalRowHeight } = this.buildLayoutRows(ratios, dimensions, fixedRatio, containerWidth, maxHeight);
-		const finalRowHeight = scaleLastRow && totalRowHeight < containerHeight
-			? this.scaleRowsToFit(rows, totalRowHeight, containerWidth, containerHeight, maxHeight)
-			: totalRowHeight;
+		if (!fixedRatio) {
+			dimensions = this.getBestDimensions(minRatio, maxRatio, containerWidth, containerHeight, count, maxWidth, maxHeight);
+		} else {
+			// Use the ratio of the first video element we find to approximate
+			const ratio = ratios.length > 0 ? ratios[0] : LAYOUT_CONSTANTS.DEFAULT_MIN_RATIO;
+			dimensions = this.getBestDimensions(ratio, ratio, containerWidth, containerHeight, count, maxWidth, maxHeight);
+		}
 
-		// Calculate starting position
-		let y = this.calculateVerticalOffset(alignItems, containerHeight, finalRowHeight);
-
-		// Position elements in rows
+		// Loop through each stream in the container and place it inside
+		let x = 0;
+		let y = 0;
+		const rows: LayoutRow[] = [];
+		let row: LayoutRow | undefined;
 		const boxes: LayoutBox[] = [];
-		for (const row of rows) {
-			let x = this.calculateHorizontalOffset(alignItems, containerWidth, row.width);
 
-			for (const ratio of row.ratios) {
+		// Iterate through the children and create an array with a new item for each row
+		// and calculate the width of each row so that we know if we go over the size and need
+		// to adjust
+		for (let i = 0; i < ratios.length; i++) {
+			if (i % dimensions.targetCols === 0) {
+				// This is a new row
+				row = {
+					ratios: [],
+					width: 0,
+					height: 0
+				};
+				rows.push(row);
+			}
+			const ratio = ratios[i];
+			if (row) {
+				row.ratios.push(ratio);
 				let targetWidth = dimensions.targetWidth;
-				const targetHeight = row.height;
+				const targetHeight = dimensions.targetHeight;
+				// If we're using a fixedRatio then we need to set the correct ratio for this element
+				if (fixedRatio) {
+					targetWidth = targetHeight / ratio;
+				}
+				row.width += targetWidth;
+				row.height = targetHeight;
+			}
+		}
+		// Calculate total row height adjusting if we go too wide
+		let totalRowHeight = 0;
+		let remainingShortRows = 0;
+		for (let i = 0; i < rows.length; i++) {
+			row = rows[i];
+			if (row.width > containerWidth) {
+				// Went over on the width, need to adjust the height proportionally
+				row.height = Math.floor(row.height * (containerWidth / row.width));
+				row.width = containerWidth;
+			} else if (row.width < containerWidth && row.height < maxHeight) {
+				remainingShortRows += 1;
+			}
+			totalRowHeight += row.height;
+		}
+		if (scaleLastRow && totalRowHeight < containerHeight && remainingShortRows > 0) {
+			// We can grow some of the rows, we're not taking up the whole height
+			let remainingHeightDiff = containerHeight - totalRowHeight;
+			totalRowHeight = 0;
+			for (let i = 0; i < rows.length; i++) {
+				row = rows[i];
+				if (row.width < containerWidth) {
+					// Evenly distribute the extra height between the short rows
+					let extraHeight = remainingHeightDiff / remainingShortRows;
+					if (extraHeight / row.height > (containerWidth - row.width) / row.width) {
+						// We can't go that big or we'll go too wide
+						extraHeight = Math.floor(((containerWidth - row.width) / row.width) * row.height);
+					}
+					row.width += Math.floor((extraHeight / row.height) * row.width);
+					row.height += extraHeight;
+					remainingHeightDiff -= extraHeight;
+					remainingShortRows -= 1;
+				}
+				totalRowHeight += row.height;
+			}
+		}
+		// vertical centering
+		switch (alignItems) {
+			case 'start':
+				y = 0;
+				break;
+			case 'end':
+				y = containerHeight - totalRowHeight;
+				break;
+			case 'center':
+			default:
+				y = (containerHeight - totalRowHeight) / 2;
+				break;
+		}
+		// Iterate through each row and place each child
+		for (let i = 0; i < rows.length; i++) {
+			row = rows[i];
+			let rowMarginLeft;
+			switch (alignItems) {
+				case 'start':
+					rowMarginLeft = 0;
+					break;
+				case 'end':
+					rowMarginLeft = containerWidth - row.width;
+					break;
+				case 'center':
+				default:
+					rowMarginLeft = (containerWidth - row.width) / 2;
+					break;
+			}
+			x = rowMarginLeft;
+			let targetHeight = row.height;
+			for (let j = 0; j < row.ratios.length; j++) {
+				const ratio = row.ratios[j];
 
+				let targetWidth = dimensions.targetWidth;
+				targetHeight = row.height;
+				// If we're using a fixedRatio then we need to set the correct ratio for this element
 				if (fixedRatio) {
 					targetWidth = Math.floor(targetHeight / ratio);
 				} else if (targetHeight / targetWidth !== dimensions.targetHeight / dimensions.targetWidth) {
+					// We grew this row, we need to adjust the width to account for the increase in height
 					targetWidth = Math.floor((dimensions.targetWidth / dimensions.targetHeight) * targetHeight);
 				}
 
@@ -1078,7 +928,7 @@ export class OpenViduLayout {
 				});
 				x += targetWidth;
 			}
-			y += row.height;
+			y += targetHeight;
 		}
 		return boxes;
 	}
