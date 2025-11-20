@@ -165,7 +165,8 @@ public class SingleStreamRecordingService extends RecordingService {
 		});
 		final CountDownLatch stoppedCountDown = new CountDownLatch(wrappers.size());
 
-		try (ForkJoinPool customThreadPool = new ForkJoinPool(4)) {
+		ForkJoinPool customThreadPool = new ForkJoinPool(4);
+		try {
 			customThreadPool.submit(() -> wrappers.parallelStream().forEach(wrapper -> {
 				this.stopRecorderEndpointOfPublisherEndpoint(recording.getId(), wrapper.getStreamId(), stoppedCountDown,
 						kmsDisconnectionTime);
@@ -173,8 +174,11 @@ public class SingleStreamRecordingService extends RecordingService {
 			customThreadPool.shutdown();
 			customThreadPool.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
 		} catch (InterruptedException e) {
+			Thread.currentThread().interrupt();
 			recording.setStatus(io.openvidu.java.client.Recording.Status.failed);
 			log.error("Exception while stopping recorder endpoints", e);
+		} finally {
+			customThreadPool.shutdownNow();
 		}
 
 		try {
