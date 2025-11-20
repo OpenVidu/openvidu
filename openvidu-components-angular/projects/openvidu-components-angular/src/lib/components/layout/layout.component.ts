@@ -104,8 +104,10 @@ export class LayoutComponent implements OnInit, OnDestroy, AfterViewInit {
 	private destroy$ = new Subject<void>();
 	private resizeObserver: ResizeObserver;
 	private resizeTimeout: NodeJS.Timeout;
+	private rafId: number | null = null;
 	private videoIsAtRight: boolean = false;
 	private lastLayoutWidth: number = 0;
+	private readonly SIGNIFICANT_RESIZE_THRESHOLD = 5; // pixels
 
 	/**
 	 * @ignore
@@ -140,6 +142,10 @@ export class LayoutComponent implements OnInit, OnDestroy, AfterViewInit {
 		this.destroy$.complete();
 		this.localParticipant = undefined;
 		this.remoteParticipants = [];
+		if (this.rafId !== null) {
+			cancelAnimationFrame(this.rafId);
+			this.rafId = null;
+		}
 		this.resizeObserver?.disconnect();
 		this.layoutService.clear();
 	}
@@ -217,11 +223,22 @@ export class LayoutComponent implements OnInit, OnDestroy, AfterViewInit {
 
 	private listenToResizeLayout() {
 		this.resizeObserver = new ResizeObserver((entries) => {
-			clearTimeout(this.resizeTimeout);
+			// Cancel any pending animation frame to avoid duplicate work
+			if (this.rafId !== null) {
+				cancelAnimationFrame(this.rafId);
+			}
 
-			this.resizeTimeout = setTimeout(() => {
+			// Use requestAnimationFrame for better performance
+			this.rafId = requestAnimationFrame(() => {
+				const { width: parentWidth } = entries[0].contentRect;
+
+				// Only update if the change is significant (threshold-based)
+				if (Math.abs(this.lastLayoutWidth - parentWidth) < this.SIGNIFICANT_RESIZE_THRESHOLD) {
+					this.rafId = null;
+					return;
+				}
+
 				if (this.localParticipant?.isMinimized) {
-					const { width: parentWidth } = entries[0].contentRect;
 					if (this.panelService.isPanelOpened()) {
 						if (this.lastLayoutWidth < parentWidth) {
 							// Layout is bigger than before. Maybe the settings panel(wider) has been transitioned to another panel.
@@ -240,9 +257,11 @@ export class LayoutComponent implements OnInit, OnDestroy, AfterViewInit {
 							this.moveStreamToRight(parentWidth);
 						}
 					}
-					this.lastLayoutWidth = parentWidth;
 				}
-			}, 100);
+
+				this.lastLayoutWidth = parentWidth;
+				this.rafId = null;
+			});
 		});
 
 		this.resizeObserver.observe(this.layoutContainer.element.nativeElement);

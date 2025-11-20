@@ -80,6 +80,7 @@ export class LayoutService {
 	protected getOptions(): OpenViduLayoutOptions {
 		const ratios = this.getResponsiveRatios();
 		const percentages = this.getResponsivePercentages();
+		const isMobile = this.viewportSrv.isMobile();
 
 		return {
 			maxRatio: ratios.maxRatio,
@@ -94,7 +95,8 @@ export class LayoutService {
 			bigMaxRatio: ratios.bigMaxRatio,
 			bigMinRatio: ratios.bigMinRatio,
 			bigFirst: true,
-			animate: true,
+			// Disable animations on mobile for better performance
+			animate: !isMobile,
 			alignItems: LayoutAlignment.CENTER,
 			bigAlignItems: LayoutAlignment.CENTER,
 			smallAlignItems: LayoutAlignment.CENTER,
@@ -105,7 +107,7 @@ export class LayoutService {
 			bigMaxWidth: Infinity,
 			bigMaxHeight: Infinity,
 			scaleLastRow: true,
-			bigScaleLastRow: true
+			bigScaleLastRow: false
 		};
 	}
 
