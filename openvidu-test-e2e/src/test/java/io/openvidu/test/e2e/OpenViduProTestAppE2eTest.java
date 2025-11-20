@@ -20,6 +20,7 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
@@ -3166,8 +3167,8 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 					"Broadcast error message does not contain expected message");
 			// Concurrent broadcast
 			final int PETITIONS = 15;
-			List<String> responses = new ArrayList<>();
-			List<Exception> exceptions = new ArrayList<>();
+			List<String> responses = new CopyOnWriteArrayList<>();
+			List<Exception> exceptions = new CopyOnWriteArrayList<>();
 			CountDownLatch latch = new CountDownLatch(PETITIONS);
 			body = "{'session':'TestSession','broadcastUrl':'rtmp://" + BROADCAST_IP + "/live'}";
 			for (int i = 0; i < PETITIONS; i++) {
