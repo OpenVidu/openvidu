@@ -676,7 +676,7 @@ public class OpenViduTestE2e {
 		String command = null;
 		if (MEDIA_SERVER_IMAGE.startsWith(KURENTO_IMAGE)) {
 			log.info("Starting kurento");
-			command = "docker run -e KMS_UID=$(id -u) --network=host --detach=true --ulimit core=-1"
+			command = "docker run -e KMS_UID=$(id -u) --network=host --detach=true --ulimit nofile=65536:65536"
 					+ " --volume=/opt/openvidu/recordings:/opt/openvidu/recordings " + MEDIA_SERVER_IMAGE;
 		} else if (MEDIA_SERVER_IMAGE.startsWith(MEDIASOUP_IMAGE)) {
 			log.info("Starting mediaSoup");
