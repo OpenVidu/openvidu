@@ -178,7 +178,7 @@
  * ```
  * <!--ovPreJoin-end-tutorial-->
  *
- * For a detailed tutorial on customizing the pre-join component, please visit [this link](https://openvidu.io/latest/docs/tutorials/angular-components/openvidu-custom-prejoin/).
+ * @internal
  */
 
 import { Directive, TemplateRef, ViewContainerRef } from '@angular/core';
