@@ -62,7 +62,8 @@ import {
 	LayoutAdditionalElementsDirective,
 	ParticipantPanelAfterLocalParticipantDirective,
 	PreJoinDirective,
-	LeaveButtonDirective
+	LeaveButtonDirective,
+	SettingsPanelGeneralAdditionalElementsDirective
 } from '../../directives/template/internals.directive';
 import { OpenViduThemeService } from '../../services/theme/theme.service';
 import { E2eeService } from '../../services/e2ee/e2ee.service';
@@ -375,6 +376,22 @@ export class VideoconferenceComponent implements OnDestroy, AfterViewInit {
 		return this._externalLayoutAdditionalElements;
 	}
 
+	private _externalSettingsPanelGeneralAdditionalElements?: SettingsPanelGeneralAdditionalElementsDirective;
+	/**
+	 * @internal
+	 */
+	@ContentChild(SettingsPanelGeneralAdditionalElementsDirective)
+	set externalSettingsPanelGeneralAdditionalElements(value: SettingsPanelGeneralAdditionalElementsDirective) {
+		this._externalSettingsPanelGeneralAdditionalElements = value;
+		this.setupTemplates();
+	}
+	/**
+	 * @internal
+	 */
+	get externalSettingsPanelGeneralAdditionalElements(): SettingsPanelGeneralAdditionalElementsDirective | undefined {
+		return this._externalSettingsPanelGeneralAdditionalElements;
+	}
+
 	/**
 	 * @internal
 	 */
@@ -477,6 +494,10 @@ export class VideoconferenceComponent implements OnDestroy, AfterViewInit {
 	 * @internal
 	 */
 	ovLayoutAdditionalElementsTemplate: TemplateRef<any>;
+	/**
+	 * @internal
+	 */
+	ovSettingsPanelGeneralAdditionalElementsTemplate: TemplateRef<any>;
 
 	/**
 	 * @internal
@@ -786,7 +807,8 @@ export class VideoconferenceComponent implements OnDestroy, AfterViewInit {
 			layout: this.externalLayout,
 			stream: this.externalStream,
 			preJoin: this.externalPreJoin,
-			layoutAdditionalElements: this.externalLayoutAdditionalElements
+			layoutAdditionalElements: this.externalLayoutAdditionalElements,
+			settingsPanelGeneralAdditionalElements: this.externalSettingsPanelGeneralAdditionalElements
 		};
 
 		const defaultTemplates: DefaultTemplates = {
@@ -860,6 +882,9 @@ export class VideoconferenceComponent implements OnDestroy, AfterViewInit {
 		}
 		if (this.templateConfig.layoutAdditionalElementsTemplate) {
 			assignIfChanged('ovLayoutAdditionalElementsTemplate', this.templateConfig.layoutAdditionalElementsTemplate);
+		}
+		if (this.templateConfig.settingsPanelGeneralAdditionalElementsTemplate) {
+			assignIfChanged('ovSettingsPanelGeneralAdditionalElementsTemplate', this.templateConfig.settingsPanelGeneralAdditionalElementsTemplate);
 		}
 	}
 

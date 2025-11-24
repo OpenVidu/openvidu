@@ -19,7 +19,8 @@ import {
 	PreJoinDirective,
 	ParticipantPanelAfterLocalParticipantDirective,
 	LayoutAdditionalElementsDirective,
-	LeaveButtonDirective
+	LeaveButtonDirective,
+	SettingsPanelGeneralAdditionalElementsDirective
 } from '../../directives/template/internals.directive';
 
 /**
@@ -48,6 +49,9 @@ export interface TemplateConfiguration {
 	layoutTemplate: TemplateRef<any>;
 	streamTemplate: TemplateRef<any>;
 	layoutAdditionalElementsTemplate?: TemplateRef<any>;
+
+	// Settings panel templates
+	settingsPanelGeneralAdditionalElementsTemplate?: TemplateRef<any>;
 
 	// PreJoin template
 	preJoinTemplate?: TemplateRef<any>;
@@ -126,6 +130,7 @@ export interface ExternalDirectives {
 	stream?: StreamDirective;
 	preJoin?: PreJoinDirective;
 	layoutAdditionalElements?: LayoutAdditionalElementsDirective;
+	settingsPanelGeneralAdditionalElements?: SettingsPanelGeneralAdditionalElementsDirective;
 }
 
 /**
@@ -206,6 +211,11 @@ export class TemplateManagerService {
 		if (externalDirectives.layoutAdditionalElements) {
 			this.log.v('Setting EXTERNAL ADDITIONAL LAYOUT ELEMENTS');
 			config.layoutAdditionalElementsTemplate = externalDirectives.layoutAdditionalElements.template;
+		}
+
+		if (externalDirectives.settingsPanelGeneralAdditionalElements) {
+			this.log.v('Setting EXTERNAL SETTINGS PANEL GENERAL ADDITIONAL ELEMENTS');
+			config.settingsPanelGeneralAdditionalElementsTemplate = externalDirectives.settingsPanelGeneralAdditionalElements.template;
 		}
 
 		this.log.v('Template setup completed', config);

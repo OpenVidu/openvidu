@@ -19,7 +19,8 @@ import {
 	ParticipantPanelAfterLocalParticipantDirective,
 	ParticipantPanelParticipantBadgeDirective,
 	PreJoinDirective,
-	LeaveButtonDirective
+	LeaveButtonDirective,
+	SettingsPanelGeneralAdditionalElementsDirective
 } from './internals.directive';
 
 @NgModule({
@@ -40,7 +41,8 @@ import {
 		PreJoinDirective,
 		ParticipantPanelAfterLocalParticipantDirective,
 		LayoutAdditionalElementsDirective,
-		ParticipantPanelParticipantBadgeDirective
+		ParticipantPanelParticipantBadgeDirective,
+		SettingsPanelGeneralAdditionalElementsDirective
 		// BackgroundEffectsPanelDirective
 	],
 	exports: [
@@ -60,7 +62,8 @@ import {
 		PreJoinDirective,
 		ParticipantPanelAfterLocalParticipantDirective,
 		LayoutAdditionalElementsDirective,
-		ParticipantPanelParticipantBadgeDirective
+		ParticipantPanelParticipantBadgeDirective,
+		SettingsPanelGeneralAdditionalElementsDirective
 		// BackgroundEffectsPanelDirective
 	]
 })

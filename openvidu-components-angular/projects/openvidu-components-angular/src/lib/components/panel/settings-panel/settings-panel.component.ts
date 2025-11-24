@@ -1,4 +1,4 @@
-import { Component, EventEmitter, OnInit, Output } from '@angular/core';
+import { Component, ContentChild, EventEmitter, OnInit, Output, TemplateRef } from '@angular/core';
 import { Subject, takeUntil } from 'rxjs';
 import { PanelStatusInfo, PanelSettingsOptions, PanelType } from '../../../models/panel.model';
 import { OpenViduComponentsConfigService } from '../../../services/config/directive-config.service';
@@ -7,6 +7,7 @@ import { PlatformService } from '../../../services/platform/platform.service';
 import { ViewportService } from '../../../services/viewport/viewport.service';
 import { CustomDevice } from '../../../models/device.model';
 import { LangOption } from '../../../models/lang.model';
+import { SettingsPanelGeneralAdditionalElementsDirective } from '../../../directives/template/internals.directive';
 
 /**
  * @internal
@@ -23,6 +24,14 @@ export class SettingsPanelComponent implements OnInit {
 	@Output() onAudioEnabledChanged = new EventEmitter<boolean>();
 	@Output() onAudioDeviceChanged = new EventEmitter<CustomDevice>();
 	@Output() onLangChanged = new EventEmitter<LangOption>();
+
+	/**
+	 * @internal
+	 * ContentChild for custom elements in general section
+	 */
+	@ContentChild(SettingsPanelGeneralAdditionalElementsDirective)
+	externalGeneralAdditionalElements!: SettingsPanelGeneralAdditionalElementsDirective;
+
 	settingsOptions: typeof PanelSettingsOptions = PanelSettingsOptions;
 	selectedOption: PanelSettingsOptions = PanelSettingsOptions.GENERAL;
 	showCameraButton: boolean = true;
@@ -31,6 +40,14 @@ export class SettingsPanelComponent implements OnInit {
 	showThemeSelector: boolean = false;
 	isMobile: boolean = false;
 	private destroy$ = new Subject<void>();
+
+	/**
+	 * @internal
+	 * Gets the template for additional elements in general section
+	 */
+	get generalAdditionalElementsTemplate(): TemplateRef<any> | undefined {
+		return this.externalGeneralAdditionalElements?.template;
+	}
 
 	constructor(
 		private panelService: PanelService,

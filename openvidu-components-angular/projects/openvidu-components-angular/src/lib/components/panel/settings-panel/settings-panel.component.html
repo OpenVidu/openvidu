@@ -93,6 +93,12 @@
 						</mat-list>
 					</div>
 				}
+				<!-- Additional elements injected via directive -->
+				@if (generalAdditionalElementsTemplate) {
+					<div class="additional-elements-section">
+						<ng-container *ngTemplateOutlet="generalAdditionalElementsTemplate"></ng-container>
+					</div>
+				}
 			</div>
 			<div *ngIf="showCameraButton && selectedOption === settingsOptions.VIDEO" class="video-settings">
 				<ov-video-devices-select

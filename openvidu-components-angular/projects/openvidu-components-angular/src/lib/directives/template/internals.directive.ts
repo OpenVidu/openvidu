@@ -308,3 +308,38 @@ export class ParticipantPanelParticipantBadgeDirective {
 		public container: ViewContainerRef
 	) {}
 }
+
+/**
+ * The ***ovSettingsPanelGeneralAdditionalElements** directive allows you to inject custom HTML or Angular templates
+ * into the general section of the settings panel.
+ * This enables you to add custom controls, information, or UI elements to extend the settings panel functionality.
+ *
+ * Usage example:
+ * ```html
+ * <ov-videoconference>
+ *   <ng-container *ovSettingsPanelGeneralAdditionalElements>
+ *     <div class="custom-settings-section">
+ *       <mat-list>
+ *         <mat-list-item>
+ *           <mat-icon matListItemIcon>tune</mat-icon>
+ *           <div matListItemTitle>Custom Setting</div>
+ *           <mat-slide-toggle matListItemMeta [(ngModel)]="customSetting"></mat-slide-toggle>
+ *         </mat-list-item>
+ *       </mat-list>
+ *     </div>
+ *   </ng-container>
+ * </ov-videoconference>
+ * ```
+ *
+ * @internal
+ */
+@Directive({
+	selector: '[ovSettingsPanelGeneralAdditionalElements]',
+	standalone: false
+})
+export class SettingsPanelGeneralAdditionalElementsDirective {
+	constructor(
+		public template: TemplateRef<any>,
+		public container: ViewContainerRef
+	) {}
+}

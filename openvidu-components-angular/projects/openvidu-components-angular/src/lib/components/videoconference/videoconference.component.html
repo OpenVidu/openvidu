@@ -127,7 +127,11 @@
 				(onAudioDeviceChanged)="onAudioDeviceChanged.emit($event)"
 				(onAudioEnabledChanged)="onAudioEnabledChanged.emit($event)"
 				(onLangChanged)="onLangChanged.emit($event)"
-			></ov-settings-panel>
+			>
+				<ng-container *ovSettingsPanelGeneralAdditionalElements>
+					<ng-container *ngTemplateOutlet="ovSettingsPanelGeneralAdditionalElementsTemplate"></ng-container>
+				</ng-container>
+			</ov-settings-panel>
 		</ng-template>
 
 		<ng-template #activitiesPanel>
