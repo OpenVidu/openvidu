@@ -1,8 +1,9 @@
-import { Component, EventEmitter, Input, Output, TemplateRef, computed, inject } from '@angular/core';
+import { Component, ContentChild, EventEmitter, Input, Output, TemplateRef, computed, inject } from '@angular/core';
 import { RecordingStatus } from '../../../models/recording.model';
 import { BroadcastingStatus } from '../../../models/broadcasting.model';
 import { ToolbarAdditionalButtonsPosition } from '../../../models/toolbar.model';
 import { ViewportService } from '../../../services/viewport/viewport.service';
+import { ToolbarMoreOptionsAdditionalMenuItemsDirective } from '../../../directives/template/internals.directive';
 
 /**
  * @internal
@@ -70,6 +71,21 @@ export class ToolbarMediaButtonsComponent {
 
 	// Leave button template
 	@Input() toolbarLeaveButtonTemplate: TemplateRef<any> | null = null;
+
+	/**
+	 * @internal
+	 * ContentChild for custom menu items in more options menu
+	 */
+	@ContentChild(ToolbarMoreOptionsAdditionalMenuItemsDirective)
+	externalMoreOptionsAdditionalMenuItems!: ToolbarMoreOptionsAdditionalMenuItemsDirective;
+
+	/**
+	 * @internal
+	 * Gets the template for additional menu items in more options
+	 */
+	get moreOptionsAdditionalMenuItemsTemplate(): TemplateRef<any> | undefined {
+		return this.externalMoreOptionsAdditionalMenuItems?.template;
+	}
 
 	// Status enums for template usage
 	_recordingStatus = RecordingStatus;

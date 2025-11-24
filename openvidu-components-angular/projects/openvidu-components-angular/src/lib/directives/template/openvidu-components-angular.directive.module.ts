@@ -20,7 +20,8 @@ import {
 	ParticipantPanelParticipantBadgeDirective,
 	PreJoinDirective,
 	LeaveButtonDirective,
-	SettingsPanelGeneralAdditionalElementsDirective
+	SettingsPanelGeneralAdditionalElementsDirective,
+	ToolbarMoreOptionsAdditionalMenuItemsDirective
 } from './internals.directive';
 
 @NgModule({
@@ -42,7 +43,8 @@ import {
 		ParticipantPanelAfterLocalParticipantDirective,
 		LayoutAdditionalElementsDirective,
 		ParticipantPanelParticipantBadgeDirective,
-		SettingsPanelGeneralAdditionalElementsDirective
+		SettingsPanelGeneralAdditionalElementsDirective,
+		ToolbarMoreOptionsAdditionalMenuItemsDirective
 		// BackgroundEffectsPanelDirective
 	],
 	exports: [
@@ -63,7 +65,8 @@ import {
 		ParticipantPanelAfterLocalParticipantDirective,
 		LayoutAdditionalElementsDirective,
 		ParticipantPanelParticipantBadgeDirective,
-		SettingsPanelGeneralAdditionalElementsDirective
+		SettingsPanelGeneralAdditionalElementsDirective,
+		ToolbarMoreOptionsAdditionalMenuItemsDirective
 		// BackgroundEffectsPanelDirective
 	]
 })

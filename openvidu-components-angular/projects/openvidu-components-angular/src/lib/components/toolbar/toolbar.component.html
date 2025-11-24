@@ -82,7 +82,12 @@
 			(captionsToggled)="onCaptionsToggle()"
 			(settingsToggled)="toggleSettings()"
 			(leaveClicked)="disconnect()"
-		></ov-toolbar-media-buttons>
+		>
+			<!-- Inject additional menu items via content projection -->
+			<ng-container *ovToolbarMoreOptionsAdditionalMenuItems>
+				<ng-container *ngTemplateOutlet="externalMoreOptionsAdditionalMenuItems?.template"></ng-container>
+			</ng-container>
+		</ov-toolbar-media-buttons>
 	</div>
 
 	<!-- Panel buttons -->

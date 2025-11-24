@@ -343,3 +343,38 @@ export class SettingsPanelGeneralAdditionalElementsDirective {
 		public container: ViewContainerRef
 	) {}
 }
+
+/**
+ * The ***ovToolbarMoreOptionsAdditionalMenuItems** directive allows you to inject custom HTML or Angular templates
+ * into the "more options" menu (three dots button) of the toolbar.
+ * This enables you to add custom menu items to extend the toolbar functionality.
+ *
+ * Usage example:
+ * ```html
+ * <ov-videoconference>
+ *   <ng-container *ovToolbarMoreOptionsAdditionalMenuItems>
+ *     <button mat-menu-item (click)="onCustomAction()">
+ *       <mat-icon>star</mat-icon>
+ *       <span>Custom Action</span>
+ *     </button>
+ *     <mat-divider></mat-divider>
+ *     <button mat-menu-item (click)="onAnotherAction()">
+ *       <mat-icon>info</mat-icon>
+ *       <span>Another Action</span>
+ *     </button>
+ *   </ng-container>
+ * </ov-videoconference>
+ * ```
+ *
+ * @internal
+ */
+@Directive({
+	selector: '[ovToolbarMoreOptionsAdditionalMenuItems]',
+	standalone: false
+})
+export class ToolbarMoreOptionsAdditionalMenuItemsDirective {
+	constructor(
+		public template: TemplateRef<any>,
+		public container: ViewContainerRef
+	) {}
+}

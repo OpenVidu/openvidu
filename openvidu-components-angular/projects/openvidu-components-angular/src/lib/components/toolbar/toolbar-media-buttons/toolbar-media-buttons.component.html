@@ -177,6 +177,11 @@
 			</ng-container>
 		}
 
+		<!-- Additional menu items injected via directive -->
+		@if (moreOptionsAdditionalMenuItemsTemplate) {
+			<ng-container *ngTemplateOutlet="moreOptionsAdditionalMenuItemsTemplate"></ng-container>
+		}
+
 		<!-- Divider before settings -->
 		@if (showSettingsButton) {
 			<mat-divider class="divider"></mat-divider>

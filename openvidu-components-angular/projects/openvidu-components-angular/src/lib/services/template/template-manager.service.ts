@@ -20,7 +20,8 @@ import {
 	ParticipantPanelAfterLocalParticipantDirective,
 	LayoutAdditionalElementsDirective,
 	LeaveButtonDirective,
-	SettingsPanelGeneralAdditionalElementsDirective
+	SettingsPanelGeneralAdditionalElementsDirective,
+	ToolbarMoreOptionsAdditionalMenuItemsDirective
 } from '../../directives/template/internals.directive';
 
 /**
@@ -53,6 +54,9 @@ export interface TemplateConfiguration {
 	// Settings panel templates
 	settingsPanelGeneralAdditionalElementsTemplate?: TemplateRef<any>;
 
+	// Toolbar templates
+	toolbarMoreOptionsAdditionalMenuItemsTemplate?: TemplateRef<any>;
+
 	// PreJoin template
 	preJoinTemplate?: TemplateRef<any>;
 }
@@ -76,6 +80,7 @@ export interface ToolbarTemplateConfiguration {
 	toolbarAdditionalButtonsTemplate?: TemplateRef<any>;
 	toolbarAdditionalPanelButtonsTemplate?: TemplateRef<any>;
 	toolbarLeaveButtonTemplate?: TemplateRef<any>;
+	toolbarMoreOptionsAdditionalMenuItemsTemplate?: TemplateRef<any>;
 }
 
 /**
@@ -131,6 +136,7 @@ export interface ExternalDirectives {
 	preJoin?: PreJoinDirective;
 	layoutAdditionalElements?: LayoutAdditionalElementsDirective;
 	settingsPanelGeneralAdditionalElements?: SettingsPanelGeneralAdditionalElementsDirective;
+	toolbarMoreOptionsAdditionalMenuItems?: ToolbarMoreOptionsAdditionalMenuItemsDirective;
 }
 
 /**
@@ -216,6 +222,11 @@ export class TemplateManagerService {
 		if (externalDirectives.settingsPanelGeneralAdditionalElements) {
 			this.log.v('Setting EXTERNAL SETTINGS PANEL GENERAL ADDITIONAL ELEMENTS');
 			config.settingsPanelGeneralAdditionalElementsTemplate = externalDirectives.settingsPanelGeneralAdditionalElements.template;
+		}
+
+		if (externalDirectives.toolbarMoreOptionsAdditionalMenuItems) {
+			this.log.v('Setting EXTERNAL TOOLBAR MORE OPTIONS ADDITIONAL MENU ITEMS');
+			config.toolbarMoreOptionsAdditionalMenuItemsTemplate = externalDirectives.toolbarMoreOptionsAdditionalMenuItems.template;
 		}
 
 		this.log.v('Template setup completed', config);
@@ -378,14 +389,16 @@ export class TemplateManagerService {
 	setupToolbarTemplates(
 		externalAdditionalButtons?: ToolbarAdditionalButtonsDirective,
 		externalAdditionalPanelButtons?: ToolbarAdditionalPanelButtonsDirective,
-		externalLeaveButton?: LeaveButtonDirective
+		externalLeaveButton?: LeaveButtonDirective,
+		externalMoreOptionsAdditionalMenuItems?: ToolbarMoreOptionsAdditionalMenuItemsDirective
 	): ToolbarTemplateConfiguration {
 		this.log.v('Setting up toolbar templates...');
 
 		return {
 			toolbarAdditionalButtonsTemplate: externalAdditionalButtons?.template,
 			toolbarAdditionalPanelButtonsTemplate: externalAdditionalPanelButtons?.template,
-			toolbarLeaveButtonTemplate: externalLeaveButton?.template
+			toolbarLeaveButtonTemplate: externalLeaveButton?.template,
+			toolbarMoreOptionsAdditionalMenuItemsTemplate: externalMoreOptionsAdditionalMenuItems?.template
 		};
 	}
 

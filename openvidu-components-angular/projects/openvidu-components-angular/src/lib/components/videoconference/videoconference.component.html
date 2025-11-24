@@ -96,6 +96,11 @@
 		<ng-template #toolbarLeaveButton>
 			<ng-container *ngTemplateOutlet="openviduAngularToolbarLeaveButtonTemplate"></ng-container>
 		</ng-template>
+
+		<!-- Inject additional menu items in toolbar more options -->
+		<ng-container *ovToolbarMoreOptionsAdditionalMenuItems>
+			<ng-container *ngTemplateOutlet="ovToolbarMoreOptionsAdditionalMenuItemsTemplate"></ng-container>
+		</ng-container>
 	</ov-toolbar>
 </ng-template>
 

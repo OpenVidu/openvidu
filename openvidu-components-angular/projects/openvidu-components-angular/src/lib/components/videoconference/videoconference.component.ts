@@ -63,7 +63,8 @@ import {
 	ParticipantPanelAfterLocalParticipantDirective,
 	PreJoinDirective,
 	LeaveButtonDirective,
-	SettingsPanelGeneralAdditionalElementsDirective
+	SettingsPanelGeneralAdditionalElementsDirective,
+	ToolbarMoreOptionsAdditionalMenuItemsDirective
 } from '../../directives/template/internals.directive';
 import { OpenViduThemeService } from '../../services/theme/theme.service';
 import { E2eeService } from '../../services/e2ee/e2ee.service';
@@ -392,6 +393,22 @@ export class VideoconferenceComponent implements OnDestroy, AfterViewInit {
 		return this._externalSettingsPanelGeneralAdditionalElements;
 	}
 
+	private _externalToolbarMoreOptionsAdditionalMenuItems?: ToolbarMoreOptionsAdditionalMenuItemsDirective;
+	/**
+	 * @internal
+	 */
+	@ContentChild(ToolbarMoreOptionsAdditionalMenuItemsDirective)
+	set externalToolbarMoreOptionsAdditionalMenuItems(value: ToolbarMoreOptionsAdditionalMenuItemsDirective) {
+		this._externalToolbarMoreOptionsAdditionalMenuItems = value;
+		this.setupTemplates();
+	}
+	/**
+	 * @internal
+	 */
+	get externalToolbarMoreOptionsAdditionalMenuItems(): ToolbarMoreOptionsAdditionalMenuItemsDirective | undefined {
+		return this._externalToolbarMoreOptionsAdditionalMenuItems;
+	}
+
 	/**
 	 * @internal
 	 */
@@ -498,6 +515,10 @@ export class VideoconferenceComponent implements OnDestroy, AfterViewInit {
 	 * @internal
 	 */
 	ovSettingsPanelGeneralAdditionalElementsTemplate: TemplateRef<any>;
+	/**
+	 * @internal
+	 */
+	ovToolbarMoreOptionsAdditionalMenuItemsTemplate: TemplateRef<any>;
 
 	/**
 	 * @internal
@@ -808,7 +829,8 @@ export class VideoconferenceComponent implements OnDestroy, AfterViewInit {
 			stream: this.externalStream,
 			preJoin: this.externalPreJoin,
 			layoutAdditionalElements: this.externalLayoutAdditionalElements,
-			settingsPanelGeneralAdditionalElements: this.externalSettingsPanelGeneralAdditionalElements
+			settingsPanelGeneralAdditionalElements: this.externalSettingsPanelGeneralAdditionalElements,
+			toolbarMoreOptionsAdditionalMenuItems: this.externalToolbarMoreOptionsAdditionalMenuItems
 		};
 
 		const defaultTemplates: DefaultTemplates = {
@@ -885,6 +907,9 @@ export class VideoconferenceComponent implements OnDestroy, AfterViewInit {
 		}
 		if (this.templateConfig.settingsPanelGeneralAdditionalElementsTemplate) {
 			assignIfChanged('ovSettingsPanelGeneralAdditionalElementsTemplate', this.templateConfig.settingsPanelGeneralAdditionalElementsTemplate);
+		}
+		if (this.templateConfig.toolbarMoreOptionsAdditionalMenuItemsTemplate) {
+			assignIfChanged('ovToolbarMoreOptionsAdditionalMenuItemsTemplate', this.templateConfig.toolbarMoreOptionsAdditionalMenuItemsTemplate);
 		}
 	}
 

@@ -50,7 +50,7 @@ import { CdkOverlayService } from '../../services/cdk-overlay/cdk-overlay.servic
 import { ParticipantLeftEvent, ParticipantLeftReason, ParticipantModel } from '../../models/participant.model';
 import { Room, RoomEvent } from 'livekit-client';
 import { ToolbarAdditionalButtonsPosition } from '../../models/toolbar.model';
-import { LeaveButtonDirective } from '../../directives/template/internals.directive';
+import { LeaveButtonDirective, ToolbarMoreOptionsAdditionalMenuItemsDirective } from '../../directives/template/internals.directive';
 
 /**
  * The **ToolbarComponent** is hosted inside of the {@link VideoconferenceComponent}.
@@ -79,6 +79,28 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 	@ContentChild('toolbarAdditionalPanelButtons', { read: TemplateRef }) toolbarAdditionalPanelButtonsTemplate:
 		| TemplateRef<any>
 		| undefined;
+
+	/**
+	 * @internal
+	 * Template for additional menu items in the more options menu
+	 */
+	moreOptionsAdditionalMenuItemsTemplate: TemplateRef<any> | undefined;
+
+	private _externalMoreOptionsAdditionalMenuItems?: ToolbarMoreOptionsAdditionalMenuItemsDirective;
+	/**
+	 * @internal
+	 */
+	@ContentChild(ToolbarMoreOptionsAdditionalMenuItemsDirective)
+	set externalMoreOptionsAdditionalMenuItems(value: ToolbarMoreOptionsAdditionalMenuItemsDirective) {
+		this._externalMoreOptionsAdditionalMenuItems = value;
+		this.setupTemplates();
+	}
+	/**
+	 * @internal
+	 */
+	get externalMoreOptionsAdditionalMenuItems(): ToolbarMoreOptionsAdditionalMenuItemsDirective | undefined {
+		return this._externalMoreOptionsAdditionalMenuItems;
+	}
 
 	/**
 	 * @ignore
@@ -494,7 +516,8 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 		this.templateConfig = this.templateManagerService.setupToolbarTemplates(
 			this._externalAdditionalButtons,
 			this._externalAdditionalPanelButtons,
-			this._externalLeaveButton
+			this._externalLeaveButton,
+			this._externalMoreOptionsAdditionalMenuItems
 		);
 
 		// Apply templates to component properties for backward compatibility
@@ -514,6 +537,9 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 		}
 		if (this.templateConfig.toolbarLeaveButtonTemplate) {
 			this.toolbarLeaveButtonTemplate = this.templateConfig.toolbarLeaveButtonTemplate;
+		}
+		if (this.templateConfig.toolbarMoreOptionsAdditionalMenuItemsTemplate) {
+			this.moreOptionsAdditionalMenuItemsTemplate = this.templateConfig.toolbarMoreOptionsAdditionalMenuItemsTemplate;
 		}
 	}
 
