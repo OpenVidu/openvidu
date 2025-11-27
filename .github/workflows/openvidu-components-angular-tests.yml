@@ -17,6 +17,10 @@ on:
         required: false
         default: ''
 
+env:
+  NODE_VERSION: '20'
+  CHROME_IMAGE: selenium/standalone-chrome:138.0
+
 jobs:
   test_setup:
     name: Test setup
@@ -29,7 +33,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: ${{ env.NODE_VERSION }}
       - name: Commit URL
         run: echo https://github.com/OpenVidu/openvidu/commit/${{ inputs.commit_sha || github.sha }}
       - name: Send Dispatch Event
@@ -45,10 +49,41 @@ jobs:
           https://api.github.com/repos/OpenVidu/openvidu-tutorials/dispatches \
           -d '{"event_type":"openvidu-components-angular","client_payload":{"commit-message":"'"$COMMIT_MESSAGE"'","commit-ref":"'"$COMMIT_URL"'", "branch-name":"'"$BRANCH_NAME"'"}}'
 
-  nested_events:
+  e2e_tests:
     needs: test_setup
-    name: Nested events
+    name: ${{ matrix.name }}
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Nested events
+            script: e2e:nested-events
+          - name: Nested Structural Directives
+            script: e2e:nested-structural-directives
+          - name: Nested Attribute Directives
+            script: e2e:nested-attribute-directives
+          - name: API Directives Tests
+            script: e2e:lib-directives
+          - name: Internal Directives Tests
+            script: e2e:lib-internal-directives
+          - name: Chat E2E
+            script: e2e:lib-chat
+          - name: Events E2E
+            script: e2e:lib-events
+          - name: Media devices E2E
+            script: e2e:lib-media-devices
+          - name: Panels E2E
+            script: e2e:lib-panels
+          - name: Screen sharing E2E
+            script: e2e:lib-screensharing
+          - name: Stream E2E
+            script: e2e:lib-stream
+            mount_assets: true
+          - name: Toolbar E2E
+            script: e2e:lib-toolbar
+          - name: Virtual Backgrounds E2E
+            script: e2e:lib-virtual-backgrounds
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -57,116 +92,16 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: ${{ env.NODE_VERSION }}
       - name: Install wait-on package
         run: npm install -g wait-on
-      # - name: Run Browserless Chrome
-      #   run: docker run -d -p 3000:3000 --network host browserless/chrome:1.57-chrome-stable
       - name: Run Chrome
-        run: docker run --network=host -d -p 4444:4444 selenium/standalone-chrome:138.0
-      - name: Run openvidu-local-deployment
-        uses: OpenVidu/actions/start-openvidu-local-deployment@main
-      - name: Start OpenVidu Call backend
-        uses: OpenVidu/actions/start-openvidu-call@main
-      - name: Install dependencies
         run: |
-          cd openvidu-components-angular
-          npm install
-      - name: Build and Serve openvidu-components-angular Testapp
-        uses: OpenVidu/actions/start-openvidu-components-testapp@main
-      - name: Run nested components E2E event tests
-        env:
-          LAUNCH_MODE: CI
-        run: npm run e2e:nested-events --prefix openvidu-components-angular
-      - name: Cleanup
-        if: always()
-        uses: OpenVidu/actions/cleanup@main
-
-  nested_structural_directives:
-    needs: test_setup
-    name: Nested Structural Directives
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ inputs.commit_sha || github.sha }}
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-      - name: Install wait-on package
-        run: npm install -g wait-on
-      # - name: Run Browserless Chrome
-      #   run: docker run -d -p 3000:3000 --network host browserless/chrome:1.57-chrome-stable
-      - name: Run Chrome
-        run: docker run --network=host -d -p 4444:4444 selenium/standalone-chrome:138.0
-      - name: Run openvidu-local-deployment
-        uses: OpenVidu/actions/start-openvidu-local-deployment@main
-      - name: Start OpenVidu Call backend
-        uses: OpenVidu/actions/start-openvidu-call@main
-      - name: Build and Serve openvidu-components-angular Testapp
-        uses: OpenVidu/actions/start-openvidu-components-testapp@main
-      - name: Run nested structural directives tests
-        env:
-          LAUNCH_MODE: CI
-        run: npm run e2e:nested-structural-directives --prefix openvidu-components-angular
-      - name: Cleanup
-        if: always()
-        uses: OpenVidu/actions/cleanup@main
-
-  nested_attribute_directives:
-    needs: test_setup
-    name: Nested Attribute Directives
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ inputs.commit_sha || github.sha }}
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-      - name: Install wait-on package
-        run: npm install -g wait-on
-      # - name: Run Browserless Chrome
-      #   run: docker run -d -p 3000:3000 --network host browserless/chrome:1.57-chrome-stable
-      - name: Run Chrome
-        run: docker run --network=host -d -p 4444:4444 selenium/standalone-chrome:138.0
-      - name: Run openvidu-local-deployment
-        uses: OpenVidu/actions/start-openvidu-local-deployment@main
-      - name: Start OpenVidu Call backend
-        uses: OpenVidu/actions/start-openvidu-call@main
-      - name: Build and Serve openvidu-components-angular Testapp
-        uses: OpenVidu/actions/start-openvidu-components-testapp@main
-      - name: Run nested attribute directives tests
-        env:
-          LAUNCH_MODE: CI
-        run: npm run e2e:nested-attribute-directives --prefix openvidu-components-angular
-      - name: Cleanup
-        if: always()
-        uses: OpenVidu/actions/cleanup@main
-
-  e2e_directives:
-    needs: test_setup
-    name: API Directives Tests
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ inputs.commit_sha || github.sha }}
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-      - name: Install wait-on package
-        run: npm install -g wait-on
-      # - name: Run Browserless Chrome
-      #   run: docker run -d -p 3000:3000 --network host browserless/chrome:1.57-chrome-stable
-      - name: Run Chrome
-        run: docker run --network=host -d -p 4444:4444 selenium/standalone-chrome:138.0
+          if [ "${{ matrix.mount_assets }}" = "true" ]; then
+            docker run --network=host -d -p 4444:4444 -v $(pwd)/openvidu-components-angular/e2e/assets:/e2e-assets ${{ env.CHROME_IMAGE }}
+          else
+            docker run --network=host -d -p 4444:4444 ${{ env.CHROME_IMAGE }}
+          fi
       - name: Run openvidu-local-deployment
         uses: OpenVidu/actions/start-openvidu-local-deployment@main
       - name: Start OpenVidu Call backend
@@ -176,303 +111,7 @@ jobs:
       - name: Run Tests
         env:
           LAUNCH_MODE: CI
-        run: npm run e2e:lib-directives --prefix openvidu-components-angular
-      - name: Cleanup
-        if: always()
-        uses: OpenVidu/actions/cleanup@main
-  e2e_internal_directives:
-    needs: test_setup
-    name: Internal Directives Tests
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ inputs.commit_sha || github.sha }}
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-      - name: Install wait-on package
-        run: npm install -g wait-on
-      # - name: Run Browserless Chrome
-      #   run: docker run -d -p 3000:3000 --network host browserless/chrome:1.57-chrome-stable
-      - name: Run Chrome
-        run: docker run --network=host -d -p 4444:4444 selenium/standalone-chrome:138.0
-      - name: Run openvidu-local-deployment
-        uses: OpenVidu/actions/start-openvidu-local-deployment@main
-      - name: Start OpenVidu Call backend
-        uses: OpenVidu/actions/start-openvidu-call@main
-      - name: Build and Serve openvidu-components-angular Testapp
-        uses: OpenVidu/actions/start-openvidu-components-testapp@main
-      - name: Run Tests
-        env:
-          LAUNCH_MODE: CI
-        run: npm run e2e:lib-internal-directives --prefix openvidu-components-angular
-      - name: Cleanup
-        if: always()
-        uses: OpenVidu/actions/cleanup@main
-
-  e2e_chat:
-    needs: test_setup
-    name: Chat E2E
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ inputs.commit_sha || github.sha }}
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-      - name: Install wait-on package
-        run: npm install -g wait-on
-      # - name: Run Browserless Chrome
-      #   run: docker run -d -p 3000:3000 --network host browserless/chrome:1.57-chrome-stable
-      - name: Run Chrome
-        run: docker run --network=host -d -p 4444:4444 selenium/standalone-chrome:138.0
-      - name: Run openvidu-local-deployment
-        uses: OpenVidu/actions/start-openvidu-local-deployment@main
-      - name: Start OpenVidu Call backend
-        uses: OpenVidu/actions/start-openvidu-call@main
-      - name: Build and Serve openvidu-components-angular Testapp
-        uses: OpenVidu/actions/start-openvidu-components-testapp@main
-      - name: Run Tests
-        env:
-          LAUNCH_MODE: CI
-        run: npm run e2e:lib-chat --prefix openvidu-components-angular
-      - name: Cleanup
-        if: always()
-        uses: OpenVidu/actions/cleanup@main
-
-  e2e_events:
-    needs: test_setup
-    name: Events E2E
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ inputs.commit_sha || github.sha }}
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-      - name: Install wait-on package
-        run: npm install -g wait-on
-      # - name: Run Browserless Chrome
-      #   run: docker run -d -p 3000:3000 --network host browserless/chrome:1.57-chrome-stable
-      - name: Run Chrome
-        run: docker run --network=host -d -p 4444:4444 selenium/standalone-chrome:138.0
-      - name: Run openvidu-local-deployment
-        uses: OpenVidu/actions/start-openvidu-local-deployment@main
-      - name: Start OpenVidu Call backend
-        uses: OpenVidu/actions/start-openvidu-call@main
-      - name: Build and Serve openvidu-components-angular Testapp
-        uses: OpenVidu/actions/start-openvidu-components-testapp@main
-      - name: Run Tests
-        env:
-          LAUNCH_MODE: CI
-        run: npm run e2e:lib-events --prefix openvidu-components-angular
-      - name: Cleanup
-        if: always()
-        uses: OpenVidu/actions/cleanup@main
-
-  e2e_media_devices:
-    needs: test_setup
-    name: Media devices E2E
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ inputs.commit_sha || github.sha }}
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-      - name: Install wait-on package
-        run: npm install -g wait-on
-      # - name: Run Browserless Chrome
-      #   run: docker run -d -p 3000:3000 --network host browserless/chrome:1.57-chrome-stable
-      - name: Run Chrome
-        run: docker run --network=host -d -p 4444:4444 selenium/standalone-chrome:138.0
-      - name: Run openvidu-local-deployment
-        uses: OpenVidu/actions/start-openvidu-local-deployment@main
-      - name: Start OpenVidu Call backend
-        uses: OpenVidu/actions/start-openvidu-call@main
-      - name: Build and Serve openvidu-components-angular Testapp
-        uses: OpenVidu/actions/start-openvidu-components-testapp@main
-      - name: Run Tests
-        env:
-          LAUNCH_MODE: CI
-        run: npm run e2e:lib-media-devices --prefix openvidu-components-angular
-      - name: Cleanup
-        if: always()
-        uses: OpenVidu/actions/cleanup@main
-
-  e2e_panels:
-    needs: test_setup
-    name: Panels E2E
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ inputs.commit_sha || github.sha }}
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-      - name: Install wait-on package
-        run: npm install -g wait-on
-      # - name: Run Browserless Chrome
-      #   run: docker run -d -p 3000:3000 --network host browserless/chrome:1.57-chrome-stable
-      - name: Run Chrome
-        run: docker run --network=host -d -p 4444:4444 selenium/standalone-chrome:138.0
-      - name: Run openvidu-local-deployment
-        uses: OpenVidu/actions/start-openvidu-local-deployment@main
-      - name: Start OpenVidu Call backend
-        uses: OpenVidu/actions/start-openvidu-call@main
-      - name: Build and Serve openvidu-components-angular Testapp
-        uses: OpenVidu/actions/start-openvidu-components-testapp@main
-      - name: Run Tests
-        env:
-          LAUNCH_MODE: CI
-        run: npm run e2e:lib-panels --prefix openvidu-components-angular
-      - name: Cleanup
-        if: always()
-        uses: OpenVidu/actions/cleanup@main
-
-  e2e_screen_sharing:
-    needs: test_setup
-    name: Screen sharing E2E
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ inputs.commit_sha || github.sha }}
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-      - name: Install wait-on package
-        run: npm install -g wait-on
-      # - name: Run Browserless Chrome
-      #   run: docker run -d -p 3000:3000 --network host browserless/chrome:1.57-chrome-stable
-      - name: Run Chrome
-        run: docker run --network=host -d -p 4444:4444 selenium/standalone-chrome:138.0
-      - name: Run openvidu-local-deployment
-        uses: OpenVidu/actions/start-openvidu-local-deployment@main
-      - name: Start OpenVidu Call backend
-        uses: OpenVidu/actions/start-openvidu-call@main
-      - name: Build and Serve openvidu-components-angular Testapp
-        uses: OpenVidu/actions/start-openvidu-components-testapp@main
-      - name: Run Tests
-        env:
-          LAUNCH_MODE: CI
-        run: npm run e2e:lib-screensharing --prefix openvidu-components-angular
-      - name: Cleanup
-        if: always()
-        uses: OpenVidu/actions/cleanup@main
-
-  e2e_stream:
-    needs: test_setup
-    name: Stream E2E
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ inputs.commit_sha || github.sha }}
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-      - name: Install wait-on package
-        run: npm install -g wait-on
-      # - name: Run Browserless Chrome
-      #   run: docker run -d -p 3000:3000 --network host browserless/chrome:1.57-chrome-stable
-      - name: Run Chrome
-        run: docker run --network=host -d -v $(pwd)/openvidu-components-angular/e2e/assets:/e2e-assets selenium/standalone-chrome:138.0
-      - name: Run openvidu-local-deployment
-        uses: OpenVidu/actions/start-openvidu-local-deployment@main
-      - name: Start OpenVidu Call backend
-        uses: OpenVidu/actions/start-openvidu-call@main
-      - name: Build and Serve openvidu-components-angular Testapp
-        uses: OpenVidu/actions/start-openvidu-components-testapp@main
-      - name: Run Tests
-        env:
-          LAUNCH_MODE: CI
-        run: npm run e2e:lib-stream --prefix openvidu-components-angular
-      - name: Cleanup
-        if: always()
-        uses: OpenVidu/actions/cleanup@main
-
-  e2e_toolbar:
-    needs: test_setup
-    name: Toolbar E2E
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ inputs.commit_sha || github.sha }}
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-      - name: Install wait-on package
-        run: npm install -g wait-on
-      # - name: Run Browserless Chrome
-      #   run: docker run -d -p 3000:3000 --network host browserless/chrome:1.57-chrome-stable
-      - name: Run Chrome
-        run: docker run --network=host -d -p 4444:4444 selenium/standalone-chrome:138.0
-      - name: Run openvidu-local-deployment
-        uses: OpenVidu/actions/start-openvidu-local-deployment@main
-      - name: Start OpenVidu Call backend
-        uses: OpenVidu/actions/start-openvidu-call@main
-      - name: Build and Serve openvidu-components-angular Testapp
-        uses: OpenVidu/actions/start-openvidu-components-testapp@main
-      - name: Run Webcomponent E2E
-        env:
-          LAUNCH_MODE: CI
-        run: npm run e2e:lib-toolbar --prefix openvidu-components-angular
-      - name: Cleanup
-        if: always()
-        uses: OpenVidu/actions/cleanup@main
-
-  e2e_virtual_backgrounds:
-    needs: test_setup
-    name: Virtual Backgrounds E2E
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ inputs.commit_sha || github.sha }}
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-      - name: Install wait-on package
-        run: npm install -g wait-on
-      # - name: Run Browserless Chrome
-      #   run: docker run -d -p 3000:3000 --network host browserless/chrome:1.57-chrome-stable
-      - name: Run Chrome
-        run: docker run --network=host -d -p 4444:4444 selenium/standalone-chrome:138.0
-      - name: Run openvidu-local-deployment
-        uses: OpenVidu/actions/start-openvidu-local-deployment@main
-      - name: Start OpenVidu Call backend
-        uses: OpenVidu/actions/start-openvidu-call@main
-      - name: Build and Serve openvidu-components-angular Testapp
-        uses: OpenVidu/actions/start-openvidu-components-testapp@main
-      - name: Run Webcomponent E2E
-        env:
-          LAUNCH_MODE: CI
-        run: npm run e2e:lib-virtual-backgrounds --prefix openvidu-components-angular
+        run: npm run ${{ matrix.script }} --prefix openvidu-components-angular
       - name: Cleanup
         if: always()
         uses: OpenVidu/actions/cleanup@main
