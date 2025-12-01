@@ -2650,7 +2650,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		gracefullyLeaveParticipants(user, 1);
 
 		// Wait some time for the STT subscription to be closed
-		Thread.sleep(1500);
+		Thread.sleep(5000);
 
 		// 409: "manual" does not automatic unload lang model
 		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/load", body, HttpURLConnection.HTTP_CONFLICT);
@@ -2709,7 +2709,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		gracefullyLeaveParticipants(user, 1);
 
 		// Wait some time for the STT subscription to be closed
-		Thread.sleep(1500);
+		Thread.sleep(5000);
 
 		// 409: "on_demand" automatic unload of lang model
 		restClient.rest(HttpMethod.POST, "/openvidu/api/speech-to-text/unload", body, HttpURLConnection.HTTP_CONFLICT);
