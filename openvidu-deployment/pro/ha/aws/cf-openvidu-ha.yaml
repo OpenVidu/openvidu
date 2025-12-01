@@ -1843,7 +1843,7 @@ Resources:
     Type: 'AWS::CloudFormation::WaitCondition'
     CreationPolicy:
       ResourceSignal:
-        Timeout: PT10M
+        Timeout: PT20M
         Count: '1'
 
   OpenViduMasterNode2:
@@ -1896,7 +1896,7 @@ Resources:
     Type: 'AWS::CloudFormation::WaitCondition'
     CreationPolicy:
       ResourceSignal:
-        Timeout: PT10M
+        Timeout: PT20M
         Count: '1'
 
   OpenViduMasterNode3:
@@ -1949,7 +1949,7 @@ Resources:
     Type: 'AWS::CloudFormation::WaitCondition'
     CreationPolicy:
       ResourceSignal:
-        Timeout: PT10M
+        Timeout: PT20M
         Count: '1'
 
   OpenViduMasterNode4:
@@ -2001,7 +2001,7 @@ Resources:
     Type: 'AWS::CloudFormation::WaitCondition'
     CreationPolicy:
       ResourceSignal:
-        Timeout: PT10M
+        Timeout: PT20M
         Count: '1'
 
   OpenViduMediaNodeLaunchTemplate:
