@@ -245,7 +245,6 @@ services:
 
   setup:
     image: docker.io/busybox:1.37.0
-    platform: linux/amd64
     restart: "no"
     volumes:
       - minio-data:/minio

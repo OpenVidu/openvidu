@@ -2,7 +2,6 @@ services:
 
   caddy-proxy:
     image: docker.io/openvidu/openvidu-caddy-local:main
-    platform: linux/amd64
     restart: unless-stopped
     extra_hosts:
       - host.docker.internal:host-gateway
@@ -33,7 +32,6 @@ services:
 
   redis:
     image: docker.io/redis:8.2.2-alpine
-    platform: linux/amd64
     restart: unless-stopped
     ports:
       - 6379:6379
@@ -50,7 +48,6 @@ services:
 
   minio:
     image: docker.io/openvidu/minio:2025.9.7-debian-12-r3
-    platform: linux/amd64
     restart: unless-stopped
     ports:
       - 9000:9000
@@ -71,7 +68,6 @@ services:
 
   mongo:
     image: docker.io/openvidu/mongodb:8.0.15-r0
-    platform: linux/amd64
     restart: unless-stopped
     ports:
       - 27017:27017
@@ -92,7 +88,6 @@ services:
 
   dashboard:
     image: docker.io/openvidu/openvidu-dashboard:main
-    platform: linux/amd64
     restart: unless-stopped
     environment:
       - SERVER_PORT=5000
@@ -107,7 +102,6 @@ services:
 
   openvidu:
     image: docker.io/openvidu/openvidu-server:main
-    platform: linux/amd64
     restart: unless-stopped
     extra_hosts:
       - host.docker.internal:host-gateway
@@ -129,7 +123,6 @@ services:
 
   ingress:
     image: docker.io/openvidu/ingress:main
-    platform: linux/amd64
     restart: unless-stopped
     extra_hosts:
       - host.docker.internal:host-gateway
@@ -148,7 +141,6 @@ services:
 
   egress:
     image: docker.io/openvidu/egress:main
-    platform: linux/amd64
     restart: unless-stopped
     extra_hosts:
       - host.docker.internal:host-gateway
@@ -164,7 +156,6 @@ services:
 
   operator:
     image: docker.io/openvidu/openvidu-operator:main
-    platform: linux/amd64
     restart: unless-stopped
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
@@ -172,7 +163,6 @@ services:
       - operator-deployment:/deployment
       - /etc/localtime:/etc/localtime:ro
     environment:
-      - PLATFORM=linux/amd64
       - MODE=agent-manager-local
       - DEPLOYMENT_FILES_DIR=/deployment
       - AGENTS_CONFIG_DIR=/agents-config
@@ -189,7 +179,6 @@ services:
 
   openvidu-meet:
     image: docker.io/openvidu/openvidu-meet:main
-    platform: linux/amd64
     restart: on-failure
     ports:
       - 9080:6080
@@ -231,7 +220,6 @@ services:
 
   openvidu-meet-init:
     image: docker.io/openvidu/openvidu-operator:main
-    platform: linux/amd64
     restart: on-failure
     environment:
       - MODE=local-ready-check
