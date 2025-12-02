@@ -7,7 +7,7 @@ RUN apt update && apt -y upgrade && \
 	rm -rf /var/lib/apt/lists/*
 
 # Install Kurento Media Server (KMS)
-RUN echo "deb [arch=amd64] http://ubuntu.openvidu.io/7.2.0 noble main" | tee /etc/apt/sources.list.d/kurento.list && \
+RUN echo "deb [arch=amd64] http://ubuntu.openvidu.io/7.3.0 noble main" | tee /etc/apt/sources.list.d/kurento.list && \
 	apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 234821A61B67740F89BFD669FC8A16625AFA7A83 && \
 	apt update && \
 	apt -y install kurento-media-server && \

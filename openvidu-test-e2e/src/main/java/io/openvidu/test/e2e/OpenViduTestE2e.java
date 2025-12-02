@@ -89,7 +89,7 @@ public class OpenViduTestE2e {
 	// Media server variables
 	final protected static String KURENTO_IMAGE = "kurento/kurento-media-server";
 	final protected static String MEDIASOUP_IMAGE = "openvidu/mediasoup-controller";
-	protected static String MEDIA_SERVER_IMAGE = KURENTO_IMAGE + ":7.2.0";
+	protected static String MEDIA_SERVER_IMAGE = KURENTO_IMAGE + ":7.3.0";
 
 	final protected String DEFAULT_JSON_SESSION = "{'id':'STR','object':'session','sessionId':'STR','createdAt':0,'mediaMode':'STR','recordingMode':'STR','defaultRecordingProperties':{'hasVideo':true,'frameRate':25,'hasAudio':true,'shmSize':536870912,'name':'','outputMode':'COMPOSED','resolution':'1280x720','recordingLayout':'BEST_FIT'},'customSessionId':'STR','connections':{'numberOfElements':0,'content':[]},'recording':false,'broadcasting':false,'forcedVideoCodec':'STR','allowTranscoding':false}";
 	final protected String DEFAULT_JSON_PENDING_CONNECTION = "{'id':'STR','object':'connection','type':'WEBRTC','status':'pending','connectionId':'STR','sessionId':'STR','createdAt':0,'activeAt':null,'location':null,'ip':null,'platform':null,'token':'STR','serverData':'STR','record':true,'role':'STR','kurentoOptions':null,'rtspUri':null,'adaptativeBitrate':null,'onlyPlayWithSubscribers':null,'networkCache':null,'clientData':null,'publishers':null,'subscribers':null, 'customIceServers':[]}";

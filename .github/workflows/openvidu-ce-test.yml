@@ -24,7 +24,7 @@ on:
       KURENTO_MEDIA_SERVER_IMAGE:
         description: "Docker image of kurento-media-server"
         required: true
-        default: "kurento/kurento-media-server:7.2.0"
+        default: "kurento/kurento-media-server:7.3.0"
       DOCKER_RECORDING_VERSION:
         description: "Force version of openvidu/openvidu-recording container"
         required: true
@@ -52,7 +52,7 @@ jobs:
     env:
       TEST_IMAGE: ${{ inputs.TEST_IMAGE || 'openvidu/openvidu-test-e2e:24.04' }}
       KURENTO_SNAPSHOTS_URL: ${{ secrets.KURENTO_SNAPSHOTS_URL }}
-      KURENTO_MEDIA_SERVER_IMAGE: ${{ inputs.KURENTO_MEDIA_SERVER_IMAGE || 'kurento/kurento-media-server:7.2.0' }}
+      KURENTO_MEDIA_SERVER_IMAGE: ${{ inputs.KURENTO_MEDIA_SERVER_IMAGE || 'kurento/kurento-media-server:7.3.0' }}
       KURENTO_JAVA_COMMIT: ${{ inputs.KURENTO_JAVA_COMMIT || 'default' }}
       DOCKER_RECORDING_VERSION: ${{ inputs.DOCKER_RECORDING_VERSION || 'default' }}
       CHROME_VERSION: ${{ inputs.CHROME_VERSION || 'latest' }}
