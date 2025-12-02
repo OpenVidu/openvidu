@@ -81,7 +81,6 @@ services:
       - MONGODB_REPLICA_SET_MODE=primary
       - MONGODB_REPLICA_SET_NAME=rs0
       - MONGODB_REPLICA_SET_KEY=devreplicasetkey
-      - EXPERIMENTAL_DOCKER_DESKTOP_FORCE_QEMU=1
     depends_on:
       setup:
         condition: service_completed_successfully
