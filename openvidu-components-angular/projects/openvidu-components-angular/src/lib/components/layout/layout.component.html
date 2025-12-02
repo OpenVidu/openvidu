@@ -10,7 +10,7 @@
 				OV_big: track.isPinned,
 				OV_ignored: track.isAudioTrack && !track.participant.onlyHasAudioTracks
 			}"
-			[id]="'local-element-' + track.source"
+			[id]="'participant-' + track.participant.identity"
 			cdkDrag
 			cdkDragBoundary=".layout"
 			[cdkDragDisabled]="!track.isMinimized"
@@ -27,6 +27,7 @@
 		<div
 			*ngFor="let track of remoteParticipants | tracks; trackBy: trackParticipantElement"
 			class="remote-participant"
+			[id]="'participant-' + track.participant.identity"
 			[ngClass]="{
 				OV_root: !track.isAudioTrack,
 				OV_publisher: !track.isAudioTrack,

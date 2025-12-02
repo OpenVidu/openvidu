@@ -58,7 +58,10 @@ export class FallbackLogoDirective implements OnInit {
 	standalone: false
 })
 export class LayoutRemoteParticipantsDirective {
+	private _ovRemoteParticipants: ParticipantModel[] | undefined;
+
 	@Input() set ovRemoteParticipants(value: ParticipantModel[] | undefined) {
+		this._ovRemoteParticipants = value;
 		this.update(value);
 	}
 	constructor(
@@ -71,7 +74,7 @@ export class LayoutRemoteParticipantsDirective {
 	}
 
 	ngAfterViewInit() {
-		this.update(this.ovRemoteParticipants);
+		this.update(this._ovRemoteParticipants);
 	}
 
 	update(value: ParticipantModel[] | undefined) {
