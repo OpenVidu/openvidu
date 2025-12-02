@@ -260,7 +260,10 @@
                             "label": "Master Node Instance Type",
                             "toolTip": "Specifies the Azure instance type for your OpenVidu Master Node",
                             "recommendedSizes": [
-                                "Standard_B2s"
+                                "Standard_B4s",
+                                "Standard_B4ms",
+                                "Standard_D4ps_v5",
+                                "Standard_D4pls_v5"
                             ],
                             "constraints": {
                                 "allowedSizes": [],
@@ -295,8 +298,10 @@
                             "label": "Media Node Instance Type",
                             "toolTip": "Specifies the Azure instance type for your OpenVidu Media Nodes",
                             "recommendedSizes": [
-                                "Standard_B2s",
-                                "Standard_B4ms"
+                                "Standard_B4s",
+                                "Standard_B4ms",
+                                "Standard_D4ps_v5",
+                                "Standard_D4pls_v5"
                             ],
                             "constraints": {
                                 "allowedSizes": [],
