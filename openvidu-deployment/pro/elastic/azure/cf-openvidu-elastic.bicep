@@ -95,15 +95,15 @@ var mediaNodeInstanceTypeLower = toLower(mediaNodeInstanceType)
 var isMasterArm64 = contains(masterNodeInstanceTypeLower, 'ps_v') || contains(masterNodeInstanceTypeLower, 'pls_v') || contains(masterNodeInstanceTypeLower, 'pds_v') || contains(masterNodeInstanceTypeLower, 'plds_v') || contains(masterNodeInstanceTypeLower, 'psv') || contains(masterNodeInstanceTypeLower, 'plsv') || contains(masterNodeInstanceTypeLower, 'pdsv') || contains(masterNodeInstanceTypeLower, 'pldsv')
 var isMediaArm64 = contains(mediaNodeInstanceTypeLower, 'ps_v') || contains(mediaNodeInstanceTypeLower, 'pls_v') || contains(mediaNodeInstanceTypeLower, 'pds_v') || contains(mediaNodeInstanceTypeLower, 'plds_v') || contains(mediaNodeInstanceTypeLower, 'psv') || contains(mediaNodeInstanceTypeLower, 'plsv') || contains(mediaNodeInstanceTypeLower, 'pdsv') || contains(mediaNodeInstanceTypeLower, 'pldsv')
 
-var masterUbuntuSku = isMasterArm64 ? '24_04-lts-arm64' : '24_04-lts-gen2'
-var mediaUbuntuSku = isMediaArm64 ? '24_04-lts-arm64' : '24_04-lts-gen2'
+var masterUbuntuSku = isMasterArm64 ? 'server-arm64' : 'server'
+var mediaUbuntuSku = isMediaArm64 ? 'server-arm64' : 'server'
 
 var masterNodeVMSettings = {
   vmName: '${stackName}-VM-MasterNode'
   osDiskType: 'StandardSSD_LRS'
   ubuntuOSVersion: {
     publisher: 'Canonical'
-    offer: '0001-com-ubuntu-server-noble'
+    offer: 'ubuntu-24_04-lts'
     sku: masterUbuntuSku
     version: 'latest'
   }
@@ -125,7 +125,7 @@ var mediaNodeVMSettings = {
   osDiskType: 'StandardSSD_LRS'
   ubuntuOSVersion: {
     publisher: 'Canonical'
-    offer: '0001-com-ubuntu-server-noble'
+    offer: 'ubuntu-24_04-lts'
     sku: mediaUbuntuSku
     version: 'latest'
   }

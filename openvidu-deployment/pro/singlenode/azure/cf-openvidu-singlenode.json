@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.37.4.10188",
-      "templateHash": "14237993136432487485"
+      "templateHash": "13834895375627415098"
     }
   },
   "parameters": {
@@ -149,7 +149,7 @@
     "isEmptyDomain": "[equals(parameters('domainName'), '')]",
     "instanceTypeLower": "[toLower(parameters('instanceType'))]",
     "isArm64Instance": "[or(or(or(or(or(or(or(contains(variables('instanceTypeLower'), 'ps_v'), contains(variables('instanceTypeLower'), 'pls_v')), contains(variables('instanceTypeLower'), 'pds_v')), contains(variables('instanceTypeLower'), 'plds_v')), contains(variables('instanceTypeLower'), 'psv')), contains(variables('instanceTypeLower'), 'plsv')), contains(variables('instanceTypeLower'), 'pdsv')), contains(variables('instanceTypeLower'), 'pldsv'))]",
-    "ubuntuSku": "[if(variables('isArm64Instance'), '24_04-lts-arm64', '24_04-lts-gen2')]",
+    "ubuntuSku": "[if(variables('isArm64Instance'), 'server-arm64', 'server')]",
     "networkSettings": {
       "privateIPaddressNetInterface": "10.0.0.5",
       "vNetAddressPrefix": "10.0.0.0/16",
@@ -163,7 +163,7 @@
       "osDiskType": "StandardSSD_LRS",
       "ubuntuOSVersion": {
         "publisher": "Canonical",
-        "offer": "0001-com-ubuntu-server-noble",
+        "offer": "ubuntu-24_04-lts",
         "sku": "[variables('ubuntuSku')]",
         "version": "latest"
       },

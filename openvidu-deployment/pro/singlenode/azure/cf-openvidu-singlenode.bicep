@@ -81,7 +81,7 @@ var isEmptyDomain = domainName == ''
 var instanceTypeLower = toLower(instanceType)
 var isArm64Instance = contains(instanceTypeLower, 'ps_v') || contains(instanceTypeLower, 'pls_v') || contains(instanceTypeLower, 'pds_v') || contains(instanceTypeLower, 'plds_v') || contains(instanceTypeLower, 'psv') || contains(instanceTypeLower, 'plsv') || contains(instanceTypeLower, 'pdsv') || contains(instanceTypeLower, 'pldsv')
 
-var ubuntuSku = isArm64Instance ? '24_04-lts-arm64' : '24_04-lts-gen2'
+var ubuntuSku = isArm64Instance ? 'server-arm64' : 'server'
 
 //Variables for deployment
 var networkSettings = {
@@ -98,7 +98,7 @@ var openviduVMSettings = {
   osDiskType: 'StandardSSD_LRS'
   ubuntuOSVersion: {
     publisher: 'Canonical'
-    offer: '0001-com-ubuntu-server-noble'
+    offer: 'ubuntu-24_04-lts'
     sku: ubuntuSku
     version: 'latest'
   }

@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.37.4.10188",
-      "templateHash": "4723246277088565564"
+      "templateHash": "16829119904455177602"
     }
   },
   "parameters": {
@@ -211,14 +211,14 @@
     "mediaNodeInstanceTypeLower": "[toLower(parameters('mediaNodeInstanceType'))]",
     "isMasterArm64": "[or(or(or(or(or(or(or(contains(variables('masterNodeInstanceTypeLower'), 'ps_v'), contains(variables('masterNodeInstanceTypeLower'), 'pls_v')), contains(variables('masterNodeInstanceTypeLower'), 'pds_v')), contains(variables('masterNodeInstanceTypeLower'), 'plds_v')), contains(variables('masterNodeInstanceTypeLower'), 'psv')), contains(variables('masterNodeInstanceTypeLower'), 'plsv')), contains(variables('masterNodeInstanceTypeLower'), 'pdsv')), contains(variables('masterNodeInstanceTypeLower'), 'pldsv'))]",
     "isMediaArm64": "[or(or(or(or(or(or(or(contains(variables('mediaNodeInstanceTypeLower'), 'ps_v'), contains(variables('mediaNodeInstanceTypeLower'), 'pls_v')), contains(variables('mediaNodeInstanceTypeLower'), 'pds_v')), contains(variables('mediaNodeInstanceTypeLower'), 'plds_v')), contains(variables('mediaNodeInstanceTypeLower'), 'psv')), contains(variables('mediaNodeInstanceTypeLower'), 'plsv')), contains(variables('mediaNodeInstanceTypeLower'), 'pdsv')), contains(variables('mediaNodeInstanceTypeLower'), 'pldsv'))]",
-    "masterUbuntuSku": "[if(variables('isMasterArm64'), '24_04-lts-arm64', '24_04-lts-gen2')]",
-    "mediaUbuntuSku": "[if(variables('isMediaArm64'), '24_04-lts-arm64', '24_04-lts-gen2')]",
+    "masterUbuntuSku": "[if(variables('isMasterArm64'), 'server-arm64', 'server')]",
+    "mediaUbuntuSku": "[if(variables('isMediaArm64'), 'server-arm64', 'server')]",
     "masterNodeVMSettings": {
       "osDiskType": "StandardSSD_LRS",
       "osDiskSize": "[parameters('masterNodesDiskSize')]",
       "ubuntuOSVersion": {
         "publisher": "Canonical",
-        "offer": "0001-com-ubuntu-server-noble",
+        "offer": "ubuntu-24_04-lts",
         "sku": "[variables('masterUbuntuSku')]",
         "version": "latest"
       },
@@ -239,7 +239,7 @@
       "osDiskType": "StandardSSD_LRS",
       "ubuntuOSVersion": {
         "publisher": "Canonical",
-        "offer": "0001-com-ubuntu-server-noble",
+        "offer": "ubuntu-24_04-lts",
         "sku": "[variables('mediaUbuntuSku')]",
         "version": "latest"
       },
