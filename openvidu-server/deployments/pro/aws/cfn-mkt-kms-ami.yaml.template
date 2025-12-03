@@ -177,7 +177,7 @@ Resources:
           Ebs:
             VolumeType: gp3
             DeleteOnTermination: true
-            VolumeSize: 12
+            VolumeSize: 15
       Tags:
         - Key: Name
           Value: !Ref AWS::StackName
