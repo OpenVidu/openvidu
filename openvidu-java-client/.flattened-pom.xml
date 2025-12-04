@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>io.openvidu</groupId>
+  <artifactId>openvidu-java-client</artifactId>
+  <version>2.32.0</version>
+  <name>OpenVidu Java Client</name>
+  <description>OpenVidu client for your Java backend: get sessionId's and tokens easily from your OpenVidu server</description>
+  <url>https://openvidu.io</url>
+  <licenses>
+    <license>
+      <name>Apache 2.0</name>
+      <url>http://www.apache.org/licenses/LICENSE-2.0</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+  <developers>
+    <developer>
+      <id>openvidu.io</id>
+      <name>-openvidu.io Community</name>
+      <organization>openvidu.io</organization>
+      <organizationUrl>https://openvidu.io</organizationUrl>
+    </developer>
+  </developers>
+  <scm>
+    <connection>scm:git:git://github.com/OpenVidu/openvidu.git</connection>
+    <developerConnection>scm:git:git@github.com:OpenVidu/openvidu.git</developerConnection>
+    <tag>develop</tag>
+    <url>https://github.com/OpenVidu/openvidu.git</url>
+  </scm>
+  <dependencies>
+    <dependency>
+      <groupId>org.apache.httpcomponents.client5</groupId>
+      <artifactId>httpclient5</artifactId>
+      <version>5.4.4</version>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.google.code.gson</groupId>
+      <artifactId>gson</artifactId>
+      <version>2.13.2</version>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+      <version>2.0.17</version>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>commons-validator</groupId>
+      <artifactId>commons-validator</artifactId>
+      <version>1.10.0</version>
+      <scope>compile</scope>
+    </dependency>
+  </dependencies>
+</project>

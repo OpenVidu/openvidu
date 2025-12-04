@@ -45,7 +45,7 @@
 
 		<version.spring-boot>3.5.7</version.spring-boot>
 		<version.kurento>7.3.0</version.kurento>
-		<version.openvidu.java.client>2.31.0</version.openvidu.java.client>
+		<version.openvidu.java.client>2.32.0</version.openvidu.java.client>
 		<version.openvidu.client>1.1.0</version.openvidu.client>
 		<version.openvidu.test.browsers>1.1.0</version.openvidu.test.browsers>
 		<version.openvidu.test.e2e>1.1.1</version.openvidu.test.e2e>
