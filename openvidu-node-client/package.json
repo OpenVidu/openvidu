@@ -32,5 +32,5 @@
         "beautify": "prettier --write ."
     },
     "typings": "lib/index.d.ts",
-    "version": "2.31.0"
+    "version": "2.32.0"
 }
