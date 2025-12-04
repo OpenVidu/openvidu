@@ -190,14 +190,32 @@
 						<configuration>
 							<publishingServerId>ossrh</publishingServerId>
 							<autoPublish>true</autoPublish>
-							<excludeArtifacts>
-                                <excludeArtifact>openvidu-server</excludeArtifact>
-								<excludeArtifact>openvidu-client</excludeArtifact>
-								<excludeArtifact>openvidu-test</excludeArtifact>
-								<excludeArtifact>openvidu-test-e2e</excludeArtifact>
-								<excludeArtifact>openvidu-test-browsers</excludeArtifact>
-                            </excludeArtifacts>
 						</configuration>
+					</plugin>
+					<!-- Add this in the default profile's plugins section -->
+					<plugin>
+						<groupId>org.codehaus.mojo</groupId>
+						<artifactId>flatten-maven-plugin</artifactId>
+						<version>1.6.0</version>
+						<configuration>
+							<flattenMode>ossrh</flattenMode>
+						</configuration>
+						<executions>
+							<execution>
+								<id>flatten</id>
+								<phase>process-resources</phase>
+								<goals>
+									<goal>flatten</goal>
+								</goals>
+							</execution>
+							<execution>
+								<id>flatten.clean</id>
+								<phase>clean</phase>
+								<goals>
+									<goal>clean</goal>
+								</goals>
+							</execution>
+						</executions>
 					</plugin>
 				</plugins>
 			</build>
