@@ -3,7 +3,7 @@
 # Global variables
 OPENVIDU_FOLDER=openvidu
 OPENVIDU_VERSION=v2
-OPENVIDU_UPGRADABLE_VERSION="2.31"
+OPENVIDU_UPGRADABLE_VERSION="2.32"
 DOWNLOAD_URL=https://raw.githubusercontent.com/OpenVidu/openvidu/${OPENVIDU_VERSION}
 
 # Support docker compose v1 and v2
