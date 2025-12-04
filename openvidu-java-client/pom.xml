@@ -190,6 +190,13 @@
 						<configuration>
 							<publishingServerId>ossrh</publishingServerId>
 							<autoPublish>true</autoPublish>
+							<excludeArtifacts>
+                                <excludeArtifact>openvidu-server</excludeArtifact>
+								<excludeArtifact>openvidu-client</excludeArtifact>
+								<excludeArtifact>openvidu-test</excludeArtifact>
+								<excludeArtifact>openvidu-test-e2e</excludeArtifact>
+								<excludeArtifact>openvidu-test-browsers</excludeArtifact>
+                            </excludeArtifacts>
 						</configuration>
 					</plugin>
 				</plugins>
