@@ -8,7 +8,8 @@
 				OV_publisher: !track.isAudioTrack && !track.isMinimized,
 				OV_minimized: track.isMinimized,
 				OV_big: track.isPinned,
-				OV_ignored: track.isAudioTrack && !track.participant.onlyHasAudioTracks
+				OV_ignored: track.isAudioTrack && !track.participant.onlyHasAudioTracks,
+				OV_screen: track.isScreenTrack
 			}"
 			[id]="'participant-' + track.participant.identity"
 			cdkDrag
@@ -32,7 +33,8 @@
 				OV_root: !track.isAudioTrack,
 				OV_publisher: !track.isAudioTrack,
 				OV_big: track.isPinned,
-				OV_ignored: track.isAudioTrack && !track.participant.onlyHasAudioTracks
+				OV_ignored: track.isAudioTrack && !track.participant.onlyHasAudioTracks,
+				OV_screen: track.isScreenTrack
 			}"
 		>
 			<ng-container *ngTemplateOutlet="streamTemplate; context: { $implicit: track }"></ng-container>

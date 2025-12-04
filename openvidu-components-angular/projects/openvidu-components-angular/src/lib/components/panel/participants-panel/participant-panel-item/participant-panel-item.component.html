@@ -1,7 +1,7 @@
 <mat-list>
 	<mat-list-item>
 		<!-- Main participant container with improved structure -->
-		<div class="participant-container" [attr.data-participant-id]="_participant?.sid">
+		<div class="participant-container" [attr.data-participant-id]="_participant?.sid" [attr.data-participant-name]="participantDisplayName">
 			<!-- Avatar section with dynamic color -->
 			<div
 				class="participant-avatar"
