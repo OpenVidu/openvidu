@@ -192,7 +192,7 @@ Resources:
                   fi
                   sed -i "s|#OPENVIDU_PRO_RECORDING_STORAGE=|OPENVIDU_PRO_RECORDING_STORAGE=s3|" $WORKINGDIR/.env
                   sed -i "s|#OPENVIDU_PRO_AWS_S3_BUCKET=|OPENVIDU_PRO_AWS_S3_BUCKET=${OPENVIDU_PRO_CONFIG_S3_BUCKET}/recordings|" $WORKINGDIR/.env
-                  sed -i "s|#OPENVIDU_PRO_AWS_S3_REGION=|OPENVIDU_PRO_AWS_S3_REGION=${AWS_REGION}|" $WORKINGDIR/.env
+                  sed -i "s|#OPENVIDU_PRO_AWS_REGION=|OPENVIDU_PRO_AWS_REGION=${AWS_REGION}|" $WORKINGDIR/.env
 
                   # Deploy Coturn in media nodes
                   OPENVIDU_PRO_COTURN_IN_MEDIA_NODES=$(echo ${ASG_DATA} | grep -Po "(OPENVIDU_PRO_COTURN_IN_MEDIA_NODES=).+?(?=\s*(\||$))" | cut -d"=" -f2)
