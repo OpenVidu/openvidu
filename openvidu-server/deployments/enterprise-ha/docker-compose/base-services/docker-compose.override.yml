@@ -9,11 +9,11 @@ services:
     #
     #    Default Application
     #
-    #    Openvidu-Call Version: 2.31.0
+    #    Openvidu-Call Version: 2.32.0
     #
     # --------------------------------------------------------------
     app:
-        image: openvidu/openvidu-call:2.31.0
+        image: openvidu/openvidu-call:2.32.0
         restart: on-failure
         ports:
           - 5442:5442

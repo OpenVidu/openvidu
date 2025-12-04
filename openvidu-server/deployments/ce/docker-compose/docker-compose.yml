@@ -11,7 +11,7 @@
 #
 #    This file will be overridden when update OpenVidu Platform
 #
-#    Openvidu Version: 2.31.0
+#    Openvidu Version: 2.32.0
 #
 #    Installation Mode: On Premises
 #
@@ -22,7 +22,7 @@ version: '3.1'
 services:
 
     openvidu-server:
-        image: openvidu/openvidu-server:2.31.0
+        image: openvidu/openvidu-server:2.32.0
         restart: on-failure
         network_mode: host
         entrypoint: ['/usr/local/bin/entrypoint.sh']
@@ -68,7 +68,7 @@ services:
                 max-size: "${DOCKER_LOGS_MAX_SIZE:-100M}"
 
     coturn:
-        image: openvidu/openvidu-coturn:2.31.0
+        image: openvidu/openvidu-coturn:2.32.0
         restart: on-failure
         ports:
             - "${COTURN_PORT:-3478}:${COTURN_PORT:-3478}/tcp"
@@ -92,7 +92,7 @@ services:
                 max-size: "${DOCKER_LOGS_MAX_SIZE:-100M}"
 
     nginx:
-        image: openvidu/openvidu-proxy:2.31.0
+        image: openvidu/openvidu-proxy:2.32.0
         restart: always
         network_mode: host
         volumes:

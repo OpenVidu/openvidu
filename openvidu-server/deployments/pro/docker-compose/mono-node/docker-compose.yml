@@ -11,7 +11,7 @@
 #
 #    This file will be overridden when update OpenVidu Platform
 #
-#    Openvidu Version: 2.31.0
+#    Openvidu Version: 2.32.0
 #
 #    Installation Mode: OpenVidu PRO On Premises - Mono Node
 #
@@ -22,7 +22,7 @@ version: '3.1'
 services:
 
     openvidu-server:
-        image: openvidu/openvidu-server-pro:2.31.0
+        image: openvidu/openvidu-server-pro:2.32.0
         restart: on-failure
         network_mode: host
         entrypoint: ['/usr/local/bin/entrypoint.sh']
@@ -58,7 +58,7 @@ services:
                 max-size: "${DOCKER_LOGS_MAX_SIZE:-100M}"
 
     coturn:
-        image: openvidu/openvidu-coturn:2.31.0
+        image: openvidu/openvidu-coturn:2.32.0
         restart: on-failure
         env_file:
             - .env
@@ -85,7 +85,7 @@ services:
                 max-size: "${DOCKER_LOGS_MAX_SIZE:-100M}"
 
     nginx:
-        image: openvidu/openvidu-proxy:2.31.0
+        image: openvidu/openvidu-proxy:2.32.0
         restart: always
         network_mode: host
         volumes:
@@ -151,7 +151,7 @@ services:
                 max-size: "${DOCKER_LOGS_MAX_SIZE:-100M}"
 
     media-node-controller:
-        image: openvidu/media-node-controller:2.31.0
+        image: openvidu/media-node-controller:2.32.0
         restart: always
         ulimits:
             core: -1
@@ -161,12 +161,12 @@ services:
         environment:
             - MEDIA_NODE_CONTROLLER_RECORDINGS_PATH=/opt/openvidu/mncontroller/recordings
             - KMS_IMAGE=kurento/kurento-media-server:7.3.0
-            - MEDIASOUP_IMAGE=openvidu/mediasoup-controller:2.31.0
+            - MEDIASOUP_IMAGE=openvidu/mediasoup-controller:2.32.0
             - METRICBEAT_IMAGE=docker.elastic.co/beats/metricbeat-oss:7.12.1
             - FILEBEAT_IMAGE=docker.elastic.co/beats/filebeat-oss:7.12.1
-            - OPENVIDU_RECORDING_IMAGE=openvidu/openvidu-recording:2.31.0
-            - SPEECH_TO_TEXT_IMAGE=openvidu/speech-to-text-service:2.31.0
-            - COTURN_IMAGE=openvidu/openvidu-coturn:2.31.0
+            - OPENVIDU_RECORDING_IMAGE=openvidu/openvidu-recording:2.32.0
+            - SPEECH_TO_TEXT_IMAGE=openvidu/speech-to-text-service:2.32.0
+            - COTURN_IMAGE=openvidu/openvidu-coturn:2.32.0
             - NO_COLOR=true
         ports:
             - 3000:3000
