@@ -74,7 +74,7 @@
 		<version.assembly.plugin>3.7.1</version.assembly.plugin>
 		<version.surefire.plugin>3.5.4</version.surefire.plugin>
 		<version.gpg.plugin>3.2.8</version.gpg.plugin>
-		<version.nexus.staging.plugin>1.7.0</version.nexus.staging.plugin>
+		<version.sonatype.central.plugin>0.9</version.sonatype.central.plugin>
 		<version.exec.plugin>3.6.2</version.exec.plugin>
 		<version.javadoc.plugin>3.12.0</version.javadoc.plugin>
 		<version.maven.artifact>3.9.11</version.maven.artifact>
@@ -273,14 +273,13 @@
 						</executions>
 					</plugin>
 					<plugin>
-						<groupId>org.sonatype.plugins</groupId>
-						<artifactId>nexus-staging-maven-plugin</artifactId>
-						<version>${version.nexus.staging.plugin}</version>
+						<groupId>org.sonatype.central</groupId>
+						<artifactId>central-publishing-maven-plugin</artifactId>
+						<version>${version.sonatype.central.plugin}</version>
 						<extensions>true</extensions>
 						<configuration>
-							<serverId>ossrh</serverId>
-							<nexusUrl>https://oss.sonatype.org/</nexusUrl>
-							<autoReleaseAfterClose>false</autoReleaseAfterClose>
+							<publishingServerId>ossrh</publishingServerId>
+							<autoPublish>true</autoPublish>
 						</configuration>
 					</plugin>
 				</plugins>
