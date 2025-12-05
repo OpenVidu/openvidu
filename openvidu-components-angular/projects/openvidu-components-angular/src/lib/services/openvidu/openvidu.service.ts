@@ -15,6 +15,7 @@ import {
 	VideoPresets,
 	createLocalTracks
 } from 'livekit-client';
+import { BackgroundProcessor, BackgroundProcessorWrapper, SwitchBackgroundProcessorOptions } from '@livekit/track-processors';
 import { ILogger } from '../../models/logger.model';
 import { OpenViduComponentsConfigService } from '../config/directive-config.service';
 import { DeviceService } from '../device/device.service';
@@ -52,6 +53,12 @@ export class OpenViduService {
 	private log: ILogger;
 
 	/**
+	 * Background processor for video tracks. Initialized in disabled mode.
+	 * This processor is shared between prejoin and in-room states.
+	 */
+	private backgroundProcessor: BackgroundProcessorWrapper;
+
+	/**
 	 * @internal
 	 */
 	constructor(
@@ -62,6 +69,7 @@ export class OpenViduService {
 	) {
 		this.log = this.loggerSrv.get('OpenViduService');
 		// this.isSttReadyObs = this._isSttReady.asObservable();
+		this.backgroundProcessor = BackgroundProcessor({ mode: 'disabled' });
 	}
 
 	/**
@@ -266,6 +274,18 @@ export class OpenViduService {
 	}
 
 	/**
+	 * Switches the background mode on the local video track.
+	 * Works both in prejoin and in-room states.
+	 * @param options - The switch options (mode, blurRadius, imagePath)
+	 * @returns Promise<void>
+	 * @internal
+	 */
+	async switchBackgroundMode(options: SwitchBackgroundProcessorOptions): Promise<void> {
+		await this.backgroundProcessor.switchTo(options);
+		this.log.d('Background mode switched:', options);
+	}
+
+	/**
 	 * @internal
 	 **/
 	removeLocalTracks(): void {
@@ -335,6 +355,14 @@ export class OpenViduService {
 			} else {
 				// Original behavior - all or nothing
 				newLocalTracks = await createLocalTracks(options);
+			}
+
+			// Apply background processor to video track (initialized in disabled mode)
+			// This ensures the processor is attached before publishing for smooth transitions
+			const videoTrack = newLocalTracks.find((t) => t.kind === Track.Kind.Video) as LocalVideoTrack | undefined;
+			if (videoTrack) {
+				await videoTrack.setProcessor(this.backgroundProcessor);
+				this.log.d('Background processor applied to newly created video track');
 			}
 
 			// Mute tracks if devices are disabled

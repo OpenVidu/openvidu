@@ -1,12 +1,10 @@
 import { Injectable } from '@angular/core';
-import { BackgroundOptions, BackgroundProcessor, ProcessorWrapper } from '@livekit/track-processors';
-import { LocalVideoTrack, Track } from 'livekit-client';
+import { SwitchBackgroundProcessorOptions } from '@livekit/track-processors';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { BackgroundEffect, EffectType } from '../../models/background-effect.model';
 import { ILogger } from '../../models/logger.model';
 import { LoggerService } from '../logger/logger.service';
 import { OpenViduService } from '../openvidu/openvidu.service';
-import { ParticipantService } from '../participant/participant.service';
 import { StorageService } from '../storage/storage.service';
 
 /**
@@ -47,17 +45,14 @@ export class VirtualBackgroundService {
 	private HARD_BLUR_INTENSITY = 60;
 
 	private log: ILogger;
-	private processor: ProcessorWrapper<BackgroundOptions>;
 
 	constructor(
-		private participantService: ParticipantService,
 		private openviduService: OpenViduService,
 		private storageService: StorageService,
 		private loggerSrv: LoggerService
 	) {
 		this.log = this.loggerSrv.get('VirtualBackgroundService');
 		this.backgroundIdSelected$ = this.backgroundIdSelected.asObservable();
-		this.processor = BackgroundProcessor({ mode: 'disabled' });
 	}
 
 	getBackgrounds(): BackgroundEffect[] {
@@ -74,126 +69,59 @@ export class VirtualBackgroundService {
 		if (!!bgId) {
 			const background = this.backgrounds.find((bg) => bg.id === bgId);
 			if (background) {
-				this.applyBackground(background);
+				await this.applyBackground(background);
 			}
 		}
 	}
 
+	/**
+	 * Applies a background effect to the local video track.
+	 * Works both in prejoin (using OpenViduService's processor) and in-room states.
+	 * The background processor is centralized in OpenViduService for consistency.
+	 */
 	async applyBackground(bg: BackgroundEffect) {
 		// If the background is already applied, do nothing
 		if (this.backgroundIsAlreadyApplied(bg.id)) return;
 
-		const cameraTrack = this.getCameraTrack();
-		if (!cameraTrack) {
-			this.log.e('No camera track found. Cannot apply background.');
-			return;
-		}
-
 		try {
-			// If no effect is selected, remove the background
-			if (bg.type === EffectType.NONE) {
-				await this.removeBackground();
-				return;
-			}
-
-			const currentProcessor = cameraTrack.getProcessor() as ProcessorWrapper<BackgroundOptions>;
-
-			if (currentProcessor) {
-				await this.replaceBackground(currentProcessor, bg);
-			} else {
-				await this.applyProcessorToCameraTrack(cameraTrack, this.processor);
-				await this.replaceBackground(this.processor, bg);
-			}
+			const options = this.getBackgroundOptions(bg);
+			await this.openviduService.switchBackgroundMode(options);
 
 			this.storageService.setBackground(bg.id);
 			this.backgroundIdSelected.next(bg.id);
+			this.log.d('Background applied:', options);
 		} catch (error) {
 			this.log.e('Error applying background effect:', error);
 		}
 	}
 
-	private getBackgroundOptions(bg: BackgroundEffect): BackgroundOptions {
-		if (bg.type === EffectType.IMAGE && bg.src) {
-			return { imagePath: bg.src, blurRadius: undefined, backgroundDisabled: false };
-		} else if (bg.type === EffectType.BLUR) {
-			return {
-				blurRadius: bg.id === 'soft_blur' ? this.SOFT_BLUR_INTENSITY : this.HARD_BLUR_INTENSITY,
-				imagePath: undefined,
-				backgroundDisabled: false
-			};
-		}
-		return { backgroundDisabled: true };
-	}
-
 	async removeBackground() {
 		if (this.isBackgroundApplied()) {
 			this.backgroundIdSelected.next('no_effect');
-			const cameraTrack = this.getCameraTrack();
-			const processor = cameraTrack?.getProcessor() as ProcessorWrapper<BackgroundOptions>;
-			if (processor) {
-				try {
-					await processor.updateTransformerOptions({ backgroundDisabled: true });
-				} catch (e) {
-					this.log.w('Error disabling processor:', e);
-				}
+			try {
+				await this.openviduService.switchBackgroundMode({ mode: 'disabled' });
+			} catch (e) {
+				this.log.w('Error disabling processor:', e);
 			}
 			this.storageService.removeBackground();
 		}
 	}
 
-	/**
-	 * Gets the camera track from either the published tracks (if in room) or local tracks (if in prejoin)
-	 * @returns The camera LocalTrack or undefined if not found
-	 * @private
-	 */
-	private getCameraTrack(): LocalVideoTrack | undefined {
-		// First, try to get from published tracks (when in room)
-		if (this.openviduService.isRoomConnected()) {
-			const localParticipant = this.participantService.getLocalParticipant();
-			const cameraTrackPublication = localParticipant?.cameraTracks?.[0];
-			if (cameraTrackPublication?.track) {
-				return cameraTrackPublication.track as LocalVideoTrack;
-			}
+	private getBackgroundOptions(bg: BackgroundEffect): SwitchBackgroundProcessorOptions {
+		if (bg.type === EffectType.NONE) {
+			return { mode: 'disabled' };
+		} else if (bg.type === EffectType.IMAGE && bg.src) {
+			return { mode: 'virtual-background', imagePath: bg.src };
+		} else if (bg.type === EffectType.BLUR) {
+			return {
+				mode: 'background-blur',
+				blurRadius: bg.id === 'soft_blur' ? this.SOFT_BLUR_INTENSITY : this.HARD_BLUR_INTENSITY
+			};
 		}
-
-		// Fallback to local tracks (when in prejoin or tracks not yet published)
-		const localTracks = this.openviduService.getLocalTracks();
-		const cameraTrack = localTracks.find((track) => track.kind === Track.Kind.Video);
-		return cameraTrack as LocalVideoTrack | undefined;
-	}
-
-	/**
-	 * Applies a background processor to the camera track
-	 * @param cameraTrack The camera track to apply the processor to
-	 * @param processor The background processor to apply
-	 * @private
-	 */
-	private async applyProcessorToCameraTrack(cameraTrack: LocalVideoTrack, processor: ProcessorWrapper<BackgroundOptions>): Promise<void> {
-		await cameraTrack.setProcessor(processor);
+		return { mode: 'disabled' };
 	}
 
 	private backgroundIsAlreadyApplied(backgroundId: string): boolean {
 		return backgroundId === this.backgroundIdSelected.getValue();
-	}
-
-	/**
-	 * Replaces the current background effect with a new one by updating the processor options.
-	 *
-	 * @private
-	 * @param currentProcessor - The current processor wrapper that handles background effects
-	 * @param bg - The new background effect to apply
-	 * @returns A Promise that resolves when the background options have been updated
-	 * @throws Will throw an error if updating the background options fails
-	 */
-	private async replaceBackground(currentProcessor: ProcessorWrapper<BackgroundOptions>, bg: BackgroundEffect) {
-		try {
-			const options = this.getBackgroundOptions(bg);
-			// Update the processor with the new options
-			await currentProcessor.updateTransformerOptions(options);
-			this.log.d('Background options updated:', options);
-		} catch (error) {
-			this.log.e('Error updating background options:', error);
-			throw error;
-		}
 	}
 }
