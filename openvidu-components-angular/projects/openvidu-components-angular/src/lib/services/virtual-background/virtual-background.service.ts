@@ -1,13 +1,13 @@
 import { Injectable } from '@angular/core';
+import { BackgroundOptions, BackgroundProcessor, ProcessorWrapper } from '@livekit/track-processors';
+import { LocalVideoTrack, Track } from 'livekit-client';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { BackgroundEffect, EffectType } from '../../models/background-effect.model';
-import { ParticipantService } from '../participant/participant.service';
-import { OpenViduService } from '../openvidu/openvidu.service';
-import { StorageService } from '../storage/storage.service';
-import { LocalVideoTrack, Track } from 'livekit-client';
-import { BackgroundBlur, BackgroundOptions, ProcessorWrapper, VirtualBackground } from '@livekit/track-processors';
-import { LoggerService } from '../logger/logger.service';
 import { ILogger } from '../../models/logger.model';
+import { LoggerService } from '../logger/logger.service';
+import { OpenViduService } from '../openvidu/openvidu.service';
+import { ParticipantService } from '../participant/participant.service';
+import { StorageService } from '../storage/storage.service';
 
 /**
  * @internal
@@ -47,6 +47,8 @@ export class VirtualBackgroundService {
 	private HARD_BLUR_INTENSITY = 60;
 
 	private log: ILogger;
+	private processor: ProcessorWrapper<BackgroundOptions>;
+
 	constructor(
 		private participantService: ParticipantService,
 		private openviduService: OpenViduService,
@@ -55,6 +57,7 @@ export class VirtualBackgroundService {
 	) {
 		this.log = this.loggerSrv.get('VirtualBackgroundService');
 		this.backgroundIdSelected$ = this.backgroundIdSelected.asObservable();
+		this.processor = BackgroundProcessor({ mode: 'disabled' });
 	}
 
 	getBackgrounds(): BackgroundEffect[] {
@@ -95,17 +98,11 @@ export class VirtualBackgroundService {
 
 			const currentProcessor = cameraTrack.getProcessor() as ProcessorWrapper<BackgroundOptions>;
 
-			// Check if the background is the same type as the previous one
-			if (this.hasSameTypeAsPreviousOne(bg.type) && currentProcessor) {
+			if (currentProcessor) {
 				await this.replaceBackground(currentProcessor, bg);
 			} else {
-				// If the background is different, remove the previous one and apply the new one
-				const newProcessor = this.getBackgroundProcessor(bg);
-				if (!newProcessor) {
-					this.log.e('No processor found for the background effect.');
-					return;
-				}
-				await this.applyProcessorToCameraTrack(cameraTrack, newProcessor);
+				await this.applyProcessorToCameraTrack(cameraTrack, this.processor);
+				await this.replaceBackground(this.processor, bg);
 			}
 
 			this.storageService.setBackground(bg.id);
@@ -117,47 +114,31 @@ export class VirtualBackgroundService {
 
 	private getBackgroundOptions(bg: BackgroundEffect): BackgroundOptions {
 		if (bg.type === EffectType.IMAGE && bg.src) {
-			return { imagePath: bg.src };
+			return { imagePath: bg.src, blurRadius: undefined, backgroundDisabled: false };
 		} else if (bg.type === EffectType.BLUR) {
 			return {
-				blurRadius: bg.id === 'soft_blur' ? this.SOFT_BLUR_INTENSITY : this.HARD_BLUR_INTENSITY
+				blurRadius: bg.id === 'soft_blur' ? this.SOFT_BLUR_INTENSITY : this.HARD_BLUR_INTENSITY,
+				imagePath: undefined,
+				backgroundDisabled: false
 			};
 		}
-		return {};
+		return { backgroundDisabled: true };
 	}
 
 	async removeBackground() {
 		if (this.isBackgroundApplied()) {
 			this.backgroundIdSelected.next('no_effect');
 			const cameraTrack = this.getCameraTrack();
-			if (cameraTrack) {
+			const processor = cameraTrack?.getProcessor() as ProcessorWrapper<BackgroundOptions>;
+			if (processor) {
 				try {
-					await cameraTrack.stopProcessor();
+					await processor.updateTransformerOptions({ backgroundDisabled: true });
 				} catch (e) {
-					this.log.w('Error stopping processor:', e);
+					this.log.w('Error disabling processor:', e);
 				}
 			}
 			this.storageService.removeBackground();
 		}
-	}
-
-	private getBackgroundProcessor(bg: BackgroundEffect): ProcessorWrapper<BackgroundOptions> | undefined {
-		switch (bg.type) {
-			case EffectType.IMAGE:
-				if (bg.src) {
-					return VirtualBackground(bg.src);
-				}
-				break;
-			case EffectType.BLUR:
-				if (bg.id === 'soft_blur') {
-					return BackgroundBlur(this.SOFT_BLUR_INTENSITY);
-				} else if (bg.id === 'hard_blur') {
-					return BackgroundBlur(this.HARD_BLUR_INTENSITY);
-				}
-				break;
-		}
-
-		return undefined;
 	}
 
 	/**
@@ -214,19 +195,5 @@ export class VirtualBackgroundService {
 			this.log.e('Error updating background options:', error);
 			throw error;
 		}
-	}
-
-	/**
-	 * Checks if the currently selected background has the same effect type as the provided one.
-	 *
-	 * @param type - The effect type to compare with the currently selected background.
-	 * @returns `true` if the currently selected background has the same effect type, `false` otherwise.
-	 * @private
-	 */
-	private hasSameTypeAsPreviousOne(type: EffectType): boolean {
-		const currentBgId = this.backgroundIdSelected.getValue();
-		const currentBg = this.backgrounds.find((b) => b.id === currentBgId);
-		const isSameEffectType = currentBg && currentBg.type === type;
-		return !!isSameEffectType;
 	}
 }
