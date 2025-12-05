@@ -1,7 +1,4 @@
 import { Injectable } from '@angular/core';
-import { ILogger } from '../../models/logger.model';
-import { DeviceService } from '../device/device.service';
-import { LoggerService } from '../logger/logger.service';
 import {
 	AudioCaptureOptions,
 	ConnectionState,
@@ -18,8 +15,11 @@ import {
 	VideoPresets,
 	createLocalTracks
 } from 'livekit-client';
-import { StorageService } from '../storage/storage.service';
+import { ILogger } from '../../models/logger.model';
 import { OpenViduComponentsConfigService } from '../config/directive-config.service';
+import { DeviceService } from '../device/device.service';
+import { LoggerService } from '../logger/logger.service';
+import { StorageService } from '../storage/storage.service';
 
 @Injectable({
 	providedIn: 'root'
@@ -113,7 +113,7 @@ export class OpenViduService {
 		// Configure E2EE if key is provided and keyProvider exists
 		if (needsE2EEConfig) {
 			// Create worker using the copied livekit-client e2ee worker from assets
-			roomOptions.e2ee = this.buildE2EEOptions();
+			roomOptions.encryption = this.buildE2EEOptions();
 			// !This config enables the data channel encryption
 			// (roomOptions as any).encryption = this.buildE2EEOptions();
 		}

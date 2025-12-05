@@ -9,10 +9,10 @@
     "@angular/platform-browser": "20.3.4",
     "@angular/platform-browser-dynamic": "20.3.4",
     "@angular/router": "20.3.4",
-    "@livekit/track-processors": "0.6.1",
+    "@livekit/track-processors": "0.7.0",
     "@types/dom-mediacapture-transform": "0.1.11",
     "autolinker": "4.1.5",
-    "livekit-client": "2.15.15",
+    "livekit-client": "2.16.0",
     "rxjs": "7.8.2",
     "tslib": "2.7.0",
     "zone.js": "0.15.1"
