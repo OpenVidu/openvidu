@@ -898,9 +898,9 @@ Resources:
       Port: 4443
       Protocol: HTTP
       Matcher:
-        HttpCode: '200'
+        HttpCode: '401-403'
       HealthCheckIntervalSeconds: 10
-      HealthCheckPath: /openvidu/health
+      HealthCheckPath: /
       HealthCheckProtocol: HTTP
       HealthCheckPort: '4443'
       HealthCheckTimeoutSeconds: 5
