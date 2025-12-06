@@ -76,12 +76,16 @@ services:
         image: minio/mc:RELEASE.2025-08-13T08-35-41Z
         depends_on:
             - minio-s3
+        restart: on-failure
         entrypoint: >
             /bin/sh -c "
-            /usr/bin/mc config host add openvidu-minio \
+            until /usr/bin/mc alias set openvidu-minio \
             http://minio-s3:9000 \
             '${OPENVIDU_ENTERPRISE_HA_S3_CONFIG_ACCESS_KEY}' \
-            '${OPENVIDU_ENTERPRISE_HA_S3_CONFIG_SECRET_KEY}';
+            '${OPENVIDU_ENTERPRISE_HA_S3_CONFIG_SECRET_KEY}'; do
+              echo 'Waiting for MinIO to be ready...';
+              sleep 2;
+            done;
             /usr/bin/mc mb 'openvidu-minio/${OPENVIDU_ENTERPRISE_HA_S3_CONFIG_BUCKET}';
             exit 0;
             "

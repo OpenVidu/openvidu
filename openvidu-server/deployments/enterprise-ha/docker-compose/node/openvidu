@@ -242,7 +242,7 @@ check_env_var_is_value() {
 
 start_openvidu() {
     export INITIAL_CONFIG_SYNC=true
-    if ! docker-compose up --exit-code-from replication-manager replication-manager; then
+    if ! docker-compose run replication-manager; then
         printf "\n  ERROR: Openvidu Node failed to start"
         printf "\n"
         unset INITIAL_CONFIG_SYNC
