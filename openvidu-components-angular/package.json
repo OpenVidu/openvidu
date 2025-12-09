@@ -11,7 +11,7 @@
     "@angular/platform-browser-dynamic": "17.3.10",
     "@angular/router": "17.3.10",
     "autolinker": "4.0.0",
-    "openvidu-browser": "2.32.0",
+    "openvidu-browser": "2.32.1",
     "rxjs": "7.5.7",
     "tslib": "2.3.1",
     "zone.js": "^0.14.6"
@@ -78,5 +78,5 @@
     "webcomponent:e2e-pro-ci": "cross-env LAUNCH_MODE=CI npm run webcomponent:e2e-pro",
     "webcomponent:serve-testapp": "npx http-server ./e2e/webcomponent-app/ && echo http://localhost:8080/?OV_URL=https://localhost:4443&OV_SECRET=MY_SECRET&prejoin=false"
   },
-  "version": "2.32.0"
+  "version": "2.32.1"
 }
