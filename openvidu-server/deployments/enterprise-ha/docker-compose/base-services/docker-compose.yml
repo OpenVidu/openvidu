@@ -8,7 +8,7 @@
 #
 #    This file will be overridden when updating OpenVidu Enterprise HA
 #
-#    Openvidu Version: 2.32.0
+#    Openvidu Version: 2.32.1
 #
 #    Installation Mode: On Premises
 #
@@ -18,7 +18,7 @@ version: '3.1'
 
 services:
     loadbalancer:
-        image: openvidu/openvidu-proxy:2.32.0
+        image: openvidu/openvidu-proxy:2.32.1
         restart: always
         volumes:
             - ./certificates:/etc/letsencrypt
