@@ -15,7 +15,7 @@
     "core-js": "3.26.1",
     "json-stringify-safe": "5.0.1",
     "openvidu-browser": "2.32.0",
-    "openvidu-node-client": "2.32.0",
+    "openvidu-node-client": "2.32.1",
     "rxjs": "7.5.7",
     "tslib": "2.4.1",
     "zone.js": "0.12.0"
