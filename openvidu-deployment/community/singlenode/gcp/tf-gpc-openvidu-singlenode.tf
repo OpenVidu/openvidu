@@ -96,7 +96,6 @@ locals {
 resource "google_compute_instance" "openvidu_server" {
   name         = lower("${var.stackName}-vm-ce")
   machine_type = var.instanceType
-  zone         = var.zone
 
   tags = [lower("${var.stackName}-vm-ce")]
 
@@ -117,7 +116,7 @@ resource "google_compute_instance" "openvidu_server" {
 
   metadata = {
     # metadata values are accessible from the instance
-    publicIpAddress           = google_compute_address.public_ip_address[0].address
+    publicIpAddress           = coalesce(var.publicIpAddress, google_compute_address.public_ip_address[0].address)
     region                    = var.region
     stackName                 = var.stackName
     certificateType           = var.certificateType
