@@ -1,4 +1,4 @@
-name: openvidu-components-angular Tests
+name: openvidu-components-angular E2E
 
 on:
   push:
