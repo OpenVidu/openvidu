@@ -96,6 +96,7 @@ locals {
 resource "google_compute_instance" "openvidu_server" {
   name         = lower("${var.stackName}-vm-ce")
   machine_type = var.instanceType
+  zone         = var.zone
 
   tags = [lower("${var.stackName}-vm-ce")]
 

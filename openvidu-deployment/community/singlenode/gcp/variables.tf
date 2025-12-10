@@ -12,6 +12,12 @@ variable "region" {
   default     = "europe-west1"
 }
 
+variable "zone" {
+  description = "GCP zone that some resources will use."
+  type        = string
+  default     = "europe-west1-b"
+}
+
 variable "stackName" {
   description = "Stack name for OpenVidu deployment."
   type        = string
