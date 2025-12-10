@@ -1,4 +1,4 @@
-name: openvidu-components-angular E2E
+name: openvidu-components-angular v2 E2E
 on:
   push:
     branches:
