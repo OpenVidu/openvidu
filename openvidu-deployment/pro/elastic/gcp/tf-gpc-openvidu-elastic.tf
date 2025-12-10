@@ -126,7 +126,6 @@ resource "google_compute_address" "public_ip_address" {
 resource "google_compute_instance" "openvidu_master_node" {
   name         = lower("${var.stackName}-master-node")
   machine_type = var.masterNodeInstanceType
-  zone         = var.zone
 
   tags = [lower("${var.stackName}-master-node")]
 

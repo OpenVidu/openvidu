@@ -88,7 +88,6 @@ resource "google_compute_address" "public_ip_address" {
 resource "google_compute_instance" "openvidu_server" {
   name         = lower("${var.stackName}-vm-pro")
   machine_type = var.instanceType
-  zone         = var.zone
 
   tags = [lower("${var.stackName}-vm-pro")]
 
