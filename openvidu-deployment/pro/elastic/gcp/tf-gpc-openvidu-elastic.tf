@@ -126,6 +126,7 @@ resource "google_compute_address" "public_ip_address" {
 resource "google_compute_instance" "openvidu_master_node" {
   name         = lower("${var.stackName}-master-node")
   machine_type = var.masterNodeInstanceType
+  zone         = var.zone
 
   tags = [lower("${var.stackName}-master-node")]
 
@@ -598,7 +599,10 @@ resource "google_cloud_scheduler_job" "scale_scheduler" {
 # ------------------------- local values -------------------------
 
 locals {
-  isEmpty               = var.bucketName == ""
+  isEmpty         = var.bucketName == ""
+  is_arm_instance = startswith(var.masterNodeInstanceType, "c4a-") || startswith(var.masterNodeInstanceType, "t2a-") || startswith(var.masterNodeInstanceType, "n4a-") || startswith(var.masterNodeInstanceType, "a4x-")
+  yq_arch         = local.is_arm_instance ? "arm64" : "amd64"
+
   install_script_master = <<-EOF
 #!/bin/bash -x
 set -e
@@ -616,8 +620,8 @@ apt-get update && apt-get install -y \
   lsb-release \
   openssl
 
-wget https://github.com/mikefarah/yq/releases/download/$${YQ_VERSION}/yq_linux_amd64.tar.gz -O - |\
-tar xz && mv yq_linux_amd64 /usr/bin/yq
+wget https://github.com/mikefarah/yq/releases/download/$${YQ_VERSION}/yq_linux_${local.yq_arch}.tar.gz -O - |\
+tar xz && mv yq_linux_${local.yq_arch} /usr/bin/yq
 
 # Configure gcloud with instance service account
 gcloud auth activate-service-account --key-file=/dev/null 2>/dev/null || true
