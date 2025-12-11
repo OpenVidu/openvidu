@@ -1,7 +1,7 @@
-import { By, until, WebDriver, WebElement } from 'selenium-webdriver';
 import * as fs from 'fs';
-import { PNG } from 'pngjs';
 import pixelmatch from 'pixelmatch';
+import { PNG } from 'pngjs';
+import { By, until, WebDriver, WebElement } from 'selenium-webdriver';
 type PNGWithMetadata = PNG & { data: Buffer };
 
 export class OpenViduComponentsPO {
@@ -287,6 +287,7 @@ export class OpenViduComponentsPO {
 	async toggleStreamPin(streamSelector: string): Promise<void> {
 		const stream = await this.waitForElement(streamSelector);
 		await stream.click();
+		await this.clickOn('#pin-btn');
 		await this.browser.sleep(300);
 	}
 
