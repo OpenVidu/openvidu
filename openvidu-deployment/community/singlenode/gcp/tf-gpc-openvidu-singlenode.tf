@@ -28,8 +28,8 @@ resource "google_secret_manager_secret" "openvidu_shared_info" {
 
 # GCS bucket
 resource "google_storage_bucket" "bucket" {
-  count                       = 1
-  name                        = local.isEmpty ? "${var.projectId}-${random_id.bucket_suffix.hex}" : var.bucketName
+  count                       = local.isEmpty ? 1 : 0
+  name                        = "${var.projectId}-${var.stackName}-${random_id.bucket_suffix.hex}"
   location                    = var.region
   force_destroy               = true
   uniform_bucket_level_access = true
@@ -340,7 +340,7 @@ EXTERNAL_S3_SECRET_KEY=$(echo "$HMAC_OUTPUT" | jq -r '.secret')
 EXTERNAL_S3_ENDPOINT="https://storage.googleapis.com"
 EXTERNAL_S3_REGION="${var.region}"
 EXTERNAL_S3_PATH_STYLE_ACCESS="true"
-EXTERNAL_S3_BUCKET_APP_DATA=${google_storage_bucket.bucket[0].name}
+EXTERNAL_S3_BUCKET_APP_DATA=$(get_meta "instance/attributes/bucketName")
 
 # Update egress.yaml to use hardcoded credentials instead of env variable
 if [ -f "$${CONFIG_DIR}/egress.yaml" ]; then

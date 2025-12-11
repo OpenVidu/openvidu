@@ -32,16 +32,16 @@ resource "google_secret_manager_secret" "openvidu_shared_info" {
 
 # GCS buckets for HA deployment
 resource "google_storage_bucket" "appdata_bucket" {
-  count                       = var.GCSAppDataBucketName == "" ? 1 : 0
-  name                        = "${var.projectId}-openvidu-appdata-${var.stackName}-${random_id.bucket_suffix.hex}"
+  count                       = local.isEmptyAppData ? 1 : 0
+  name                        = "${var.projectId}-${var.stackName}-appdata-${random_id.bucket_suffix.hex}"
   location                    = var.region
   force_destroy               = true
   uniform_bucket_level_access = true
 }
 
 resource "google_storage_bucket" "clusterdata_bucket" {
-  count                       = var.GCSClusterDataBucketName == "" ? 1 : 0
-  name                        = "${var.projectId}-openvidu-clusterdata-${var.stackName}-${random_id.bucket_suffix.hex}"
+  count                       = local.isEmptyClusterData ? 1 : 0
+  name                        = "${var.projectId}-${var.stackName}-clusterdata-${random_id.bucket_suffix.hex}"
   location                    = var.region
   force_destroy               = true
   uniform_bucket_level_access = true
@@ -279,6 +279,13 @@ resource "google_compute_instance_group" "master_node_group" {
   }
 }
 
+locals {
+  is_arm_instance = startswith(var.masterNodesInstanceType, "c4a-") || startswith(var.masterNodesInstanceType, "t2a-") || startswith(var.masterNodesInstanceType, "n4a-") || startswith(var.masterNodesInstanceType, "a4x-")
+  yq_arch         = local.is_arm_instance ? "arm64" : "amd64"
+
+  ubuntu_image = local.is_arm_instance ? "ubuntu-os-cloud/ubuntu-2404-noble-arm64-v20241219" : "ubuntu-os-cloud/ubuntu-2404-noble-amd64-v20241219"
+}
+
 # Master Node 1
 resource "google_compute_instance" "openvidu_master_node_1" {
   name         = lower("${var.stackName}-master-node-1")
@@ -288,7 +295,7 @@ resource "google_compute_instance" "openvidu_master_node_1" {
 
   boot_disk {
     initialize_params {
-      image = "projects/ubuntu-os-cloud/global/images/family/ubuntu-2204-lts"
+      image = local.ubuntu_image
       size  = var.masterNodesDiskSize
       type  = "pd-standard"
     }
@@ -314,8 +321,8 @@ resource "google_compute_instance" "openvidu_master_node_1" {
     initialMeetAdminPassword  = var.initialMeetAdminPassword
     initialMeetApiKey         = var.initialMeetApiKey
     additionalInstallFlags    = var.additionalInstallFlags
-    bucketAppDataName         = var.GCSAppDataBucketName == "" ? google_storage_bucket.appdata_bucket[0].name : var.GCSAppDataBucketName
-    bucketClusterDataName     = var.GCSClusterDataBucketName == "" ? google_storage_bucket.clusterdata_bucket[0].name : var.GCSClusterDataBucketName
+    bucketAppDataName         = local.isEmptyAppData ? google_storage_bucket.appdata_bucket[0].name : var.GCSAppDataBucketName
+    bucketClusterDataName     = local.isEmptyClusterData ? google_storage_bucket.clusterdata_bucket[0].name : var.GCSClusterDataBucketName
   }
 
   service_account {
@@ -341,7 +348,7 @@ resource "google_compute_instance" "openvidu_master_node_2" {
 
   boot_disk {
     initialize_params {
-      image = "projects/ubuntu-os-cloud/global/images/family/ubuntu-2204-lts"
+      image = local.ubuntu_image
       size  = var.masterNodesDiskSize
       type  = "pd-standard"
     }
@@ -367,8 +374,8 @@ resource "google_compute_instance" "openvidu_master_node_2" {
     initialMeetAdminPassword  = var.initialMeetAdminPassword
     initialMeetApiKey         = var.initialMeetApiKey
     additionalInstallFlags    = var.additionalInstallFlags
-    bucketAppDataName         = var.GCSAppDataBucketName == "" ? google_storage_bucket.appdata_bucket[0].name : var.GCSAppDataBucketName
-    bucketClusterDataName     = var.GCSClusterDataBucketName == "" ? google_storage_bucket.clusterdata_bucket[0].name : var.GCSClusterDataBucketName
+    bucketAppDataName         = local.isEmptyAppData ? google_storage_bucket.appdata_bucket[0].name : var.GCSAppDataBucketName
+    bucketClusterDataName     = local.isEmptyClusterData ? google_storage_bucket.clusterdata_bucket[0].name : var.GCSClusterDataBucketName
   }
 
   service_account {
@@ -396,7 +403,7 @@ resource "google_compute_instance" "openvidu_master_node_3" {
 
   boot_disk {
     initialize_params {
-      image = "projects/ubuntu-os-cloud/global/images/family/ubuntu-2204-lts"
+      image = local.ubuntu_image
       size  = var.masterNodesDiskSize
       type  = "pd-standard"
     }
@@ -422,8 +429,8 @@ resource "google_compute_instance" "openvidu_master_node_3" {
     initialMeetAdminPassword  = var.initialMeetAdminPassword
     initialMeetApiKey         = var.initialMeetApiKey
     additionalInstallFlags    = var.additionalInstallFlags
-    bucketAppDataName         = var.GCSAppDataBucketName == "" ? google_storage_bucket.appdata_bucket[0].name : var.GCSAppDataBucketName
-    bucketClusterDataName     = var.GCSClusterDataBucketName == "" ? google_storage_bucket.clusterdata_bucket[0].name : var.GCSClusterDataBucketName
+    bucketAppDataName         = local.isEmptyAppData ? google_storage_bucket.appdata_bucket[0].name : var.GCSAppDataBucketName
+    bucketClusterDataName     = local.isEmptyClusterData ? google_storage_bucket.clusterdata_bucket[0].name : var.GCSClusterDataBucketName
   }
 
   service_account {
@@ -451,7 +458,7 @@ resource "google_compute_instance" "openvidu_master_node_4" {
 
   boot_disk {
     initialize_params {
-      image = "projects/ubuntu-os-cloud/global/images/family/ubuntu-2204-lts"
+      image = local.ubuntu_image
       size  = var.masterNodesDiskSize
       type  = "pd-standard"
     }
@@ -477,8 +484,8 @@ resource "google_compute_instance" "openvidu_master_node_4" {
     initialMeetAdminPassword  = var.initialMeetAdminPassword
     initialMeetApiKey         = var.initialMeetApiKey
     additionalInstallFlags    = var.additionalInstallFlags
-    bucketAppDataName         = var.GCSAppDataBucketName == "" ? google_storage_bucket.appdata_bucket[0].name : var.GCSAppDataBucketName
-    bucketClusterDataName     = var.GCSClusterDataBucketName == "" ? google_storage_bucket.clusterdata_bucket[0].name : var.GCSClusterDataBucketName
+    bucketAppDataName         = local.isEmptyAppData ? google_storage_bucket.appdata_bucket[0].name : var.GCSAppDataBucketName
+    bucketClusterDataName     = local.isEmptyClusterData ? google_storage_bucket.clusterdata_bucket[0].name : var.GCSClusterDataBucketName
   }
 
   service_account {
@@ -771,7 +778,7 @@ EOF
 
 resource "google_storage_bucket_object" "function_source" {
   name   = "function-source.zip"
-  bucket = var.GCSClusterDataBucketName == "" ? google_storage_bucket.clusterdata_bucket[0].name : var.GCSClusterDataBucketName
+  bucket = local.isEmptyClusterData ? google_storage_bucket.clusterdata_bucket[0].name : var.GCSClusterDataBucketName
   source = data.archive_file.function_source.output_path
 }
 
@@ -785,7 +792,7 @@ resource "google_cloudfunctions2_function" "scalein_function" {
     entry_point = "scalein_function"
     source {
       storage_source {
-        bucket = var.GCSClusterDataBucketName == "" ? google_storage_bucket.clusterdata_bucket[0].name : var.GCSClusterDataBucketName
+        bucket = local.isEmptyClusterData ? google_storage_bucket.clusterdata_bucket[0].name : var.GCSClusterDataBucketName
         object = google_storage_bucket_object.function_source.name
       }
     }
@@ -833,6 +840,11 @@ resource "google_cloud_scheduler_job" "scale_scheduler" {
   }
 }
 
+locals {
+  is_arm_media_instance = startswith(var.mediaNodeInstanceType, "c4a-") || startswith(var.mediaNodeInstanceType, "t2a-") || startswith(var.mediaNodeInstanceType, "n4a-") || startswith(var.mediaNodeInstanceType, "a4x-")
+  media_ubuntu_image    = local.is_arm_media_instance ? "ubuntu-os-cloud/ubuntu-2404-noble-arm64-v20241219" : "ubuntu-os-cloud/ubuntu-2404-noble-amd64-v20241219"
+}
+
 # Media Node Instance Template
 resource "google_compute_instance_template" "media_node_template" {
   name         = lower("${var.stackName}-media-node-template")
@@ -840,7 +852,7 @@ resource "google_compute_instance_template" "media_node_template" {
   tags         = [lower("${var.stackName}-media-node")]
 
   disk {
-    source_image = "projects/ubuntu-os-cloud/global/images/family/ubuntu-2204-lts"
+    source_image = local.media_ubuntu_image
     auto_delete  = true
     boot         = true
     disk_size_gb = 100
@@ -855,8 +867,8 @@ resource "google_compute_instance_template" "media_node_template" {
   metadata = {
     stackName               = var.stackName
     masterNodePrivateIPList = "${google_compute_instance.openvidu_master_node_1.network_interface[0].network_ip},${google_compute_instance.openvidu_master_node_2.network_interface[0].network_ip},${google_compute_instance.openvidu_master_node_3.network_interface[0].network_ip},${google_compute_instance.openvidu_master_node_4.network_interface[0].network_ip}"
-    bucketAppDataName       = var.GCSAppDataBucketName == "" ? google_storage_bucket.appdata_bucket[0].name : var.GCSAppDataBucketName
-    bucketClusterDataName   = var.GCSClusterDataBucketName == "" ? google_storage_bucket.clusterdata_bucket[0].name : var.GCSClusterDataBucketName
+    bucketAppDataName       = local.isEmptyAppData ? google_storage_bucket.appdata_bucket[0].name : var.GCSAppDataBucketName
+    bucketClusterDataName   = local.isEmptyClusterData ? google_storage_bucket.clusterdata_bucket[0].name : var.GCSClusterDataBucketName
     region                  = var.region
     shutdown-script         = local.graceful_shutdown_script
   }
@@ -933,8 +945,6 @@ resource "google_compute_region_autoscaler" "media_node_autoscaler" {
 locals {
   isEmptyAppData     = var.GCSAppDataBucketName == ""
   isEmptyClusterData = var.GCSClusterDataBucketName == ""
-  is_arm_instance    = startswith(var.masterNodesInstanceType, "c4a-") || startswith(var.masterNodesInstanceType, "t2a-") || startswith(var.masterNodesInstanceType, "n4a-") || startswith(var.masterNodesInstanceType, "a4x-")
-  yq_arch            = local.is_arm_instance ? "arm64" : "amd64"
 
   install_script_master = <<-EOF
 #!/bin/bash -x

@@ -32,7 +32,7 @@ resource "google_secret_manager_secret" "openvidu_shared_info" {
 # GCS bucket
 resource "google_storage_bucket" "bucket" {
   count                       = local.isEmpty ? 1 : 0
-  name                        = "${var.projectId}-openvidu-${var.stackName}-${random_id.bucket_suffix.hex}"
+  name                        = "${var.projectId}-${var.stackName}-${random_id.bucket_suffix.hex}"
   location                    = var.region
   force_destroy               = true
   uniform_bucket_level_access = true
@@ -122,6 +122,12 @@ resource "google_compute_address" "public_ip_address" {
   region = var.region
 }
 
+locals {
+  is_arm_instance = startswith(var.masterNodeInstanceType, "c4a-") || startswith(var.masterNodeInstanceType, "t2a-") || startswith(var.masterNodeInstanceType, "n4a-") || startswith(var.masterNodeInstanceType, "a4x-")
+  yq_arch         = local.is_arm_instance ? "arm64" : "amd64"
+
+  ubuntu_image = local.is_arm_instance ? "ubuntu-os-cloud/ubuntu-2404-noble-arm64-v20241219" : "ubuntu-os-cloud/ubuntu-2404-noble-amd64-v20241219"
+}
 # Compute instance for OpenVidu
 resource "google_compute_instance" "openvidu_master_node" {
   name         = lower("${var.stackName}-master-node")
@@ -132,7 +138,7 @@ resource "google_compute_instance" "openvidu_master_node" {
 
   boot_disk {
     initialize_params {
-      image = "projects/ubuntu-os-cloud/global/images/family/ubuntu-2204-lts"
+      image = local.ubuntu_image
       size  = 100
       type  = "pd-standard"
     }
@@ -178,6 +184,12 @@ resource "google_compute_instance" "openvidu_master_node" {
   }
 }
 
+locals {
+  is_arm_instance_media = startswith(var.mediaNodeInstanceType, "c4a-") || startswith(var.mediaNodeInstanceType, "t2a-") || startswith(var.mediaNodeInstanceType, "n4a-") || startswith(var.mediaNodeInstanceType, "a4x-")
+
+  ubuntu_image_media = local.is_arm_instance_media ? "ubuntu-os-cloud/ubuntu-2404-noble-arm64-v20241219" : "ubuntu-os-cloud/ubuntu-2404-noble-amd64-v20241219"
+}
+
 # Media Node Instance Template
 resource "google_compute_instance_template" "media_node_template" {
   name         = lower("${var.stackName}-media-node-template")
@@ -186,7 +198,7 @@ resource "google_compute_instance_template" "media_node_template" {
   tags = [lower("${var.stackName}-media-node")]
 
   disk {
-    source_image = "projects/ubuntu-os-cloud/global/images/family/ubuntu-2204-lts"
+    source_image = local.ubuntu_image_media
     auto_delete  = true
     boot         = true
     disk_size_gb = 100
@@ -599,9 +611,7 @@ resource "google_cloud_scheduler_job" "scale_scheduler" {
 # ------------------------- local values -------------------------
 
 locals {
-  isEmpty         = var.bucketName == ""
-  is_arm_instance = startswith(var.masterNodeInstanceType, "c4a-") || startswith(var.masterNodeInstanceType, "t2a-") || startswith(var.masterNodeInstanceType, "n4a-") || startswith(var.masterNodeInstanceType, "a4x-")
-  yq_arch         = local.is_arm_instance ? "arm64" : "amd64"
+  isEmpty = var.bucketName == ""
 
   install_script_master = <<-EOF
 #!/bin/bash -x
