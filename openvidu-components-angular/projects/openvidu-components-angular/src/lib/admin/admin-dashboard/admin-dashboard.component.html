@@ -19,12 +19,16 @@
 					autocomplete="off"
 					[(ngModel)]="searchValue"
 				></textarea>
-				<button *ngIf="searchValue" class="searchbar-btn" mat-icon-button aria-label="Clear" (click)="searchValue = ''">
-					<mat-icon>close</mat-icon>
-				</button>
-				<button *ngIf="!searchValue" class="searchbar-btn" mat-icon-button aria-label="Search">
-					<mat-icon>search</mat-icon>
-				</button>
+				@if (searchValue) {
+					<button class="searchbar-btn" mat-icon-button aria-label="Clear" (click)="searchValue = ''">
+						<mat-icon>close</mat-icon>
+					</button>
+				}
+				@if (!searchValue) {
+					<button class="searchbar-btn" mat-icon-button aria-label="Search">
+						<mat-icon>search</mat-icon>
+					</button>
+				}
 			</div>
 
 			<button id="sort-menu-btn" color="primary" mat-flat-button [matMenuTriggerFor]="sortMenu">
@@ -55,18 +59,14 @@
 		</mat-toolbar>
 
 		<div class="recordings-container">
-			<div *ngIf="!recordings || recordings.length === 0" class="no-recordings-warn">
-				<span>{{ 'ADMIN.RECORDINGS.EMPTY' | translate }}</span>
-			</div>
+			@if (!recordings || recordings.length === 0) {
+				<div class="no-recordings-warn">
+					<span>{{ 'ADMIN.RECORDINGS.EMPTY' | translate }}</span>
+				</div>
+			}
 
-			<div
-				*ngFor="
-					let recording of recordings
-						| searchByStringProperty: { properties: ['roomName', 'filename', 'outputMode'], filter: searchValue };
-					trackBy: trackByRecordingId
-				"
-				class="recording-card"
-			>
+			@for (recording of recordings | searchByStringProperty: { properties: ['roomName', 'filename', 'outputMode'], filter: searchValue }; track recording.id) {
+				<div class="recording-card">
 				<mat-card appearance="outlined" class="card">
 					<mat-card-content>
 						<div class="video-div-container">
@@ -74,36 +74,35 @@
 								src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAABdwAAARMCAMAAAC0+qGhAAAB41BMVEVNTU3/zAAG02IAiKr////QqxV6bTk40k4Fw3EWd4+FzzABkqAzYGyH6rMPfJf9ywFCVVoDhqYmansTepRLTk/ZsRBJUFEGg6I2X2lQT0vluQsvY3E5XGRhW0T6/vwe2HE+WV/Lphb4xwMrZnVGUlVVU0kJgZ9SUUsAh6mAcTeHdjMccoiQfTCmjCbqvQn+//70/fgibYEFzmdkXUP0xAX5yAIo2ngO1WcJ1GTwwQYDtX9dWEZpYUGahCu99NUecIS/nhvk+u6M67cAjaZq5aEMfptI34wW1myVgC62mB/EohnetA7r/PKs8ct66KxW4pQU01xzaDyskST7yQIBl5yxlSHWrxHY+eeb7cA63YMk0lduZT93azsBh6h9bziDdDWNezGpzyHf+uvJ9t4CqYsZdYsz238Px2kG0mNZVkdZ0UH3zQMBnZYCpI8Ev3WfhympjyW6mx7PqhWU7LuD6bEFy2qdzybT+ORz56cAi6cDroYEunoT1Wpj0T2KeTKSzyvozQnG9dy08tABlJ9f45ow0FNv0Tl70DSC0DGK0C2kiyeyzh66zhvBzhjSrBPdzQ248tKm8McAkKMFx2490kzLzhTVzhDN998BkaIWuXBC0UpK0UfvzAYLiJlgfUOiyCqmuyRf32vuAAAbHklEQVR42uzBgQAAAACAoP2pF6kCAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAGD24EAAAAAAAMj/tRFUVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVYU9OBAAAAAAAPJ/bQRVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVWEPDgQAAAAAgPxfG0FVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVdiDAwEAAAAAIP/XRlBVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVFfbgQAAAAAAAyP+1EVRVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVhT04EAAAAAAA8n9tBFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVYQ8OBAAAAACA/F8bQVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV2Ll7nVSCAArAMwW0W1lwky00IYSN2lwsNkhCeVkqINJwo7ZWIA/gs/sMLPszmu97iJPJmZkDAAAAAAAAAAAAAAAAAAAAAD/N/PD6vjitVlV1O+Aq1XL1cvo3fZ4EgN6MDl8P1fou0rhysC3yANC18fDhLNbbVVb3HwGgM/likEU6kO2PfwNAB/LjXrJ3KDsXowDQrk0l2TtXnvTvQItGxT7Sh91qHgDaUfyJ9OVu63IVaMNwHenT7D0ANGy+1LX37lb1DjRrWkb6N1sEgMZMPiNpqMYBoBn5TSQVa5+agGZsVDIpmQ0DwPXeTMikZefVDHC9YhdJSybdAdn+C2VFALjG/6dIerKvAFDf8yySoqdNAKhrbEwmVaUhMaC2ZSRVeyPvQE33kXS9BIA6coV70qYBoIZzJGWPZmaAGopI2rYB4FKTx0jaskMAuNAxkrqbAHCZsSnIH+AtADi4/zqO7sBlRhr3b/buFqcBIAjA6IwAW1WJKAkhJICpalISbEFRUUMTdB1wgB6AU3OEncrZvHeIT+zPTAueQwIXOScdHALgAoekhWMAlG0XSQuvAVD2nfRw65sqUOc6tQ0r94Cyz6SLVQAUPSVdLGztAKqWSRuPAVBy561MIz8BUPKV9PEcACX7pJF1AFRcJY04dAdq7E5txaE7ULJOOjE8DCh5SDrZBEDBS9LKKQDGdkkrHwEwtkpaOQfA2HvSyl8AjG2SVvYBMGayTDO7ABi6T3qxag8oOCW9vAXA0E3Sy28ADG2TXswfACxQndAyAIaOSS/iDhRcJ72IOyDuExJ3QNwnJO6AuE9I3AFxn5C4A+I+IXEHxH1C4g6I+4TEHRD3CYk7IO4TEndA3Cck7oC4T0jcAXGfkLjDP3t3zNJIEMZhfJgUJnAkt9njNuAVAY9DSJVPYHX91YKFxSFk+3RiGqNCxEYF0Q9rZam84+Iy73+e34d4GN59dwbEXRBxB0DcBRF3AMRdEHEHQNwFEXcAZcS9vdutr89Xq+f7PV3HZ2+exlZ1Pfq/WE73Z/OfAUBhnMf9cb3di2UZDj6hqY8O5j8CgGI4jnu72x7H8rzFPV1VT+cBQBncxv129S8WaTjoolnMOMADJfAZ95eLy1iq4aCjZvo7AFDnMe7tTaGHdkPcTaojxjOAOn9xby9KTrsh7iaj7wGAMndxvy13IGOIu93Jkv1IQJmzuLdXsXSGuNs0swBAlq+4P5S4+2iMe7rDJYszgCxXcT8te9pujbvdmMk7oMpT3K8jTHG3a34FAJL8xH2yijDG3a76FgAochP3yXmEOe52h9QdkOQl7rTdFvd0JyzNAIq8xH0bYYp7uorfVQFBTuK+jjDGPV3DXTOAHh9xf4gwxz1dzb47IMdF3Df8u5QS93QHAYAYF3FnCfKL417xMxOgxkPcdxFJcU83CgC0OIh7y1AmNe7p2HYHxDiIOxdB9hD3P3xTBbTkH/cNt4Wlxz3dfgCgJP+4c3DvJe5/AwAl2cf9hYO7Je7dcQsBICX7uHPPb09xrwMAIbnHfcKqjC3u3bHrDijJPe7suPcW92kAoCP3uHPTb29xHwcAOjKPe8vn1A/izlwGgNO4n0a8H3fmMgCcxp2pzIdxZ18GgM+4X0b0FveKKwgAHXnHfRNhjnt3vLcH6Mg77ozcLXHnzQ4AzuLOs9i9xn0R8MreHZtEEIRhGB6GTTQRG9DEAtZojRQP8SK5UHOxBTGzABELsFlDxeB2k1tmPp6niDf65h9I0Xbcvytzcbd0B7qLu9sDq8b9tAApmo77SWWFuP+6KECIpuP+VZmLu7kM0F3cPysL4u4nVaCvuH9UZuJuCwn0F3cz90Vxd10G6Cvur5VV435ZgBBNx/29smrcbwoQoum4H1fm4+6JKiDu/Ttk3F8KEELce3PIuB8VIIS490bcAXEPJO6AuAcSd0DcA4k7IO6BxB0Q90DiDoh7IHEHxD2QuAPiHkjcAXEPJO6AuAcSd0DcA4k7IO6BxB0Q90DiDoh7IHEHxD2QuAPiHkjcAXEPJO6AuAcSd0DcA4k7IO6BxB0Q90DiDoh7IHEHxD2QuAPivsS03daOiDsg7jOm3dPzOAzD2e31ZjfVLog7IO57nW/G4Y/x4b52QNwBcd/nbRz+e7y7qq0Td0Dcf9i7Y9wmwiAMw9KvaX0F5wh2FbqVQgFNEkrjNpF8ASKRIg3IB4CK6yIkCkj+9eymiGel5znEq6nmG/c0RM+u/PUu7oC4j/r4K0b82LfSxB0Q91FDjBsOrTBxB8R9zCpO2fy8bGWJOyDuIy7XcdrmpmzexR0Q9xE3kVp/vmgliTsg7n0X64jF5l3cAXHvu42IxeZd3AFx77uPqbarcn9nxB0Q965365hu+75Y3sUdEPeufcxyfVvqpZi4A+LedYxYcN7FHRD3rseY7eqxTN7FHRD3rod4hbtjkYeR4g6Ie9cqXuWuxj9gcQfEPYn7TLtP7fzEHRD3JO6zfT1/3sUdEPcs7vPdz867uAMpcX+DuCe+fWiziDuQEvfzxz1i2LcZxB1IiXuFuM/Lu7gDKXGvEffYfD+0icQdSIl7kbjPGGsSdyAl7mXiPjnv4g6kxL1Q3CeueYg7kBL3UnGflHdxB1LiXizuEdsvSd7FHUiJe7m4p2NN4g6kxL1g3COuH57aKHEHUuJeMu4nx5rEHUiJe9G4n8i7uAMpcS8b94ir/pqHuAMpcS8c95GxJnEHUuJeOu4Ru2N7TtyBlLgXj3tnrEncgZS4l4/7i7yLO5AS9wXE/dlYk7gDKXFfRNz/y7u4AylxX0jc/xlrEncgJe6LiXvEcGh/iDuQEvcFxf3vmoe4w2/27h41oSCMwjAMs47rErS6WgUU0SYhpUmr4AYixMLKHVhluwG7uX/W3/A8i3jLc3hJ3CPF/Zl3cQdeE/dYcc+5ebTiDrwi7tHi/jxrEndgmrjHi/vzrEncgSniHjHuOS8uN3EHxol7zLg/94DFHRgj7lHjnvPfWdyBEeIeN+65uazEHRgk7oHjnvPbXtyBIeIeOu750Io7MEDcY8c9r1txB/rEPXjc83Em7kCPuEePez6txB3oEvfwcc8XcQe6xD1+3JtW3IEOcY8f9/wQd6BD3CuIezMTd6Ak7hXEPW/FHSiJew1xv4s7UBL3GuL+K+5ASdxriPu7uAMlca8h7kdxB0riXkPcT+IOlMS9hrj/iDtQEvca4v4p7kBJ3CuI+3op7kBJ3CuI+9X8ANAh7vHjfliKO9Ah7uHjPv82+Qt0iXv4uF89MQE94h497hsfqkCfuAeP+yaJO9An7qHj3myTuAMDxD1y3Ne7JO7AEHEPHPfHPok7MEjcw8b9sEtJ3IFh4h407uvtKok7MEbcQ8Z9sbmlJO7AKHEPGPfma5aSuAMTxD1c3OcfbUriDkwS92Bxn9/PKYn7P3t3kJJQFMVxGC7toyXorEYOJHQiOhSnBm5AoQZOihbgkosghHp67nsEngvft4jf6H84QEDc24r7ZFOKuAMhcW8p7s+z8kXcgZC4txP39ap8E3cgJO6txP08bBd3ICTubcR9sXwoP8QdCIl7C3EfT+flTNyBkLjnj/vvmyVxB0Linj3uf2+WxB0IiXvyuHcM28UdCIl76rh3DtvFHQiJe+K4Xxi2izsQEve0cb84bBd3ICTuSeN+Zdgu7kBI3FPG/eqwXdyBkLgnjHswbBd3ICTu6eIeDtvFHQiJe7a4T3YlIO5ASNxzxf1tVkLiDoTEPVPcX1algrgDIXHPE/dt5bBd3IGQuGeJe/2wXdyBkLjniPt4eiy1xB0IiXuGuPcbtos7EBL328e977Bd3IGQuN867qP3XelH3IGQuP+DQ+pnHOIOiPsgy9TPOMQdEPdBXlM/4xB3QNwH+Uj9jEPcAXEfZNPSzZK4A+Je5zjK/IxD3AFxH2bd82Zpf1/yEHdA3LvtG7pZEndA3CvN7uqddiUXcQfEvdvjtqVhu7gD4l7nkPgZh7gD4j7QfNHQsF3cAXGv9NTQsF3cAXGvdWpn2C7ugLjXmm+bGbaLOyDun+zdsWoUURSAYY9jbyEWaVwQAiqCsiJEwUAiiFqk0kpREQsLtdBKrRQbO9FCH9d0dzez9zLZBHJm8n0P8TOcOXNmsNnrsSy2izsg7sPNvp1b6Xu2xXZxB8T9ELb2bvYHMr9O/Gcc4g6I+9HMdpdWIm/83Us8axd3QNyH2nqwu71zaX87Zmf7048RlF3cAXEfLOlGu7gD4n5qiDswwItITNzFHVjP1UhM3MUdWM/LSEzcV/hQWizuQM21SEzcxR1Yz6tITNzFHVjP9UhM3Ff4Wlos7oC4T8Xd0mJxB8R9KsQdEPcJ+lJaLO6AuE/F+9JicQfEfSrelRaLO2DPfSqelBaLO+D8wFT8Li0Wd6DmeSQm7n1vr5QWiztQ8ywSE/e+P10h7kDNrUhM3NsfqIo7ULNxPvIS9/aau7gDVXciL3Fvb0KKO1B1MfIS975/XSHuQNXjyEvce+bdAnEHqp5GXuLefp8q7sAo7w+Ie8+bboG4A6NcdBf39vEBcQeqNm5HWuLeHrmLOzDKdRlxb/+pQ9yBukeRlri3t9zFHRjl0V9xP2D+uVsk7kDdZt6hu7i3pzLiDjR8jKzEvT2VEXeg4V5kJe7tc7/iDozy6q+4t79gEndglMuQ4r5kfr9bJu5Ay8NIStzbp9zFHWjZvBw5/TxL48H9+F04A/xn7/5aoojCOI7POYfWDcGNiExrL4rEyUBorAs3oWBvsitXNy+6aA0MttxdMZhglfJiCQ1LQUuiV1tU/kvbmVl3jo8z38+LeDj8znN+J0mkNkOuarQ7uDPcAbSVn1EivdPY5zdN7PocAImypER6qbGvbo5huANoLy8zdd/Q2NMwxzHcAQSYVhJ91vjL+26OY7gDCDA0qAT6otEulGG4AwiSySl5tjTaNYYx3AGcy1r3BY3fsk1zEoY7gEADs0qe5xq/+NvmZOy5AwiUH1fifNXQ2muZ/6J+AECQkrx9yDca2isbW+46ABIoI+5PpjUNv2WseeQASKKKtOnOE1W902vsuewASKSMsGSGXchG0Vh03QGQTKVRJUrK12Wqy66x6YYDIKEebipJ0n2j6peNXZccAEk18EzSW9U0f9dRLTSNXf0OgAQrCeqZSXG7TKNlQuANE4DQhuQc3memdDpla8a+ew6AZJu4qYRIZ+ierbkmJJZlAERxR0jVTAo33b1C2YTGfSqAiDJvJYQzCynLZaqNetFEQSckgKjGpgV0ib3X6eEX6tsmEt6nAujE8Mjj++psfdPp4K/Mt0xkPGEC0KHhyuSgioza3/C8bGG+VjRnrv+KAyBd8nOTs7dUBFypBvD8nWxjpbBcr7WaRggWIYFUGpgYWVy6MPpA2Zb72KX3nr0SbBeLRTHj/AiXXRkg1YbypReVkQ9P/rCR2GzoLsiWDfiFCUA4w1bCmh/6tLx5A65TAYRVUTbs6lMqCLiulI5eGQAHlpQV6yQycXM5uAM4MK6syPWQyJyAr7EBxKOkLNmaIpGJVf9tBwD2TKs2JGzMkMiE415zAGDfoLJmlUTmX7TKAIjHmLJojUQmNhcpHgBwyKKy6ROJTEz6rjoAcGBThWR/unt11yCcPi5TARz2Oqfs2pjS4VRXSGSY7QA6NKds2+0hkem2V2QyAI56qqzLrbMj01UuPb8/2bub1SaiMA7j78uAEgidaVKbjyaQNm2s1haEuBAtySZgzaZVdNHWQhdZ6EZx0aVmo1eggoIfl+rHppJkOudomXnJPL+LmBke5vwPgAm1rmbg45eEIsM/Mh46jA4AmHSi2Tg9pMhckh5JBsCUPc1IeHoYW2T4R8ZduSUAMGVHMxN+f0eR+U8LRQGAaUeaqfHbqxSZf1dmTAbAbNuatfHZi/2/Ti0FcFS5zXWpAOJcUws+nb3/sP+ryHz+Sm13U+k1WJIBEKsZqhnjH99EllvFUq8wWAwQqzNq880O4EIP1Izubk3OLa9HrUa1mLKS7ZfKs06h166yMwAg0aoaEfbviQHRKLClvPJHsVhtRDzVATjauKM2DI/FiMYgsGRBAMDbTTXhd5ExY6ltqs1Q1wH466sBRorMufWtwI62AICn2l3Nnp0iY7LNFAQAPB1r5kwVGYttZpNVMAC+Hqm3OS8yBtsM4zEAfNU1W8MDMcxIm9kSAPByXz3loshYazMVZgYA+HmpXnJTZIy1Ga5ZAuDnqXrIVZEx1Wa4HxWAl+ehustZkbHUZjoCAB5uqbMcFhlDbYZ79AD4eKiu5v/Ukuk2UxIAcHZ9Td3ktshYaTOMhwHwcEOd5LrIGGkzbP0CcLenDnJfZEy0mRUBAFc7mowiY6LNMB4GwNmBJqLITIgyajOLjIcBcPVKE1Bk7LSZqgCAm6FejCJjqM30BACcNENN0WpT5kYWbaYiAOBkV9NTP5G54thmOKQKIH2vNS1r23NSZHzbDIdUAaRu47HGosjYazMDAQAHbzQORcZkm4kEAJL1dSaKjLulUpptpi0AkKjW1ZkoMj6iQpCasgBAois6C0XGV7UTpGST8TAAyZ7oFIqM7TbDeBiAZHWdQpGx3WZGAgAJjnQSReYnO3fTElUYh3H4/yAtBNHUnDEzyMqXUgQxF1LRKpBapbgqs00LV+HXcOFnTsp0Rs85zmvzHLyuj/GD+869zUw/CoBqZ6mNIlOHNrMYANXmUhtFpg5tZisAKr2dSi0UmXq0mZUAqLSXrigy9WkzzsOAakvpiiJTnzbjPAyotPo8DcXCq7jnhttmJgOgwnEq0n+RWY17b6htZs15GFDlNP2hyPxVnzZjpApU2U0XFJkWNWkz4wFQ6ktKiswwNYbVZqYbAVBmPw3Y0nbwX9rMRACU+azIFKpBm1kPgBLbikyZ7NtM03kYUOa9IlMq+zbjPAwoc67IVMq6zTgPA0qcHCgylbJuMx8DoNAPReYuObcZI1Wg2CdF5k4Zt5kXAVDg8Zs0ADuKzIjazGwAFPiuyHQk1zaz9jIAbjtUZDqVZ5txHgYU2VRkOpZlm/kZALd8VWS6kGObmTZSBW47U2S6lF2bmQ+Am+YUmRFqzByN9e1DANzwdEqR6VpmbaYZADfsKTK9yKvNPAuAdkuKzMj13WZmAqDN8o4ik4E+28xkALR5rcjkYX7FeRgwOKeKTCYu2ozzMGBQdhWZbPTRZsYDoMW3HorMcdAiizaz1giAa/uKTFZ6bjMTAXBtIXXnwbtgqB7OjvViPQCubKeubG4EhUbeZprOw4Brv1IXDg6Xg2KjbzOLAfDPuSKTpR7azFYAXDqZUmQy9aQ51p2VALi0ochkq7F1ZKQKv9m7Y5UGgigMo1cEKxFkxYhRWMyCmkKwsBCVrQSjnWJlY2NhF3yMFD6zrpWgyW5SzSznPMQUHzP/sJp7RSZhZWE8DFjF8ZEik7Sl2kwRAD9OFZnELdVmqgBoTBSZ5C3RZoYB0DhTZDLQuc28BcC3l9Ydmakik4Dd85P1LraNhwGNO0UmEx3bzF4ARDwrMtno1GbqAIiYKDL56NJmBgEQMV2b61ORSU6HNlMGQLzOLTLjIEHDgUeqQLur/2fDnh4VmUS1tZnbAJgzLfOhyCSsLIyHAW2uL9yRyc7CNjMKgIg7RSY/Ve0nVaDFzKulDJWFZUhgsfGlOzIZGg4c7sBC77P9tcbDzXGQjaqWZYAWh6fjjasgL+WW1V+AHvrbZgZ2IQGyV9VuQgL0ULnltw6AHvrVZuqdAKAfqvPt9UZxEAD0x87BaLRpVQYAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgC/24EAAAAAAAMj/tRFUVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVYU9OBAAAAAAAPJ/bQRVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVWEPDgQAAAAAgPxfG0FVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVdiDAwEAAAAAIP/XRlBVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVFfbgQAAAAAAAyP+1EVRVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVhT04EAAAAAAA8n9tBFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVYQ8OBAAAAACA/F8bQVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVNgpGwSgYBaNgFDAAAL2hiP3OAIFCAAAAAElFTkSuQmCC"
 							/>
 							<div class="video-btns">
-								<button *ngIf="recording.status === recordingStatusEnum.READY" mat-icon-button (click)="play(recording)">
-									<mat-icon id="play" aria-label="Play" title="{{ 'PANEL.RECORDING.PLAY' | translate }}"
-										>play_arrow</mat-icon
-									>
-								</button>
+								@if (recording.status === recordingStatusEnum.READY) {
+									<button mat-icon-button (click)="play(recording)">
+										<mat-icon id="play" aria-label="Play" title="{{ 'PANEL.RECORDING.PLAY' | translate }}"
+											>play_arrow</mat-icon
+										>
+									</button>
+								}
 
-								<button
-									(click)="download(recording)"
-									*ngIf="
-										(recording.location && recording.status === recordingStatusEnum.READY) ||
-										recording.status === recordingStatusEnum.FAILED
-									"
-									mat-icon-button
-									aria-label="Download"
-									title="{{ 'PANEL.RECORDING.DOWNLOAD' | translate }}"
-								>
-									<mat-icon id="download">download</mat-icon>
-								</button>
-								<button
-									mat-icon-button
-									class="delete-recording-btn"
-									(click)="deleteRecording(recording)"
-									*ngIf="
-										recording.status === recordingStatusEnum.READY || recording.status === recordingStatusEnum.FAILED
-									"
-								>
-									<mat-icon id="delete" aria-label="Delete" title="{{ 'PANEL.RECORDING.DELETE' | translate }}"
-										>delete</mat-icon
+								@if ((recording.location && recording.status === recordingStatusEnum.READY) || recording.status === recordingStatusEnum.FAILED) {
+									<button
+										mat-icon-button
+										(click)="download(recording)"
+										aria-label="Download"
+										title="{{ 'PANEL.RECORDING.DOWNLOAD' | translate }}"
 									>
-								</button>
+										<mat-icon id="download">download</mat-icon>
+									</button>
+								}
+								@if (recording.status === recordingStatusEnum.READY || recording.status === recordingStatusEnum.FAILED) {
+									<button
+										mat-icon-button
+										class="delete-recording-btn"
+										(click)="deleteRecording(recording)"
+									>
+										<mat-icon id="delete" aria-label="Delete" title="{{ 'PANEL.RECORDING.DELETE' | translate }}"
+											>delete</mat-icon
+										>
+									</button>
+								}
 							</div>
 						</div>
 						<div class="video-info-container">
@@ -145,7 +144,8 @@
 					</mat-card-content>
 				</mat-card>
 			</div>
-		</div>
+		}
+	</div>
 
 		<div class="load-more-container">
 			<button mat-fab extended class="load-more-btn" (click)="loadMore($event)">

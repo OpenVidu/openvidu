@@ -7,17 +7,25 @@
 	</div>
 
 	<div class="scrollable">
-		<div class="local-participant-container" *ngIf="localParticipant">
-			<ng-container *ngTemplateOutlet="participantPanelItemTemplate; context: { $implicit: localParticipant }"></ng-container>
-			<mat-divider *ngIf="true"></mat-divider>
-		</div>
+		@if (localParticipant) {
+			<div class="local-participant-container">
+				<ng-container *ngTemplateOutlet="participantPanelItemTemplate; context: { $implicit: localParticipant }"></ng-container>
+				@if (true) {
+					<mat-divider></mat-divider>
+				}
+			</div>
+		}
 		<ng-container *ngTemplateOutlet="participantPanelAfterLocalParticipantTemplate"></ng-container>
 
-		<div class="remote-participants-container" id="remote-participants-container" *ngIf="remoteParticipants.length > 0">
-			<div *ngFor="let participant of this.remoteParticipants" id="remote-participant-item">
-				<ng-container *ngTemplateOutlet="participantPanelItemTemplate; context: { $implicit: participant }"></ng-container>
+		@if (remoteParticipants.length > 0) {
+			<div class="remote-participants-container" id="remote-participants-container">
+				@for (participant of this.remoteParticipants; track participant.identity) {
+					<div id="remote-participant-item">
+						<ng-container *ngTemplateOutlet="participantPanelItemTemplate; context: { $implicit: participant }"></ng-container>
+					</div>
+				}
 			</div>
-		</div>
+		}
 	</div>
 </div>
 

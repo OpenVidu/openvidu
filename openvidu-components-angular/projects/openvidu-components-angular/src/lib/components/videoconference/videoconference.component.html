@@ -8,10 +8,9 @@
 	} @else if (componentState.showPrejoin) {
 		<!-- Prejoin -->
 		<div [@inOutAnimation] id="pre-join-container">
-			<ng-container *ngIf="openviduAngularPreJoinTemplate; else defaultPreJoin">
+			@if (openviduAngularPreJoinTemplate) {
 				<ng-container *ngTemplateOutlet="openviduAngularPreJoinTemplate"></ng-container>
-			</ng-container>
-			<ng-template #defaultPreJoin>
+			} @else {
 				<ov-pre-join
 					[error]="componentState.error?.tokenError"
 					(onReadyToJoin)="_onReadyToJoin()"
@@ -21,7 +20,7 @@
 					(onAudioEnabledChanged)="onAudioEnabledChanged.emit($event)"
 					(onLangChanged)="onLangChanged.emit($event)"
 				></ov-pre-join>
-			</ng-template>
+			}
 		</div>
 	} @else if (componentState.error?.hasError) {
 		<!-- Error -->
@@ -44,21 +43,21 @@
 				(onParticipantLeft)="_onParticipantLeft($event)"
 			>
 				<ng-template #toolbar>
-					<ng-container *ngIf="openviduAngularToolbarTemplate">
+					@if (openviduAngularToolbarTemplate) {
 						<ng-container *ngTemplateOutlet="openviduAngularToolbarTemplate"></ng-container>
-					</ng-container>
+					}
 				</ng-template>
 
 				<ng-template #panel>
-					<ng-container *ngIf="openviduAngularPanelTemplate">
+					@if (openviduAngularPanelTemplate) {
 						<ng-container *ngTemplateOutlet="openviduAngularPanelTemplate"></ng-container>
-					</ng-container>
+					}
 				</ng-template>
 
 				<ng-template #layout>
-					<ng-container *ngIf="openviduAngularLayoutTemplate">
+					@if (openviduAngularLayoutTemplate) {
 						<ng-container *ngTemplateOutlet="openviduAngularLayoutTemplate"></ng-container>
-					</ng-container>
+					}
 				</ng-template>
 			</ov-session>
 		</div>

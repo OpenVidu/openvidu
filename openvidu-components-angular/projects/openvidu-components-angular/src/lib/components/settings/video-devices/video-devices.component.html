@@ -55,7 +55,9 @@
 					>
 						<mat-icon class="device-icon">videocam</mat-icon>
 						<span class="selected-device-name">{{ cameraSelected?.label || 'No camera selected' }}</span>
-						<mat-icon class="dropdown-icon" *ngIf="cameras.length > 1">expand_more</mat-icon>
+						@if (cameras.length > 1) {
+							<mat-icon class="dropdown-icon">expand_more</mat-icon>
+						}
 					</button>
 				</div>
 			} @else {
@@ -87,7 +89,9 @@
 				(click)="onCameraSelected({ value: camera })"
 				[class.selected]="camera.device === cameraSelected?.device"
 			>
-				<mat-icon *ngIf="camera.device === cameraSelected?.device" class="check-icon">check</mat-icon>
+				@if (camera.device === cameraSelected?.device) {
+					<mat-icon class="check-icon">check</mat-icon>
+				}
 				<span>{{ camera.label }}</span>
 			</button>
 		}

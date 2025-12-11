@@ -1,83 +1,112 @@
-<div
-	*ngIf="_track.participant"
-	[ngClass]="{
-		OV_stream: !_track.isAudioTrack || (_track.isAudioTrack && _track.participant.onlyHasAudioTracks),
-		'no-size': !showVideo,
-		local: _track.participant.isLocal,
-		remote: !_track.participant.isLocal,
-		speaking: !isMinimal && showAudioDetection && _track.participant.isSpeaking && _track.isCameraTrack
-	}"
-	[id]="'stream-' + _track.source + '-' + _track.trackSid"
-	(mousemove)="mouseHover($event)"
-	#streamContainer
->
+@if (_track.participant) {
 	<div
-		*ngIf="!isMinimal && showParticipantName && !_track.isAudioTrack || (_track.isAudioTrack && _track.participant.onlyHasAudioTracks)"
-		id="participant-name-container"
-		class="participant-name"
-		[class.fullscreen]="isFullscreen"
+		[ngClass]="{
+			OV_stream: !_track.isAudioTrack || (_track.isAudioTrack && _track.participant.onlyHasAudioTracks),
+			'no-size': !showVideo,
+			local: _track.participant.isLocal,
+			remote: !_track.participant.isLocal,
+			speaking: !isMinimal && showAudioDetection && _track.participant.isSpeaking && _track.isCameraTrack
+		}"
+		[id]="'stream-' + _track.source + '-' + _track.trackSid"
+		(mousemove)="mouseHover($event)"
+		#streamContainer
 	>
-		<div class="participant-name-container">
-			<span id="participant-name">{{ _track.participant.name }}</span>
-			<span *ngIf="_track.isScreenTrack" id="participant-name">_SCREEN</span>
-		</div>
-	</div>
-
-	<div *ngIf="!isMinimal && showAudioDetection && _track.participant.isSpeaking && _track.isCameraTrack" id="audio-wave-container">
-		<ov-audio-wave></ov-audio-wave>
-	</div>
-
-	<ov-media-element
-		[track]="_track.track"
-		[showAvatar]="_track.participant.onlyHasAudioTracks || (_track.isCameraTrack && !_track.participant.isCameraEnabled)"
-		[avatarColor]="_track.participant.colorProfile"
-		[avatarName]="_track.participant.name"
-		[muted]="_track.isMutedForcibly"
-		[isLocal]="_track.participant.isLocal"
-		[hasEncryptionError]="_track.participant.hasEncryptionError"
-	></ov-media-element>
-
-	@if (!_track.participant.hasEncryptionError) {
-		<div class="status-icons">
-			<mat-icon id="status-mic" fontIcon="mic_off" *ngIf="!_track.participant?.isMicrophoneEnabled"></mat-icon>
-			<mat-icon id="status-muted-forcibly" fontIcon="volume_off" *ngIf="_track.isMutedForcibly"></mat-icon>
-			<mat-icon id="status-pinned" fontIcon="push_pin" *ngIf="_track.isPinned"></mat-icon>
-		</div>
-
-		<div class="stream-video-controls" *ngIf="!isMinimal && showVideoControls && mouseHovering">
-			<div class="flex-container">
-				<button
-					mat-icon-button
-					id="pin-btn"
-					(click)="toggleVideoPinned()"
-					[matTooltip]="_track.isPinned ? ('STREAM.UNPIN' | translate) : ('STREAM.PIN' | translate)"
-				>
-					<mat-icon *ngIf="_track.isPinned" fontSet="material-symbols-outlined" fontIcon="keep">keep_off</mat-icon>
-					<mat-icon *ngIf="!_track.isPinned" id="status-pinned" fontIcon="push_pin"></mat-icon>
-				</button>
-				<button
-					*ngIf="!_track.participant.isLocal"
-					mat-icon-button
-					id="silence-btn"
-					(click)="toggleMuteForcibly()"
-					[class.muted-btn]="_track.isMutedForcibly"
-					[matTooltip]="_track.isMutedForcibly ? ('STREAM.UNMUTE_SOUND' | translate) : ('STREAM.MUTE_SOUND' | translate)"
-				>
-					<mat-icon *ngIf="_track.isMutedForcibly">volume_off</mat-icon>
-					<mat-icon *ngIf="!_track.isMutedForcibly">volume_up</mat-icon>
-				</button>
-				<button
-					*ngIf="_track.participant.isLocal"
-					mat-icon-button
-					id="minimize-btn"
-					[disabled]="_track.isPinned"
-					(click)="toggleMinimize()"
-					[matTooltip]="_track.isMinimized ? ('STREAM.MAXIMIZE' | translate) : ('STREAM.MINIMIZE' | translate)"
-				>
-					<mat-icon *ngIf="_track.isMinimized">open_in_full</mat-icon>
-					<mat-icon *ngIf="!_track.isMinimized">close_fullscreen</mat-icon>
-				</button>
+		@if ((!isMinimal && showParticipantName && !_track.isAudioTrack) || (_track.isAudioTrack && _track.participant.onlyHasAudioTracks)) {
+			<div
+				id="participant-name-container"
+				class="participant-name"
+				[class.fullscreen]="isFullscreen"
+			>
+				<div class="participant-name-container">
+					<span id="participant-name">{{ _track.participant.name }}</span>
+					@if (_track.isScreenTrack) {
+						<span id="participant-name">_SCREEN</span>
+					}
+				</div>
 			</div>
-		</div>
-	}
-</div>
+		}
+
+		@if (!isMinimal && showAudioDetection && _track.participant.isSpeaking && _track.isCameraTrack) {
+			<div id="audio-wave-container">
+				<ov-audio-wave></ov-audio-wave>
+			</div>
+		}
+
+		<ov-media-element
+			[track]="_track.track"
+			[showAvatar]="_track.participant.onlyHasAudioTracks || (_track.isCameraTrack && !_track.participant.isCameraEnabled)"
+			[avatarColor]="_track.participant.colorProfile"
+			[avatarName]="_track.participant.name"
+			[muted]="_track.isMutedForcibly"
+			[isLocal]="_track.participant.isLocal"
+			[hasEncryptionError]="_track.participant.hasEncryptionError"
+		></ov-media-element>
+
+		@if (!_track.participant.hasEncryptionError) {
+			<div class="status-icons">
+				@if (!_track.participant?.isMicrophoneEnabled) {
+					<mat-icon id="status-mic" fontIcon="mic_off"></mat-icon>
+				}
+				@if (_track.isMutedForcibly) {
+					<mat-icon id="status-muted-forcibly" fontIcon="volume_off"></mat-icon>
+				}
+				@if (_track.isPinned) {
+					<mat-icon id="status-pinned" fontIcon="push_pin"></mat-icon>
+				}
+			</div>
+		}
+
+		@if (!isMinimal && showVideoControls && mouseHovering && !_track.participant.hasEncryptionError) {
+			<div class="stream-video-controls">
+				<div class="flex-container">
+					<button
+						mat-icon-button
+						id="pin-btn"
+						(click)="toggleVideoPinned()"
+						[matTooltip]="_track.isPinned ? ('STREAM.UNPIN' | translate) : ('STREAM.PIN' | translate)"
+					>
+						@if (_track.isPinned) {
+							<mat-icon fontSet="material-symbols-outlined" fontIcon="keep">keep_off</mat-icon>
+						}
+						@if (!_track.isPinned) {
+							<mat-icon id="status-pinned" fontIcon="push_pin"></mat-icon>
+						}
+					</button>
+					@if (!_track.participant.isLocal) {
+						<button
+							mat-icon-button
+							id="silence-btn"
+							(click)="toggleMuteForcibly()"
+							[class.muted-btn]="_track.isMutedForcibly"
+							[matTooltip]="_track.isMutedForcibly ? ('STREAM.UNMUTE_SOUND' | translate) : ('STREAM.MUTE_SOUND' | translate)"
+						>
+							@if (_track.isMutedForcibly) {
+								<mat-icon>volume_off</mat-icon>
+							}
+							@if (!_track.isMutedForcibly) {
+								<mat-icon>volume_up</mat-icon>
+							}
+						</button>
+					}
+					@if (_track.participant.isLocal) {
+						<button
+							mat-icon-button
+							id="minimize-btn"
+							[disabled]="_track.isPinned"
+							(click)="toggleMinimize()"
+							[matTooltip]="_track.isMinimized ? ('STREAM.MAXIMIZE' | translate) : ('STREAM.MINIMIZE' | translate)"
+						>
+							@if (_track.isMinimized) {
+								<mat-icon>open_in_full</mat-icon>
+							}
+							@if (!_track.isMinimized) {
+								<mat-icon>close_fullscreen</mat-icon>
+							}
+						</button>
+					}
+				</div>
+			</div>
+		}
+	</div>
+}
+

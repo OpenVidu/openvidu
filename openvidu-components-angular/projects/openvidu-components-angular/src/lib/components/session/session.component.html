@@ -29,8 +29,10 @@
 			</mat-sidenav-content>
 		</mat-sidenav-container>
 
-		<div id="footer-container" *ngIf="toolbarTemplate">
-			<ng-container *ngTemplateOutlet="toolbarTemplate"></ng-container>
-		</div>
+		@if (toolbarTemplate) {
+			<div id="footer-container">
+				<ng-container *ngTemplateOutlet="toolbarTemplate"></ng-container>
+			</div>
+		}
 	</div>
 }

@@ -11,6 +11,7 @@ import { CdkOverlayService } from '../../services/cdk-overlay/cdk-overlay.servic
 import { OpenViduComponentsConfigService } from '../../services/config/directive-config.service';
 import { LayoutService } from '../../services/layout/layout.service';
 import { ParticipantService } from '../../services/participant/participant.service';
+import { TranslatePipe } from '../../pipes/translate.pipe';
 
 /**
  * The **StreamComponent** is hosted inside of the {@link LayoutComponent}.
@@ -21,7 +22,7 @@ import { ParticipantService } from '../../services/participant/participant.servi
 	templateUrl: './stream.component.html',
 	styleUrls: ['./stream.component.scss'],
 	standalone: true,
-	imports: [CommonModule, AppMaterialModule, AudioWaveComponent, MediaElementComponent]
+	imports: [CommonModule, AppMaterialModule, AudioWaveComponent, MediaElementComponent, TranslatePipe]
 })
 export class StreamComponent implements OnInit, OnDestroy {
 	/**
@@ -193,21 +194,18 @@ export class StreamComponent implements OnInit, OnDestroy {
 			.pipe(takeUntil(this.destroy$))
 			.subscribe((value: boolean) => {
 				this.showParticipantName = value;
-				// this.cd.markForCheck();
 			});
 
 		this.libService.displayAudioDetection$
 			.pipe(takeUntil(this.destroy$))
 			.subscribe((value: boolean) => {
 				this.showAudioDetection = value;
-				// this.cd.markForCheck();
 			});
 
 		this.libService.streamVideoControls$
 			.pipe(takeUntil(this.destroy$))
 			.subscribe((value: boolean) => {
 				this.showVideoControls = value;
-				// this.cd.markForCheck();
 			});
 	}
 }

@@ -21,7 +21,9 @@
 							<div id="recording-tag" class="recording-tag" (click)="openRecordingActivityPanel()">
 								<mat-icon class="blink">radio_button_checked</mat-icon>
 								<span class="blink">REC</span>
-								<span *ngIf="recordingTime"> | {{ recordingTime | date: 'H:mm:ss' }}</span>
+								@if (recordingTime) {
+									<span> | {{ recordingTime | date: 'H:mm:ss' }}</span>
+								}
 							</div>
 						}
 

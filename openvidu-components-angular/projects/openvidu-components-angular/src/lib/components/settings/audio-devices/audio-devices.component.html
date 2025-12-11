@@ -56,7 +56,9 @@
 						>
 							<mat-icon class="device-icon">mic</mat-icon>
 							<span class="selected-device-name">{{ microphoneSelected?.label || 'No microphone selected' }}</span>
-							<mat-icon class="dropdown-icon" *ngIf="microphones.length > 1">expand_more</mat-icon>
+							@if (microphones.length > 1) {
+								<mat-icon class="dropdown-icon">expand_more</mat-icon>
+							}
 						</button>
 					</div>
 				} @else {
@@ -91,7 +93,9 @@
 				(click)="onMicrophoneSelected({ value: microphone })"
 				[class.selected]="microphone.device === microphoneSelected.device"
 			>
-				<mat-icon *ngIf="microphone.device === microphoneSelected.device">check</mat-icon>
+				@if (microphone.device === microphoneSelected.device) {
+					<mat-icon>check</mat-icon>
+				}
 				<span>{{ microphone.label }}</span>
 			</button>
 		}

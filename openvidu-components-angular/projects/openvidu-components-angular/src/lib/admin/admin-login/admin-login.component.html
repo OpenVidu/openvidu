@@ -1,37 +1,45 @@
 <mat-toolbar class="header"> {{ title || ('ADMIN.DASHBOARD_TITLE' | translate) }} </mat-toolbar>
 
 <div class="center-container">
-	<div *ngIf="loading" class="outer">
-		<div class="middle">
-			<div class="inner">
-				<mat-spinner [diameter]="50"></mat-spinner>
+	@if (loading) {
+		<div class="outer">
+			<div class="middle">
+				<div class="inner">
+					<mat-spinner [diameter]="50"></mat-spinner>
+				</div>
 			</div>
 		</div>
-	</div>
+	}
 
-	<mat-card *ngIf="!loading" class="card-container" appearance="outlined">
-		<mat-card-content>
-			<form [formGroup]="loginForm" (ngSubmit)="login()">
-				<mat-form-field appearance="outline" class="form-field">
-					<mat-label>{{ 'ADMIN.USERNAME' | translate }}</mat-label>
-					<input matInput formControlName="username" type="text" name="username" />
-					<mat-error *ngIf="loginForm.get('username')?.hasError('required')">
-						{{ 'ADMIN.USERNAME_REQUIRED' | translate }}
-					</mat-error>
-				</mat-form-field>
-				<mat-form-field appearance="outline" class="form-field">
-					<mat-label>{{ 'ADMIN.PASSWORD' | translate }}</mat-label>
-					<input matInput formControlName="password" type="password" name="password" autocomplete="current-password" />
-					<mat-error *ngIf="loginForm.get('password')?.hasError('required')">
-						{{ 'ADMIN.PASSWORD_REQUIRED' | translate }}
-					</mat-error>
-				</mat-form-field>
-				<div class="col-12 d-flex text-center">
-					<button mat-flat-button disableRipple class="form-btn" type="submit">
-						{{ 'ADMIN.LOGIN' | translate }}
-					</button>
-				</div>
-			</form>
-		</mat-card-content>
-	</mat-card>
+	@if (!loading) {
+		<mat-card class="card-container" appearance="outlined">
+			<mat-card-content>
+				<form [formGroup]="loginForm" (ngSubmit)="login()">
+					<mat-form-field appearance="outline" class="form-field">
+						<mat-label>{{ 'ADMIN.USERNAME' | translate }}</mat-label>
+						<input matInput formControlName="username" type="text" name="username" />
+						@if (loginForm.get('username')?.hasError('required')) {
+							<mat-error>
+								{{ 'ADMIN.USERNAME_REQUIRED' | translate }}
+							</mat-error>
+						}
+					</mat-form-field>
+					<mat-form-field appearance="outline" class="form-field">
+						<mat-label>{{ 'ADMIN.PASSWORD' | translate }}</mat-label>
+						<input matInput formControlName="password" type="password" name="password" autocomplete="current-password" />
+						@if (loginForm.get('password')?.hasError('required')) {
+							<mat-error>
+								{{ 'ADMIN.PASSWORD_REQUIRED' | translate }}
+							</mat-error>
+						}
+					</mat-form-field>
+					<div class="col-12 d-flex text-center">
+						<button mat-flat-button disableRipple class="form-btn" type="submit">
+							{{ 'ADMIN.LOGIN' | translate }}
+						</button>
+					</div>
+				</form>
+			</mat-card-content>
+		</mat-card>
+	}
 </div>

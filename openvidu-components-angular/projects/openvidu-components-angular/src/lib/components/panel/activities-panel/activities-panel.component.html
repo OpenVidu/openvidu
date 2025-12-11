@@ -8,25 +8,27 @@
 
 	<div class="activities-body-container">
 		<mat-accordion [multi]="false">
-			<ov-recording-activity
-				*ngIf="showRecordingActivity"
-				id="recording-activity"
-				[expanded]="expandedPanel === 'recording'"
-				(onRecordingStartRequested)="onRecordingStartRequested.emit($event)"
-				(onRecordingStopRequested)="onRecordingStopRequested.emit($event)"
-				(onRecordingDeleteRequested)="onRecordingDeleteRequested.emit($event)"
-				(onRecordingDownloadClicked)="onRecordingDownloadClicked.emit($event)"
-				(onRecordingPlayClicked)="onRecordingPlayClicked.emit($event)"
-				(onViewRecordingClicked)="onViewRecordingClicked.emit($event)"
-				(onViewRecordingsClicked)="onViewRecordingsClicked.emit()"
-			></ov-recording-activity>
-			<ov-broadcasting-activity
-				*ngIf="showBroadcastingActivity"
-				id="broadcasting-activity"
-				[expanded]="expandedPanel === 'broadcasting'"
-				(onBroadcastingStartRequested)="onBroadcastingStartRequested.emit($event)"
-				(onBroadcastingStopRequested)="onBroadcastingStopRequested.emit($event)"
-			></ov-broadcasting-activity>
+			@if (showRecordingActivity) {
+				<ov-recording-activity
+					id="recording-activity"
+					[expanded]="expandedPanel === 'recording'"
+					(onRecordingStartRequested)="onRecordingStartRequested.emit($event)"
+					(onRecordingStopRequested)="onRecordingStopRequested.emit($event)"
+					(onRecordingDeleteRequested)="onRecordingDeleteRequested.emit($event)"
+					(onRecordingDownloadClicked)="onRecordingDownloadClicked.emit($event)"
+					(onRecordingPlayClicked)="onRecordingPlayClicked.emit($event)"
+					(onViewRecordingClicked)="onViewRecordingClicked.emit($event)"
+					(onViewRecordingsClicked)="onViewRecordingsClicked.emit()"
+				></ov-recording-activity>
+			}
+			@if (showBroadcastingActivity) {
+				<ov-broadcasting-activity
+					id="broadcasting-activity"
+					[expanded]="expandedPanel === 'broadcasting'"
+					(onBroadcastingStartRequested)="onBroadcastingStartRequested.emit($event)"
+					(onBroadcastingStopRequested)="onBroadcastingStopRequested.emit($event)"
+				></ov-broadcasting-activity>
+			}
 		</mat-accordion>
 	</div>
 </div>

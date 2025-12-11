@@ -1,45 +1,47 @@
 <div class="container" [ngClass]="{ withCaptions: captionsEnabled, withMargin: localParticipant.isMinimized }">
 	<div id="layout" class="layout" #layout>
-		<div
-			#localLayoutElement
-			*ngFor="let track of localParticipant.tracks; trackBy: trackParticipantElement"
-			[ngClass]="{
-				local_participant: true,
-				OV_root: !track.isAudioTrack && !track.isMinimized,
-				OV_publisher: !track.isAudioTrack && !track.isMinimized,
-				OV_minimized: track.isMinimized,
-				OV_big: track.isPinned,
-				OV_ignored: track.isAudioTrack && !track.participant.onlyHasAudioTracks,
-				OV_screen: track.isScreenTrack
-			}"
-			[id]="'participant-' + track.participant.identity"
-			cdkDrag
-			cdkDragBoundary=".layout"
-			[cdkDragDisabled]="!track.isMinimized"
-			[cdkDragFreeDragPosition]="!track.isMinimized ? { x: 0, y: 0 } : null"
-		>
-			<ng-container *ngTemplateOutlet="streamTemplate; context: { $implicit: track }"></ng-container>
-		</div>
+		@for (track of localParticipant.tracks; track track) {
+			<div
+				#localLayoutElement
+				[ngClass]="{
+					local_participant: true,
+					OV_root: !track.isAudioTrack && !track.isMinimized,
+					OV_publisher: !track.isAudioTrack && !track.isMinimized,
+					OV_minimized: track.isMinimized,
+					OV_big: track.isPinned,
+					OV_ignored: track.isAudioTrack && !track.participant.onlyHasAudioTracks,
+					OV_screen: track.isScreenTrack
+				}"
+				[id]="'participant-' + track.participant.identity"
+				cdkDrag
+				cdkDragBoundary=".layout"
+				[cdkDragDisabled]="!track.isMinimized"
+				[cdkDragFreeDragPosition]="!track.isMinimized ? { x: 0, y: 0 } : null"
+			>
+				<ng-container *ngTemplateOutlet="streamTemplate; context: { $implicit: track }"></ng-container>
+			</div>
+		}
 
 		<!-- Render additional layout elements injected via ovAdditionalLayoutElement -->
 		@if (layoutAdditionalElementsTemplate) {
 			<ng-container *ngTemplateOutlet="layoutAdditionalElementsTemplate"></ng-container>
 		}
 
-		<div
-			*ngFor="let track of remoteParticipants | tracks; trackBy: trackParticipantElement"
-			class="remote-participant"
-			[id]="'participant-' + track.participant.identity"
-			[ngClass]="{
-				OV_root: !track.isAudioTrack,
-				OV_publisher: !track.isAudioTrack,
-				OV_big: track.isPinned,
-				OV_ignored: track.isAudioTrack && !track.participant.onlyHasAudioTracks,
-				OV_screen: track.isScreenTrack
-			}"
-		>
-			<ng-container *ngTemplateOutlet="streamTemplate; context: { $implicit: track }"></ng-container>
-		</div>
+		@for (track of remoteParticipants | tracks; track track) {
+			<div
+				class="remote-participant"
+				[id]="'participant-' + track.participant.identity"
+				[ngClass]="{
+					OV_root: !track.isAudioTrack,
+					OV_publisher: !track.isAudioTrack,
+					OV_big: track.isPinned,
+					OV_ignored: track.isAudioTrack && !track.participant.onlyHasAudioTracks,
+					OV_screen: track.isScreenTrack
+				}"
+			>
+				<ng-container *ngTemplateOutlet="streamTemplate; context: { $implicit: track }"></ng-container>
+			</div>
+		}
 	</div>
 
 	<!-- <ov-captions *ngIf="captionsEnabled" class="OV_ignored"></ov-captions> -->

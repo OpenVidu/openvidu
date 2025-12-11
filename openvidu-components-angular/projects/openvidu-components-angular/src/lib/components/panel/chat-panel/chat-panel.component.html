@@ -11,17 +11,23 @@
 	</div>
 
 	<div class="messages-container" #chatScroll>
-		<div *ngFor="let data of messageList" class="message" [ngClass]="data.isLocal ? 'right' : 'left'">
-			<div class="msg-detail">
-				<div class="participant-name-container">
-					<p *ngIf="data.isLocal">{{ 'PANEL.CHAT.YOU' | translate }}</p>
-					<p *ngIf="!data.isLocal">{{ data.participantName }}</p>
-				</div>
-				<div class="chat-message">
-					<p [innerHTML]="data.message | linkify"></p>
+		@for (data of messageList; track data) {
+			<div class="message" [ngClass]="data.isLocal ? 'right' : 'left'">
+				<div class="msg-detail">
+					<div class="participant-name-container">
+						@if (data.isLocal) {
+							<p>{{ 'PANEL.CHAT.YOU' | translate }}</p>
+						}
+						@if (!data.isLocal) {
+							<p>{{ data.participantName }}</p>
+						}
+					</div>
+					<div class="chat-message">
+						<p [innerHTML]="data.message | linkify"></p>
+					</div>
 				</div>
 			</div>
-		</div>
+		}
 	</div>
 
 	<div class="input-container">

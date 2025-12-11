@@ -73,28 +73,30 @@
 				/>
 				<button
 					mat-icon-button
-					*ngIf="broadcastingStatus !== broadcastingStatusEnum.STARTED"
-					id="broadcasting-btn"
-					[disabled]="
-						!broadcastUrl ||
-						broadcastingStatus === broadcastingStatusEnum.STARTING ||
-						broadcastingStatus === broadcastingStatusEnum.STOPPING
-					"
-					(click)="startBroadcasting()"
-					matTooltip="{{ 'PANEL.STREAMING.START' | translate }}"
+					@if (broadcastingStatus !== broadcastingStatusEnum.STARTED) {
+						id="broadcasting-btn"
+						[disabled]="
+							!broadcastUrl ||
+							broadcastingStatus === broadcastingStatusEnum.STARTING ||
+							broadcastingStatus === broadcastingStatusEnum.STOPPING
+						"
+						(click)="startBroadcasting()"
+						matTooltip="{{ 'PANEL.STREAMING.START' | translate }}"
+					}
 				>
 					<mat-icon>play_circle</mat-icon>
 				</button>
 
-				<button
-					mat-icon-button
-					*ngIf="broadcastingStatus === broadcastingStatusEnum.STARTED"
-					id="stop-broadcasting-btn"
-					(click)="stopBroadcasting()"
-					matTooltip="{{ 'PANEL.STREAMING.STOP' | translate }}"
-				>
-					<mat-icon>stop_circle</mat-icon>
-				</button>
+				@if (broadcastingStatus === broadcastingStatusEnum.STARTED) {
+					<button
+						mat-icon-button
+						id="stop-broadcasting-btn"
+						(click)="stopBroadcasting()"
+						matTooltip="{{ 'PANEL.STREAMING.STOP' | translate }}"
+					>
+						<mat-icon>stop_circle</mat-icon>
+					</button>
+				}
 			</div>
 
 			<div>
