@@ -9,6 +9,10 @@ import {
 	TemplateRef,
 	ViewChild
 } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { AppMaterialModule } from '../../../../openvidu-components-angular.material.module';
+import { TranslatePipe } from '../../../../pipes/translate.pipe';
+import { ParticipantPanelItemComponent } from '../participant-panel-item/participant-panel-item.component';
 // import { ParticipantModel } from '../../../../models/participant.model';
 import { ParticipantService } from '../../../../services/participant/participant.service';
 import { PanelService } from '../../../../services/panel/panel.service';
@@ -28,7 +32,8 @@ import { OpenViduComponentsConfigService } from '../../../../services/config/dir
 	templateUrl: './participants-panel.component.html',
 	styleUrls: ['../../panel.component.scss', './participants-panel.component.scss'],
 	changeDetection: ChangeDetectionStrategy.OnPush,
-	standalone: false
+	standalone: true,
+	imports: [CommonModule, AppMaterialModule, TranslatePipe, ParticipantPanelItemComponent]
 })
 export class ParticipantsPanelComponent implements OnInit, OnDestroy, AfterViewInit {
 	/**

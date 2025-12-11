@@ -18,7 +18,7 @@ import { OpenViduComponentsConfigService } from '../../services/config/directive
  */
 @Directive({
 	selector: 'ov-videoconference[streamDisplayParticipantName], ov-stream[displayParticipantName]',
-	standalone: false
+	standalone: true
 })
 export class StreamDisplayParticipantNameDirective implements AfterViewInit, OnDestroy {
 	@Input() set streamDisplayParticipantName(value: boolean) {
@@ -71,7 +71,7 @@ export class StreamDisplayParticipantNameDirective implements AfterViewInit, OnD
  */
 @Directive({
 	selector: 'ov-videoconference[streamDisplayAudioDetection], ov-stream[displayAudioDetection]',
-	standalone: false
+	standalone: true
 })
 export class StreamDisplayAudioDetectionDirective implements AfterViewInit, OnDestroy {
 	@Input() set streamDisplayAudioDetection(value: boolean) {
@@ -122,7 +122,7 @@ export class StreamDisplayAudioDetectionDirective implements AfterViewInit, OnDe
  */
 @Directive({
 	selector: 'ov-videoconference[streamVideoControls], ov-stream[videoControls]',
-	standalone: false
+	standalone: true
 })
 export class StreamVideoControlsDirective implements AfterViewInit, OnDestroy {
 	@Input() set streamVideoControls(value: boolean) {

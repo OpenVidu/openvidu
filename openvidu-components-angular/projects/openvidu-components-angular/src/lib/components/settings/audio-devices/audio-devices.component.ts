@@ -1,4 +1,7 @@
 import { Component, EventEmitter, Input, OnDestroy, OnInit, Output } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { AppMaterialModule } from '../../../openvidu-components-angular.material.module';
+import { TranslatePipe } from '../../../pipes/translate.pipe';
 import { Subscription } from 'rxjs';
 import { CustomDevice } from '../../../models/device.model';
 import { DeviceService } from '../../../services/device/device.service';
@@ -15,7 +18,8 @@ import { ILogger } from '../../../models/logger.model';
 	selector: 'ov-audio-devices-select',
 	templateUrl: './audio-devices.component.html',
 	styleUrls: ['./audio-devices.component.scss'],
-	standalone: false
+	standalone: true,
+	imports: [CommonModule, AppMaterialModule, TranslatePipe]
 })
 export class AudioDevicesComponent implements OnInit, OnDestroy {
 	@Input() compact: boolean = false;

@@ -12,6 +12,10 @@ import {
 	TemplateRef,
 	ViewChild
 } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { AppMaterialModule } from '../../openvidu-components-angular.material.module';
+import { TranslatePipe } from '../../pipes/translate.pipe';
+import { LandscapeWarningComponent } from '../landscape-warning/landscape-warning.component';
 
 import { ILogger } from '../../models/logger.model';
 import { animate, style, transition, trigger } from '@angular/animations';
@@ -68,7 +72,8 @@ import { safeJsonParse } from '../../utils/utils';
 		])
 	],
 	changeDetection: ChangeDetectionStrategy.OnPush,
-	standalone: false
+	standalone: true,
+	imports: [CommonModule, AppMaterialModule, TranslatePipe, LandscapeWarningComponent]
 })
 export class SessionComponent implements OnInit, OnDestroy {
 	@ContentChild('toolbar', { read: TemplateRef }) toolbarTemplate: TemplateRef<any> | undefined;

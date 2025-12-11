@@ -87,7 +87,14 @@ const privateComponents = [
 ];
 
 @NgModule({
-	declarations: [
+	imports: [
+		CommonModule,
+		FormsModule,
+		ReactiveFormsModule,
+		AppMaterialModule,
+		OpenViduComponentsDirectiveModule,
+		ApiDirectiveModule,
+		DragDropModule,
 		...publicComponents,
 		...privateComponents,
 		LinkifyPipe,
@@ -97,15 +104,6 @@ const privateComponents = [
 		ThumbnailFromUrlPipe,
 		TrackPublishedTypesPipe,
 		TranslatePipe
-	],
-	imports: [
-		CommonModule,
-		FormsModule,
-		ReactiveFormsModule,
-		AppMaterialModule,
-		OpenViduComponentsDirectiveModule,
-		ApiDirectiveModule,
-		DragDropModule
 	],
 	exports: [
 		...publicComponents,

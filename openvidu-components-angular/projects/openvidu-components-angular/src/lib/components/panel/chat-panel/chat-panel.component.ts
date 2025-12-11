@@ -1,4 +1,9 @@
 import { AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, OnInit, ViewChild } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { AppMaterialModule } from '../../../openvidu-components-angular.material.module';
+import { TranslatePipe } from '../../../pipes/translate.pipe';
+import { LinkifyPipe } from '../../../pipes/linkify.pipe';
 import { Subject, takeUntil } from 'rxjs';
 import { ChatMessage } from '../../../models/chat.model';
 import { PanelType } from '../../../models/panel.model';
@@ -14,7 +19,8 @@ import { PanelService } from '../../../services/panel/panel.service';
 	templateUrl: './chat-panel.component.html',
 	styleUrls: ['../panel.component.scss', './chat-panel.component.scss'],
 	changeDetection: ChangeDetectionStrategy.OnPush,
-	standalone: false
+	standalone: true,
+	imports: [CommonModule, FormsModule, AppMaterialModule, TranslatePipe, LinkifyPipe]
 })
 export class ChatPanelComponent implements OnInit, AfterViewInit {
 	/**

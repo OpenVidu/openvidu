@@ -120,7 +120,7 @@ import { Directive, TemplateRef, ViewContainerRef } from '@angular/core';
  */
 @Directive({
 	selector: '[ovToolbar]',
-	standalone: false
+	standalone: true
 })
 export class ToolbarDirective {
 	/**
@@ -260,7 +260,7 @@ export class ToolbarDirective {
 
 @Directive({
 	selector: '[ovToolbarAdditionalButtons]',
-	standalone: false
+	standalone: true
 })
 export class ToolbarAdditionalButtonsDirective {
 	/**
@@ -383,7 +383,7 @@ export class ToolbarAdditionalButtonsDirective {
  */
 @Directive({
 	selector: '[ovToolbarAdditionalPanelButtons]',
-	standalone: false
+	standalone: true
 })
 export class ToolbarAdditionalPanelButtonsDirective {
 	/**
@@ -533,7 +533,7 @@ export class ToolbarAdditionalPanelButtonsDirective {
  */
 @Directive({
 	selector: '[ovPanel]',
-	standalone: false
+	standalone: true
 })
 export class PanelDirective {
 	/**
@@ -720,7 +720,7 @@ export class PanelDirective {
  */
 @Directive({
 	selector: '[ovAdditionalPanels]',
-	standalone: false
+	standalone: true
 })
 export class AdditionalPanelsDirective {
 	/**
@@ -898,7 +898,7 @@ export class AdditionalPanelsDirective {
  */
 @Directive({
 	selector: '[ovChatPanel]',
-	standalone: false
+	standalone: true
 })
 export class ChatPanelDirective {
 	constructor(
@@ -913,7 +913,7 @@ export class ChatPanelDirective {
  */
 @Directive({
 	selector: '[ovBackgroundEffectsPanel]',
-	standalone: false
+	standalone: true
 })
 export class BackgroundEffectsPanelDirective {
 	constructor(
@@ -1026,7 +1026,7 @@ export class BackgroundEffectsPanelDirective {
  */
 @Directive({
 	selector: '[ovActivitiesPanel]',
-	standalone: false
+	standalone: true
 })
 export class ActivitiesPanelDirective {
 	constructor(
@@ -1197,7 +1197,7 @@ export class ActivitiesPanelDirective {
 
 @Directive({
 	selector: '[ovParticipantsPanel]',
-	standalone: false
+	standalone: true
 })
 export class ParticipantsPanelDirective {
 	constructor(
@@ -1335,7 +1335,7 @@ export class ParticipantsPanelDirective {
 
 @Directive({
 	selector: '[ovParticipantPanelItem]',
-	standalone: false
+	standalone: true
 })
 export class ParticipantPanelItemDirective {
 	constructor(
@@ -1478,7 +1478,7 @@ export class ParticipantPanelItemDirective {
 
 @Directive({
 	selector: '[ovParticipantPanelItemElements]',
-	standalone: false
+	standalone: true
 })
 export class ParticipantPanelItemElementsDirective {
 	constructor(
@@ -1674,7 +1674,7 @@ export class ParticipantPanelItemElementsDirective {
  */
 @Directive({
 	selector: '[ovLayout]',
-	standalone: false
+	standalone: true
 })
 export class LayoutDirective {
 	constructor(
@@ -1806,7 +1806,7 @@ export class LayoutDirective {
 
 @Directive({
 	selector: '[ovStream]',
-	standalone: false
+	standalone: true
 })
 export class StreamDirective {
 	constructor(

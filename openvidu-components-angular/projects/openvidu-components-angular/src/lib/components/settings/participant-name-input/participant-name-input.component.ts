@@ -1,4 +1,8 @@
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { AppMaterialModule } from '../../../openvidu-components-angular.material.module';
+import { TranslatePipe } from '../../../pipes/translate.pipe';
 import { Subscription } from 'rxjs';
 import { ParticipantService } from '../../../services/participant/participant.service';
 import { StorageService } from '../../../services/storage/storage.service';
@@ -10,7 +14,8 @@ import { StorageService } from '../../../services/storage/storage.service';
 	selector: 'ov-participant-name-input',
 	templateUrl: './participant-name-input.component.html',
 	styleUrls: ['./participant-name-input.component.scss'],
-	standalone: false
+	standalone: true,
+	imports: [CommonModule, FormsModule, AppMaterialModule, TranslatePipe]
 })
 export class ParticipantNameInputComponent implements OnInit {
 	name: string;

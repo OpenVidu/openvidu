@@ -1,5 +1,8 @@
 import { Component, EventEmitter, OnInit, Output } from '@angular/core';
-import { Validators, FormGroup, FormBuilder } from '@angular/forms';
+import { CommonModule } from '@angular/common';
+import { ReactiveFormsModule, Validators, FormGroup, FormBuilder } from '@angular/forms';
+import { AppMaterialModule } from '../../openvidu-components-angular.material.module';
+import { TranslatePipe } from '../../pipes/translate.pipe';
 import { Subscription } from 'rxjs';
 import { ActionService } from '../../services/action/action.service';
 import { OpenViduComponentsConfigService } from '../../services/config/directive-config.service';
@@ -8,7 +11,8 @@ import { OpenViduComponentsConfigService } from '../../services/config/directive
 	selector: 'ov-admin-login',
 	templateUrl: './admin-login.component.html',
 	styleUrls: ['./admin-login.component.scss'],
-	standalone: false
+	standalone: true,
+	imports: [CommonModule, ReactiveFormsModule, AppMaterialModule, TranslatePipe]
 })
 export class AdminLoginComponent implements OnInit {
 	/**

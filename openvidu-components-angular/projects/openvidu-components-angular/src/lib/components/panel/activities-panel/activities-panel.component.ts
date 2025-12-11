@@ -1,4 +1,9 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, OnInit, Output } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { AppMaterialModule } from '../../../openvidu-components-angular.material.module';
+import { TranslatePipe } from '../../../pipes/translate.pipe';
+import { RecordingActivityComponent } from './recording-activity/recording-activity.component';
+import { BroadcastingActivityComponent } from './broadcasting-activity/broadcasting-activity.component';
 import { Subject, takeUntil } from 'rxjs';
 import { PanelStatusInfo, PanelType } from '../../../models/panel.model';
 import { OpenViduComponentsConfigService } from '../../../services/config/directive-config.service';
@@ -21,7 +26,8 @@ import { BroadcastingStartRequestedEvent, BroadcastingStopRequestedEvent } from 
 	templateUrl: './activities-panel.component.html',
 	styleUrls: ['../panel.component.scss', './activities-panel.component.scss'],
 	changeDetection: ChangeDetectionStrategy.OnPush,
-	standalone: false
+	standalone: true,
+	imports: [CommonModule, AppMaterialModule, TranslatePipe, RecordingActivityComponent, BroadcastingActivityComponent]
 })
 export class ActivitiesPanelComponent implements OnInit {
 	/**

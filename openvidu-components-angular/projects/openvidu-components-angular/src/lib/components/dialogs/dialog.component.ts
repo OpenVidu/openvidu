@@ -1,4 +1,7 @@
 import { Component, Inject } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { AppMaterialModule } from '../../openvidu-components-angular.material.module';
+import { TranslatePipe } from '../../pipes/translate.pipe';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { DialogData } from '../../models/dialog.model';
 
@@ -34,7 +37,7 @@ import { DialogData } from '../../models/dialog.model';
 			}
 		`
     ],
-    standalone: false
+    standalone: true
 })
 export class DialogTemplateComponent {
 	constructor(

@@ -13,6 +13,6 @@ import { Component } from '@angular/core';
 		</div>
 	`,
 	styleUrls: ['./audio-wave.component.scss'],
-	standalone: false
+	standalone: true
 })
 export class AudioWaveComponent {}

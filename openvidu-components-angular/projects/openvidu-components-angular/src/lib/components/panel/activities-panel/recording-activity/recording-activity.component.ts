@@ -1,4 +1,8 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, OnInit, OnDestroy, Output } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { AppMaterialModule } from '../../../../openvidu-components-angular.material.module';
+import { TranslatePipe } from '../../../../pipes/translate.pipe';
 import { Subject, takeUntil } from 'rxjs';
 import {
 	RecordingDeleteRequestedEvent,
@@ -26,7 +30,13 @@ import { OpenViduComponentsConfigService } from '../../../../services/config/dir
 	templateUrl: './recording-activity.component.html',
 	styleUrls: ['./recording-activity.component.scss', '../activities-panel.component.scss'],
 	changeDetection: ChangeDetectionStrategy.OnPush,
-	standalone: false
+	standalone: true,
+	imports: [
+		CommonModule,
+		FormsModule,
+		AppMaterialModule,
+		TranslatePipe
+	]
 })
 
 // TODO: Allow to add more than one recording type

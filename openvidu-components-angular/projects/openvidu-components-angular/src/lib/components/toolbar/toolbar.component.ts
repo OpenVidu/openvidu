@@ -1,3 +1,8 @@
+import { CommonModule } from '@angular/common';
+import { AppMaterialModule } from '../../openvidu-components-angular.material.module';
+import { ApiDirectiveModule } from '../../directives/api/api.directive.module';
+import { ToolbarMediaButtonsComponent } from './toolbar-media-buttons/toolbar-media-buttons.component';
+import { ToolbarPanelButtonsComponent } from './toolbar-panel-buttons/toolbar-panel-buttons.component';
 import {
 	AfterViewInit,
 	ChangeDetectionStrategy,
@@ -61,7 +66,14 @@ import { LeaveButtonDirective, ToolbarMoreOptionsAdditionalMenuItemsDirective } 
 	templateUrl: './toolbar.component.html',
 	styleUrls: ['./toolbar.component.scss'],
 	changeDetection: ChangeDetectionStrategy.OnPush,
-	standalone: false
+	standalone: true,
+	imports: [
+		CommonModule,
+		AppMaterialModule,
+		ApiDirectiveModule,
+		ToolbarMediaButtonsComponent,
+		ToolbarPanelButtonsComponent
+	]
 })
 export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 	/**

@@ -4,7 +4,7 @@ import { Linkifier } from '../models/linkifier.model';
 /**
  * @internal
  */
-@Pipe({ name: 'linkify', standalone: false })
+@Pipe({ name: 'linkify', standalone: true })
 export class LinkifyPipe implements PipeTransform {
 	private linkifer: Linkifier;
 

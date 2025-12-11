@@ -5,7 +5,7 @@ import { Pipe, PipeTransform } from '@angular/core';
  */
 @Pipe({
 	name: 'duration',
-	standalone: false
+	standalone: true
 })
 export class DurationFromSecondsPipe implements PipeTransform {
 	transform(durationInSeconds: number): string {
@@ -28,7 +28,7 @@ export class DurationFromSecondsPipe implements PipeTransform {
  */
 @Pipe({
 	name: 'searchByStringProperty',
-	standalone: false
+	standalone: true
 })
 export class SearchByStringPropertyPipe implements PipeTransform {
 	transform(items: any[], props: { properties: string[]; filter: string }): any {
@@ -60,7 +60,7 @@ export class SearchByStringPropertyPipe implements PipeTransform {
  */
 @Pipe({
 	name: 'thumbnailUrl',
-	standalone: false
+	standalone: true
 })
 export class ThumbnailFromUrlPipe implements PipeTransform {
 	transform(url: string): string {

@@ -18,7 +18,7 @@ import { OpenViduComponentsConfigService } from '../../services/config/directive
  */
 @Directive({
 	selector: 'ov-videoconference[activitiesPanelRecordingActivity], ov-activities-panel[recordingActivity]',
-	standalone: false
+	standalone: true
 })
 export class ActivitiesPanelRecordingActivityDirective implements AfterViewInit, OnDestroy {
 	@Input() set activitiesPanelRecordingActivity(value: boolean) {
@@ -70,7 +70,7 @@ export class ActivitiesPanelRecordingActivityDirective implements AfterViewInit,
  */
 @Directive({
 	selector: 'ov-videoconference[activitiesPanelBroadcastingActivity], ov-activities-panel[broadcastingActivity]',
-	standalone: false
+	standalone: true
 })
 export class ActivitiesPanelBroadcastingActivityDirective implements AfterViewInit, OnDestroy {
 	@Input() set activitiesPanelBroadcastingActivity(value: boolean) {

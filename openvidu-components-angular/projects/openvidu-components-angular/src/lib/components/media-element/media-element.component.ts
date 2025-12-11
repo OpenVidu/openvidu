@@ -1,5 +1,7 @@
 import { animate, style, transition, trigger } from '@angular/animations';
 import { AfterViewInit, Component, ElementRef, Input, OnDestroy, ViewChild } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { VideoPosterComponent } from '../video-poster/video-poster.component';
 import { Track } from 'livekit-client';
 
 /**
@@ -25,7 +27,8 @@ import { Track } from 'livekit-client';
 			transition(':leave', [style({ opacity: 1 }), animate('200ms', style({ opacity: 0 }))])
 		])
 	],
-	standalone: false
+	standalone: true,
+	imports: [CommonModule, VideoPosterComponent]
 })
 export class MediaElementComponent implements AfterViewInit, OnDestroy {
 	_track: Track;

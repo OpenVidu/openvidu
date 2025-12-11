@@ -1,4 +1,7 @@
 import { Component } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { AppMaterialModule } from '../../openvidu-components-angular.material.module';
+import { TranslatePipe } from '../../pipes/translate.pipe';
 import { MatDialogRef } from '@angular/material/dialog';
 
 /**
@@ -37,7 +40,8 @@ import { MatDialogRef } from '@angular/material/dialog';
 			}
 		`
     ],
-    standalone: false
+    standalone: true,
+    imports: [CommonModule, AppMaterialModule, TranslatePipe]
 })
 export class DeleteDialogComponent {
 	constructor(public dialogRef: MatDialogRef<DeleteDialogComponent>) {}

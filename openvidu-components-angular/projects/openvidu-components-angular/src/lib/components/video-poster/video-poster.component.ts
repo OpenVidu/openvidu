@@ -1,10 +1,13 @@
 import { Component, Input } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { TranslatePipe } from '../../pipes/translate.pipe';
 
 @Component({
 	selector: 'ov-video-poster',
 	templateUrl: './video-poster.component.html',
 	styleUrl: './video-poster.component.scss',
-	standalone: false
+	standalone: true,
+	imports: [CommonModule, TranslatePipe]
 })
 export class VideoPosterComponent {
 	letter: string = '';

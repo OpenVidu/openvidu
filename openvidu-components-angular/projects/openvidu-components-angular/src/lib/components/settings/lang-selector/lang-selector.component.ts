@@ -1,4 +1,6 @@
 import { Component, OnInit, Output, ViewChild, EventEmitter, Input, OnDestroy } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { AppMaterialModule } from '../../../openvidu-components-angular.material.module';
 import { MatMenuTrigger } from '@angular/material/menu';
 import { MatSelect } from '@angular/material/select';
 import { StorageService } from '../../../services/storage/storage.service';
@@ -13,7 +15,8 @@ import { Subscription } from 'rxjs';
 	selector: 'ov-lang-selector',
 	templateUrl: './lang-selector.component.html',
 	styleUrls: ['./lang-selector.component.scss'],
-	standalone: false
+	standalone: true,
+	imports: [CommonModule, AppMaterialModule]
 })
 export class LangSelectorComponent implements OnInit, OnDestroy {
 	/**

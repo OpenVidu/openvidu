@@ -1,4 +1,7 @@
 import { Component, Inject } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { AppMaterialModule } from '../../openvidu-components-angular.material.module';
+import { TranslatePipe } from '../../pipes/translate.pipe';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { DialogData } from '../../models/dialog.model';
 
@@ -20,7 +23,8 @@ import { DialogData } from '../../models/dialog.model';
 			<button mat-button (click)="close()">{{'PANEL.CLOSE' | translate}}</button>
 		</div>
 	`,
-    standalone: false
+    standalone: true,
+	imports: [CommonModule, AppMaterialModule, TranslatePipe]
 })
 export class ProFeatureDialogTemplateComponent {
 	constructor(public dialogRef: MatDialogRef<ProFeatureDialogTemplateComponent>, @Inject(MAT_DIALOG_DATA) public data: DialogData) {}

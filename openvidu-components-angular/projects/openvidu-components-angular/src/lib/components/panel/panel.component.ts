@@ -8,6 +8,7 @@ import {
 	Output,
 	TemplateRef
 } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { skip, Subject, takeUntil } from 'rxjs';
 import {
 	ActivitiesPanelDirective,
@@ -39,7 +40,8 @@ import { TemplateManagerService, PanelTemplateConfiguration } from '../../servic
 	templateUrl: './panel.component.html',
 	styleUrls: ['./panel.component.scss'],
 	changeDetection: ChangeDetectionStrategy.OnPush,
-	standalone: false
+	standalone: true,
+	imports: [CommonModule]
 })
 export class PanelComponent implements OnInit {
 	/**

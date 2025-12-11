@@ -1,4 +1,8 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { AppMaterialModule } from '../../../../openvidu-components-angular.material.module';
+import { TranslatePipe } from '../../../../pipes/translate.pipe';
 import { Subject, takeUntil } from 'rxjs';
 import {
 	BroadcastingStartRequestedEvent,
@@ -19,7 +23,8 @@ import { OpenViduService } from '../../../../services/openvidu/openvidu.service'
 	templateUrl: './broadcasting-activity.component.html',
 	styleUrls: ['./broadcasting-activity.component.scss', '../activities-panel.component.scss'],
 	changeDetection: ChangeDetectionStrategy.OnPush,
-	standalone: false
+	standalone: true,
+	imports: [CommonModule, FormsModule, AppMaterialModule, TranslatePipe]
 })
 
 // TODO: Allow to add more than one broadcast url

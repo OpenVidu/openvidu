@@ -25,7 +25,7 @@ import {
 } from './internals.directive';
 
 @NgModule({
-	declarations: [
+	imports: [
 		ChatPanelDirective,
 		LayoutDirective,
 		PanelDirective,

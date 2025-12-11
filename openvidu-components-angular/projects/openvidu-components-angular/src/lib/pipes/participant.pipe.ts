@@ -8,7 +8,7 @@ import { Track } from 'livekit-client';
  * This is used to display the tracks in the videoconference layout.
  * @returns {ParticipantTrackPublication[]} Array of tracks
  */
-@Pipe({ name: 'tracks', standalone: false })
+@Pipe({ name: 'tracks', standalone: true })
 export class RemoteParticipantTracksPipe implements PipeTransform {
 	constructor() {}
 
@@ -20,7 +20,7 @@ export class RemoteParticipantTracksPipe implements PipeTransform {
 /**
  * @internal
  */
-@Pipe({ name: 'tracksPublishedTypes', standalone: false })
+@Pipe({ name: 'tracksPublishedTypes', standalone: true })
 export class TrackPublishedTypesPipe implements PipeTransform {
 	constructor(private translateService: TranslateService) {}
 

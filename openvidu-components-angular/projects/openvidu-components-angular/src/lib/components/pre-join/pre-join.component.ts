@@ -9,6 +9,16 @@ import {
 	OnInit,
 	Output
 } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { AppMaterialModule } from '../../openvidu-components-angular.material.module';
+import { TranslatePipe } from '../../pipes/translate.pipe';
+import { LandscapeWarningComponent } from '../landscape-warning/landscape-warning.component';
+import { LangSelectorComponent } from '../settings/lang-selector/lang-selector.component';
+import { MediaElementComponent } from '../media-element/media-element.component';
+import { VideoDevicesComponent } from '../settings/video-devices/video-devices.component';
+import { AudioDevicesComponent } from '../settings/audio-devices/audio-devices.component';
+import { ParticipantNameInputComponent } from '../settings/participant-name-input/participant-name-input.component';
+import { BackgroundEffectsPanelComponent } from '../panel/background-effects-panel/background-effects-panel.component';
 import { animate, state, style, transition, trigger } from '@angular/animations';
 import { filter, Subject, take, takeUntil } from 'rxjs';
 import { ILogger } from '../../models/logger.model';
@@ -30,7 +40,19 @@ import { LangOption } from '../../models/lang.model';
 	templateUrl: './pre-join.component.html',
 	styleUrls: ['./pre-join.component.scss'],
 	changeDetection: ChangeDetectionStrategy.OnPush,
-	standalone: false,
+	standalone: true,
+	imports: [
+		CommonModule,
+		AppMaterialModule,
+		TranslatePipe,
+		LandscapeWarningComponent,
+		LangSelectorComponent,
+		MediaElementComponent,
+		VideoDevicesComponent,
+		AudioDevicesComponent,
+		ParticipantNameInputComponent,
+		BackgroundEffectsPanelComponent
+	],
 	animations: [
 		trigger('containerResize', [
 			state(

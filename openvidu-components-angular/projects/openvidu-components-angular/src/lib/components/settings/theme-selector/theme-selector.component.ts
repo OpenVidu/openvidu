@@ -1,10 +1,13 @@
 import { Component } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { AppMaterialModule } from '../../../openvidu-components-angular.material.module';
 import { OpenViduThemeService } from '../../../services/theme/theme.service';
 import { OpenViduThemeMode } from '../../../models/theme.model';
 
 @Component({
 	selector: 'ov-theme-selector',
-	standalone: false,
+	standalone: true,
+	imports: [CommonModule, AppMaterialModule],
 	template: `
 		<div class="theme-selector-container">
 			<button

@@ -1,4 +1,9 @@
 import { Component, OnInit, Output, EventEmitter, OnDestroy } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { AppMaterialModule } from '../../openvidu-components-angular.material.module';
+import { TranslatePipe } from '../../pipes/translate.pipe';
+import { SearchByStringPropertyPipe } from '../../pipes/recording.pipe';
 import { Subscription } from 'rxjs';
 import { RecordingDeleteRequestedEvent, RecordingInfo, RecordingStatus } from '../../models/recording.model';
 import { ActionService } from '../../services/action/action.service';
@@ -9,7 +14,14 @@ import { RecordingService } from '../../services/recording/recording.service';
 	selector: 'ov-admin-dashboard',
 	templateUrl: './admin-dashboard.component.html',
 	styleUrls: ['./admin-dashboard.component.scss'],
-	standalone: false
+	standalone: true,
+	imports: [
+		CommonModule,
+		FormsModule,
+		AppMaterialModule,
+		TranslatePipe,
+		SearchByStringPropertyPipe
+	]
 })
 export class AdminDashboardComponent implements OnInit, OnDestroy {
 	/**

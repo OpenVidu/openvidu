@@ -1,4 +1,12 @@
 import { Component, ContentChild, EventEmitter, OnInit, Output, TemplateRef } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { AppMaterialModule } from '../../../openvidu-components-angular.material.module';
+import { TranslatePipe } from '../../../pipes/translate.pipe';
+import { ParticipantNameInputComponent } from '../../settings/participant-name-input/participant-name-input.component';
+import { LangSelectorComponent } from '../../settings/lang-selector/lang-selector.component';
+import { ThemeSelectorComponent } from '../../settings/theme-selector/theme-selector.component';
+import { VideoDevicesComponent } from '../../settings/video-devices/video-devices.component';
+import { AudioDevicesComponent } from '../../settings/audio-devices/audio-devices.component';
 import { Subject, takeUntil } from 'rxjs';
 import { PanelStatusInfo, PanelSettingsOptions, PanelType } from '../../../models/panel.model';
 import { OpenViduComponentsConfigService } from '../../../services/config/directive-config.service';
@@ -16,7 +24,17 @@ import { SettingsPanelGeneralAdditionalElementsDirective } from '../../../direct
 	selector: 'ov-settings-panel',
 	templateUrl: './settings-panel.component.html',
 	styleUrls: ['../panel.component.scss', './settings-panel.component.scss'],
-	standalone: false
+	standalone: true,
+	imports: [
+		CommonModule,
+		AppMaterialModule,
+		TranslatePipe,
+		ParticipantNameInputComponent,
+		LangSelectorComponent,
+		ThemeSelectorComponent,
+		VideoDevicesComponent,
+		AudioDevicesComponent
+	]
 })
 export class SettingsPanelComponent implements OnInit {
 	@Output() onVideoEnabledChanged = new EventEmitter<boolean>();

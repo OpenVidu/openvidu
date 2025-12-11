@@ -185,7 +185,7 @@ import { Directive, TemplateRef, ViewContainerRef } from '@angular/core';
 
 @Directive({
 	selector: '[ovPreJoin]',
-	standalone: false
+	standalone: true
 })
 export class PreJoinDirective {
 	constructor(
@@ -213,7 +213,7 @@ export class PreJoinDirective {
  */
 @Directive({
 	selector: '[ovParticipantPanelAfterLocalParticipant]',
-	standalone: false
+	standalone: true
 })
 export class ParticipantPanelAfterLocalParticipantDirective {
 	constructor(
@@ -239,7 +239,7 @@ export class ParticipantPanelAfterLocalParticipantDirective {
  */
 @Directive({
 	selector: '[ovToolbarLeaveButton]',
-	standalone: false
+	standalone: true
 })
 export class LeaveButtonDirective {
 	constructor(
@@ -267,7 +267,7 @@ export class LeaveButtonDirective {
  */
 @Directive({
 	selector: '[ovLayoutAdditionalElements]',
-	standalone: false
+	standalone: true
 })
 export class LayoutAdditionalElementsDirective {
 	constructor(
@@ -300,7 +300,7 @@ export class LayoutAdditionalElementsDirective {
  */
 @Directive({
 	selector: '[ovParticipantPanelParticipantBadge]',
-	standalone: false
+	standalone: true
 })
 export class ParticipantPanelParticipantBadgeDirective {
 	constructor(
@@ -335,7 +335,7 @@ export class ParticipantPanelParticipantBadgeDirective {
  */
 @Directive({
 	selector: '[ovSettingsPanelGeneralAdditionalElements]',
-	standalone: false
+	standalone: true
 })
 export class SettingsPanelGeneralAdditionalElementsDirective {
 	constructor(
@@ -370,7 +370,7 @@ export class SettingsPanelGeneralAdditionalElementsDirective {
  */
 @Directive({
 	selector: '[ovToolbarMoreOptionsAdditionalMenuItems]',
-	standalone: false
+	standalone: true
 })
 export class ToolbarMoreOptionsAdditionalMenuItemsDirective {
 	constructor(

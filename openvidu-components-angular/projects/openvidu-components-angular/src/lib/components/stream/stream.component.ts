@@ -1,4 +1,8 @@
 import { Component, ElementRef, Input, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { AppMaterialModule } from '../../openvidu-components-angular.material.module';
+import { AudioWaveComponent } from '../audio-wave/audio-wave.component';
+import { MediaElementComponent } from '../media-element/media-element.component';
 import { MatMenuPanel, MatMenuTrigger } from '@angular/material/menu';
 import { Track } from 'livekit-client';
 import { Subject, takeUntil } from 'rxjs';
@@ -16,7 +20,8 @@ import { ParticipantService } from '../../services/participant/participant.servi
 	selector: 'ov-stream',
 	templateUrl: './stream.component.html',
 	styleUrls: ['./stream.component.scss'],
-	standalone: false
+	standalone: true,
+	imports: [CommonModule, AppMaterialModule, AudioWaveComponent, MediaElementComponent]
 })
 export class StreamComponent implements OnInit, OnDestroy {
 	/**

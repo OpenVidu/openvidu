@@ -1,4 +1,7 @@
 import { Component, ContentChild, EventEmitter, Input, Output, TemplateRef, computed, inject } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { AppMaterialModule } from '../../../openvidu-components-angular.material.module';
+import { TranslatePipe } from '../../../pipes/translate.pipe';
 import { RecordingStatus } from '../../../models/recording.model';
 import { BroadcastingStatus } from '../../../models/broadcasting.model';
 import { ToolbarAdditionalButtonsPosition } from '../../../models/toolbar.model';
@@ -12,7 +15,8 @@ import { ToolbarMoreOptionsAdditionalMenuItemsDirective } from '../../../directi
 	selector: 'ov-toolbar-media-buttons',
 	templateUrl: './toolbar-media-buttons.component.html',
 	styleUrl: './toolbar-media-buttons.component.scss',
-	standalone: false
+	standalone: true,
+	imports: [CommonModule, AppMaterialModule, TranslatePipe]
 })
 export class ToolbarMediaButtonsComponent {
 	// Camera related inputs

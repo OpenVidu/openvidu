@@ -13,6 +13,9 @@ import {
 	ViewChild,
 	ViewContainerRef
 } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { DragDropModule } from '@angular/cdk/drag-drop';
+import { RemoteParticipantTracksPipe } from '../../pipes/participant.pipe';
 import { combineLatest, map, Subject, takeUntil } from 'rxjs';
 import { StreamDirective } from '../../directives/template/openvidu-components-angular.directive';
 import { ParticipantTrackPublication, ParticipantModel } from '../../models/participant.model';
@@ -34,7 +37,8 @@ import { LayoutTemplateConfiguration, TemplateManagerService } from '../../servi
 	templateUrl: './layout.component.html',
 	styleUrls: ['./layout.component.scss'],
 	changeDetection: ChangeDetectionStrategy.OnPush,
-	standalone: false
+	standalone: true,
+	imports: [CommonModule, DragDropModule, RemoteParticipantTracksPipe]
 })
 export class LayoutComponent implements OnInit, OnDestroy, AfterViewInit {
 	/**

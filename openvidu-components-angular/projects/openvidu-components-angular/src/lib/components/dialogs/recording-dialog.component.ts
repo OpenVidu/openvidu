@@ -1,4 +1,7 @@
 import { Component, ElementRef, Inject, ViewChild } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { AppMaterialModule } from '../../openvidu-components-angular.material.module';
+import { TranslatePipe } from '../../pipes/translate.pipe';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { RecordingDialogData } from '../../models/dialog.model';
 
@@ -39,10 +42,11 @@ import { RecordingDialogData } from '../../models/dialog.model';
 			}
 		`
     ],
-    standalone: false
+    standalone: true,
+    imports: [CommonModule, AppMaterialModule, TranslatePipe]
 })
 export class RecordingDialogComponent {
-	@ViewChild('videoElement', { static: true }) videoElement: ElementRef<HTMLVideoElement>;
+	@ViewChild('videoElement', { static: true }) videoElement!: ElementRef<HTMLVideoElement>;
 
 	src: string;
 

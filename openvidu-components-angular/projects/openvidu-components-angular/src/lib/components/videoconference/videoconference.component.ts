@@ -1,4 +1,21 @@
 import { animate, style, transition, trigger } from '@angular/animations';
+import { CommonModule } from '@angular/common';
+import { AppMaterialModule } from '../../openvidu-components-angular.material.module';
+import { TranslatePipe } from '../../pipes/translate.pipe';
+import { PreJoinComponent } from '../pre-join/pre-join.component';
+import { SessionComponent } from '../session/session.component';
+import { ToolbarComponent } from '../toolbar/toolbar.component';
+import { PanelComponent } from '../panel/panel.component';
+import { ChatPanelComponent } from '../panel/chat-panel/chat-panel.component';
+import { ParticipantsPanelComponent } from '../panel/participants-panel/participants-panel/participants-panel.component';
+import { BackgroundEffectsPanelComponent } from '../panel/background-effects-panel/background-effects-panel.component';
+import { SettingsPanelComponent } from '../panel/settings-panel/settings-panel.component';
+import { ActivitiesPanelComponent } from '../panel/activities-panel/activities-panel.component';
+import { ParticipantPanelItemComponent } from '../panel/participants-panel/participant-panel-item/participant-panel-item.component';
+import { LayoutComponent } from '../layout/layout.component';
+import { StreamComponent } from '../stream/stream.component';
+import { ApiDirectiveModule } from '../../directives/api/api.directive.module';
+import { OpenViduComponentsDirectiveModule } from '../../directives/template/openvidu-components-angular.directive.module';
 import {
 	AfterViewInit,
 	ChangeDetectionStrategy,
@@ -86,7 +103,26 @@ import { E2eeService } from '../../services/e2ee/e2ee.service';
 			// transition(':leave', [style({ opacity: 1 }), animate('50ms ease-in', style({ opacity: 0.9 }))])
 		])
 	],
-	standalone: false
+	standalone: true,
+	imports: [
+		CommonModule,
+		AppMaterialModule,
+		TranslatePipe,
+		PreJoinComponent,
+		SessionComponent,
+		ToolbarComponent,
+		PanelComponent,
+		ChatPanelComponent,
+		ParticipantsPanelComponent,
+		BackgroundEffectsPanelComponent,
+		SettingsPanelComponent,
+		ActivitiesPanelComponent,
+		ParticipantPanelItemComponent,
+		LayoutComponent,
+		StreamComponent,
+		ApiDirectiveModule,
+		OpenViduComponentsDirectiveModule
+	]
 })
 export class VideoconferenceComponent implements OnDestroy, AfterViewInit {
 	// Constants

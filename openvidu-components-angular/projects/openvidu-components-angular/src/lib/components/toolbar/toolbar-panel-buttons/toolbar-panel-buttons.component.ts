@@ -1,11 +1,15 @@
 import { Component, EventEmitter, Input, Output, TemplateRef } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { AppMaterialModule } from '../../../openvidu-components-angular.material.module';
+import { TranslatePipe } from '../../../pipes/translate.pipe';
 import { ViewportService } from '../../../services/viewport/viewport.service';
 
 @Component({
 	selector: 'ov-toolbar-panel-buttons',
 	templateUrl: './toolbar-panel-buttons.component.html',
 	styleUrl: './toolbar-panel-buttons.component.scss',
-	standalone: false
+	standalone: true,
+	imports: [CommonModule, AppMaterialModule, TranslatePipe]
 })
 export class ToolbarPanelButtonsComponent {
 	// Inputs from toolbar
