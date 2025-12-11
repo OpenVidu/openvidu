@@ -1,12 +1,12 @@
 import { Component, ElementRef, Input, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { MatMenuPanel, MatMenuTrigger } from '@angular/material/menu';
+import { Track } from 'livekit-client';
 import { Subject, takeUntil } from 'rxjs';
+import { ParticipantTrackPublication } from '../../models/participant.model';
 import { CdkOverlayService } from '../../services/cdk-overlay/cdk-overlay.service';
 import { OpenViduComponentsConfigService } from '../../services/config/directive-config.service';
 import { LayoutService } from '../../services/layout/layout.service';
 import { ParticipantService } from '../../services/participant/participant.service';
-import { Track } from 'livekit-client';
-import { ParticipantTrackPublication } from '../../models/participant.model';
 
 /**
  * The **StreamComponent** is hosted inside of the {@link LayoutComponent}.
@@ -93,7 +93,7 @@ export class StreamComponent implements OnInit, OnDestroy {
 
 	private _streamContainer: ElementRef;
 	private destroy$ = new Subject<void>();
-	private readonly HOVER_TIMEOUT = 3000;
+	private readonly HOVER_TIMEOUT = 2000;
 
 	/**
 	 * @ignore
