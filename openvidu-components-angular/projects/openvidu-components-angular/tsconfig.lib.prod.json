@@ -6,7 +6,7 @@
 		"sourceMap": false,
 		"removeComments": true,
 		"pretty": false,
-		// "skipLibCheck": true // Livekit track processors fails with typescript types checking
+		"skipLibCheck": true // TODO Livekit track processors fails with typescript types checking
 	},
 	"angularCompilerOptions": {
 		"compilationMode": "partial"

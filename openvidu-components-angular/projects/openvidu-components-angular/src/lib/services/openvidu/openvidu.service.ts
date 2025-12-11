@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { BackgroundProcessor, /*BackgroundProcessorWrapper,*/ SwitchBackgroundProcessorOptions } from '@livekit/track-processors';
 import {
 	AudioCaptureOptions,
 	ConnectionState,
@@ -15,13 +16,14 @@ import {
 	VideoPresets,
 	createLocalTracks
 } from 'livekit-client';
-import { BackgroundProcessor, BackgroundProcessorWrapper, SwitchBackgroundProcessorOptions } from '@livekit/track-processors';
 import { ILogger } from '../../models/logger.model';
 import { OpenViduComponentsConfigService } from '../config/directive-config.service';
 import { DeviceService } from '../device/device.service';
 import { LoggerService } from '../logger/logger.service';
 import { StorageService } from '../storage/storage.service';
 
+// TODO: Remove this once livekit-client exports it
+type BackgroundProcessorWrapper = ReturnType<typeof BackgroundProcessor>;
 @Injectable({
 	providedIn: 'root'
 })
