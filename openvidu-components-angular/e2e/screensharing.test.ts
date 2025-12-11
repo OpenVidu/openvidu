@@ -301,7 +301,7 @@ describe('E2E: Screensharing features', () => {
 		if (screenStreams.length > 0) {
 			// Find B's own screen (it should be the pinned one)
 			await utils.toggleStreamPin('.OV_big');
-			await browser.sleep(500);
+			await browser.sleep(1000);
 		}
 
 		// Verify B's screen is now unpinned
