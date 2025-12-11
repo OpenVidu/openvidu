@@ -56,7 +56,8 @@ export const TestAppConfig: BrowserConfig = {
 	seleniumAddress: LAUNCH_MODE === 'CI' ? 'http://localhost:4444/wd/hub' : '',
 	browserName: 'chrome',
 	browserCapabilities: Capabilities.chrome().set('acceptInsecureCerts', true),
-	browserOptions: new chrome.Options().addArguments(...(LAUNCH_MODE === 'CI' ? chromeArgumentsCI : chromeArguments))
+	browserOptions: new chrome.Options()
+		.addArguments(...(LAUNCH_MODE === 'CI' ? chromeArgumentsCI : chromeArguments)) as chrome.Options
 };
 
 export const NestedConfig: BrowserConfig = {
@@ -64,13 +65,14 @@ export const NestedConfig: BrowserConfig = {
 	seleniumAddress: LAUNCH_MODE === 'CI' ? 'http://localhost:4444/wd/hub' : '',
 	browserName: 'Chrome',
 	browserCapabilities: Capabilities.chrome().set('acceptInsecureCerts', true),
-	browserOptions: new chrome.Options().addArguments(...(LAUNCH_MODE === 'CI' ? chromeArgumentsCI : chromeArguments))
+	browserOptions: new chrome.Options()
+		.addArguments(...(LAUNCH_MODE === 'CI' ? chromeArgumentsCI : chromeArguments)) as chrome.Options
 };
 
 export function getBrowserOptionsWithoutDevices() {
 	if (LAUNCH_MODE === 'CI') {
-		return new chrome.Options().addArguments(...chromeArgumentsWithoutMediaDevicesCI);
+		return new chrome.Options().addArguments(...chromeArgumentsWithoutMediaDevicesCI) as chrome.Options;
 	} else {
-		return new chrome.Options().addArguments(...chromeArgumentsWithoutMediaDevices);
+		return new chrome.Options().addArguments(...chromeArgumentsWithoutMediaDevices) as chrome.Options;
 	}
 }
