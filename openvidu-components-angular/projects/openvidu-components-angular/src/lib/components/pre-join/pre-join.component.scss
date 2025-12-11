@@ -2,291 +2,289 @@
 	display: block;
 	width: 100%;
 	height: 100%;
+}
 
-	.prejoin-container {
-		min-height: 100vh;
-		background: var(--ov-background-color);
+.prejoin-container {
+	min-height: 100vh;
+	background: var(--ov-background-color);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 20px;
+	box-sizing: border-box;
+	position: relative;
+	transition: all 0.3s ease;
+
+	&.name-error {
+		.prejoin-main {
+			min-height: fit-content;
+		}
+	}
+
+	.prejoin-content {
+		width: 100%;
+		max-width: 520px;
+		margin: 0 auto;
+
+		.prejoin-main {
+			width: 100%;
+			background: var(--ov-surface-color, #ffffff);
+			border-radius: var(--ov-surface-radius);
+			overflow: hidden;
+			box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+			animation: fadeIn 0.3s ease-out;
+			transform: translateZ(0);
+		}
+	}
+
+	// Top Language Toolbar
+	.top-toolbar {
+		position: fixed;
+		top: 0;
+		left: 0;
+		right: 0;
+		z-index: 1000;
+		display: flex;
+		justify-content: flex-end;
+		padding: 20px 24px;
+		background: transparent;
+	}
+
+	// Loading State
+	.loading-overlay {
+		position: absolute;
+		top: 0;
+		left: 0;
+		right: 0;
+		bottom: 0;
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		padding: 20px;
-		box-sizing: border-box;
-		position: relative;
-		transition: all 0.3s ease;
+		background-color: var(--ov-background-color, #f5f5f5);
+		z-index: 1000;
 
-		&.name-error {
-			.prejoin-main {
-				min-height: fit-content;
-			}
-		}
-
-		.prejoin-content {
-			width: 100%;
-			max-width: 520px;
-			margin: 0 auto;
-
-			.prejoin-main {
-				width: 100%;
-				background: var(--ov-surface-color, #ffffff);
-				border-radius: var(--ov-surface-radius);
-				overflow: hidden;
-				box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
-				animation: fadeIn 0.3s ease-out;
-				transform: translateZ(0);
-			}
-		}
-
-		// Top Language Toolbar
-		.top-toolbar {
-			position: fixed;
-			top: 0;
-			left: 0;
-			right: 0;
-			z-index: 1000;
+		.loading-content {
 			display: flex;
-			justify-content: flex-end;
-			padding: 20px 24px;
-			background: transparent;
-		}
-
-		// Loading State
-		.loading-overlay {
-			position: absolute;
-			top: 0;
-			left: 0;
-			right: 0;
-			bottom: 0;
-			display: flex;
+			flex-direction: column;
 			align-items: center;
-			justify-content: center;
-			background-color: var(--ov-background-color, #f5f5f5);
-			z-index: 1000;
+			gap: 16px;
 
-			.loading-content {
-				display: flex;
-				flex-direction: column;
-				align-items: center;
-				gap: 16px;
+			.loading-text {
+				color: var(--ov-text-primary-color, #333);
+				font-size: 16px;
+				font-weight: 500;
+			}
 
-				.loading-text {
-					color: var(--ov-text-primary-color, #333);
-					font-size: 16px;
-					font-weight: 500;
-				}
-
-				.mat-mdc-progress-spinner {
-					--mat-progress-spinner-active-indicator-color: var(--ov-secondary-action-color, #4285f4);
-				}
+			.mat-mdc-progress-spinner {
+				--mat-progress-spinner-active-indicator-color: var(--ov-secondary-action-color, #4285f4);
 			}
 		}
+	}
 
-		// Video Preview Section
-		.video-preview-section {
-			.video-preview-container {
-				position: relative;
+	// Video Preview Section
+	.video-preview-section {
+		.video-preview-container {
+			position: relative;
+			width: 100%;
+			aspect-ratio: 4/3;
+			border-radius: var(--ov-surface-radius) var(--ov-surface-radius) 0 0;
+			overflow: hidden;
+			background: var(--ov-video-background, var(--ov-primary-action-color));
+
+			.video-frame {
 				width: 100%;
-				aspect-ratio: 4/3;
-				border-radius: var(--ov-surface-radius) var(--ov-surface-radius) 0 0;
-				overflow: hidden;
-				background: var(--ov-video-background, var(--ov-primary-action-color));
+				height: 100%;
+				position: relative;
 
-				.video-frame {
+				::ng-deep .video-element {
 					width: 100%;
 					height: 100%;
-					position: relative;
+					object-fit: cover;
+					display: block;
 
-					::ng-deep .video-element {
+					video {
 						width: 100%;
 						height: 100%;
 						object-fit: cover;
-						display: block;
-
-						video {
-							width: 100%;
-							height: 100%;
-							object-fit: cover;
-							border-radius: 0;
-						}
-					}
-				}
-
-				.video-overlay {
-					position: absolute;
-					bottom: 0;
-					left: 0;
-					right: 0;
-					padding: 16px;
-					z-index: 9999;
-					display: flex;
-					justify-content: center;
-					align-items: flex-end;
-
-					.device-controls {
-						display: flex;
-						gap: 12px;
-					}
-
-					.background-control {
-						position: absolute;
-						bottom: 16px;
-						left: 16px;
-
-						.background-button {
-							width: 48px;
-							height: 48px;
-							min-width: 48px;
-							min-height: 48px;
-							background: var(--ov-primary-action-color);
-							color: var(--ov-text-primary-color);
-							border-radius: 16px;
-							padding: 0;
-
-							&.mat-mdc-button-disabled {
-								background: var(--ov-disabled-background);
-								color: var(--ov-text-disabled-color);
-								cursor: not-allowed;
-
-								&:hover {
-									transform: none;
-								}
-							}
-
-							mat-icon {
-								font-size: 22px;
-								width: 22px;
-								height: 22px;
-								opacity: 0.9;
-								transition: opacity 0.2s ease;
-								margin: 0;
-							}
-						}
+						border-radius: 0;
 					}
 				}
 			}
-		}
 
-		.vb-container {
-			height: fit-content;
-			overflow: hidden;
-		}
+			.video-overlay {
+				position: absolute;
+				bottom: 0;
+				left: 0;
+				right: 0;
+				padding: 16px;
+				z-index: 9999;
+				display: flex;
+				justify-content: center;
+				align-items: flex-end;
 
-		// Configuration Section
-		.configuration-section {
-			display: flex;
-			padding: 24px;
-			gap: 10px;
-			flex-flow: column;
+				.device-controls {
+					display: flex;
+					gap: 12px;
+				}
 
-			.input-section {
-				::ng-deep .name-input {
-					.mat-mdc-form-field {
-						width: 100%;
+				.background-control {
+					position: absolute;
+					bottom: 16px;
+					left: 16px;
 
-						.mat-mdc-text-field-wrapper {
-							border-radius: var(--ov-surface-radius);
-							border: 1px solid var(--ov-border-color, #e0e0e0);
-							transition: all 0.2s ease;
+					.background-button {
+						width: 48px;
+						height: 48px;
+						min-width: 48px;
+						min-height: 48px;
+						background: var(--ov-primary-action-color);
+						color: var(--ov-text-primary-color);
+						border-radius: 16px;
+						padding: 0;
+
+						&.mat-mdc-button-disabled {
+							background: var(--ov-disabled-background);
+							color: var(--ov-text-disabled-color);
+							cursor: not-allowed;
 
 							&:hover {
-								border-color: var(--ov-primary-action-color, #4285f4);
-							}
-
-							&.mdc-text-field--focused {
-								border-color: var(--ov-primary-action-color, #4285f4);
-								box-shadow: 0 0 0 3px rgba(66, 133, 244, 0.1);
+								transform: none;
 							}
 						}
 
-						.mat-mdc-form-field-subscript-wrapper {
-							display: none;
+						mat-icon {
+							font-size: 22px;
+							width: 22px;
+							height: 22px;
+							opacity: 0.9;
+							transition: opacity 0.2s ease;
+							margin: 0;
 						}
-
-						input {
-							font-size: 16px;
-							font-weight: 500;
-							color: var(--ov-text-surface-color, #666);
-							padding: 16px;
-
-							&::placeholder {
-								color: var(--ov-text-surface-color, #666);
-								font-weight: 400;
-							}
-						}
-					}
-				}
-			}
-
-			.error-message {
-				display: flex;
-				align-items: center;
-				gap: 8px;
-				padding: 12px 16px;
-				background-color: rgba(244, 67, 54, 0.08);
-				border: 1px solid rgba(244, 67, 54, 0.2);
-				border-radius: var(--ov-surface-radius);
-				color: var(--ov-error-color, #d32f2f);
-
-				.error-icon {
-					font-size: 18px;
-					width: 18px;
-					height: 18px;
-				}
-
-				.error-text {
-					font-size: 14px;
-					font-weight: 500;
-				}
-			}
-
-			.join-section {
-				.join-button {
-					width: 100%;
-					height: 56px;
-					background: var(--ov-primary-action-color);
-					color: var(--ov-text-primary-color);
-					border-radius: var(--ov-surface-radius);
-					font-size: 16px;
-					font-weight: 600;
-					letter-spacing: 0.5px;
-					transition: all 0.2s ease;
-					display: flex;
-					align-items: center;
-					justify-content: center;
-					gap: 8px;
-
-					&:hover:not([disabled]) {
-						background: color-mix(in srgb, var(--ov-primary-action-color), var(--ov-secondary-action-color) 10%);
-						transform: translateY(-1px);
-					}
-
-					&:active:not([disabled]) {
-						transform: translateY(0);
-					}
-
-					&[disabled] {
-						background: var(--ov-disabled-color, #ccc);
-						color: var(--ov-disabled-text-color, #999);
-						cursor: not-allowed;
-						box-shadow: none;
-					}
-
-					.join-icon {
-						font-size: 20px;
-						width: 20px;
-						height: 20px;
 					}
 				}
 			}
 		}
 	}
 
+	.vb-container {
+		height: fit-content;
+		overflow: hidden;
+	}
+
+	// Configuration Section
+	.configuration-section {
+		display: flex;
+		padding: 24px;
+		gap: 10px;
+		flex-flow: column;
+
+		.input-section {
+			::ng-deep .name-input {
+				.mat-mdc-form-field {
+					width: 100%;
+
+					.mat-mdc-text-field-wrapper {
+						border-radius: var(--ov-surface-radius);
+						border: 1px solid var(--ov-border-color, #e0e0e0);
+						transition: all 0.2s ease;
+
+						&:hover {
+							border-color: var(--ov-primary-action-color, #4285f4);
+						}
+
+						&.mdc-text-field--focused {
+							border-color: var(--ov-primary-action-color, #4285f4);
+							box-shadow: 0 0 0 3px rgba(66, 133, 244, 0.1);
+						}
+					}
+
+					.mat-mdc-form-field-subscript-wrapper {
+						display: none;
+					}
+
+					input {
+						font-size: 16px;
+						font-weight: 500;
+						color: var(--ov-text-surface-color, #666);
+						padding: 16px;
+
+						&::placeholder {
+							color: var(--ov-text-surface-color, #666);
+							font-weight: 400;
+						}
+					}
+				}
+			}
+		}
+
+		.error-message {
+			display: flex;
+			align-items: center;
+			gap: 8px;
+			padding: 12px 16px;
+			background-color: rgba(244, 67, 54, 0.08);
+			border: 1px solid rgba(244, 67, 54, 0.2);
+			border-radius: var(--ov-surface-radius);
+			color: var(--ov-error-color, #d32f2f);
+
+			.error-icon {
+				font-size: 18px;
+				width: 18px;
+				height: 18px;
+			}
+
+			.error-text {
+				font-size: 14px;
+				font-weight: 500;
+			}
+		}
+
+		.join-section {
+			.join-button {
+				width: 100%;
+				height: 56px;
+				background: var(--ov-primary-action-color);
+				color: var(--ov-text-primary-color);
+				border-radius: var(--ov-surface-radius);
+				font-size: 16px;
+				font-weight: 600;
+				letter-spacing: 0.5px;
+				transition: all 0.2s ease;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				gap: 8px;
+
+				&:hover:not([disabled]) {
+					background: color-mix(in srgb, var(--ov-primary-action-color), var(--ov-secondary-action-color) 10%);
+					transform: translateY(-1px);
+				}
+
+				&:active:not([disabled]) {
+					transform: translateY(0);
+				}
+
+				&[disabled] {
+					background: var(--ov-disabled-color, #ccc);
+					color: var(--ov-disabled-text-color, #999);
+					cursor: not-allowed;
+					box-shadow: none;
+				}
+
+				.join-icon {
+					font-size: 20px;
+					width: 20px;
+					height: 20px;
+				}
+			}
+		}
+	}
+
 	// Mobile Layout Optimization
-	.prejoin-container.mobile {
-		all: unset;
+	&.mobile {
 		padding: 0;
-		display: content;
-		height: 100vh;
 		min-height: 100vh;
+		height: 100vh;
 		max-height: 100vh;
 		overflow: hidden;
 
@@ -303,7 +301,6 @@
 				flex-direction: column;
 
 				.video-preview-section {
-					// Video takes all remaining space
 					flex: 1 1 auto;
 					min-height: 0;
 					overflow: hidden;
@@ -321,7 +318,6 @@
 					gap: 16px;
 					background: var(--ov-surface-color, #ffffff);
 
-					// Ensure content is displayed in column
 					display: flex;
 					flex-direction: column;
 
@@ -332,7 +328,6 @@
 				}
 
 				.vb-container {
-					// Virtual background panel - also adapts to content
 					flex: 0 0 auto;
 					max-height: 60vh;
 					overflow-y: auto;
@@ -341,109 +336,109 @@
 			}
 		}
 	}
+}
 
-	@keyframes slideInFromRight {
-		from {
-			opacity: 0;
-			transform: translateX(20px);
+// Responsive Design for Desktop/Tablet
+@media (max-width: 640px) and (min-height: 640px) {
+	.prejoin-container:not(.mobile) {
+		padding: 16px;
+
+		.prejoin-content {
+			max-width: 100%;
+
+			.prejoin-main {
+				border-radius: var(--ov-surface-radius);
+			}
 		}
-		to {
-			opacity: 1;
-			transform: translateX(0);
+
+		.configuration-section {
+			padding: 20px;
+			gap: 16px;
+		}
+
+		.top-toolbar {
+			padding: 16px 20px;
 		}
 	}
+}
 
-	// Responsive Design for Desktop/Tablet
-	@media (max-width: 640px) and (min-height: 640px) {
-		.prejoin-container:not(.mobile) {
+@media (max-width: 480px) and (min-height: 640px) {
+	.prejoin-container:not(.mobile) {
+		padding: 12px;
+
+		.configuration-section {
 			padding: 16px;
+		}
 
-			.prejoin-content {
-				max-width: 100%;
+		.video-overlay .device-controls {
+			gap: 8px;
 
-				.prejoin-main {
-					border-radius: var(--ov-surface-radius);
+			::ng-deep .device-selector .mat-mdc-icon-button {
+				width: 44px;
+				height: 44px;
+
+				mat-icon {
+					font-size: 18px;
 				}
 			}
+		}
 
-			.configuration-section {
-				padding: 20px;
-				gap: 16px;
-			}
-
-			.top-toolbar {
-				padding: 16px 20px;
-			}
+		.top-toolbar {
+			padding: 12px 16px;
 		}
 	}
+}
 
-	@media (max-width: 480px) and (min-height: 640px) {
-		.prejoin-container:not(.mobile) {
-			padding: 12px;
+// Short screens - optimize for horizontal space
+@media (max-height: 640px) and (min-width: 640px) {
+	.prejoin-container:not(.mobile) {
+		align-items: flex-start;
+		padding-top: 60px;
 
-			.configuration-section {
-				padding: 16px;
-			}
-
-			.video-overlay .device-controls {
-				gap: 8px;
-
-				::ng-deep .device-selector .mat-mdc-icon-button {
-					width: 44px;
-					height: 44px;
-
-					mat-icon {
-						font-size: 18px;
-					}
-				}
-			}
-
-			.top-toolbar {
-				padding: 12px 16px;
-			}
+		.video-preview-section .video-preview-container {
+			aspect-ratio: 16/9;
 		}
 	}
+}
 
-	// Short screens - optimize for horizontal space
-	@media (max-height: 640px) and (min-width: 640px) {
-		.prejoin-container:not(.mobile) {
-			align-items: flex-start;
-			padding-top: 60px; // Space for top toolbar
-
-			.video-preview-section .video-preview-container {
-				aspect-ratio: 16/9; // Wider aspect ratio for short screens
-			}
-		}
+// Dark theme support
+@media (prefers-color-scheme: dark) {
+	.prejoin-container {
+		background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
 	}
 
-	// Dark theme support
-	@media (prefers-color-scheme: dark) {
-		.prejoin-container {
-			background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
-		}
-
-		.prejoin-main {
-			background: #2d2d2d;
-			box-shadow:
-				0 8px 32px rgba(0, 0, 0, 0.3),
-				0 2px 8px rgba(0, 0, 0, 0.2);
-		}
-
-		.configuration-section .input-section ::ng-deep .name-input .participant-name-input-container .input-wrapper {
-			background-color: #3a3a3a;
-			border-color: #555;
-		}
+	.prejoin-main {
+		background: #2d2d2d;
+		box-shadow:
+			0 8px 32px rgba(0, 0, 0, 0.3),
+			0 2px 8px rgba(0, 0, 0, 0.2);
 	}
 
-	// Animation keyframes
-	@keyframes fadeIn {
-		from {
-			opacity: 0;
-			transform: translateY(20px);
-		}
-		to {
-			opacity: 1;
-			transform: translateY(0);
-		}
+	.configuration-section .input-section ::ng-deep .name-input .participant-name-input-container .input-wrapper {
+		background-color: #3a3a3a;
+		border-color: #555;
+	}
+}
+
+// Animation keyframes
+@keyframes fadeIn {
+	from {
+		opacity: 0;
+		transform: translateY(20px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+@keyframes slideInFromRight {
+	from {
+		opacity: 0;
+		transform: translateX(20px);
+	}
+	to {
+		opacity: 1;
+		transform: translateX(0);
 	}
 }
