@@ -4,6 +4,7 @@
 			#localLayoutElement
 			*ngFor="let track of localParticipant.tracks; trackBy: trackParticipantElement"
 			[ngClass]="{
+				local_participant: true,
 				OV_root: !track.isAudioTrack && !track.isMinimized,
 				OV_publisher: !track.isAudioTrack && !track.isMinimized,
 				OV_minimized: track.isMinimized,

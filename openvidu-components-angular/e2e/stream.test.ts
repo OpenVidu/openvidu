@@ -1,4 +1,4 @@
-import { Builder, ILocation, IRectangle, ISize, WebDriver } from 'selenium-webdriver';
+import { Builder, IRectangle, WebDriver } from 'selenium-webdriver';
 import { TestAppConfig } from './selenium.conf';
 import { OpenViduComponentsPO } from './utils.po.test';
 
@@ -81,7 +81,7 @@ describe('Stream rendering and media toggling scenarios', () => {
 
 		await utils.clickOn('#screenshare-btn');
 		await browser.sleep(1000);
-		await utils.waitForElement('#local-element-screen_share');
+		await utils.waitForElement('.local_participant.OV_screen');
 		expect(await utils.getNumberOfElements('.OV_stream')).toEqual(2);
 		expect(await utils.getNumberOfElements('video')).toEqual(1); //screen sharse video
 		expect(await utils.getNumberOfElements('audio')).toEqual(1); //screen share audio
@@ -106,7 +106,7 @@ describe('Stream rendering and media toggling scenarios', () => {
 
 		await utils.clickOn('#screenshare-btn');
 		await browser.sleep(1000);
-		await utils.waitForElement('#local-element-screen_share');
+		await utils.waitForElement('.local_participant.OV_screen');
 		expect(await utils.getNumberOfElements('.OV_stream')).toEqual(2);
 		expect(await utils.getNumberOfElements('video')).toEqual(2);
 		expect(await utils.getNumberOfElements('audio')).toEqual(2); //screen share audio and local audio
@@ -221,7 +221,7 @@ describe('Stream rendering and media toggling scenarios', () => {
 
 		await utils.clickOn('#screenshare-btn');
 		await browser.sleep(1000);
-		await utils.waitForElement('#local-element-screen_share');
+		await utils.waitForElement('.local_participant.OV_screen');
 		expect(await utils.getNumberOfElements('.OV_stream')).toEqual(3);
 		expect(await utils.getNumberOfElements('video')).toEqual(1);
 		expect(await utils.getNumberOfElements('audio')).toEqual(1); // screen share audios
@@ -260,7 +260,7 @@ describe('Stream rendering and media toggling scenarios', () => {
 
 		await utils.clickOn('#screenshare-btn');
 		await browser.sleep(1000);
-		await utils.waitForElement('#local-element-screen_share');
+		await utils.waitForElement('.local_participant.OV_screen');
 		expect(await utils.getNumberOfElements('.OV_stream')).toEqual(3);
 		expect(await utils.getNumberOfElements('video')).toEqual(3);
 		expect(await utils.getNumberOfElements('audio')).toEqual(3); // screen share audios and local audio and remote audio
@@ -304,7 +304,7 @@ describe('Stream rendering and media toggling scenarios', () => {
 
 		await utils.clickOn('#screenshare-btn');
 		await browser.sleep(500);
-		await utils.waitForElement('#local-element-screen_share');
+		await utils.waitForElement('.local_participant.OV_screen');
 		expect(await utils.getNumberOfElements('.OV_stream')).toEqual(4);
 		expect(await utils.getNumberOfElements('video')).toEqual(2);
 		expect(await utils.getNumberOfElements('audio')).toEqual(2); // screen share audios
