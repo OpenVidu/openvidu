@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, Output, Inject } from '@angular/core';
+import { Component, EventEmitter, Input, Output, Inject, ChangeDetectorRef } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import {
   AudioCaptureOptions,
@@ -65,7 +65,8 @@ export class ParticipantComponent {
 
   constructor(
     private testFeedService: TestFeedService,
-    @Inject(MatDialog) private dialog: MatDialog
+    @Inject(MatDialog) private dialog: MatDialog,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit() {
@@ -80,6 +81,11 @@ export class ParticipantComponent {
     this.trackPublishOptions = JSON.parse(
       JSON.stringify(this.room.options.publishDefaults)
     );
+  }
+
+  onTrackEvent(event: TestAppEvent) {
+    this.events.push(event);
+    this.cdr.detectChanges();
   }
 
   async addVideoTrack() {

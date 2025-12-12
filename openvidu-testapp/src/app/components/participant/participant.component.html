@@ -72,13 +72,13 @@
         @for (trackPublication of participant.audioTrackPublications| keyvalue; track trackPublication) {
           <app-audio-track
             [index]="index" [trackPublication]="trackPublication.value" [track]="trackPublication.value.audioTrack"
-          [localParticipant]="localParticipant" (newTrackEvent)="events.push($event)"></app-audio-track>
+          [localParticipant]="localParticipant" (newTrackEvent)="onTrackEvent($event)"></app-audio-track>
         }
       </div>
       @for (trackPublication of participant.videoTrackPublications | keyvalue; track trackPublication) {
         <app-video-track
           [index]="index" [trackPublication]="trackPublication.value" [track]="trackPublication.value.videoTrack"
-        [localParticipant]="localParticipant" (newTrackEvent)="events.push($event)"></app-video-track>
+        [localParticipant]="localParticipant" (newTrackEvent)="onTrackEvent($event)"></app-video-track>
       }
     </div>
   }

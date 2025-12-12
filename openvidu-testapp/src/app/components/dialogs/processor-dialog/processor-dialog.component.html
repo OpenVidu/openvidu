@@ -1,0 +1,212 @@
+<h1 mat-dialog-title>Track Processor Settings</h1>
+<div mat-dialog-content class="dialog-content-wrapper">
+  <div class="processor-layout">
+    <div class="video-column">
+      <div class="video-preview">
+        <div class="video-container">
+          <video #videoElement autoplay playsinline muted></video>
+          @if (data.videoTrack.processorEnabled && data.videoTrack.segmentationMethod === 'chroma' && data.videoTrack.chromaKey.autoDetect) {
+            <div class="sample-region-overlay"
+                 [style.left.%]="data.videoTrack.chromaKey.sampleRegion.startX * 100"
+                 [style.width.%]="(data.videoTrack.chromaKey.sampleRegion.endX - data.videoTrack.chromaKey.sampleRegion.startX) * 100"
+                 [style.top.%]="data.videoTrack.chromaKey.sampleRegion.startY * 100"
+                 [style.height.%]="(data.videoTrack.chromaKey.sampleRegion.endY - data.videoTrack.chromaKey.sampleRegion.startY) * 100">
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+
+    <div class="controls-column">
+      <div class="control-row">
+        <label>Processor Status:</label>
+        <mat-slide-toggle [checked]="data.videoTrack.processorEnabled" (change)="toggleTrackProcessor()" matTooltip="Toggle track processor"></mat-slide-toggle>
+      </div>
+
+      @if (data.videoTrack.processorEnabled) {
+      
+        <div class="control-row">
+          <label>Mode:</label>
+          <mat-form-field class="processor-mode-option" matTooltip="Set processor mode" matTooltipClass="custom-tooltip">
+            <mat-select [(value)]="data.videoTrack.mode" (selectionChange)="changeProcessorMode($event.value)">
+              <mat-option value="virtual-background">Virtual Background</mat-option>
+              <mat-option value="background-blur">Background Blur</mat-option>
+              <mat-option value="disabled">Disabled</mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+
+        @if (data.videoTrack.mode === 'virtual-background') {
+
+          <div class="control-row">
+            <label>Background Type:</label>
+            <mat-form-field class="processor-mode-option" matTooltip="Set background type" matTooltipClass="custom-tooltip">
+              <mat-select [(value)]="data.videoTrack.backgroundType" (selectionChange)="changeBackgroundType($event.value)">
+                <mat-option value="image">Image</mat-option>
+                <mat-option value="screen">Screen</mat-option>
+              </mat-select>
+            </mat-form-field>
+          </div>
+
+          <div class="control-row-group">
+            <div class="control-item">
+              <label>Tracking:</label>
+              <mat-slide-toggle [checked]="data.videoTrack.tracking" (change)="toggleProcessorTracking()" matTooltip="Toggle Tracking"></mat-slide-toggle>
+            </div>
+
+            <div class="control-item">
+              <label>Scale:</label>
+              <mat-slider min="0.1" max="1" step="0.1" discrete matTooltip="Change Scale">
+                <input matSliderThumb [value]="data.videoTrack.scale" (valueChange)="changeProcessorScale($event)">
+              </mat-slider>
+            </div>
+
+            <div class="control-item">
+              <label>H. Pos:</label>
+              <mat-slider min="-1" max="1" step="0.1" discrete matTooltip="Change Horizontal Position">
+                <input matSliderThumb [value]="data.videoTrack.horizontalPosition" (valueChange)="changeProcessorHorizontalPosition($event)">
+              </mat-slider>
+            </div>
+
+            <div class="control-item">
+              <button mat-stroked-button (click)="resetVirtualBackground()" matTooltip="Reset all virtual background defaults">Reset</button>
+            </div>
+          </div>
+        }
+
+        @if (data.videoTrack.mode === 'background-blur') {
+          <div class="control-row">
+            <label>Blur Radius:</label>
+            <mat-slider min="1" max="100" step="1" discrete matTooltip="Change Blur Radius">
+              <input matSliderThumb [value]="data.videoTrack.blurRadius" (valueChange)="changeProcessorBlurRadius($event)">
+            </mat-slider>
+          </div>
+        }
+
+        <mat-divider></mat-divider>
+
+        <div class="control-row">
+          <label>Segmentation:</label>
+          <mat-form-field class="processor-mode-option" matTooltip="Set segmentation method" matTooltipClass="custom-tooltip">
+            <mat-select [(value)]="data.videoTrack.segmentationMethod" (selectionChange)="changeSegmentationMethod($event.value)">
+              <mat-option value="mediapipe">MediaPipe</mat-option>
+              <mat-option value="chroma">Chroma Key</mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+
+        @if (data.videoTrack.segmentationMethod === 'mediapipe') {
+          <div class="control-row">
+            <div style="display: flex; align-items: center; min-width: 120px;">
+              <label style="min-width: auto; margin-right: 4px;">Model:</label>
+              <a href="https://ai.google.dev/edge/mediapipe/solutions/vision/image_segmenter#selfie-model" target="_blank" matTooltip="See available models at ai.google.dev" style="color: inherit; text-decoration: none; display: flex; cursor: pointer;">
+                <mat-icon style="font-size: 16px; width: 16px; height: 16px; line-height: 16px;">info</mat-icon>
+              </a>
+            </div>
+            <mat-form-field class="processor-mode-option" matTooltip="Set custom model asset path" matTooltipClass="custom-tooltip">
+              <mat-select [(value)]="data.videoTrack.modelAssetPath" (selectionChange)="changeModelAssetPath($event.value)">
+                <mat-option value="https://storage.googleapis.com/mediapipe-models/image_segmenter/selfie_segmenter/float16/latest/selfie_segmenter.tflite">SelfieSegmenter (square) 256 x 256</mat-option>
+                <mat-option value="https://storage.googleapis.com/mediapipe-models/image_segmenter/selfie_segmenter_landscape/float16/latest/selfie_segmenter_landscape.tflite">SelfieSegmenter (landscape) 144 x 256</mat-option>
+              </mat-select>
+            </mat-form-field>
+          </div>
+        }
+
+        @if (data.videoTrack.segmentationMethod === 'chroma') {
+          <div class="control-row-group">
+            <div class="control-item">
+              <label>Auto Detect:</label>
+              <mat-slide-toggle [(ngModel)]="data.videoTrack.chromaKey.autoDetect" (change)="updateChromaKey()" matTooltip="Auto Detect Chroma Key"></mat-slide-toggle>
+            </div>
+
+            @if (!data.videoTrack.chromaKey.autoDetect) {
+              <div class="control-row">
+                <label>HSV range:</label>
+                <div class="control-group-nowrap">
+                  <div class="control-item">
+                    <label style="min-width: auto">H:</label>
+                    <mat-slider min="0" max="255" discrete matTooltip="Hue Range">
+                      <input matSliderStartThumb [(ngModel)]="data.videoTrack.chromaKey.hueRange[0]" (valueChange)="updateChromaKey()">
+                      <input matSliderEndThumb [(ngModel)]="data.videoTrack.chromaKey.hueRange[1]" (valueChange)="updateChromaKey()">
+                    </mat-slider>
+                  </div>
+                  <div class="control-item">
+                    <label style="min-width: auto">S:</label>
+                    <mat-slider min="0" max="255" discrete matTooltip="Saturation Range">
+                      <input matSliderStartThumb [(ngModel)]="data.videoTrack.chromaKey.saturationRange[0]" (valueChange)="updateChromaKey()">
+                      <input matSliderEndThumb [(ngModel)]="data.videoTrack.chromaKey.saturationRange[1]" (valueChange)="updateChromaKey()">
+                    </mat-slider>
+                  </div>
+                  <div class="control-item">
+                    <label style="min-width: auto">V:</label>
+                    <mat-slider min="0" max="255" discrete matTooltip="Value Range">
+                      <input matSliderStartThumb [(ngModel)]="data.videoTrack.chromaKey.valueRange[0]" (valueChange)="updateChromaKey()">
+                      <input matSliderEndThumb [(ngModel)]="data.videoTrack.chromaKey.valueRange[1]" (valueChange)="updateChromaKey()">
+                    </mat-slider>
+                  </div>
+                </div>
+              </div>
+
+            } @else {
+              <div class="control-row">
+                <label>Threshold:</label>
+                <div class="control-group-nowrap">
+                  <div class="control-item">
+                    <label style="min-width: auto">H:</label>
+                    <mat-slider min="0" max="255" discrete matTooltip="Hue Threshold">
+                      <input matSliderThumb [(ngModel)]="data.videoTrack.chromaKey.autoDetectThreshold[0]" (valueChange)="updateChromaKey()">
+                    </mat-slider>
+                  </div>
+                  <div class="control-item">
+                    <label style="min-width: auto">S:</label>
+                    <mat-slider min="0" max="255" discrete matTooltip="Saturation Threshold">
+                      <input matSliderThumb [(ngModel)]="data.videoTrack.chromaKey.autoDetectThreshold[1]" (valueChange)="updateChromaKey()">
+                    </mat-slider>
+                  </div>
+                  <div class="control-item">
+                    <label style="min-width: auto">V:</label>
+                    <mat-slider min="0" max="255" discrete matTooltip="Value Threshold">
+                      <input matSliderThumb [(ngModel)]="data.videoTrack.chromaKey.autoDetectThreshold[2]" (valueChange)="updateChromaKey()">
+                    </mat-slider>
+                  </div>
+                </div>
+              </div>
+              <div class="control-row">
+                <label>Sample Region:</label>
+                <div class="control-group-nowrap">
+                  <div class="control-item">
+                    <label style="min-width: auto">X:</label>
+                    <mat-slider min="0" max="1" step="0.01" discrete matTooltip="Auto-detect Sample Region (X-axis)">
+                      <input matSliderStartThumb [(ngModel)]="data.videoTrack.chromaKey.sampleRegion.startX" (valueChange)="updateChromaKey()">
+                      <input matSliderEndThumb [(ngModel)]="data.videoTrack.chromaKey.sampleRegion.endX" (valueChange)="updateChromaKey()">
+                    </mat-slider>
+                  </div>
+                  <div class="control-item">
+                    <label style="min-width: auto">Y:</label>
+                    <mat-slider min="0" max="1" step="0.01" discrete matTooltip="Auto-detect Sample Region (Y-axis)">
+                      <input matSliderStartThumb [(ngModel)]="data.videoTrack.chromaKey.sampleRegion.startY" (valueChange)="updateChromaKey()">
+                      <input matSliderEndThumb [(ngModel)]="data.videoTrack.chromaKey.sampleRegion.endY" (valueChange)="updateChromaKey()">
+                    </mat-slider>
+                  </div>
+                </div>
+              </div>
+              <div class="control-item">
+                <label>Frame Auto-Detect Interval:</label>
+                <mat-slider min="1" max="100" step="1" discrete matTooltip="Auto-detect Frame Interval">
+                  <input matSliderThumb [(ngModel)]="data.videoTrack.chromaKey.autoDetectFrameInterval" (valueChange)="updateChromaKey()">
+                </mat-slider>
+              </div>
+            }
+            <div class="control-item">
+              <button mat-stroked-button (click)="resetAllChromaKeyDefaults()" matTooltip="Reset all chroma defaults">Reset</button>
+            </div>
+          </div>
+        }
+      
+      }
+    </div>
+  </div>
+</div>
+<div mat-dialog-actions align="end">
+  <button mat-button (click)="close()">Close</button>
+</div>

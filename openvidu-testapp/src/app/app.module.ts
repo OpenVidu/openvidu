@@ -27,6 +27,7 @@ import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatBadgeModule } from '@angular/material/badge';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatRadioModule } from '@angular/material/radio';
+import { MatSliderModule } from '@angular/material/slider';
 
 import { TestScenariosComponent } from './components/test-scenarios/test-scenarios.component';
 import { TestSessionsComponent } from './components/test-sessions/test-sessions.component';
@@ -46,6 +47,7 @@ import { CallbackPipe } from './pipes/callback.pipe';
 import { AppRoutingModule } from './app.routing';
 import { VideoResolutionComponent } from './components/dialogs/options-dialog/video-resolution/video-resolution.component';
 import { InfoDialogComponent } from './components/dialogs/info-dialog/info-dialog.component';
+import { ProcessorDialogComponent } from './components/dialogs/processor-dialog/processor-dialog.component';
 
 @NgModule({ declarations: [
         AppComponent,
@@ -64,6 +66,7 @@ import { InfoDialogComponent } from './components/dialogs/info-dialog/info-dialo
         OptionsDialogComponent,
         VideoResolutionComponent,
         InfoDialogComponent,
+        ProcessorDialogComponent,
     ],
     bootstrap: [AppComponent], imports: [FormsModule,
         BrowserModule,
@@ -86,7 +89,8 @@ import { InfoDialogComponent } from './components/dialogs/info-dialog/info-dialo
         MatChipsModule,
         MatSlideToggleModule,
         MatBadgeModule,
-        MatProgressSpinnerModule], providers: [
+        MatProgressSpinnerModule,
+        MatSliderModule], providers: [
         TestFeedService,
         {
             provide: MAT_FORM_FIELD_DEFAULT_OPTIONS,

@@ -48,7 +48,7 @@ export class TrackComponent {
   private indexId: string;
   private trackId: string;
 
-  protected _track: Track | undefined;
+  public _track: Track | undefined;
   @ViewChild('mediaElement') protected elementRef: ElementRef;
 
   trackSubscribed: boolean = true;

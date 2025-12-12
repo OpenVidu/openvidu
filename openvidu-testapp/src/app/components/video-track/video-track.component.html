@@ -15,6 +15,13 @@
         aria-hidden="true">stop</mat-icon>
       </button>
     }
+    @if (localParticipant) {
+      <button (click)="openProcessorDialog()" class="video-btn toggle-track-processor" matTooltip="Open track processor settings"
+        matTooltipClass="custom-tooltip">
+        <mat-icon aria-label="Open track processor settings" class="mat-icon material-icons" role="img"
+        aria-hidden="true">auto_fix_high</mat-icon>
+      </button>
+    }
     @if (!localParticipant) {
       <button (click)="toggleEnableTrack()" class="video-btn toggle-video-enabled" matTooltip="Toggle track enabled"
         matTooltipClass="custom-tooltip">
