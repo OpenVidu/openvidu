@@ -28,7 +28,6 @@ Visit [OpenVidu Community Forum](https://openvidu.discourse.group/)
 This project exists thanks to all the people who contribute. 
 <a href="https://github.com/OpenVidu/openvidu/contributors"><img src="https://opencollective.com/openvidu/contributors.svg?width=890&button=false" /></a>
 
-
 ## Backers
 
 Thank you to all our backers! 🙏 [[Become a backer](https://opencollective.com/openvidu#backer)]
