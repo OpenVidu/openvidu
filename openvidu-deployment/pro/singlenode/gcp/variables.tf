@@ -9,13 +9,13 @@ variable "projectId" {
 variable "region" {
   description = "GCP region where resources will be created."
   type        = string
-  default     = "europe-west1"
+  default     = "europe-west2"
 }
 
 variable "zone" {
   description = "GCP zone that some resources will use."
   type        = string
-  default     = "europe-west1-b"
+  default     = "europe-west2-b"
 }
 
 variable "stackName" {

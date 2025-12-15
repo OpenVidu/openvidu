@@ -142,7 +142,7 @@ resource "google_compute_instance" "openvidu_master_node" {
     initialize_params {
       image = local.ubuntu_image
       size  = 100
-      type  = local.is_c4a_instance ? "pd-ssd" : "pd-standard"
+      type  = local.is_c4a_instance ? "hyperdisk-balanced" : "pd-standard"
     }
   }
 
@@ -205,7 +205,7 @@ resource "google_compute_instance_template" "media_node_template" {
     auto_delete  = true
     boot         = true
     disk_size_gb = 100
-    disk_type    = local.is_c4a_instance_media ? "pd-ssd" : "pd-standard"
+    disk_type    = local.is_c4a_instance_media ? "hyperdisk-balanced" : "pd-standard"
   }
 
   network_interface {
