@@ -126,7 +126,9 @@ locals {
   is_arm_instance = startswith(var.masterNodeInstanceType, "c4a-") || startswith(var.masterNodeInstanceType, "t2a-") || startswith(var.masterNodeInstanceType, "n4a-") || startswith(var.masterNodeInstanceType, "a4x-")
   yq_arch         = local.is_arm_instance ? "arm64" : "amd64"
 
-  ubuntu_image = local.is_arm_instance ? "ubuntu-os-cloud/ubuntu-2404-noble-arm64-v20241219" : "ubuntu-os-cloud/ubuntu-2404-noble-amd64-v20241219"
+  ubuntu_image    = local.is_arm_instance ? "ubuntu-os-cloud/ubuntu-2404-noble-arm64-v20241219" : "ubuntu-os-cloud/ubuntu-2404-noble-amd64-v20241219"
+  is_c4a_instance = startswith(var.masterNodeInstanceType, "c4a-")
+
 }
 # Compute instance for OpenVidu
 resource "google_compute_instance" "openvidu_master_node" {
@@ -140,7 +142,7 @@ resource "google_compute_instance" "openvidu_master_node" {
     initialize_params {
       image = local.ubuntu_image
       size  = 100
-      type  = "pd-standard"
+      type  = local.is_c4a_instance ? "pd-ssd" : "pd-standard"
     }
   }
 
@@ -187,7 +189,8 @@ resource "google_compute_instance" "openvidu_master_node" {
 locals {
   is_arm_instance_media = startswith(var.mediaNodeInstanceType, "c4a-") || startswith(var.mediaNodeInstanceType, "t2a-") || startswith(var.mediaNodeInstanceType, "n4a-") || startswith(var.mediaNodeInstanceType, "a4x-")
 
-  ubuntu_image_media = local.is_arm_instance_media ? "ubuntu-os-cloud/ubuntu-2404-noble-arm64-v20241219" : "ubuntu-os-cloud/ubuntu-2404-noble-amd64-v20241219"
+  ubuntu_image_media    = local.is_arm_instance_media ? "ubuntu-os-cloud/ubuntu-2404-noble-arm64-v20241219" : "ubuntu-os-cloud/ubuntu-2404-noble-amd64-v20241219"
+  is_c4a_instance_media = startswith(var.mediaNodeInstanceType, "c4a-")
 }
 
 # Media Node Instance Template
@@ -202,7 +205,7 @@ resource "google_compute_instance_template" "media_node_template" {
     auto_delete  = true
     boot         = true
     disk_size_gb = 100
-    disk_type    = "pd-standard"
+    disk_type    = local.is_c4a_instance_media ? "pd-ssd" : "pd-standard"
   }
 
   network_interface {
