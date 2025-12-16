@@ -1809,6 +1809,8 @@ Resources:
           #!/bin/bash
           set -eu -o pipefail
 
+          echo "DPkg::Lock::Timeout \"-1\";" > /etc/apt/apt.conf.d/99timeout
+
           apt-get update && apt-get install -y \
                 python3-pip \
                 ec2-instance-connect
@@ -1861,6 +1863,8 @@ Resources:
         Fn::Base64: !Sub |
           #!/bin/bash
           set -eu -o pipefail
+
+          echo "DPkg::Lock::Timeout \"-1\";" > /etc/apt/apt.conf.d/99timeout
 
           apt-get update && apt-get install -y \
                 python3-pip \
@@ -1915,6 +1919,8 @@ Resources:
           #!/bin/bash
           set -eu -o pipefail
 
+          echo "DPkg::Lock::Timeout \"-1\";" > /etc/apt/apt.conf.d/99timeout
+
           apt-get update && apt-get install -y \
                 python3-pip \
                 ec2-instance-connect
@@ -1967,6 +1973,8 @@ Resources:
         Fn::Base64: !Sub |
           #!/bin/bash
           set -eu -o pipefail
+
+          echo "DPkg::Lock::Timeout \"-1\";" > /etc/apt/apt.conf.d/99timeout
 
           apt-get update && apt-get install -y \
                 python3-pip \
@@ -2181,6 +2189,8 @@ Resources:
           Fn::Base64: !Sub |
             #!/bin/bash
             set -eu -o pipefail
+
+            echo "DPkg::Lock::Timeout \"-1\";" > /etc/apt/apt.conf.d/99timeout
 
             apt-get update && apt-get install -y \
                 python3-pip \

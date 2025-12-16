@@ -189,6 +189,8 @@ var installScriptTemplate = '''
 OPENVIDU_VERSION=main
 DOMAIN=
 
+echo "DPkg::Lock::Timeout \"-1\";" > /etc/apt/apt.conf.d/99timeout
+
 apt-get update && apt-get install -y \
   curl \
   unzip \
@@ -770,6 +772,8 @@ chmod +x /usr/local/bin/config_blobStorage.sh
 curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
 
 az login --identity --allow-no-subscriptions
+
+echo "DPkg::Lock::Timeout \"-1\";" > /etc/apt/apt.conf.d/99timeout
 
 apt-get update && apt-get install -y
 

@@ -303,6 +303,8 @@ DOMAIN=
 
 # Assume azure cli is installed
 
+echo "DPkg::Lock::Timeout \"-1\";" > /etc/apt/apt.conf.d/99timeout
+
 apt-get update && apt-get install -y \
   curl \
   unzip \
@@ -1046,6 +1048,8 @@ curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
 
 az login --identity --allow-no-subscriptions
 
+echo "DPkg::Lock::Timeout \"-1\";" > /etc/apt/apt.conf.d/99timeout
+
 apt-get update && apt-get install -y
 
 export HOME="/root"
@@ -1264,6 +1268,8 @@ var installScriptTemplateMedia = '''
 DOMAIN=
 
 # Install dependencies
+echo "DPkg::Lock::Timeout \"-1\";" > /etc/apt/apt.conf.d/99timeout
+
 apt-get update && apt-get install -y \
   curl \
   unzip \
@@ -1407,6 +1413,8 @@ chmod +x /usr/local/bin/install.sh
 # stop_media_nodes.sh
 echo ${base64stop} | base64 -d > /usr/local/bin/stop_media_node.sh
 chmod +x /usr/local/bin/stop_media_node.sh
+
+echo "DPkg::Lock::Timeout \"-1\";" > /etc/apt/apt.conf.d/99timeout
 
 apt-get update && apt-get install -y 
 apt-get install -y jq

@@ -149,6 +149,8 @@ set -e
 OPENVIDU_VERSION=main
 DOMAIN=
 YQ_VERSION=v4.44.5
+echo "DPkg::Lock::Timeout \"-1\";" > /etc/apt/apt.conf.d/99timeout
+
 apt-get update && apt-get install -y \
   curl \
   unzip \
@@ -683,7 +685,7 @@ ${local.config_s3_script}
 CONFIG_S3_EOF
   chmod +x /usr/local/bin/config_s3.sh
 
-
+  echo "DPkg::Lock::Timeout \"-1\";" > /etc/apt/apt.conf.d/99timeout
   apt-get update && apt-get install -y
   
   # Install google cli 
