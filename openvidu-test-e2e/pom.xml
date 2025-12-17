@@ -128,6 +128,11 @@
 			<artifactId>minio</artifactId>
 			<version>${version.minio}</version>
 		</dependency>
+		<dependency>
+			<groupId>com.squareup.okhttp3</groupId>
+			<artifactId>okhttp</artifactId>
+			<version>4.12.0</version>
+		</dependency>
 	</dependencies>
 
 </project>
