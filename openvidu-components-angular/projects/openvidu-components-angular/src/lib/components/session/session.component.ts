@@ -13,27 +13,17 @@ import {
 	ViewChild
 } from '@angular/core';
 
-import { ILogger } from '../../models/logger.model';
 import { animate, style, transition, trigger } from '@angular/animations';
 import { MatDrawerContainer, MatSidenav } from '@angular/material/sidenav';
 import { skip, Subject, takeUntil } from 'rxjs';
-import { SidenavMode } from '../../models/layout.model';
-import { PanelStatusInfo, PanelType } from '../../models/panel.model';
 import { DataTopic } from '../../models/data-topic.model';
+import { SidenavMode } from '../../models/layout.model';
+import { ILogger } from '../../models/logger.model';
+import { PanelStatusInfo, PanelType } from '../../models/panel.model';
 import { RoomStatusData } from '../../models/room.model';
 import { ActionService } from '../../services/action/action.service';
 import { BroadcastingService } from '../../services/broadcasting/broadcasting.service';
 // import { CaptionService } from '../../services/caption/caption.service';
-import { ChatService } from '../../services/chat/chat.service';
-import { OpenViduComponentsConfigService } from '../../services/config/directive-config.service';
-import { LayoutService } from '../../services/layout/layout.service';
-import { LoggerService } from '../../services/logger/logger.service';
-import { OpenViduService } from '../../services/openvidu/openvidu.service';
-import { PanelService } from '../../services/panel/panel.service';
-import { ParticipantService } from '../../services/participant/participant.service';
-import { RecordingService } from '../../services/recording/recording.service';
-import { TranslateService } from '../../services/translate/translate.service';
-import { VirtualBackgroundService } from '../../services/virtual-background/virtual-background.service';
 import {
 	DataPacket_Kind,
 	DisconnectReason,
@@ -48,9 +38,18 @@ import {
 } from 'livekit-client';
 import { ParticipantLeftEvent, ParticipantLeftReason, ParticipantModel } from '../../models/participant.model';
 import { RecordingStatus } from '../../models/recording.model';
-import { TemplateManagerService, SessionTemplateConfiguration } from '../../services/template/template-manager.service';
+import { ChatService } from '../../services/chat/chat.service';
+import { OpenViduComponentsConfigService } from '../../services/config/directive-config.service';
+import { LayoutService } from '../../services/layout/layout.service';
+import { LoggerService } from '../../services/logger/logger.service';
+import { OpenViduService } from '../../services/openvidu/openvidu.service';
+import { PanelService } from '../../services/panel/panel.service';
+import { ParticipantService } from '../../services/participant/participant.service';
+import { RecordingService } from '../../services/recording/recording.service';
+import { SessionTemplateConfiguration, TemplateManagerService } from '../../services/template/template-manager.service';
+import { TranslateService } from '../../services/translate/translate.service';
 import { ViewportService } from '../../services/viewport/viewport.service';
-import { E2eeService } from '../../services/e2ee/e2ee.service';
+import { VirtualBackgroundService } from '../../services/virtual-background/virtual-background.service';
 import { safeJsonParse } from '../../utils/utils';
 
 /**
@@ -141,7 +140,6 @@ export class SessionComponent implements OnInit, OnDestroy {
 		private cd: ChangeDetectorRef,
 		private templateManagerService: TemplateManagerService,
 		protected viewportService: ViewportService,
-		private e2eeService: E2eeService
 	) {
 		this.log = this.loggerSrv.get('SessionComponent');
 		this.setupTemplates();
@@ -445,23 +443,6 @@ export class SessionComponent implements OnInit, OnDestroy {
 		);
 	}
 
-	// private subscribeToCaptionLanguage() {
-	// 	this.captionLanguageSubscription = this.captionService.captionLangObs.subscribe(async (langOpt) => {
-	// 		if (this.captionService.areCaptionsEnabled()) {
-	// 			// Unsubscribe all streams from speech to text and re-subscribe with new language
-	// 			this.log.d('Re-subscribe from STT because of language changed to ', langOpt.lang);
-	// 			await this.openviduService.unsubscribeRemotesFromSTT();
-	// 			await this.openviduService.subscribeRemotesToSTT(langOpt.lang);
-	// 		}
-	// 	});
-	// }
-
-	// private subscribeToParticipantNameChanged() {
-	// 	this.room.on(RoomEvent.ParticipantNameChanged, (name: string, participant: RemoteParticipant | LocalParticipant) => {
-	// 		console.log('ParticipantNameChanged', participant);
-	// 	});
-	// }
-
 	private subscribeToDataMessage() {
 		this.room.on(
 			RoomEvent.DataReceived,
@@ -484,10 +465,6 @@ export class SessionComponent implements OnInit, OnDestroy {
 
 					const participantIdentity = storedParticipant?.identity || '';
 					const participantName = storedParticipant?.name || '';
-
-					if (this.e2eeService.isEnabled) {
-						payload = await this.decryptIfNeeded(topic, payload, participantIdentity);
-					}
 
 					const rawText = decoder.decode(payload);
 					this.log.d('DataReceived (raw)', { topic });
@@ -580,18 +557,18 @@ export class SessionComponent implements OnInit, OnDestroy {
 		}
 	}
 
-	private async decryptIfNeeded(topic: string | undefined, payload: Uint8Array, identity: string): Promise<Uint8Array> {
-		if (topic === DataTopic.CHAT && this.e2eeService.isEnabled) {
-			try {
-				return await this.e2eeService.decryptOrMask(payload, identity, JSON.stringify({ message: '******' }));
-			} catch (e) {
-				this.log.e('Error decrypting payload, using masked fallback', e);
-				// In case of decryption error, return a masked JSON so subsequent parsing won't crash
-				return new TextEncoder().encode(JSON.stringify({ message: '******' }));
-			}
-		}
-		return payload;
-	}
+	// private async decryptIfNeeded(topic: string | undefined, payload: Uint8Array, identity: string): Promise<Uint8Array> {
+	// 	if (topic === DataTopic.CHAT && this.e2eeService.isEnabled) {
+	// 		try {
+	// 			return await this.e2eeService.decryptOrMask(payload, identity, JSON.stringify({ message: '******' }));
+	// 		} catch (e) {
+	// 			this.log.e('Error decrypting payload, using masked fallback', e);
+	// 			// In case of decryption error, return a masked JSON so subsequent parsing won't crash
+	// 			return new TextEncoder().encode(JSON.stringify({ message: '******' }));
+	// 		}
+	// 	}
+	// 	return payload;
+	// }
 
 	private subscribeToReconnection() {
 		this.room.on(RoomEvent.Reconnecting, () => {

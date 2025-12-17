@@ -124,8 +124,6 @@ export class OpenViduService {
 		if (needsE2EEConfig) {
 			// Create worker using the copied livekit-client e2ee worker from assets
 			roomOptions.encryption = this.buildE2EEOptions();
-			// !This config enables the data channel encryption
-			// (roomOptions as any).encryption = this.buildE2EEOptions();
 		}
 
 		this.room = new Room(roomOptions);

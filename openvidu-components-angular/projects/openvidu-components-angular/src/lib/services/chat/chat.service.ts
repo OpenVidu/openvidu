@@ -1,19 +1,18 @@
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs/internal/Observable';
 import { BehaviorSubject } from 'rxjs/internal/BehaviorSubject';
+import { Observable } from 'rxjs/internal/Observable';
 
-import { ILogger } from '../../models/logger.model';
 import { ChatMessage } from '../../models/chat.model';
+import { ILogger } from '../../models/logger.model';
 import { INotificationOptions } from '../../models/notification-options.model';
 
+import { DataTopic } from '../../models/data-topic.model';
+import { PanelType } from '../../models/panel.model';
 import { ActionService } from '../action/action.service';
 import { LoggerService } from '../logger/logger.service';
-import { DataTopic } from '../../models/data-topic.model';
 import { PanelService } from '../panel/panel.service';
 import { ParticipantService } from '../participant/participant.service';
-import { PanelType } from '../../models/panel.model';
 import { TranslateService } from '../translate/translate.service';
-import { E2eeService } from '../e2ee/e2ee.service';
 
 /**
  * @internal
@@ -33,7 +32,6 @@ export class ChatService {
 		private panelService: PanelService,
 		private actionService: ActionService,
 		private translateService: TranslateService,
-		private e2eeService: E2eeService
 	) {
 		this.log = this.loggerSrv.get('ChatService');
 		this.chatMessages$ = this._messageList.asObservable();
@@ -64,7 +62,6 @@ export class ChatService {
 
 	/**
 	 * Sends a chat message through the data channel.
-	 * If E2EE is enabled, the message will be encrypted before sending.
 	 *
 	 * @param message The message text to send
 	 */
@@ -74,13 +71,10 @@ export class ChatService {
 			try {
 				// Create message payload
 				const payload = JSON.stringify({ message: plainTextMessage });
-				const plainData: Uint8Array = new TextEncoder().encode(payload);
-
-				// Encrypt data if E2EE is enabled (Uint8Array → Uint8Array)
-				const dataToSend: Uint8Array = await this.e2eeService.encrypt(plainData);
+				const data: Uint8Array = new TextEncoder().encode(payload);
 
 				// Send through data channel
-				await this.participantService.publishData(dataToSend, { topic: DataTopic.CHAT, reliable: true });
+				await this.participantService.publishData(data, { topic: DataTopic.CHAT, reliable: true });
 
 				// Add to local message list
 				this.addMessage(plainTextMessage, true, this.participantService.getMyName()!);
