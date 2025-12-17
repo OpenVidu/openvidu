@@ -52,14 +52,14 @@
 
 		<version.spring-boot>3.5.8</version.spring-boot>
 		<version.surefire.plugin>3.5.2</version.surefire.plugin>
-		<version.selenium>4.27.0</version.selenium>
-		<version.gson>2.11.0</version.gson>
-		<version.livekit-server>0.8.3</version.livekit-server>
-		<version.testcontainers>1.20.4</version.testcontainers>
-		<version.dockerjava>3.4.1</version.dockerjava>
+		<version.selenium>4.39.0</version.selenium>
+		<version.gson>2.13.2</version.gson>
+		<version.livekit-server>0.10.1</version.livekit-server>
+		<version.testcontainers>1.21.4</version.testcontainers>
+		<version.dockerjava>3.7.0</version.dockerjava>
 		<version.stringsimilarity>2.0.0</version.stringsimilarity>
 		<version.openvidu-test-browsers>1.1.0</version.openvidu-test-browsers>
-		<version.minio>8.5.17</version.minio>
+		<version.minio>8.6.0</version.minio>
 	</properties>
 
 	<build>
