@@ -50,7 +50,7 @@
 		<openvidu.scm.url>https://github.com/OpenVidu/openvidu</openvidu.scm.url>
 		<openvidu.scm.connection>git@github.com:OpenVidu/openvidu.git</openvidu.scm.connection>
 
-		<version.spring-boot>3.4.1</version.spring-boot>
+		<version.spring-boot>3.5.8</version.spring-boot>
 		<version.surefire.plugin>3.5.2</version.surefire.plugin>
 		<version.selenium>4.27.0</version.selenium>
 		<version.gson>2.11.0</version.gson>
