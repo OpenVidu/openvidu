@@ -85,7 +85,8 @@
 			"PLACEHOLDER": "Send a message...",
 			"SEND": "Send",
 			"MESSAGE_SENT_NOTIFICATION": "message sent",
-			"OPEN_CHAT": "OPEN"
+			"OPEN_CHAT": "OPEN",
+			"ENCRYPTION_KEY_MISMATCH": "There are participants connected with a different encryption key. You will not receive messages from them."
 		},
 		"PARTICIPANTS": {
 			"TITLE": "Participants",

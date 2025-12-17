@@ -85,7 +85,8 @@
 			"PLACEHOLDER": "एक संदेश भेजें ...",
 			"SEND": "भेजें",
 			"MESSAGE_SENT_NOTIFICATION": "संदेश भेजा गया",
-			"OPEN_CHAT": "खोलें"
+			"OPEN_CHAT": "खोलें",
+			"ENCRYPTION_KEY_MISMATCH": "कुछ सदस्य एक अलग एन्क्रिप्शन कुंजी के साथ जुड़े हैं। आपको उनके संदेश प्राप्त नहीं होंगे।"
 		},
 		"ACTIVITIES": {
 			"TITLE": "गतिविधियाँ"

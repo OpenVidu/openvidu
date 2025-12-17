@@ -1,9 +1,11 @@
-import { AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, OnInit, ViewChild } from '@angular/core';
+import { AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, computed, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { Subject, takeUntil } from 'rxjs';
 import { ChatMessage } from '../../../models/chat.model';
 import { PanelType } from '../../../models/panel.model';
 import { ChatService } from '../../../services/chat/chat.service';
+import { E2eeService } from '../../../services/e2ee/e2ee.service';
 import { PanelService } from '../../../services/panel/panel.service';
+import { ParticipantService } from '../../../services/participant/participant.service';
 
 /**
  *
@@ -20,15 +22,15 @@ export class ChatPanelComponent implements OnInit, AfterViewInit {
 	/**
 	 * @ignore
 	 */
-	@ViewChild('chatScroll') chatScroll: ElementRef;
+	@ViewChild('chatScroll') chatScroll: ElementRef = new ElementRef(null);
 	/**
 	 * @ignore
 	 */
-	@ViewChild('chatInput') chatInput: ElementRef;
+	@ViewChild('chatInput') chatInput: ElementRef = new ElementRef(null);
 	/**
 	 * @ignore
 	 */
-	message: string;
+	message: string = '';
 	/**
 	 * @ignore
 	 */
@@ -42,8 +44,10 @@ export class ChatPanelComponent implements OnInit, AfterViewInit {
 	constructor(
 		private chatService: ChatService,
 		private panelService: PanelService,
-		private cd: ChangeDetectorRef
-	) {}
+		private cd: ChangeDetectorRef,
+		private e2eeService: E2eeService,
+		private participantService: ParticipantService
+	) {	}
 
 	/**
 	 * @ignore
@@ -73,7 +77,7 @@ export class ChatPanelComponent implements OnInit, AfterViewInit {
 	/**
 	 * @ignore
 	 */
-	eventKeyPress(event) {
+	eventKeyPress(event: KeyboardEvent): void {
 		// Pressed 'Enter' key
 		if (event && event.keyCode === 13) {
 			event.preventDefault();
@@ -108,6 +112,19 @@ export class ChatPanelComponent implements OnInit, AfterViewInit {
 	close() {
 		this.panelService.togglePanel(PanelType.CHAT);
 	}
+
+	/**
+	 * @ignore
+	 */
+	hasEncryptionKeyMismatch = computed(() => {
+		if (!this.e2eeService.isEnabled) {
+			return false;
+		}
+		const remoteParticipants = this.participantService.remoteParticipantsSignal();
+		return remoteParticipants.some(p => p.hasEncryptionError);
+	});
+
+
 
 	private subscribeToMessages() {
 		this.chatService.chatMessages$.pipe(takeUntil(this.destroy$)).subscribe((messages: ChatMessage[]) => {

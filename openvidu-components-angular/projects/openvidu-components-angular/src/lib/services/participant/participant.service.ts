@@ -1,4 +1,5 @@
-import { Injectable } from '@angular/core';
+import { Injectable, Signal } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { ILogger } from '../../models/logger.model';
 import { ParticipantModel, ParticipantProperties } from '../../models/participant.model';
@@ -6,7 +7,6 @@ import { OpenViduComponentsConfigService } from '../config/directive-config.serv
 import { GlobalConfigService } from '../config/global-config.service';
 import { LoggerService } from '../logger/logger.service';
 
-import { OpenViduService } from '../openvidu/openvidu.service';
 import {
 	AudioCaptureOptions,
 	DataPublishOptions,
@@ -19,8 +19,9 @@ import {
 	VideoCaptureOptions,
 	VideoPresets
 } from 'livekit-client';
-import { StorageService } from '../storage/storage.service';
 import { E2eeService } from '../e2ee/e2ee.service';
+import { OpenViduService } from '../openvidu/openvidu.service';
+import { StorageService } from '../storage/storage.service';
 
 @Injectable({
 	providedIn: 'root'
@@ -28,6 +29,7 @@ import { E2eeService } from '../e2ee/e2ee.service';
 export class ParticipantService {
 	/**
 	 * Local participant Observable which pushes the local participant object in every update.
+	 * @deprecated Please prefer `localParticipantSignal` for reactive updates and `localParticipant$` when using RxJS.
 	 */
 	localParticipant$: Observable<ParticipantModel | undefined>;
 	private localParticipantBS: BehaviorSubject<ParticipantModel | undefined> = new BehaviorSubject<ParticipantModel | undefined>(
@@ -36,9 +38,25 @@ export class ParticipantService {
 
 	/**
 	 * Remote participants Observable which pushes the remote participants array in every update.
+	 * @deprecated Please prefer `remoteParticipantsSignal` for reactive updates and `remoteParticipants$` when using RxJS.
 	 */
 	remoteParticipants$: Observable<ParticipantModel[]>;
 	private remoteParticipantsBS: BehaviorSubject<ParticipantModel[]> = new BehaviorSubject<ParticipantModel[]>([]);
+
+	/**
+	 * Local participant Signal for reactive programming with Angular signals.
+	 * This is a modern alternative to localParticipant$ Observable.
+	 * @since Angular 16+
+	 */
+	localParticipantSignal: Signal<ParticipantModel | undefined>;
+
+	/**
+	 * Remote participants Signal for reactive programming with Angular signals.
+	 * This is a modern alternative to remoteParticipants$ Observable.
+	 * @since Angular 16+
+	 */
+	remoteParticipantsSignal: Signal<ParticipantModel[]>;
+
 	private localParticipant: ParticipantModel | undefined;
 	private remoteParticipants: ParticipantModel[] = [];
 	private log: ILogger;
@@ -57,6 +75,10 @@ export class ParticipantService {
 		this.log = this.loggerSrv.get('ParticipantService');
 		this.localParticipant$ = this.localParticipantBS.asObservable();
 		this.remoteParticipants$ = this.remoteParticipantsBS.asObservable();
+
+		// Create signals from observables for modern reactive programming
+		this.localParticipantSignal = toSignal(this.localParticipant$, { initialValue: undefined });
+		this.remoteParticipantsSignal = toSignal(this.remoteParticipants$, { initialValue: [] });
 	}
 
 	/**
@@ -81,6 +103,8 @@ export class ParticipantService {
 
 	/**
 	 * Returns the local participant object.
+	 *
+	 * @deprecated Please prefer `localParticipantSignal()` for reactive updates and `localParticipant$` when using RxJS.
 	 */
 	getLocalParticipant(): ParticipantModel | undefined {
 		return this.localParticipant;
@@ -435,6 +459,8 @@ export class ParticipantService {
 
 	/**
 	 * Returns all remote participants in the room.
+	 *
+	 * @deprecated Please prefer `remoteParticipantsSignal()` for automatic reactive updates or `remoteParticipants$` when using Observables.
 	 */
 	getRemoteParticipants(): ParticipantModel[] {
 		return this.remoteParticipants;

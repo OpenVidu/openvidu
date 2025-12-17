@@ -85,7 +85,8 @@
 			"PLACEHOLDER": "Enviar uma mensagem...",
 			"SEND": "Enviar",
 			"MESSAGE_SENT_NOTIFICATION": "mensagem enviada",
-			"OPEN_CHAT": "ABRIR"
+			"OPEN_CHAT": "ABRIR",
+			"ENCRYPTION_KEY_MISMATCH": "Existem participantes conectados com uma chave de criptografia diferente. Você não receberá mensagens deles."
 		},
 		"ACTIVITIES": {
 			"TITLE": "Atividades"

@@ -1,3 +1,29 @@
+.encryption-warning {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 8px;
+	padding: 12px;
+	margin: 10px;
+	background-color: rgba(255, 152, 0, 0.1);
+	border: 1px solid rgba(255, 152, 0, 0.5);
+	border-radius: var(--ov-surface-radius);
+	color: var(--ov-warn-color, #ff9800);
+	font-size: 13px;
+
+	mat-icon {
+		font-size: 20px;
+		width: 20px;
+		height: 20px;
+	}
+
+	p {
+		margin: 0;
+		line-height: 1.4;
+		width: fit-content;
+	}
+}
+
 .text-container {
 	color: var(--ov-text-primary-color);
 	text-align: center;

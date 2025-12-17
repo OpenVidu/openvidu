@@ -6,6 +6,13 @@
 		</button>
 	</div>
 
+	@if (hasEncryptionKeyMismatch()) {
+		<div class="encryption-warning">
+			<mat-icon>warning</mat-icon>
+			<p>{{ 'PANEL.CHAT.ENCRYPTION_KEY_MISMATCH' | translate }}</p>
+		</div>
+	}
+
 	<div class="text-container">
 		<p class="text-info">{{ 'PANEL.CHAT.SUBTITLE' | translate }}</p>
 	</div>

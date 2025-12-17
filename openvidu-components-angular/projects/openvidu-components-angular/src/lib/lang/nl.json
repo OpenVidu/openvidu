@@ -85,7 +85,8 @@
 			"PLACEHOLDER": "Stuur een bericht ...",
 			"SEND": "Versturen",
 			"MESSAGE_SENT_NOTIFICATION": "bericht verzonden",
-			"OPEN_CHAT": "OPENEN"
+			"OPEN_CHAT": "OPENEN",
+			"ENCRYPTION_KEY_MISMATCH": "Er zijn deelnemers verbonden met een andere versleutelingssleutel. U ontvangt hun berichten niet."
 		},
 		"ACTIVITIES": {
 			"TITLE": "Activiteiten"

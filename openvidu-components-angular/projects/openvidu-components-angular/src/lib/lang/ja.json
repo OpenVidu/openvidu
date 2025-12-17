@@ -85,7 +85,8 @@
 			"PLACEHOLDER": "メッセージを送信...",
 			"SEND": "送信する",
 			"MESSAGE_SENT_NOTIFICATION": "メッセージを送信しました",
-			"OPEN_CHAT": "開く"
+			"OPEN_CHAT": "開く",
+			"ENCRYPTION_KEY_MISMATCH": "異なる暗号化キーで接続している参加者がいます。彼らからのメッセージは受信できません。"
 		},
 		"ACTIVITIES": {
 			"TITLE": "アクティビティ"

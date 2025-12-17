@@ -85,7 +85,8 @@
 			"PLACEHOLDER": "发送消息...",
 			"SEND": "发送",
 			"MESSAGE_SENT_NOTIFICATION": "消息已发送",
-			"OPEN_CHAT": "打开"
+			"OPEN_CHAT": "打开",
+			"ENCRYPTION_KEY_MISMATCH": "有参与者使用不同的加密密钥连接。您将不会收到他们的消息。"
 		},
 		"ACTIVITIES": {
 			"TITLE": "活动"
