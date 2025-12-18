@@ -50,16 +50,17 @@
 		<openvidu.scm.url>https://github.com/OpenVidu/openvidu</openvidu.scm.url>
 		<openvidu.scm.connection>git@github.com:OpenVidu/openvidu.git</openvidu.scm.connection>
 
-		<version.spring-boot>3.5.8</version.spring-boot>
-		<version.surefire.plugin>3.5.2</version.surefire.plugin>
+		<version.spring-boot>4.0.0</version.spring-boot>
+		<version.surefire.plugin>3.5.4</version.surefire.plugin>
 		<version.selenium>4.39.0</version.selenium>
 		<version.gson>2.13.2</version.gson>
 		<version.livekit-server>0.10.1</version.livekit-server>
-		<version.testcontainers>1.21.4</version.testcontainers>
+		<version.testcontainers>2.0.3</version.testcontainers>
 		<version.dockerjava>3.7.0</version.dockerjava>
 		<version.stringsimilarity>2.0.0</version.stringsimilarity>
 		<version.openvidu-test-browsers>1.1.0</version.openvidu-test-browsers>
 		<version.minio>8.6.0</version.minio>
+		<version.okhttp>5.3.2</version.okhttp>
 	</properties>
 
 	<build>
@@ -102,6 +103,12 @@
 			<groupId>io.openvidu</groupId>
 			<artifactId>openvidu-test-browsers</artifactId>
 			<version>${version.openvidu-test-browsers}</version>
+			<exclusions>
+				<exclusion>
+					<groupId>org.junit.jupiter</groupId>
+					<artifactId>junit-jupiter-api</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>io.livekit</groupId>
@@ -131,7 +138,12 @@
 		<dependency>
 			<groupId>com.squareup.okhttp3</groupId>
 			<artifactId>okhttp</artifactId>
-			<version>4.12.0</version>
+			<version>${version.okhttp}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.squareup.okhttp3</groupId>
+			<artifactId>logging-interceptor</artifactId>
+			<version>${version.okhttp}</version>
 		</dependency>
 	</dependencies>
 
