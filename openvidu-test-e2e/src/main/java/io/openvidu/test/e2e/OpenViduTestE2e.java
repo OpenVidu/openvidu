@@ -468,17 +468,17 @@ public class OpenViduTestE2e {
 		case "firefox":
 			container = firefoxContainer("selenium/standalone-firefox:" + FIREFOX_VERSION, 2147483648L, 1, false);
 			setupBrowserAux(BrowserNames.FIREFOX, container, false);
-			browserUser = new FirefoxUser("TestUser", 50, false);
+			browserUser = new FirefoxUser("TestUser", 50, false, headless);
 			break;
 		case "firefoxDisabledOpenH264":
 			container = firefoxContainer("selenium/standalone-firefox:" + FIREFOX_VERSION, 2147483648L, 1, true);
 			setupBrowserAux(BrowserNames.FIREFOX, container, false);
-			browserUser = new FirefoxUser("TestUser", 50, true);
+			browserUser = new FirefoxUser("TestUser", 50, true, headless);
 			break;
 		case "edge":
 			container = edgeContainer("selenium/standalone-edge:" + EDGE_VERSION, 2147483648L, 1, false);
 			setupBrowserAux(BrowserNames.EDGE, container, false);
-			browserUser = new EdgeUser("TestUser", 50);
+			browserUser = new EdgeUser("TestUser", 50, headless);
 			break;
 		default:
 			log.error("Browser {} not recognized", browser);

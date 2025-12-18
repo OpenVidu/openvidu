@@ -27,7 +27,7 @@ public class CustomLayoutHandler implements WebMvcConfigurer {
 
 	@Bean
 	SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-		http.httpBasic().disable();
+		http.httpBasic(basic -> basic.disable());
 		return http.build();
 	}
 
