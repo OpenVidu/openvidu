@@ -39,7 +39,7 @@ public class OperaUser extends BrowserUser {
 			// this.driver = new OperaDriver(options);
 		}
 
-		this.driver.manage().timeouts().setScriptTimeout(timeOfWaitInSeconds, TimeUnit.SECONDS);
+		this.driver.manage().timeouts().scriptTimeout(java.time.Duration.ofSeconds(timeOfWaitInSeconds));
 		this.configureDriver(new org.openqa.selenium.Dimension(1920, 1080));
 	}
 
