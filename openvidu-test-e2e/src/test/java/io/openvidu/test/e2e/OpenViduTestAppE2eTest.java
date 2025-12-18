@@ -153,9 +153,9 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		Assertions.assertEquals(4, numberOfVideos, "Wrong number of videos");
 		Assertions.assertEquals(4, numberOfAudios, "Wrong number of audios");
 
-		Assertions.assertTrue(dummyAssert("video", false, true),
+		Assertions.assertTrue(assertAllElementsHaveTracks(user, "video", false, true),
 				"HTMLVideoElements were expected to have only one video track");
-		Assertions.assertTrue(dummyAssert("audio.remote", true, false),
+		Assertions.assertTrue(assertAllElementsHaveTracks(user, "audio.remote", true, false),
 				"HTMLAudioElements were expected to have only one audio track");
 		gracefullyLeaveParticipants(user, 2);
 	}
@@ -329,7 +329,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		final int numberOfAudios = user.getDriver().findElements(By.tagName("audio")).size();
 		Assertions.assertEquals(4, numberOfAudios, "Wrong number of audios");
 
-		Assertions.assertTrue(dummyAssert("audio.remote", true, false),
+		Assertions.assertTrue(assertAllElementsHaveTracks(user, "audio.remote", true, false),
 				"HTMLAudioElements were expected to have only one audio track");
 
 		gracefullyLeaveParticipants(user, 2);
@@ -359,7 +359,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		final int numberOfVideos = user.getDriver().findElements(By.tagName("video")).size();
 		Assertions.assertEquals(4, numberOfVideos, "Wrong number of videos");
 
-		Assertions.assertTrue(dummyAssert("video", false, true),
+		Assertions.assertTrue(assertAllElementsHaveTracks(user, "video", false, true),
 				"HTMLVideoElements were expected to have only one audio track");
 
 		gracefullyLeaveParticipants(user, 2);
@@ -395,9 +395,9 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		Assertions.assertEquals(USERS, numberOfVideos, "Wrong number of videos");
 		Assertions.assertEquals(USERS, numberOfAudios, "Wrong number of audios");
 
-		Assertions.assertTrue(dummyAssert("video", false, true),
+		Assertions.assertTrue(assertAllElementsHaveTracks(user, "video", false, true),
 				"HTMLVideoElements were expected to have only one video track");
-		Assertions.assertTrue(dummyAssert("audio.remote", true, false),
+		Assertions.assertTrue(assertAllElementsHaveTracks(user, "audio.remote", true, false),
 				"HTMLAudioElements were expected to have only one audio track");
 
 		gracefullyLeaveParticipants(user, USERS);
@@ -433,9 +433,9 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		Assertions.assertEquals(USERS * USERS, numberOfVideos, "Wrong number of videos");
 		Assertions.assertEquals(USERS * USERS, numberOfAudios, "Wrong number of audios");
 
-		Assertions.assertTrue(dummyAssert("video", false, true),
+		Assertions.assertTrue(assertAllElementsHaveTracks(user, "video", false, true),
 				"HTMLVideoElements were expected to have only one video track");
-		Assertions.assertTrue(dummyAssert("audio.remote", true, false),
+		Assertions.assertTrue(assertAllElementsHaveTracks(user, "audio.remote", true, false),
 				"HTMLAudioElements were expected to have only one audio track");
 
 		gracefullyLeaveParticipants(user, USERS);
@@ -468,7 +468,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 		user.getWaiter()
 				.until(ExpectedConditions.numberOfElementsToBe(By.tagName("video"), NUMBER_OF_USERS * NUMBER_OF_USERS));
-		Assertions.assertTrue(dummyAssert("video", true, true),
+		Assertions.assertTrue(assertAllElementsHaveTracks(user, "video", true, true),
 				"HTMLVideoElements were expected to have a video track and an audio track attached");
 
 		user.getDriver().findElement(By.id("finish-btn")).click();
@@ -517,9 +517,9 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 				Assertions.assertEquals(3, numberOfVideos, "Wrong number of videos");
 				Assertions.assertEquals(3, numberOfAudios, "Wrong number of audios");
 
-				Assertions.assertTrue(dummyAssert("video", false, true),
+				Assertions.assertTrue(assertAllElementsHaveTracks(user, "video", false, true),
 						"HTMLVideoElements were expected to have only one video track");
-				Assertions.assertTrue(dummyAssert("audio.remote", true, false),
+				Assertions.assertTrue(assertAllElementsHaveTracks(user, "audio.remote", true, false),
 						"HTMLAudioElements were expected to have only one audio track");
 
 				latch.countDown();
@@ -664,7 +664,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		final int numberOfVideos = user.getDriver().findElements(By.tagName("video")).size();
 		Assertions.assertEquals(2, numberOfVideos, "Wrong number of videos");
 
-		Assertions.assertTrue(dummyAssert("video", false, true),
+		Assertions.assertTrue(assertAllElementsHaveTracks(user, "video", false, true),
 				"HTMLVideoElements were expected to have only one video track");
 
 		String expectedCodec = "video/" + codec.toUpperCase();
@@ -782,7 +782,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 				firefoxUser.getWaiter().until(ExpectedConditions.numberOfElementsToBe(By.tagName("video"), 1));
 				final int numberOfVideos = firefoxUser.getDriver().findElements(By.tagName("video")).size();
 				Assertions.assertEquals(1, numberOfVideos, "Wrong number of videos");
-				Assertions.assertTrue(dummyAssert("video", false, true),
+				Assertions.assertTrue(assertAllElementsHaveTracks(firefoxUser, "video", false, true),
 						"HTMLVideoElements were expected to have only one video track");
 
 				// Check subscriber's codec
@@ -819,7 +819,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		user.getEventManager().waitUntilEventReaches(0, "localTrackSubscribed", "ParticipantEvent", 1);
 		user.getEventManager().waitUntilEventReaches(1, "trackSubscribed", "ParticipantEvent", 1);
 		user.getWaiter().until(ExpectedConditions.numberOfElementsToBe(By.tagName("video"), 2));
-		Assertions.assertTrue(dummyAssert("video", false, true),
+		Assertions.assertTrue(assertAllElementsHaveTracks(user, "video", false, true),
 				"HTMLVideoElements were expected to have only one video track");
 
 		WebElement subscriberVideo = user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 video.remote"));
@@ -871,7 +871,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		final int numberOfAudios = user.getDriver().findElements(By.tagName("audio")).size();
 		Assertions.assertEquals(0, numberOfAudios, "Wrong number of audios");
 
-		Assertions.assertTrue(dummyAssert("video", false, true),
+		Assertions.assertTrue(assertAllElementsHaveTracks(user, "video", false, true),
 				"HTMLVideoElements were expected to have only one audio track");
 
 		WebElement subscriberVideo = user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 video.remote"));
@@ -923,7 +923,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		final int numberOfAudios = user.getDriver().findElements(By.tagName("audio")).size();
 		Assertions.assertEquals(0, numberOfAudios, "Wrong number of audios");
 
-		Assertions.assertTrue(dummyAssert("video", false, true),
+		Assertions.assertTrue(assertAllElementsHaveTracks(user, "video", false, true),
 				"HTMLVideoElements were expected to have only one audio track");
 
 		WebElement subscriberVideo1 = user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 video.remote"));
@@ -1027,7 +1027,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		final int numberOfVideos = user.getDriver().findElements(By.tagName("video")).size();
 		Assertions.assertEquals(2, numberOfVideos, "Wrong number of videos");
 
-		Assertions.assertTrue(dummyAssert("video", false, true),
+		Assertions.assertTrue(assertAllElementsHaveTracks(user, "video", false, true),
 				"HTMLVideoElements were expected to have only one audio track");
 
 		user.getDriver().findElement(By.cssSelector("#room-api-btn-0")).click();
@@ -1092,7 +1092,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		final int numberOfAudios = user.getDriver().findElements(By.tagName("audio")).size();
 		Assertions.assertEquals(2, numberOfAudios, "Wrong number of audios");
 
-		Assertions.assertTrue(dummyAssert("audio.remote", true, false),
+		Assertions.assertTrue(assertAllElementsHaveTracks(user, "audio.remote", true, false),
 				"HTMLAudioElements were expected to have only one audio track");
 
 		user.getEventManager().waitUntilEventReaches(0, "activeSpeakersChanged", "RoomEvent", 5);
@@ -1139,7 +1139,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		final int numberOfAudios = user.getDriver().findElements(By.tagName("audio")).size();
 		Assertions.assertEquals(0, numberOfAudios, "Wrong number of audios");
 
-		Assertions.assertTrue(dummyAssert("video", false, true),
+		Assertions.assertTrue(assertAllElementsHaveTracks(user, "video", false, true),
 				"HTMLVideoElements were expected to have only one audio track");
 
 		WebElement publisherVideo = user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 video.local"));
@@ -1201,7 +1201,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		final int numberOfAudios = user.getDriver().findElements(By.tagName("audio")).size();
 		Assertions.assertEquals(0, numberOfAudios, "Wrong number of audios");
 
-		Assertions.assertTrue(dummyAssert("video", false, true),
+		Assertions.assertTrue(assertAllElementsHaveTracks(user, "video", false, true),
 				"HTMLVideoElements were expected to have only one audio track");
 
 		WebElement publisherVideo = user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 video.local"));
@@ -1247,7 +1247,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		final int numberOfAudios = user.getDriver().findElements(By.tagName("audio")).size();
 		Assertions.assertEquals(0, numberOfAudios, "Wrong number of audios");
 
-		Assertions.assertTrue(dummyAssert("video", false, true),
+		Assertions.assertTrue(assertAllElementsHaveTracks(user, "video", false, true),
 				"HTMLVideoElements were expected to have only one video track");
 
 		WebElement subscriberVideo = user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 video.remote"));
@@ -1255,7 +1255,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		// Subscriber should settle in 640p
 		this.waitUntilSubscriberFrameWidthIs(user, subscriberVideo, 640);
 
-		dummyChangeElementSize(subscriberVideo, 1000, 700);
+		changeElementSize(user, subscriberVideo, 1000, 700);
 		Thread.sleep(2000);
 		int newFrameWidth = this.getSubscriberVideoFrameWidth(user, subscriberVideo);
 
@@ -1263,7 +1263,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 				"With adaptive stream disabled subscriber's track resolution should NOT change");
 
 		int oldFrameWidth = newFrameWidth;
-		dummyChangeElementSize(subscriberVideo, 100, 30);
+		changeElementSize(user, subscriberVideo, 100, 30);
 		Thread.sleep(3000);
 		newFrameWidth = this.getSubscriberVideoFrameWidth(user, subscriberVideo);
 
@@ -1272,7 +1272,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 		oldFrameWidth = newFrameWidth;
 		oldFrameWidth = this.getSubscriberVideoFrameWidth(user, subscriberVideo);
-		dummyChangeElementSize(subscriberVideo, 1000, 700);
+		changeElementSize(user, subscriberVideo, 1000, 700);
 		Thread.sleep(3000);
 		newFrameWidth = this.getSubscriberVideoFrameWidth(user, subscriberVideo);
 
@@ -1313,26 +1313,26 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		// Some time to let subscriber's video stabilize its first resolution
 		Thread.sleep(2000);
 
-		Assertions.assertTrue(dummyAssert("video", false, true),
+		Assertions.assertTrue(assertAllElementsHaveTracks(user, "video", false, true),
 				"HTMLVideoElements were expected to have only one audio track");
 
 		WebElement subscriberVideo = user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 video.remote"));
 		int frameWidth;
 
 		frameWidth = this.getSubscriberVideoFrameWidth(user, subscriberVideo);
-		dummyChangeElementSize(subscriberVideo, 500, 300);
+		changeElementSize(user, subscriberVideo, 500, 300);
 		this.waitUntilSubscriberFrameWidthChanges(user, subscriberVideo, frameWidth, true);
 
 		frameWidth = this.getSubscriberVideoFrameWidth(user, subscriberVideo);
-		dummyChangeElementSize(subscriberVideo, 80, 40);
+		changeElementSize(user, subscriberVideo, 80, 40);
 		this.waitUntilSubscriberFrameWidthChanges(user, subscriberVideo, frameWidth, false);
 
 		frameWidth = this.getSubscriberVideoFrameWidth(user, subscriberVideo);
-		dummyChangeElementSize(subscriberVideo, 1000, 700);
+		changeElementSize(user, subscriberVideo, 1000, 700);
 		this.waitUntilSubscriberFrameWidthChanges(user, subscriberVideo, frameWidth, true);
 
 		frameWidth = this.getSubscriberVideoFrameWidth(user, subscriberVideo);
-		dummyChangeElementSize(subscriberVideo, 120, 80);
+		changeElementSize(user, subscriberVideo, 120, 80);
 		this.waitUntilSubscriberFrameWidthChanges(user, subscriberVideo, frameWidth, false);
 
 		gracefullyLeaveParticipants(user, 2);
@@ -1380,7 +1380,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		// With adaptive stream disabled, it doesn't matter the subscription video is
 		// small. All layers will remain active
 		WebElement subscriberVideo = user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 video.remote"));
-		dummyChangeElementSize(subscriberVideo, 100, 30);
+		changeElementSize(user, subscriberVideo, 100, 30);
 		Thread.sleep(4000);
 		this.waitUntilPublisherLayerActive(user, publisherVideo, "q", true);
 		this.waitUntilPublisherLayerActive(user, publisherVideo, "h", true);
@@ -1440,7 +1440,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		// the subscriber side
 		WebElement publisherVideo = user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 video.local"));
 		WebElement subscriberVideo = user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 video.remote"));
-		dummyChangeElementSize(subscriberVideo, 100, 30);
+		changeElementSize(user, subscriberVideo, 100, 30);
 		this.waitUntilPublisherLayerActive(user, publisherVideo, "q", true);
 		this.waitUntilPublisherLayerActive(user, publisherVideo, "h", false);
 		this.waitUntilPublisherLayerActive(user, publisherVideo, "f", false);
@@ -1453,7 +1453,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 		// All video layers should reach enabled status with a big video in the
 		// subscriber side
-		dummyChangeElementSize(subscriberVideo, 1000, 500);
+		changeElementSize(user, subscriberVideo, 1000, 500);
 		this.waitUntilPublisherLayerActive(user, publisherVideo, "q", true);
 		this.waitUntilPublisherLayerActive(user, publisherVideo, "h", true);
 		this.waitUntilPublisherLayerActive(user, publisherVideo, "f", true);
@@ -1467,7 +1467,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 		// Half and quarter video layers should reach enabled status with a medium video
 		// in the subscriber side
-		dummyChangeElementSize(subscriberVideo, 500, 300);
+		changeElementSize(user, subscriberVideo, 500, 300);
 		this.waitUntilPublisherLayerActive(user, publisherVideo, "q", true);
 		this.waitUntilPublisherLayerActive(user, publisherVideo, "h", true);
 		this.waitUntilPublisherLayerActive(user, publisherVideo, "f", false);
@@ -1504,7 +1504,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		final int numberOfAudios = user.getDriver().findElements(By.tagName("audio")).size();
 		Assertions.assertEquals(0, numberOfAudios, "Wrong number of audios");
 
-		Assertions.assertTrue(dummyAssert("video", false, true),
+		Assertions.assertTrue(assertAllElementsHaveTracks(user, "video", false, true),
 				"HTMLVideoElements were expected to have only one audio track");
 
 		WebElement publisherVideo = user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 video.local"));
@@ -1901,7 +1901,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		user.getWaiter().until(ExpectedConditions.numberOfElementsToBe(By.tagName("video"), 1));
 		int numberOfVideos = user.getDriver().findElements(By.tagName("video")).size();
 		Assertions.assertEquals(1, numberOfVideos, "Wrong number of videos");
-		Assertions.assertTrue(dummyAssert("video", false, true),
+		Assertions.assertTrue(assertAllElementsHaveTracks(user, "video", false, true),
 				"HTMLVideoElements were expected to have only one video track");
 
 		// Should receive VP8 960x540 25 fps
@@ -1929,7 +1929,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		user.getWaiter().until(ExpectedConditions.numberOfElementsToBe(By.tagName("video"), 1));
 		numberOfVideos = user.getDriver().findElements(By.tagName("video")).size();
 		Assertions.assertEquals(1, numberOfVideos, "Wrong number of videos");
-		Assertions.assertTrue(dummyAssert("video", false, true),
+		Assertions.assertTrue(assertAllElementsHaveTracks(user, "video", false, true),
 				"HTMLVideoElements were expected to have only one video track");
 
 		// Should receive VP8 1920x1080 30 fps
@@ -2338,7 +2338,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 			user.getWaiter().until(ExpectedConditions.numberOfElementsToBe(By.tagName("audio"), 1));
 			final int numberOfAudios = user.getDriver().findElements(By.tagName("audio")).size();
 			Assertions.assertEquals(1, numberOfAudios, "Wrong number of videos");
-			Assertions.assertTrue(dummyAssert("audio", true, false),
+			Assertions.assertTrue(assertAllElementsHaveTracks(user, "audio", true, false),
 					"HTMLAudioElements were expected to have only one audio track");
 			if (!withVideo) {
 				final int numberOfVideos = user.getDriver().findElements(By.tagName("video")).size();
@@ -2349,7 +2349,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 			user.getWaiter().until(ExpectedConditions.numberOfElementsToBe(By.tagName("video"), 1));
 			final int numberOfVideos = user.getDriver().findElements(By.tagName("video")).size();
 			Assertions.assertEquals(1, numberOfVideos, "Wrong number of videos");
-			Assertions.assertTrue(dummyAssert("video", false, true),
+			Assertions.assertTrue(assertAllElementsHaveTracks(user, "video", false, true),
 					"HTMLVideoElements were expected to have only one video track");
 			if (!withAudio) {
 				final int numberOfAudios = user.getDriver().findElements(By.tagName("audio")).size();
@@ -2392,7 +2392,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		final int numberOfVideos = user.getDriver().findElements(By.tagName("video")).size();
 		Assertions.assertEquals(1, numberOfVideos, "Wrong number of videos");
 
-		Assertions.assertTrue(dummyAssert("video", false, true),
+		Assertions.assertTrue(assertAllElementsHaveTracks(user, "video", false, true),
 				"HTMLVideoElements were expected to have only one video track");
 
 		WebElement subscriberVideo = user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 video.remote"));
@@ -2845,7 +2845,25 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 				+ "' to be clickable without backdrop interference after " + timeoutMillis + "ms");
 	}
 
-	public boolean dummyAssert(String s, boolean b1, boolean b2) { return true; }
-	public void dummyChangeElementSize(org.openqa.selenium.WebElement e, int i1, int i2) {}
+	public boolean assertAllElementsHaveTracks(OpenViduTestappUser user, String selector, boolean hasAudio, boolean hasVideo) {
+		org.openqa.selenium.JavascriptExecutor js = (org.openqa.selenium.JavascriptExecutor) user.getDriver();
+		String script = 
+			"var elements = document.querySelectorAll(arguments[0]);" +
+			"for (var i = 0; i < elements.length; i++) {" +
+			"    var el = elements[i];" +
+			"    if (!el.srcObject) return false;" +
+			"    if (arguments[1] && el.srcObject.getAudioTracks().length === 0) return false;" +
+			"    if (!arguments[1] && el.srcObject.getAudioTracks().length > 0) return false;" +
+			"    if (arguments[2] && el.srcObject.getVideoTracks().length === 0) return false;" +
+			"    if (!arguments[2] && el.srcObject.getVideoTracks().length > 0) return false;" +
+			"}" +
+			"return true;";
+		return (Boolean) js.executeScript(script, selector, hasAudio, hasVideo);
+	}
+
+	public void changeElementSize(OpenViduTestappUser user, org.openqa.selenium.WebElement element, int width, int height) {
+		org.openqa.selenium.JavascriptExecutor js = (org.openqa.selenium.JavascriptExecutor) user.getDriver();
+		js.executeScript("arguments[0].style.width = '" + width + "px'; arguments[0].style.height = '" + height + "px';", element);
+	}
 
 }
