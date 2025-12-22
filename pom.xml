@@ -57,7 +57,7 @@
 		<version.slf4j>1.7.36</version.slf4j>
 		<version.gson>2.10</version.gson>
 		<version.jcodec>0.2.5</version.jcodec>
-		<version.testcontainers>1.17.6</version.testcontainers>
+		<version.testcontainers>2.0.3</version.testcontainers>
 		<version.appium>8.3.0</version.appium>
 		<version.stringsimilarity>2.0.0</version.stringsimilarity>
 
