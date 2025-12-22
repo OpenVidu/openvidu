@@ -1,12 +1,5 @@
-import { Injectable, Signal } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
-import { BehaviorSubject, Observable } from 'rxjs';
-import { ILogger } from '../../models/logger.model';
-import { ParticipantModel, ParticipantProperties } from '../../models/participant.model';
-import { OpenViduComponentsConfigService } from '../config/directive-config.service';
-import { GlobalConfigService } from '../config/global-config.service';
-import { LoggerService } from '../logger/logger.service';
-
+import { Injectable, Signal, WritableSignal, signal } from '@angular/core';
+import { toObservable } from '@angular/core/rxjs-interop';
 import {
 	AudioCaptureOptions,
 	DataPublishOptions,
@@ -19,7 +12,13 @@ import {
 	VideoCaptureOptions,
 	VideoPresets
 } from 'livekit-client';
+import { Observable } from 'rxjs';
+import { ILogger } from '../../models/logger.model';
+import { ParticipantModel, ParticipantProperties } from '../../models/participant.model';
+import { OpenViduComponentsConfigService } from '../config/directive-config.service';
+import { GlobalConfigService } from '../config/global-config.service';
 import { E2eeService } from '../e2ee/e2ee.service';
+import { LoggerService } from '../logger/logger.service';
 import { OpenViduService } from '../openvidu/openvidu.service';
 import { StorageService } from '../storage/storage.service';
 
@@ -32,16 +31,12 @@ export class ParticipantService {
 	 * @deprecated Please prefer `localParticipantSignal` for reactive updates and `localParticipant$` when using RxJS.
 	 */
 	localParticipant$: Observable<ParticipantModel | undefined>;
-	private localParticipantBS: BehaviorSubject<ParticipantModel | undefined> = new BehaviorSubject<ParticipantModel | undefined>(
-		undefined
-	);
 
 	/**
 	 * Remote participants Observable which pushes the remote participants array in every update.
 	 * @deprecated Please prefer `remoteParticipantsSignal` for reactive updates and `remoteParticipants$` when using RxJS.
 	 */
 	remoteParticipants$: Observable<ParticipantModel[]>;
-	private remoteParticipantsBS: BehaviorSubject<ParticipantModel[]> = new BehaviorSubject<ParticipantModel[]>([]);
 
 	/**
 	 * Local participant Signal for reactive programming with Angular signals.
@@ -49,6 +44,7 @@ export class ParticipantService {
 	 * @since Angular 16+
 	 */
 	localParticipantSignal: Signal<ParticipantModel | undefined>;
+	private localParticipantWritableSignal: WritableSignal<ParticipantModel | undefined> = signal<ParticipantModel | undefined>(undefined);
 
 	/**
 	 * Remote participants Signal for reactive programming with Angular signals.
@@ -56,6 +52,7 @@ export class ParticipantService {
 	 * @since Angular 16+
 	 */
 	remoteParticipantsSignal: Signal<ParticipantModel[]>;
+	private remoteParticipantsWritableSignal: WritableSignal<ParticipantModel[]> = signal<ParticipantModel[]>([]);
 
 	private localParticipant: ParticipantModel | undefined;
 	private remoteParticipants: ParticipantModel[] = [];
@@ -73,12 +70,14 @@ export class ParticipantService {
 		private e2eeService: E2eeService
 	) {
 		this.log = this.loggerSrv.get('ParticipantService');
-		this.localParticipant$ = this.localParticipantBS.asObservable();
-		this.remoteParticipants$ = this.remoteParticipantsBS.asObservable();
 
-		// Create signals from observables for modern reactive programming
-		this.localParticipantSignal = toSignal(this.localParticipant$, { initialValue: undefined });
-		this.remoteParticipantsSignal = toSignal(this.remoteParticipants$, { initialValue: [] });
+		// Expose readonly signals
+		this.localParticipantSignal = this.localParticipantWritableSignal.asReadonly();
+		this.remoteParticipantsSignal = this.remoteParticipantsWritableSignal.asReadonly();
+
+		// Create Observables from signals for backward compatibility
+		this.localParticipant$ = toObservable(this.localParticipantWritableSignal);
+		this.remoteParticipants$ = toObservable(this.remoteParticipantsWritableSignal);
 	}
 
 	/**
@@ -87,8 +86,8 @@ export class ParticipantService {
 	clear(): void {
 		this.localParticipant = undefined;
 		this.remoteParticipants = [];
-		this.localParticipantBS.next(undefined);
-		this.remoteParticipantsBS.next([]);
+		this.localParticipantWritableSignal.set(undefined);
+		this.remoteParticipantsWritableSignal.set([]);
 	}
 
 	/**
@@ -342,7 +341,7 @@ export class ParticipantService {
 	 */
 	toggleMyVideoPinned(sid: string | undefined) {
 		if (sid && this.localParticipant) this.localParticipant.toggleVideoPinned(sid);
-		// this.updateLocalParticipant();
+		this.updateLocalParticipant();
 	}
 
 	/**
@@ -404,11 +403,17 @@ export class ParticipantService {
 	 * Forces to update the local participant object and fire a new `localParticipant$` Observable event.
 	 */
 	updateLocalParticipant() {
-		// this._localParticipant.next(
-		// 	Object.assign(Object.create(Object.getPrototypeOf(this.localParticipant)), { ...this.localParticipant })
-		// );
-
-		this.localParticipantBS.next(this.localParticipant);
+		// Update Signal - create new reference to trigger reactivity
+		// The Observable will automatically emit via toObservable()
+		if (this.localParticipant) {
+			const updatedParticipant = Object.assign(
+				Object.create(Object.getPrototypeOf(this.localParticipant)),
+				{ ...this.localParticipant }
+			);
+			this.localParticipantWritableSignal.set(updatedParticipant);
+		} else {
+			this.localParticipantWritableSignal.set(undefined);
+		}
 	}
 
 	/**
@@ -478,7 +483,9 @@ export class ParticipantService {
 	 * Force to update the remote participants object and fire a new `remoteParticipants$` Observable event.
 	 */
 	updateRemoteParticipants() {
-		this.remoteParticipantsBS.next([...this.remoteParticipants]);
+		// Update Signal - create new array reference to trigger reactivity
+		// The Observable will automatically emit via toObservable()
+		this.remoteParticipantsWritableSignal.set([...this.remoteParticipants]);
 	}
 
 	/**
