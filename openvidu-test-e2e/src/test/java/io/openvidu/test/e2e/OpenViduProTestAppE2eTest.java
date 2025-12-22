@@ -1466,7 +1466,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		filterOptionsInput = user.getDriver().findElement(By.id("filter-options-field"));
 		filterOptionsInput.clear();
 		filterOptionsInput.sendKeys(
-				"{\"url\": \"https://upload.wikimedia.org/wikipedia/commons/thumb/6/62/Solid_red.svg/1024px-Solid_red.svg.png\"}");
+				"{\"url\": \"https://s3.eu-west-1.amazonaws.com/public.openvidu.io/virtual-background-solid-red.png\"}");
 		user.getDriver().findElement(By.id("apply-filter-btn")).click();
 		user.getWaiter().until(
 				ExpectedConditions.attributeContains(By.id("operation-response-text-area"), "value", "Filter applied"));
@@ -1504,7 +1504,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		// Blue
 		filterParamsInput.clear();
 		filterParamsInput.sendKeys(
-				"{\"url\": \"https://png.pngtree.com/thumb_back/fw800/background/20210207/pngtree-blue-pure-color-simple-background-image_557085.jpg\"}");
+				"{\"url\": \"https://s3.eu-west-1.amazonaws.com/public.openvidu.io/virtual-background-solid-blue.jpg\"}");
 		user.getDriver().findElement(By.id("exec-filter-btn")).click();
 		user.getWaiter().until(ExpectedConditions.attributeContains(By.id("operation-response-text-area"), "value",
 				"Filter method executed"));
