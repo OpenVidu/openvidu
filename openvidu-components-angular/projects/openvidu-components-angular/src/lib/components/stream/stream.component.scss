@@ -7,13 +7,19 @@
 
 	.participant-name-container {
 		background-color: var(--ov-secondary-action-color);
-		padding: 5px;
+		padding: 3px 6px;
 		color: var(--ov-text-primary-color);
 		font-weight: 400;
 		border-radius: var(--ov-video-radius);
+		font-size: 12px;
+		line-height: 1.2;
+		width: fit-content;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
 	}
 	.participant-name {
-		padding: 0px;
+		padding: 2px;
 		position: absolute;
 		z-index: 999;
 		border-radius: var(--ov-video-radius);
@@ -33,10 +39,21 @@
 
 	.flex-container {
 		display: flex;
-		justify-content: space-between;
-		flex-wrap: wrap;
+		justify-content: center;
+		gap: 2px;
+		flex-wrap: nowrap;
 		button {
-			margin: auto;
+			margin: 0;
+			min-width: 32px;
+			width: 32px;
+			height: 32px;
+			padding: 4px;
+
+			mat-icon {
+				font-size: 18px;
+				width: 18px;
+				height: 18px;
+			}
 		}
 	}
 
@@ -49,16 +66,16 @@
 		border-radius: var(--ov-video-radius);
 		backdrop-filter: blur(8px);
 		width: fit-content;
-		height: 44px;
+		height: auto;
 		opacity: 0.5;
 		position: absolute;
 		display: inline-grid;
 		z-index: 9999;
-		bottom: 12px;
+		bottom: 8px;
 		left: 50%;
 		transform: translateX(-50%);
 		transition: opacity 0.3s ease, transform 0.3s ease;
-		padding: 4px 8px;
+		padding: 2px 4px;
 		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 		button {
 			color: var(--ov-text-primary-color);
