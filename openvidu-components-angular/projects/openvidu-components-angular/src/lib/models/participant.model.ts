@@ -1,4 +1,3 @@
-import { DeviceType } from './device.model';
 import {
 	AudioCaptureOptions,
 	DataPublishOptions,
@@ -11,9 +10,9 @@ import {
 	Track,
 	TrackPublication,
 	TrackPublishOptions,
-	VideoCaptureOptions,
-	VideoPresets
+	VideoCaptureOptions
 } from 'livekit-client';
+import { DeviceType } from './device.model';
 
 export interface ParticipantLeftEvent {
 	roomName: string;
@@ -506,6 +505,15 @@ export class ParticipantModel {
 		if (track) {
 			track.isPinned = !track.isPinned;
 		}
+	}
+
+	/**
+	 * Gets whether this participant is pinned.
+	 * This indicates that the participant's video is fixed in place in the UI.
+	 * @returns boolean
+	 */
+	get isPinned(): boolean {
+		return this.tracks.some((track) => track.isPinned);
 	}
 
 	/**
