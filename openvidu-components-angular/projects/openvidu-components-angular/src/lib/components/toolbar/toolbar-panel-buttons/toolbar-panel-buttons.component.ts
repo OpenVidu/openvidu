@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, Output, TemplateRef } from '@angular/core';
+import { Component, TemplateRef, computed, input, output } from '@angular/core';
 import { ViewportService } from '../../../services/viewport/viewport.service';
 
 @Component({
@@ -8,44 +8,44 @@ import { ViewportService } from '../../../services/viewport/viewport.service';
 	standalone: false
 })
 export class ToolbarPanelButtonsComponent {
-	// Inputs from toolbar
-	@Input() isMinimal: boolean = false;
-	@Input() isConnectionLost: boolean = false;
-	@Input() isActivitiesOpened: boolean = false;
-	@Input() isParticipantsOpened: boolean = false;
-	@Input() isChatOpened: boolean = false;
-	@Input() unreadMessages: number = 0;
-	@Input() showActivitiesPanelButton: boolean = true;
-	@Input() showParticipantsPanelButton: boolean = true;
-	@Input() showChatPanelButton: boolean = true;
-	@Input() recordingStatus: any;
-	@Input() broadcastingStatus: any;
-	@Input() toolbarAdditionalPanelButtonsTemplate: TemplateRef<any> | undefined;
+	// Signal inputs from toolbar
+	isMinimal = input<boolean>(false);
+	isConnectionLost = input<boolean>(false);
+	isActivitiesOpened = input<boolean>(false);
+	isParticipantsOpened = input<boolean>(false);
+	isChatOpened = input<boolean>(false);
+	unreadMessages = input<number>(0);
+	showActivitiesPanelButton = input<boolean>(true);
+	showParticipantsPanelButton = input<boolean>(true);
+	showChatPanelButton = input<boolean>(true);
+	recordingStatus = input<any>();
+	broadcastingStatus = input<any>();
+	toolbarAdditionalPanelButtonsTemplate = input<TemplateRef<any> | undefined>();
+	totalParticipants = input<number>(0);
 
-	// Outputs back to toolbar
-	@Output() toggleActivitiesPanel: EventEmitter<string | undefined> = new EventEmitter();
-	@Output() toggleParticipantsPanel: EventEmitter<void> = new EventEmitter();
-	@Output() toggleChatPanel: EventEmitter<void> = new EventEmitter();
+	// Signal outputs back to toolbar
+	toggleActivitiesPanel = output<string | undefined>();
+	toggleParticipantsPanel = output<void>();
+	toggleChatPanel = output<void>();
+
+	// Computed signals
+	visibleButtonsCount = computed(() => {
+		let count = 0;
+		if (!this.isMinimal() && this.showActivitiesPanelButton()) count++;
+		if (!this.isMinimal() && this.showParticipantsPanelButton()) count++;
+		if (!this.isMinimal() && this.showChatPanelButton()) count++;
+		return count;
+	});
+
+	isAnyPanelOpened = computed(() => {
+		return this.isActivitiesOpened() || this.isParticipantsOpened() || this.isChatOpened();
+	});
 
 	constructor(public viewportService: ViewportService) {}
 
 	// Computed property to determine if we should show collapsed menu
 	get shouldShowCollapsed(): boolean {
 		return this.viewportService.isMobileView()
-	}
-
-	// Get count of visible buttons
-	get visibleButtonsCount(): number {
-		let count = 0;
-		if (!this.isMinimal && this.showActivitiesPanelButton) count++;
-		if (!this.isMinimal && this.showParticipantsPanelButton) count++;
-		if (!this.isMinimal && this.showChatPanelButton) count++;
-		return count;
-	}
-
-	// Check if any panel is currently opened
-	get isAnyPanelOpened(): boolean {
-		return this.isActivitiesOpened || this.isParticipantsOpened || this.isChatOpened;
 	}
 
 	// Local methods that emit events

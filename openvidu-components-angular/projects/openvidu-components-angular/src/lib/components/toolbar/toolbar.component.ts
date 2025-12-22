@@ -3,6 +3,7 @@ import {
 	ChangeDetectionStrategy,
 	ChangeDetectorRef,
 	Component,
+	computed,
 	ContentChild,
 	EventEmitter,
 	HostListener,
@@ -18,6 +19,8 @@ import { DocumentService } from '../../services/document/document.service';
 import { PanelService } from '../../services/panel/panel.service';
 
 import { MatMenuTrigger } from '@angular/material/menu';
+import { Room, RoomEvent } from 'livekit-client';
+import { LeaveButtonDirective, ToolbarMoreOptionsAdditionalMenuItemsDirective } from '../../directives/template/internals.directive';
 import {
 	ToolbarAdditionalButtonsDirective,
 	ToolbarAdditionalPanelButtonsDirective
@@ -26,6 +29,7 @@ import { BroadcastingStatus, BroadcastingStatusInfo, BroadcastingStopRequestedEv
 import { ChatMessage } from '../../models/chat.model';
 import { ILogger } from '../../models/logger.model';
 import { PanelStatusInfo, PanelType } from '../../models/panel.model';
+import { ParticipantLeftEvent, ParticipantLeftReason, ParticipantModel } from '../../models/participant.model';
 import {
 	RecordingInfo,
 	RecordingStartRequestedEvent,
@@ -33,8 +37,10 @@ import {
 	RecordingStatusInfo,
 	RecordingStopRequestedEvent
 } from '../../models/recording.model';
+import { ToolbarAdditionalButtonsPosition } from '../../models/toolbar.model';
 import { ActionService } from '../../services/action/action.service';
 import { BroadcastingService } from '../../services/broadcasting/broadcasting.service';
+import { CdkOverlayService } from '../../services/cdk-overlay/cdk-overlay.service';
 import { OpenViduComponentsConfigService } from '../../services/config/directive-config.service';
 import { DeviceService } from '../../services/device/device.service';
 import { LayoutService } from '../../services/layout/layout.service';
@@ -46,11 +52,6 @@ import { RecordingService } from '../../services/recording/recording.service';
 import { StorageService } from '../../services/storage/storage.service';
 import { TemplateManagerService, ToolbarTemplateConfiguration } from '../../services/template/template-manager.service';
 import { TranslateService } from '../../services/translate/translate.service';
-import { CdkOverlayService } from '../../services/cdk-overlay/cdk-overlay.service';
-import { ParticipantLeftEvent, ParticipantLeftReason, ParticipantModel } from '../../models/participant.model';
-import { Room, RoomEvent } from 'livekit-client';
-import { ToolbarAdditionalButtonsPosition } from '../../models/toolbar.model';
-import { LeaveButtonDirective, ToolbarMoreOptionsAdditionalMenuItemsDirective } from '../../directives/template/internals.directive';
 
 /**
  * The **ToolbarComponent** is hosted inside of the {@link VideoconferenceComponent}.
@@ -405,6 +406,16 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 	 */
 	templateConfig: ToolbarTemplateConfiguration = {};
 
+	/**
+	 * @internal
+	 * Computed signal for total participants count (local + remote)
+	 */
+	totalParticipants = computed(() => {
+		const local = this.participantService.localParticipantSignal();
+		const remotes = this.participantService.remoteParticipantsSignal();
+		return (local ? 1 : 0) + remotes.length;
+	});
+
 	// Store directive references for template setup
 	private _externalAdditionalButtons?: ToolbarAdditionalButtonsDirective;
 	private _externalLeaveButton?: LeaveButtonDirective;
@@ -624,8 +635,8 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 			await this.openviduService.disconnectRoom(() => {
 				this.onParticipantLeft.emit({
 					roomName: this.openviduService.getRoomName(),
-					participantName: this.participantService.getLocalParticipant()?.name || '',
-					identity: this.participantService.getLocalParticipant()?.identity || '',
+					participantName: this.participantService.localParticipantSignal()!.name || '',
+					identity: this.participantService.localParticipantSignal()!.identity || '',
 					reason: ParticipantLeftReason.LEAVE
 				});
 				this.onRoomDisconnected.emit();

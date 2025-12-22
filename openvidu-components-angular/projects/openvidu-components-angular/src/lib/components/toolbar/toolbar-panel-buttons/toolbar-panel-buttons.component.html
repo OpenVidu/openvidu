@@ -1,12 +1,12 @@
 <!-- Responsive container: show individual buttons on larger screens, collapsed menu on smaller screens -->
 <ng-container *ngIf="shouldShowCollapsed; else uncollapsedButtons">
-	<div class="collapsed-menu-container" *ngIf="visibleButtonsCount > 0">
+	<div class="collapsed-menu-container" *ngIf="visibleButtonsCount() > 0">
 		<button
 			mat-icon-button
 			class="fab-menu-trigger"
 			[matMenuTriggerFor]="panelsMenu"
-			[disabled]="isConnectionLost"
-			[class.active-btn]="isAnyPanelOpened"
+			[disabled]="isConnectionLost()"
+			[class.active-btn]="isAnyPanelOpened()"
 			matTooltip="{{ 'TOOLBAR.PANELS' | translate }}"
 			#menuTrigger="matMenuTrigger"
 		>
@@ -19,41 +19,43 @@
 			<button
 				mat-menu-item
 				class="panel-menu-item"
-				*ngIf="!isMinimal && showActivitiesPanelButton"
+				*ngIf="!isMinimal() && showActivitiesPanelButton()"
 				(click)="onToggleActivities()"
-				[disabled]="isConnectionLost"
-				[class.active-menu-item]="isActivitiesOpened"
+				[disabled]="isConnectionLost()"
+				[class.active-menu-item]="isActivitiesOpened()"
 			>
 				<mat-icon>category</mat-icon>
 			</button>
 
 			<!-- Participants menu item -->
 			<button
+				*ngIf="!isMinimal() && showParticipantsPanelButton()"
 				mat-menu-item
+				[matBadge]="totalParticipants()"
+				[matBadgeHidden]="totalParticipants() === 0"
+				matBadgePosition="above before"
 				class="panel-menu-item"
-				*ngIf="!isMinimal && showParticipantsPanelButton"
 				(click)="onToggleParticipants()"
-				[disabled]="isConnectionLost"
-				[class.active-menu-item]="isParticipantsOpened"
+				[disabled]="isConnectionLost()"
+				[class.active-menu-item]="isParticipantsOpened()"
 			>
-				<mat-icon>people</mat-icon>
+				<mat-icon aria-hidden="false"> people</mat-icon>
 			</button>
 
 			<!-- Chat menu item -->
 			<button
 				mat-menu-item
 				class="panel-menu-item"
-				*ngIf="!isMinimal && showChatPanelButton"
+				*ngIf="!isMinimal() && showChatPanelButton()"
 				(click)="onToggleChat()"
-				[disabled]="isConnectionLost"
-				[class.active-menu-item]="isChatOpened"
+				[disabled]="isConnectionLost()"
+				[class.active-menu-item]="isChatOpened()"
 			>
 				<mat-icon
-					matBadge="{{ unreadMessages }}"
-					[matBadgeHidden]="unreadMessages === 0"
+					[matBadge]="unreadMessages()"
+					[matBadgeHidden]="unreadMessages() === 0"
 					matBadgePosition="above before"
 					matBadgeSize="small"
-					matBadgeColor="accent"
 					aria-hidden="false"
 				>
 					chat
@@ -61,8 +63,8 @@
 			</button>
 
 			<!-- External additional panel buttons in menu -->
-			<ng-container *ngIf="toolbarAdditionalPanelButtonsTemplate">
-				<ng-container *ngTemplateOutlet="toolbarAdditionalPanelButtonsTemplate"></ng-container>
+			<ng-container *ngIf="toolbarAdditionalPanelButtonsTemplate()">
+				<ng-container *ngTemplateOutlet="toolbarAdditionalPanelButtonsTemplate()"></ng-container>
 			</ng-container>
 		</mat-menu>
 	</div>
@@ -75,11 +77,11 @@
 		mat-icon-button
 		id="activities-panel-btn"
 		class="panel-button"
-		*ngIf="!isMinimal && showActivitiesPanelButton"
+		*ngIf="!isMinimal() && showActivitiesPanelButton()"
 		matTooltip="{{ 'TOOLBAR.ACTIVITIES' | translate }}"
 		(click)="onToggleActivities()"
-		[disabled]="isConnectionLost"
-		[class.active-btn]="isActivitiesOpened"
+		[disabled]="isConnectionLost()"
+		[class.active-btn]="isActivitiesOpened()"
 	>
 		<mat-icon>category</mat-icon>
 	</button>
@@ -89,13 +91,20 @@
 		mat-icon-button
 		class="panel-button"
 		id="participants-panel-btn"
-		*ngIf="!isMinimal && showParticipantsPanelButton"
+		*ngIf="!isMinimal() && showParticipantsPanelButton()"
 		matTooltip="{{ 'TOOLBAR.PARTICIPANTS' | translate }}"
 		(click)="onToggleParticipants()"
-		[disabled]="isConnectionLost"
-		[class.active-btn]="isParticipantsOpened"
+		[disabled]="isConnectionLost()"
+		[class.active-btn]="isParticipantsOpened()"
 	>
-		<mat-icon>people</mat-icon>
+		<mat-icon
+			[matBadge]="totalParticipants()"
+			[matBadgeHidden]="totalParticipants() === 0"
+			matBadgePosition="above before"
+			matBadgeSize="small"
+			aria-hidden="false"
+			>people</mat-icon
+		>
 	</button>
 
 	<!-- Default chat button -->
@@ -103,18 +112,17 @@
 		mat-icon-button
 		class="panel-button"
 		id="chat-panel-btn"
-		*ngIf="!isMinimal && showChatPanelButton"
+		*ngIf="!isMinimal() && showChatPanelButton()"
 		matTooltip="{{ 'TOOLBAR.CHAT' | translate }}"
 		(click)="onToggleChat()"
-		[disabled]="isConnectionLost"
-		[class.active-btn]="isChatOpened"
+		[disabled]="isConnectionLost()"
+		[class.active-btn]="isChatOpened()"
 	>
 		<mat-icon
-			matBadge="{{ unreadMessages }}"
-			[matBadgeHidden]="unreadMessages === 0"
+			[matBadge]="unreadMessages()"
+			[matBadgeHidden]="unreadMessages() === 0"
 			matBadgePosition="above before"
 			matBadgeSize="small"
-			matBadgeColor="accent"
 			aria-hidden="false"
 		>
 			chat
@@ -122,7 +130,7 @@
 	</button>
 
 	<!-- External additional panel buttons  -->
-	<ng-container *ngIf="toolbarAdditionalPanelButtonsTemplate">
-		<ng-container *ngTemplateOutlet="toolbarAdditionalPanelButtonsTemplate"></ng-container>
+	<ng-container *ngIf="toolbarAdditionalPanelButtonsTemplate()">
+		<ng-container *ngTemplateOutlet="toolbarAdditionalPanelButtonsTemplate()"></ng-container>
 	</ng-container>
 </ng-template>

@@ -2,6 +2,24 @@
 	.panel-button {
 		border-radius: var(--ov-toolbar-buttons-radius);
 		color: var(--ov-text-primary-color);
+
+		// Custom badge styles for participants and chat buttons
+		::ng-deep .mat-badge-content {
+			background-color: var(--ov-accent-action-color) !important;
+			color: var(--ov-text-primary-color) !important;
+			font-weight: 600;
+			font-size: 10px;
+			min-width: 16px;
+			height: 16px;
+			line-height: 16px;
+		}
+
+		::ng-deep .mat-badge-small .mat-badge-content {
+			font-size: 9px;
+			min-width: 14px;
+			height: 14px;
+			line-height: 14px;
+		}
 	}
 
 	.active-btn,
@@ -93,18 +111,11 @@
 		}
 
 		// Chat badge adjustments for menu
-		.mat-badge {
-			mat-icon {
-				font-size: 18px !important;
-				width: 18px !important;
-				height: 18px !important;
-			}
-		}
-
-		.mat-badge-content {
-			background-color: var(--ov-warn-color) !important;
+		::ng-deep .mat-badge-content {
+			background-color: var(--ov-accent-action-color) !important;
 			color: var(--ov-text-primary-color) !important;
 			font-size: 10px !important;
+			font-weight: 600 !important;
 			min-width: 14px !important;
 			height: 14px !important;
 			line-height: 14px !important;
