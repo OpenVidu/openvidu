@@ -5,6 +5,7 @@ export enum LayoutClass {
 	ROOT_ELEMENT = 'OV_root',
 	BIG_ELEMENT = 'OV_big',
 	SMALL_ELEMENT = 'OV_small',
+	TOP_BAR_ELEMENT = 'OV_top-bar',
 	IGNORED_ELEMENT = 'OV_ignored',
 	MINIMIZED_ELEMENT = 'OV_minimized',
 	SIDENAV_CONTAINER = 'sidenav-container',
@@ -42,6 +43,7 @@ export interface ElementDimensions {
 	width: number;
 	big?: boolean;
 	small?: boolean;
+	topBar?: boolean;
 }
 
 /**
@@ -200,7 +202,8 @@ export class OpenViduLayout {
 			const elements = children.map((element) => {
 				const res = this.getChildDims(element);
 				res.big = element.classList.contains(this.opts.bigClass);
-				res.small = element.classList.contains(this.opts.smallClass);
+				res.small = element.classList.contains(LayoutClass.SMALL_ELEMENT);
+				res.topBar = element.classList.contains(LayoutClass.TOP_BAR_ELEMENT);
 				return res;
 			});
 
@@ -545,13 +548,15 @@ export class OpenViduLayout {
 		let bigOffsetLeft = 0;
 		const bigIndices: number[] = [];
 		const smallIndices: number[] = [];
+		const topBarIndices: number[] = [];
 		const normalIndices: number[] = [];
 		let bigBoxes: LayoutBox[] = [];
 		let smallBoxes: LayoutBox[] = [];
+		let topBarBoxes: LayoutBox[] = [];
 		let normalBoxes: LayoutBox[] = [];
-		let areas: { big: LayoutArea | null; normal: LayoutArea | null; small: LayoutArea | null } = { big: null, normal: null, small: null };
+		let areas: { big: LayoutArea | null; normal: LayoutArea | null; small: LayoutArea | null; topBar: LayoutArea | null } = { big: null, normal: null, small: null, topBar: null };
 
-		// Separate elements into three categories: big, small, and normal
+		// Separate elements into categories: big, small, topbar, and normal
 		const bigOnes = elements.filter((element, idx) => {
 			if (element.big) {
 				bigIndices.push(idx);
@@ -559,23 +564,31 @@ export class OpenViduLayout {
 			}
 			return false;
 		});
+		const topBarOnes = elements.filter((element, idx) => {
+			if (!element.big && element.topBar) {
+				topBarIndices.push(idx);
+				return true;
+			}
+			return false;
+		});
 		const smallOnes = elements.filter((element, idx) => {
-			if (!element.big && element.small) {
+			if (!element.big && !element.topBar && element.small) {
 				smallIndices.push(idx);
 				return true;
 			}
 			return false;
 		});
 		const normalOnes = elements.filter((element, idx) => {
-			if (!element.big && !element.small) {
+			if (!element.big && !element.topBar && !element.small) {
 				normalIndices.push(idx);
 				return true;
 			}
 			return false;
 		});
+
 		// Handle different layout scenarios based on element types
-		if (bigOnes.length > 0 && (normalOnes.length > 0 || smallOnes.length > 0)) {
-			// Scenario: Big elements with normal/small elements
+		if (bigOnes.length > 0 && (normalOnes.length > 0 || smallOnes.length > 0 || topBarOnes.length > 0)) {
+			// Scenario: Big elements with normal/small/topbar elements
 			let bigWidth;
 			let bigHeight;
 			let showBigFirst = bigFirst;
@@ -622,7 +635,7 @@ export class OpenViduLayout {
 						maxRatio,
 						containerWidth,
 						containerHeight - bigHeight,
-						normalOnes.length + smallOnes.length,
+						normalOnes.length + smallOnes.length + topBarOnes.length,
 						smallMaxWidth,
 						smallMaxHeight
 					);
@@ -677,7 +690,7 @@ export class OpenViduLayout {
 						maxRatio,
 						containerWidth - bigWidth,
 						containerHeight,
-						normalOnes.length + smallOnes.length,
+						normalOnes.length + smallOnes.length + topBarOnes.length,
 						smallMaxWidth,
 						smallMaxHeight
 					);
@@ -718,16 +731,16 @@ export class OpenViduLayout {
 					height: containerHeight - offsetTop
 				};
 			}
-		} else if (bigOnes.length > 0 && smallOnes.length === 0) {
-			// We only have one bigOne just center it
+		} else if (bigOnes.length > 0 && normalOnes.length === 0 && smallOnes.length === 0 && topBarOnes.length === 0) {
+			// We only have bigOnes just center it
 			areas.big = {
 				top: 0,
 				left: 0,
 				width: containerWidth,
 				height: containerHeight
 			};
-		} else if (normalOnes.length > 0 || smallOnes.length > 0) {
-			// Only normal and/or small elements
+		} else if (normalOnes.length > 0 || smallOnes.length > 0 || topBarOnes.length > 0) {
+			// Only normal, small, and/or topbar elements
 			areas.normal = {
 				top: offsetTop,
 				left: offsetLeft,
@@ -755,22 +768,67 @@ export class OpenViduLayout {
 			);
 		}
 		if (areas.normal) {
-			// Calculate equivalent "normal-sized" count considering small elements take less space
-			// Treat each small element as taking up a fraction of a normal element's space
-			const smallElementSpaceFactor = 0.25; // Small elements take ~25% of normal element space
-			const equivalentNormalCount = normalOnes.length + (smallOnes.length * smallElementSpaceFactor);
+			let currentTop = areas.normal.top;
+			let remainingHeight = areas.normal.height;
 
-			// Calculate layout for all elements together as if they were normal-sized
-			const allNormalAreaElements = [...normalOnes, ...smallOnes];
+			// 1. Position TopBar Elements at the very top (header style: full width, 80px height)
+			if (topBarOnes.length > 0) {
+				const topBarHeight = 80;
+				const topBarWidth = Math.floor(containerWidth / topBarOnes.length);
 
-			if (allNormalAreaElements.length > 0) {
-				// Get dimensions as if all elements were normal-sized
-				const allBoxes = this.getLayoutAux(
+				topBarBoxes = topBarOnes.map((element, idx) => {
+					return {
+						left: areas.normal!.left + idx * topBarWidth,
+						top: currentTop,
+						width: topBarWidth,
+						height: topBarHeight
+					};
+				});
+
+				currentTop += topBarHeight;
+				remainingHeight -= topBarHeight;
+			}
+
+			// 2. Position Small Elements (reduced format)
+			if (smallOnes.length > 0) {
+				const maxSmallWidthAvailable = smallMaxWidth;
+				const maxSmallHeightAvailable = smallMaxHeight;
+
+				const tentativeCols = maxSmallWidthAvailable === Infinity
+					? smallOnes.length
+					: Math.max(1, Math.floor(containerWidth / maxSmallWidthAvailable));
+				const displayCols = Math.max(1, Math.min(smallOnes.length, tentativeCols));
+
+				const computedWidth = maxSmallWidthAvailable === Infinity
+					? Math.floor(containerWidth / displayCols)
+					: maxSmallWidthAvailable;
+				const computedHeight = maxSmallHeightAvailable === Infinity ? computedWidth : maxSmallHeightAvailable;
+
+				const rowWidth = displayCols * computedWidth;
+				const rowOffset = Math.floor(Math.max(0, containerWidth - rowWidth) / 2);
+
+				smallBoxes = smallOnes.map((element, idx) => {
+					const col = idx % displayCols;
+					return {
+						left: areas.normal!.left + col * computedWidth + rowOffset,
+						top: currentTop,
+						width: computedWidth,
+						height: computedHeight
+					};
+				});
+
+				currentTop += computedHeight;
+				remainingHeight -= computedHeight;
+			}
+
+			// 3. Position Normal Elements in remaining space
+			if (normalOnes.length > 0) {
+				normalBoxes = this.getLayoutAux(
 					{
 						containerWidth: areas.normal.width,
-						containerHeight: areas.normal.height,
+						containerHeight: Math.max(0, remainingHeight),
 						offsetLeft: areas.normal.left,
-						offsetTop: areas.normal.top,
+						offsetTop: currentTop,
 						fixedRatio,
 						minRatio,
 						maxRatio,
@@ -779,97 +837,8 @@ export class OpenViduLayout {
 						maxHeight: areas.big ? maxHeight : maxHeight,
 						scaleLastRow
 					},
-					allNormalAreaElements
+					normalOnes
 				);
-
-				// Split boxes and adjust small elements
-				normalBoxes = allBoxes.slice(0, normalOnes.length);
-				const rawSmallBoxes = allBoxes.slice(normalOnes.length);
-
-				// Adjust small element boxes to use restricted dimensions and reposition them
-				// to utilize space efficiently
-				smallBoxes = rawSmallBoxes.map((box, idx) => {
-					// Calculate restricted size while maintaining aspect ratio
-					const restrictedWidth = Math.min(box.width, smallMaxWidth);
-					const restrictedHeight = Math.min(box.height, smallMaxHeight);
-
-					// Maintain the position but adjust size
-					return {
-						left: box.left,
-						top: box.top,
-						width: restrictedWidth,
-						height: restrictedHeight
-					};
-				});
-
-				// If there are small elements, try to compact them and redistribute space
-				if (smallOnes.length > 0 && normalOnes.length > 0) {
-					// Recalculate normal elements with more space since small elements take less
-					const adjustedDimensions = this.getBestDimensions(
-						minRatio,
-						maxRatio,
-						areas.normal.width,
-						areas.normal.height,
-						equivalentNormalCount,
-						areas.big ? maxWidth : maxWidth,
-						areas.big ? maxHeight : maxHeight
-					);
-
-					// If the adjusted dimensions give us bigger normal elements, recalculate
-					if (normalBoxes.length > 0 &&
-						adjustedDimensions.targetHeight > normalBoxes[0].height) {
-						normalBoxes = this.getLayoutAux(
-							{
-								containerWidth: areas.normal.width,
-								containerHeight: areas.normal.height,
-								offsetLeft: areas.normal.left,
-								offsetTop: areas.normal.top,
-								fixedRatio,
-								minRatio,
-								maxRatio,
-								alignItems: areas.big ? smallAlignItems : alignItems,
-								maxWidth: areas.big ? maxWidth : maxWidth,
-								maxHeight: areas.big ? maxHeight : maxHeight,
-								scaleLastRow
-							},
-							normalOnes
-						);
-
-						// Position small elements in remaining space (bottom or side)
-						const normalMaxBottom = normalBoxes.length > 0 ? Math.max(...normalBoxes.map(b => b.top + b.height)) : areas.normal.top;
-						const normalMaxRight = normalBoxes.length > 0 ? Math.max(...normalBoxes.map(b => b.left + b.width)) : areas.normal.left;
-
-						// Position small elements at the end of the layout
-						const spaceAtBottom = (areas.normal.top + areas.normal.height) - normalMaxBottom;
-						const spaceAtRight = (areas.normal.left + areas.normal.width) - normalMaxRight;
-
-						let smallStartX = areas.normal.left;
-						let smallStartY = normalMaxBottom;
-						let availableWidth = areas.normal.width;
-
-						// Choose best positioning based on available space
-						if (spaceAtBottom < smallMaxHeight && spaceAtRight >= smallMaxWidth) {
-							// Position to the right
-							smallStartX = normalMaxRight;
-							smallStartY = areas.normal.top;
-							availableWidth = spaceAtRight;
-						}
-
-						// Arrange small elements in a compact grid
-						const smallCols = Math.floor(availableWidth / smallMaxWidth);
-						smallBoxes = smallOnes.map((_, idx) => {
-							const col = idx % Math.max(1, smallCols);
-							const row = Math.floor(idx / Math.max(1, smallCols));
-
-							return {
-								left: smallStartX + (col * smallMaxWidth),
-								top: smallStartY + (row * smallMaxHeight),
-								width: smallMaxWidth,
-								height: smallMaxHeight
-							};
-						});
-					}
-				}
 			}
 		}
 
@@ -877,15 +846,22 @@ export class OpenViduLayout {
 		let bigBoxesIdx = 0;
 		let normalBoxesIdx = 0;
 		let smallBoxesIdx = 0;
+		let topBarBoxesIdx = 0;
 		// Rebuild the array in the right order based on element types
 		elements.forEach((element, idx) => {
 			if (bigIndices.indexOf(idx) > -1) {
 				boxes[idx] = bigBoxes[bigBoxesIdx];
 				bigBoxesIdx += 1;
+			} else if (topBarIndices.indexOf(idx) > -1) {
+				// Element is topbar (header style: full width, limited height)
+				boxes[idx] = topBarBoxes[topBarBoxesIdx];
+				topBarBoxesIdx += 1;
 			} else if (smallIndices.indexOf(idx) > -1) {
+				// Element is small (reduced format)
 				boxes[idx] = smallBoxes[smallBoxesIdx];
 				smallBoxesIdx += 1;
 			} else {
+				// Element is normal
 				boxes[idx] = normalBoxes[normalBoxesIdx];
 				normalBoxesIdx += 1;
 			}

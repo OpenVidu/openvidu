@@ -1,5 +1,6 @@
 import { LayoutAdditionalElementsDirective } from '../../directives/template/internals.directive';
 
+import { CdkDrag } from '@angular/cdk/drag-drop';
 import {
 	AfterViewInit,
 	ChangeDetectionStrategy,
@@ -15,13 +16,12 @@ import {
 } from '@angular/core';
 import { combineLatest, map, Subject, takeUntil } from 'rxjs';
 import { StreamDirective } from '../../directives/template/openvidu-components-angular.directive';
-import { ParticipantTrackPublication, ParticipantModel } from '../../models/participant.model';
-import { LayoutService } from '../../services/layout/layout.service';
-import { ParticipantService } from '../../services/participant/participant.service';
-import { CdkDrag } from '@angular/cdk/drag-drop';
-import { PanelService } from '../../services/panel/panel.service';
-import { GlobalConfigService } from '../../services/config/global-config.service';
+import { ParticipantModel, ParticipantTrackPublication } from '../../models/participant.model';
 import { OpenViduComponentsConfigService } from '../../services/config/directive-config.service';
+import { GlobalConfigService } from '../../services/config/global-config.service';
+import { LayoutService } from '../../services/layout/layout.service';
+import { PanelService } from '../../services/panel/panel.service';
+import { ParticipantService } from '../../services/participant/participant.service';
 import { LayoutTemplateConfiguration, TemplateManagerService } from '../../services/template/template-manager.service';
 
 /**

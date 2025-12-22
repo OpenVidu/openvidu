@@ -1,5 +1,10 @@
 <div class="container" [ngClass]="{ withCaptions: captionsEnabled, withMargin: localParticipant.isMinimized }">
 	<div id="layout" class="layout" #layout>
+		<!-- Top slot: Render elements that should appear at the top -->
+		@if (layoutAdditionalElementsTemplate && templateConfig.layoutAdditionalElementsSlot === 'top') {
+			<ng-container *ngTemplateOutlet="layoutAdditionalElementsTemplate"></ng-container>
+		}
+
 		<div
 			#localLayoutElement
 			*ngFor="let track of localParticipant.tracks; trackBy: trackParticipantElement"
@@ -21,8 +26,8 @@
 			<ng-container *ngTemplateOutlet="streamTemplate; context: { $implicit: track }"></ng-container>
 		</div>
 
-		<!-- Render additional layout elements injected via ovAdditionalLayoutElement -->
-		@if (layoutAdditionalElementsTemplate) {
+		<!-- Default slot: Render additional layout elements (backward compatibility and default position) -->
+		@if (layoutAdditionalElementsTemplate && (templateConfig.layoutAdditionalElementsSlot === 'default' || !templateConfig.layoutAdditionalElementsSlot)) {
 			<ng-container *ngTemplateOutlet="layoutAdditionalElementsTemplate"></ng-container>
 		}
 
@@ -40,6 +45,11 @@
 		>
 			<ng-container *ngTemplateOutlet="streamTemplate; context: { $implicit: track }"></ng-container>
 		</div>
+
+		<!-- Bottom slot: Render elements that should appear at the bottom -->
+		@if (layoutAdditionalElementsTemplate && templateConfig.layoutAdditionalElementsSlot === 'bottom') {
+			<ng-container *ngTemplateOutlet="layoutAdditionalElementsTemplate"></ng-container>
+		}
 	</div>
 
 	<!-- <ov-captions *ngIf="captionsEnabled" class="OV_ignored"></ov-captions> -->

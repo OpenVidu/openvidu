@@ -1,6 +1,12 @@
 import { Injectable, TemplateRef } from '@angular/core';
-import { ILogger } from '../../models/logger.model';
-import { LoggerService } from '../logger/logger.service';
+import {
+	LayoutAdditionalElementsDirective,
+	LeaveButtonDirective,
+	ParticipantPanelAfterLocalParticipantDirective,
+	PreJoinDirective,
+	SettingsPanelGeneralAdditionalElementsDirective,
+	ToolbarMoreOptionsAdditionalMenuItemsDirective
+} from '../../directives/template/internals.directive';
 import {
 	ActivitiesPanelDirective,
 	AdditionalPanelsDirective,
@@ -15,14 +21,8 @@ import {
 	ToolbarAdditionalPanelButtonsDirective,
 	ToolbarDirective
 } from '../../directives/template/openvidu-components-angular.directive';
-import {
-	PreJoinDirective,
-	ParticipantPanelAfterLocalParticipantDirective,
-	LayoutAdditionalElementsDirective,
-	LeaveButtonDirective,
-	SettingsPanelGeneralAdditionalElementsDirective,
-	ToolbarMoreOptionsAdditionalMenuItemsDirective
-} from '../../directives/template/internals.directive';
+import { ILogger } from '../../models/logger.model';
+import { LoggerService } from '../logger/logger.service';
 
 /**
  * Configuration object for all templates in the videoconference component
@@ -89,6 +89,7 @@ export interface ToolbarTemplateConfiguration {
 export interface LayoutTemplateConfiguration {
 	layoutStreamTemplate?: TemplateRef<any>;
 	layoutAdditionalElementsTemplate?: TemplateRef<any>;
+	layoutAdditionalElementsSlot?: 'top' | 'bottom' | 'default';
 }
 
 /**
@@ -413,7 +414,8 @@ export class TemplateManagerService {
 
 		return {
 			layoutStreamTemplate: externalStream?.template,
-			layoutAdditionalElementsTemplate: externalLayoutAdditionalElements?.template
+			layoutAdditionalElementsTemplate: externalLayoutAdditionalElements?.template,
+			layoutAdditionalElementsSlot: externalLayoutAdditionalElements?.slot || 'default'
 		};
 	}
 

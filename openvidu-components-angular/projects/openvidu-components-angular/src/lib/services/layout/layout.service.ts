@@ -101,7 +101,7 @@ export class LayoutService {
 			maxWidth: Infinity,
 			maxHeight: Infinity,
 			smallMaxWidth: Infinity,
-			smallMaxHeight: Infinity,
+			smallMaxHeight: 80,
 			bigMaxWidth: Infinity,
 			bigMaxHeight: Infinity,
 			scaleLastRow: true,

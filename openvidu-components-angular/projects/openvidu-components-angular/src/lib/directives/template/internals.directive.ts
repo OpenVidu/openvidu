@@ -181,7 +181,7 @@
  * @internal
  */
 
-import { Directive, TemplateRef, ViewContainerRef } from '@angular/core';
+import { Directive, Input, TemplateRef, ViewContainerRef } from '@angular/core';
 
 @Directive({
 	selector: '[ovPreJoin]',
@@ -253,14 +253,27 @@ export class LeaveButtonDirective {
  * as additional layout elements within the videoconference UI.
  * This enables you to extend the layout with extra controls, banners, or any custom UI.
  *
- * Usage example:
+ * You can specify a slot to control where the element is positioned:
+ * - 'top': Position at the top of the layout (after local participant, before remote participants)
+ * - 'bottom': Position at the bottom of the layout (after all participants)
+ * - 'default' or no slot: Position after local participant (default behavior)
+ *
+ * Usage examples:
  * ```html
  * <ov-videoconference>
+ *   <!-- Default position (after local participant) -->
  *   <ng-container *ovLayoutAdditionalElements>
- *     <div class="my-custom-layout-element">
- *       <!-- Your custom HTML here -->
- *       <span>Extra layout element</span>
- *     </div>
+ *     <div class="my-banner">Banner</div>
+ *   </ng-container>
+ *
+ *   <!-- Top position -->
+ *   <ng-container *ovLayoutAdditionalElements="'top'">
+ *     <div class="top-bar">Top Bar</div>
+ *   </ng-container>
+ *
+ *   <!-- Bottom position -->
+ *   <ng-container *ovLayoutAdditionalElements="'bottom'">
+ *     <div class="bottom-info">Footer Info</div>
  *   </ng-container>
  * </ov-videoconference>
  * ```
@@ -270,10 +283,27 @@ export class LeaveButtonDirective {
 	standalone: false
 })
 export class LayoutAdditionalElementsDirective {
+	/**
+	 * Slot position: 'top', 'bottom', or 'default'
+	 */
+	slot: 'top' | 'bottom' | 'default' = 'default';
+
 	constructor(
 		public template: TemplateRef<any>,
 		public container: ViewContainerRef
 	) {}
+
+	/**
+	 * @ignore
+	 */
+	@Input('ovLayoutAdditionalElements')
+	set ovLayoutAdditionalElements(slot: 'top' | 'bottom' | 'default' | '') {
+		if (slot === 'top' || slot === 'bottom' || slot === 'default') {
+			this.slot = slot;
+		} else {
+			this.slot = 'default';
+		}
+	}
 }
 
 /**
