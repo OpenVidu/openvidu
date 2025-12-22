@@ -5,6 +5,7 @@ import {
 	Component,
 	computed,
 	ContentChild,
+	effect,
 	EventEmitter,
 	HostListener,
 	OnDestroy,
@@ -29,7 +30,7 @@ import { BroadcastingStatus, BroadcastingStatusInfo, BroadcastingStopRequestedEv
 import { ChatMessage } from '../../models/chat.model';
 import { ILogger } from '../../models/logger.model';
 import { PanelStatusInfo, PanelType } from '../../models/panel.model';
-import { ParticipantLeftEvent, ParticipantLeftReason, ParticipantModel } from '../../models/participant.model';
+import { ParticipantLeftEvent, ParticipantLeftReason } from '../../models/participant.model';
 import {
 	RecordingInfo,
 	RecordingStartRequestedEvent,
@@ -449,6 +450,30 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 		private templateManagerService: TemplateManagerService
 	) {
 		this.log = this.loggerSrv.get('ToolbarComponent');
+
+		// Effect to react to local participant changes
+		effect(() => {
+			const p = this.participantService.localParticipantSignal();
+			if (p) {
+				if (this.isCameraEnabled !== p.isCameraEnabled) {
+					this.onVideoEnabledChanged.emit(p.isCameraEnabled);
+					this.isCameraEnabled = p.isCameraEnabled;
+					this.storageSrv.setCameraEnabled(this.isCameraEnabled);
+				}
+
+				if (this.isMicrophoneEnabled !== p.isMicrophoneEnabled) {
+					this.onAudioEnabledChanged.emit(p.isMicrophoneEnabled);
+					this.isMicrophoneEnabled = p.isMicrophoneEnabled;
+					this.storageSrv.setMicrophoneEnabled(this.isMicrophoneEnabled);
+				}
+
+				if (this.isScreenShareEnabled !== p.isScreenShareEnabled) {
+					this.onScreenShareEnabledChanged.emit(p.isScreenShareEnabled);
+					this.isScreenShareEnabled = p.isScreenShareEnabled;
+				}
+				this.cd.markForCheck();
+			}
+		});
 	}
 
 	/**
@@ -497,7 +522,6 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 
 		this.setupTemplates();
 		this.subscribeToToolbarDirectives();
-		this.subscribeToUserMediaProperties();
 
 		this.subscribeToReconnection();
 		this.subscribeToMenuToggling();
@@ -809,29 +833,6 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 			}
 			this.messageList = messages;
 			this.cd.markForCheck();
-		});
-	}
-	private subscribeToUserMediaProperties() {
-		this.participantService.localParticipant$.pipe(takeUntil(this.destroy$)).subscribe((p: ParticipantModel | undefined) => {
-			if (p) {
-				if (this.isCameraEnabled !== p.isCameraEnabled) {
-					this.onVideoEnabledChanged.emit(p.isCameraEnabled);
-					this.isCameraEnabled = p.isCameraEnabled;
-					this.storageSrv.setCameraEnabled(this.isCameraEnabled);
-				}
-
-				if (this.isMicrophoneEnabled !== p.isMicrophoneEnabled) {
-					this.onAudioEnabledChanged.emit(p.isMicrophoneEnabled);
-					this.isMicrophoneEnabled = p.isMicrophoneEnabled;
-					this.storageSrv.setMicrophoneEnabled(this.isMicrophoneEnabled);
-				}
-
-				if (this.isScreenShareEnabled !== p.isScreenShareEnabled) {
-					this.onScreenShareEnabledChanged.emit(p.isScreenShareEnabled);
-					this.isScreenShareEnabled = p.isScreenShareEnabled;
-				}
-				this.cd.markForCheck();
-			}
 		});
 	}
 
