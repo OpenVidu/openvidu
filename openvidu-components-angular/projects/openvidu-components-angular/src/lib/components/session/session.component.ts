@@ -17,7 +17,7 @@ import { animate, style, transition, trigger } from '@angular/animations';
 import { MatDrawerContainer, MatSidenav } from '@angular/material/sidenav';
 import { skip, Subject, takeUntil } from 'rxjs';
 import { DataTopic } from '../../models/data-topic.model';
-import { SidenavMode } from '../../models/layout.model';
+import { SidenavMode } from '../../models/layout/layout.model';
 import { ILogger } from '../../models/logger.model';
 import { PanelStatusInfo, PanelType } from '../../models/panel.model';
 import { RoomStatusData } from '../../models/room.model';

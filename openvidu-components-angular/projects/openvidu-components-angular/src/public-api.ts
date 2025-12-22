@@ -38,7 +38,7 @@ export * from './lib/models/broadcasting.model';
 export * from './lib/models/data-topic.model';
 export * from './lib/models/device.model';
 export * from './lib/models/lang.model';
-export * from './lib/models/layout.model';
+export * from './lib/models/layout/layout.model';
 export * from './lib/models/logger.model';
 export * from './lib/models/panel.model';
 export * from './lib/models/participant.model';

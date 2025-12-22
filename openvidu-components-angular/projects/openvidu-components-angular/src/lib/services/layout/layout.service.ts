@@ -1,6 +1,6 @@
 import { Injectable, effect } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
-import { LayoutAlignment, LayoutClass, OpenViduLayout, OpenViduLayoutOptions } from '../../models/layout.model';
+import { LayoutAlignment, LayoutClass, OpenViduLayout, OpenViduLayoutOptions } from '../../models/layout/layout.model';
 import { ILogger } from '../../models/logger.model';
 import { LoggerService } from '../logger/logger.service';
 import { ViewportService } from '../viewport/viewport.service';

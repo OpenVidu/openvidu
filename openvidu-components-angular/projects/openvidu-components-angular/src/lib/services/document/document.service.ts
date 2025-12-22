@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { LayoutClass } from '../../models/layout.model';
+import { LayoutClass } from '../../models/layout/layout.model';
 
 /**
  * @internal
