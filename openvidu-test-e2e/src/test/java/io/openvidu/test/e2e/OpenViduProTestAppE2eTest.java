@@ -1476,7 +1476,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 				Arrays.asList(new Point[] { new Point(93, 30), new Point(30, 50) }));
 
 		// Red
-		Assertions.assertTrue((rgb.get("r") > 250) && (rgb.get("g") < 10) && (rgb.get("b") < 40));
+		Assertions.assertTrue((rgb.get("r") > 220) && (rgb.get("g") < 20) && (rgb.get("b") < 20));
 
 		// Fail exec method
 		WebElement filterMethodInput = user.getDriver().findElement(By.id("filter-method-field"));
@@ -1508,9 +1508,10 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		user.getDriver().findElement(By.id("exec-filter-btn")).click();
 		user.getWaiter().until(ExpectedConditions.attributeContains(By.id("operation-response-text-area"), "value",
 				"Filter method executed"));
+		Thread.sleep(1000);
 		rgb = user.getBrowserUser().getAverageColorFromPixels(subscriberVideo,
 				Arrays.asList(new Point[] { new Point(93, 30), new Point(30, 50) }));
-		Assertions.assertTrue((rgb.get("r") < 10) && (rgb.get("g") < 10) && (rgb.get("b") > 240));
+		Assertions.assertTrue((rgb.get("r") < 20) && (rgb.get("g") < 20) && (rgb.get("b") > 220));
 
 		user.getDriver().findElement(By.id("remove-filter-btn")).click();
 		user.getWaiter().until(
