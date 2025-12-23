@@ -54,13 +54,13 @@ variable "domainName" {
 }
 
 variable "ownPublicCertificate" {
-  description = "If certificate type is 'owncert', this parameter will be used to specify the public certificate"
+  description = "If certificate type is 'owncert', this parameter will be used to specify the public certificate in base64 format"
   type        = string
   default     = ""
 }
 
 variable "ownPrivateCertificate" {
-  description = "If certificate type is 'owncert', this parameter will be used to specify the private certificate"
+  description = "If certificate type is 'owncert', this parameter will be used to specify the private certificate in base64 format"
   type        = string
   default     = ""
 }
@@ -160,13 +160,13 @@ variable "turnDomainName" {
 }
 
 variable "turnOwnPublicCertificate" {
-  description = "(Optional) This setting is applicable if the certificate type is set to 'owncert' and the TurnDomainName is specified."
+  description = "(Optional) This setting is applicable if the certificate type is set to 'owncert' and the TurnDomainName is specified. Provide in base64 format."
   type        = string
   default     = ""
 }
 
 variable "turnOwnPrivateCertificate" {
-  description = "(Optional) This setting is applicable if the certificate type is set to 'owncert' and the TurnDomainName is specified."
+  description = "(Optional) This setting is applicable if the certificate type is set to 'owncert' and the TurnDomainName is specified. Provide in base64 format."
   type        = string
   default     = ""
 }

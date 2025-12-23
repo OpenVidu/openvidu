@@ -113,7 +113,7 @@
                             "name": "ownPublicCertificate",
                             "type": "Microsoft.Common.TextBox",
                             "label": "Own Public Certificate",
-                            "subLabel": "\nIf certificate type is 'owncert', this parameter will be used to specify the public certificate",
+                            "subLabel": "\nIf certificate type is 'owncert', this parameter will be used to specify the public certificate in base64 format",
                             "defaultValue": "",
                             "toolTip": "",
                             "constraints": {
@@ -134,7 +134,7 @@
                             "name": "ownPrivateCertificate",
                             "type": "Microsoft.Common.TextBox",
                             "label": "Own Private Certificate",
-                            "subLabel": "\nIf certificate type is 'owncert', this parameter will be used to specify the private certificate",
+                            "subLabel": "\nIf certificate type is 'owncert', this parameter will be used to specify the private certificate in base64 format",
                             "defaultValue": "",
                             "toolTip": "",
                             "constraints": {
@@ -356,7 +356,7 @@
                             "name": "turnOwnPublicCertificate",
                             "type": "Microsoft.Common.TextBox",
                             "label": "Turn Own Public Certificate",
-                            "subLabel": "\n(Optional) This setting is applicable if the certificate type is set to 'owncert' and the TurnDomainName is specified.",
+                            "subLabel": "\n(Optional) This setting is applicable if the certificate type is set to 'owncert' and the TurnDomainName is specified. Provide in base64 format.",
                             "defaultValue": "",
                             "toolTip": "",
                             "constraints": {
@@ -377,7 +377,7 @@
                             "name": "turnOwnPrivateCertificate",
                             "type": "Microsoft.Common.TextBox",
                             "label": "Turn Own Private Certificate",
-                            "subLabel": "\n(Optional) This setting is applicable if the certificate type is set to 'owncert' and the TurnDomainName is specified.",
+                            "subLabel": "\n(Optional) This setting is applicable if the certificate type is set to 'owncert' and the TurnDomainName is specified. Provide in base64 format.",
                             "defaultValue": "",
                             "toolTip": "",
                             "constraints": {

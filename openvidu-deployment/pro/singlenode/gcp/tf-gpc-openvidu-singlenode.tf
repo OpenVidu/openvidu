@@ -277,14 +277,9 @@ elif [[ "${var.certificateType}" == "letsencrypt" ]]; then
     "--certificate-type=letsencrypt"
   )
 else
-  # Download owncert files
-  mkdir -p /tmp/owncert
-  wget -O /tmp/owncert/fullchain.pem ${var.ownPublicCertificate}
-  wget -O /tmp/owncert/privkey.pem ${var.ownPrivateCertificate}
-
-  # Convert to base64
-  OWN_CERT_CRT=$(base64 -w 0 /tmp/owncert/fullchain.pem)
-  OWN_CERT_KEY=$(base64 -w 0 /tmp/owncert/privkey.pem)
+  # Use base64 encoded certificates directly
+  OWN_CERT_CRT=${var.ownPublicCertificate}
+  OWN_CERT_KEY=${var.ownPrivateCertificate}
   CERT_ARGS=(
     "--certificate-type=owncert"
     "--owncert-public-key=$OWN_CERT_CRT"
@@ -293,13 +288,9 @@ else
 
   # Turn with TLS and own certificate
   if [[ "${var.turnDomainName}" != '' ]]; then
-    # Download owncert files
-    mkdir -p /tmp/owncert-turn
-    wget -O /tmp/owncert-turn/fullchain.pem ${var.turnOwnPublicCertificate}
-    wget -O /tmp/owncert-turn/privkey.pem ${var.turnOwnPrivateCertificate}
-    # Convert to base64
-    OWN_CERT_CRT_TURN=$(base64 -w 0 /tmp/owncert-turn/fullchain.pem)
-    OWN_CERT_KEY_TURN=$(base64 -w 0 /tmp/owncert-turn/privkey.pem)
+    # Use base64 encoded certificates directly
+    OWN_CERT_CRT_TURN=${var.turnOwnPublicCertificate}
+    OWN_CERT_KEY_TURN=${var.turnOwnPrivateCertificate}
     CERT_ARGS+=(
       "--turn-owncert-private-key=$OWN_CERT_KEY_TURN"
       "--turn-owncert-public-key=$OWN_CERT_CRT_TURN"

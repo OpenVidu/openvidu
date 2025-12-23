@@ -16,10 +16,10 @@ param certificateType string = 'letsencrypt'
 @description('Domain name for the OpenVidu Deployment.')
 param domainName string = ''
 
-@description('If certificate type is \'owncert\', this parameter will be used to specify the public certificate')
+@description('If certificate type is \'owncert\', this parameter will be used to specify the public certificate in base64 format')
 param ownPublicCertificate string = ''
 
-@description('If certificate type is \'owncert\', this parameter will be used to specify the private certificate')
+@description('If certificate type is \'owncert\', this parameter will be used to specify the private certificate in base64 format')
 param ownPrivateCertificate string = ''
 
 @description('Name of the PublicIPAddress resource in Azure when using certificateType \'owncert\' or \'letsencrypt\'')
@@ -28,10 +28,10 @@ param publicIpAddressObject object
 @description('(Optional) Domain name for the TURN server with TLS. Only needed if your users are behind restrictive firewalls')
 param turnDomainName string = ''
 
-@description('(Optional) This setting is applicable if the certificate type is set to \'owncert\' and the TurnDomainName is specified.')
+@description('(Optional) This setting is applicable if the certificate type is set to \'owncert\' and the TurnDomainName is specified. Provide in base64 format.')
 param turnOwnPublicCertificate string = ''
 
-@description('(Optional) This setting is applicable if the certificate type is set to \'owncert\' and the TurnDomainName is specified.')
+@description('(Optional) This setting is applicable if the certificate type is set to \'owncert\' and the TurnDomainName is specified. Provide in base64 format.')
 param turnOwnPrivateCertificate string = ''
 
 @description('Visit https://openvidu.io/account')
@@ -521,14 +521,9 @@ elif [[ "${certificateType}" == "letsencrypt" ]]; then
     "--certificate-type=letsencrypt"
   )
 else
-  # Download owncert files
-  mkdir -p /tmp/owncert
-  wget -O /tmp/owncert/fullchain.pem ${ownPublicCertificate}
-  wget -O /tmp/owncert/privkey.pem ${ownPrivateCertificate}
-
-  # Convert to base64
-  OWN_CERT_CRT=$(base64 -w 0 /tmp/owncert/fullchain.pem)
-  OWN_CERT_KEY=$(base64 -w 0 /tmp/owncert/privkey.pem)
+  # Use base64 encoded certificates directly
+  OWN_CERT_CRT=${ownPublicCertificate}
+  OWN_CERT_KEY=${ownPrivateCertificate}
 
   CERT_ARGS=(
     "--certificate-type=owncert"
@@ -538,14 +533,9 @@ else
 
   # Turn with TLS and own certificate
   if [[ "${turnDomainName}" != '' ]]; then
-    # Download owncert files
-    mkdir -p /tmp/owncert-turn
-    wget -O /tmp/owncert-turn/fullchain.pem ${turnOwnPublicCertificate}
-    wget -O /tmp/owncert-turn/privkey.pem ${turnOwnPrivateCertificate}
-
-    # Convert to base64
-    OWN_CERT_CRT_TURN=$(base64 -w 0 /tmp/owncert-turn/fullchain.pem)
-    OWN_CERT_KEY_TURN=$(base64 -w 0 /tmp/owncert-turn/privkey.pem)
+    # Use base64 encoded certificates directly
+    OWN_CERT_CRT_TURN=${turnOwnPublicCertificate}
+    OWN_CERT_KEY_TURN=${turnOwnPrivateCertificate}
 
     CERT_ARGS+=(
       "--turn-owncert-private-key=$OWN_CERT_KEY_TURN"
