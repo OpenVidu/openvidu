@@ -216,9 +216,9 @@ export class LayoutCalculator {
 			let currentTop = areas.normal.top;
 			let remainingHeight = areas.normal.height;
 
-			// 1. Position TopBar Elements at the very top (header style: full width, 80px height)
+			// 1. Position TopBar Elements at the very top (header style: full width, 50px height)
 			if (topBarOnes.length > 0) {
-				const topBarHeight = 80;
+				const topBarHeight = 50;
 				const topBarWidth = Math.floor(containerWidth / topBarOnes.length);
 
 				topBarBoxes = topBarOnes.map((element, idx) => {
