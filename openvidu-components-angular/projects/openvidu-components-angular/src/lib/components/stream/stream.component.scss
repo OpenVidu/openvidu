@@ -90,20 +90,34 @@
 
 	.status-icons {
 		position: absolute;
-		bottom: 0;
+		bottom: 8px;
 		z-index: 999;
-		left: 0;
-		line-height: 0;
+		left: 8px;
+		display: flex;
+		gap: 6px;
+		align-items: center;
+		background-color: rgba(0, 0, 0, 0.5);
+		backdrop-filter: blur(8px);
+		padding: 4px 8px;
+		border-radius: 20px;
+		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 
 		#status-mic,
 		#status-muted-forcibly,
 		#status-pinned {
-			font-size: 24px;
-			margin: 5px;
+			font-size: 20px;
+			width: 20px;
+			height: 20px;
+			display: flex;
+			align-items: center;
+			justify-content: center;
 		}
 		#status-mic,
 		#status-muted-forcibly {
 			color: var(--ov-error-color);
+		}
+		#status-pinned {
+			color: var(--ov-accent-action-color);
 		}
 	}
 

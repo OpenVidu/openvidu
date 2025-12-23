@@ -38,7 +38,7 @@
 	></ov-media-element>
 
 	@if (!_track.participant.hasEncryptionError) {
-		<div class="status-icons">
+		<div class="status-icons" *ngIf="!_track.participant?.isMicrophoneEnabled || _track.isMutedForcibly || _track.isPinned">
 			<mat-icon id="status-mic" fontIcon="mic_off" *ngIf="!_track.participant?.isMicrophoneEnabled"></mat-icon>
 			<mat-icon id="status-muted-forcibly" fontIcon="volume_off" *ngIf="_track.isMutedForcibly"></mat-icon>
 			<mat-icon id="status-pinned" fontIcon="push_pin" *ngIf="_track.isPinned"></mat-icon>
