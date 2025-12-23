@@ -28,11 +28,11 @@ Parameters:
     ConstraintDescription: The domain name does not have a valid domain name format
 
   OwnPublicCertificate:
-    Description: "If certificate type is 'owncert', this parameter will be used to specify the public certificate"
+    Description: "If certificate type is 'owncert', this parameter will be used to specify the public certificate in base64 format"
     Type: String
 
   OwnPrivateCertificate:
-    Description: "If certificate type is 'owncert', this parameter will be used to specify the private certificate"
+    Description: "If certificate type is 'owncert', this parameter will be used to specify the private certificate in base64 format"
     Type: String
 
   InitialMeetAdminPassword:
@@ -66,12 +66,12 @@ Parameters:
     Default: ''
 
   TurnOwnPublicCertificate:
-    Description: "(Optional) This setting is applicable if the certificate type is set to 'owncert' and the TurnDomainName is specified."
+    Description: "(Optional) This setting is applicable if the certificate type is set to 'owncert' and the TurnDomainName is specified. Provide in base64 format."
     Type: String
     Default: ''
 
   TurnOwnPrivateCertificate:
-    Description: "(Optional) This setting is applicable if the certificate type is set to 'owncert' and the TurnDomainName is specified."
+    Description: "(Optional) This setting is applicable if the certificate type is set to 'owncert' and the TurnDomainName is specified. Provide in base64 format."
     Type: String
     Default: ''
 
@@ -765,14 +765,9 @@ Resources:
                     "--certificate-type=letsencrypt"
                   )
                 else
-                  # Download owncert files
-                  mkdir -p /tmp/owncert
-                  wget -O /tmp/owncert/fullchain.pem ${OwnPublicCertificate}
-                  wget -O /tmp/owncert/privkey.pem ${OwnPrivateCertificate}
-
-                  # Convert to base64
-                  OWN_CERT_CRT=$(base64 -w 0 /tmp/owncert/fullchain.pem)
-                  OWN_CERT_KEY=$(base64 -w 0 /tmp/owncert/privkey.pem)
+                  # Use base64 encoded certificates directly
+                  OWN_CERT_CRT=${OwnPublicCertificate}
+                  OWN_CERT_KEY=${OwnPrivateCertificate}
 
                   CERT_ARGS=(
                     "--certificate-type=owncert"
@@ -782,14 +777,9 @@ Resources:
 
                   # Turn with TLS and own certificate
                   if [[ "${TurnDomainName}" != '' ]]; then
-                    # Download owncert files
-                    mkdir -p /tmp/owncert-turn
-                    wget -O /tmp/owncert-turn/fullchain.pem ${TurnOwnPublicCertificate}
-                    wget -O /tmp/owncert-turn/privkey.pem ${TurnOwnPrivateCertificate}
-
-                    # Convert to base64
-                    OWN_CERT_CRT_TURN=$(base64 -w 0 /tmp/owncert-turn/fullchain.pem)
-                    OWN_CERT_KEY_TURN=$(base64 -w 0 /tmp/owncert-turn/privkey.pem)
+                    # Use base64 encoded certificates directly
+                    OWN_CERT_CRT_TURN=${TurnOwnPublicCertificate}
+                    OWN_CERT_KEY_TURN=${TurnOwnPrivateCertificate}
 
                     CERT_ARGS+=(
                       "--turn-owncert-private-key=$OWN_CERT_KEY_TURN"
