@@ -765,7 +765,7 @@ Parameters:
     ConstraintDescription: must be the name of an existing EC2 KeyPair.
 
   OperatingSystem:
-    Description: OpenVidu EC2 operating system
+    Description: EC2 Operating System
     Type: String
     Default: "Ubuntu-24"
     AllowedValues: ['Ubuntu-22', 'Ubuntu-24']
