@@ -81,7 +81,6 @@ export class TestFeedService {
     // 2. SCOPED BLOCKLIST (Parent -> Child removal)
     const scopedBlocklist: Record<string, Set<string>> = {
       session: new Set(["room", "openvidu"]),
-      target: new Set(["stream"]),
       streamManagers: new Set(["stream"])
     };
 
