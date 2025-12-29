@@ -3,7 +3,7 @@ set -eu
 export INSTALL_PREFIX="${INSTALL_PREFIX:-/opt/openvidu}"
 export DOCKER_VERSION="${DOCKER_VERSION:-29.0.2}"
 export DOCKER_COMPOSE_VERSION="${DOCKER_COMPOSE_VERSION:-v2.40.3}"
-export OPENVIDU_VERSION="${OPENVIDU_VERSION:-main}"
+export OPENVIDU_VERSION="${OPENVIDU_VERSION:-3.5.0}"
 export UPDATER_IMAGE="${UPDATER_IMAGE:-docker.io/openvidu/openvidu-updater:${OPENVIDU_VERSION}}"
 export MINIO_SERVER_IMAGE="${MINIO_SERVER_IMAGE:-docker.io/openvidu/minio:2025.9.7-debian-12-r3}"
 export MINIO_CLIENT_IMAGE="${MINIO_CLIENT_IMAGE:-docker.io/minio/mc:RELEASE.2025-08-13T08-35-41Z}"
