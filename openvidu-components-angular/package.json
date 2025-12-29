@@ -106,5 +106,5 @@
 		"simulate:multiparty": "livekit-cli load-test --url ws://localhost:7880 --api-key devkey --api-secret secret --room daily-call --publishers 8 --audio-publishers 8 --identity-prefix Participant --identity publisher",
 		"husky": "cd .. && husky install"
 	},
-	"version": "3.4.0"
+	"version": "3.5.0"
 }
