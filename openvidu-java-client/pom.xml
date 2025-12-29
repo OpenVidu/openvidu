@@ -5,7 +5,7 @@
 	
 	<groupId>io.openvidu</groupId>
 	<artifactId>openvidu-java-client-v2compatibility</artifactId>
-	<version>3.3.0</version>
+	<version>3.5.0</version>
 	<packaging>jar</packaging>
 
 	<name>OpenVidu Java Client V2 Compatibility</name>
