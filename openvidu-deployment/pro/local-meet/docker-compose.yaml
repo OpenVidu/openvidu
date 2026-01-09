@@ -1,6 +1,6 @@
 services:
   caddy-proxy:
-    image: docker.io/openvidu/openvidu-caddy-local:3.5.0
+    image: docker.io/openvidu/openvidu-caddy-local:main
     restart: unless-stopped
     extra_hosts:
       - host.docker.internal:host-gateway
@@ -86,7 +86,7 @@ services:
         condition: service_completed_successfully
 
   dashboard:
-    image: docker.io/openvidu/openvidu-dashboard:3.5.0
+    image: docker.io/openvidu/openvidu-dashboard:main
     restart: unless-stopped
     volumes:
       - /etc/localtime:/etc/localtime:ro
@@ -100,7 +100,7 @@ services:
         condition: service_completed_successfully
 
   openvidu:
-    image: docker.io/openvidu/openvidu-server-pro:3.5.0
+    image: docker.io/openvidu/openvidu-server-pro:main
     restart: unless-stopped
     extra_hosts:
       - host.docker.internal:host-gateway
@@ -123,7 +123,7 @@ services:
         condition: service_completed_successfully
 
   ingress:
-    image: docker.io/openvidu/ingress:3.5.0
+    image: docker.io/openvidu/ingress:main
     restart: unless-stopped
     extra_hosts:
       - host.docker.internal:host-gateway
@@ -141,7 +141,7 @@ services:
         condition: service_completed_successfully
 
   egress:
-    image: docker.io/openvidu/egress:3.5.0
+    image: docker.io/openvidu/egress:main
     restart: unless-stopped
     extra_hosts:
       - host.docker.internal:host-gateway
@@ -155,7 +155,7 @@ services:
       setup:
         condition: service_completed_successfully
   operator:
-    image: docker.io/openvidu/openvidu-operator:3.5.0
+    image: docker.io/openvidu/openvidu-operator:main
     restart: unless-stopped
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
@@ -179,7 +179,7 @@ services:
 
 
   openvidu-meet:
-    image: docker.io/openvidu/openvidu-meet:3.5.0
+    image: docker.io/openvidu/openvidu-meet:main
     restart: on-failure
     ports:
       - 9080:6080
@@ -220,7 +220,7 @@ services:
         condition: service_completed_successfully
 
   openvidu-v2compatibility:
-    image: docker.io/openvidu/openvidu-v2compatibility:3.5.0
+    image: docker.io/openvidu/openvidu-v2compatibility:main
     restart: unless-stopped
     entrypoint: /bin/sh /scripts/entrypoint_openvidu_v2_compat.sh
     extra_hosts:
@@ -257,7 +257,7 @@ services:
         condition: service_completed_successfully
 
   openvidu-meet-init:
-    image: docker.io/openvidu/openvidu-operator:3.5.0
+    image: docker.io/openvidu/openvidu-operator:main
     restart: on-failure
     environment:
       - MODE=local-ready-check
