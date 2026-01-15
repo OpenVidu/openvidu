@@ -1114,7 +1114,7 @@ Resources:
       BlockDeviceMappings:
         - DeviceName: /dev/sda1
           Ebs:
-            VolumeType: gp2
+            VolumeType: gp3
             DeleteOnTermination: true
             VolumeSize: 200
 
