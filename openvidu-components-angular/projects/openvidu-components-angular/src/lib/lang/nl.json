@@ -23,7 +23,9 @@
 	},
 	"ROOM": {
 		"JOINING": "De ruimte betreden...",
-		"LANDSCAPE_WARNING": "Draai uw apparaat voor een betere ervaring naar portretmodus"
+		"LANDSCAPE_WARNING": "Draai uw apparaat voor een betere ervaring naar portretmodus",
+		"DISCONNECTED": "U heeft de kamer verlaten",
+		"DISCONNECTED_SUBTITLE": "De sessie is beëindigd"
 	},
 	"PREJOIN": {
 		"NICKNAME_SECTION": "Stel je bijnaam in",

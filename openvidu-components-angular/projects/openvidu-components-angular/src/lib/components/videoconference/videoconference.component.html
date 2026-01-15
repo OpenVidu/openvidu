@@ -30,6 +30,14 @@
 			<mat-icon class="error-icon">error</mat-icon>
 			<span>{{ componentState.error?.message }}</span>
 		</div>
+	} @else if (componentState.state === 'DISCONNECTED') {
+		<!-- Disconnected state -->
+
+		<div id="spinner">
+			<mat-icon class="info-icon">check_circle</mat-icon>
+			<span>{{ 'ROOM.DISCONNECTED' | translate }}</span>
+			<p class="subtitle">{{ 'ROOM.DISCONNECTED_SUBTITLE' | translate }}</p>
+		</div>
 	} @else if (componentState.isRoomReady) {
 		<!-- VideoConference -->
 

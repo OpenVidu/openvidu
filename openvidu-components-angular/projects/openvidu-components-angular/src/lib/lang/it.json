@@ -23,7 +23,9 @@
 	},
 	"ROOM": {
 		"JOINING": "Unendosi alla stanza...",
-		"LANDSCAPE_WARNING": "Per una migliore esperienza, ruota il dispositivo in modalità verticale"
+		"LANDSCAPE_WARNING": "Per una migliore esperienza, ruota il dispositivo in modalità verticale",
+		"DISCONNECTED": "Hai lasciato la stanza",
+		"DISCONNECTED_SUBTITLE": "La sessione è terminata"
 	},
 	"PREJOIN": {
 		"NICKNAME_SECTION": "Imposta il tuo soprannome",

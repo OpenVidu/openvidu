@@ -35,7 +35,9 @@
 	},
 	"ROOM": {
 		"JOINING": "Joining room...",
-		"LANDSCAPE_WARNING": "Please rotate your device to portrait for a better experience"
+		"LANDSCAPE_WARNING": "Please rotate your device to portrait for a better experience",
+		"DISCONNECTED": "You have left the room",
+		"DISCONNECTED_SUBTITLE": "The session has ended"
 	},
 	"TOOLBAR": {
 		"MUTE_AUDIO": "Mute your audio",

@@ -23,7 +23,9 @@
 	},
 	"ROOM": {
 		"JOINING": "Entrando na sala...",
-		"LANDSCAPE_WARNING": "Por favor, gire seu dispositivo para o modo retrato para uma melhor experiência"
+		"LANDSCAPE_WARNING": "Por favor, gire seu dispositivo para o modo retrato para uma melhor experiência",
+		"DISCONNECTED": "Você saiu da sala",
+		"DISCONNECTED_SUBTITLE": "A sessão foi encerrada"
 	},
 	"PREJOIN": {
 		"NICKNAME_SECTION": "Defina seu apelido",

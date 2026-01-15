@@ -1,8 +1,6 @@
 import { animate, style, transition, trigger } from '@angular/animations';
 import {
 	AfterViewInit,
-	ChangeDetectionStrategy,
-	ChangeDetectorRef,
 	Component,
 	ContentChild,
 	EventEmitter,
@@ -11,7 +9,16 @@ import {
 	TemplateRef,
 	ViewChild
 } from '@angular/core';
+import { Room } from 'livekit-client';
 import { Subject, filter, skip, take, takeUntil } from 'rxjs';
+import {
+	LayoutAdditionalElementsDirective,
+	LeaveButtonDirective,
+	ParticipantPanelAfterLocalParticipantDirective,
+	PreJoinDirective,
+	SettingsPanelGeneralAdditionalElementsDirective,
+	ToolbarMoreOptionsAdditionalMenuItemsDirective
+} from '../../directives/template/internals.directive';
 import {
 	ActivitiesPanelDirective,
 	AdditionalPanelsDirective,
@@ -26,29 +33,17 @@ import {
 	ToolbarAdditionalPanelButtonsDirective,
 	ToolbarDirective
 } from '../../directives/template/openvidu-components-angular.directive';
-import { ILogger } from '../../models/logger.model';
-import { VideoconferenceState, VideoconferenceStateInfo } from '../../models/videoconference-state.model';
-import { ActionService } from '../../services/action/action.service';
-import { OpenViduComponentsConfigService } from '../../services/config/directive-config.service';
-import { DeviceService } from '../../services/device/device.service';
-import { LoggerService } from '../../services/logger/logger.service';
-import { OpenViduService } from '../../services/openvidu/openvidu.service';
-import { StorageService } from '../../services/storage/storage.service';
-import {
-	TemplateManagerService,
-	TemplateConfiguration,
-	ExternalDirectives,
-	DefaultTemplates
-} from '../../services/template/template-manager.service';
-import { Room } from 'livekit-client';
-import { ParticipantLeftEvent, ParticipantModel } from '../../models/participant.model';
+import { BroadcastingStartRequestedEvent, BroadcastingStopRequestedEvent } from '../../models/broadcasting.model';
 import { CustomDevice } from '../../models/device.model';
+import { LangOption } from '../../models/lang.model';
+import { ILogger } from '../../models/logger.model';
 import {
 	ActivitiesPanelStatusEvent,
 	ChatPanelStatusEvent,
 	ParticipantsPanelStatusEvent,
 	SettingsPanelStatusEvent
 } from '../../models/panel.model';
+import { ParticipantLeftEvent, ParticipantModel } from '../../models/participant.model';
 import {
 	RecordingDeleteRequestedEvent,
 	RecordingDownloadClickedEvent,
@@ -56,18 +51,21 @@ import {
 	RecordingStartRequestedEvent,
 	RecordingStopRequestedEvent
 } from '../../models/recording.model';
-import { BroadcastingStartRequestedEvent, BroadcastingStopRequestedEvent } from '../../models/broadcasting.model';
-import { LangOption } from '../../models/lang.model';
-import {
-	LayoutAdditionalElementsDirective,
-	ParticipantPanelAfterLocalParticipantDirective,
-	PreJoinDirective,
-	LeaveButtonDirective,
-	SettingsPanelGeneralAdditionalElementsDirective,
-	ToolbarMoreOptionsAdditionalMenuItemsDirective
-} from '../../directives/template/internals.directive';
-import { OpenViduThemeService } from '../../services/theme/theme.service';
+import { VideoconferenceState, VideoconferenceStateInfo } from '../../models/videoconference-state.model';
+import { ActionService } from '../../services/action/action.service';
+import { OpenViduComponentsConfigService } from '../../services/config/directive-config.service';
+import { DeviceService } from '../../services/device/device.service';
 import { E2eeService } from '../../services/e2ee/e2ee.service';
+import { LoggerService } from '../../services/logger/logger.service';
+import { OpenViduService } from '../../services/openvidu/openvidu.service';
+import { StorageService } from '../../services/storage/storage.service';
+import {
+	DefaultTemplates,
+	ExternalDirectives,
+	TemplateConfiguration,
+	TemplateManagerService
+} from '../../services/template/template-manager.service';
+import { OpenViduThemeService } from '../../services/theme/theme.service';
 
 /**
  * The **VideoconferenceComponent** is the parent of all OpenVidu components.
@@ -982,14 +980,16 @@ export class VideoconferenceComponent implements OnDestroy, AfterViewInit {
 	 * @internal
 	 */
 	_onParticipantLeft(event: ParticipantLeftEvent) {
-		// Reset to disconnected state to allow prejoin to show again if needed
+		this.onParticipantLeft.emit(event);
+
+		// Reset to disconnected state
+		// Set showPrejoin to false to prevent prejoin from showing and creating tracks
+		// This avoids the race condition where tracks are created before navigation
 		this.updateComponentState({
 			state: VideoconferenceState.DISCONNECTED,
 			isRoomReady: false,
-			showPrejoin: this.libService.showPrejoin()
+			showPrejoin: false
 		});
-
-		this.onParticipantLeft.emit(event);
 	}
 
 	private subscribeToVideconferenceDirectives() {

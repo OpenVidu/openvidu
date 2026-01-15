@@ -23,7 +23,9 @@
 	},
 	"ROOM": {
 		"JOINING": "Raum beitreten...",
-		"LANDSCAPE_WARNING": "Bitte drehen Sie Ihr Gerät für eine bessere Erfahrung in den Hochformatmodus"
+		"LANDSCAPE_WARNING": "Bitte drehen Sie Ihr Gerät für eine bessere Erfahrung in den Hochformatmodus",
+		"DISCONNECTED": "Sie haben den Raum verlassen",
+		"DISCONNECTED_SUBTITLE": "Die Sitzung wurde beendet"
 	},
 	"PREJOIN": {
 		"NICKNAME_SECTION": "Legen Sie Ihren Spitznamen fest",

@@ -23,7 +23,9 @@
 	},
 	"ROOM": {
 		"JOINING": "正在加入房间...",
-		"LANDSCAPE_WARNING": "请将设备旋转到纵向以获得最佳体验"
+		"LANDSCAPE_WARNING": "请将设备旋转到纵向以获得最佳体验",
+		"DISCONNECTED": "您已离开房间",
+		"DISCONNECTED_SUBTITLE": "会话已结束"
 	},
 	"PREJOIN": {
 		"NICKNAME_SECTION": "设置你的绰号",

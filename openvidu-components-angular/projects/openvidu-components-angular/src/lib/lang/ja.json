@@ -23,7 +23,9 @@
 	},
 	"ROOM": {
 		"JOINING": "ルームに参加しています...",
-		"LANDSCAPE_WARNING": "より良い体験のために、デバイスを縦向きに回転させてください"
+		"LANDSCAPE_WARNING": "より良い体験のために、デバイスを縦向きに回転させてください",
+		"DISCONNECTED": "ルームから退出しました",
+		"DISCONNECTED_SUBTITLE": "セッションが終了しました"
 	},
 	"PREJOIN": {
 		"NICKNAME_SECTION": "ニックネームを設定してください",

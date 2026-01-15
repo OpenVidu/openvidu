@@ -23,7 +23,9 @@
 	},
 	"ROOM": {
 		"JOINING": "Rejoindre la salle...",
-		"LANDSCAPE_WARNING": "Veuillez faire pivoter votre appareil en mode portrait pour une meilleure expérience"
+		"LANDSCAPE_WARNING": "Veuillez faire pivoter votre appareil en mode portrait pour une meilleure expérience",
+		"DISCONNECTED": "Vous avez quitté la salle",
+		"DISCONNECTED_SUBTITLE": "La session est terminée"
 	},
 	"PREJOIN": {
 		"NICKNAME_SECTION": "Définir votre surnom",
