@@ -20,6 +20,7 @@ import { ILogger } from '../../models/logger.model';
 import { OpenViduComponentsConfigService } from '../config/directive-config.service';
 import { DeviceService } from '../device/device.service';
 import { LoggerService } from '../logger/logger.service';
+import { PlatformService } from '../platform/platform.service';
 import { StorageService } from '../storage/storage.service';
 
 // TODO: Remove this once livekit-client exports it
@@ -67,7 +68,8 @@ export class OpenViduService {
 		private loggerSrv: LoggerService,
 		private deviceService: DeviceService,
 		private storageService: StorageService,
-		private configService: OpenViduComponentsConfigService
+		private configService: OpenViduComponentsConfigService,
+		private platformService: PlatformService
 	) {
 		this.log = this.loggerSrv.get('OpenViduService');
 		// this.isSttReadyObs = this._isSttReady.asObservable();
@@ -276,11 +278,25 @@ export class OpenViduService {
 	/**
 	 * Switches the background mode on the local video track.
 	 * Works both in prejoin and in-room states.
+	 * For Firefox: applies processor when effect is activated to avoid performance issues
+	 * For other browsers: processor is pre-attached, so just switch mode
 	 * @param options - The switch options (mode, blurRadius, imagePath)
 	 * @returns Promise<void>
 	 * @internal
 	 */
 	async switchBackgroundMode(options: SwitchBackgroundProcessorOptions): Promise<void> {
+		// For Firefox, attach processor only when an effect is activated
+		if (this.platformService.isFirefox() && options.mode !== 'disabled') {
+			const videoTrack = await this.getVideoTrack();
+			if (videoTrack) {
+				const hasProcessor = videoTrack.getProcessor();
+				if (!hasProcessor) {
+					this.log.d('Firefox: Attaching processor on effect activation');
+					await videoTrack.setProcessor(this.backgroundProcessor);
+				}
+			}
+		}
+
 		await this.backgroundProcessor.switchTo(options);
 		this.log.d('Background mode switched:', options);
 	}
@@ -358,11 +374,15 @@ export class OpenViduService {
 			}
 
 			// Apply background processor to video track (initialized in disabled mode)
-			// This ensures the processor is attached before publishing for smooth transitions
+			// For Firefox: skip processor attachment to avoid performance issues (applied only when effect is activated)
+			// For other browsers: attach processor for smooth transitions
 			const videoTrack = newLocalTracks.find((t) => t.kind === Track.Kind.Video) as LocalVideoTrack | undefined;
-			if (videoTrack) {
+			debugger
+			if (videoTrack && !this.platformService.isFirefox()) {
 				await videoTrack.setProcessor(this.backgroundProcessor);
 				this.log.d('Background processor applied to newly created video track');
+			} else if (videoTrack && this.platformService.isFirefox()) {
+				this.log.d('Firefox detected: skipping processor attachment for better performance');
 			}
 
 			// Mute tracks if devices are disabled
@@ -591,6 +611,25 @@ export class OpenViduService {
 			this.localTracks.splice(audioTrackIndex, 1);
 			this.log.d('Audio track removed');
 		}
+	}
+
+	/**
+	 * Gets the current video track from local tracks or room
+	 * @returns LocalVideoTrack or undefined
+	 * @internal
+	 */
+	private async getVideoTrack(): Promise<LocalVideoTrack | undefined> {
+		// First try to get from local tracks (prejoin state)
+		let videoTrack = this.localTracks.find((t) => t.kind === Track.Kind.Video) as LocalVideoTrack | undefined;
+
+		// If not found and room is connected, get from published tracks
+		if (!videoTrack && this.isRoomConnected()) {
+			const localParticipant = this.room.localParticipant;
+			const videoPublication = localParticipant.getTrackPublications().find((pub) => pub.kind === Track.Kind.Video);
+			videoTrack = videoPublication?.track as LocalVideoTrack | undefined;
+		}
+
+		return videoTrack;
 	}
 
 	/**
