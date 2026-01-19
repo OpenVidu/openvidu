@@ -106,6 +106,7 @@ export class LayoutComponent implements OnInit, OnDestroy, AfterViewInit {
 	private resizeTimeout: NodeJS.Timeout;
 	private videoIsAtRight: boolean = false;
 	private lastLayoutWidth: number = 0;
+	private lastLayoutHeight: number = 0;
 
 	/**
 	 * @ignore
@@ -130,7 +131,9 @@ export class LayoutComponent implements OnInit, OnDestroy, AfterViewInit {
 	ngAfterViewInit() {
 		console.log('LayoutComponent.ngAfterViewInit');
 		this.layoutService.initialize(this.layoutContainer.element.nativeElement);
-		this.lastLayoutWidth = this.layoutContainer.element.nativeElement.getBoundingClientRect().width;
+		const rect = this.layoutContainer.element.nativeElement.getBoundingClientRect();
+		this.lastLayoutWidth = rect.width;
+		this.lastLayoutHeight = rect.height;
 		this.listenToResizeLayout();
 		this.listenToCdkDrag();
 	}
@@ -217,11 +220,21 @@ export class LayoutComponent implements OnInit, OnDestroy, AfterViewInit {
 
 	private listenToResizeLayout() {
 		this.resizeObserver = new ResizeObserver((entries) => {
+			const { width: parentWidth, height: parentHeight } = entries[0].contentRect;
+
 			clearTimeout(this.resizeTimeout);
 
 			this.resizeTimeout = setTimeout(() => {
+				// Always update layout when container size changes
+				// This ensures layout recalculates when parent containers change
+				const widthDiff = Math.abs(this.lastLayoutWidth - parentWidth);
+				const heightDiff = Math.abs(this.lastLayoutHeight - parentHeight);
+				if (widthDiff > 1 || heightDiff > 1) {
+					this.layoutService.update();
+					this.cd.markForCheck();
+				}
+				// Handle minimized participant positioning
 				if (this.localParticipant?.isMinimized) {
-					const { width: parentWidth } = entries[0].contentRect;
 					if (this.panelService.isPanelOpened()) {
 						if (this.lastLayoutWidth < parentWidth) {
 							// Layout is bigger than before. Maybe the settings panel(wider) has been transitioned to another panel.
@@ -240,8 +253,10 @@ export class LayoutComponent implements OnInit, OnDestroy, AfterViewInit {
 							this.moveStreamToRight(parentWidth);
 						}
 					}
-					this.lastLayoutWidth = parentWidth;
 				}
+
+				this.lastLayoutWidth = parentWidth;
+				this.lastLayoutHeight = parentHeight;
 			}, 100);
 		});
 
