@@ -460,6 +460,19 @@ export class ParticipantService {
 		}
 	}
 
+
+	/**
+	 * Returns the participant with the given identity.
+	 * @param identity
+	 * @returns
+	 */
+	getParticipantByIdentity(identity: string): ParticipantModel | undefined {
+		if (this.localParticipant?.identity === identity) {
+			return this.localParticipant;
+		}
+		return this.remoteParticipants.find((p) => p.identity === identity);
+	}
+
 	/* ------------------------------ Remote Participants ------------------------------ */
 
 	/**
