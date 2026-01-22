@@ -286,19 +286,35 @@ export class OpenViduService {
 	 */
 	async switchBackgroundMode(options: SwitchBackgroundProcessorOptions): Promise<void> {
 		// For Firefox, attach processor only when an effect is activated
-		if (this.platformService.isFirefox() && options.mode !== 'disabled') {
-			const videoTrack = await this.getVideoTrack();
-			if (videoTrack) {
-				const hasProcessor = videoTrack.getProcessor();
-				if (!hasProcessor) {
-					this.log.d('Firefox: Attaching processor on effect activation');
-					await videoTrack.setProcessor(this.backgroundProcessor);
-				}
-			}
+		if (this.platformService.isFirefox()) {
+			await this.handleFirefoxProcessor(options.mode);
 		}
 
 		await this.backgroundProcessor.switchTo(options);
 		this.log.d('Background mode switched:', options);
+	}
+
+	/**
+	 * Applies the background processor handling for Firefox browser.
+	 * @internal
+	 */
+	private async handleFirefoxProcessor(mode: SwitchBackgroundProcessorOptions['mode']): Promise<void> {
+		const videoTrack = await this.getVideoTrack();
+		if (!videoTrack) return;
+
+		const hasProcessor = Boolean(videoTrack.getProcessor());
+		const isDisabled = mode === 'disabled';
+
+		if (!isDisabled && !hasProcessor) {
+			this.log.d('Firefox: Attaching processor on effect activation');
+			await videoTrack.setProcessor(this.backgroundProcessor);
+			return;
+		}
+
+		if (isDisabled && hasProcessor) {
+			this.log.d('Firefox: Stopping processor on effect deactivation');
+			await videoTrack.stopProcessor();
+		}
 	}
 
 	/**
@@ -377,7 +393,7 @@ export class OpenViduService {
 			// For Firefox: skip processor attachment to avoid performance issues (applied only when effect is activated)
 			// For other browsers: attach processor for smooth transitions
 			const videoTrack = newLocalTracks.find((t) => t.kind === Track.Kind.Video) as LocalVideoTrack | undefined;
-			debugger
+			debugger;
 			if (videoTrack && !this.platformService.isFirefox()) {
 				await videoTrack.setProcessor(this.backgroundProcessor);
 				this.log.d('Background processor applied to newly created video track');
