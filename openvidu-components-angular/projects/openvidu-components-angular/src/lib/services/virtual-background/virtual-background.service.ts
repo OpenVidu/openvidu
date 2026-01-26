@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { computed, Injectable, Signal } from '@angular/core';
 import { SwitchBackgroundProcessorOptions } from '@livekit/track-processors';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { BackgroundEffect, EffectType } from '../../models/background-effect.model';
@@ -59,6 +59,14 @@ export class VirtualBackgroundService {
 		return this.backgrounds;
 	}
 
+	/**
+	 * Computed signal that checks if virtual background is supported (requires GPU).
+	 * Reactively tracks the support status from OpenViduService.
+	 */
+	readonly isVirtualBackgroundSupported: Signal<boolean> = computed(() =>
+		this.openviduService.isBackgroundProcessorSupported()
+	);
+
 	isBackgroundApplied(): boolean {
 		const bgSelected = this.backgroundIdSelected.getValue();
 		return !!bgSelected && bgSelected !== 'no_effect';
@@ -80,6 +88,12 @@ export class VirtualBackgroundService {
 	 * The background processor is centralized in OpenViduService for consistency.
 	 */
 	async applyBackground(bg: BackgroundEffect) {
+		// Check if virtual background is supported before proceeding
+		if (!this.isVirtualBackgroundSupported()) {
+			this.log.w('Virtual background not supported (GPU disabled). Skipping background application.');
+			return;
+		}
+
 		// If the background is already applied, do nothing
 		if (this.backgroundIsAlreadyApplied(bg.id)) return;
 

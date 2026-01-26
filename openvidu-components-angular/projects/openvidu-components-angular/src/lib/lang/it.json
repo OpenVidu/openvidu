@@ -120,7 +120,9 @@
 			"BLURRED_SECTION": "Nessun effetto e sfondo sfocato",
 			"NO_EFFECTS": "Nessun effetto di sfondo",
 			"BLURRED_EFFECT": "Sfondo sfocato",
-			"IMAGES_SECTION": "Immagini di sfondo"
+			"IMAGES_SECTION": "Immagini di sfondo",
+			"NOT_SUPPORTED": "Gli sfondi virtuali non sono supportati in questo browser",
+			"NOT_SUPPORTED_DESCRIPTION": "Il tuo browser non supporta gli effetti di sfondo. Questa funzione richiede l'accelerazione GPU che potrebbe essere disabilitata o non disponibile."
 		},
 		"RECORDING": {
 			"TITLE": "Registrazione",

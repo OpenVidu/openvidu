@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, computed, EventEmitter, Input, OnInit, Output, Signal } from '@angular/core';
 import { Subscription } from 'rxjs';
 import { BackgroundEffect, EffectType } from '../../../models/background-effect.model';
 import { PanelType } from '../../../models/panel.model';
@@ -23,7 +23,7 @@ export class BackgroundEffectsPanelComponent implements OnInit {
 	effectType = EffectType;
 	backgroundImages: BackgroundEffect[] = [];
 	noEffectAndBlurredBackground: BackgroundEffect[] = [];
-	private backgrounds: BackgroundEffect[];
+	private backgrounds: BackgroundEffect[] = [];
 	private backgroundSubs: Subscription;
 
 	/**
@@ -37,6 +37,14 @@ export class BackgroundEffectsPanelComponent implements OnInit {
 		private backgroundService: VirtualBackgroundService,
 		private cd: ChangeDetectorRef
 	) {}
+
+	/**
+	 * Computed signal that reactively tracks if virtual background is supported.
+	 * Updates automatically when browser support changes.
+	 */
+	readonly isVirtualBackgroundSupported: Signal<boolean> = computed(() =>
+		this.backgroundService.isVirtualBackgroundSupported()
+	);
 
 	ngOnInit(): void {
 		this.subscribeToBackgroundSelected();

@@ -120,7 +120,9 @@
 			"BLURRED_SECTION": "Sem efeitos e fundo desfocado",
 			"NO_EFFECTS": "Sem efeito de fundo",
 			"BLURRED_EFFECT": "Fundo desfocado",
-			"IMAGES_SECTION": "Imagens de fundo"
+			"IMAGES_SECTION": "Imagens de fundo",
+			"NOT_SUPPORTED": "Fundos virtuais não são suportados neste navegador",
+			"NOT_SUPPORTED_DESCRIPTION": "Seu navegador não suporta efeitos de fundo. Este recurso requer aceleração de GPU que pode estar desabilitada ou não disponível."
 		},
 		"RECORDING": {
 			"TITLE": "Gravação",

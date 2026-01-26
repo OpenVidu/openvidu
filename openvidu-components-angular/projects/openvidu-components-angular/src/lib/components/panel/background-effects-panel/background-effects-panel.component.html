@@ -13,6 +13,13 @@
 		</button>
 	}
 
+	@if (!isVirtualBackgroundSupported()) {
+		<div class="not-supported-message">
+			<p class="warning-title">{{ 'PANEL.BACKGROUND.NOT_SUPPORTED' | translate }}</p>
+			<p class="warning-description">{{ 'PANEL.BACKGROUND.NOT_SUPPORTED_DESCRIPTION' | translate }}</p>
+		</div>
+	}
+
 	<div class="effects-container" fxFlex="100%" fxLayoutAlign="space-evenly none">
 		<div>
 			<h4 class="background-title">{{ 'PANEL.BACKGROUND.BLURRED_SECTION' | translate }}</h4>
@@ -24,6 +31,7 @@
 					[class.active-effect-btn]="backgroundSelectedId === effect.id"
 					(click)="applyBackground(effect)"
 					[attr.id]="effect.id + '-btn'"
+					[disabled]="!isVirtualBackgroundSupported()"
 					[matTooltip]="
 						effect.type === effectType.NONE
 							? ('PANEL.BACKGROUND.NO_EFFECTS' | translate)
@@ -44,7 +52,8 @@
 					class="effect-button"
 					[id]="'effect-' + effect.id"
 					[class.active-effect-btn]="backgroundSelectedId === effect.id"
-					(click)="applyBackground(effect)"
+					[class.disabled]="!isVirtualBackgroundSupported()"
+					(click)="isVirtualBackgroundSupported() && applyBackground(effect)"
 				>
 					<img [src]="effect.thumbnail" />
 				</div>

@@ -120,7 +120,9 @@
 			"BLURRED_SECTION": "エフェクトなし、ぼやけた背景",
 			"NO_EFFECTS": "背景エフェクトなし",
 			"BLURRED_EFFECT": "ぼやけた背景",
-			"IMAGES_SECTION": "背景画像"
+			"IMAGES_SECTION": "背景画像",
+			"NOT_SUPPORTED": "このブラウザでは仮想背景はサポートされていません",
+			"NOT_SUPPORTED_DESCRIPTION": "お使いのブラウザは背景効果をサポートしていません。この機能にはGPUアクセラレーションが必要ですが、無効化されているか利用できません。"
 		},
 		"RECORDING": {
 			"TITLE": "レコーディング",

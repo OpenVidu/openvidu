@@ -406,10 +406,9 @@ export class ParticipantService {
 		// Update Signal - create new reference to trigger reactivity
 		// The Observable will automatically emit via toObservable()
 		if (this.localParticipant) {
-			const updatedParticipant = Object.assign(
-				Object.create(Object.getPrototypeOf(this.localParticipant)),
-				{ ...this.localParticipant }
-			);
+			const updatedParticipant = Object.assign(Object.create(Object.getPrototypeOf(this.localParticipant)), {
+				...this.localParticipant
+			});
 			this.localParticipantWritableSignal.set(updatedParticipant);
 		} else {
 			this.localParticipantWritableSignal.set(undefined);

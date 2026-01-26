@@ -120,7 +120,9 @@
 			"BLURRED_SECTION": "没有效果和模糊的背景",
 			"NO_EFFECTS": "没有背景效果",
 			"BLURRED_EFFECT": "模糊的背景",
-			"IMAGES_SECTION": "背景图像"
+			"IMAGES_SECTION": "背景图像",
+			"NOT_SUPPORTED": "此浏览器不支持虚拟背景",
+			"NOT_SUPPORTED_DESCRIPTION": "您的浏览器不支持背景效果。此功能需要 GPU 加速,可能已被禁用或不可用。"
 		},
 		"RECORDING": {
 			"TITLE": "录音",

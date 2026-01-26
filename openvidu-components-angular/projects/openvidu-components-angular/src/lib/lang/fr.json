@@ -120,7 +120,9 @@
 			"BLURRED_SECTION": "Aucun effet et arrière-plan flou",
 			"NO_EFFECTS": "Aucun effet de fond",
 			"BLURRED_EFFECT": "Arrière-plan flou",
-			"IMAGES_SECTION": "Images d'arrière-plan"
+			"IMAGES_SECTION": "Images d'arrière-plan",
+			"NOT_SUPPORTED": "Les arrière-plans virtuels ne sont pas pris en charge dans ce navigateur",
+			"NOT_SUPPORTED_DESCRIPTION": "Votre navigateur ne prend pas en charge les effets d'arrière-plan. Cette fonctionnalité nécessite l'accélération GPU qui peut être désactivée ou non disponible."
 		},
 		"RECORDING": {
 			"TITLE": "Enregistrement",

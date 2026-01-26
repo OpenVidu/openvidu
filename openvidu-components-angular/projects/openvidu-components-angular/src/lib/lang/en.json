@@ -120,7 +120,9 @@
 			"BLURRED_SECTION": "No effects and blurred background",
 			"NO_EFFECTS": "No background effect",
 			"BLURRED_EFFECT": "Blurred background",
-			"IMAGES_SECTION": "Background images"
+			"IMAGES_SECTION": "Background images",
+			"NOT_SUPPORTED": "Virtual backgrounds are not supported in this browser",
+			"NOT_SUPPORTED_DESCRIPTION": "Your browser does not support background effects. This feature requires GPU acceleration which may be disabled or unavailable."
 		},
 		"RECORDING": {
 			"TITLE": "Recording",

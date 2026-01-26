@@ -12,6 +12,26 @@
 	margin: 10px 0;
 	font-weight: 300;
 }
+
+.not-supported-message {
+	padding: 15px;
+	margin: 10px;
+	background-color: var(--ov-warn-color, #ff9800);
+	border-radius: var(--ov-surface-radius);
+	color: var(--ov-text-surface-color);
+
+	.warning-title {
+		font-weight: 500;
+		margin: 0 0 8px 0;
+	}
+
+	.warning-description {
+		font-size: 0.9em;
+		margin: 0;
+		opacity: 0.9;
+	}
+}
+
 .effects-container {
 	display: block !important;
 	overflow-y: auto;
@@ -31,6 +51,11 @@
 
 .effect-button:hover {
 	cursor: pointer;
+}
+
+.effect-button.disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
 }
 
 .active-effect-btn {
