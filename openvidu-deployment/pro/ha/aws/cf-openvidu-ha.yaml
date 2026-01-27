@@ -14,16 +14,6 @@ Parameters:
     AllowedPattern: '.+'
     ConstraintDescription: The Load Balancer domain name must be defined
 
-  TurnDomainName:
-    Description: '(Optional) Domain name for the TURN server with TLS.'
-    Type: String
-    Default: ''
-
-  TurnCertificateARN:
-    Description: '(Optional) Amazon certificate arn resource to load into the TURN LoadBalancer'
-    Type: String
-    Default: ''
-
   OpenViduLicense:
     Description: "Visit https://openvidu.io/account"
     Type: String
@@ -848,14 +838,8 @@ Metadata:
           default: "(Optional) Additional Installer Flags"
         Parameters:
           - AdditionalInstallFlags
-      - Label:
-          default: (Optional) TURN server configuration with TLS
-        Parameters:
-          - TurnDomainName
-          - TurnCertificateARN
 
 Conditions:
-  TurnTLSIsEnabled: !Or [!Not [!Equals [!Ref TurnDomainName, ""]], !Not [!Equals [!Ref TurnCertificateARN, ""]]]
   CreateRecordingsBucket: !Equals [!Ref S3AppDataBucketName, ""]
   CreateClusterDataBucket: !Equals [!Ref S3ClusterDataBucketName, ""]
   IsMasterGraviton: !Or
@@ -880,22 +864,6 @@ Conditions:
     - !Equals [ !Select [ 0, !Split ['.', !Ref MediaNodeInstanceType ]], 'm7g']
     - !Equals [ !Select [ 0, !Split ['.', !Ref MediaNodeInstanceType ]], 'm7gd']
     - !Equals [ !Select [ 0, !Split ['.', !Ref MediaNodeInstanceType ]], 'm8g']
-  # ---
-  # Experimental TURN TLS with main domain
-  ExperimentalTurnTLSWithMainDomain:
-    Fn::Not:
-      - Fn::Equals:
-          - !Ref AdditionalInstallFlags
-          - !Select [0, !Split ["--experimental-turn-tls-with-main-domain", !Ref AdditionalInstallFlags]]
-  NotExperimentalTurnTLSWithMainDomain:
-    Fn::Or:
-      - Fn::Equals:
-          - !Ref AdditionalInstallFlags
-          - !Select [0, !Split ["--experimental-turn-tls-with-main-domain", !Ref AdditionalInstallFlags]]
-      - Fn::Equals:
-          - !Ref AdditionalInstallFlags
-          - ""
-  # ---
 
 Mappings:
   ArmImage:
@@ -933,7 +901,6 @@ Resources:
           "GRAFANA_URL": "none",
           "MINIO_URL": "none",
           "DOMAIN_NAME": "none",
-          "LIVEKIT_TURN_DOMAIN_NAME": "none",
           "OPENVIDU_PRO_LICENSE": "none",
           "OPENVIDU_RTC_ENGINE": "none",
           "REDIS_PASSWORD": "none",
@@ -1324,9 +1291,6 @@ Resources:
                 # If the private IP is the same as the first master node, generate the secrets
                 if [[ $MASTER_NODE_NUM -eq 1 ]] && [[ "$ALL_SECRETS_GENERATED" == "false" ]]; then
                   DOMAIN="$(/usr/local/bin/store_secret.sh save DOMAIN_NAME "${DomainName}")"
-                  if [[ -n "${TurnDomainName}" ]]; then
-                    LIVEKIT_TURN_DOMAIN_NAME="$(/usr/local/bin/store_secret.sh save LIVEKIT_TURN_DOMAIN_NAME "${TurnDomainName}")"
-                  fi
                   OPENVIDU_PRO_LICENSE="$(/usr/local/bin/store_secret.sh save OPENVIDU_PRO_LICENSE "${OpenViduLicense}")"
                   OPENVIDU_RTC_ENGINE="$(/usr/local/bin/store_secret.sh save OPENVIDU_RTC_ENGINE "${RTCEngine}")"
                   # Store version so media nodes can use it to install the same version
@@ -1411,7 +1375,6 @@ Resources:
                 MASTER_NODE_PRIVATE_IP_LIST="$MASTER_NODE_1_PRIVATE_IP,$MASTER_NODE_2_PRIVATE_IP,$MASTER_NODE_3_PRIVATE_IP,$MASTER_NODE_4_PRIVATE_IP"
 
                 DOMAIN=$(echo "$SHARED_SECRET" | jq -r '.DOMAIN_NAME')
-                LIVEKIT_TURN_DOMAIN_NAME=$(echo "$SHARED_SECRET" | jq -r '.LIVEKIT_TURN_DOMAIN_NAME')
                 OPENVIDU_PRO_LICENSE=$(echo "$SHARED_SECRET" | jq -r '.OPENVIDU_PRO_LICENSE')
                 OPENVIDU_RTC_ENGINE=$(echo "$SHARED_SECRET" | jq -r '.OPENVIDU_RTC_ENGINE')
                 REDIS_PASSWORD=$(echo "$SHARED_SECRET" | jq -r '.REDIS_PASSWORD')
@@ -1478,10 +1441,6 @@ Resources:
                       COMMON_ARGS+=("$extra_flag")
                     fi
                   done
-                fi
-
-                if [[ "${!LIVEKIT_TURN_DOMAIN_NAME}" != "none" ]]; then
-                  COMMON_ARGS+=("--turn-domain-name='${!LIVEKIT_TURN_DOMAIN_NAME}'")
                 fi
 
                 # Construct the final command
@@ -1584,12 +1543,6 @@ Resources:
                   exit 1
                 fi
 
-                # Replace LIVEKIT_TURN_DOMAIN_NAME
-                export LIVEKIT_TURN_DOMAIN_NAME=$(echo $SHARED_SECRET | jq -r .LIVEKIT_TURN_DOMAIN_NAME)
-                if [[ -n "$LIVEKIT_TURN_DOMAIN_NAME" ]]; then
-                  sed -i "s/LIVEKIT_TURN_DOMAIN_NAME=.*/LIVEKIT_TURN_DOMAIN_NAME=$LIVEKIT_TURN_DOMAIN_NAME/" "${!CLUSTER_CONFIG_DIR}/openvidu.env"
-                fi
-
                 # Replace rest of the values
                 sed -i "s/REDIS_PASSWORD=.*/REDIS_PASSWORD=$(echo $SHARED_SECRET | jq -r .REDIS_PASSWORD)/" "${!MASTER_NODE_CONFIG_DIR}/master_node.env"
                 sed -i "s/OPENVIDU_RTC_ENGINE=.*/OPENVIDU_RTC_ENGINE=$(echo $SHARED_SECRET | jq -r .OPENVIDU_RTC_ENGINE)/" "${!CLUSTER_CONFIG_DIR}/openvidu.env"
@@ -1649,7 +1602,6 @@ Resources:
                 # Update shared secret
                 SHARED_SECRET="$(echo "$SHARED_SECRET" | jq '. + {"REDIS_PASSWORD": "'"$(/usr/local/bin/get_value_from_config.sh REDIS_PASSWORD "${!MASTER_NODE_CONFIG_DIR}/master_node.env")"'"}')"
                 SHARED_SECRET="$(echo "$SHARED_SECRET" | jq '. + {"DOMAIN_NAME": "'"$(/usr/local/bin/get_value_from_config.sh DOMAIN_NAME "${!CLUSTER_CONFIG_DIR}/openvidu.env")"'"}')"
-                SHARED_SECRET="$(echo "$SHARED_SECRET" | jq '. + {"LIVEKIT_TURN_DOMAIN_NAME": "'"$(/usr/local/bin/get_value_from_config.sh LIVEKIT_TURN_DOMAIN_NAME "${!CLUSTER_CONFIG_DIR}/openvidu.env")"'"}')"
                 SHARED_SECRET="$(echo "$SHARED_SECRET" | jq '. + {"OPENVIDU_RTC_ENGINE": "'"$(/usr/local/bin/get_value_from_config.sh OPENVIDU_RTC_ENGINE "${!CLUSTER_CONFIG_DIR}/openvidu.env")"'"}')"
                 SHARED_SECRET="$(echo "$SHARED_SECRET" | jq '. + {"OPENVIDU_PRO_LICENSE": "'"$(/usr/local/bin/get_value_from_config.sh OPENVIDU_PRO_LICENSE "${!CLUSTER_CONFIG_DIR}/openvidu.env")"'"}')"
                 SHARED_SECRET="$(echo "$SHARED_SECRET" | jq '. + {"MONGO_ADMIN_USERNAME": "'"$(/usr/local/bin/get_value_from_config.sh MONGO_ADMIN_USERNAME "${!CLUSTER_CONFIG_DIR}/openvidu.env")"'"}')"
@@ -2235,11 +2187,7 @@ Resources:
         LaunchTemplateId: !Ref OpenViduMediaNodeLaunchTemplate
         Version: !GetAtt OpenViduMediaNodeLaunchTemplate.DefaultVersionNumber
       TargetGroupARNs:
-        Fn::If:
-          - TurnTLSIsEnabled
-          - - !Ref OpenViduMediaNodeRTMPTG
-            - !Ref OpenViduMediaNodeTurnTLSTG
-          - - !Ref OpenViduMediaNodeRTMPTG
+        - !Ref OpenViduMediaNodeRTMPTG
       MinSize: !Ref MinNumberOfMediaNodes
       MaxSize: !Ref MaxNumberOfMediaNodes
       DesiredCapacity: !Ref InitialNumberOfMediaNodes
@@ -2700,27 +2648,6 @@ Resources:
       ToPort: 9092
       SourceSecurityGroupId: !Ref OpenViduLoadBalancerSG
 
-  OpenViduLoadBalancerTurnTLSToMediaNodeIngressSG:
-    Type: AWS::EC2::SecurityGroupIngress
-    Condition: TurnTLSIsEnabled
-    Properties:
-      GroupId: !Ref OpenViduMediaNodeSG
-      IpProtocol: tcp
-      FromPort: 5349
-      ToPort: 5349
-      SourceSecurityGroupId: !Ref OpenViduTurnTLSLoadBalancerSG
-
-  OpenViduLoadBalancerTurnTLSToMediaNodeHealthCheckSG:
-    Type: AWS::EC2::SecurityGroupIngress
-    Condition: TurnTLSIsEnabled
-    Properties:
-      GroupId: !Ref OpenViduMediaNodeSG
-      IpProtocol: tcp
-      FromPort: 7880
-      ToPort: 7880
-      SourceSecurityGroupId: !Ref OpenViduTurnTLSLoadBalancerSG
-
-
   OpenViduMasterToMediaNodeServerIngressSG:
     Type: AWS::EC2::SecurityGroupIngress
     Properties:
@@ -2739,11 +2666,8 @@ Resources:
       ToPort: 8080
       SourceSecurityGroupId: !Ref OpenViduMasterNodeSG
 
-  # ---
-  # Experimental TURN TLS with main domain
   OpenViduTurnTLSMasterNodeToMediaNodeIngressSG:
     Type: AWS::EC2::SecurityGroupIngress
-    Condition: ExperimentalTurnTLSWithMainDomain
     Properties:
       GroupId: !Ref OpenViduMediaNodeSG
       IpProtocol: tcp
@@ -2753,14 +2677,12 @@ Resources:
 
   OpenViduTurnTLSLoadBalancerToMediaNodeIngressSG:
     Type: AWS::EC2::SecurityGroupIngress
-    Condition: ExperimentalTurnTLSWithMainDomain
     Properties:
       GroupId: !Ref OpenViduMasterNodeSG
       IpProtocol: tcp
       FromPort: 443
       ToPort: 443
       SourceSecurityGroupId: !Ref OpenViduLoadBalancerSG
-  # ---
 
   OpenViduLoadBalancerSG:
     Type: AWS::EC2::SecurityGroup
@@ -2794,23 +2716,6 @@ Resources:
           ToPort: 1935
           CidrIpv6: ::/0
 
-  OpenViduTurnTLSLoadBalancerSG:
-    Type: AWS::EC2::SecurityGroup
-    Condition: TurnTLSIsEnabled
-    Properties:
-      GroupDescription: Security group for the Load Balancer for TURN with TLS
-      GroupName: !Sub openvidu-ha-turn-tls-lb-sg-${AWS::Region}-${AWS::StackName}
-      VpcId: !Ref OpenViduVPC
-      SecurityGroupIngress:
-        - IpProtocol: tcp
-          FromPort: 443
-          ToPort: 443
-          CidrIp: 0.0.0.0/0
-        - IpProtocol: tcp
-          FromPort: 443
-          ToPort: 443
-          CidrIpv6: ::/0
-
   LoadBalancer:
     Type: AWS::ElasticLoadBalancingV2::LoadBalancer
     DependsOn:
@@ -2831,54 +2736,8 @@ Resources:
         - Key: Name
           Value: !Sub ${AWS::StackName} - OpenVidu HA - Load Balancer
 
-  TurnTLSLoadBalancer:
-    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
-    Condition: TurnTLSIsEnabled
-    Properties:
-      Name:
-        Fn::Join:
-          # Generate a not too long and unique load balancer name
-          # Getting a unique identifier from the stack id
-          - ''
-          - - OpenViduHA-TurnTLS-
-            - !Select [4, !Split ['-', !Select [2, !Split ['/', !Ref AWS::StackId]]]]
-      Subnets: !Ref OpenViduMediaNodeSubnets
-      SecurityGroups:
-        - !Ref OpenViduTurnTLSLoadBalancerSG
-      Type: network
-      Tags:
-        - Key: Name
-          Value: !Sub ${AWS::StackName} - OpenVidu HA - TURN with TLS Load Balancer
-
-  OpenViduMasterNodeHTTPListener:
-    Type: 'AWS::ElasticLoadBalancingV2::Listener'
-    Condition: NotExperimentalTurnTLSWithMainDomain
-    Properties:
-      DefaultActions:
-        - Type: forward
-          TargetGroupArn: !Ref OpenViduMasterNodeHTTPTG
-      LoadBalancerArn: !Ref LoadBalancer
-      Port: 80
-      Protocol: TCP
-
-  OpenViduMasterNodeListener:
-    Type: 'AWS::ElasticLoadBalancingV2::Listener'
-    Condition: NotExperimentalTurnTLSWithMainDomain
-    Properties:
-      DefaultActions:
-        - Type: forward
-          TargetGroupArn: !Ref OpenViduMasterNodeTG
-      LoadBalancerArn: !Ref LoadBalancer
-      Port: 443
-      Protocol: TLS
-      Certificates:
-        - CertificateArn: !Ref OpenViduCertificateARN
-
-  # ---
-  # Experimental TURN TLS with main domain
   OpenViduMasterNodeWithTurnTLSHTTPListener:
     Type: 'AWS::ElasticLoadBalancingV2::Listener'
-    Condition: ExperimentalTurnTLSWithMainDomain
     Properties:
       DefaultActions:
         - Type: forward
@@ -2889,7 +2748,6 @@ Resources:
 
   OpenViduMasterNodeWithTurnTLSListener:
     Type: 'AWS::ElasticLoadBalancingV2::Listener'
-    Condition: ExperimentalTurnTLSWithMainDomain
     Properties:
       DefaultActions:
         - Type: forward
@@ -2899,7 +2757,6 @@ Resources:
       Protocol: TLS
       Certificates:
         - CertificateArn: !Ref OpenViduCertificateARN
-  # ---
 
   OpenViduRTMPMediaNodeListener:
     Type: 'AWS::ElasticLoadBalancingV2::Listener'
@@ -2913,22 +2770,8 @@ Resources:
       Certificates:
         - CertificateArn: !Ref OpenViduCertificateARN
 
-  OpenViduTurnTLSMediaNodeListener:
-    Type: 'AWS::ElasticLoadBalancingV2::Listener'
-    Condition: TurnTLSIsEnabled
-    Properties:
-      DefaultActions:
-        - Type: forward
-          TargetGroupArn: !Ref OpenViduMediaNodeTurnTLSTG
-      LoadBalancerArn: !Ref TurnTLSLoadBalancer
-      Port: 443
-      Protocol: TLS
-      Certificates:
-        - CertificateArn: !Ref TurnCertificateARN
-
   OpenViduMasterNodeHTTPTG:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
-    Condition: NotExperimentalTurnTLSWithMainDomain
     Properties:
       Name:
         Fn::Join:
@@ -2962,47 +2805,8 @@ Resources:
         - Key: Name
           Value: !Sub ${AWS::StackName} - OpenVidu HA - Master HTTP Target Group
 
-  OpenViduMasterNodeTG:
-    Type: AWS::ElasticLoadBalancingV2::TargetGroup
-    Condition: NotExperimentalTurnTLSWithMainDomain
-    Properties:
-      Name:
-        Fn::Join:
-          # Generate a not too long and unique target id
-          # Getting a unique identifier from the stack id
-          - ''
-          - - OpenVidu-
-            - !Select [4, !Split ['-', !Select [2, !Split ['/', !Ref AWS::StackId]]]]
-      TargetType: instance
-      Targets:
-        - Id: !Ref OpenViduMasterNode1
-        - Id: !Ref OpenViduMasterNode2
-        - Id: !Ref OpenViduMasterNode3
-        - Id: !Ref OpenViduMasterNode4
-      VpcId: !Ref OpenViduVPC
-      Port: 7880
-      Protocol: TCP
-      Matcher:
-        HttpCode: '200'
-      HealthCheckIntervalSeconds: 10
-      HealthCheckPath: /health/caddy
-      HealthCheckProtocol: HTTP
-      HealthCheckPort: '7880'
-      HealthCheckTimeoutSeconds: 5
-      HealthyThresholdCount: 3
-      UnhealthyThresholdCount: 4
-      TargetGroupAttributes:
-        - Key: deregistration_delay.timeout_seconds
-          Value: 60
-      Tags:
-        - Key: Name
-          Value: !Sub ${AWS::StackName} - OpenVidu HA - Master Target Group
-
-  # ---
-  # Experimental TURN TLS with main domain
   OpenViduMasterNodeWithTurnTLSTG:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
-    Condition: ExperimentalTurnTLSWithMainDomain
     Properties:
       Name:
         Fn::Join:
@@ -3035,7 +2839,6 @@ Resources:
       Tags:
         - Key: Name
           Value: !Sub ${AWS::StackName} - OpenVidu HA - TURN TLS Master Target Group
-  # ---
 
   OpenViduMediaNodeRTMPTG:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
@@ -3066,33 +2869,6 @@ Resources:
       Tags:
         - Key: Name
           Value: !Sub ${AWS::StackName} - OpenVidu HA - RTMP Target Group
-
-  OpenViduMediaNodeTurnTLSTG:
-    Type: AWS::ElasticLoadBalancingV2::TargetGroup
-    Condition: TurnTLSIsEnabled
-    Properties:
-      Name:
-        Fn::Join:
-          # Generate a not too long and unique target id
-          # Getting a unique identifier from the stack id
-          - ''
-          - - OVTurnTLS-
-            - !Select [4, !Split ['-', !Select [2, !Split ['/', !Ref AWS::StackId]]]]
-      VpcId: !Ref OpenViduVPC
-      Port: 5349
-      Protocol: TCP
-      Matcher:
-        HttpCode: '200'
-      HealthCheckIntervalSeconds: 10
-      HealthCheckPath: /
-      HealthCheckProtocol: HTTP
-      HealthCheckPort: '7880'
-      HealthCheckTimeoutSeconds: 5
-      HealthyThresholdCount: 3
-      UnhealthyThresholdCount: 4
-      Tags:
-        - Key: Name
-          Value: !Sub ${AWS::StackName} - OpenVidu HA - TURN TLS Target Group
 
 Outputs:
   ServicesAndCredentials:
