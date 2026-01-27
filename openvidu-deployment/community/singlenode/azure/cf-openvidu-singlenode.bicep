@@ -25,15 +25,6 @@ param ownPublicCertificate string = ''
 @description('If certificate type is \'owncert\', this parameter will be used to specify the private certificate in base64 format')
 param ownPrivateCertificate string = ''
 
-@description('(Optional) Domain name for the TURN server with TLS. Only needed if your users are behind restrictive firewalls')
-param turnDomainName string = ''
-
-@description('(Optional) This setting is applicable if the certificate type is set to \'owncert\' and the TurnDomainName is specified. Provide in base64 format.')
-param turnOwnPublicCertificate string = ''
-
-@description('(Optional) This setting is applicable if the certificate type is set to \'owncert\' and the TurnDomainName is specified. Provide in base64 format.')
-param turnOwnPrivateCertificate string = ''
-
 @description('Initial password for the \'admin\' user in OpenVidu Meet. If not provided, a random password will be generated.')
 @secure()
 param initialMeetAdminPassword string = ''
@@ -161,12 +152,9 @@ resource openviduSharedInfo 'Microsoft.KeyVault/vaults@2023-07-01' = {
 var stringInterpolationParams = {
   publicIPId: publicIPId
   domainName: domainName
-  turnDomainName: turnDomainName
   certificateType: certificateType
   ownPublicCertificate: ownPublicCertificate
   ownPrivateCertificate: ownPrivateCertificate
-  turnOwnPublicCertificate: turnOwnPublicCertificate
-  turnOwnPrivateCertificate: turnOwnPrivateCertificate
   initialMeetAdminPassword: initialMeetAdminPassword
   initialMeetApiKey: initialMeetApiKey
   keyVaultName: keyVaultName
@@ -198,7 +186,6 @@ if [[ "${domainName}" == '' ]]; then
 
   RANDOM_DOMAIN_STRING=$(tr -dc 'a-z' < /dev/urandom | head -c 8)
   DOMAIN="openvidu-$RANDOM_DOMAIN_STRING-$(echo "$PUBLIC_IP" | tr '.' '-').sslip.io"
-  TURN_DOMAIN_NAME_SSLIP_IO="turn-$RANDOM_DOMAIN_STRING-$(echo "$PUBLIC_IP" | tr '.' '-').sslip.io"
 else
   DOMAIN=${domainName}
 fi
@@ -272,19 +259,6 @@ if [[ "${additionalInstallFlags}" != "" ]]; then
   done
 fi
 
-# Turn with TLS
-if [[ "${turnDomainName}" != '' ]]; then
-  LIVEKIT_TURN_DOMAIN_NAME=$(/usr/local/bin/store_secret.sh save LIVEKIT-TURN-DOMAIN-NAME "${turnDomainName}")
-  COMMON_ARGS+=(
-    "--turn-domain-name=$LIVEKIT_TURN_DOMAIN_NAME"
-  )
-elif [[ "${TURN_DOMAIN_NAME_SSLIP_IO}" != '' ]]; then
-  LIVEKIT_TURN_DOMAIN_NAME=$(/usr/local/bin/store_secret.sh save LIVEKIT-TURN-DOMAIN-NAME "${TURN_DOMAIN_NAME_SSLIP_IO}")
-  COMMON_ARGS+=(
-    "--turn-domain-name=$LIVEKIT_TURN_DOMAIN_NAME"
-  )
-fi
-
 # Certificate arguments
 if [[ "${certificateType}" == "selfsigned" ]]; then
   CERT_ARGS=(
@@ -304,18 +278,6 @@ else
     "--owncert-public-key=$OWN_CERT_CRT"
     "--owncert-private-key=$OWN_CERT_KEY"
   )
-
-  # Turn with TLS and own certificate
-  if [[ "${turnDomainName}" != '' ]]; then
-    # Use base64 encoded certificates directly
-    OWN_CERT_CRT_TURN=${turnOwnPublicCertificate}
-    OWN_CERT_KEY_TURN=${turnOwnPrivateCertificate}
-
-    CERT_ARGS+=(
-      "--turn-owncert-private-key=$OWN_CERT_KEY_TURN"
-      "--turn-owncert-public-key=$OWN_CERT_CRT_TURN"
-    )
-  fi
 fi
 
 # Construct the final command with all arguments
@@ -372,12 +334,6 @@ if [[ -n "$DOMAIN" ]]; then
     sed -i "s/DOMAIN_NAME=.*/DOMAIN_NAME=$DOMAIN/" "${CONFIG_DIR}/openvidu.env"
 else
     exit 1
-fi
-
-# Replace LIVEKIT_TURN_DOMAIN_NAME
-export LIVEKIT_TURN_DOMAIN_NAME=$(az keyvault secret show --vault-name ${keyVaultName} --name LIVEKIT-TURN-DOMAIN-NAME --query value -o tsv)
-if [[ -n "$LIVEKIT_TURN_DOMAIN_NAME" ]]; then
-    sed -i "s/LIVEKIT_TURN_DOMAIN_NAME=.*/LIVEKIT_TURN_DOMAIN_NAME=$LIVEKIT_TURN_DOMAIN_NAME/" "${CONFIG_DIR}/openvidu.env"
 fi
 
 # Get the rest of the values
@@ -452,7 +408,6 @@ CONFIG_DIR="${INSTALL_DIR}/config"
 # Get current values of the config
 REDIS_PASSWORD="$(/usr/local/bin/get_value_from_config.sh REDIS_PASSWORD "${CONFIG_DIR}/openvidu.env")"
 DOMAIN_NAME="$(/usr/local/bin/get_value_from_config.sh DOMAIN_NAME "${CONFIG_DIR}/openvidu.env")"
-LIVEKIT_TURN_DOMAIN_NAME="$(/usr/local/bin/get_value_from_config.sh LIVEKIT_TURN_DOMAIN_NAME "${CONFIG_DIR}/openvidu.env")"
 MONGO_ADMIN_USERNAME="$(/usr/local/bin/get_value_from_config.sh MONGO_ADMIN_USERNAME "${CONFIG_DIR}/openvidu.env")"
 MONGO_ADMIN_PASSWORD="$(/usr/local/bin/get_value_from_config.sh MONGO_ADMIN_PASSWORD "${CONFIG_DIR}/openvidu.env")"
 MONGO_REPLICA_SET_KEY="$(/usr/local/bin/get_value_from_config.sh MONGO_REPLICA_SET_KEY "${CONFIG_DIR}/openvidu.env")"
@@ -475,7 +430,6 @@ ENABLED_MODULES="$(/usr/local/bin/get_value_from_config.sh ENABLED_MODULES "${CO
 # Update shared secret
 az keyvault secret set --vault-name ${keyVaultName} --name REDIS-PASSWORD --value $REDIS_PASSWORD
 az keyvault secret set --vault-name ${keyVaultName} --name DOMAIN-NAME --value $DOMAIN_NAME
-az keyvault secret set --vault-name ${keyVaultName} --name LIVEKIT-TURN-DOMAIN-NAME --value $LIVEKIT_TURN_DOMAIN_NAME
 az keyvault secret set --vault-name ${keyVaultName} --name MONGO-ADMIN-USERNAME --value $MONGO_ADMIN_USERNAME
 az keyvault secret set --vault-name ${keyVaultName} --name MONGO-ADMIN-PASSWORD --value $MONGO_ADMIN_PASSWORD
 az keyvault secret set --vault-name ${keyVaultName} --name MONGO-REPLICA-SET-KEY --value $MONGO_REPLICA_SET_KEY

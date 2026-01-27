@@ -381,70 +381,6 @@
                             "visible": true
                         }
                     ]
-                },
-                {
-                    "name": "parameters TURN",
-                    "label": "(Optional) TURN server configuration with TLS",
-                    "elements": [
-                        {
-                            "name": "turnDomainName",
-                            "type": "Microsoft.Common.TextBox",
-                            "label": "Turn Domain Name",
-                            "subLabel": "\n(Optional) Domain name for the TURN server with TLS. Only needed if your users are behind restrictive firewalls",
-                            "defaultValue": "",
-                            "toolTip": "",
-                            "constraints": {
-                                "required": false,
-                                "regex": "",
-                                "validationMessage": "",
-                                "validations": []
-                            },
-                            "infoMessages": [],
-                            "visible": true
-                        },
-                        {
-                            "name": "turnOwnPublicCertificate",
-                            "type": "Microsoft.Common.TextBox",
-                            "label": "Turn Own Public Certificate",
-                            "subLabel": "\n(Optional) This setting is applicable if the certificate type is set to 'owncert' and the TurnDomainName is specified. Provide in base64 format.",
-                            "defaultValue": "",
-                            "toolTip": "",
-                            "constraints": {
-                                "required": false,
-                                "regex": "",
-                                "validationMessage": "",
-                                "validations": [
-                                    {
-                                        "isValid": "[if(and(equals(steps('parameters SSL').certificateType, 'owncert'), not(empty(steps('parameters TURN').turnDomainName))), not(empty(steps('parameters TURN').turnOwnPublicCertificate)), true)]",
-                                        "message": "You need to fill this parameter because you've selected owncert certificate type and you've filled Turn Domain Name."
-                                    }
-                                ]
-                            },
-                            "infoMessages": [],
-                            "visible": true
-                        },
-                        {
-                            "name": "turnOwnPrivateCertificate",
-                            "type": "Microsoft.Common.TextBox",
-                            "label": "Turn Own Private Certificate",
-                            "subLabel": "\n(Optional) This setting is applicable if the certificate type is set to 'owncert' and the TurnDomainName is specified. Provide in base64 format.",
-                            "defaultValue": "",
-                            "toolTip": "",
-                            "constraints": {
-                                "required": false,
-                                "regex": "",
-                                "validationMessage": "",
-                                "validations": [
-                                    {
-                                        "isValid": "[if(and(equals(steps('parameters SSL').certificateType, 'owncert'), not(empty(steps('parameters TURN').turnDomainName))), not(empty(steps('parameters TURN').turnOwnPrivateCertificate)), true)]",
-                                        "message": "You need to fill this parameter because you've selected owncert certificate type and you've filled Turn Domain Name."
-                                    }
-                                ]
-                            },
-                            "infoMessages": [],
-                            "visible": true
-                        }
-                    ]
                 }
             ]
         },
@@ -461,9 +397,6 @@
                 "ownPrivateCertificate": "[steps('parameters SSL').ownPrivateCertificate]",
                 "openviduLicense": "[steps('parameters OPENVIDU').openviduLicense]",
                 "rtcEngine": "[steps('parameters OPENVIDU').rtcEngine]",
-                "turnDomainName": "[steps('parameters TURN').turnDomainName]",
-                "turnOwnPublicCertificate": "[steps('parameters TURN').turnOwnPublicCertificate]",
-                "turnOwnPrivateCertificate": "[steps('parameters TURN').turnOwnPrivateCertificate]",
                 "initialMeetAdminPassword": "[steps('parameters MEET').initialMeetAdminPassword]",
                 "initialMeetApiKey": "[steps('parameters MEET').initialMeetApiKey]",
                 "instanceType": "[steps('parameters INSTANCE').instanceType]",

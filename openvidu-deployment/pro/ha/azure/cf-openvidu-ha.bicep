@@ -25,15 +25,6 @@ param ownPrivateCertificate string = ''
 @description('Name of the PublicIPAddress resource in Azure when using certificateType \'owncert\' or \'letsencrypt\'')
 param publicIpAddressObject object
 
-@description('(Optional) Domain name for the TURN server with TLS. Only needed if your users are behind restrictive firewalls')
-param turnDomainName string = ''
-
-@description('(Optional) This setting is applicable if the certificate type is set to \'owncert\' and the TurnDomainName is specified. Provide in base64 format.')
-param turnOwnPublicCertificate string = ''
-
-@description('(Optional) This setting is applicable if the certificate type is set to \'owncert\' and the TurnDomainName is specified. Provide in base64 format.')
-param turnOwnPrivateCertificate string = ''
-
 @description('Visit https://openvidu.io/account')
 @secure()
 param openviduLicense string
@@ -145,8 +136,6 @@ var mediaNodeVMSettings = {
   }
 }
 
-var turnTLSIsEnabled = turnDomainName != ''
-
 var keyVaultName = '${stackName}-keyvault'
 
 var location = resourceGroup().location
@@ -226,12 +215,9 @@ resource openviduSharedInfo 'Microsoft.KeyVault/vaults@2023-07-01' = {
 var stringInterpolationParamsMaster1 = {
   publicIPId: publicIPId
   domainName: domainName
-  turnDomainName: turnDomainName
   certificateType: certificateType
   ownPublicCertificate: ownPublicCertificate
   ownPrivateCertificate: ownPrivateCertificate
-  turnOwnPublicCertificate: turnOwnPublicCertificate
-  turnOwnPrivateCertificate: turnOwnPrivateCertificate
   openviduLicense: openviduLicense
   rtcEngine: rtcEngine
   initialMeetAdminPassword: initialMeetAdminPassword
@@ -244,12 +230,9 @@ var stringInterpolationParamsMaster1 = {
 var stringInterpolationParamsMaster2 = {
   publicIPId: publicIPId
   domainName: domainName
-  turnDomainName: turnDomainName
   certificateType: certificateType
   ownPublicCertificate: ownPublicCertificate
   ownPrivateCertificate: ownPrivateCertificate
-  turnOwnPublicCertificate: turnOwnPublicCertificate
-  turnOwnPrivateCertificate: turnOwnPrivateCertificate
   openviduLicense: openviduLicense
   rtcEngine: rtcEngine
   initialMeetAdminPassword: initialMeetAdminPassword
@@ -262,12 +245,9 @@ var stringInterpolationParamsMaster2 = {
 var stringInterpolationParamsMaster3 = {
   publicIPId: publicIPId
   domainName: domainName
-  turnDomainName: turnDomainName
   certificateType: certificateType
   ownPublicCertificate: ownPublicCertificate
   ownPrivateCertificate: ownPrivateCertificate
-  turnOwnPublicCertificate: turnOwnPublicCertificate
-  turnOwnPrivateCertificate: turnOwnPrivateCertificate
   openviduLicense: openviduLicense
   rtcEngine: rtcEngine
   initialMeetAdminPassword: initialMeetAdminPassword
@@ -280,12 +260,9 @@ var stringInterpolationParamsMaster3 = {
 var stringInterpolationParamsMaster4 = {
   publicIPId: publicIPId
   domainName: domainName
-  turnDomainName: turnDomainName
   certificateType: certificateType
   ownPublicCertificate: ownPublicCertificate
   ownPrivateCertificate: ownPrivateCertificate
-  turnOwnPublicCertificate: turnOwnPublicCertificate
-  turnOwnPrivateCertificate: turnOwnPrivateCertificate
   openviduLicense: openviduLicense
   rtcEngine: rtcEngine
   initialMeetAdminPassword: initialMeetAdminPassword
@@ -361,7 +338,6 @@ if [[ $MASTER_NODE_NUM -eq 1 ]] && [[ "$ALL_SECRETS_GENERATED" == "" || "$ALL_SE
 
     RANDOM_DOMAIN_STRING=$(tr -dc 'a-z' < /dev/urandom | head -c 8)
     DOMAIN="openvidu-$RANDOM_DOMAIN_STRING-$(echo "$PUBLIC_IP" | tr '.' '-').sslip.io"
-    TURN_DOMAIN_NAME_SSLIP_IO="turn-$RANDOM_DOMAIN_STRING-$(echo "$PUBLIC_IP" | tr '.' '-').sslip.io"
   else
     DOMAIN=${domainName}
   fi
@@ -378,16 +354,6 @@ if [[ $MASTER_NODE_NUM -eq 1 ]] && [[ "$ALL_SECRETS_GENERATED" == "" || "$ALL_SE
     MEET_INITIAL_API_KEY="$(/usr/local/bin/store_secret.sh save MEET-INITIAL-API-KEY "${initialMeetApiKey}")"
   else
     MEET_INITIAL_API_KEY="$(/usr/local/bin/store_secret.sh save MEET-INITIAL-API-KEY "")"
-  fi
-
-  # Configure TURN server domain name
-  if [[ -n "${turnDomainName}" ]]; then
-    LIVEKIT_TURN_DOMAIN_NAME="$(/usr/local/bin/store_secret.sh save LIVEKIT-TURN-DOMAIN-NAME "${turnDomainName}")"
-  elif [[ "${TURN_DOMAIN_NAME_SSLIP_IO}" != '' ]]; then
-    LIVEKIT_TURN_DOMAIN_NAME=$(/usr/local/bin/store_secret.sh save LIVEKIT-TURN-DOMAIN-NAME "${TURN_DOMAIN_NAME_SSLIP_IO}")
-    COMMON_ARGS+=(
-      "--turn-domain-name=$LIVEKIT_TURN_DOMAIN_NAME"
-    )
   fi
 
   # Store usernames and generate random passwords
@@ -435,9 +401,6 @@ MASTER_NODE_4_PRIVATE_IP=$(az keyvault secret show --vault-name ${keyVaultName} 
 MASTER_NODE_PRIVATE_IP_LIST="$MASTER_NODE_1_PRIVATE_IP,$MASTER_NODE_2_PRIVATE_IP,$MASTER_NODE_3_PRIVATE_IP,$MASTER_NODE_4_PRIVATE_IP"
 
 DOMAIN=$(az keyvault secret show --vault-name ${keyVaultName} --name DOMAIN-NAME --query value -o tsv)
-if [[ -n "${turnDomainName}" ]]; then
-  LIVEKIT_TURN_DOMAIN_NAME=$(az keyvault secret show --vault-name ${keyVaultName} --name LIVEKIT-TURN-DOMAIN-NAME --query value -o tsv)
-fi
 OPENVIDU_RTC_ENGINE=$(az keyvault secret show --vault-name ${keyVaultName} --name OPENVIDU-RTC-ENGINE --query value -o tsv)
 OPENVIDU_PRO_LICENSE=$(az keyvault secret show --vault-name ${keyVaultName} --name OPENVIDU-PRO-LICENSE --query value -o tsv)
 REDIS_PASSWORD=$(az keyvault secret show --vault-name ${keyVaultName} --name REDIS-PASSWORD --query value -o tsv)
@@ -507,10 +470,6 @@ if [[ "${additionalInstallFlags}" != "" ]]; then
   done
 fi
 
-if [[ $LIVEKIT_TURN_DOMAIN_NAME != "" ]]; then
-  COMMON_ARGS+=("--turn-domain-name=$LIVEKIT_TURN_DOMAIN_NAME")
-fi
-
 # Certificate arguments
 if [[ "${certificateType}" == "selfsigned" ]]; then
   CERT_ARGS=(
@@ -530,18 +489,6 @@ else
     "--owncert-public-key=$OWN_CERT_CRT"
     "--owncert-private-key=$OWN_CERT_KEY"
   )
-
-  # Turn with TLS and own certificate
-  if [[ "${turnDomainName}" != '' ]]; then
-    # Use base64 encoded certificates directly
-    OWN_CERT_CRT_TURN=${turnOwnPublicCertificate}
-    OWN_CERT_KEY_TURN=${turnOwnPrivateCertificate}
-
-    CERT_ARGS+=(
-      "--turn-owncert-private-key=$OWN_CERT_KEY_TURN"
-      "--turn-owncert-public-key=$OWN_CERT_CRT_TURN"
-    )
-  fi
 fi
 
 # Construct the final command
@@ -592,12 +539,6 @@ if [[ -n "$DOMAIN" ]]; then
     sed -i "s/DOMAIN_NAME=.*/DOMAIN_NAME=$DOMAIN/" "${CLUSTER_CONFIG_DIR}/openvidu.env"
 else
     exit 1
-fi
-
-# Replace LIVEKIT_TURN_DOMAIN_NAME
-export LIVEKIT_TURN_DOMAIN_NAME=$(az keyvault secret show --vault-name ${keyVaultName} --name LIVEKIT-TURN-DOMAIN-NAME --query value -o tsv)
-if [[ -n "$LIVEKIT_TURN_DOMAIN_NAME" ]]; then
-    sed -i "s/LIVEKIT_TURN_DOMAIN_NAME=.*/LIVEKIT_TURN_DOMAIN_NAME=$LIVEKIT_TURN_DOMAIN_NAME/" "${CLUSTER_CONFIG_DIR}/openvidu.env"
 fi
 
 # Get the rest of the values
@@ -670,7 +611,6 @@ MASTER_NODE_CONFIG_DIR="${INSTALL_DIR}/config/node"
 # Get current values of the config
 REDIS_PASSWORD="$(/usr/local/bin/get_value_from_config.sh REDIS_PASSWORD "${MASTER_NODE_CONFIG_DIR}/master_node.env")"
 DOMAIN_NAME="$(/usr/local/bin/get_value_from_config.sh DOMAIN_NAME "${CLUSTER_CONFIG_DIR}/openvidu.env")"
-LIVEKIT_TURN_DOMAIN_NAME="$(/usr/local/bin/get_value_from_config.sh LIVEKIT_TURN_DOMAIN_NAME "${CLUSTER_CONFIG_DIR}/openvidu.env")"
 OPENVIDU_RTC_ENGINE="$(/usr/local/bin/get_value_from_config.sh OPENVIDU_RTC_ENGINE "${CLUSTER_CONFIG_DIR}/openvidu.env")"
 OPENVIDU_PRO_LICENSE="$(/usr/local/bin/get_value_from_config.sh OPENVIDU_PRO_LICENSE "${CLUSTER_CONFIG_DIR}/openvidu.env")"
 MONGO_ADMIN_USERNAME="$(/usr/local/bin/get_value_from_config.sh MONGO_ADMIN_USERNAME "${CLUSTER_CONFIG_DIR}/openvidu.env")"
@@ -694,7 +634,6 @@ ENABLED_MODULES="$(/usr/local/bin/get_value_from_config.sh ENABLED_MODULES "${CL
 # Update shared secret
 az keyvault secret set --vault-name ${keyVaultName} --name REDIS-PASSWORD --value $REDIS_PASSWORD
 az keyvault secret set --vault-name ${keyVaultName} --name DOMAIN-NAME --value $DOMAIN_NAME
-az keyvault secret set --vault-name ${keyVaultName} --name LIVEKIT-TURN-DOMAIN-NAME --value $LIVEKIT_TURN_DOMAIN_NAME
 az keyvault secret set --vault-name ${keyVaultName} --name OPENVIDU-RTC-ENGINE --value $OPENVIDU_RTC_ENGINE
 az keyvault secret set --vault-name ${keyVaultName} --name OPENVIDU-PRO-LICENSE --value $OPENVIDU_PRO_LICENSE
 az keyvault secret set --vault-name ${keyVaultName} --name MONGO-ADMIN-USERNAME --value $MONGO_ADMIN_USERNAME
@@ -2784,44 +2723,6 @@ resource loadBalancerToMediaHealthcheckIngress 'Microsoft.Network/networkSecurit
   }
 }
 
-resource loadBalancerToMediaTurnTlsIngress 'Microsoft.Network/networkSecurityGroups/securityRules@2023-11-01' = if (turnTLSIsEnabled == true) {
-  parent: openviduMediaNodeNSG
-  name: 'loadbalancer_to_mediaNode_TURN_TLS_INGRESS'
-  properties: {
-    protocol: 'Tcp'
-    sourceAddressPrefix: 'AzureLoadBalancer'
-    sourcePortRange: '*'
-    destinationApplicationSecurityGroups: [
-      {
-        id: openviduMediaNodeASG.id
-      }
-    ]
-    destinationPortRange: '5349'
-    access: 'Allow'
-    priority: 180
-    direction: 'Inbound'
-  }
-}
-
-resource loadBalancerToMediaTurnTlsHealthCheckIngress 'Microsoft.Network/networkSecurityGroups/securityRules@2023-11-01' = if (turnTLSIsEnabled == true) {
-  parent: openviduMediaNodeNSG
-  name: 'masterNode_to_mediaNode_TURN_TLSHEALTHCHECK_INGRESS'
-  properties: {
-    protocol: 'Tcp'
-    sourceAddressPrefix: 'AzureLoadBalancer'
-    sourcePortRange: '*'
-    destinationApplicationSecurityGroups: [
-      {
-        id: openviduMediaNodeASG.id
-      }
-    ]
-    destinationPortRange: '7880'
-    access: 'Allow'
-    priority: 190
-    direction: 'Inbound'
-  }
-}
-
 resource masterToMediaServerIngress 'Microsoft.Network/networkSecurityGroups/securityRules@2023-11-01' = {
   parent: openviduMediaNodeNSG
   name: 'masterNode_to_mediaNode_SERVER_INGRESS'
@@ -2864,6 +2765,29 @@ resource masterToMediaClientIngress 'Microsoft.Network/networkSecurityGroups/sec
     destinationPortRange: '8080'
     access: 'Allow'
     priority: 210
+    direction: 'Inbound'
+  }
+}
+
+resource masterToMediaTurnTlsIngress 'Microsoft.Network/networkSecurityGroups/securityRules@2023-11-01' = {
+  parent: openviduMediaNodeNSG
+  name: 'masterNode_to_mediaNode_TURN_TLS_INGRESS'
+  properties: {
+    protocol: 'Tcp'
+    sourceApplicationSecurityGroups: [
+      {
+        id: openviduMasterNodeASG.id
+      }
+    ]
+    sourcePortRange: '*'
+    destinationApplicationSecurityGroups: [
+      {
+        id: openviduMediaNodeASG.id
+      }
+    ]
+    destinationPortRange: '5349'
+    access: 'Allow'
+    priority: 220
     direction: 'Inbound'
   }
 }
