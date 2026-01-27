@@ -9,18 +9,17 @@ import {
 	OnInit,
 	Output
 } from '@angular/core';
-import { animate, state, style, transition, trigger } from '@angular/animations';
+import { LocalTrack, Track } from 'livekit-client';
 import { filter, Subject, take, takeUntil } from 'rxjs';
+import { CustomDevice } from '../../models/device.model';
+import { LangOption } from '../../models/lang.model';
 import { ILogger } from '../../models/logger.model';
 import { CdkOverlayService } from '../../services/cdk-overlay/cdk-overlay.service';
 import { OpenViduComponentsConfigService } from '../../services/config/directive-config.service';
 import { LoggerService } from '../../services/logger/logger.service';
 import { OpenViduService } from '../../services/openvidu/openvidu.service';
-import { ViewportService } from '../../services/viewport/viewport.service';
 import { TranslateService } from '../../services/translate/translate.service';
-import { LocalTrack, Track } from 'livekit-client';
-import { CustomDevice } from '../../models/device.model';
-import { LangOption } from '../../models/lang.model';
+import { ViewportService } from '../../services/viewport/viewport.service';
 
 /**
  * @internal
@@ -30,38 +29,7 @@ import { LangOption } from '../../models/lang.model';
 	templateUrl: './pre-join.component.html',
 	styleUrls: ['./pre-join.component.scss'],
 	changeDetection: ChangeDetectionStrategy.OnPush,
-	standalone: false,
-	animations: [
-		trigger('containerResize', [
-			state(
-				'normal',
-				style({
-					height: '*'
-				})
-			),
-			state(
-				'compact',
-				style({
-					height: '300px'
-				})
-			),
-			transition('normal => compact', [animate('250ms cubic-bezier(0.25, 0.8, 0.25, 1)')]),
-			transition('compact => normal', [animate('350ms cubic-bezier(0.25, 0.8, 0.25, 1)')])
-		]),
-		trigger('slideInOut', [
-			transition(':enter', [
-				style({
-					opacity: 0
-				}),
-				animate(
-					'300ms cubic-bezier(0.34, 1.56, 0.64, 1)',
-					style({
-						opacity: 1
-					})
-				)
-			])
-		])
-	]
+	standalone: false
 })
 export class PreJoinComponent implements OnInit, OnDestroy {
 	@Input() set error(error: { name: string; message: string } | undefined) {

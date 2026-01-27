@@ -25,7 +25,7 @@
 				<div class="prejoin-main">
 					<!-- Video Preview Section -->
 					<div class="video-preview-section">
-						<div class="video-preview-container" [@containerResize]="showBackgroundPanel ? 'compact' : 'normal'">
+					<div class="video-preview-container" [class.compact]="showBackgroundPanel">
 							<div class="video-frame">
 								<ov-media-element
 									[track]="videoTrack"
