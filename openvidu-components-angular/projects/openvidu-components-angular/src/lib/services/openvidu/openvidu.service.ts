@@ -421,9 +421,12 @@ export class OpenViduService {
 
 		// Video device
 		if (videoDeviceId === true) {
-			options.video = this.deviceService.hasVideoDeviceAvailable()
-				? { deviceId: this.deviceService.getCameraSelected()?.device || 'default' }
-				: false;
+			if (this.deviceService.hasVideoDeviceAvailable()) {
+				const selectedCamera = this.deviceService.getCameraSelected();
+				options.video = { deviceId: selectedCamera?.device || 'default' };
+			} else {
+				options.video = false;
+			}
 		} else if (videoDeviceId === false) {
 			options.video = false;
 		} else {
@@ -433,8 +436,8 @@ export class OpenViduService {
 		// Audio device
 		if (audioDeviceId === true) {
 			if (this.deviceService.hasAudioDeviceAvailable()) {
-				audioDeviceId = this.deviceService.getMicrophoneSelected()?.device || 'default';
-				(options.audio as AudioCaptureOptions).deviceId = audioDeviceId;
+				const selectedMic = this.deviceService.getMicrophoneSelected();
+				(options.audio as AudioCaptureOptions).deviceId = selectedMic?.device || 'default';
 			} else {
 				options.audio = false;
 			}

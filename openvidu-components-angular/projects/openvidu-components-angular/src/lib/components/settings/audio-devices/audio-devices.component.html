@@ -1,18 +1,18 @@
 <div class="audio-device-selector" [class.compact]="compact">
 	<!-- Unified Device Button (Compact Mode) -->
 	@if (compact) {
-		@if (hasAudioDevices) {
+		@if (hasAudioDevices()) {
 			<div class="unified-device-button">
 				<!-- Main toggle button -->
 				<button
 					mat-flat-button
 					class="toggle-section"
-					[disabled]="!hasAudioDevices || microphoneStatusChanging"
-					[class.device-enabled]="isMicrophoneEnabled"
-					[class.device-disabled]="!isMicrophoneEnabled"
-					(click)="toggleMic($event)"
-					[matTooltip]="isMicrophoneEnabled ? ('TOOLBAR.MUTE_AUDIO' | translate) : ('TOOLBAR.UNMUTE_AUDIO' | translate)"
-					[matTooltipDisabled]="!hasAudioDevices"
+				[disabled]="!hasAudioDevices() || microphoneStatusChanging"
+				[class.device-enabled]="isMicrophoneEnabled"
+				[class.device-disabled]="!isMicrophoneEnabled"
+				(click)="toggleMic($event)"
+				[matTooltip]="isMicrophoneEnabled ? ('TOOLBAR.MUTE_AUDIO' | translate) : ('TOOLBAR.UNMUTE_AUDIO' | translate)"
+				[matTooltipDisabled]="!hasAudioDevices()"
 					id="microphone-button"
 				>
 					<mat-icon [id]="isMicrophoneEnabled ? 'mic' : 'mic_off'">{{ isMicrophoneEnabled ? 'mic' : 'mic_off' }}</mat-icon>
@@ -42,7 +42,7 @@
 		<!-- Normal Mode - Input Style Selector -->
 		<div class="normal-device-selector">
 			<!-- Input-style Device Selector -->
-			<div class="device-input-selector" [class.disabled]="!hasAudioDevices || !isMicrophoneEnabled">
+			<div class="device-input-selector" [class.disabled]="!hasAudioDevices() || !isMicrophoneEnabled">
 				<!-- When microphone is enabled -->
 				@if (isMicrophoneEnabled) {
 					<div class="device-input-selector">
@@ -50,23 +50,23 @@
 							mat-flat-button
 							id="audio-dropdown"
 							class="selector-button"
-							[disabled]="microphoneStatusChanging || microphones.length <= 1"
-							[matMenuTriggerFor]="microphoneMenu"
-							[attr.aria-expanded]="false"
-						>
-							<mat-icon class="device-icon">mic</mat-icon>
-							<span class="selected-device-name">{{ microphoneSelected?.label || 'No microphone selected' }}</span>
-							<mat-icon class="dropdown-icon" *ngIf="microphones.length > 1">expand_more</mat-icon>
+						[disabled]="microphoneStatusChanging || microphones().length <= 1"
+						[matMenuTriggerFor]="microphoneMenu"
+						[attr.aria-expanded]="false"
+					>
+						<mat-icon class="device-icon">mic</mat-icon>
+						<span class="selected-device-name">{{ microphoneSelected()?.label || 'No microphone selected' }}</span>
+						<mat-icon class="dropdown-icon" *ngIf="microphones().length > 1">expand_more</mat-icon>
 						</button>
 					</div>
 				} @else {
-					@if (hasAudioDevices) {
+					@if (hasAudioDevices()) {
 						<!-- When microphone is disabled -->
 						<div class="device-input-selector disabled">
 							<div class="selector-button disabled">
 								<mat-icon class="device-icon">mic_off</mat-icon>
 								<span class="selected-device-name">
-									{{ !hasAudioDevices ? ('PREJOIN.NO_AUDIO_DEVICE' | translate) : 'Microphone disabled' }}
+								{{ !hasAudioDevices() ? ('PREJOIN.NO_AUDIO_DEVICE' | translate) : 'Microphone disabled' }}
 								</span>
 							</div>
 						</div>
@@ -84,14 +84,14 @@
 
 	<!-- Device Selection Menu (Shared) -->
 	<mat-menu #microphoneMenu="matMenu" class="device-menu">
-		@for (microphone of microphones; track microphone.device) {
+		@for (microphone of microphones(); track microphone.device) {
 			<button
 				mat-menu-item
 				id="option-{{ microphone.label }}"
 				(click)="onMicrophoneSelected({ value: microphone })"
-				[class.selected]="microphone.device === microphoneSelected.device"
+				[class.selected]="microphone.device === microphoneSelected()?.device"
 			>
-				<mat-icon *ngIf="microphone.device === microphoneSelected.device">check</mat-icon>
+				<mat-icon *ngIf="microphone.device === microphoneSelected()?.device">check</mat-icon>
 				<span>{{ microphone.label }}</span>
 			</button>
 		}

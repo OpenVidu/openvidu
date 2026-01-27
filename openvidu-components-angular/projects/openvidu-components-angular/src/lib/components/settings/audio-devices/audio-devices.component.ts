@@ -1,8 +1,6 @@
-import { Component, EventEmitter, Input, OnDestroy, OnInit, Output } from '@angular/core';
-import { Subscription } from 'rxjs';
+import { Component, effect, EventEmitter, Input, OnInit, Output, Signal, WritableSignal } from '@angular/core';
 import { CustomDevice } from '../../../models/device.model';
 import { ILogger } from '../../../models/logger.model';
-import { ParticipantModel } from '../../../models/participant.model';
 import { DeviceService } from '../../../services/device/device.service';
 import { LoggerService } from '../../../services/logger/logger.service';
 import { ParticipantService } from '../../../services/participant/participant.service';
@@ -17,18 +15,19 @@ import { StorageService } from '../../../services/storage/storage.service';
 	styleUrls: ['./audio-devices.component.scss'],
 	standalone: false
 })
-export class AudioDevicesComponent implements OnInit, OnDestroy {
+export class AudioDevicesComponent implements OnInit {
 	@Input() compact: boolean = false;
 	@Output() onAudioDeviceChanged = new EventEmitter<CustomDevice>();
 	@Output() onAudioEnabledChanged = new EventEmitter<boolean>();
 
-	microphoneStatusChanging: boolean;
-	hasAudioDevices: boolean;
-	isMicrophoneEnabled: boolean;
-	microphoneSelected: CustomDevice | undefined;
-	microphones: CustomDevice[] = [];
-	private localParticipantSubscription: Subscription;
+	microphoneStatusChanging: boolean = false;
+	isMicrophoneEnabled: boolean = false;
 	private log: ILogger;
+
+	// Expose signals directly from service (reactive)
+	protected readonly microphones: WritableSignal<CustomDevice[]>;
+	protected readonly microphoneSelected: WritableSignal<CustomDevice | undefined>;
+	protected readonly hasAudioDevices: Signal<boolean>;
 
 	constructor(
 		private deviceSrv: DeviceService,
@@ -37,22 +36,22 @@ export class AudioDevicesComponent implements OnInit, OnDestroy {
 		private loggerSrv: LoggerService
 	) {
 		this.log = this.loggerSrv.get('AudioDevicesComponent');
+		this.microphones = this.deviceSrv.microphones;
+		this.microphoneSelected = this.deviceSrv.microphoneSelected;
+		this.hasAudioDevices = this.deviceSrv.hasAudioDevices;
+
+		// Use effect instead of subscription for reactive updates
+		effect(() => {
+			const participant = this.participantService.localParticipantSignal();
+			if (participant) {
+				this.isMicrophoneEnabled = participant.isMicrophoneEnabled;
+				this.storageSrv.setMicrophoneEnabled(this.isMicrophoneEnabled);
+			}
+		});
 	}
 
 	async ngOnInit() {
-		this.subscribeToParticipantMediaProperties();
-		this.hasAudioDevices = this.deviceSrv.hasAudioDeviceAvailable();
-		if (this.hasAudioDevices) {
-			this.microphones = this.deviceSrv.getMicrophones();
-			this.microphoneSelected = this.deviceSrv.getMicrophoneSelected();
-		}
-
 		this.isMicrophoneEnabled = this.participantService.isMyMicrophoneEnabled();
-	}
-
-	ngOnDestroy() {
-		this.microphones = [];
-		if (this.localParticipantSubscription) this.localParticipantSubscription.unsubscribe();
 	}
 
 	async toggleMic(event: any) {
@@ -72,8 +71,7 @@ export class AudioDevicesComponent implements OnInit, OnDestroy {
 				this.microphoneStatusChanging = true;
 				await this.participantService.switchMicrophone(device.device);
 				this.deviceSrv.setMicSelected(device.device);
-				this.microphoneSelected = this.deviceSrv.getMicrophoneSelected();
-				this.onAudioDeviceChanged.emit(this.microphoneSelected);
+				this.onAudioDeviceChanged.emit(this.microphoneSelected());
 			}
 		} catch (error) {
 			this.log.e('Error switching microphone', error);
@@ -88,18 +86,5 @@ export class AudioDevicesComponent implements OnInit, OnDestroy {
 	 */
 	compareObjectDevices(o1: CustomDevice, o2: CustomDevice): boolean {
 		return o1.label === o2.label;
-	}
-
-	/**
-	 * This subscription is necessary to update the microphone status when the user changes it from toolbar and
-	 * the settings panel is opened. With this, the microphone status is updated in the settings panel.
-	 */
-	private subscribeToParticipantMediaProperties() {
-		this.localParticipantSubscription = this.participantService.localParticipant$.subscribe((p: ParticipantModel | undefined) => {
-			if (p) {
-				this.isMicrophoneEnabled = p.isMicrophoneEnabled;
-				this.storageSrv.setMicrophoneEnabled(this.isMicrophoneEnabled);
-			}
-		});
 	}
 }

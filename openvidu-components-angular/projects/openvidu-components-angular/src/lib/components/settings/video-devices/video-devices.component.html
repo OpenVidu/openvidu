@@ -1,18 +1,18 @@
 <div class="video-device-selector" [class.compact]="compact">
 	<!-- Unified Device Button (Compact Mode) -->
 	@if (compact) {
-		@if (hasVideoDevices) {
+		@if (hasVideoDevices()) {
 			<div class="unified-device-button">
 				<!-- Main toggle button -->
 				<button
 					mat-flat-button
 					class="toggle-section"
-					[disabled]="!hasVideoDevices || cameraStatusChanging"
-					[class.device-enabled]="isCameraEnabled"
-					[class.device-disabled]="!isCameraEnabled"
-					(click)="toggleCam($event)"
-					[matTooltip]="isCameraEnabled ? ('TOOLBAR.STOP_VIDEO' | translate) : ('TOOLBAR.START_VIDEO' | translate)"
-					[matTooltipDisabled]="!hasVideoDevices"
+				[disabled]="!hasVideoDevices() || cameraStatusChanging"
+				[class.device-enabled]="isCameraEnabled"
+				[class.device-disabled]="!isCameraEnabled"
+				(click)="toggleCam($event)"
+				[matTooltip]="isCameraEnabled ? ('TOOLBAR.STOP_VIDEO' | translate) : ('TOOLBAR.START_VIDEO' | translate)"
+				[matTooltipDisabled]="!hasVideoDevices()"
 					id="camera-button"
 				>
 					<mat-icon [id]="isCameraEnabled ? 'videocam' : 'videocam_off'">
@@ -51,15 +51,15 @@
 						id="video-dropdown"
 						class="selector-button"
 						[matMenuTriggerFor]="cameraMenu"
-						[disabled]="cameraStatusChanging || cameras.length <= 1"
+						[disabled]="cameraStatusChanging || cameras().length <= 1"
 					>
 						<mat-icon class="device-icon">videocam</mat-icon>
-						<span class="selected-device-name">{{ cameraSelected?.label || 'No camera selected' }}</span>
-						<mat-icon class="dropdown-icon" *ngIf="cameras.length > 1">expand_more</mat-icon>
+						<span class="selected-device-name">{{ cameraSelected()?.label || 'No camera selected' }}</span>
+						<mat-icon class="dropdown-icon" *ngIf="cameras().length > 1">expand_more</mat-icon>
 					</button>
 				</div>
 			} @else {
-				@if (hasVideoDevices) {
+				@if (hasVideoDevices()) {
 					<!-- Disabled state message -->
 					<div class="device-input-selector disabled">
 						<div class="selector-button disabled">
@@ -80,14 +80,14 @@
 
 	<!-- Device Selection Menu (Shared) -->
 	<mat-menu #cameraMenu="matMenu" class="device-menu">
-		@for (camera of cameras; track camera.device) {
+		@for (camera of cameras(); track camera.device) {
 			<button
 				mat-menu-item
 				id="option-{{ camera.label }}"
 				(click)="onCameraSelected({ value: camera })"
-				[class.selected]="camera.device === cameraSelected?.device"
+				[class.selected]="camera.device === cameraSelected()?.device"
 			>
-				<mat-icon *ngIf="camera.device === cameraSelected?.device" class="check-icon">check</mat-icon>
+				<mat-icon *ngIf="camera.device === cameraSelected()?.device" class="check-icon">check</mat-icon>
 				<span>{{ camera.label }}</span>
 			</button>
 		}
