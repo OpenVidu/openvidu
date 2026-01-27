@@ -6,13 +6,13 @@ import { DeleteDialogComponent } from './components/dialogs/delete-recording.com
 import { DialogTemplateComponent } from './components/dialogs/dialog.component';
 import { RecordingDialogComponent } from './components/dialogs/recording-dialog.component';
 import { LayoutComponent } from './components/layout/layout.component';
+import { MediaElementComponent } from './components/media-element/media-element.component';
 import { ChatPanelComponent } from './components/panel/chat-panel/chat-panel.component';
 import { SessionComponent } from './components/session/session.component';
 import { StreamComponent } from './components/stream/stream.component';
-import { ToolbarComponent } from './components/toolbar/toolbar.component';
 import { ToolbarMediaButtonsComponent } from './components/toolbar/toolbar-media-buttons/toolbar-media-buttons.component';
 import { ToolbarPanelButtonsComponent } from './components/toolbar/toolbar-panel-buttons/toolbar-panel-buttons.component';
-import { MediaElementComponent } from './components/media-element/media-element.component';
+import { ToolbarComponent } from './components/toolbar/toolbar.component';
 
 import { LinkifyPipe } from './pipes/linkify.pipe';
 import { RemoteParticipantTracksPipe, TrackPublishedTypesPipe } from './pipes/participant.pipe';
@@ -39,15 +39,15 @@ import { BackgroundEffectsPanelComponent } from './components/panel/background-e
 import { SettingsPanelComponent } from './components/panel/settings-panel/settings-panel.component';
 import { AudioDevicesComponent } from './components/settings/audio-devices/audio-devices.component';
 // import { CaptionsSettingComponent } from './components/settings/captions/captions.component';
+import { LandscapeWarningComponent } from './components/landscape-warning/landscape-warning.component';
 import { LangSelectorComponent } from './components/settings/lang-selector/lang-selector.component';
 import { ParticipantNameInputComponent } from './components/settings/participant-name-input/participant-name-input.component';
+import { ThemeSelectorComponent } from './components/settings/theme-selector/theme-selector.component';
 import { VideoDevicesComponent } from './components/settings/video-devices/video-devices.component';
+import { VideoPosterComponent } from './components/video-poster/video-poster.component';
 import { ApiDirectiveModule } from './directives/api/api.directive.module';
 import { OpenViduComponentsDirectiveModule } from './directives/template/openvidu-components-angular.directive.module';
 import { AppMaterialModule } from './openvidu-components-angular.material.module';
-import { ThemeSelectorComponent } from './components/settings/theme-selector/theme-selector.component';
-import { LandscapeWarningComponent } from './components/landscape-warning/landscape-warning.component';
-import { VideoPosterComponent } from './components/video-poster/video-poster.component';
 
 const publicComponents = [
 	AdminDashboardComponent,

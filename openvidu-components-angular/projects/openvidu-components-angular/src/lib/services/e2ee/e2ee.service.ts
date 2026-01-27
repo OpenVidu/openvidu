@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
-import { OpenViduComponentsConfigService } from '../config/directive-config.service';
-import { Subject, takeUntil } from 'rxjs';
 import { createKeyMaterialFromString, deriveKeys } from 'livekit-client';
+import { Subject, takeUntil } from 'rxjs';
+import { OpenViduComponentsConfigService } from '../config/directive-config.service';
 
 /**
  * Independent E2EE Service for encrypting and decrypting text-based content
@@ -12,6 +12,7 @@ import { createKeyMaterialFromString, deriveKeys } from 'livekit-client';
  * - Uses deriveKeys from livekit-client for key derivation (HKDF)
  * - Uses Web Crypto API (AES-GCM) for actual encryption/decryption
  * - Generates random IV for each encryption operation
+ * @internal
  */
 @Injectable({
 	providedIn: 'root',

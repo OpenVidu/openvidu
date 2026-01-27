@@ -179,13 +179,14 @@
 		align-items: center;
 		gap: 6px;
 		padding: 8px 12px;
-		background: rgba(255, 193, 7, 0.1);
-		border: 1px solid rgba(255, 193, 7, 0.3);
+		background: var(--ov-primary-action-color);
+		border: 1px solid  var(--ov-warning-color, #ff9800);
 		border-radius: 8px;
-		color: var(--ov-warning-color, #ff9800);
 		font-size: 12px;
+		color: var(--ov-text-primary-color);
 
 		.warning-icon {
+			color: var(--ov-warning-color, #ff9800);
 			font-size: 16px;
 			width: 16px;
 			height: 16px;

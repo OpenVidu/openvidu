@@ -436,7 +436,7 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 		private panelService: PanelService,
 		private participantService: ParticipantService,
 		private openviduService: OpenViduService,
-		private oVDevicesService: DeviceService,
+		private deviceService: DeviceService,
 		private actionService: ActionService,
 		private loggerSrv: LoggerService,
 		private cd: ChangeDetectorRef,
@@ -517,8 +517,8 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 		this.room = this.openviduService.getRoom();
 		this.evalAndSetRoomName(this.libService.getRoomName());
 
-		this.hasVideoDevices = this.oVDevicesService.hasVideoDeviceAvailable();
-		this.hasAudioDevices = this.oVDevicesService.hasAudioDeviceAvailable();
+		this.hasVideoDevices = this.deviceService.hasVideoDeviceAvailable();
+		this.hasAudioDevices = this.deviceService.hasAudioDeviceAvailable();
 
 		this.setupTemplates();
 		this.subscribeToToolbarDirectives();

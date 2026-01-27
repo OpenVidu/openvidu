@@ -1,12 +1,12 @@
 import { Component, EventEmitter, Input, OnDestroy, OnInit, Output } from '@angular/core';
 import { Subscription } from 'rxjs';
 import { CustomDevice } from '../../../models/device.model';
+import { ILogger } from '../../../models/logger.model';
+import { ParticipantModel } from '../../../models/participant.model';
 import { DeviceService } from '../../../services/device/device.service';
+import { LoggerService } from '../../../services/logger/logger.service';
 import { ParticipantService } from '../../../services/participant/participant.service';
 import { StorageService } from '../../../services/storage/storage.service';
-import { ParticipantModel } from '../../../models/participant.model';
-import { LoggerService } from '../../../services/logger/logger.service';
-import { ILogger } from '../../../models/logger.model';
 
 /**
  * @internal

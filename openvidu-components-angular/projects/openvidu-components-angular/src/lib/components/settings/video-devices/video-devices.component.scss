@@ -3,6 +3,7 @@
 :host {
 	display: flex;
 	align-items: center;
+	height: 100%;
 
 	.video-device-selector {
 		@include shared.device-selector-base();
