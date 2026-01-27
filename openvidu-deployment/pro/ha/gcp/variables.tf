@@ -122,7 +122,7 @@ variable "minNumberOfMediaNodes" {
 variable "maxNumberOfMediaNodes" {
   description = "Maximum number of media nodes to deploy"
   type        = number
-  default     = 2
+  default     = 5
 }
 
 variable "scaleTargetCPU" {
