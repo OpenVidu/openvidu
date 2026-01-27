@@ -60,21 +60,6 @@ Parameters:
     AllowedPattern: '^[A-Za-z0-9, =_.\-]*$'  # Allows letters, numbers, comma, space, underscore, dot, equals, and hyphen
     ConstraintDescription: Must be a comma-separated list of flags (for example, --flag=value, --bool-flag).
 
-  TurnDomainName:
-    Description: '(Optional) Domain name for the TURN server with TLS. Only needed if your users are behind restrictive firewalls'
-    Type: String
-    Default: ''
-
-  TurnOwnPublicCertificate:
-    Description: "(Optional) This setting is applicable if the certificate type is set to 'owncert' and the TurnDomainName is specified. Provide in base64 format."
-    Type: String
-    Default: ''
-
-  TurnOwnPrivateCertificate:
-    Description: "(Optional) This setting is applicable if the certificate type is set to 'owncert' and the TurnDomainName is specified. Provide in base64 format."
-    Type: String
-    Default: ''
-
   OpenViduLicense:
     Description: "Visit https://openvidu.io/account"
     Type: String
@@ -861,13 +846,6 @@ Metadata:
           default: "(Optional) Additional Installer Flags"
         Parameters:
           - AdditionalInstallFlags
-      - Label:
-          default: (Optional) TURN server configuration with TLS
-        Parameters:
-          - TurnDomainName
-          - TurnOwnPublicCertificate
-          - TurnOwnPrivateCertificate
-
 Conditions:
     PublicElasticIPPresent: !Not [ !Equals [!Ref PublicElasticIP, ""] ]
     PublicElasticIPAbsent: !Equals [!Ref PublicElasticIP, ""]
@@ -931,7 +909,6 @@ Resources:
           "GRAFANA_URL": "none",
           "MINIO_URL": "none",
           "DOMAIN_NAME": "none",
-          "LIVEKIT_TURN_DOMAIN_NAME": "none",
           "OPENVIDU_PRO_LICENSE": "none",
           "OPENVIDU_RTC_ENGINE": "none",
           "REDIS_PASSWORD": "none",
@@ -1163,7 +1140,6 @@ Resources:
                   PublicHostname=$(curl -s -H "X-aws-ec2-metadata-token: $TOKEN" http://169.254.169.254/latest/meta-data/public-hostname)
                   RANDOM_DOMAIN_STRING=$(tr -dc 'a-z' < /dev/urandom | head -c 8)
                   DOMAIN=openvidu-$RANDOM_DOMAIN_STRING-$(echo "$PublicHostname" | cut -d'.' -f1 | sed 's/^ec2-//').sslip.io
-                  TURN_DOMAIN_NAME_SSLIP_IO="turn-$RANDOM_DOMAIN_STRING-$(echo "$PublicHostname" | cut -d'.' -f1 | sed 's/^ec2-//').sslip.io"
                 else
                   DOMAIN=${DomainName}
                 fi
@@ -1190,7 +1166,7 @@ Resources:
                       break
                     fi
 
-                    RETRY_COUNT=RETRY_COUNT+1
+                    RETRY_COUNT=$((RETRY_COUNT+1))
                     if [[ $RETRY_COUNT -ge $MAX_RETRIES ]]; then
                       exit 1
                     fi
@@ -1271,19 +1247,6 @@ Resources:
                   done
                 fi
 
-                # Turn with TLS
-                if [[ "${!TURN_DOMAIN_NAME_SSLIP_IO}" != '' ]]; then
-                  LIVEKIT_TURN_DOMAIN_NAME=$(/usr/local/bin/store_secret.sh save LIVEKIT_TURN_DOMAIN_NAME "${!TURN_DOMAIN_NAME_SSLIP_IO}")
-                  COMMON_ARGS+=(
-                    "--turn-domain-name=$LIVEKIT_TURN_DOMAIN_NAME"
-                  )
-                elif [[ "${TurnDomainName}" != '' ]]; then
-                  LIVEKIT_TURN_DOMAIN_NAME=$(/usr/local/bin/store_secret.sh save LIVEKIT_TURN_DOMAIN_NAME "${TurnDomainName}")
-                  COMMON_ARGS+=(
-                    "--turn-domain-name=$LIVEKIT_TURN_DOMAIN_NAME"
-                  )
-                fi
-
                 # Certificate arguments
                 if [[ "${CertificateType}" == "selfsigned" ]]; then
                   CERT_ARGS=(
@@ -1303,18 +1266,6 @@ Resources:
                     "--owncert-public-key=$OWN_CERT_CRT"
                     "--owncert-private-key=$OWN_CERT_KEY"
                   )
-
-                  # Turn with TLS and own certificate
-                  if [[ "${TurnDomainName}" != '' ]]; then
-                    # Use base64 encoded certificates directly
-                    OWN_CERT_CRT_TURN=${TurnOwnPublicCertificate}
-                    OWN_CERT_KEY_TURN=${TurnOwnPrivateCertificate}
-
-                    CERT_ARGS+=(
-                      "--turn-owncert-private-key=$OWN_CERT_KEY_TURN"
-                      "--turn-owncert-public-key=$OWN_CERT_CRT_TURN"
-                    )
-                  fi
                 fi
 
                 # Construct the final command with all arguments
@@ -1412,12 +1363,6 @@ Resources:
                   exit 1
                 fi
 
-                # Replace LIVEKIT_TURN_DOMAIN_NAME
-                export LIVEKIT_TURN_DOMAIN_NAME=$(echo $SHARED_SECRET | jq -r .LIVEKIT_TURN_DOMAIN_NAME)
-                if [[ -n "$LIVEKIT_TURN_DOMAIN_NAME" ]]; then
-                  sed -i "s/LIVEKIT_TURN_DOMAIN_NAME=.*/LIVEKIT_TURN_DOMAIN_NAME=$LIVEKIT_TURN_DOMAIN_NAME/" "${!CLUSTER_CONFIG_DIR}/openvidu.env"
-                fi
-
                 # Replace rest of the values
                 sed -i "s/REDIS_PASSWORD=.*/REDIS_PASSWORD=$(echo $SHARED_SECRET | jq -r .REDIS_PASSWORD)/" "${!MASTER_NODE_CONFIG_DIR}/master_node.env"
                 sed -i "s/OPENVIDU_RTC_ENGINE=.*/OPENVIDU_RTC_ENGINE=$(echo $SHARED_SECRET | jq -r .OPENVIDU_RTC_ENGINE)/" "${!CLUSTER_CONFIG_DIR}/openvidu.env"
@@ -1478,7 +1423,6 @@ Resources:
                 # Update shared secret
                 SHARED_SECRET="$(echo "$SHARED_SECRET" | jq '. + {"REDIS_PASSWORD": "'"$(/usr/local/bin/get_value_from_config.sh REDIS_PASSWORD "${!MASTER_NODE_CONFIG_DIR}/master_node.env")"'"}')"
                 SHARED_SECRET="$(echo "$SHARED_SECRET" | jq '. + {"DOMAIN_NAME": "'"$(/usr/local/bin/get_value_from_config.sh DOMAIN_NAME "${!CLUSTER_CONFIG_DIR}/openvidu.env")"'"}')"
-                SHARED_SECRET="$(echo "$SHARED_SECRET" | jq '. + {"LIVEKIT_TURN_DOMAIN_NAME": "'"$(/usr/local/bin/get_value_from_config.sh LIVEKIT_TURN_DOMAIN_NAME "${!CLUSTER_CONFIG_DIR}/openvidu.env")"'"}')"
                 SHARED_SECRET="$(echo "$SHARED_SECRET" | jq '. + {"OPENVIDU_RTC_ENGINE": "'"$(/usr/local/bin/get_value_from_config.sh OPENVIDU_RTC_ENGINE "${!CLUSTER_CONFIG_DIR}/openvidu.env")"'"}')"
                 SHARED_SECRET="$(echo "$SHARED_SECRET" | jq '. + {"OPENVIDU_PRO_LICENSE": "'"$(/usr/local/bin/get_value_from_config.sh OPENVIDU_PRO_LICENSE "${!CLUSTER_CONFIG_DIR}/openvidu.env")"'"}')"
                 SHARED_SECRET="$(echo "$SHARED_SECRET" | jq '. + {"MONGO_ADMIN_USERNAME": "'"$(/usr/local/bin/get_value_from_config.sh MONGO_ADMIN_USERNAME "${!CLUSTER_CONFIG_DIR}/openvidu.env")"'"}')"
@@ -1731,7 +1675,7 @@ Resources:
                     if [[ "$SHARED_SECRET" != "none" ]]; then
                         break
                     fi
-                    RETRY_COUNT=RETRY_COUNT+1
+                    RETRY_COUNT=$((RETRY_COUNT+1))
                     if [[ $RETRY_COUNT -ge $MAX_RETRIES ]]; then
                         exit 1
                     fi
