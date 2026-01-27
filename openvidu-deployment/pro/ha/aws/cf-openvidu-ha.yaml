@@ -2301,7 +2301,9 @@ Resources:
             - Effect: Allow
               Action:
                 - ssm:StartAutomationExecution
-              Resource: !Sub arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:automation-definition/${StopMediaNodeAutomationDocument}:$DEFAULT
+              Resource:
+                - !Sub arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:automation-execution/*
+                - !Sub arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:document/${StopMediaNodeAutomationDocument}
         PolicyName: !Sub StopMediaNodeCloudWatchEventPolicy-${AWS::Region}-${AWS::StackName}
       - PolicyDocument:
           Version: '2012-10-17'
