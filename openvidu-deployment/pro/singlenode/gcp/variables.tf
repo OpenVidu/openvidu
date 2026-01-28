@@ -122,21 +122,3 @@ variable "additionalInstallFlags" {
     error_message = "Must be a comma-separated list of flags (for example, --flag=value, --bool-flag)."
   }
 }
-
-variable "turnDomainName" {
-  description = "(Optional) Domain name for the TURN server with TLS. Only needed if your users are behind restrictive firewalls"
-  type        = string
-  default     = ""
-}
-
-variable "turnOwnPublicCertificate" {
-  description = "(Optional) This setting is applicable if the certificate type is set to 'owncert' and the TurnDomainName is specified. Provide in base64 format."
-  type        = string
-  default     = ""
-}
-
-variable "turnOwnPrivateCertificate" {
-  description = "(Optional) This setting is applicable if the certificate type is set to 'owncert' and the TurnDomainName is specified. Provide in base64 format."
-  type        = string
-  default     = ""
-}

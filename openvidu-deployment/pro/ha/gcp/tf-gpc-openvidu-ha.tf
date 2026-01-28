@@ -16,7 +16,7 @@ resource "google_secret_manager_secret" "openvidu_shared_info" {
   for_each = toset([
     "OPENVIDU_URL", "MEET_INITIAL_ADMIN_USER", "MEET_INITIAL_ADMIN_PASSWORD",
     "MEET_INITIAL_API_KEY", "LIVEKIT_URL", "LIVEKIT_API_KEY", "LIVEKIT_API_SECRET",
-    "DASHBOARD_URL", "GRAFANA_URL", "MINIO_URL", "DOMAIN_NAME", "LIVEKIT_TURN_DOMAIN_NAME",
+    "DASHBOARD_URL", "GRAFANA_URL", "MINIO_URL", "DOMAIN_NAME",
     "OPENVIDU_PRO_LICENSE", "OPENVIDU_RTC_ENGINE", "REDIS_PASSWORD", "MONGO_ADMIN_USERNAME",
     "MONGO_ADMIN_PASSWORD", "MONGO_REPLICA_SET_KEY", "MINIO_ACCESS_KEY", "MINIO_SECRET_KEY",
     "DASHBOARD_ADMIN_USERNAME", "DASHBOARD_ADMIN_PASSWORD", "GRAFANA_ADMIN_USERNAME",
@@ -314,9 +314,6 @@ resource "google_compute_instance" "openvidu_master_node_1" {
     certificateType           = var.certificateType
     ownPublicCertificate      = var.ownPublicCertificate
     ownPrivateCertificate     = var.ownPrivateCertificate
-    turnDomainName            = var.turnDomainName
-    turnOwnPublicCertificate  = var.turnOwnPublicCertificate
-    turnOwnPrivateCertificate = var.turnOwnPrivateCertificate
     openviduLicense           = var.openviduLicense
     rtcEngine                 = var.rtcEngine
     initialMeetAdminPassword  = var.initialMeetAdminPassword
@@ -367,9 +364,6 @@ resource "google_compute_instance" "openvidu_master_node_2" {
     certificateType           = var.certificateType
     ownPublicCertificate      = var.ownPublicCertificate
     ownPrivateCertificate     = var.ownPrivateCertificate
-    turnDomainName            = var.turnDomainName
-    turnOwnPublicCertificate  = var.turnOwnPublicCertificate
-    turnOwnPrivateCertificate = var.turnOwnPrivateCertificate
     openviduLicense           = var.openviduLicense
     rtcEngine                 = var.rtcEngine
     initialMeetAdminPassword  = var.initialMeetAdminPassword
@@ -422,9 +416,6 @@ resource "google_compute_instance" "openvidu_master_node_3" {
     certificateType           = var.certificateType
     ownPublicCertificate      = var.ownPublicCertificate
     ownPrivateCertificate     = var.ownPrivateCertificate
-    turnDomainName            = var.turnDomainName
-    turnOwnPublicCertificate  = var.turnOwnPublicCertificate
-    turnOwnPrivateCertificate = var.turnOwnPrivateCertificate
     openviduLicense           = var.openviduLicense
     rtcEngine                 = var.rtcEngine
     initialMeetAdminPassword  = var.initialMeetAdminPassword
@@ -477,9 +468,6 @@ resource "google_compute_instance" "openvidu_master_node_4" {
     certificateType           = var.certificateType
     ownPublicCertificate      = var.ownPublicCertificate
     ownPrivateCertificate     = var.ownPrivateCertificate
-    turnDomainName            = var.turnDomainName
-    turnOwnPublicCertificate  = var.turnOwnPublicCertificate
-    turnOwnPrivateCertificate = var.turnOwnPrivateCertificate
     openviduLicense           = var.openviduLicense
     rtcEngine                 = var.rtcEngine
     initialMeetAdminPassword  = var.initialMeetAdminPassword
@@ -995,7 +983,6 @@ if [[ $MASTER_NODE_NUM -eq 1 ]] && [[ "$ALL_SECRETS_GENERATED" == "false" ]]; th
     EXTERNAL_IP=$(gcloud compute addresses describe "${lower("${var.stackName}-nlb-ip")}" --region ${var.region} --format="get(address)")
     RANDOM_DOMAIN_STRING=$(tr -dc 'a-z' < /dev/urandom | head -c 8)
     DOMAIN="openvidu-$RANDOM_DOMAIN_STRING-$(echo $EXTERNAL_IP | tr '.' '-').sslip.io"
-    TURN_DOMAIN_NAME_SSLIP_IO="turn-$RANDOM_DOMAIN_STRING-$(echo $EXTERNAL_IP | tr '.' '-').sslip.io"
   else
     DOMAIN="${var.domainName}"
   fi
@@ -1011,13 +998,6 @@ if [[ $MASTER_NODE_NUM -eq 1 ]] && [[ "$ALL_SECRETS_GENERATED" == "false" ]]; th
 
   if [[ "${var.initialMeetApiKey}" != '' ]]; then
     MEET_INITIAL_API_KEY="$(/usr/local/bin/store_secret.sh save MEET_INITIAL_API_KEY "${var.initialMeetApiKey}")"
-  fi
-
-  # Configure TURN server domain name
-  if [[ -n "${var.turnDomainName}" ]]; then
-    LIVEKIT_TURN_DOMAIN_NAME="$(/usr/local/bin/store_secret.sh save LIVEKIT_TURN_DOMAIN_NAME "${var.turnDomainName}")"
-  elif [[ "$${TURN_DOMAIN_NAME_SSLIP_IO}" != '' ]]; then
-    LIVEKIT_TURN_DOMAIN_NAME=$(/usr/local/bin/store_secret.sh save LIVEKIT_TURN_DOMAIN_NAME "$${TURN_DOMAIN_NAME_SSLIP_IO}")
   fi
 
   # Store usernames and generate random passwords
@@ -1065,7 +1045,6 @@ MASTER_NODE_4_PRIVATE_IP=$(gcloud secrets versions access latest --secret=MASTER
 MASTER_NODE_PRIVATE_IP_LIST="$MASTER_NODE_1_PRIVATE_IP,$MASTER_NODE_2_PRIVATE_IP,$MASTER_NODE_3_PRIVATE_IP,$MASTER_NODE_4_PRIVATE_IP"
 
 DOMAIN=$(gcloud secrets versions access latest --secret=DOMAIN_NAME)
-LIVEKIT_TURN_DOMAIN_NAME=$(gcloud secrets versions access latest --secret=LIVEKIT_TURN_DOMAIN_NAME)
 OPENVIDU_PRO_LICENSE=$(gcloud secrets versions access latest --secret=OPENVIDU_PRO_LICENSE)
 OPENVIDU_RTC_ENGINE=$(gcloud secrets versions access latest --secret=OPENVIDU_RTC_ENGINE)
 REDIS_PASSWORD=$(gcloud secrets versions access latest --secret=REDIS_PASSWORD)
@@ -1132,10 +1111,6 @@ if [[ "${var.additionalInstallFlags}" != "" ]]; then
   done
 fi
 
-if [[ "$LIVEKIT_TURN_DOMAIN_NAME" != "" ]]; then
-  COMMON_ARGS+=("--turn-domain-name=$LIVEKIT_TURN_DOMAIN_NAME")
-fi
-
 # Certificate arguments
 if [[ "${var.certificateType}" == "selfsigned" ]]; then
   CERT_ARGS=(
@@ -1155,18 +1130,6 @@ else
     "--owncert-public-key=$OWN_CERT_CRT"
     "--owncert-private-key=$OWN_CERT_KEY"
   )
-
-  # Turn with TLS and own certificate
-  if [[ "${var.turnDomainName}" != '' ]]; then
-    # Use base64 encoded certificates directly
-    OWN_CERT_CRT_TURN=${var.turnOwnPublicCertificate}
-    OWN_CERT_KEY_TURN=${var.turnOwnPrivateCertificate}
-
-    CERT_ARGS+=(
-      "--turn-owncert-private-key=$OWN_CERT_KEY_TURN"
-      "--turn-owncert-public-key=$OWN_CERT_CRT_TURN"
-    )
-  fi
 fi
 
 # Construct the final command

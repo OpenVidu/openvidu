@@ -14,7 +14,7 @@ resource "google_secret_manager_secret" "openvidu_shared_info" {
   for_each = toset([
     "OPENVIDU_URL", "MEET_INITIAL_ADMIN_USER", "MEET_INITIAL_ADMIN_PASSWORD",
     "MEET_INITIAL_API_KEY", "LIVEKIT_URL", "LIVEKIT_API_KEY", "LIVEKIT_API_SECRET",
-    "DASHBOARD_URL", "GRAFANA_URL", "MINIO_URL", "DOMAIN_NAME", "LIVEKIT_TURN_DOMAIN_NAME",
+    "DASHBOARD_URL", "GRAFANA_URL", "MINIO_URL", "DOMAIN_NAME",
     "REDIS_PASSWORD", "MONGO_ADMIN_USERNAME", "MONGO_ADMIN_PASSWORD", "MONGO_REPLICA_SET_KEY",
     "MINIO_ACCESS_KEY", "MINIO_SECRET_KEY", "DASHBOARD_ADMIN_USERNAME", "DASHBOARD_ADMIN_PASSWORD",
     "GRAFANA_ADMIN_USERNAME", "GRAFANA_ADMIN_PASSWORD", "ENABLED_MODULES"
@@ -125,9 +125,6 @@ resource "google_compute_instance" "openvidu_server" {
     ownPublicCertificate      = var.ownPublicCertificate
     ownPrivateCertificate     = var.ownPrivateCertificate
     additionalInstallFlags    = var.additionalInstallFlags
-    turnDomainName            = var.turnDomainName
-    turnOwnPublicCertificate  = var.turnOwnPublicCertificate
-    turnOwnPrivateCertificate = var.turnOwnPrivateCertificate
     bucketName                = local.isEmpty ? google_storage_bucket.bucket[0].name : var.bucketName
   }
 
@@ -183,7 +180,6 @@ if [[ "${var.domainName}" == "" ]]; then
   EXTERNAL_IP=$(get_meta "instance/network-interfaces/0/access-configs/0/external-ip")
   RANDOM_DOMAIN_STRING=$(tr -dc 'a-z' < /dev/urandom | head -c 8)
   DOMAIN=openvidu-$RANDOM_DOMAIN_STRING-$(echo $EXTERNAL_IP | tr '.' '-').sslip.io
-  TURN_DOMAIN_NAME_SSLIP_IO=turn-$RANDOM_DOMAIN_STRING-$(echo $EXTERNAL_IP | tr '.' '-').sslip.io
 else
   DOMAIN="${var.domainName}"
 fi
@@ -255,19 +251,6 @@ if [[ "${var.additionalInstallFlags}" != "" ]]; then
   done
 fi
 
-# Turn with TLS
-if [[ "$TURN_DOMAIN_NAME_SSLIP_IO" != "" ]]; then
-  LIVEKIT_TURN_DOMAIN_NAME=$(/usr/local/bin/store_secret.sh save LIVEKIT_TURN_DOMAIN_NAME "$TURN_DOMAIN_NAME_SSLIP_IO")
-  COMMON_ARGS+=(
-    "--turn-domain-name=$LIVEKIT_TURN_DOMAIN_NAME"
-  )
-elif [[ "${var.turnDomainName}" != '' ]]; then
-  LIVEKIT_TURN_DOMAIN_NAME=$(/usr/local/bin/store_secret.sh save LIVEKIT_TURN_DOMAIN_NAME "${var.turnDomainName}")
-  COMMON_ARGS+=(
-    "--turn-domain-name=$LIVEKIT_TURN_DOMAIN_NAME"
-  )
-fi
-
 # Certificate arguments
 if [[ "${var.certificateType}" == "selfsigned" ]]; then
   CERT_ARGS=(
@@ -286,17 +269,6 @@ else
     "--owncert-public-key=$OWN_CERT_CRT"
     "--owncert-private-key=$OWN_CERT_KEY"
   )
-
-  # Turn with TLS and own certificate
-  if [[ "${var.turnDomainName}" != '' ]]; then
-    # Use base64 encoded certificates directly
-    OWN_CERT_CRT_TURN=${var.turnOwnPublicCertificate}
-    OWN_CERT_KEY_TURN=${var.turnOwnPrivateCertificate}
-    CERT_ARGS+=(
-      "--turn-owncert-private-key=$OWN_CERT_KEY_TURN"
-      "--turn-owncert-public-key=$OWN_CERT_CRT_TURN"
-    )
-  fi
 fi
 
 # Final command
@@ -395,12 +367,6 @@ else
     exit 1
 fi
 
-# Replace LIVEKIT_TURN_DOMAIN_NAME
-export LIVEKIT_TURN_DOMAIN_NAME=$(gcloud secrets versions access latest --secret=LIVEKIT_TURN_DOMAIN_NAME)
-if [[ -n "$LIVEKIT_TURN_DOMAIN_NAME" ]]; then
-    sed -i "s/LIVEKIT_TURN_DOMAIN_NAME=.*/LIVEKIT_TURN_DOMAIN_NAME=$LIVEKIT_TURN_DOMAIN_NAME/" "$${CONFIG_DIR}/openvidu.env"
-fi
-
 # Get the rest of the values
 export REDIS_PASSWORD=$(gcloud secrets versions access latest --secret=REDIS_PASSWORD)
 export MONGO_ADMIN_USERNAME=$(gcloud secrets versions access latest --secret=MONGO_ADMIN_USERNAME)
@@ -471,7 +437,6 @@ CONFIG_DIR="$${INSTALL_DIR}/config"
 # Get current values of the config
 REDIS_PASSWORD="$(/usr/local/bin/get_value_from_config.sh REDIS_PASSWORD "$${CONFIG_DIR}/openvidu.env")"
 DOMAIN_NAME="$(/usr/local/bin/get_value_from_config.sh DOMAIN_NAME "$${CONFIG_DIR}/openvidu.env")"
-LIVEKIT_TURN_DOMAIN_NAME="$(/usr/local/bin/get_value_from_config.sh LIVEKIT_TURN_DOMAIN_NAME "$${CONFIG_DIR}/openvidu.env")"
 MONGO_ADMIN_USERNAME="$(/usr/local/bin/get_value_from_config.sh MONGO_ADMIN_USERNAME "$${CONFIG_DIR}/openvidu.env")"
 MONGO_ADMIN_PASSWORD="$(/usr/local/bin/get_value_from_config.sh MONGO_ADMIN_PASSWORD "$${CONFIG_DIR}/openvidu.env")"
 MONGO_REPLICA_SET_KEY="$(/usr/local/bin/get_value_from_config.sh MONGO_REPLICA_SET_KEY "$${CONFIG_DIR}/openvidu.env")"
@@ -493,7 +458,6 @@ ENABLED_MODULES="$(/usr/local/bin/get_value_from_config.sh ENABLED_MODULES "$${C
 # Update shared secret
 echo -n "$REDIS_PASSWORD" | gcloud secrets versions add REDIS_PASSWORD --data-file=-
 echo -n "$DOMAIN_NAME" | gcloud secrets versions add DOMAIN_NAME --data-file=-
-echo -n "$LIVEKIT_TURN_DOMAIN_NAME" | gcloud secrets versions add LIVEKIT_TURN_DOMAIN_NAME --data-file=-
 echo -n "$MONGO_ADMIN_USERNAME" | gcloud secrets versions add MONGO_ADMIN_USERNAME --data-file=-
 echo -n "$MONGO_ADMIN_PASSWORD" | gcloud secrets versions add MONGO_ADMIN_PASSWORD --data-file=-
 echo -n "$MONGO_REPLICA_SET_KEY" | gcloud secrets versions add MONGO_REPLICA_SET_KEY --data-file=-
