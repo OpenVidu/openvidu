@@ -86,8 +86,20 @@ var isEmptyDomain = domainName == ''
 // The pattern checks for 'p' followed by optional letters (like 'l', 'd', 's') before '_v' version suffix
 var masterNodeInstanceTypeLower = toLower(masterNodeInstanceType)
 var mediaNodeInstanceTypeLower = toLower(mediaNodeInstanceType)
-var isMasterArm64 = contains(masterNodeInstanceTypeLower, 'ps_v') || contains(masterNodeInstanceTypeLower, 'pls_v') || contains(masterNodeInstanceTypeLower, 'pds_v') || contains(masterNodeInstanceTypeLower, 'plds_v') || contains(masterNodeInstanceTypeLower, 'psv') || contains(masterNodeInstanceTypeLower, 'plsv') || contains(masterNodeInstanceTypeLower, 'pdsv') || contains(masterNodeInstanceTypeLower, 'pldsv')
-var isMediaArm64 = contains(mediaNodeInstanceTypeLower, 'ps_v') || contains(mediaNodeInstanceTypeLower, 'pls_v') || contains(mediaNodeInstanceTypeLower, 'pds_v') || contains(mediaNodeInstanceTypeLower, 'plds_v') || contains(mediaNodeInstanceTypeLower, 'psv') || contains(mediaNodeInstanceTypeLower, 'plsv') || contains(mediaNodeInstanceTypeLower, 'pdsv') || contains(mediaNodeInstanceTypeLower, 'pldsv')
+var isMasterArm64 = contains(masterNodeInstanceTypeLower, 'ps_v') || contains(masterNodeInstanceTypeLower, 'pls_v') || contains(
+  masterNodeInstanceTypeLower,
+  'pds_v'
+) || contains(masterNodeInstanceTypeLower, 'plds_v') || contains(masterNodeInstanceTypeLower, 'psv') || contains(
+  masterNodeInstanceTypeLower,
+  'plsv'
+) || contains(masterNodeInstanceTypeLower, 'pdsv') || contains(masterNodeInstanceTypeLower, 'pldsv')
+var isMediaArm64 = contains(mediaNodeInstanceTypeLower, 'ps_v') || contains(mediaNodeInstanceTypeLower, 'pls_v') || contains(
+  mediaNodeInstanceTypeLower,
+  'pds_v'
+) || contains(mediaNodeInstanceTypeLower, 'plds_v') || contains(mediaNodeInstanceTypeLower, 'psv') || contains(
+  mediaNodeInstanceTypeLower,
+  'plsv'
+) || contains(mediaNodeInstanceTypeLower, 'pdsv') || contains(mediaNodeInstanceTypeLower, 'pldsv')
 
 var masterUbuntuSku = isMasterArm64 ? 'server-arm64' : 'server'
 var mediaUbuntuSku = isMediaArm64 ? 'server-arm64' : 'server'
@@ -506,12 +518,16 @@ az login --identity --allow-no-subscriptions > /dev/null
 
 # Generate URLs
 DOMAIN=$(az keyvault secret show --vault-name ${keyVaultName} --name DOMAIN-NAME --query value -o tsv)
+OPENVIDU_URL="https://$${DOMAIN}/"
+LIVEKIT_URL="wss://$${DOMAIN}/"
 DASHBOARD_URL="https://${DOMAIN}/dashboard/"
 GRAFANA_URL="https://${DOMAIN}/grafana/"
 MINIO_URL="https://${DOMAIN}/minio-console/"
 
 # Update shared secret
 az keyvault secret set --vault-name ${keyVaultName} --name DOMAIN-NAME --value $DOMAIN
+az keyvault secret set --vault-name ${keyVaultName} --name OPENVIDU-URL --value $OPENVIDU_URL
+az keyvault secret set --vault-name ${keyVaultName} --name LIVEKIT-URL --value $LIVEKIT_URL
 az keyvault secret set --vault-name ${keyVaultName} --name DASHBOARD-URL --value $DASHBOARD_URL
 az keyvault secret set --vault-name ${keyVaultName} --name GRAFANA-URL --value $GRAFANA_URL
 az keyvault secret set --vault-name ${keyVaultName} --name MINIO-URL --value $MINIO_URL
