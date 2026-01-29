@@ -518,8 +518,8 @@ az login --identity --allow-no-subscriptions > /dev/null
 
 # Generate URLs
 DOMAIN=$(az keyvault secret show --vault-name ${keyVaultName} --name DOMAIN-NAME --query value -o tsv)
-OPENVIDU_URL="https://$${DOMAIN}/"
-LIVEKIT_URL="wss://$${DOMAIN}/"
+OPENVIDU_URL="https://${DOMAIN}/"
+LIVEKIT_URL="wss://${DOMAIN}/"
 DASHBOARD_URL="https://${DOMAIN}/dashboard/"
 GRAFANA_URL="https://${DOMAIN}/grafana/"
 MINIO_URL="https://${DOMAIN}/minio-console/"
