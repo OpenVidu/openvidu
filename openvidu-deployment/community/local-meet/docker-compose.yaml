@@ -26,6 +26,7 @@ services:
       - 7443:7443
       - 7880:7880
       - 9443:9443
+      - 9080:9080
     depends_on:
       setup:
         condition: service_completed_successfully
@@ -179,8 +180,6 @@ services:
   openvidu-meet:
     image: docker.io/openvidu/openvidu-meet:main
     restart: on-failure
-    ports:
-      - 9080:6080
     extra_hosts:
       - host.docker.internal:host-gateway
     environment:
