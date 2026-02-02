@@ -858,9 +858,6 @@ var blobStorageParams = {
   storageAccountName: isEmptyStorageAccountName ? storageAccount.name : existingStorageAccount.name
   storageAccountKey: listKeys(storageAccount.id, '2021-04-01').keys[0].value
   storageAccountContainerName: isEmptyAppDataContainerName ? 'openvidu-appdata' : '${appDataContainerName}'
-  storageAccountClusterContainerName: isEmptyClusterContainerName
-    ? 'openvidu-clusterdata'
-    : '${clusterDataContainerName}'
 }
 
 var config_blobStorageScript = reduce(
@@ -2848,20 +2845,6 @@ resource blobContainer 'Microsoft.Storage/storageAccounts/blobServices/container
   name: isEmptyAppDataContainerName
     ? '${storageAccount.name}/default/openvidu-appdata'
     : '${storageAccount.name}/default/${appDataContainerName}'
-  properties: {
-    publicAccess: 'None'
-  }
-}
-
-@description('Name of the bucket where OpenVidu will store the recordings if a new Storage account is being creating. If not specified, a default bucket will be created. If you want to use an existing storage account, fill this parameter with the name of the container where the recordings are stored.')
-param clusterDataContainerName string = ''
-
-var isEmptyClusterContainerName = clusterDataContainerName == ''
-
-resource clusterDatablobContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2023-01-01' = if (isEmptyStorageAccountName == true) {
-  name: isEmptyClusterContainerName
-    ? '${storageAccount.name}/default/openvidu-clusterdata'
-    : '${storageAccount.name}/default/${clusterDataContainerName}'
   properties: {
     publicAccess: 'None'
   }
