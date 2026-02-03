@@ -308,19 +308,19 @@ resource "google_compute_instance" "openvidu_master_node_1" {
   }
 
   metadata = {
-    stackName                 = var.stackName
-    masterNodeNum             = "1"
-    domainName                = var.domainName
-    certificateType           = var.certificateType
-    ownPublicCertificate      = var.ownPublicCertificate
-    ownPrivateCertificate     = var.ownPrivateCertificate
-    openviduLicense           = var.openviduLicense
-    rtcEngine                 = var.rtcEngine
-    initialMeetAdminPassword  = var.initialMeetAdminPassword
-    initialMeetApiKey         = var.initialMeetApiKey
-    additionalInstallFlags    = var.additionalInstallFlags
-    bucketAppDataName         = local.isEmptyAppData ? google_storage_bucket.appdata_bucket[0].name : var.GCSAppDataBucketName
-    bucketClusterDataName     = local.isEmptyClusterData ? google_storage_bucket.clusterdata_bucket[0].name : var.GCSClusterDataBucketName
+    stackName                = var.stackName
+    masterNodeNum            = "1"
+    domainName               = var.domainName
+    certificateType          = var.certificateType
+    ownPublicCertificate     = var.ownPublicCertificate
+    ownPrivateCertificate    = var.ownPrivateCertificate
+    openviduLicense          = var.openviduLicense
+    rtcEngine                = var.rtcEngine
+    initialMeetAdminPassword = var.initialMeetAdminPassword
+    initialMeetApiKey        = var.initialMeetApiKey
+    additionalInstallFlags   = var.additionalInstallFlags
+    bucketAppDataName        = local.isEmptyAppData ? google_storage_bucket.appdata_bucket[0].name : var.GCSAppDataBucketName
+    bucketClusterDataName    = local.isEmptyClusterData ? google_storage_bucket.clusterdata_bucket[0].name : var.GCSClusterDataBucketName
   }
 
   service_account {
@@ -358,19 +358,19 @@ resource "google_compute_instance" "openvidu_master_node_2" {
   }
 
   metadata = {
-    stackName                 = var.stackName
-    masterNodeNum             = "2"
-    domainName                = var.domainName
-    certificateType           = var.certificateType
-    ownPublicCertificate      = var.ownPublicCertificate
-    ownPrivateCertificate     = var.ownPrivateCertificate
-    openviduLicense           = var.openviduLicense
-    rtcEngine                 = var.rtcEngine
-    initialMeetAdminPassword  = var.initialMeetAdminPassword
-    initialMeetApiKey         = var.initialMeetApiKey
-    additionalInstallFlags    = var.additionalInstallFlags
-    bucketAppDataName         = local.isEmptyAppData ? google_storage_bucket.appdata_bucket[0].name : var.GCSAppDataBucketName
-    bucketClusterDataName     = local.isEmptyClusterData ? google_storage_bucket.clusterdata_bucket[0].name : var.GCSClusterDataBucketName
+    stackName                = var.stackName
+    masterNodeNum            = "2"
+    domainName               = var.domainName
+    certificateType          = var.certificateType
+    ownPublicCertificate     = var.ownPublicCertificate
+    ownPrivateCertificate    = var.ownPrivateCertificate
+    openviduLicense          = var.openviduLicense
+    rtcEngine                = var.rtcEngine
+    initialMeetAdminPassword = var.initialMeetAdminPassword
+    initialMeetApiKey        = var.initialMeetApiKey
+    additionalInstallFlags   = var.additionalInstallFlags
+    bucketAppDataName        = local.isEmptyAppData ? google_storage_bucket.appdata_bucket[0].name : var.GCSAppDataBucketName
+    bucketClusterDataName    = local.isEmptyClusterData ? google_storage_bucket.clusterdata_bucket[0].name : var.GCSClusterDataBucketName
   }
 
   service_account {
@@ -410,19 +410,19 @@ resource "google_compute_instance" "openvidu_master_node_3" {
   }
 
   metadata = {
-    stackName                 = var.stackName
-    masterNodeNum             = "3"
-    domainName                = var.domainName
-    certificateType           = var.certificateType
-    ownPublicCertificate      = var.ownPublicCertificate
-    ownPrivateCertificate     = var.ownPrivateCertificate
-    openviduLicense           = var.openviduLicense
-    rtcEngine                 = var.rtcEngine
-    initialMeetAdminPassword  = var.initialMeetAdminPassword
-    initialMeetApiKey         = var.initialMeetApiKey
-    additionalInstallFlags    = var.additionalInstallFlags
-    bucketAppDataName         = local.isEmptyAppData ? google_storage_bucket.appdata_bucket[0].name : var.GCSAppDataBucketName
-    bucketClusterDataName     = local.isEmptyClusterData ? google_storage_bucket.clusterdata_bucket[0].name : var.GCSClusterDataBucketName
+    stackName                = var.stackName
+    masterNodeNum            = "3"
+    domainName               = var.domainName
+    certificateType          = var.certificateType
+    ownPublicCertificate     = var.ownPublicCertificate
+    ownPrivateCertificate    = var.ownPrivateCertificate
+    openviduLicense          = var.openviduLicense
+    rtcEngine                = var.rtcEngine
+    initialMeetAdminPassword = var.initialMeetAdminPassword
+    initialMeetApiKey        = var.initialMeetApiKey
+    additionalInstallFlags   = var.additionalInstallFlags
+    bucketAppDataName        = local.isEmptyAppData ? google_storage_bucket.appdata_bucket[0].name : var.GCSAppDataBucketName
+    bucketClusterDataName    = local.isEmptyClusterData ? google_storage_bucket.clusterdata_bucket[0].name : var.GCSClusterDataBucketName
   }
 
   service_account {
@@ -462,19 +462,19 @@ resource "google_compute_instance" "openvidu_master_node_4" {
   }
 
   metadata = {
-    stackName                 = var.stackName
-    masterNodeNum             = "4"
-    domainName                = var.domainName
-    certificateType           = var.certificateType
-    ownPublicCertificate      = var.ownPublicCertificate
-    ownPrivateCertificate     = var.ownPrivateCertificate
-    openviduLicense           = var.openviduLicense
-    rtcEngine                 = var.rtcEngine
-    initialMeetAdminPassword  = var.initialMeetAdminPassword
-    initialMeetApiKey         = var.initialMeetApiKey
-    additionalInstallFlags    = var.additionalInstallFlags
-    bucketAppDataName         = local.isEmptyAppData ? google_storage_bucket.appdata_bucket[0].name : var.GCSAppDataBucketName
-    bucketClusterDataName     = local.isEmptyClusterData ? google_storage_bucket.clusterdata_bucket[0].name : var.GCSClusterDataBucketName
+    stackName                = var.stackName
+    masterNodeNum            = "4"
+    domainName               = var.domainName
+    certificateType          = var.certificateType
+    ownPublicCertificate     = var.ownPublicCertificate
+    ownPrivateCertificate    = var.ownPrivateCertificate
+    openviduLicense          = var.openviduLicense
+    rtcEngine                = var.rtcEngine
+    initialMeetAdminPassword = var.initialMeetAdminPassword
+    initialMeetApiKey        = var.initialMeetApiKey
+    additionalInstallFlags   = var.additionalInstallFlags
+    bucketAppDataName        = local.isEmptyAppData ? google_storage_bucket.appdata_bucket[0].name : var.GCSAppDataBucketName
+    bucketClusterDataName    = local.isEmptyClusterData ? google_storage_bucket.clusterdata_bucket[0].name : var.GCSClusterDataBucketName
   }
 
   service_account {
@@ -1211,6 +1211,145 @@ if [[ $? -ne 0 ]]; then
 fi
 EOF
 
+  update_config_from_secret_script = <<-EOF
+#!/bin/bash -x
+set -e
+
+# Configure gcloud with instance service account
+gcloud auth activate-service-account --key-file=/dev/null 2>/dev/null || true
+
+# Installation directory
+INSTALL_DIR="/opt/openvidu"
+CLUSTER_CONFIG_DIR="$${INSTALL_DIR}/config/cluster"
+MASTER_NODE_CONFIG_DIR="$${INSTALL_DIR}/config/node"
+
+# Replace DOMAIN_NAME
+export DOMAIN=$(gcloud secrets versions access latest --secret=DOMAIN_NAME)
+if [[ -n "$DOMAIN" ]]; then
+    sed -i "s/DOMAIN_NAME=.*/DOMAIN_NAME=$DOMAIN/" "$${CLUSTER_CONFIG_DIR}/openvidu.env"
+else
+    exit 1
+fi
+
+# Get the rest of the values
+export REDIS_PASSWORD=$(gcloud secrets versions access latest --secret=REDIS_PASSWORD)
+export OPENVIDU_RTC_ENGINE=$(gcloud secrets versions access latest --secret=OPENVIDU_RTC_ENGINE)
+export OPENVIDU_PRO_LICENSE=$(gcloud secrets versions access latest --secret=OPENVIDU_PRO_LICENSE)
+export MONGO_ADMIN_USERNAME=$(gcloud secrets versions access latest --secret=MONGO_ADMIN_USERNAME)
+export MONGO_ADMIN_PASSWORD=$(gcloud secrets versions access latest --secret=MONGO_ADMIN_PASSWORD)
+export MONGO_REPLICA_SET_KEY=$(gcloud secrets versions access latest --secret=MONGO_REPLICA_SET_KEY)
+export DASHBOARD_ADMIN_USERNAME=$(gcloud secrets versions access latest --secret=DASHBOARD_ADMIN_USERNAME)
+export DASHBOARD_ADMIN_PASSWORD=$(gcloud secrets versions access latest --secret=DASHBOARD_ADMIN_PASSWORD)
+export MINIO_ACCESS_KEY=$(gcloud secrets versions access latest --secret=MINIO_ACCESS_KEY)
+export MINIO_SECRET_KEY=$(gcloud secrets versions access latest --secret=MINIO_SECRET_KEY)
+export GRAFANA_ADMIN_USERNAME=$(gcloud secrets versions access latest --secret=GRAFANA_ADMIN_USERNAME)
+export GRAFANA_ADMIN_PASSWORD=$(gcloud secrets versions access latest --secret=GRAFANA_ADMIN_PASSWORD)
+export LIVEKIT_API_KEY=$(gcloud secrets versions access latest --secret=LIVEKIT_API_KEY)
+export LIVEKIT_API_SECRET=$(gcloud secrets versions access latest --secret=LIVEKIT_API_SECRET)
+export MEET_INITIAL_ADMIN_USER=$(gcloud secrets versions access latest --secret=MEET_INITIAL_ADMIN_USER)
+export MEET_INITIAL_ADMIN_PASSWORD=$(gcloud secrets versions access latest --secret=MEET_INITIAL_ADMIN_PASSWORD)
+if [[ "${var.initialMeetApiKey}" != '' ]]; then
+  export MEET_INITIAL_API_KEY=$(gcloud secrets versions access latest --secret=MEET_INITIAL_API_KEY)
+fi
+export ENABLED_MODULES=$(gcloud secrets versions access latest --secret=ENABLED_MODULES)
+
+# Replace rest of the values
+sed -i "s/REDIS_PASSWORD=.*/REDIS_PASSWORD=$REDIS_PASSWORD/" "$${MASTER_NODE_CONFIG_DIR}/master_node.env"
+sed -i "s/OPENVIDU_RTC_ENGINE=.*/OPENVIDU_RTC_ENGINE=$OPENVIDU_RTC_ENGINE/" "$${CLUSTER_CONFIG_DIR}/openvidu.env"
+sed -i "s/OPENVIDU_PRO_LICENSE=.*/OPENVIDU_PRO_LICENSE=$OPENVIDU_PRO_LICENSE/" "$${CLUSTER_CONFIG_DIR}/openvidu.env"
+sed -i "s/MONGO_ADMIN_USERNAME=.*/MONGO_ADMIN_USERNAME=$MONGO_ADMIN_USERNAME/" "$${CLUSTER_CONFIG_DIR}/openvidu.env"
+sed -i "s/MONGO_ADMIN_PASSWORD=.*/MONGO_ADMIN_PASSWORD=$MONGO_ADMIN_PASSWORD/" "$${CLUSTER_CONFIG_DIR}/openvidu.env"
+sed -i "s/MONGO_REPLICA_SET_KEY=.*/MONGO_REPLICA_SET_KEY=$MONGO_REPLICA_SET_KEY/" "$${CLUSTER_CONFIG_DIR}/openvidu.env"
+sed -i "s/DASHBOARD_ADMIN_USERNAME=.*/DASHBOARD_ADMIN_USERNAME=$DASHBOARD_ADMIN_USERNAME/" "$${CLUSTER_CONFIG_DIR}/openvidu.env"
+sed -i "s/DASHBOARD_ADMIN_PASSWORD=.*/DASHBOARD_ADMIN_PASSWORD=$DASHBOARD_ADMIN_PASSWORD/" "$${CLUSTER_CONFIG_DIR}/openvidu.env"
+sed -i "s/MINIO_ACCESS_KEY=.*/MINIO_ACCESS_KEY=$MINIO_ACCESS_KEY/" "$${CLUSTER_CONFIG_DIR}/openvidu.env"
+sed -i "s/MINIO_SECRET_KEY=.*/MINIO_SECRET_KEY=$MINIO_SECRET_KEY/" "$${CLUSTER_CONFIG_DIR}/openvidu.env"
+sed -i "s/GRAFANA_ADMIN_USERNAME=.*/GRAFANA_ADMIN_USERNAME=$GRAFANA_ADMIN_USERNAME/" "$${CLUSTER_CONFIG_DIR}/openvidu.env"
+sed -i "s/GRAFANA_ADMIN_PASSWORD=.*/GRAFANA_ADMIN_PASSWORD=$GRAFANA_ADMIN_PASSWORD/" "$${CLUSTER_CONFIG_DIR}/openvidu.env"
+sed -i "s/LIVEKIT_API_KEY=.*/LIVEKIT_API_KEY=$LIVEKIT_API_KEY/" "$${CLUSTER_CONFIG_DIR}/openvidu.env"
+sed -i "s/LIVEKIT_API_SECRET=.*/LIVEKIT_API_SECRET=$LIVEKIT_API_SECRET/" "$${CLUSTER_CONFIG_DIR}/openvidu.env"
+sed -i "s/MEET_INITIAL_ADMIN_USER=.*/MEET_INITIAL_ADMIN_USER=$MEET_INITIAL_ADMIN_USER/" "$${CLUSTER_CONFIG_DIR}/master_node/meet.env"
+sed -i "s/MEET_INITIAL_ADMIN_PASSWORD=.*/MEET_INITIAL_ADMIN_PASSWORD=$MEET_INITIAL_ADMIN_PASSWORD/" "$${CLUSTER_CONFIG_DIR}/master_node/meet.env"
+if [[ "${var.initialMeetApiKey}" != '' ]]; then
+  sed -i "s/MEET_INITIAL_API_KEY=.*/MEET_INITIAL_API_KEY=$MEET_INITIAL_API_KEY/" "$${CLUSTER_CONFIG_DIR}/master_node/meet.env"
+fi
+sed -i "s/ENABLED_MODULES=.*/ENABLED_MODULES=$ENABLED_MODULES/" "$${CLUSTER_CONFIG_DIR}/openvidu.env"
+
+# Update URLs in secret
+OPENVIDU_URL="https://$${DOMAIN}/"
+LIVEKIT_URL="wss://$${DOMAIN}/"
+DASHBOARD_URL="https://$${DOMAIN}/dashboard/"
+GRAFANA_URL="https://$${DOMAIN}/grafana/"
+MINIO_URL="https://$${DOMAIN}/minio-console/"
+
+# Update shared secret
+echo -n "$DOMAIN" | gcloud secrets versions add DOMAIN_NAME --data-file=-
+echo -n "$OPENVIDU_URL" | gcloud secrets versions add OPENVIDU_URL --data-file=-
+echo -n "$LIVEKIT_URL" | gcloud secrets versions add LIVEKIT_URL --data-file=-
+echo -n "$DASHBOARD_URL" | gcloud secrets versions add DASHBOARD_URL --data-file=-
+echo -n "$GRAFANA_URL" | gcloud secrets versions add GRAFANA_URL --data-file=-
+echo -n "$MINIO_URL" | gcloud secrets versions add MINIO_URL --data-file=-
+EOF
+
+  update_secret_from_config_script = <<-EOF
+#!/bin/bash
+set -e
+
+# Configure gcloud with instance service account
+gcloud auth activate-service-account --key-file=/dev/null 2>/dev/null || true
+
+# Installation directory
+INSTALL_DIR="/opt/openvidu"
+CLUSTER_CONFIG_DIR="$${INSTALL_DIR}/config/cluster"
+MASTER_NODE_CONFIG_DIR="$${INSTALL_DIR}/config/node"
+
+# Get current values of the config
+REDIS_PASSWORD="$(/usr/local/bin/get_value_from_config.sh REDIS_PASSWORD "$${MASTER_NODE_CONFIG_DIR}/master_node.env")"
+DOMAIN_NAME="$(/usr/local/bin/get_value_from_config.sh DOMAIN_NAME "$${CLUSTER_CONFIG_DIR}/openvidu.env")"
+OPENVIDU_RTC_ENGINE="$(/usr/local/bin/get_value_from_config.sh OPENVIDU_RTC_ENGINE "$${CLUSTER_CONFIG_DIR}/openvidu.env")"
+OPENVIDU_PRO_LICENSE="$(/usr/local/bin/get_value_from_config.sh OPENVIDU_PRO_LICENSE "$${CLUSTER_CONFIG_DIR}/openvidu.env")"
+MONGO_ADMIN_USERNAME="$(/usr/local/bin/get_value_from_config.sh MONGO_ADMIN_USERNAME "$${CLUSTER_CONFIG_DIR}/openvidu.env")"
+MONGO_ADMIN_PASSWORD="$(/usr/local/bin/get_value_from_config.sh MONGO_ADMIN_PASSWORD "$${CLUSTER_CONFIG_DIR}/openvidu.env")"
+MONGO_REPLICA_SET_KEY="$(/usr/local/bin/get_value_from_config.sh MONGO_REPLICA_SET_KEY "$${CLUSTER_CONFIG_DIR}/openvidu.env")"
+MINIO_ACCESS_KEY="$(/usr/local/bin/get_value_from_config.sh MINIO_ACCESS_KEY "$${CLUSTER_CONFIG_DIR}/openvidu.env")"
+MINIO_SECRET_KEY="$(/usr/local/bin/get_value_from_config.sh MINIO_SECRET_KEY "$${CLUSTER_CONFIG_DIR}/openvidu.env")"
+DASHBOARD_ADMIN_USERNAME="$(/usr/local/bin/get_value_from_config.sh DASHBOARD_ADMIN_USERNAME "$${CLUSTER_CONFIG_DIR}/openvidu.env")"
+DASHBOARD_ADMIN_PASSWORD="$(/usr/local/bin/get_value_from_config.sh DASHBOARD_ADMIN_PASSWORD "$${CLUSTER_CONFIG_DIR}/openvidu.env")"
+GRAFANA_ADMIN_USERNAME="$(/usr/local/bin/get_value_from_config.sh GRAFANA_ADMIN_USERNAME "$${CLUSTER_CONFIG_DIR}/openvidu.env")"
+GRAFANA_ADMIN_PASSWORD="$(/usr/local/bin/get_value_from_config.sh GRAFANA_ADMIN_PASSWORD "$${CLUSTER_CONFIG_DIR}/openvidu.env")"
+LIVEKIT_API_KEY="$(/usr/local/bin/get_value_from_config.sh LIVEKIT_API_KEY "$${CLUSTER_CONFIG_DIR}/openvidu.env")"
+LIVEKIT_API_SECRET="$(/usr/local/bin/get_value_from_config.sh LIVEKIT_API_SECRET "$${CLUSTER_CONFIG_DIR}/openvidu.env")"
+MEET_INITIAL_ADMIN_USER="$(/usr/local/bin/get_value_from_config.sh MEET_INITIAL_ADMIN_USER "$${CLUSTER_CONFIG_DIR}/master_node/meet.env")"
+MEET_INITIAL_ADMIN_PASSWORD="$(/usr/local/bin/get_value_from_config.sh MEET_INITIAL_ADMIN_PASSWORD "$${CLUSTER_CONFIG_DIR}/master_node/meet.env")"
+if [[ "${var.initialMeetApiKey}" != '' ]]; then
+  MEET_INITIAL_API_KEY="$(/usr/local/bin/get_value_from_config.sh MEET_INITIAL_API_KEY "$${CLUSTER_CONFIG_DIR}/master_node/meet.env")"
+fi
+ENABLED_MODULES="$(/usr/local/bin/get_value_from_config.sh ENABLED_MODULES "$${CLUSTER_CONFIG_DIR}/openvidu.env")"
+
+# Update shared secret
+echo -n "$REDIS_PASSWORD" | gcloud secrets versions add REDIS_PASSWORD --data-file=-
+echo -n "$DOMAIN_NAME" | gcloud secrets versions add DOMAIN_NAME --data-file=-
+echo -n "$OPENVIDU_RTC_ENGINE" | gcloud secrets versions add OPENVIDU_RTC_ENGINE --data-file=-
+echo -n "$OPENVIDU_PRO_LICENSE" | gcloud secrets versions add OPENVIDU_PRO_LICENSE --data-file=-
+echo -n "$MONGO_ADMIN_USERNAME" | gcloud secrets versions add MONGO_ADMIN_USERNAME --data-file=-
+echo -n "$MONGO_ADMIN_PASSWORD" | gcloud secrets versions add MONGO_ADMIN_PASSWORD --data-file=-
+echo -n "$MONGO_REPLICA_SET_KEY" | gcloud secrets versions add MONGO_REPLICA_SET_KEY --data-file=-
+echo -n "$MINIO_ACCESS_KEY" | gcloud secrets versions add MINIO_ACCESS_KEY --data-file=-
+echo -n "$MINIO_SECRET_KEY" | gcloud secrets versions add MINIO_SECRET_KEY --data-file=-
+echo -n "$DASHBOARD_ADMIN_USERNAME" | gcloud secrets versions add DASHBOARD_ADMIN_USERNAME --data-file=-
+echo -n "$DASHBOARD_ADMIN_PASSWORD" | gcloud secrets versions add DASHBOARD_ADMIN_PASSWORD --data-file=-
+echo -n "$GRAFANA_ADMIN_USERNAME" | gcloud secrets versions add GRAFANA_ADMIN_USERNAME --data-file=-
+echo -n "$GRAFANA_ADMIN_PASSWORD" | gcloud secrets versions add GRAFANA_ADMIN_PASSWORD --data-file=-
+echo -n "$LIVEKIT_API_KEY" | gcloud secrets versions add LIVEKIT_API_KEY --data-file=-
+echo -n "$LIVEKIT_API_SECRET" | gcloud secrets versions add LIVEKIT_API_SECRET --data-file=-
+echo -n "$MEET_INITIAL_ADMIN_USER" | gcloud secrets versions add MEET_INITIAL_ADMIN_USER --data-file=-
+echo -n "$MEET_INITIAL_ADMIN_PASSWORD" | gcloud secrets versions add MEET_INITIAL_ADMIN_PASSWORD --data-file=-
+if [[ "${var.initialMeetApiKey}" != '' ]]; then
+  echo -n "$MEET_INITIAL_API_KEY" | gcloud secrets versions add MEET_INITIAL_API_KEY --data-file=-
+fi
+echo -n "$ENABLED_MODULES" | gcloud secrets versions add ENABLED_MODULES --data-file=-
+EOF
+
   store_secret_script = <<-EOF
 #!/bin/bash
 set -e
@@ -1288,6 +1427,18 @@ INSTALL_EOF
 ${local.after_install_script}
 AFTER_INSTALL_EOF
   chmod +x /usr/local/bin/after_install.sh
+
+  # update_config_from_secret.sh
+  cat > /usr/local/bin/update_config_from_secret.sh << 'UPDATE_CONFIG_EOF'
+${local.update_config_from_secret_script}
+UPDATE_CONFIG_EOF
+  chmod +x /usr/local/bin/update_config_from_secret.sh
+
+  # update_secret_from_config.sh
+  cat > /usr/local/bin/update_secret_from_config.sh << 'UPDATE_SECRET_EOF'
+${local.update_secret_from_config_script}
+UPDATE_SECRET_EOF
+  chmod +x /usr/local/bin/update_secret_from_config.sh
 
   cat > /usr/local/bin/store_secret.sh << 'STORE_SECRET_EOF'
 ${local.store_secret_script}
