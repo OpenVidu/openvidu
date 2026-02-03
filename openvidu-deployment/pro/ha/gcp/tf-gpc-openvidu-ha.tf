@@ -1350,6 +1350,39 @@ fi
 echo -n "$ENABLED_MODULES" | gcloud secrets versions add ENABLED_MODULES --data-file=-
 EOF
 
+  get_value_from_config_script = <<-EOF
+#!/bin/bash -x
+set -e
+
+# Function to get the value of a given key from the environment file
+get_value() {
+    local key="$1"
+    local file_path="$2"
+    # Use grep to find the line with the key, ignoring lines starting with #
+    # Use awk to split on '=' and print the second field, which is the value
+    local value=$(grep -E "^\s*$key\s*=" "$file_path" | awk -F= '{print $2}' | sed 's/#.*//; s/^\s*//; s/\s*$//')
+    # If the value is empty, return "none"
+    if [ -z "$value" ]; then
+        echo "none"
+    else
+        echo "$value"
+    fi
+}
+
+# Check if the correct number of arguments are supplied
+if [ "$#" -ne 2 ]; then
+    echo "Usage: $0 <key> <file_path>"
+    exit 1
+fi
+
+# Get the key and file path from the arguments
+key="$1"
+file_path="$2"
+
+# Get and print the value
+get_value "$key" "$file_path"
+  EOF
+
   store_secret_script = <<-EOF
 #!/bin/bash
 set -e
@@ -1439,6 +1472,13 @@ UPDATE_CONFIG_EOF
 ${local.update_secret_from_config_script}
 UPDATE_SECRET_EOF
   chmod +x /usr/local/bin/update_secret_from_config.sh
+
+  # get_value_from_config.sh
+  cat > /usr/local/bin/get_value_from_config.sh << 'GET_VALUE_EOF'
+${local.get_value_from_config_script}
+GET_VALUE_EOF
+  chmod +x /usr/local/bin/get_value_from_config.sh
+
 
   cat > /usr/local/bin/store_secret.sh << 'STORE_SECRET_EOF'
 ${local.store_secret_script}
