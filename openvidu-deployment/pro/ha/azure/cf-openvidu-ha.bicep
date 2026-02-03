@@ -602,12 +602,16 @@ fi
 sed -i "s/ENABLED_MODULES=.*/ENABLED_MODULES=$ENABLED_MODULES/" "${CLUSTER_CONFIG_DIR}/openvidu.env"
 
 # Update URLs in secret
+OPENVIDU_URL="https://${DOMAIN}/"
+LIVEKIT_URL="wss://${DOMAIN}/"
 DASHBOARD_URL="https://${DOMAIN}/dashboard/"
 GRAFANA_URL="https://${DOMAIN}/grafana/"
 MINIO_URL="https://${DOMAIN}/minio-console/"
 
 # Update shared secret
 az keyvault secret set --vault-name ${keyVaultName} --name DOMAIN-NAME --value $DOMAIN
+az keyvault secret set --vault-name ${keyVaultName} --name OPENVIDU-URL --value $OPENVIDU_URL
+az keyvault secret set --vault-name ${keyVaultName} --name LIVEKIT-URL --value $LIVEKIT_URL
 az keyvault secret set --vault-name ${keyVaultName} --name DASHBOARD-URL --value $DASHBOARD_URL
 az keyvault secret set --vault-name ${keyVaultName} --name GRAFANA-URL --value $GRAFANA_URL
 az keyvault secret set --vault-name ${keyVaultName} --name MINIO-URL --value $MINIO_URL
