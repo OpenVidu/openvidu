@@ -88,7 +88,7 @@ variable "initialMeetApiKey" {
 variable "masterNodesInstanceType" {
   description = "Specifies the GCE machine type for your OpenVidu Master Node"
   type        = string
-  default     = "e2-standard-2"
+  default     = "e2-standard-4"
 }
 
 variable "masterNodesDiskSize" {
@@ -104,7 +104,7 @@ variable "masterNodesDiskSize" {
 variable "mediaNodeInstanceType" {
   description = "Specifies the GCE machine type for your OpenVidu Media Nodes"
   type        = string
-  default     = "e2-standard-2"
+  default     = "e2-standard-4"
 }
 
 variable "initialNumberOfMediaNodes" {
