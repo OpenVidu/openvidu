@@ -2574,7 +2574,7 @@ resource masterToMasterMeet 'Microsoft.Network/networkSecurityGroups/securityRul
         id: openviduMasterNodeASG.id
       }
     ]
-    destinationPortRange: '6080'
+    destinationPortRange: '9080'
     access: 'Allow'
     priority: 290
     direction: 'Inbound'
@@ -2597,7 +2597,7 @@ resource mediaToMasterMeetWebhookIngress 'Microsoft.Network/networkSecurityGroup
         id: openviduMasterNodeASG.id
       }
     ]
-    destinationPortRange: '6080'
+    destinationPortRange: '9080'
     access: 'Allow'
     priority: 300
     direction: 'Inbound'

@@ -122,7 +122,7 @@ resource "google_compute_firewall" "master_to_master_internal" {
       "5000",
       "3000",
       "4443",
-      "6080"
+      "9080"
     ]
   }
 
@@ -145,7 +145,7 @@ resource "google_compute_firewall" "media_to_master_services" {
       "9009",
       "3100",
       "4443",
-      "6080"
+      "9080"
     ]
   }
 

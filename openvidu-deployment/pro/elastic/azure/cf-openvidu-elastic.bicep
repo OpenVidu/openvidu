@@ -1691,7 +1691,7 @@ resource mediaToMasterMeetWebhookIngress 'Microsoft.Network/networkSecurityGroup
         id: openviduMasterNodeASG.id
       }
     ]
-    destinationPortRange: '6080'
+    destinationPortRange: '9080'
     access: 'Allow'
     priority: 210
     direction: 'Inbound'

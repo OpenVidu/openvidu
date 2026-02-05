@@ -87,7 +87,7 @@ resource "google_compute_firewall" "firewall_media_to_master" {
 
   allow {
     protocol = "tcp"
-    ports    = ["7000", "9100", "20000", "3100", "9009", "4443", "6080"]
+    ports    = ["7000", "9100", "20000", "3100", "9009", "4443", "9080"]
   }
 
   source_tags = [

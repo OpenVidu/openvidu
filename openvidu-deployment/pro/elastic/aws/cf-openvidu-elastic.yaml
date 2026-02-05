@@ -2144,8 +2144,8 @@ Resources:
     Properties:
       GroupId: !GetAtt OpenViduMasterNodeSG.GroupId
       IpProtocol: tcp
-      FromPort: 6080
-      ToPort: 6080
+      FromPort: 9080
+      ToPort: 9080
       SourceSecurityGroupId: !GetAtt OpenViduMediaNodeSG.GroupId
 
   OpenViduMediaNodeSG:

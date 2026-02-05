@@ -4,8 +4,8 @@
   "metadata": {
     "_generator": {
       "name": "bicep",
-      "version": "0.36.1.42791",
-      "templateHash": "5003476352656312533"
+      "version": "0.37.4.10188",
+      "templateHash": "15285989962337030173"
     }
   },
   "parameters": {
@@ -1881,7 +1881,7 @@
             "id": "[resourceId('Microsoft.Network/applicationSecurityGroups', format('{0}-masterNodeASG', parameters('stackName')))]"
           }
         ],
-        "destinationPortRange": "6080",
+        "destinationPortRange": "9080",
         "access": "Allow",
         "priority": 290,
         "direction": "Inbound"
@@ -1908,7 +1908,7 @@
             "id": "[resourceId('Microsoft.Network/applicationSecurityGroups', format('{0}-masterNodeASG', parameters('stackName')))]"
           }
         ],
-        "destinationPortRange": "6080",
+        "destinationPortRange": "9080",
         "access": "Allow",
         "priority": 300,
         "direction": "Inbound"
