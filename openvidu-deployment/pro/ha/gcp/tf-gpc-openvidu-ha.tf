@@ -1419,7 +1419,7 @@ EOF
   check_app_ready_script = <<-EOF
 #!/bin/bash
 while true; do
-  HTTP_STATUS=$(curl -Ik http://localhost:7880 2>/dev/null | head -n1 | awk '{print $2}')
+  HTTP_STATUS=$(curl -Ik http://localhost:7880/health/caddy 2>/dev/null | head -n1 | awk '{print $2}')
   if [ "$HTTP_STATUS" == "200" ]; then
     break
   fi

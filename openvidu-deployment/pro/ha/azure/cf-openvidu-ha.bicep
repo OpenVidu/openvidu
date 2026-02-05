@@ -763,7 +763,7 @@ var check_app_readyScriptMaster = '''
 #!/bin/bash
 set -e
 while true; do
-  HTTP_STATUS=$(curl -Ik http://localhost:7880/twirp/health | head -n1 | awk '{print $2}')
+  HTTP_STATUS=$(curl -Ik http://localhost:7880/health/caddy | head -n1 | awk '{print $2}')
   if [ $HTTP_STATUS == 200 ]; then
     break
   fi
