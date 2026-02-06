@@ -16,6 +16,7 @@ services:
       - MEET_INITIAL_ADMIN_USER=${MEET_INITIAL_ADMIN_USER:-admin}
       - MEET_INITIAL_ADMIN_PASSWORD=${MEET_INITIAL_ADMIN_PASSWORD:-admin}
       - MEET_INITIAL_API_KEY=${MEET_INITIAL_API_KEY:-meet-api-key}
+      - MEET_BASE_PATH=${MEET_BASE_PATH:-/meet}
     volumes:
       - scripts:/scripts
       - /etc/localtime:/etc/localtime:ro
@@ -208,6 +209,7 @@ services:
       - MEET_REDIS_PASSWORD=${REDIS_PASSWORD:-redispassword}
       - MEET_REDIS_DB=0
       - MEET_MONGO_URI=mongodb://${MONGO_ADMIN_USERNAME:-mongoadmin}:${MONGO_ADMIN_PASSWORD:-mongoadmin}@mongo:27017/?replicaSet=rs0&readPreference=primaryPreferred
+      - MEET_BASE_PATH=${MEET_BASE_PATH:-/meet}
     volumes:
       - scripts:/scripts
       - /etc/localtime:/etc/localtime:ro
