@@ -28,8 +28,8 @@ resource "google_secret_manager_secret" "openvidu_shared_info" {
 
 # GCS bucket
 resource "google_storage_bucket" "bucket" {
-  count                       = 1
-  name                        = local.isEmpty ? "${var.projectId}-${random_id.bucket_suffix.hex}" : var.bucketName
+  count                       = local.isEmpty ? 1 : 0
+  name                        = "${var.projectId}-${var.stackName}-${random_id.bucket_suffix.hex}"
   location                    = var.region
   force_destroy               = true
   uniform_bucket_level_access = true
@@ -84,6 +84,11 @@ resource "google_compute_address" "public_ip_address" {
   region = var.region
 }
 
+#Check if ARM
+locals {
+  ubuntu_image = local.is_arm_instance ? "ubuntu-os-cloud/ubuntu-2404-noble-arm64-v20241219" : "ubuntu-os-cloud/ubuntu-2404-noble-amd64-v20241219"
+}
+
 # Compute instance for OpenVidu
 resource "google_compute_instance" "openvidu_server" {
   name         = lower("${var.stackName}-vm-pro")
@@ -94,7 +99,7 @@ resource "google_compute_instance" "openvidu_server" {
 
   boot_disk {
     initialize_params {
-      image = "projects/ubuntu-os-cloud/global/images/family/ubuntu-2204-lts"
+      image = local.ubuntu_image
       size  = 100
       type  = "pd-standard"
     }
@@ -109,15 +114,15 @@ resource "google_compute_instance" "openvidu_server" {
 
   metadata = {
     # metadata values are accessible from the instance
-    publicIpAddress           = google_compute_address.public_ip_address[0].address
-    region                    = var.region
-    stackName                 = var.stackName
-    certificateType           = var.certificateType
-    domainName                = var.domainName
-    ownPublicCertificate      = var.ownPublicCertificate
-    ownPrivateCertificate     = var.ownPrivateCertificate
-    additionalInstallFlags    = var.additionalInstallFlags
-    bucketName                = local.isEmpty ? google_storage_bucket.bucket[0].name : var.bucketName
+    publicIpAddress        = coalesce(var.publicIpAddress, google_compute_address.public_ip_address[0].address)
+    region                 = var.region
+    stackName              = var.stackName
+    certificateType        = var.certificateType
+    domainName             = var.domainName
+    ownPublicCertificate   = var.ownPublicCertificate
+    ownPrivateCertificate  = var.ownPrivateCertificate
+    additionalInstallFlags = var.additionalInstallFlags
+    bucketName             = local.isEmpty ? google_storage_bucket.bucket[0].name : var.bucketName
   }
 
   service_account {
