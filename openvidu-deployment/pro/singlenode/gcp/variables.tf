@@ -88,7 +88,7 @@ variable "initialMeetApiKey" {
 variable "instanceType" {
   description = "Specifies the GCE machine type for your OpenVidu instance"
   type        = string
-  default     = "e2-standard-2"
+  default     = "e2-standard-4"
 }
 
 variable "bucketName" {
