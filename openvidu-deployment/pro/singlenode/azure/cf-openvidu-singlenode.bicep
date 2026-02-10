@@ -233,7 +233,7 @@ LIVEKIT_API_SECRET="$(/usr/local/bin/store_secret.sh generate LIVEKIT-API-SECRET
 ENABLED_MODULES="$(/usr/local/bin/store_secret.sh save ENABLED-MODULES "observability,openviduMeet,v2compatibility")"
 
 # Base command
-INSTALL_COMMAND="sh <(curl -fsSL http://get.openvidu.io/community/singlenode/$OPENVIDU_VERSION/install.sh)"
+INSTALL_COMMAND="sh <(curl -fsSL http://get.openvidu.io/pro/singlenode/$OPENVIDU_VERSION/install.sh)"
 
 # Common arguments
 COMMON_ARGS=(

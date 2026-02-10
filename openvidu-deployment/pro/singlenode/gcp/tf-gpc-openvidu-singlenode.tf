@@ -216,7 +216,7 @@ LIVEKIT_API_KEY="$(/usr/local/bin/store_secret.sh generate LIVEKIT_API_KEY "API"
 LIVEKIT_API_SECRET="$(/usr/local/bin/store_secret.sh generate LIVEKIT_API_SECRET)"
 
 # Build install command and args
-INSTALL_COMMAND="sh <(curl -fsSL http://get.openvidu.io/community/singlenode/$OPENVIDU_VERSION/install.sh)"
+INSTALL_COMMAND="sh <(curl -fsSL http://get.openvidu.io/pro/singlenode/$OPENVIDU_VERSION/install.sh)"
 # Common arguments
 COMMON_ARGS=(
   "--no-tty"
