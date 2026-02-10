@@ -2,7 +2,7 @@
 
 # Variables used by the configuration
 variable "projectId" {
-  description = "GCP project id where the resourw es will be created."
+  description = "GCP project id where the resources will be created."
   type        = string
 }
 
