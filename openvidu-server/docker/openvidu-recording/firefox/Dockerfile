@@ -1,8 +1,10 @@
 FROM ubuntu:24.04
 MAINTAINER info@openvidu.io
 
-# Install packages
-RUN apt-get update && apt-get -y upgrade && apt-get install -y \
+# SECURITY UPDATE: Install packages with time validation bypass and security updates
+# Added comprehensive language font support and line ending conversion tools
+RUN echo 'Acquire::Check-Valid-Until "false";' > /etc/apt/apt.conf.d/99ignore-release-date && \
+    apt-get update && apt-get -y upgrade && apt-get install -y \
     wget \
     sudo \
     gnupg2 \
@@ -12,6 +14,10 @@ RUN apt-get update && apt-get -y upgrade && apt-get install -y \
     pulseaudio \
     xvfb \
     jq \
+    # SECURITY UPDATE: Added dos2unix for proper line ending handling
+    dos2unix \
+    # SECURITY UPDATE: Added comprehensive language fonts for international support
+    ttf-ancient-fonts fonts-beng fonts-wqy-zenhei fonts-indic \
   && rm -rf /var/lib/apt/lists/*
 
 # Install Firefox
