@@ -63,7 +63,14 @@
 		<version.testcontainers>2.0.2</version.testcontainers>
 		<version.appium>10.0.0</version.appium>
 		<version.stringsimilarity>2.0.0</version.stringsimilarity>
-		<version.logback>1.5.20</version.logback>
+		<!-- SECURITY UPDATE: Updated logback from 1.5.20 to 1.5.25 for CVE fixes -->
+		<version.logback>1.5.25</version.logback>
+		<!-- SECURITY UPDATE: Added explicit Netty version management for CVE-2024-xxx fixes -->
+		<version.netty>4.2.9.Final</version.netty>
+		<!-- SECURITY UPDATE: Added commons-codec explicit version for security compliance -->
+		<version.commons.codec>1.13</version.commons.codec>
+		<!-- SECURITY UPDATE: Updated Jetty to 12.0.22 for io.netty:jetty-io CVE fixes -->
+		<version.jetty>12.0.22</version.jetty>
 		<version.jackson>3.0.2</version.jackson>
 		<version.jackson-annotations>2.20</version.jackson-annotations>
 
