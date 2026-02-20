@@ -237,11 +237,19 @@ services:
         openvidu:
             # Allocation strategy for new egress requests
             # - cpuload: the node with the lowest CPU load will be selected. Distributes the CPU load evenly across all nodes.
-            # - binpack: some node already hosting at least one Egress will be selected. Fills up nodes before assigning work to new ones.
+            # - binpack: some node already hosting at least one egress will be selected. Fills up nodes before assigning work to new ones.
             allocation_strategy: cpuload
+            # Whether to use system-wide CPU monitoring or egress process CPU monitoring. This affects the allocation of new egress requests.
+            # It is preferable to set this value to:
+            # - true: when the egress service is running in a shared server also hosting other CPU-intensive services.
+            # - false: when the egress service is running in a dedicated server.
+            use_global_cpu_monitoring: true
             # Disables the automatic killing of the most expensive egress when CPU is overloaded.
             # The default "false" value helps keeping the node stable, but may cause unexpected egress terminations under high load.
             disable_cpu_overload_killer: false
+            # Minimum available disk space in MB required to accept new egress requests.
+            # Default: 512 MB. Set to a negative value (e.g., -1) to disable disk space checking.
+            min_disk_space_mb: 512
 
   setup:
     image: docker.io/busybox:1.37.0
