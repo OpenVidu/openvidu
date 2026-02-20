@@ -427,28 +427,28 @@ export class OpenViduService {
 		if (videoDeviceId === true) {
 			if (this.deviceService.hasVideoDeviceAvailable()) {
 				const selectedCamera = this.deviceService.getCameraSelected();
-				options.video = { deviceId: selectedCamera?.device || 'default' };
+				options.video = { deviceId: this.toDeviceConstraint(selectedCamera?.device) };
 			} else {
 				options.video = false;
 			}
 		} else if (videoDeviceId === false) {
 			options.video = false;
 		} else {
-			(options.video as VideoCaptureOptions).deviceId = videoDeviceId;
+			(options.video as VideoCaptureOptions).deviceId = this.toDeviceConstraint(videoDeviceId);
 		}
 
 		// Audio device
 		if (audioDeviceId === true) {
 			if (this.deviceService.hasAudioDeviceAvailable()) {
 				const selectedMic = this.deviceService.getMicrophoneSelected();
-				(options.audio as AudioCaptureOptions).deviceId = selectedMic?.device || 'default';
+				(options.audio as AudioCaptureOptions).deviceId = this.toDeviceConstraint(selectedMic?.device);
 			} else {
 				options.audio = false;
 			}
 		} else if (audioDeviceId === false) {
 			options.audio = false;
 		} else {
-			(options.audio as AudioCaptureOptions).deviceId = audioDeviceId;
+			(options.audio as AudioCaptureOptions).deviceId = this.toDeviceConstraint(audioDeviceId);
 		}
 
 		let newLocalTracks: LocalTrack[] = [];
@@ -516,6 +516,13 @@ export class OpenViduService {
 		}
 
 		return tracks;
+	}
+
+	private toDeviceConstraint(deviceId?: string): ConstrainDOMString {
+		if (!deviceId || deviceId === 'default') {
+			return { ideal: 'default' };
+		}
+		return { exact: deviceId };
 	}
 
 	/**
@@ -588,13 +595,13 @@ export class OpenViduService {
 	 */
 	async switchCamera(deviceId: string): Promise<void> {
 		const existingTrack = this.localTracks.find((t) => t.kind === Track.Kind.Video) as LocalVideoTrack | undefined;
-
+		const options: VideoCaptureOptions = { deviceId: this.toDeviceConstraint(deviceId) };
 		if (existingTrack) {
 			try {
 				// restartTrack replaces the underlying MediaStreamTrack in-place.
 				// LiveKit's setMediaStreamTrack will call processor.restart(newTrack) automatically
 				// if a background processor is attached, preserving the active effect.
-				await existingTrack.restartTrack({ deviceId });
+				await existingTrack.restartTrack(options);
 				if (!this.deviceService.isCameraEnabled()) {
 					await existingTrack.mute();
 				}
@@ -608,7 +615,7 @@ export class OpenViduService {
 
 		// No existing track (edge case: camera was unavailable/unpublished) → create a fresh one
 		try {
-			const newVideoTracks = await createLocalTracks({ video: { deviceId } });
+			const newVideoTracks = await createLocalTracks({ video: options });
 			const videoTrack = newVideoTracks.find((t) => t.kind === Track.Kind.Video) as LocalVideoTrack | undefined;
 			if (videoTrack) {
 				if (!this.deviceService.isCameraEnabled()) {
@@ -679,15 +686,16 @@ export class OpenViduService {
 	 */
 	async switchMicrophone(deviceId: string): Promise<void> {
 		const existingTrack = this.localTracks.find((t) => t.kind === Track.Kind.Audio) as LocalAudioTrack | undefined;
+		const options: AudioCaptureOptions = {
+			deviceId: this.toDeviceConstraint(deviceId),
+			echoCancellation: true,
+			noiseSuppression: true,
+			autoGainControl: true
+		};
 
 		if (existingTrack) {
 			try {
-				await existingTrack.restartTrack({
-					deviceId,
-					echoCancellation: true,
-					noiseSuppression: true,
-					autoGainControl: true
-				});
+				await existingTrack.restartTrack(options);
 				if (!this.deviceService.isMicrophoneEnabled()) {
 					await existingTrack.mute();
 				}
@@ -701,14 +709,7 @@ export class OpenViduService {
 
 		// No existing track (edge case) → create a fresh one
 		try {
-			const newAudioTracks = await createLocalTracks({
-				audio: {
-					deviceId,
-					echoCancellation: true,
-					noiseSuppression: true,
-					autoGainControl: true
-				}
-			});
+			const newAudioTracks = await createLocalTracks(options as CreateLocalTracksOptions);
 			const audioTrack = newAudioTracks.find((t) => t.kind === Track.Kind.Audio);
 			if (audioTrack) {
 				if (!this.deviceService.isMicrophoneEnabled()) {
