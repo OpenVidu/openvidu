@@ -25,7 +25,7 @@
 				<div class="prejoin-main">
 					<!-- Video Preview Section -->
 					<div class="video-preview-section">
-					<div class="video-preview-container" [class.compact]="showBackgroundPanel">
+						<div class="video-preview-container" [class.compact]="showBackgroundPanel">
 							<div class="video-frame">
 								<ov-media-element
 									[track]="videoTrack"
@@ -85,7 +85,7 @@
 					</div>
 
 					@if (showBackgroundPanel) {
-						<div class="vb-container" [@slideInOut]>
+						<div class="vb-container">
 							<ov-background-effects-panel [mode]="'prejoin'" (onClose)="closeBackgroundPanel()">
 							</ov-background-effects-panel>
 						</div>
