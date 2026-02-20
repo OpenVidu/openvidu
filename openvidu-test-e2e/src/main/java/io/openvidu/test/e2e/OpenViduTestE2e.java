@@ -184,7 +184,7 @@ public class OpenViduTestE2e {
 
 		GenericContainer<?> rtspServerContainer = new GenericContainer<>(DockerImageName.parse(RTSP_SERVER_IMAGE))
 				.withCreateContainerCmdModifier(cmd -> cmd.withName("rtsp-" + Math.random() * 100000))
-				.withEnv(Map.of("MTX_LOGLEVEL", "info", "MTX_PROTOCOLS", "tcp", "MTX_RTSPADDRESS", ":" + RTSP_SRT_PORT,
+				.withEnv(Map.of("MTX_LOGLEVEL", "info", "MTX_RTSPTRANSPORTS", "tcp", "MTX_RTSPADDRESS", ":" + RTSP_SRT_PORT,
 						"MTX_HLS", "no", "MTX_RTSP", "yes", "MTX_WEBRTC", "yes", "MTX_SRT", "no", "MTX_RTMP", "no",
 						"MTX_API", "no"))
 				.withNetworkMode("host")
@@ -214,15 +214,14 @@ public class OpenViduTestE2e {
 		ffmpegPublishContainer.start();
 		containers.add(ffmpegPublishContainer);
 
+		// e.g. "[path live] stream is available and online, 2 tracks (H264, Opus)"
 		if (videoCodec != null) {
-			String regex = ".*is publishing to path '" + RTSP_PATH + "'[^\\n]*\\([^\\n]*(?i)(" + videoCodec
-					+ ")[^\\n]*\\)\\n";
+			String regex = ".*\\[path " + RTSP_PATH + "\\] stream is available.*\\(.*(?i)(" + videoCodec + ").*\\).*";
 			waitUntilLog(rtspServerContainer, regex, 15);
 		}
 		if (audioCodec != null) {
 			String expectedValue = FFMPEG_AUDIO_CODEC_NAMES.get(audioCodec).getRight();
-			String regex = ".*is publishing to path '" + RTSP_PATH + "'[^\\n]*\\([^\\n]*(?i)(" + expectedValue
-					+ ")[^\\n]*\\)\\n";
+			String regex = ".*\\[path " + RTSP_PATH + "\\] stream is available.*\\(.*(?i)(" + expectedValue + ").*\\).*";
 			waitUntilLog(rtspServerContainer, regex, 15);
 		}
 
