@@ -3,7 +3,7 @@ import {
 	BackgroundProcessor,
 	supportsBackgroundProcessors,
 	supportsModernBackgroundProcessors,
-    /*BackgroundProcessorWrapper,*/ SwitchBackgroundProcessorOptions
+	/*BackgroundProcessorWrapper,*/ SwitchBackgroundProcessorOptions
 } from '@livekit/track-processors';
 import {
 	AudioCaptureOptions,
@@ -78,13 +78,18 @@ export class OpenViduService {
 	readonly isBackgroundProcessorSupported: Signal<boolean> = this._isBackgroundProcessorSupported.asReadonly();
 
 	/**
+	 * Stores the last applied background options so they can be re-applied after a camera switch.
+	 */
+	private currentBackgroundOptions: SwitchBackgroundProcessorOptions | null = null;
+
+	/**
 	 * @internal
 	 */
 	constructor(
 		private loggerSrv: LoggerService,
 		private deviceService: DeviceService,
 		private storageService: StorageService,
-		private configService: OpenViduComponentsConfigService,
+		private configService: OpenViduComponentsConfigService
 	) {
 		this.log = this.loggerSrv.get('OpenViduService');
 		// this.isSttReadyObs = this._isSttReady.asObservable();
@@ -313,8 +318,6 @@ export class OpenViduService {
 		return this.localTracks;
 	}
 
-
-
 	/**
 	 * Switches the background mode on the local video track.
 	 * Works both in prejoin and in-room states.
@@ -339,6 +342,7 @@ export class OpenViduService {
 			// If processor exists, switch mode (either pre-initialized or just created on-demand)
 			if (this.backgroundProcessor) {
 				await this.backgroundProcessor.switchTo(options);
+				this.currentBackgroundOptions = options;
 				this.log.d('Background mode switched:', options);
 			}
 		} catch (error: any) {
@@ -460,25 +464,12 @@ export class OpenViduService {
 				newLocalTracks = await createLocalTracks(options);
 			}
 
-			// Apply background processor to video track (initialized in disabled mode)
-			// For browsers with modern processor support: attach processor immediately for smooth transitions
-			// For browsers without modern support: skip attachment, will be applied on-demand when effect is activated
+			// Apply background processor to the new video track.
+			// applyProcessorToVideoTrack handles both modern (pre-attach + auto-restore via
+			// transformer.options) and Firefox/non-modern (lazy attach only when a VBG is active).
 			const videoTrack = newLocalTracks.find((t) => t.kind === Track.Kind.Video) as LocalVideoTrack | undefined;
-			if (videoTrack && supportsModernBackgroundProcessors()) {
-				if (this.isBackgroundProcessorSupported() && this.backgroundProcessor) {
-					try {
-						await videoTrack.setProcessor(this.backgroundProcessor);
-						this.log.d('Background processor applied to newly created video track');
-					} catch (error: any) {
-						this.log.w('Failed to apply background processor (GPU may be disabled):', error?.message || error);
-						this._isBackgroundProcessorSupported.set(false);
-						// Continue without crashing - virtual background will be disabled
-					}
-				} else {
-					this.log.d('Background processor not supported (GPU disabled or not available)');
-				}
-			} else if (videoTrack && !supportsModernBackgroundProcessors()) {
-				this.log.d('Modern background processors not supported - will apply processor on-demand when effect is activated');
+			if (videoTrack) {
+				await this.applyProcessorToVideoTrack(videoTrack);
 			}
 
 			// Mute tracks if devices are disabled
@@ -584,128 +575,152 @@ export class OpenViduService {
 	}
 
 	/**
-	 * Switch the camera device when the room is not connected (prejoin page)
-	 * @param deviceId new video device to use
+	 * Switches the camera device in prejoin (room not yet connected).
+	 *
+	 * Uses `LocalVideoTrack.restartTrack({ deviceId })` on the existing track when available.
+	 * This is the correct LiveKit pattern: `restartTrack` internally calls `setMediaStreamTrack`,
+	 * which automatically calls `processor.restart(newTrack)` if a background processor is
+	 * attached — preserving any active virtual-background effect without extra work.
+	 *
+	 * Falls back to creating a new track (with processor reattachment) when no track exists.
+	 * @param deviceId - The new video device ID
 	 * @internal
 	 */
 	async switchCamera(deviceId: string): Promise<void> {
-		const existingTrack = this.localTracks.find((track) => track.kind === Track.Kind.Video) as LocalVideoTrack;
+		const existingTrack = this.localTracks.find((t) => t.kind === Track.Kind.Video) as LocalVideoTrack | undefined;
 
 		if (existingTrack) {
-			//TODO: Should use replace track using restartTrack
-			// Try to restart existing track
-			this.removeVideoTrack();
-			// try {
-			// await existingTrack.restartTrack({ deviceId: deviceId });
-			// 	this.log.d('Camera switched successfully using existing track');
-			// 	return;
-			// } catch (error) {
-			// 	this.log.w('Failed to restart video track, trying to create new one:', error);
-			// 	// Remove the failed track
-			// 	this.removeVideoTrack();
-			// }
+			try {
+				// restartTrack replaces the underlying MediaStreamTrack in-place.
+				// LiveKit's setMediaStreamTrack will call processor.restart(newTrack) automatically
+				// if a background processor is attached, preserving the active effect.
+				await existingTrack.restartTrack({ deviceId });
+				if (!this.deviceService.isCameraEnabled()) {
+					await existingTrack.mute();
+				}
+				this.log.d('Camera switched via restartTrack:', deviceId);
+			} catch (error) {
+				this.log.e('Failed to switch camera via restartTrack:', error);
+				throw error;
+			}
+			return;
 		}
 
-		// Create new video track if no existing track or restart failed
+		// No existing track (edge case: camera was unavailable/unpublished) → create a fresh one
 		try {
-			const newVideoTracks = await createLocalTracks({
-				video: { deviceId: deviceId }
-			});
-
-			const videoTrack = newVideoTracks.find((t) => t.kind === Track.Kind.Video);
+			const newVideoTracks = await createLocalTracks({ video: { deviceId } });
+			const videoTrack = newVideoTracks.find((t) => t.kind === Track.Kind.Video) as LocalVideoTrack | undefined;
 			if (videoTrack) {
-				// Mute if camera is disabled in settings
 				if (!this.deviceService.isCameraEnabled()) {
 					await videoTrack.mute();
 				}
-
+				// Attach processor (and restore active background if any) to the fresh track
+				await this.applyProcessorToVideoTrack(videoTrack);
 				this.localTracks.push(videoTrack);
-				this.log.d('New camera track created and added');
+				this.log.d('New camera track created and added:', deviceId);
 			}
 		} catch (error) {
 			this.log.e('Failed to create new video track:', error);
 			const message = error instanceof Error ? error.message : 'Unknown error';
 			throw new Error(`Failed to switch camera: ${message}`);
 		}
-	} /**
-	 * Switches the microphone device when the room is not connected (prejoin page)
-	 * @param deviceId new audio device to use
+	}
+
+	/**
+	 * Attaches the background processor to a freshly-created video track.
+	 * Called only for brand-new track objects (createLocalTracks or the no-existing-track fallback).
+	 *
+	 * - Modern browsers: pre-attaches the shared processor object; `processor.init()` uses the
+	 *   transformer's stored options so any previously active mode is automatically restored.
+	 * - Firefox (non-modern / stream fallback): lazily attaches the processor only when a
+	 *   background effect was already active, then re-applies the stored options.
+	 * @internal
+	 */
+	private async applyProcessorToVideoTrack(videoTrack: LocalVideoTrack): Promise<void> {
+		if (!this.isBackgroundProcessorSupported()) return;
+
+		if (supportsModernBackgroundProcessors()) {
+			if (!this.backgroundProcessor) return;
+			try {
+				// setProcessor calls processor.init() which re-initialises the pipeline using
+				// transformer.options (updated by every switchTo call), so the active background
+				// effect is restored without an explicit switchTo here.
+				await videoTrack.setProcessor(this.backgroundProcessor);
+				this.log.d('Background processor applied to video track');
+			} catch (error: any) {
+				this.log.w('Failed to apply background processor to video track:', error?.message || error);
+				this._isBackgroundProcessorSupported.set(false);
+			}
+		} else if (this.currentBackgroundOptions && this.currentBackgroundOptions.mode !== 'disabled') {
+			// Firefox / non-modern: processor is not pre-allocated; create on first use
+			try {
+				if (!this.backgroundProcessor) {
+					this.backgroundProcessor = BackgroundProcessor({ mode: 'disabled' });
+				}
+				await videoTrack.setProcessor(this.backgroundProcessor);
+				// For the non-modern path the processor's transformer options are reset on init;
+				// we must explicitly re-apply the active effect.
+				await this.backgroundProcessor.switchTo(this.currentBackgroundOptions);
+				this.log.d('Background effect restored on new track (non-modern):', this.currentBackgroundOptions);
+			} catch (error: any) {
+				this.log.w('Failed to restore background processor (non-modern):', error?.message || error);
+			}
+		}
+	}
+
+	/**
+	 * Switches the microphone device in prejoin (room not yet connected).
+	 *
+	 * Uses `LocalAudioTrack.restartTrack({ deviceId })` on the existing track when available,
+	 * preserving echo-cancellation, noise-suppression and auto-gain-control constraints.
+	 * Falls back to creating a new audio track when none exists.
+	 * @param deviceId - The new audio device ID
 	 * @internal
 	 */
 	async switchMicrophone(deviceId: string): Promise<void> {
-		const existingTrack = this.localTracks?.find((track) => track.kind === Track.Kind.Audio) as LocalAudioTrack;
+		const existingTrack = this.localTracks.find((t) => t.kind === Track.Kind.Audio) as LocalAudioTrack | undefined;
 
 		if (existingTrack) {
-			this.removeAudioTrack();
-			//TODO: Should use replace track using restartTrack
-			// Try to restart existing track
-			// try {
-			// 	await existingTrack.restartTrack({ deviceId: deviceId });
-			// 	this.log.d('Microphone switched successfully using existing track');
-			// 	return;
-			// } catch (error) {
-			// 	this.log.w('Failed to restart audio track, trying to create new one:', error);
-			// 	// Remove the failed track
-			// 	this.removeAudioTrack();
-			// }
+			try {
+				await existingTrack.restartTrack({
+					deviceId,
+					echoCancellation: true,
+					noiseSuppression: true,
+					autoGainControl: true
+				});
+				if (!this.deviceService.isMicrophoneEnabled()) {
+					await existingTrack.mute();
+				}
+				this.log.d('Microphone switched via restartTrack:', deviceId);
+			} catch (error) {
+				this.log.e('Failed to switch microphone via restartTrack:', error);
+				throw error;
+			}
+			return;
 		}
 
-		// Create new audio track if no existing track or restart failed
+		// No existing track (edge case) → create a fresh one
 		try {
 			const newAudioTracks = await createLocalTracks({
 				audio: {
-					deviceId: deviceId,
+					deviceId,
 					echoCancellation: true,
 					noiseSuppression: true,
 					autoGainControl: true
 				}
 			});
-
 			const audioTrack = newAudioTracks.find((t) => t.kind === Track.Kind.Audio);
 			if (audioTrack) {
-				this.localTracks.push(audioTrack);
-
-				// Mute if microphone is disabled in settings
 				if (!this.deviceService.isMicrophoneEnabled()) {
 					await audioTrack.mute();
 				}
-
-				this.log.d('New microphone track created and added');
+				this.localTracks.push(audioTrack);
+				this.log.d('New microphone track created and added:', deviceId);
 			}
 		} catch (error) {
 			this.log.e('Failed to create new audio track:', error);
 			const message = error instanceof Error ? error.message : 'Unknown error';
 			throw new Error(`Failed to switch microphone: ${message}`);
-		}
-	}
-
-	/**
-	 * Removes video track from local tracks
-	 * @internal
-	 */
-	private removeVideoTrack(): void {
-		const videoTrackIndex = this.localTracks.findIndex((track) => track.kind === Track.Kind.Video);
-		if (videoTrackIndex !== -1) {
-			const videoTrack = this.localTracks[videoTrackIndex];
-			videoTrack.stop();
-			videoTrack.detach();
-			this.localTracks.splice(videoTrackIndex, 1);
-			this.log.d('Video track removed');
-		}
-	}
-
-	/**
-	 * Removes audio track from local tracks
-	 * @internal
-	 */
-	private removeAudioTrack(): void {
-		const audioTrackIndex = this.localTracks.findIndex((track) => track.kind === Track.Kind.Audio);
-		if (audioTrackIndex !== -1) {
-			const audioTrack = this.localTracks[audioTrackIndex];
-			audioTrack.stop();
-			audioTrack.detach();
-			this.localTracks.splice(audioTrackIndex, 1);
-			this.log.d('Audio track removed');
 		}
 	}
 
