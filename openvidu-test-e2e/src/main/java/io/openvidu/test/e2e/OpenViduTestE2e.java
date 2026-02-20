@@ -271,7 +271,9 @@ public class OpenViduTestE2e {
 			}
 			t--;
 		}
-		if (!pattern.matcher(container.getLogs()).find()) {
+		String logs = container.getLogs();
+		if (!pattern.matcher(logs).find()) {
+			System.err.println("Container logs:\n" + logs + "\nEnd of container logs\n");
 			Assertions.fail("RTSP server has not published media in " + secondsTimeout + " seconds. Looking for regex "
 					+ regex);
 		}
