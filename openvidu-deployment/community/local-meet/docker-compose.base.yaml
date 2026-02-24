@@ -1,7 +1,7 @@
 services:
 
   generate-scripts:
-    image: alpine:3.23.2
+    image: alpine:3.23.3
     entrypoint: ["/bin/sh", "-c"]
     restart: "no"
     user: root
