@@ -2513,7 +2513,7 @@ Resources:
             Ebs:
               VolumeType: gp3
               DeleteOnTermination: true
-              VolumeSize: 50
+              VolumeSize: !If [IsMediaNodeNvidia, 100, 50]
 
   OpenViduMediaNodeASG:
     DependsOn:
