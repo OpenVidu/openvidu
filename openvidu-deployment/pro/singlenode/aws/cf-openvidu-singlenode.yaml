@@ -794,11 +794,13 @@ Resources:
                 wget https://github.com/mikefarah/yq/releases/download/${!YQ_VERSION}/yq_linux_$(dpkg --print-architecture).tar.gz -O - |\
                   tar xz && mv yq_linux_$(dpkg --print-architecture) /usr/bin/yq
 
-                # Install aws-cli
-                curl "https://awscli.amazonaws.com/awscli-exe-linux-$(uname -m).zip" -o "awscliv2.zip"
-                unzip -qq awscliv2.zip
-                ./aws/install
-                rm -rf awscliv2.zip aws
+                # Install aws-cli if not already installed
+                if ! command -v aws &> /dev/null; then
+                  curl "https://awscli.amazonaws.com/awscli-exe-linux-$(uname -m).zip" -o "awscliv2.zip"
+                  unzip -qq awscliv2.zip
+                  ./aws/install
+                  rm -rf awscliv2.zip aws
+                fi
 
                 # Token for IMDSv2
                 TOKEN=$(curl -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 21600")
