@@ -853,25 +853,91 @@ Conditions:
     IsMasterGraviton: !Or
       - !Equals [ !Select [ 0, !Split ['.', !Ref MasterNodeInstanceType ]], 't4g']
       - !Equals [ !Select [ 0, !Split ['.', !Ref MasterNodeInstanceType ]], 'c6g']
+      - !Equals [ !Select [ 0, !Split ['.', !Ref MasterNodeInstanceType ]], 'c6gd']
+      - !Equals [ !Select [ 0, !Split ['.', !Ref MasterNodeInstanceType ]], 'c6gn']
       - !Equals [ !Select [ 0, !Split ['.', !Ref MasterNodeInstanceType ]], 'c7g']
       - !Equals [ !Select [ 0, !Split ['.', !Ref MasterNodeInstanceType ]], 'c7gd']
+      - !Equals [ !Select [ 0, !Split ['.', !Ref MasterNodeInstanceType ]], 'c7gn']
       - !Equals [ !Select [ 0, !Split ['.', !Ref MasterNodeInstanceType ]], 'c8g']
-      - !Equals [ !Select [ 0, !Split ['.', !Ref MasterNodeInstanceType ]], 'm6g']
-      - !Equals [ !Select [ 0, !Split ['.', !Ref MasterNodeInstanceType ]], 'm6gd']
-      - !Equals [ !Select [ 0, !Split ['.', !Ref MasterNodeInstanceType ]], 'm7g']
-      - !Equals [ !Select [ 0, !Split ['.', !Ref MasterNodeInstanceType ]], 'm7gd']
-      - !Equals [ !Select [ 0, !Split ['.', !Ref MasterNodeInstanceType ]], 'm8g']
+      - !Or
+        - !Equals [ !Select [ 0, !Split ['.', !Ref MasterNodeInstanceType ]], 'c8gd']
+        - !Equals [ !Select [ 0, !Split ['.', !Ref MasterNodeInstanceType ]], 'm6g']
+        - !Equals [ !Select [ 0, !Split ['.', !Ref MasterNodeInstanceType ]], 'm6gd']
+        - !Equals [ !Select [ 0, !Split ['.', !Ref MasterNodeInstanceType ]], 'm7g']
+        - !Equals [ !Select [ 0, !Split ['.', !Ref MasterNodeInstanceType ]], 'm7gd']
+        - !Equals [ !Select [ 0, !Split ['.', !Ref MasterNodeInstanceType ]], 'm8g']
+        - !Equals [ !Select [ 0, !Split ['.', !Ref MasterNodeInstanceType ]], 'm8gd']
+        - !Equals [ !Select [ 0, !Split ['.', !Ref MasterNodeInstanceType ]], 'r6g']
+        - !Equals [ !Select [ 0, !Split ['.', !Ref MasterNodeInstanceType ]], 'r6gd']
+        - !Equals [ !Select [ 0, !Split ['.', !Ref MasterNodeInstanceType ]], 'r7g']
+      - !Or
+        - !Equals [ !Select [ 0, !Split ['.', !Ref MasterNodeInstanceType ]], 'r7gd']
+        - !Equals [ !Select [ 0, !Split ['.', !Ref MasterNodeInstanceType ]], 'r8g']
+        - !Equals [ !Select [ 0, !Split ['.', !Ref MasterNodeInstanceType ]], 'g5g']
+        - !Equals [ !Select [ 0, !Split ['.', !Ref MasterNodeInstanceType ]], 'p6e-gb200']
     IsMediaGraviton: !Or
       - !Equals [ !Select [ 0, !Split ['.', !Ref MediaNodeInstanceType ]], 't4g']
       - !Equals [ !Select [ 0, !Split ['.', !Ref MediaNodeInstanceType ]], 'c6g']
+      - !Equals [ !Select [ 0, !Split ['.', !Ref MediaNodeInstanceType ]], 'c6gd']
+      - !Equals [ !Select [ 0, !Split ['.', !Ref MediaNodeInstanceType ]], 'c6gn']
       - !Equals [ !Select [ 0, !Split ['.', !Ref MediaNodeInstanceType ]], 'c7g']
       - !Equals [ !Select [ 0, !Split ['.', !Ref MediaNodeInstanceType ]], 'c7gd']
+      - !Equals [ !Select [ 0, !Split ['.', !Ref MediaNodeInstanceType ]], 'c7gn']
       - !Equals [ !Select [ 0, !Split ['.', !Ref MediaNodeInstanceType ]], 'c8g']
-      - !Equals [ !Select [ 0, !Split ['.', !Ref MediaNodeInstanceType ]], 'm6g']
-      - !Equals [ !Select [ 0, !Split ['.', !Ref MediaNodeInstanceType ]], 'm6gd']
-      - !Equals [ !Select [ 0, !Split ['.', !Ref MediaNodeInstanceType ]], 'm7g']
-      - !Equals [ !Select [ 0, !Split ['.', !Ref MediaNodeInstanceType ]], 'm7gd']
-      - !Equals [ !Select [ 0, !Split ['.', !Ref MediaNodeInstanceType ]], 'm8g']
+      - !Or
+        - !Equals [ !Select [ 0, !Split ['.', !Ref MediaNodeInstanceType ]], 'c8gd']
+        - !Equals [ !Select [ 0, !Split ['.', !Ref MediaNodeInstanceType ]], 'm6g']
+        - !Equals [ !Select [ 0, !Split ['.', !Ref MediaNodeInstanceType ]], 'm6gd']
+        - !Equals [ !Select [ 0, !Split ['.', !Ref MediaNodeInstanceType ]], 'm7g']
+        - !Equals [ !Select [ 0, !Split ['.', !Ref MediaNodeInstanceType ]], 'm7gd']
+        - !Equals [ !Select [ 0, !Split ['.', !Ref MediaNodeInstanceType ]], 'm8g']
+        - !Equals [ !Select [ 0, !Split ['.', !Ref MediaNodeInstanceType ]], 'm8gd']
+        - !Equals [ !Select [ 0, !Split ['.', !Ref MediaNodeInstanceType ]], 'r6g']
+        - !Equals [ !Select [ 0, !Split ['.', !Ref MediaNodeInstanceType ]], 'r6gd']
+        - !Equals [ !Select [ 0, !Split ['.', !Ref MediaNodeInstanceType ]], 'r7g']
+      - !Or
+        - !Equals [ !Select [ 0, !Split ['.', !Ref MediaNodeInstanceType ]], 'r7gd']
+        - !Equals [ !Select [ 0, !Split ['.', !Ref MediaNodeInstanceType ]], 'r8g']
+        - !Equals [ !Select [ 0, !Split ['.', !Ref MediaNodeInstanceType ]], 'g5g']
+        - !Equals [ !Select [ 0, !Split ['.', !Ref MediaNodeInstanceType ]], 'p6e-gb200']
+    IsMasterNodeNvidia: !Or
+      - !Equals [ !Select [ 0, !Split ['.', !Ref MasterNodeInstanceType ]], 'g4dn']
+      - !Equals [ !Select [ 0, !Split ['.', !Ref MasterNodeInstanceType ]], 'g5']
+      - !Equals [ !Select [ 0, !Split ['.', !Ref MasterNodeInstanceType ]], 'g5g']
+      - !Equals [ !Select [ 0, !Split ['.', !Ref MasterNodeInstanceType ]], 'g6']
+      - !Equals [ !Select [ 0, !Split ['.', !Ref MasterNodeInstanceType ]], 'g6e']
+      - !Equals [ !Select [ 0, !Split ['.', !Ref MasterNodeInstanceType ]], 'g6f']
+      - !Equals [ !Select [ 0, !Split ['.', !Ref MasterNodeInstanceType ]], 'gr6']
+      - !Equals [ !Select [ 0, !Split ['.', !Ref MasterNodeInstanceType ]], 'gr6f']
+      - !Equals [ !Select [ 0, !Split ['.', !Ref MasterNodeInstanceType ]], 'g7e']
+      - !Or
+        - !Equals [ !Select [ 0, !Split ['.', !Ref MasterNodeInstanceType ]], 'p4d']
+        - !Equals [ !Select [ 0, !Split ['.', !Ref MasterNodeInstanceType ]], 'p4de']
+        - !Equals [ !Select [ 0, !Split ['.', !Ref MasterNodeInstanceType ]], 'p5']
+        - !Equals [ !Select [ 0, !Split ['.', !Ref MasterNodeInstanceType ]], 'p5e']
+        - !Equals [ !Select [ 0, !Split ['.', !Ref MasterNodeInstanceType ]], 'p5en']
+        - !Equals [ !Select [ 0, !Split ['.', !Ref MasterNodeInstanceType ]], 'p6-b200']
+        - !Equals [ !Select [ 0, !Split ['.', !Ref MasterNodeInstanceType ]], 'p6-b300']
+        - !Equals [ !Select [ 0, !Split ['.', !Ref MasterNodeInstanceType ]], 'p6e-gb200']
+    IsMediaNodeNvidia: !Or
+      - !Equals [ !Select [ 0, !Split ['.', !Ref MediaNodeInstanceType ]], 'g4dn']
+      - !Equals [ !Select [ 0, !Split ['.', !Ref MediaNodeInstanceType ]], 'g5']
+      - !Equals [ !Select [ 0, !Split ['.', !Ref MediaNodeInstanceType ]], 'g5g']
+      - !Equals [ !Select [ 0, !Split ['.', !Ref MediaNodeInstanceType ]], 'g6']
+      - !Equals [ !Select [ 0, !Split ['.', !Ref MediaNodeInstanceType ]], 'g6e']
+      - !Equals [ !Select [ 0, !Split ['.', !Ref MediaNodeInstanceType ]], 'g6f']
+      - !Equals [ !Select [ 0, !Split ['.', !Ref MediaNodeInstanceType ]], 'gr6']
+      - !Equals [ !Select [ 0, !Split ['.', !Ref MediaNodeInstanceType ]], 'gr6f']
+      - !Equals [ !Select [ 0, !Split ['.', !Ref MediaNodeInstanceType ]], 'g7e']
+      - !Or
+        - !Equals [ !Select [ 0, !Split ['.', !Ref MediaNodeInstanceType ]], 'p4d']
+        - !Equals [ !Select [ 0, !Split ['.', !Ref MediaNodeInstanceType ]], 'p4de']
+        - !Equals [ !Select [ 0, !Split ['.', !Ref MediaNodeInstanceType ]], 'p5']
+        - !Equals [ !Select [ 0, !Split ['.', !Ref MediaNodeInstanceType ]], 'p5e']
+        - !Equals [ !Select [ 0, !Split ['.', !Ref MediaNodeInstanceType ]], 'p5en']
+        - !Equals [ !Select [ 0, !Split ['.', !Ref MediaNodeInstanceType ]], 'p6-b200']
+        - !Equals [ !Select [ 0, !Split ['.', !Ref MediaNodeInstanceType ]], 'p6-b300']
+        - !Equals [ !Select [ 0, !Split ['.', !Ref MediaNodeInstanceType ]], 'p6e-gb200']
 
 Mappings:
   ArmImage:
@@ -1560,8 +1626,14 @@ Resources:
     Properties:
       ImageId: !If
         - IsMasterGraviton
-        - !FindInMap [ArmImage, !Ref OperatingSystem, ImageId]
-        - !FindInMap [AmdImage, !Ref OperatingSystem, ImageId]
+        - !If
+          - IsMasterNodeNvidia
+          - '{{resolve:ssm:/aws/service/deeplearning/ami/arm64/base-oss-nvidia-driver-gpu-ubuntu-24.04/latest/ami-id}}'
+          - !FindInMap [ArmImage, !Ref OperatingSystem, ImageId]
+        - !If
+          - IsMasterNodeNvidia
+          - '{{resolve:ssm:/aws/service/deeplearning/ami/x86_64/base-oss-nvidia-driver-gpu-ubuntu-24.04/latest/ami-id}}'
+          - !FindInMap [AmdImage, !Ref OperatingSystem, ImageId]
       LaunchTemplate:
         # Enable IMDSv2 by default
         LaunchTemplateId: !Ref IMDSv2LaunchTemplateMasterNode
@@ -1813,8 +1885,14 @@ Resources:
           - !GetAtt OpenViduMediaNodeSG.GroupId
         ImageId: !If
           - IsMediaGraviton
-          - !FindInMap [ArmImage, !Ref OperatingSystem, ImageId]
-          - !FindInMap [AmdImage, !Ref OperatingSystem, ImageId]
+          - !If
+            - IsMediaNodeNvidia
+            - '{{resolve:ssm:/aws/service/deeplearning/ami/arm64/base-oss-nvidia-driver-gpu-ubuntu-24.04/latest/ami-id}}'
+            - !FindInMap [ArmImage, !Ref OperatingSystem, ImageId]
+          - !If
+            - IsMediaNodeNvidia
+            - '{{resolve:ssm:/aws/service/deeplearning/ami/x86_64/base-oss-nvidia-driver-gpu-ubuntu-24.04/latest/ami-id}}'
+            - !FindInMap [AmdImage, !Ref OperatingSystem, ImageId]
         KeyName: !Ref KeyName
         InstanceType: !Ref MediaNodeInstanceType
         UserData:

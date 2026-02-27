@@ -470,14 +470,47 @@ Conditions:
     IsGraviton: !Or
       - !Equals [ !Select [ 0, !Split ['.', !Ref InstanceType ]], 't4g']
       - !Equals [ !Select [ 0, !Split ['.', !Ref InstanceType ]], 'c6g']
+      - !Equals [ !Select [ 0, !Split ['.', !Ref InstanceType ]], 'c6gd']
+      - !Equals [ !Select [ 0, !Split ['.', !Ref InstanceType ]], 'c6gn']
       - !Equals [ !Select [ 0, !Split ['.', !Ref InstanceType ]], 'c7g']
       - !Equals [ !Select [ 0, !Split ['.', !Ref InstanceType ]], 'c7gd']
+      - !Equals [ !Select [ 0, !Split ['.', !Ref InstanceType ]], 'c7gn']
       - !Equals [ !Select [ 0, !Split ['.', !Ref InstanceType ]], 'c8g']
-      - !Equals [ !Select [ 0, !Split ['.', !Ref InstanceType ]], 'm6g']
-      - !Equals [ !Select [ 0, !Split ['.', !Ref InstanceType ]], 'm6gd']
-      - !Equals [ !Select [ 0, !Split ['.', !Ref InstanceType ]], 'm7g']
-      - !Equals [ !Select [ 0, !Split ['.', !Ref InstanceType ]], 'm7gd']
-      - !Equals [ !Select [ 0, !Split ['.', !Ref InstanceType ]], 'm8g']
+      - !Or
+        - !Equals [ !Select [ 0, !Split ['.', !Ref InstanceType ]], 'c8gd']
+        - !Equals [ !Select [ 0, !Split ['.', !Ref InstanceType ]], 'm6g']
+        - !Equals [ !Select [ 0, !Split ['.', !Ref InstanceType ]], 'm6gd']
+        - !Equals [ !Select [ 0, !Split ['.', !Ref InstanceType ]], 'm7g']
+        - !Equals [ !Select [ 0, !Split ['.', !Ref InstanceType ]], 'm7gd']
+        - !Equals [ !Select [ 0, !Split ['.', !Ref InstanceType ]], 'm8g']
+        - !Equals [ !Select [ 0, !Split ['.', !Ref InstanceType ]], 'm8gd']
+        - !Equals [ !Select [ 0, !Split ['.', !Ref InstanceType ]], 'r6g']
+        - !Equals [ !Select [ 0, !Split ['.', !Ref InstanceType ]], 'r6gd']
+        - !Equals [ !Select [ 0, !Split ['.', !Ref InstanceType ]], 'r7g']
+      - !Or
+        - !Equals [ !Select [ 0, !Split ['.', !Ref InstanceType ]], 'r7gd']
+        - !Equals [ !Select [ 0, !Split ['.', !Ref InstanceType ]], 'r8g']
+        - !Equals [ !Select [ 0, !Split ['.', !Ref InstanceType ]], 'g5g']
+        - !Equals [ !Select [ 0, !Split ['.', !Ref InstanceType ]], 'p6e-gb200']
+    IsNvidia: !Or
+      - !Equals [ !Select [ 0, !Split ['.', !Ref InstanceType ]], 'g4dn']
+      - !Equals [ !Select [ 0, !Split ['.', !Ref InstanceType ]], 'g5']
+      - !Equals [ !Select [ 0, !Split ['.', !Ref InstanceType ]], 'g5g']
+      - !Equals [ !Select [ 0, !Split ['.', !Ref InstanceType ]], 'g6']
+      - !Equals [ !Select [ 0, !Split ['.', !Ref InstanceType ]], 'g6e']
+      - !Equals [ !Select [ 0, !Split ['.', !Ref InstanceType ]], 'g6f']
+      - !Equals [ !Select [ 0, !Split ['.', !Ref InstanceType ]], 'gr6']
+      - !Equals [ !Select [ 0, !Split ['.', !Ref InstanceType ]], 'gr6f']
+      - !Equals [ !Select [ 0, !Split ['.', !Ref InstanceType ]], 'g7e']
+      - !Or
+        - !Equals [ !Select [ 0, !Split ['.', !Ref InstanceType ]], 'p4d']
+        - !Equals [ !Select [ 0, !Split ['.', !Ref InstanceType ]], 'p4de']
+        - !Equals [ !Select [ 0, !Split ['.', !Ref InstanceType ]], 'p5']
+        - !Equals [ !Select [ 0, !Split ['.', !Ref InstanceType ]], 'p5e']
+        - !Equals [ !Select [ 0, !Split ['.', !Ref InstanceType ]], 'p5en']
+        - !Equals [ !Select [ 0, !Split ['.', !Ref InstanceType ]], 'p6-b200']
+        - !Equals [ !Select [ 0, !Split ['.', !Ref InstanceType ]], 'p6-b300']
+        - !Equals [ !Select [ 0, !Split ['.', !Ref InstanceType ]], 'p6e-gb200']
 
 Mappings:
   ArmImage:
@@ -1030,8 +1063,14 @@ Resources:
     Properties:
       ImageId: !If
         - IsGraviton
-        - !FindInMap [ArmImage, !Ref OperatingSystem, ImageId]
-        - !FindInMap [AmdImage, !Ref OperatingSystem, ImageId]
+        - !If
+          - IsNvidia
+          - '{{resolve:ssm:/aws/service/deeplearning/ami/arm64/base-oss-nvidia-driver-gpu-ubuntu-24.04/latest/ami-id}}'
+          - !FindInMap [ArmImage, !Ref OperatingSystem, ImageId]
+        - !If
+          - IsNvidia
+          - '{{resolve:ssm:/aws/service/deeplearning/ami/x86_64/base-oss-nvidia-driver-gpu-ubuntu-24.04/latest/ami-id}}'
+          - !FindInMap [AmdImage, !Ref OperatingSystem, ImageId]
       LaunchTemplate:
         # Enable IMDSv2 by default
         LaunchTemplateId: !Ref IMDSv2LaunchTemplate

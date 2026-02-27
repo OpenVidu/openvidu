@@ -449,14 +449,26 @@ Conditions:
     IsGraviton: !Or
       - !Equals [ !Select [ 0, !Split ['.', !Ref InstanceType ]], 't4g']
       - !Equals [ !Select [ 0, !Split ['.', !Ref InstanceType ]], 'c6g']
+      - !Equals [ !Select [ 0, !Split ['.', !Ref InstanceType ]], 'c6gd']
+      - !Equals [ !Select [ 0, !Split ['.', !Ref InstanceType ]], 'c6gn']
       - !Equals [ !Select [ 0, !Split ['.', !Ref InstanceType ]], 'c7g']
       - !Equals [ !Select [ 0, !Split ['.', !Ref InstanceType ]], 'c7gd']
+      - !Equals [ !Select [ 0, !Split ['.', !Ref InstanceType ]], 'c7gn']
       - !Equals [ !Select [ 0, !Split ['.', !Ref InstanceType ]], 'c8g']
-      - !Equals [ !Select [ 0, !Split ['.', !Ref InstanceType ]], 'm6g']
-      - !Equals [ !Select [ 0, !Split ['.', !Ref InstanceType ]], 'm6gd']
-      - !Equals [ !Select [ 0, !Split ['.', !Ref InstanceType ]], 'm7g']
-      - !Equals [ !Select [ 0, !Split ['.', !Ref InstanceType ]], 'm7gd']
-      - !Equals [ !Select [ 0, !Split ['.', !Ref InstanceType ]], 'm8g']
+      - !Or
+        - !Equals [ !Select [ 0, !Split ['.', !Ref InstanceType ]], 'c8gd']
+        - !Equals [ !Select [ 0, !Split ['.', !Ref InstanceType ]], 'm6g']
+        - !Equals [ !Select [ 0, !Split ['.', !Ref InstanceType ]], 'm6gd']
+        - !Equals [ !Select [ 0, !Split ['.', !Ref InstanceType ]], 'm7g']
+        - !Equals [ !Select [ 0, !Split ['.', !Ref InstanceType ]], 'm7gd']
+        - !Equals [ !Select [ 0, !Split ['.', !Ref InstanceType ]], 'm8g']
+        - !Equals [ !Select [ 0, !Split ['.', !Ref InstanceType ]], 'm8gd']
+        - !Equals [ !Select [ 0, !Split ['.', !Ref InstanceType ]], 'r6g']
+        - !Equals [ !Select [ 0, !Split ['.', !Ref InstanceType ]], 'r6gd']
+        - !Equals [ !Select [ 0, !Split ['.', !Ref InstanceType ]], 'r7g']
+      - !Or
+        - !Equals [ !Select [ 0, !Split ['.', !Ref InstanceType ]], 'r7gd']
+        - !Equals [ !Select [ 0, !Split ['.', !Ref InstanceType ]], 'r8g']
 
 Mappings:
   ArmImage:
