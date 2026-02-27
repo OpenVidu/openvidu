@@ -264,6 +264,18 @@ Parameters:
       - c8g.48xlarge
       - c8g.metal-24xl
       - c8g.metal-48xl
+      - c8gd.medium
+      - c8gd.large
+      - c8gd.xlarge
+      - c8gd.2xlarge
+      - c8gd.4xlarge
+      - c8gd.8xlarge
+      - c8gd.12xlarge
+      - c8gd.16xlarge
+      - c8gd.24xlarge
+      - c8gd.48xlarge
+      - c8gd.metal-24xl
+      - c8gd.metal-48xl
       - m6a.large
       - m6a.xlarge
       - m6a.2xlarge
@@ -393,6 +405,66 @@ Parameters:
       - m8g.48xlarge
       - m8g.metal-24xl
       - m8g.metal-48xl
+      - m8gd.medium
+      - m8gd.large
+      - m8gd.xlarge
+      - m8gd.2xlarge
+      - m8gd.4xlarge
+      - m8gd.8xlarge
+      - m8gd.12xlarge
+      - m8gd.16xlarge
+      - m8gd.24xlarge
+      - m8gd.48xlarge
+      - m8gd.metal-24xl
+      - m8gd.metal-48xl
+      - r6g.medium
+      - r6g.large
+      - r6g.xlarge
+      - r6g.2xlarge
+      - r6g.4xlarge
+      - r6g.8xlarge
+      - r6g.12xlarge
+      - r6g.16xlarge
+      - r6g.metal
+      - r6gd.medium
+      - r6gd.large
+      - r6gd.xlarge
+      - r6gd.2xlarge
+      - r6gd.4xlarge
+      - r6gd.8xlarge
+      - r6gd.12xlarge
+      - r6gd.16xlarge
+      - r6gd.metal
+      - r7g.medium
+      - r7g.large
+      - r7g.xlarge
+      - r7g.2xlarge
+      - r7g.4xlarge
+      - r7g.8xlarge
+      - r7g.12xlarge
+      - r7g.16xlarge
+      - r7g.metal
+      - r7gd.medium
+      - r7gd.large
+      - r7gd.xlarge
+      - r7gd.2xlarge
+      - r7gd.4xlarge
+      - r7gd.8xlarge
+      - r7gd.12xlarge
+      - r7gd.16xlarge
+      - r7gd.metal
+      - r8g.medium
+      - r8g.large
+      - r8g.xlarge
+      - r8g.2xlarge
+      - r8g.4xlarge
+      - r8g.8xlarge
+      - r8g.12xlarge
+      - r8g.16xlarge
+      - r8g.24xlarge
+      - r8g.48xlarge
+      - r8g.metal-24xl
+      - r8g.metal-48xl
     ConstraintDescription: "Must be a valid EC2 instance type"
 
   KeyName:
