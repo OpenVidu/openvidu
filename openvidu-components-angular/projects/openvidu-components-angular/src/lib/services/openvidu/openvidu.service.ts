@@ -1,9 +1,10 @@
 import { Injectable, signal, Signal } from '@angular/core';
 import {
 	BackgroundProcessor,
+	BackgroundProcessorWrapper,
 	supportsBackgroundProcessors,
 	supportsModernBackgroundProcessors,
-	/*BackgroundProcessorWrapper,*/ SwitchBackgroundProcessorOptions
+	SwitchBackgroundProcessorOptions
 } from '@livekit/track-processors';
 import {
 	AudioCaptureOptions,
@@ -27,8 +28,6 @@ import { DeviceService } from '../device/device.service';
 import { LoggerService } from '../logger/logger.service';
 import { StorageService } from '../storage/storage.service';
 
-// TODO: Remove this once livekit-client exports it
-type BackgroundProcessorWrapper = ReturnType<typeof BackgroundProcessor>;
 @Injectable({
 	providedIn: 'root'
 })
