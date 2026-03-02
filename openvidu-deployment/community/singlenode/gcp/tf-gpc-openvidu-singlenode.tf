@@ -150,7 +150,7 @@ set -e
 
 OPENVIDU_VERSION=main
 DOMAIN=
-YQ_VERSION=v4.44.5
+YQ_VERSION=v4.52.4
 echo "DPkg::Lock::Timeout \"-1\";" > /etc/apt/apt.conf.d/99timeout
 
 apt-get update && apt-get install -y \
@@ -636,11 +636,12 @@ CONFIG_S3_EOF
   echo "DPkg::Lock::Timeout \"-1\";" > /etc/apt/apt.conf.d/99timeout
   apt-get update && apt-get install -y
   
-  # Install google cli 
+  GCLOUD_VERSION=558.0.0
+  # Install google cli
   if ! command -v gcloud >/dev/null 2>&1; then
     curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | gpg --dearmor -o /usr/share/keyrings/cloud.google.gpg
     echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" | tee -a /etc/apt/sources.list.d/google-cloud-sdk.list
-    apt-get update && apt-get install -y google-cloud-cli
+    apt-get update && apt-get install -y google-cloud-cli=$${GCLOUD_VERSION}-0
   fi
 
   # Authenticate with gcloud using instance service account

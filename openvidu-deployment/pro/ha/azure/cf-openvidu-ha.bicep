@@ -990,7 +990,12 @@ echo ${base64config_blobStorage} | base64 -d > /usr/local/bin/config_blobStorage
 chmod +x /usr/local/bin/config_blobStorage.sh
 
 # Install azure cli
-curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
+AZURE_CLI_VERSION=2.83.0
+apt-get install -y apt-transport-https ca-certificates gnupg lsb-release
+curl -sLS https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor -o /etc/apt/trusted.gpg.d/microsoft.gpg
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/trusted.gpg.d/microsoft.gpg] https://packages.microsoft.com/repos/azure-cli/ $(lsb_release -cs) main" | tee /etc/apt/sources.list.d/azure-cli.list
+apt-get update
+apt-get install -y azure-cli=${AZURE_CLI_VERSION}-1~$(lsb_release -cs)
 
 az login --identity --allow-no-subscriptions
 
@@ -1366,7 +1371,12 @@ apt-get update && apt-get install -y
 apt-get install -y jq
 
 # Install azure cli
-curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
+AZURE_CLI_VERSION=2.83.0
+apt-get install -y apt-transport-https ca-certificates gnupg lsb-release
+curl -sLS https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor -o /etc/apt/trusted.gpg.d/microsoft.gpg
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/trusted.gpg.d/microsoft.gpg] https://packages.microsoft.com/repos/azure-cli/ $(lsb_release -cs) main" | tee /etc/apt/sources.list.d/azure-cli.list
+apt-get update
+apt-get install -y azure-cli=${AZURE_CLI_VERSION}-1~$(lsb_release -cs)
 
 az login --identity
 

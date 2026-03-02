@@ -1443,7 +1443,7 @@ Resources:
                 set -e
                 OPENVIDU_VERSION=main
                 DOMAIN=
-                YQ_VERSION=v4.44.5
+                YQ_VERSION=v4.52.4
 
                 # Install dependencies
                 apt-get update && apt-get install -y \
@@ -1454,9 +1454,10 @@ Resources:
                 wget https://github.com/mikefarah/yq/releases/download/${!YQ_VERSION}/yq_linux_$(dpkg --print-architecture).tar.gz -O - |\
                   tar xz && mv yq_linux_$(dpkg --print-architecture) /usr/bin/yq
 
+                AWS_CLI_VERSION=2.34.0
                 # Install aws-cli if not already installed
                 if ! command -v aws &> /dev/null; then
-                  curl "https://awscli.amazonaws.com/awscli-exe-linux-$(uname -m).zip" -o "awscliv2.zip"
+                  curl "https://awscli.amazonaws.com/awscli-exe-linux-$(uname -m)-${!AWS_CLI_VERSION}.zip" -o "awscliv2.zip"
                   unzip -qq awscliv2.zip
                   ./aws/install
                   rm -rf awscliv2.zip aws
@@ -1922,12 +1923,13 @@ Resources:
                 python3-pip \
                 ec2-instance-connect
 
+          CFN_BOOTSTRAP_VERSION=2.0-38
           # Detect Ubuntu version and install cfn-bootstrap accordingly
           UBUNTU_VERSION=$(lsb_release -rs | cut -d. -f1)
           if [ "$UBUNTU_VERSION" -ge 24 ]; then
-            python3 -m pip install --break-system-packages https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-py3-latest.tar.gz
+            python3 -m pip install --break-system-packages https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-py3-${!CFN_BOOTSTRAP_VERSION}.tar.gz
           else
-            python3 -m pip install https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-py3-latest.tar.gz
+            python3 -m pip install https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-py3-${!CFN_BOOTSTRAP_VERSION}.tar.gz
           fi
 
           cfn-init --region ${AWS::Region} --stack ${AWS::StackId} --resource OpenViduMasterNode
@@ -1975,7 +1977,7 @@ Resources:
                 #!/bin/bash
                 set -e
                 DOMAIN=
-                YQ_VERSION=v4.44.5
+                YQ_VERSION=v4.52.4
 
                 # Install dependencies
                 apt-get update && apt-get install -y \
@@ -1986,9 +1988,10 @@ Resources:
                 wget https://github.com/mikefarah/yq/releases/download/${!YQ_VERSION}/yq_linux_$(dpkg --print-architecture).tar.gz -O - |\
                   tar xz && mv yq_linux_$(dpkg --print-architecture) /usr/bin/yq
 
+                AWS_CLI_VERSION=2.34.0
                 # Install aws-cli if not already installed
                 if ! command -v aws &> /dev/null; then
-                  curl "https://awscli.amazonaws.com/awscli-exe-linux-$(uname -m).zip" -o "awscliv2.zip"
+                  curl "https://awscli.amazonaws.com/awscli-exe-linux-$(uname -m)-${!AWS_CLI_VERSION}.zip" -o "awscliv2.zip"
                   unzip -qq awscliv2.zip
                   ./aws/install
                   rm -rf awscliv2.zip aws
@@ -2172,12 +2175,13 @@ Resources:
                 python3-pip \
                 ec2-instance-connect
 
+            CFN_BOOTSTRAP_VERSION=2.0-38
             # Detect Ubuntu version and install cfn-bootstrap accordingly
             UBUNTU_VERSION=$(lsb_release -rs | cut -d. -f1)
             if [ "$UBUNTU_VERSION" -ge 24 ]; then
-              python3 -m pip install --break-system-packages https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-py3-latest.tar.gz
+              python3 -m pip install --break-system-packages https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-py3-${!CFN_BOOTSTRAP_VERSION}.tar.gz
             else
-              python3 -m pip install https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-py3-latest.tar.gz
+              python3 -m pip install https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-py3-${!CFN_BOOTSTRAP_VERSION}.tar.gz
             fi
 
             cfn-init --region ${AWS::Region} --stack ${AWS::StackId} --resource OpenViduMediaNodeLaunchTemplate
