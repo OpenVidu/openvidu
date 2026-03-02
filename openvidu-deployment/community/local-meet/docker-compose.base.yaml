@@ -1,7 +1,7 @@
 services:
 
   generate-scripts:
-    image: alpine:3.23.3
+    image: alpine:3.23.4
     entrypoint: ["/bin/sh", "-c"]
     restart: "no"
     user: root
@@ -252,7 +252,7 @@ services:
             min_disk_space_mb: 512
 
   setup:
-    image: docker.io/busybox:1.37.0
+    image: docker.io/busybox:1.37.1
     restart: "no"
     volumes:
       - minio-data:/minio
