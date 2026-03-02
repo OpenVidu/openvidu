@@ -682,7 +682,7 @@ Resources:
                 #!/bin/bash -x
                 OPENVIDU_VERSION=main
                 DOMAIN=
-                YQ_VERSION=v4.52.4
+                YQ_VERSION=v4.52.5
 
                 apt-get update && apt-get install -y \
                   curl \
@@ -692,7 +692,7 @@ Resources:
                 wget https://github.com/mikefarah/yq/releases/download/${!YQ_VERSION}/yq_linux_$(dpkg --print-architecture).tar.gz -O - |\
                   tar xz && mv yq_linux_$(dpkg --print-architecture) /usr/bin/yq
 
-                AWS_CLI_VERSION=2.34.0
+                AWS_CLI_VERSION=2.34.1
                 # Install aws-cli if not already installed
                 if ! command -v aws &> /dev/null; then
                   curl "https://awscli.amazonaws.com/awscli-exe-linux-$(uname -m)-${!AWS_CLI_VERSION}.zip" -o "awscliv2.zip"
@@ -1111,7 +1111,7 @@ Resources:
                 python3-pip \
                 ec2-instance-connect
 
-          CFN_BOOTSTRAP_VERSION=2.0-38
+          CFN_BOOTSTRAP_VERSION=2.0-39
           # Detect Ubuntu version and install cfn-bootstrap accordingly
           UBUNTU_VERSION=$(lsb_release -rs | cut -d. -f1)
           if [ "$UBUNTU_VERSION" -ge 24 ]; then
