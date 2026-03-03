@@ -16,7 +16,7 @@
 		"autolinker": "^4.0.0",
 		"buffer": "^6.0.3",
 		"livekit-client": "^2.16.0",
-		"@livekit/track-processors": "^0.7.0"
+		"@livekit/track-processors": "^0.7.2"
 	},
 	"version": "3.5.0"
 }
