@@ -52,7 +52,7 @@
 		<version.spring-boot>4.0.0</version.spring-boot>
 		<version.openvidu.java.client>2.32.1</version.openvidu.java.client>
 		<version.slf4j>2.0.17</version.slf4j>
-		<version.selenium>4.39.0</version.selenium>
+		<version.selenium>4.41.0</version.selenium>
 		<version.gson>2.13.2</version.gson>
 		<version.jcodec>0.2.5</version.jcodec>
 		<version.junit>5.14.1</version.junit>
