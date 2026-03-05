@@ -52,7 +52,7 @@
 
 		<version.spring-boot>4.0.0</version.spring-boot>
 		<version.surefire.plugin>3.5.4</version.surefire.plugin>
-		<version.selenium>4.39.0</version.selenium>
+		<version.selenium>4.41.0</version.selenium>
 		<version.gson>2.13.2</version.gson>
 		<version.livekit-server>0.10.1</version.livekit-server>
 		<version.testcontainers>2.0.3</version.testcontainers>
