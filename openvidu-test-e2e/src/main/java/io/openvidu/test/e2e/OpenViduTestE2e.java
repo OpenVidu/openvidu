@@ -158,6 +158,7 @@ public class OpenViduTestE2e {
 		// Avoid port collision
 		int vncPort = 8900 + (containers.size());
 		envVars.put("SE_OPTS", "--port " + port + " --no-vnc-port " + vncPort);
+		envVars.put("SE_BIND_BUS", "false");
 
 		GenericContainer<?> browser = new GenericContainer<>(DockerImageName.parse(image)).withSharedMemorySize(shmSize)
 				.withFileSystemBind("/opt/openvidu", "/opt/openvidu").withEnv(envVars).withNetworkMode("host")
