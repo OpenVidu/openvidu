@@ -132,6 +132,8 @@ public class OpenViduTestE2e {
 	private GenericContainer<?> chromeContainer(String image, long shmSize, int maxBrowserSessions, boolean headless) {
 		Map<String, String> map = new HashMap<>();
 		map.put("SE_OPTS", "--port 4444");
+		map.put("SE_EVENT_BUS_PUBLISH_PORT", "4542");
+		map.put("SE_EVENT_BUS_SUBSCRIBE_PORT", "4543");
 		if (headless) {
 			map.put("START_XVFB", "false");
 		}
@@ -148,6 +150,8 @@ public class OpenViduTestE2e {
 	private GenericContainer<?> firefoxContainer(String image, long shmSize, int maxBrowserSessions, boolean headless) {
 		Map<String, String> map = new HashMap<>();
 		map.put("SE_OPTS", "--port 4445");
+		map.put("SE_EVENT_BUS_PUBLISH_PORT", "4544");
+		map.put("SE_EVENT_BUS_SUBSCRIBE_PORT", "4545");
 		if (headless) {
 			map.put("START_XVFB", "false");
 		}
@@ -164,6 +168,8 @@ public class OpenViduTestE2e {
 	private GenericContainer<?> edgeContainer(String image, long shmSize, int maxBrowserSessions, boolean headless) {
 		Map<String, String> map = new HashMap<>();
 		map.put("SE_OPTS", "--port 4446");
+		map.put("SE_EVENT_BUS_PUBLISH_PORT", "4546");
+		map.put("SE_EVENT_BUS_SUBSCRIBE_PORT", "4547");
 		if (headless) {
 			map.put("START_XVFB", "false");
 		}
