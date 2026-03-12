@@ -3094,7 +3094,7 @@ Resources:
     Properties:
       DefaultActions:
         - Type: forward
-          TargetGroupArn: !Ref OpenViduMasterNodeWithTurnTLSTG
+          TargetGroupArn: !Ref OpenViduMasterNodeHTTPTG
       LoadBalancerArn: !Ref LoadBalancer
       Port: 80
       Protocol: TCP
