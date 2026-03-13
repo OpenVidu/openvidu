@@ -2591,6 +2591,29 @@ resource masterToMasterMeet 'Microsoft.Network/networkSecurityGroups/securityRul
   }
 }
 
+resource masterToMasterCustomApp 'Microsoft.Network/networkSecurityGroups/securityRules@2023-11-01' = {
+  parent: openviduMasterNodeNSG
+  name: 'masterNode_to_masterNode_CUSTOM_APP_INGRESS'
+  properties: {
+    protocol: 'Tcp'
+    sourceApplicationSecurityGroups: [
+      {
+        id: openviduMasterNodeASG.id
+      }
+    ]
+    sourcePortRange: '*'
+    destinationApplicationSecurityGroups: [
+      {
+        id: openviduMasterNodeASG.id
+      }
+    ]
+    destinationPortRange: '6080'
+    access: 'Allow'
+    priority: 310
+    direction: 'Inbound'
+  }
+}
+
 resource mediaToMasterMeetWebhookIngress 'Microsoft.Network/networkSecurityGroups/securityRules@2023-11-01' = {
   parent: openviduMasterNodeNSG
   name: 'mediaNode_to_masterNode_MEET_WEBHOOK_INGRESS'
@@ -2610,6 +2633,29 @@ resource mediaToMasterMeetWebhookIngress 'Microsoft.Network/networkSecurityGroup
     destinationPortRange: '9080'
     access: 'Allow'
     priority: 300
+    direction: 'Inbound'
+  }
+}
+
+resource mediaToMasterCustomAppWebhookIngress 'Microsoft.Network/networkSecurityGroups/securityRules@2023-11-01' = {
+  parent: openviduMasterNodeNSG
+  name: 'mediaNode_to_masterNode_CUSTOM_APP_WEBHOOK_INGRESS'
+  properties: {
+    protocol: 'Tcp'
+    sourceApplicationSecurityGroups: [
+      {
+        id: openviduMediaNodeASG.id
+      }
+    ]
+    sourcePortRange: '*'
+    destinationApplicationSecurityGroups: [
+      {
+        id: openviduMasterNodeASG.id
+      }
+    ]
+    destinationPortRange: '6080'
+    access: 'Allow'
+    priority: 320
     direction: 'Inbound'
   }
 }

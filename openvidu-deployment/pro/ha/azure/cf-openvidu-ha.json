@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.37.4.10188",
-      "templateHash": "7126821326646588151"
+      "templateHash": "7316395873017871617"
     }
   },
   "parameters": {
@@ -1894,6 +1894,33 @@
     {
       "type": "Microsoft.Network/networkSecurityGroups/securityRules",
       "apiVersion": "2023-11-01",
+      "name": "[format('{0}/{1}', format('{0}-masterNodeNSG', parameters('stackName')), 'masterNode_to_masterNode_CUSTOM_APP_INGRESS')]",
+      "properties": {
+        "protocol": "Tcp",
+        "sourceApplicationSecurityGroups": [
+          {
+            "id": "[resourceId('Microsoft.Network/applicationSecurityGroups', format('{0}-masterNodeASG', parameters('stackName')))]"
+          }
+        ],
+        "sourcePortRange": "*",
+        "destinationApplicationSecurityGroups": [
+          {
+            "id": "[resourceId('Microsoft.Network/applicationSecurityGroups', format('{0}-masterNodeASG', parameters('stackName')))]"
+          }
+        ],
+        "destinationPortRange": "6080",
+        "access": "Allow",
+        "priority": 310,
+        "direction": "Inbound"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/applicationSecurityGroups', format('{0}-masterNodeASG', parameters('stackName')))]",
+        "[resourceId('Microsoft.Network/networkSecurityGroups', format('{0}-masterNodeNSG', parameters('stackName')))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Network/networkSecurityGroups/securityRules",
+      "apiVersion": "2023-11-01",
       "name": "[format('{0}/{1}', format('{0}-masterNodeNSG', parameters('stackName')), 'mediaNode_to_masterNode_MEET_WEBHOOK_INGRESS')]",
       "properties": {
         "protocol": "Tcp",
@@ -1911,6 +1938,34 @@
         "destinationPortRange": "9080",
         "access": "Allow",
         "priority": 300,
+        "direction": "Inbound"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/applicationSecurityGroups', format('{0}-masterNodeASG', parameters('stackName')))]",
+        "[resourceId('Microsoft.Network/networkSecurityGroups', format('{0}-masterNodeNSG', parameters('stackName')))]",
+        "[resourceId('Microsoft.Network/applicationSecurityGroups', format('{0}-mediaNodeASG', parameters('stackName')))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Network/networkSecurityGroups/securityRules",
+      "apiVersion": "2023-11-01",
+      "name": "[format('{0}/{1}', format('{0}-masterNodeNSG', parameters('stackName')), 'mediaNode_to_masterNode_CUSTOM_APP_WEBHOOK_INGRESS')]",
+      "properties": {
+        "protocol": "Tcp",
+        "sourceApplicationSecurityGroups": [
+          {
+            "id": "[resourceId('Microsoft.Network/applicationSecurityGroups', format('{0}-mediaNodeASG', parameters('stackName')))]"
+          }
+        ],
+        "sourcePortRange": "*",
+        "destinationApplicationSecurityGroups": [
+          {
+            "id": "[resourceId('Microsoft.Network/applicationSecurityGroups', format('{0}-masterNodeASG', parameters('stackName')))]"
+          }
+        ],
+        "destinationPortRange": "6080",
+        "access": "Allow",
+        "priority": 320,
         "direction": "Inbound"
       },
       "dependsOn": [

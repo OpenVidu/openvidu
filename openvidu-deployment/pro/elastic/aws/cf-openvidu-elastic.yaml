@@ -2496,6 +2496,15 @@ Resources:
       ToPort: 9080
       SourceSecurityGroupId: !GetAtt OpenViduMediaNodeSG.GroupId
 
+  OpenViduMediaNodeToMasterCustomAppIngress:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !GetAtt OpenViduMasterNodeSG.GroupId
+      IpProtocol: tcp
+      FromPort: 6080
+      ToPort: 6080
+      SourceSecurityGroupId: !GetAtt OpenViduMediaNodeSG.GroupId
+
   OpenViduMediaNodeSG:
     Type: AWS::EC2::SecurityGroup
     Properties:

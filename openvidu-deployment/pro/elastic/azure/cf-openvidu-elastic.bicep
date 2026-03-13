@@ -1708,6 +1708,29 @@ resource mediaToMasterMeetWebhookIngress 'Microsoft.Network/networkSecurityGroup
   }
 }
 
+resource mediaToMasterCustomAppWebhookIngress 'Microsoft.Network/networkSecurityGroups/securityRules@2023-11-01' = {
+  parent: openviduMasterNodeNSG
+  name: 'mediaNode_to_masterNode_CUSTOM_APP_WEBHOOK_INGRESS'
+  properties: {
+    protocol: 'Tcp'
+    sourceApplicationSecurityGroups: [
+      {
+        id: openviduMediaNodeASG.id
+      }
+    ]
+    sourcePortRange: '*'
+    destinationApplicationSecurityGroups: [
+      {
+        id: openviduMasterNodeASG.id
+      }
+    ]
+    destinationPortRange: '6080'
+    access: 'Allow'
+    priority: 220
+    direction: 'Inbound'
+  }
+}
+
 resource openviduMediaNodeNSG 'Microsoft.Network/networkSecurityGroups@2023-11-01' = {
   name: '${stackName}-mediaNoderNSG'
   location: location

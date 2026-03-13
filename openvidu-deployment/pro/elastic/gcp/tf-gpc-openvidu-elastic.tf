@@ -87,7 +87,7 @@ resource "google_compute_firewall" "firewall_media_to_master" {
 
   allow {
     protocol = "tcp"
-    ports    = ["7000", "9100", "20000", "3100", "9009", "4443", "9080"]
+    ports    = ["7000", "9100", "20000", "3100", "9009", "4443", "9080", "6080"]
   }
 
   source_tags = [
@@ -155,19 +155,19 @@ resource "google_compute_instance" "openvidu_master_node" {
 
   metadata = {
     # metadata values are accessible from the instance
-    publicIpAddress           = var.publicIpAddress == "" ? google_compute_address.public_ip_address[0].address : var.publicIpAddress
-    region                    = var.region
-    stackName                 = var.stackName
-    certificateType           = var.certificateType
-    domainName                = var.domainName
-    ownPublicCertificate      = var.ownPublicCertificate
-    ownPrivateCertificate     = var.ownPrivateCertificate
-    openviduLicense           = var.openviduLicense
-    rtcEngine                 = var.rtcEngine
-    initialMeetAdminPassword  = var.initialMeetAdminPassword
-    initialMeetApiKey         = var.initialMeetApiKey
-    additionalInstallFlags    = var.additionalInstallFlags
-    bucketName                = local.isEmpty ? google_storage_bucket.bucket[0].name : var.bucketName
+    publicIpAddress          = var.publicIpAddress == "" ? google_compute_address.public_ip_address[0].address : var.publicIpAddress
+    region                   = var.region
+    stackName                = var.stackName
+    certificateType          = var.certificateType
+    domainName               = var.domainName
+    ownPublicCertificate     = var.ownPublicCertificate
+    ownPrivateCertificate    = var.ownPrivateCertificate
+    openviduLicense          = var.openviduLicense
+    rtcEngine                = var.rtcEngine
+    initialMeetAdminPassword = var.initialMeetAdminPassword
+    initialMeetApiKey        = var.initialMeetApiKey
+    additionalInstallFlags   = var.additionalInstallFlags
+    bucketName               = local.isEmpty ? google_storage_bucket.bucket[0].name : var.bucketName
   }
 
   service_account {
