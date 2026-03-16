@@ -55,6 +55,7 @@ export class ParticipantService {
 	private remoteParticipantsWritableSignal: WritableSignal<ParticipantModel[]> = signal<ParticipantModel[]>([]);
 
 	private localParticipant: ParticipantModel | undefined;
+	private lastLocalParticipantSnapshot: ParticipantModel | undefined;
 	private remoteParticipants: ParticipantModel[] = [];
 	private log: ILogger;
 
@@ -85,6 +86,7 @@ export class ParticipantService {
 	 */
 	clear(): void {
 		this.localParticipant = undefined;
+		this.lastLocalParticipantSnapshot = undefined;
 		this.remoteParticipants = [];
 		this.localParticipantWritableSignal.set(undefined);
 		this.remoteParticipantsWritableSignal.set([]);
@@ -410,16 +412,53 @@ export class ParticipantService {
 	 * Forces to update the local participant object and fire a new `localParticipant$` Observable event.
 	 */
 	updateLocalParticipant() {
+		const localParticipantFromSignal = this.localParticipantWritableSignal();
+
+		// Backward compatibility: if the consumer mutated the last emitted snapshot and
+		// then calls updateLocalParticipant(), keep the internal source of truth in sync.
+		// Only sync when the emitted snapshot actually diverged after emission; otherwise,
+		// a stale observable/signal snapshot would overwrite newer canonical state.
+		if (
+			this.localParticipant &&
+			localParticipantFromSignal &&
+			this.lastLocalParticipantSnapshot &&
+			localParticipantFromSignal !== this.localParticipant &&
+			localParticipantFromSignal.sid === this.localParticipant.sid &&
+			this.hasParticipantSnapshotMutations(localParticipantFromSignal, this.lastLocalParticipantSnapshot)
+		) {
+			Object.assign(this.localParticipant, localParticipantFromSignal);
+		}
+
 		// Update Signal - create new reference to trigger reactivity
 		// The Observable will automatically emit via toObservable()
 		if (this.localParticipant) {
-			const updatedParticipant = Object.assign(Object.create(Object.getPrototypeOf(this.localParticipant)), {
-				...this.localParticipant
-			});
+			const updatedParticipant = this.cloneParticipant(this.localParticipant);
 			this.localParticipantWritableSignal.set(updatedParticipant);
+			this.lastLocalParticipantSnapshot = this.cloneParticipant(updatedParticipant);
 		} else {
 			this.localParticipantWritableSignal.set(undefined);
+			this.lastLocalParticipantSnapshot = undefined;
 		}
+	}
+
+	private hasParticipantSnapshotMutations(current: ParticipantModel, previous: ParticipantModel): boolean {
+		const currentState = current as unknown as Record<string, unknown>;
+		const previousState = previous as unknown as Record<string, unknown>;
+		const keys = new Set([...Object.keys(currentState), ...Object.keys(previousState)]);
+
+		for (const key of keys) {
+			if (!Object.is(currentState[key], previousState[key])) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	private cloneParticipant<T extends ParticipantModel>(participant: T): T {
+		return Object.assign(Object.create(Object.getPrototypeOf(participant)), {
+			...participant
+		});
 	}
 
 	/**
