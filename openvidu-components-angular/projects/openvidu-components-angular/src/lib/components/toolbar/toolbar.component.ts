@@ -345,6 +345,11 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 	showCaptionsButton: boolean = true;
 
 	/**
+	 * @internal
+	 */
+	isFirefoxBrowser: boolean = false;
+
+	/**
 	 * @ignore
 	 */
 	additionalButtonsPosition: ToolbarAdditionalButtonsPosition = ToolbarAdditionalButtonsPosition.BEFORE_MENU;
@@ -450,6 +455,7 @@ export class ToolbarComponent implements OnInit, OnDestroy, AfterViewInit {
 		private templateManagerService: TemplateManagerService
 	) {
 		this.log = this.loggerSrv.get('ToolbarComponent');
+		this.isFirefoxBrowser = this.platformService.isFirefox();
 
 		// Effect to react to local participant changes
 		effect(() => {

@@ -189,19 +189,26 @@ export class ParticipantService {
 	 * Switches the active screen share track showing a native browser dialog to select a screen or window.
 	 */
 	async switchScreenShare(): Promise<void> {
-		if (this.localParticipant) {
-			const options = this.getScreenCaptureOptions();
-			const [newTrack] = await this.localParticipant.createScreenTracks(options);
-			if (newTrack) {
-				newTrack?.addListener('ended', async () => {
-					this.log.d('Clicked native stop button. Stopping screen sharing');
-					await this.setScreenShareEnabled(false);
-				});
-
-				await this.localParticipant.switchScreenshare(newTrack);
-			}
-		} else {
+		if (!this.localParticipant) {
 			this.log.e('Local participant is undefined when switching screenshare');
+			return;
+		}
+
+		// Chrome / Safari: seamless replaceTrack keeps the same publication SID.
+		const options = this.getScreenCaptureOptions();
+		const [newTrack] = await this.localParticipant.createScreenTracks(options);
+		if (newTrack) {
+			newTrack.addListener('ended', async () => {
+				this.log.d('Clicked native stop button. Stopping screen sharing');
+				await this.setScreenShareEnabled(false);
+			});
+
+			try {
+				await this.localParticipant.switchScreenshare(newTrack);
+			} catch (error) {
+				newTrack.stop();
+				throw error;
+			}
 		}
 
 		// this.updateLocalParticipant();
@@ -458,7 +465,6 @@ export class ParticipantService {
 			this.toggleMyVideoPinned(localTrackSid);
 		}
 	}
-
 
 	/**
 	 * Returns the participant with the given identity.

@@ -436,14 +436,19 @@ export class ParticipantModel {
 	 * @internal
 	 */
 	async switchScreenshare(newTrack: LocalTrack): Promise<void> {
-		if (this.participant instanceof LocalParticipant) {
-			const screenTrack = this.tracks.find((track) => track.source === Track.Source.ScreenShare);
-			if (screenTrack) {
-				await (screenTrack.videoTrack as LocalTrack).replaceTrack(newTrack.mediaStreamTrack);
-				return Promise.resolve();
-			}
+		if (!(this.participant instanceof LocalParticipant)) {
 			return Promise.reject("Remote participant can't switch screen share");
 		}
+
+		const screenTrack = this.tracks.find((track) => track.source === Track.Source.ScreenShare);
+		if (!screenTrack || !screenTrack.videoTrack) {
+			return Promise.reject('No active screen share track to switch');
+		}
+
+		const currentTrack = screenTrack.videoTrack as LocalTrack;
+
+		await currentTrack.replaceTrack(newTrack.mediaStreamTrack);
+		return Promise.resolve();
 	}
 
 	/**

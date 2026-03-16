@@ -36,31 +36,45 @@
 
 <!-- Screenshare button - Only visible on tablet+ or when active -->
 @if (showScreenshareButtonDirect()) {
-	<button
-		mat-icon-button
-		id="screenshare-btn"
-		[matMenuTriggerFor]="isScreenShareEnabled ? screenshareMenu : null"
-		[disabled]="isConnectionLost"
-		[class.active-btn]="isScreenShareEnabled"
-		[class.mobile-btn]="isMobileView()"
-		matTooltip="{{ isScreenShareEnabled ? ('TOOLBAR.DISABLE_SCREEN' | translate) : ('TOOLBAR.ENABLE_SCREEN' | translate) }}"
-		(click)="!isScreenShareEnabled && onScreenShareToggle()"
-	>
-		<mat-icon>screen_share</mat-icon>
-	</button>
+	@if (isFirefoxBrowser) {
+		<button
+			mat-icon-button
+			id="screenshare-btn"
+			[disabled]="isConnectionLost"
+			[class.active-btn]="isScreenShareEnabled"
+			[class.mobile-btn]="isMobileView()"
+			matTooltip="{{ isScreenShareEnabled ? ('TOOLBAR.DISABLE_SCREEN' | translate) : ('TOOLBAR.ENABLE_SCREEN' | translate) }}"
+			(click)="onScreenShareToggle()"
+		>
+			<mat-icon>screen_share</mat-icon>
+		</button>
+	} @else {
+		<button
+			mat-icon-button
+			id="screenshare-btn"
+			[matMenuTriggerFor]="isScreenShareEnabled ? screenshareMenu : null"
+			[disabled]="isConnectionLost"
+			[class.active-btn]="isScreenShareEnabled"
+			[class.mobile-btn]="isMobileView()"
+			matTooltip="{{ isScreenShareEnabled ? ('TOOLBAR.DISABLE_SCREEN' | translate) : ('TOOLBAR.ENABLE_SCREEN' | translate) }}"
+			(click)="!isScreenShareEnabled && onScreenShareToggle()"
+		>
+			<mat-icon>screen_share</mat-icon>
+		</button>
 
-	<!-- Screenshare button menu -->
-	<mat-menu #screenshareMenu="matMenu" id="screenshare-menu">
-		<button mat-menu-item (click)="onScreenTrackReplace()" id="replace-screen-button">
-			<mat-icon>picture_in_picture</mat-icon>
-			<span>{{ 'STREAM.REPLACE_SCREEN' | translate }}</span>
-		</button>
-		<mat-divider class="divider"></mat-divider>
-		<button mat-menu-item (click)="onScreenShareToggle()" id="disable-screen-button">
-			<mat-icon>stop_screen_share</mat-icon>
-			<span>{{ 'TOOLBAR.DISABLE_SCREEN' | translate }}</span>
-		</button>
-	</mat-menu>
+		<!-- Screenshare button menu -->
+		<mat-menu #screenshareMenu="matMenu" id="screenshare-menu">
+			<button mat-menu-item (click)="onScreenTrackReplace()" id="replace-screen-button">
+				<mat-icon>picture_in_picture</mat-icon>
+				<span>{{ 'STREAM.REPLACE_SCREEN' | translate }}</span>
+			</button>
+			<mat-divider class="divider"></mat-divider>
+			<button mat-menu-item (click)="onScreenShareToggle()" id="disable-screen-button">
+				<mat-icon>stop_screen_share</mat-icon>
+				<span>{{ 'TOOLBAR.DISABLE_SCREEN' | translate }}</span>
+			</button>
+		</mat-menu>
+	}
 }
 
 <!-- Additional buttons injection from parent component (desktop/tablet only) -->

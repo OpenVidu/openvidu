@@ -28,6 +28,7 @@ export class ToolbarMediaButtonsComponent {
 	// Screenshare related inputs
 	@Input() showScreenshareButton: boolean = true;
 	@Input() isScreenShareEnabled: boolean = false;
+	@Input() isFirefoxBrowser: boolean = false;
 
 	// Device availability inputs
 	@Input() hasVideoDevices: boolean = true;
