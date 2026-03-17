@@ -4,14 +4,14 @@
 		id="camera-btn"
 		mat-icon-button
 		(click)="onCameraToggle()"
-		[disabled]="isConnectionLost || !hasVideoDevices || cameraMuteChanging"
-		[class.disabled]="!isCameraEnabled"
+		[disabled]="isConnectionLost() || !hasVideoDevices() || cameraMuteChanging()"
+		[class.disabled]="!isCameraEnabled()"
 		[class.mobile-btn]="isMobileView()"
-		[matTooltip]="isCameraEnabled ? ('TOOLBAR.STOP_VIDEO' | translate) : ('TOOLBAR.START_VIDEO' | translate)"
-		[matTooltipDisabled]="!hasVideoDevices"
+		[matTooltip]="isCameraEnabled() ? ('TOOLBAR.STOP_VIDEO' | translate) : ('TOOLBAR.START_VIDEO' | translate)"
+		[matTooltipDisabled]="!hasVideoDevices()"
 	>
-		<mat-icon [id]="isCameraEnabled ? 'videocam' : 'videocam_off'">
-			{{ isCameraEnabled ? 'videocam' : 'videocam_off' }}
+		<mat-icon [id]="isCameraEnabled() ? 'videocam' : 'videocam_off'">
+			{{ isCameraEnabled() ? 'videocam' : 'videocam_off' }}
 		</mat-icon>
 	</button>
 }
@@ -22,28 +22,28 @@
 		id="mic-btn"
 		mat-icon-button
 		(click)="onMicrophoneToggle()"
-		[disabled]="isConnectionLost || !hasAudioDevices || microphoneMuteChanging"
-		[class.disabled]="!isMicrophoneEnabled"
+		[disabled]="isConnectionLost() || !hasAudioDevices() || microphoneMuteChanging()"
+		[class.disabled]="!isMicrophoneEnabled()"
 		[class.mobile-btn]="isMobileView()"
-		[matTooltip]="isMicrophoneEnabled ? ('TOOLBAR.MUTE_AUDIO' | translate) : ('TOOLBAR.UNMUTE_AUDIO' | translate)"
-		[matTooltipDisabled]="!hasAudioDevices"
+		[matTooltip]="isMicrophoneEnabled() ? ('TOOLBAR.MUTE_AUDIO' | translate) : ('TOOLBAR.UNMUTE_AUDIO' | translate)"
+		[matTooltipDisabled]="!hasAudioDevices()"
 	>
-		<mat-icon [id]="isMicrophoneEnabled ? 'mic' : 'mic_off'">
-			{{ isMicrophoneEnabled ? 'mic' : 'mic_off' }}
+		<mat-icon [id]="isMicrophoneEnabled() ? 'mic' : 'mic_off'">
+			{{ isMicrophoneEnabled() ? 'mic' : 'mic_off' }}
 		</mat-icon>
 	</button>
 }
 
 <!-- Screenshare button - Only visible on tablet+ or when active -->
 @if (showScreenshareButtonDirect()) {
-	@if (isFirefoxBrowser) {
+	@if (isFirefoxBrowser()) {
 		<button
 			mat-icon-button
 			id="screenshare-btn"
-			[disabled]="isConnectionLost"
-			[class.active-btn]="isScreenShareEnabled"
+			[disabled]="isConnectionLost()"
+			[class.active-btn]="isScreenShareEnabled()"
 			[class.mobile-btn]="isMobileView()"
-			matTooltip="{{ isScreenShareEnabled ? ('TOOLBAR.DISABLE_SCREEN' | translate) : ('TOOLBAR.ENABLE_SCREEN' | translate) }}"
+			matTooltip="{{ isScreenShareEnabled() ? ('TOOLBAR.DISABLE_SCREEN' | translate) : ('TOOLBAR.ENABLE_SCREEN' | translate) }}"
 			(click)="onScreenShareToggle()"
 		>
 			<mat-icon>screen_share</mat-icon>
@@ -52,12 +52,12 @@
 		<button
 			mat-icon-button
 			id="screenshare-btn"
-			[matMenuTriggerFor]="isScreenShareEnabled ? screenshareMenu : null"
-			[disabled]="isConnectionLost"
-			[class.active-btn]="isScreenShareEnabled"
+			[matMenuTriggerFor]="isScreenShareEnabled() ? screenshareMenu : null"
+			[disabled]="isConnectionLost()"
+			[class.active-btn]="isScreenShareEnabled()"
 			[class.mobile-btn]="isMobileView()"
-			matTooltip="{{ isScreenShareEnabled ? ('TOOLBAR.DISABLE_SCREEN' | translate) : ('TOOLBAR.ENABLE_SCREEN' | translate) }}"
-			(click)="!isScreenShareEnabled && onScreenShareToggle()"
+			matTooltip="{{ isScreenShareEnabled() ? ('TOOLBAR.DISABLE_SCREEN' | translate) : ('TOOLBAR.ENABLE_SCREEN' | translate) }}"
+			(click)="!isScreenShareEnabled() && onScreenShareToggle()"
 		>
 			<mat-icon>screen_share</mat-icon>
 		</button>
@@ -78,8 +78,8 @@
 }
 
 <!-- Additional buttons injection from parent component (desktop/tablet only) -->
-@if (showAdditionalButtonsOutside() && additionalButtonsPosition === 'beforeMenu') {
-	<ng-container *ngTemplateOutlet="toolbarAdditionalButtonsTemplate; context: { $implicit: additionalButtonsPosition }"></ng-container>
+@if (showAdditionalButtonsOutside() && additionalButtonsPosition() === 'beforeMenu') {
+	<ng-container *ngTemplateOutlet="toolbarAdditionalButtonsTemplate(); context: { $implicit: additionalButtonsPosition() }"></ng-container>
 }
 
 <!-- More options button -->
@@ -88,7 +88,7 @@
 		mat-icon-button
 		id="more-options-btn"
 		[matMenuTriggerFor]="settingsMenu"
-		[disabled]="isConnectionLost"
+		[disabled]="isConnectionLost()"
 		[class.mobile-btn]="isMobileView()"
 		matTooltip="{{ 'TOOLBAR.MORE_OPTIONS' | translate }}"
 	>
@@ -96,38 +96,38 @@
 	</button>
 	<mat-menu #settingsMenu="matMenu" id="more-options-menu">
 		<!-- Additional buttons injection inside menu (mobile only) -->
-		@if (showAdditionalButtonsInsideMenu() && additionalButtonsPosition === 'beforeMenu') {
-			<ng-container *ngTemplateOutlet="toolbarAdditionalButtonsTemplate; context: { $implicit: additionalButtonsPosition }">
+		@if (showAdditionalButtonsInsideMenu() && additionalButtonsPosition() === 'beforeMenu') {
+			<ng-container *ngTemplateOutlet="toolbarAdditionalButtonsTemplate(); context: { $implicit: additionalButtonsPosition() }">
 			</ng-container>
 		}
 
 		<!-- Fullscreen button -->
-		@if (showFullscreenButton) {
+		@if (showFullscreenButton()) {
 			<button mat-menu-item id="fullscreen-btn" (click)="onFullscreenToggle()">
-				<mat-icon>{{ isFullscreenActive ? 'fullscreen_exit' : 'fullscreen' }}</mat-icon>
-				<span>{{ isFullscreenActive ? ('TOOLBAR.EXIT_FULLSCREEN' | translate) : ('TOOLBAR.FULLSCREEN' | translate) }}</span>
+				<mat-icon>{{ isFullscreenActive() ? 'fullscreen_exit' : 'fullscreen' }}</mat-icon>
+				<span>{{ isFullscreenActive() ? ('TOOLBAR.EXIT_FULLSCREEN' | translate) : ('TOOLBAR.FULLSCREEN' | translate) }}</span>
 			</button>
 		}
 
 		<!-- Recording button -->
-		@if (showRecordingButton) {
+		@if (showRecordingButton()) {
 			<button
 				mat-menu-item
 				id="recording-btn"
 				[disabled]="
-					recordingStatus === _recordingStatus.STARTING ||
-					recordingStatus === _recordingStatus.STOPPING ||
-					!hasRoomTracksPublished
+					recordingStatus() === _recordingStatus.STARTING ||
+					recordingStatus() === _recordingStatus.STOPPING ||
+					!hasRoomTracksPublished()
 				"
-				[matTooltip]="!hasRoomTracksPublished ? ('TOOLBAR.NO_TRACKS_PUBLISHED' | translate) : ''"
+				[matTooltip]="!hasRoomTracksPublished() ? ('TOOLBAR.NO_TRACKS_PUBLISHED' | translate) : ''"
 				(click)="onRecordingToggle()"
 			>
 				<mat-icon color="warn">radio_button_checked</mat-icon>
 				<span>
 					{{
-						recordingStatus === _recordingStatus.STOPPED ||
-						recordingStatus === _recordingStatus.STOPPING ||
-						recordingStatus === _recordingStatus.FAILED
+						recordingStatus() === _recordingStatus.STOPPED ||
+						recordingStatus() === _recordingStatus.STOPPING ||
+						recordingStatus() === _recordingStatus.FAILED
 							? ('TOOLBAR.START_RECORDING' | translate)
 							: ('TOOLBAR.STOP_RECORDING' | translate)
 					}}
@@ -136,7 +136,7 @@
 		}
 
 		<!-- View recordings button -->
-		@if (showViewRecordingsButton) {
+		@if (showViewRecordingsButton()) {
 			<button mat-menu-item id="view-recordings-btn" (click)="onViewRecordingsClick()">
 				<mat-icon>video_library</mat-icon>
 				<span>{{ 'TOOLBAR.VIEW_RECORDINGS' | translate }}</span>
@@ -144,19 +144,19 @@
 		}
 
 		<!-- Broadcasting button -->
-		@if (showBroadcastingButton) {
+		@if (showBroadcastingButton()) {
 			<button
 				mat-menu-item
 				id="toolbar-broadcasting-btn"
-				[disabled]="broadcastingStatus === _broadcastingStatus.STARTING || recordingStatus === _broadcastingStatus.STOPPING"
+				[disabled]="broadcastingStatus() === _broadcastingStatus.STARTING || recordingStatus() === _broadcastingStatus.STOPPING"
 				(click)="onBroadcastingToggle()"
 			>
 				<mat-icon>sensors</mat-icon>
 				<span>
 					{{
-						broadcastingStatus === _broadcastingStatus.STOPPED ||
-						broadcastingStatus === _broadcastingStatus.STOPPING ||
-						broadcastingStatus === _broadcastingStatus.FAILED
+						broadcastingStatus() === _broadcastingStatus.STOPPED ||
+						broadcastingStatus() === _broadcastingStatus.STOPPING ||
+						broadcastingStatus() === _broadcastingStatus.FAILED
 							? ('PANEL.STREAMING.START' | translate)
 							: ('PANEL.STREAMING.STOP' | translate)
 					}}
@@ -165,8 +165,8 @@
 		}
 
 		<!-- Virtual background button -->
-		@if (showBackgroundEffectsButton) {
-			<button mat-menu-item id="virtual-bg-btn" [disabled]="!isCameraEnabled" (click)="onBackgroundEffectsToggle()">
+		@if (showBackgroundEffectsButton()) {
+			<button mat-menu-item id="virtual-bg-btn" [disabled]="!isCameraEnabled()" (click)="onBackgroundEffectsToggle()">
 				<mat-icon><span class="material-symbols-outlined">background_replace</span></mat-icon>
 				<span>{{ 'TOOLBAR.BACKGROUND' | translate }}</span>
 			</button>
@@ -186,8 +186,8 @@
 		</button> -->
 
 		<!-- Additional buttons injection inside menu (mobile only) -->
-		@if (showAdditionalButtonsInsideMenu() && additionalButtonsPosition === 'afterMenu') {
-			<ng-container *ngTemplateOutlet="toolbarAdditionalButtonsTemplate; context: { $implicit: additionalButtonsPosition }">
+		@if (showAdditionalButtonsInsideMenu() && additionalButtonsPosition() === 'afterMenu') {
+			<ng-container *ngTemplateOutlet="toolbarAdditionalButtonsTemplate(); context: { $implicit: additionalButtonsPosition() }">
 			</ng-container>
 		}
 
@@ -197,12 +197,12 @@
 		}
 
 		<!-- Divider before settings -->
-		@if (showSettingsButton) {
+		@if (showSettingsButton()) {
 			<mat-divider class="divider"></mat-divider>
 		}
 
 		<!-- Settings button -->
-		@if (showSettingsButton) {
+		@if (showSettingsButton()) {
 			<button mat-menu-item id="toolbar-settings-btn" (click)="onSettingsToggle()">
 				<mat-icon>settings</mat-icon>
 				<span>{{ 'TOOLBAR.SETTINGS' | translate }}</span>
@@ -212,12 +212,12 @@
 }
 
 <!-- Additional buttons injection from parent component (desktop/tablet only) -->
-@if (showAdditionalButtonsOutside() && additionalButtonsPosition === 'afterMenu') {
-	<ng-container *ngTemplateOutlet="toolbarAdditionalButtonsTemplate"></ng-container>
+@if (showAdditionalButtonsOutside() && additionalButtonsPosition() === 'afterMenu') {
+	<ng-container *ngTemplateOutlet="toolbarAdditionalButtonsTemplate()"></ng-container>
 }
 
 <!-- Leave session button -->
-@if (showLeaveButton) {
+@if (showLeaveButton()) {
 	<button
 		mat-icon-button
 		(click)="onLeaveClick()"
@@ -229,6 +229,6 @@
 	</button>
 }
 
-@if (toolbarLeaveButtonTemplate) {
-	<ng-container *ngTemplateOutlet="toolbarLeaveButtonTemplate"></ng-container>
+@if (toolbarLeaveButtonTemplate()) {
+	<ng-container *ngTemplateOutlet="toolbarLeaveButtonTemplate()"></ng-container>
 }
