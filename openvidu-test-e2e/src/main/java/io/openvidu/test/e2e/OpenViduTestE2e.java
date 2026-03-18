@@ -24,7 +24,6 @@ import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
@@ -60,16 +59,20 @@ public class OpenViduTestE2e {
 	// Value is a pair with:
 	// 1. The flag value of the ffmpeg command
 	// 2. Any extra flags needed for that codec to work
-	final protected static Map<String, Pair<String, ?>> FFMPEG_VIDEO_CODEC_NAMES = new HashMap<>() {
+	// Key is the common name of the video codec. Value is a triple with:
+	// 1. The flag value of the ffmpeg command
+	// 2. Any extra flags needed for that codec to work
+	// 3. The string expected to appear on the server log when the stream starts
+	final protected static Map<String, Triple<String, String, String>> FFMPEG_VIDEO_CODEC_NAMES = new HashMap<>() {
 		{
-			put("H264", Pair.of("libx264", ""));
-			put("VP8", Pair.of("libvpx", ""));
-			put("VP9", Pair.of("libvpx-vp9", ""));
-			put("MPEG-4", Pair.of("mpeg4", ""));
-			put("M-JPEG", Pair.of("mjpeg", "-force_duplicated_matrix:v 1 -huffman:v 0"));
-			// put("AV1", Pair.of("libaom-av1", "")); // NOT SUPPORTED BY THE RTSP SERVER
+			put("H264", Triple.of("libx264", "", "H264"));
+			put("VP8", Triple.of("libvpx", "", "VP8"));
+			put("VP9", Triple.of("libvpx-vp9", "", "VP9"));
+			put("MPEG-4", Triple.of("mpeg4", "", "MPEG-4"));
+			put("M-JPEG", Triple.of("mjpeg", "-force_duplicated_matrix:v 1 -huffman:v 0", "MJPEG"));
+			// put("AV1", Triple.of("libaom-av1", "", "AV1")); // NOT SUPPORTED BY THE RTSP SERVER
 			// (maybe gstreamer?)
-			// put("H265", Pair.of("libx265", "")); // NOT SUPPORTED BY INGRESS
+			// put("H265", Triple.of("libx265", "", "H265")); // NOT SUPPORTED BY INGRESS
 		}
 	};
 
@@ -84,7 +87,7 @@ public class OpenViduTestE2e {
 			put("AAC", Triple.of("aac", "-ac 2 -b:a 128k", "MPEG-4 Audio"));
 			put("AC3", Triple.of("ac3", "-b:a 128k", null));
 			put("OPUS", Triple.of("libopus", "-ac 2", "Opus"));
-			put("MP3", Triple.of("libmp3lame", "", "MPEG-1/2 Audio"));
+			put("MP3", Triple.of("libmp3lame", "", "MPEG-1 Audio"));
 			put("VORBIS", Triple.of("libvorbis", "", null));
 			put("G711", Triple.of("pcm_mulaw", "", "G711"));
 		}
@@ -222,7 +225,8 @@ public class OpenViduTestE2e {
 
 		// e.g. "[path live] stream is available and online, 2 tracks (H264, Opus)"
 		if (videoCodec != null) {
-			String regex = ".*\\[path " + RTSP_PATH + "\\] stream is available.*\\(.*(?i)(" + videoCodec + ").*\\).*";
+			String expectedVideoCodecLogValue = FFMPEG_VIDEO_CODEC_NAMES.get(videoCodec).getRight();
+			String regex = ".*\\[path " + RTSP_PATH + "\\] stream is available.*\\(.*(?i)(" + expectedVideoCodecLogValue + ").*\\).*";
 			waitUntilLog(rtspServerContainer, regex, 15);
 		}
 		if (audioCodec != null) {
@@ -289,7 +293,7 @@ public class OpenViduTestE2e {
 		if (videoCodec != null) {
 			String ffmpegVideoCodecFlag = FFMPEG_VIDEO_CODEC_NAMES.get(videoCodec).getLeft();
 			codecs += " -vcodec " + ffmpegVideoCodecFlag + " ";
-			codecs += FFMPEG_VIDEO_CODEC_NAMES.get(videoCodec).getRight() + " ";
+			codecs += FFMPEG_VIDEO_CODEC_NAMES.get(videoCodec).getMiddle() + " ";
 		}
 		if (audioCodec != null) {
 			String ffmpegAudioCodecFlag = FFMPEG_AUDIO_CODEC_NAMES.get(audioCodec).getLeft();
