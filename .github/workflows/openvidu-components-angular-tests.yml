@@ -27,11 +27,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           ref: ${{ inputs.commit_sha || github.sha }}
       - name: Set up Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
         with:
           node-version: ${{ env.NODE_VERSION }}
       - name: Commit URL
@@ -86,11 +86,11 @@ jobs:
             script: e2e:lib-virtual-backgrounds
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           ref: ${{ inputs.commit_sha || github.sha }}
       - name: Setup Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
         with:
           node-version: ${{ env.NODE_VERSION }}
       - name: Install wait-on package
@@ -103,15 +103,15 @@ jobs:
             docker run --network=host -d -p 4444:4444 ${{ env.CHROME_IMAGE }}
           fi
       - name: Run openvidu-local-deployment
-        uses: OpenVidu/actions/start-openvidu-local-deployment@main
+        uses: OpenVidu/actions/start-openvidu-local-deployment@35d136377813cf9b0b23d12d16d57864ccf3a8c2 # v1.0.2
       - name: Start OpenVidu Call backend
-        uses: OpenVidu/actions/start-openvidu-call@main
+        uses: OpenVidu/actions/start-openvidu-call@35d136377813cf9b0b23d12d16d57864ccf3a8c2 # v1.0.2
       - name: Build and Serve openvidu-components-angular Testapp
-        uses: OpenVidu/actions/start-openvidu-components-testapp@main
+        uses: OpenVidu/actions/start-openvidu-components-testapp@35d136377813cf9b0b23d12d16d57864ccf3a8c2 # v1.0.2
       - name: Run Tests
         env:
           LAUNCH_MODE: CI
         run: npm run ${{ matrix.script }} --prefix openvidu-components-angular
       - name: Cleanup
         if: always()
-        uses: OpenVidu/actions/cleanup@main
+        uses: OpenVidu/actions/cleanup@35d136377813cf9b0b23d12d16d57864ccf3a8c2 # v1.0.2
