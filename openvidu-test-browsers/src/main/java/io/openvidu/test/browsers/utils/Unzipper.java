@@ -54,12 +54,14 @@ public class Unzipper {
 					String fileExtension = Files.getFileExtension(entry.getName());
 					if (VIDEO_EXTENSIONS.contains(fileExtension)) {
 						File outputFile = new File(path, entry.getName());
-						recordingFiles.add(outputFile);
 						new File(outputFile.getParent()).mkdirs();
 
 						try (FileOutputStream fos = new FileOutputStream(outputFile);
 								BufferedOutputStream dest = new BufferedOutputStream(fos)) {
 							zip.getInputStream(entry).transferTo(dest);
+							recordingFiles.add(outputFile);
+						} catch (IOException extractErr) {
+							log.error("Error extracting entry '" + entry.getName() + "': " + extractErr.getMessage());
 						}
 					} else {
 						log.info("Skipping non-video file: " + entry.getName());
