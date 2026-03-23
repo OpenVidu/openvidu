@@ -20,7 +20,7 @@
 	"devDependencies": {
 		"@angular-devkit/build-angular": "20.3.13",
 		"@angular/cli": "20.3.13",
-		"@angular/compiler": "20.3.15",
+		"@angular/compiler": "20.3.18",
 		"@angular/compiler-cli": "20.3.15",
 		"@compodoc/compodoc": "1.1.32",
 		"@types/jasmine": "5.1.13",
