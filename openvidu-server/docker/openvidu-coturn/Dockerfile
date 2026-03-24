@@ -8,10 +8,12 @@ RUN apk add --no-cache bind-tools grep curl
 COPY ./detect-external-ip.sh /usr/local/bin/detect-external-ip.sh
 COPY ./docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 COPY ./discover-internal-ip.sh /usr/local/bin/discover-internal-ip.sh
+COPY ./discover-host-internal-ip.sh /usr/local/bin/discover-host-internal-ip.sh
 
 RUN chmod +x /usr/local/bin/detect-external-ip.sh \
         /usr/local/bin/docker-entrypoint.sh \
-        /usr/local/bin/discover-internal-ip.sh && \
+        /usr/local/bin/discover-internal-ip.sh \
+        /usr/local/bin/discover-host-internal-ip.sh && \
     chown -R nobody:nogroup /var/lib/coturn/ && \
     touch /turnserver.conf && chown nobody:nogroup /turnserver.conf
 

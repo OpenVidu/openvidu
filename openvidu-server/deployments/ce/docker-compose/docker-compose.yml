@@ -70,6 +70,8 @@ services:
     coturn:
         image: openvidu/openvidu-coturn:2.32.1
         restart: on-failure
+        extra_hosts:
+            - "host.docker.internal:host-gateway"
         ports:
             - "${COTURN_PORT:-3478}:${COTURN_PORT:-3478}/tcp"
             - "${COTURN_PORT:-3478}:${COTURN_PORT:-3478}/udp"
@@ -87,6 +89,8 @@ services:
             - --verbose
             - --use-auth-secret
             - --static-auth-secret=$${COTURN_SHARED_SECRET_KEY}
+            - --no-tcp-relay
+            - --allowed-peer-ip=$$(discover-host-internal-ip.sh)
         logging:
             options:
                 max-size: "${DOCKER_LOGS_MAX_SIZE:-100M}"
