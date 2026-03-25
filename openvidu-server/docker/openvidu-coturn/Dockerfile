@@ -1,4 +1,6 @@
-FROM coturn/coturn:4.7.0-r2-alpine
+# Change to official coturn when the following PR is merged:
+# https://github.com/coturn/coturn/pull/1839
+FROM cruizba/coturn:4.9.0-stunfix
 
 USER root
 
