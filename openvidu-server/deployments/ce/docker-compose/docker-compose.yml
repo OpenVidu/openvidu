@@ -93,7 +93,6 @@ services:
             - --allowed-peer-ip=$$(discover-host-internal-ip.sh)
             - --stun-backward-compatibility
             - --rfc5780
-            - --software-attribute
         logging:
             options:
                 max-size: "${DOCKER_LOGS_MAX_SIZE:-100M}"

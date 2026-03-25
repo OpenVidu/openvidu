@@ -110,7 +110,6 @@ services:
             - --no-tcp-relay
             - --stun-backward-compatibility
             - --rfc5780
-            - --software-attribute
         logging:
             options:
                 max-size: "${DOCKER_LOGS_MAX_SIZE:-100M}"
