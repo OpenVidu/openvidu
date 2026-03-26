@@ -126,16 +126,21 @@ public class OpenViduEventManager {
 		}
 
 		this.pollingThread = new Thread(() -> {
-			while (!this.isInterrupted.get()) {
-				this.getEventsFromBrowser();
-				this.emitEvents();
-				try {
-					Thread.sleep(25);
-				} catch (InterruptedException e) {
+			try {
+				while (!this.isInterrupted.get()) {
+					this.getEventsFromBrowser();
+					this.emitEvents();
+					try {
+						Thread.sleep(25);
+					} catch (InterruptedException e) {
+					}
 				}
+				log.info("Polling thread is now interrupted!");
+			} catch (Exception e) {
+				log.error("Polling thread crashed: {}", e.getMessage());
+			} finally {
+				this.pollingLatch.countDown();
 			}
-			log.info("Polling thread is now interrupted!");
-			this.pollingLatch.countDown();
 		});
 		this.pollingThread.setUncaughtExceptionHandler(h);
 		this.pollingThread.start();
@@ -261,7 +266,9 @@ public class OpenViduEventManager {
 
 	public void resetEventThread(boolean clearData) throws InterruptedException {
 		this.stopPolling(true, clearData);
-		this.pollingLatch.await();
+		if (!this.pollingLatch.await(10, TimeUnit.SECONDS)) {
+			log.warn("Polling thread did not stop within 10 seconds");
+		}
 		this.execService.shutdownNow();
 		this.execService.awaitTermination(10, TimeUnit.SECONDS);
 		this.execService = Executors.newCachedThreadPool();
