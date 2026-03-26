@@ -72,6 +72,13 @@ public class ChromeUser extends BrowserUser {
 			options.addArguments("--headless=new");
 		}
 
+		if (REMOTE_URL != null) {
+			// Enable software WebGL rendering for containers without GPU.
+			// Required by MediaPipe (used by @livekit/track-processors for virtual backgrounds)
+			options.addArguments("--use-gl=angle");
+			options.addArguments("--use-angle=swiftshader-webgl");
+		}
+
 		options.addArguments("--disable-infobars");
 		options.addArguments("--remote-allow-origins=*");
 		options.setExperimentalOption("excludeSwitches", new String[] { "enable-automation" });
