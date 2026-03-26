@@ -161,6 +161,9 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
   republishPossible: boolean = false;
   openviduError: any;
 
+  // WebSocket blocking state
+  private originalWebSocketCtor: typeof WebSocket;
+
   constructor(
     private changeDetector: ChangeDetectorRef,
     private dialog: MatDialog,
@@ -288,9 +291,77 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
     this.subscribers = [];
   }
 
-  private  async simulateNetworkDrop(): Promise<void> {
+  async simulateNetworkDropGracefully(): Promise<void> {
     const jsonRpClient = this.OV.session.localParticipant.engine;
     await jsonRpClient.close();
+  }
+
+  /**
+   * Block the WebSocket connection by closing it immediately.
+   * This simulates a transient network failure that may trigger reconnection.
+   */
+  async simulateNetworkDropIntermittently(): Promise<void> {
+    if (!this.session) {
+      console.log('[WebSocket] No active session');
+      return;
+    }
+
+    try {
+      const signalClient = this.OV.session.localParticipant.engine.client;
+      if (!signalClient || !signalClient.ws) {
+        console.log('[WebSocket] Could not access WebSocket connection');
+        return;
+      }
+
+      signalClient.ws.close();
+      console.log('[WebSocket] Closed once (quick reconnect expected)');
+    } catch (error) {
+      console.error('[WebSocket] blockWebSocket error:', error);
+    }
+  }
+
+  /**
+   * Block WebSocket connections persistently by replacing the WebSocket constructor.
+   * All new socket connection attempts will be immediately closed.
+   * This simulates a persistent network blocking condition.
+   */
+  async simulateHardNetworkDrop(): Promise<void> {
+    if (!this.session) {
+      console.log('[WebSocket] No active session');
+      return;
+    }
+
+    // Close current WebSocket if exists
+    try {
+      const signalClient = this.OV.session.localParticipant.engine.client;
+      if (signalClient && signalClient.ws) {
+        console.log('[WebSocket] Closing current WebSocket...');
+        signalClient.ws.close({ closeCode: 1000, reason: 'Simulating persistent WebSocket block' });
+      }
+    } catch (error) {
+      console.error('[WebSocket] Error closing current WebSocket:', error);
+    }
+
+    // Replace WebSocket constructor to block new connections
+    this.originalWebSocketCtor = window.WebSocket;
+    console.log('[WebSocket] Enabling persistent WebSocket block...');
+
+    const self = this;
+    (window as any).WebSocket = class BlockedWebSocket {
+      constructor(url: string | URL, protocols?: string | string[]) {
+        const wsInstance = new self.originalWebSocketCtor(url, protocols);
+        // Check if it's a signal WebSocket and block it
+        const urlStr = String(url).toLowerCase();
+        if (urlStr.startsWith('ws://') || urlStr.startsWith('wss://')) {
+          setTimeout(() => {
+            if (wsInstance.readyState === 0 || wsInstance.readyState === 1) {
+              wsInstance.close(4000, 'Simulated persistent WebSocket block');
+            }
+          }, 0);
+        }
+        return wsInstance;
+      }
+    } as typeof WebSocket;
   }
 
   updateEventList(eventName: string, eventContent: string, event: Event) {

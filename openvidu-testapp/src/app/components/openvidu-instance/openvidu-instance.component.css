@@ -183,3 +183,21 @@ mat-checkbox {
 mat-checkbox:first-of-type {
   margin-left: 0;
 }
+
+/* WebSocket blocking button styles */
+.ws-block-btn {
+  color: #ff9800 !important;
+}
+
+.ws-block-btn:hover {
+  color: #f57c00 !important;
+}
+
+.ws-block-persistent-btn {
+  color: #f44336 !important;
+}
+
+.ws-block-persistent-btn:hover {
+  color: #d32f2f !important;
+}
+
