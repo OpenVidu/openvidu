@@ -60,11 +60,24 @@ video {
   font-weight: bold;
 }
 
-::ng-deep #max-video-quality * {
+/* Compact the form-field chrome, but exclude the CDK overlay popover
+   (Angular CDK v21 renders it inside the component via the Popover API). */
+::ng-deep #max-video-quality > :not(.cdk-overlay-popover),
+::ng-deep #max-video-quality > :not(.cdk-overlay-popover) * {
   height: 16px !important;
   width: 8px !important;
   min-height: 16px !important;
   min-width: 8px !important;
   padding: 0 !important;
   border-color: transparent !important;
+}
+
+/* Let the dropdown panel and its options render at their natural size */
+::ng-deep #max-video-quality .cdk-overlay-popover,
+::ng-deep #max-video-quality .cdk-overlay-popover * {
+  width: auto !important;
+  min-width: auto !important;
+  height: auto !important;
+  min-height: auto !important;
+  padding: revert !important;
 }
