@@ -233,7 +233,6 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 	@Test
 	@Timeout(1200)
 	@DisplayName("End reason")
-	@OnlyPion // TODO: UNCOMMENT WHEN UPGRADING MEDIASOUP TO LATEST
 	void endReasonTest() throws Exception {
 
 		isRecordingTest = true;
@@ -487,7 +486,6 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 				// v2Compatibility
 				// for (int i = 0; i < 3; i++) {
 
-				// TODO: THIS WILL BE FIXED FOR MEDIASOUP AFTER UPGRADING IT
 				Assertions.assertEquals("unpublish",
 						CustomWebhook.waitForEvent("webrtcConnectionDestroyed", 60).get("reason").getAsString());
 
