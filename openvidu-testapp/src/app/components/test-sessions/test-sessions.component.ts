@@ -1,7 +1,13 @@
 import { animate, style, transition, trigger } from '@angular/animations';
 import { Component } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { Subscription } from 'rxjs';
 import { TestFeedService } from 'src/app/services/test-feed.service';
+import { MatButtonModule } from '@angular/material/button';
+import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { OpenviduInstanceComponent } from '../openvidu-instance/openvidu-instance.component';
 import stringify from 'json-stringify-safe';
 
 export interface RoomConf {
@@ -13,7 +19,7 @@ export interface RoomConf {
 @Component({
     selector: 'app-test-sessions',
     templateUrl: './test-sessions.component.html',
-    styleUrls: ['./test-sessions.component.css'],
+    styleUrl: './test-sessions.component.css',
     animations: [
         trigger('fadeAnimation', [
             transition(':enter', [
@@ -22,7 +28,7 @@ export interface RoomConf {
             ]),
         ]),
     ],
-    standalone: false
+    imports: [FormsModule, MatButtonModule, MatCheckboxModule, MatFormFieldModule, MatInputModule, OpenviduInstanceComponent],
 })
 export class TestSessionsComponent {
   eventsInfoSubscription: Subscription;

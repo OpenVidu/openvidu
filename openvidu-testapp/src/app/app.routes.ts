@@ -1,10 +1,9 @@
-import { NgModule } from '@angular/core';
-import { RouterModule, Routes } from '@angular/router';
+import { Routes } from '@angular/router';
 
 import { TestScenariosComponent } from './components/test-scenarios/test-scenarios.component';
 import { TestSessionsComponent } from './components/test-sessions/test-sessions.component';
 
-const appRoutes: Routes = [
+export const routes: Routes = [
   {
     path: '',
     redirectTo: '/test-sessions',
@@ -19,9 +18,3 @@ const appRoutes: Routes = [
     component: TestScenariosComponent,
   },
 ];
-
-@NgModule({
-  imports: [RouterModule.forRoot(appRoutes, { useHash: true })],
-  exports: [RouterModule],
-})
-export class AppRoutingModule {}

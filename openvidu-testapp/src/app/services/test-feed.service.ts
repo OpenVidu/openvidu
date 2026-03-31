@@ -9,7 +9,9 @@ export interface TestAppEvent {
     eventDescription: string;
 }
 
-@Injectable()
+@Injectable({
+    providedIn: 'root',
+})
 export class TestFeedService {
 
     newLastEvent$ = new Subject<any>();

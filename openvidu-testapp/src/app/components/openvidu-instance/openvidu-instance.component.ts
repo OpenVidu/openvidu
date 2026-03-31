@@ -1,7 +1,17 @@
-import { Component, HostListener, Inject, Input } from '@angular/core';
+import { Component, HostListener, Input, inject } from '@angular/core';
+import { NgClass, KeyValuePipe } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 
 import { RoomConf } from '../test-sessions/test-sessions.component';
 import { LivekitParamsService } from 'src/app/services/livekit-params.service';
+import { MatDialog } from '@angular/material/dialog';
+import { MatCardModule } from '@angular/material/card';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
+import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatExpansionModule } from '@angular/material/expansion';
 
 import {
   ConnectionQuality,
@@ -38,20 +48,20 @@ import {
   TestAppEvent,
   TestFeedService,
 } from 'src/app/services/test-feed.service';
-import { MatDialog } from '@angular/material/dialog';
 import { RoomApiDialogComponent } from '../dialogs/room-api-dialog/room-api-dialog.component';
 import { RoomApiService } from 'src/app/services/room-api.service';
 import { EventsDialogComponent } from '../dialogs/events-dialog/events-dialog.component';
 import { OptionsDialogComponent } from '../dialogs/options-dialog/options-dialog.component';
 import { InfoDialogComponent } from '../dialogs/info-dialog/info-dialog.component';
+import { ParticipantComponent } from '../participant/participant.component';
 import { RoomEventCallbacks } from 'node_modules/livekit-client/dist/src/room/Room';
 import PCTransport from 'node_modules/livekit-client/dist/src/room/PCTransport';
 
 @Component({
   selector: 'app-openvidu-instance',
   templateUrl: './openvidu-instance.component.html',
-  styleUrls: ['./openvidu-instance.component.css'],
-  standalone: false,
+  styleUrl: './openvidu-instance.component.css',
+  imports: [NgClass, KeyValuePipe, FormsModule, MatCardModule, MatFormFieldModule, MatInputModule, MatIconModule, MatButtonModule, MatCheckboxModule, MatExpansionModule, ParticipantComponent],
 })
 export class OpenviduInstanceComponent {
   @Input()
@@ -113,11 +123,12 @@ export class OpenviduInstanceComponent {
 
   private decoder = new TextDecoder();
 
+  private dialog = inject(MatDialog);
+
   constructor(
     private livekitParamsService: LivekitParamsService,
     private testFeedService: TestFeedService,
     private roomApiService: RoomApiService,
-    @Inject(MatDialog) private dialog: MatDialog
   ) {
     const roomForDefaults = new Room(this.roomOptions);
     this.roomOptions = roomForDefaults.options;

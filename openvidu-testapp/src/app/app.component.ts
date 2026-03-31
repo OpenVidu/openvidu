@@ -1,13 +1,19 @@
 import { Component } from '@angular/core';
-import { Router } from '@angular/router';
+import { FormsModule } from '@angular/forms';
+import { Router, RouterOutlet, RouterLink } from '@angular/router';
 import { LogLevel, setLogLevel } from 'livekit-client';
 import { LivekitParamsService } from './services/livekit-params.service';
+import { MatSidenavModule } from '@angular/material/sidenav';
+import { MatToolbarModule } from '@angular/material/toolbar';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatButtonModule } from '@angular/material/button';
 
 @Component({
     selector: 'app-root',
     templateUrl: './app.component.html',
-    styleUrls: ['./app.component.css'],
-    standalone: false
+    styleUrl: './app.component.css',
+    imports: [FormsModule, RouterOutlet, RouterLink, MatSidenavModule, MatToolbarModule, MatFormFieldModule, MatInputModule, MatButtonModule],
 })
 export class AppComponent {
   livekitUrl = 'ws://localhost:7880/'; // `${window.location.protocol === 'https:' ? 'wss' : 'ws'}://localhost:1880/`;

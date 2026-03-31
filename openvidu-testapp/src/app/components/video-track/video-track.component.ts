@@ -1,4 +1,5 @@
-import { Component, Inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
+import { NgClass } from '@angular/common';
 import {
   LocalTrack,
   VideoTrack,
@@ -10,12 +11,16 @@ import { MatDialog } from '@angular/material/dialog';
 import { TestFeedService } from 'src/app/services/test-feed.service';
 import { InfoDialogComponent } from '../dialogs/info-dialog/info-dialog.component';
 import { ProcessorDialogComponent } from '../dialogs/processor-dialog/processor-dialog.component';
+import { MatIconModule } from '@angular/material/icon';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatSelectModule } from '@angular/material/select';
 
 @Component({
   selector: 'app-video-track',
   templateUrl: './video-track.component.html',
-  styleUrls: ['./video-track.component.css'],
-  standalone: false,
+  styleUrl: './video-track.component.css',
+  imports: [NgClass, MatIconModule, MatTooltipModule, MatFormFieldModule, MatSelectModule],
 })
 export class VideoTrackComponent extends TrackComponent {
   muteVideoIcon: string = 'videocam';
@@ -47,9 +52,10 @@ export class VideoTrackComponent extends TrackComponent {
     autoDetectFrameInterval: 30
   };
 
+  private dialog = inject(MatDialog);
+
   constructor(
     protected override testFeedService: TestFeedService,
-    @Inject(MatDialog) private dialog: MatDialog
   ) {
     super(testFeedService);
   }

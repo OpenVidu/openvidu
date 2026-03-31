@@ -1,13 +1,17 @@
-import { Component, Inject, NgZone, OnDestroy, ViewChild } from '@angular/core';
+import { Component, NgZone, OnDestroy, ViewChild, inject } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { CdkTextareaAutosize } from '@angular/cdk/text-field';
 import { take } from 'rxjs/operators';
-import { MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatButtonModule } from '@angular/material/button';
 
 @Component({
   selector: 'app-info-dialog',
   templateUrl: './info-dialog.component.html',
-  styleUrls: ['./info-dialog.component.css'],
-  standalone: false,
+  styleUrl: './info-dialog.component.css',
+  imports: [FormsModule, CdkTextareaAutosize, MatDialogModule, MatFormFieldModule, MatInputModule, MatButtonModule],
 })
 export class InfoDialogComponent implements OnDestroy {
   title: string;
@@ -21,16 +25,17 @@ export class InfoDialogComponent implements OnDestroy {
 
   @ViewChild('autosize') autosize: CdkTextareaAutosize;
 
+  private data = inject<{
+    title: string;
+    subtitle: string;
+    updateFunction: () => Promise<string>;
+    updateInterval: number;
+  }>(MAT_DIALOG_DATA);
+
   constructor(
-    @Inject(MAT_DIALOG_DATA)
-    public data: {
-      title: string;
-      subtitle: string;
-      updateFunction: () => Promise<string>;
-      updateInterval: number;
-    },
     private _ngZone: NgZone
   ) {
+    const data = this.data;
     this.title = data.title;
     this.subtitle = data.subtitle;
     this.updateFunction = data.updateFunction;

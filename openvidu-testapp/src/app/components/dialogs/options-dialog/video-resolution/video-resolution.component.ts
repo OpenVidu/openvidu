@@ -1,10 +1,13 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
 
 @Component({
     selector: 'app-video-resolution',
     templateUrl: './video-resolution.component.html',
-    styleUrls: ['./video-resolution.component.css'],
-    standalone: false
+    styleUrl: './video-resolution.component.css',
+    imports: [FormsModule, MatFormFieldModule, MatInputModule],
 })
 export class VideoResolutionComponent {
   @Input() componentId: string;

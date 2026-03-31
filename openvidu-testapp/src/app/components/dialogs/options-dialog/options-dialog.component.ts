@@ -1,6 +1,15 @@
-import { Component, Inject } from '@angular/core';
-import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
-import { MatRadioChange } from '@angular/material/radio';
+import { Component, inject } from '@angular/core';
+import { NgClass, UpperCasePipe } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { MAT_DIALOG_DATA, MatDialogRef, MatDialogModule } from '@angular/material/dialog';
+import { MatRadioChange, MatRadioModule } from '@angular/material/radio';
+import { MatDividerModule } from '@angular/material/divider';
+import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
+import { MatButtonModule } from '@angular/material/button';
+import { VideoResolutionComponent } from './video-resolution/video-resolution.component';
 import {
   AudioCaptureOptions,
   CreateLocalTracksOptions,
@@ -15,8 +24,8 @@ import {
 @Component({
     selector: 'app-options-dialog',
     templateUrl: './options-dialog.component.html',
-    styleUrls: ['./options-dialog.component.css'],
-    standalone: false
+    styleUrl: './options-dialog.component.css',
+    imports: [NgClass, UpperCasePipe, FormsModule, MatDialogModule, MatRadioModule, MatDividerModule, MatCheckboxModule, MatFormFieldModule, MatInputModule, MatSelectModule, MatButtonModule, VideoResolutionComponent],
 })
 export class OptionsDialogComponent {
   roomOptions?: RoomOptions;
@@ -43,21 +52,22 @@ export class OptionsDialogComponent {
 
   inputVideoDevices: MediaDeviceInfo[] = [];
 
+  private data = inject<{
+    roomOptions?: RoomOptions;
+    forceRelay: boolean;
+    createLocalTracksOptions?: CreateLocalTracksOptions;
+    shareScreen: boolean;
+    screenShareCaptureOptions?: ScreenShareCaptureOptions;
+    trackPublishOptions?: TrackPublishOptions;
+    allowDisablingAudio?: boolean;
+    allowDisablingVideo?: boolean;
+    allowDisablingScreen?: boolean;
+  }>(MAT_DIALOG_DATA);
+
   constructor(
     public dialogRef: MatDialogRef<OptionsDialogComponent>,
-    @Inject(MAT_DIALOG_DATA)
-    public data: {
-      roomOptions?: RoomOptions;
-      forceRelay: boolean;
-      createLocalTracksOptions?: CreateLocalTracksOptions;
-      shareScreen: boolean;
-      screenShareCaptureOptions?: ScreenShareCaptureOptions;
-      trackPublishOptions?: TrackPublishOptions;
-      allowDisablingAudio?: boolean;
-      allowDisablingVideo?: boolean;
-      allowDisablingScreen?: boolean;
-    }
   ) {
+    const data = this.data;
     this.roomOptions = data.roomOptions;
     this.forceRelay = data.forceRelay;
     this.createLocalTracksOptions = data.createLocalTracksOptions;

@@ -19,7 +19,6 @@ import { AudioTrack, VideoTrack } from 'livekit-client';
       }
     `,
     ],
-    standalone: false
 })
 export class TableVideoComponent implements AfterViewInit {
   @ViewChild('mediaElement') elementRef: ElementRef;

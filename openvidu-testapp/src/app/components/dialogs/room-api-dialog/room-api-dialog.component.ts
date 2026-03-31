@@ -1,8 +1,18 @@
 import { LiveAnnouncer } from '@angular/cdk/a11y';
 import { COMMA, ENTER } from '@angular/cdk/keycodes';
-import { Component, Inject, inject } from '@angular/core';
-import { MatChipInputEvent } from '@angular/material/chips';
-import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { Component, inject } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { MatChipInputEvent, MatChipsModule } from '@angular/material/chips';
+import { MatDialogRef, MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatButtonModule } from '@angular/material/button';
+import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatDividerModule } from '@angular/material/divider';
+import { MatSelectModule } from '@angular/material/select';
+import { MatIconModule } from '@angular/material/icon';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { VideoCodec } from '@livekit/protocol';
 import { LocalParticipant } from 'livekit-client';
 
@@ -29,8 +39,8 @@ import {
 @Component({
     selector: 'app-room-api-dialog',
     templateUrl: './room-api-dialog.component.html',
-    styleUrls: ['./room-api-dialog.component.css'],
-    standalone: false
+    styleUrl: './room-api-dialog.component.css',
+    imports: [FormsModule, MatDialogModule, MatFormFieldModule, MatInputModule, MatButtonModule, MatCheckboxModule, MatDividerModule, MatSelectModule, MatChipsModule, MatIconModule, MatTooltipModule, MatSlideToggleModule],
 })
 export class RoomApiDialogComponent {
   room: Room;
@@ -109,11 +119,13 @@ export class RoomApiDialogComponent {
   addOnBlur = true;
   readonly separatorKeysCodes = [ENTER, COMMA] as const;
 
+  private data = inject(MAT_DIALOG_DATA);
+
   constructor(
     private roomApiService: RoomApiService,
     public dialogRef: MatDialogRef<RoomApiDialogComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: any
   ) {
+    const data = this.data;
     this.room = data.room;
     this.localParticipant = data.localParticipant;
     this.apiRoomName = this.room?.name;

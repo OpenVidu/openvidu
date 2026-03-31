@@ -1,12 +1,15 @@
 import { Component, Input } from '@angular/core';
 import { AudioTrack, VideoTrack } from 'livekit-client';
+import { MatBadgeModule } from '@angular/material/badge';
+import { CallbackPipe } from 'src/app/pipes/callback.pipe';
+import { TableVideoComponent } from './table-video.component';
 import { User } from '../test-scenarios/test-scenarios.component';
 
 @Component({
   selector: 'app-users-table',
-  styleUrls: ['users-table.component.css'],
+  styleUrl: 'users-table.component.css',
   templateUrl: 'users-table.component.html',
-  standalone: false,
+  imports: [MatBadgeModule, CallbackPipe, TableVideoComponent],
 })
 export class UsersTableComponent {
   @Input() users: User[] = [];

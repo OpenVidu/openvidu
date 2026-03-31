@@ -2,11 +2,21 @@ import {
   AfterViewInit,
   Component,
   ElementRef,
-  Inject,
   OnDestroy,
   ViewChild,
+  inject,
 } from '@angular/core';
-import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
+import { FormsModule } from '@angular/forms';
+import { MAT_DIALOG_DATA, MatDialogRef, MatDialogModule } from '@angular/material/dialog';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatSelectModule } from '@angular/material/select';
+import { MatSliderModule } from '@angular/material/slider';
+import { MatButtonModule } from '@angular/material/button';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatDividerModule } from '@angular/material/divider';
+import { MatIconModule } from '@angular/material/icon';
+import { MatInputModule } from '@angular/material/input';
 import { VideoTrackComponent } from '../../video-track/video-track.component';
 import { LocalVideoTrack } from 'livekit-client';
 import {
@@ -17,15 +27,16 @@ import {
 @Component({
   selector: 'app-processor-dialog',
   templateUrl: './processor-dialog.component.html',
-  styleUrls: ['./processor-dialog.component.css'],
-  standalone: false,
+  styleUrl: './processor-dialog.component.css',
+  imports: [FormsModule, MatDialogModule, MatSlideToggleModule, MatFormFieldModule, MatSelectModule, MatSliderModule, MatButtonModule, MatTooltipModule, MatDividerModule, MatIconModule, MatInputModule],
 })
 export class ProcessorDialogComponent implements AfterViewInit, OnDestroy {
   @ViewChild('videoElement') videoElement: ElementRef<HTMLVideoElement>;
 
+  public data = inject<{ videoTrack: VideoTrackComponent }>(MAT_DIALOG_DATA);
+
   constructor(
     public dialogRef: MatDialogRef<ProcessorDialogComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: { videoTrack: VideoTrackComponent }
   ) {}
 
   ngAfterViewInit() {

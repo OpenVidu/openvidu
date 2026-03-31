@@ -21,20 +21,13 @@
     "useDefineForClassFields": false,
     "strictPropertyInitialization": false,
     "skipLibCheck": true,
-    "lib": [
-      "ES2022",
-      "dom"
-    ],
     "paths": {
-      "crypto": [
-        "./node_modules/crypto-browserify"
-      ],
-      "stream": [
-        "node_modules/stream-browserify"
-      ],
-      "buffer": [
-        "node_modules/buffer"
-      ]
+      "crypto": ["./node_modules/crypto-browserify"],
+      "node:crypto": ["./node_modules/crypto-browserify"],
+      "stream": ["./node_modules/stream-browserify"],
+      "node:stream": ["./node_modules/stream-browserify"],
+      "buffer": ["./node_modules/buffer"],
+      "node:buffer": ["./node_modules/buffer"]
     },
     "types": [
       "node"

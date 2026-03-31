@@ -1,12 +1,15 @@
 import { Component } from '@angular/core';
+import { NgClass } from '@angular/common';
 import { LocalTrack } from 'livekit-client';
+import { MatIconModule } from '@angular/material/icon';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { TrackComponent } from '../track/track.component';
 
 @Component({
     selector: 'app-audio-track',
     templateUrl: './audio-track.component.html',
-    styleUrls: ['./audio-track.component.css'],
-    standalone: false
+    styleUrl: './audio-track.component.css',
+    imports: [NgClass, MatIconModule, MatTooltipModule],
 })
 export class AudioTrackComponent extends TrackComponent {
   muteAudioIcon: string = 'mic';

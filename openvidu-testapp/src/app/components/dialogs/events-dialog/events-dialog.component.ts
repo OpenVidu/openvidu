@@ -1,5 +1,10 @@
-import { Component, Inject } from '@angular/core';
-import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { Component, inject } from '@angular/core';
+import { SlicePipe } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { MatDialogRef, MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
+import { MatDividerModule } from '@angular/material/divider';
+import { MatButtonModule } from '@angular/material/button';
 
 
 @Component({
@@ -46,7 +51,7 @@ import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
         '.col-50 {flex-basis: 50%; box-sizing: border-box; padding-left: 20px; }',
         '.toggle { }'
     ],
-    standalone: false
+    imports: [SlicePipe, FormsModule, MatDialogModule, MatSlideToggleModule, MatDividerModule, MatButtonModule],
 })
 export class EventsDialogComponent {
 
@@ -55,8 +60,10 @@ export class EventsDialogComponent {
     eventCollection: Map<string, boolean>;
     eventArray: string[];
 
-    constructor(public dialogRef: MatDialogRef<EventsDialogComponent>,
-        @Inject(MAT_DIALOG_DATA) public data: any) {
+    private dialogData = inject(MAT_DIALOG_DATA);
+
+    constructor(public dialogRef: MatDialogRef<EventsDialogComponent>) {
+        const data = this.dialogData;
         this.target = data.target;
         this.eventCollection = data.eventCollection;
         this.eventArray = Array.from(this.eventCollection.keys());

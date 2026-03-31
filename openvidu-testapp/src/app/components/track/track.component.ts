@@ -26,8 +26,6 @@ import {
 @Component({
     selector: 'app-track',
     template: '',
-    styleUrls: [],
-    standalone: false
 })
 export class TrackComponent {
   @Output()

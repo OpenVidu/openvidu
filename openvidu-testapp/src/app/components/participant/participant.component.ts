@@ -1,5 +1,9 @@
-import { Component, EventEmitter, Input, Output, Inject, ChangeDetectorRef } from '@angular/core';
+import { Component, EventEmitter, Input, Output, ChangeDetectorRef, inject } from '@angular/core';
+import { NgClass, KeyValuePipe } from '@angular/common';
 import { MatDialog } from '@angular/material/dialog';
+import { MatIconModule } from '@angular/material/icon';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatExpansionModule } from '@angular/material/expansion';
 import {
   AudioCaptureOptions,
   ConnectionQuality,
@@ -32,13 +36,15 @@ import {
   TestFeedService,
 } from 'src/app/services/test-feed.service';
 import { OptionsDialogComponent } from '../dialogs/options-dialog/options-dialog.component';
+import { VideoTrackComponent } from '../video-track/video-track.component';
+import { AudioTrackComponent } from '../audio-track/audio-track.component';
 import { ParticipantEventCallbacks } from 'node_modules/livekit-client/dist/src/room/participant/Participant';
 
 @Component({
     selector: 'app-participant',
     templateUrl: './participant.component.html',
-    styleUrls: ['./participant.component.css'],
-    standalone: false
+    styleUrl: './participant.component.css',
+    imports: [NgClass, KeyValuePipe, MatIconModule, MatTooltipModule, MatExpansionModule, VideoTrackComponent, AudioTrackComponent],
 })
 export class ParticipantComponent {
   @Input()
@@ -63,9 +69,10 @@ export class ParticipantComponent {
 
   private decoder = new TextDecoder();
 
+  private dialog = inject(MatDialog);
+
   constructor(
     private testFeedService: TestFeedService,
-    @Inject(MatDialog) private dialog: MatDialog,
     private cdr: ChangeDetectorRef
   ) {}
 

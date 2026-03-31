@@ -1,10 +1,17 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { Subscription } from 'rxjs';
 
 import {
   TestAppEvent,
   TestFeedService,
 } from '../../services/test-feed.service';
+
+import { MatButtonModule } from '@angular/material/button';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatIconModule } from '@angular/material/icon';
+import { UsersTableComponent } from '../users-table/users-table.component';
 
 import {
   CreateLocalTracksOptions,
@@ -41,8 +48,8 @@ export interface User {
 @Component({
   selector: 'app-test-scenarios',
   templateUrl: './test-scenarios.component.html',
-  styleUrls: ['./test-scenarios.component.css'],
-  standalone: false,
+  styleUrl: './test-scenarios.component.css',
+  imports: [FormsModule, MatButtonModule, MatFormFieldModule, MatInputModule, MatIconModule, UsersTableComponent],
 })
 export class TestScenariosComponent implements OnInit, OnDestroy {
   fixedRoomId = 'SCENARIO_TEST';
