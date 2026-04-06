@@ -94,6 +94,7 @@ app-participant:last-child > .participant-container {
 button.mat-icon-custom .mat-mdc-button-touch-target {
   width: 24px;
   height: 24px;
+  pointer-events: none;
 }
 
 .top-div {
@@ -108,4 +109,14 @@ app-options-dialog .mat-mdc-form-field-infix {
 
 .cdk-overlay-pane:has(.mat-mdc-select-panel) {
   min-width: fit-content;
+}
+
+/* Disable mat-select panel CSS transitions/animations so options
+   are immediately clickable (prevents ElementClickInterceptedException
+   in Selenium when mdc-menu-surface intercepts clicks during animation). */
+.mat-mdc-select-panel.mdc-menu-surface {
+  transition: none !important;
+  animation: none !important;
+  opacity: 1 !important;
+  transform: none !important;
 }

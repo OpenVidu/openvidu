@@ -198,6 +198,8 @@ export class TestScenariosComponent implements OnInit, OnDestroy {
           );
           const room: Room = user.room;
 
+          room.setMaxListeners(300);
+
           room.on(RoomEvent.SignalConnected, () => {
             this.updateEventList(RoomEvent.SignalConnected);
           });
