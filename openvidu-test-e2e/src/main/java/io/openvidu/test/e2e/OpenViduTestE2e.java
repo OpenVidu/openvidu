@@ -69,7 +69,7 @@ public class OpenViduTestE2e {
 			put("VP8", Triple.of("libvpx", "", "VP8"));
 			put("VP9", Triple.of("libvpx-vp9", "", "VP9"));
 			put("MPEG-4", Triple.of("mpeg4", "", "MPEG-4"));
-			put("M-JPEG", Triple.of("mjpeg", "-force_duplicated_matrix:v 1 -huffman:v 0", "MJPEG"));
+			put("M-JPEG", Triple.of("mjpeg", "-force_duplicated_matrix:v 1 -huffman:v 0", "M-JPEG"));
 			// put("AV1", Triple.of("libaom-av1", "", "AV1")); // NOT SUPPORTED BY THE RTSP SERVER
 			// (maybe gstreamer?)
 			// put("H265", Triple.of("libx265", "", "H265")); // NOT SUPPORTED BY INGRESS
