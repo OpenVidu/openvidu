@@ -17,6 +17,7 @@ import {
   ConnectionQuality,
   ConnectionState,
   CreateLocalTracksOptions,
+  DataChannelKind,
   DataPacket_Kind,
   DataPublishOptions,
   DisconnectReason,
@@ -996,7 +997,7 @@ export class OpenviduInstanceComponent {
       if (this.roomEvents.get(RoomEvent.DCBufferStatusChanged)) {
         this.room!.on(
           RoomEvent.DCBufferStatusChanged,
-          (isLow: boolean, kind: DataPacket_Kind) => {
+          (isLow: boolean, kind: DataChannelKind) => {
             this.updateEventList(
               RoomEvent.DCBufferStatusChanged,
               { isLow, kind },
