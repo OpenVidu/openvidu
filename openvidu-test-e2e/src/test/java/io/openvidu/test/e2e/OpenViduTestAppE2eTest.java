@@ -2820,12 +2820,16 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 			} catch (InterruptedException e) {
 				// Print screenshot
 				String screenshot = "data:image/png;base64," + ((TakesScreenshot) user.getDriver()).getScreenshotAs(BASE64);
-				System.out.println("TIMEOUT WAITING FOR ELEMENT TO BE CLICKABLE: " + cssSelector);
+				System.out.println("INTERRUPTED EXCEPTION WHILE WAITING FOR ELEMENT TO BE CLICKABLE: " + cssSelector);
 				System.out.println(screenshot);
 				Thread.currentThread().interrupt();
 				throw new RuntimeException("Thread interrupted while waiting for backdrop to clear", e);
 			}
 		}
+
+		String screenshot = "data:image/png;base64," + ((TakesScreenshot) user.getDriver()).getScreenshotAs(BASE64);
+		System.out.println("TIMEOUT WAITING FOR ELEMENT TO BE CLICKABLE (): " + cssSelector);
+		System.out.println(screenshot);
 
 		// If we get here, we've timed out
 		throw new RuntimeException("Timeout waiting for element '" + cssSelector
