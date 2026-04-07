@@ -46,6 +46,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.openqa.selenium.By;
 import org.openqa.selenium.Keys;
+import org.openqa.selenium.TakesScreenshot;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
@@ -72,6 +73,8 @@ import io.openvidu.test.e2e.annotations.OnlyMediasoup;
 import io.openvidu.test.e2e.annotations.OnlyPion;
 import livekit.LivekitIngress.IngressInfo;
 import livekit.LivekitIngress.IngressState;
+
+import static org.openqa.selenium.OutputType.BASE64;
 
 /**
  * E2E tests for openvidu-testapp.
@@ -2815,6 +2818,10 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 			try {
 				Thread.sleep(retryIntervalMillis);
 			} catch (InterruptedException e) {
+				// Print screenshot
+				String screenshot = "data:image/png;base64," + ((TakesScreenshot) user.getDriver()).getScreenshotAs(BASE64);
+				System.out.println("TIMEOUT WAITING FOR ELEMENT TO BE CLICKABLE: " + cssSelector);
+				System.out.println(screenshot);
 				Thread.currentThread().interrupt();
 				throw new RuntimeException("Thread interrupted while waiting for backdrop to clear", e);
 			}
