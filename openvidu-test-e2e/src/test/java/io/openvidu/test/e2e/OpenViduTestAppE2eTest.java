@@ -645,7 +645,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 	private void forceCodecTest(OpenViduTestappUser user, String codec) throws Exception {
 		this.addOnlyPublisherVideo(user, false, false, false);
 
-		user.getDriver().findElement(By.id("room-options-btn-0")).click();
+		this.waitForBackdropAndClick(user, "#room-options-btn-0");
 		Thread.sleep(300);
 		user.getDriver().findElement(By.id("trackPublish-backupCodec")).click();
 		user.getDriver().findElement(By.id("trackPublish-videoCodec")).click();
@@ -745,7 +745,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 				WebElement participantNameInput = chromeUser.getDriver().findElement(By.id("participant-name-input-0"));
 				participantNameInput.clear();
 				participantNameInput.sendKeys("CHROME_USER");
-				chromeUser.getDriver().findElement(By.id("room-options-btn-0")).click();
+				this.waitForBackdropAndClick(chromeUser, "#room-options-btn-0");
 				Thread.sleep(300);
 				chromeUser.getDriver().findElement(By.id("trackPublish-backupCodec")).click();
 				chromeUser.getDriver().findElement(By.id("trackPublish-videoCodec")).click();
@@ -2686,7 +2686,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 			user.getDriver().findElement(By.cssSelector("#openvidu-instance-" + numberOfUser + " .subscriber-checkbox"))
 					.click();
 		}
-		user.getDriver().findElement(By.id("room-options-btn-" + numberOfUser)).click();
+		this.waitForBackdropAndClick(user, "#room-options-btn-" + numberOfUser);
 		Thread.sleep(300);
 		if (!hasAudio) {
 			user.getDriver().findElement(By.id("audio-capture-false")).click();
@@ -2724,9 +2724,8 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		user.getDriver().findElement(By.cssSelector("#openvidu-instance-" + numberOfUser + " .publisher-checkbox"))
 				.click();
 		if (!adaptiveStream) {
-			user.getDriver().findElement(By.id("room-options-btn-" + numberOfUser)).click();
-			Thread.sleep(300);
-			user.getDriver().findElement(By.id("room-adaptiveStream")).click();
+			this.waitForBackdropAndClick(user, "#room-options-btn-" + numberOfUser);
+			this.waitForBackdropAndClick(user, "#room-adaptiveStream");
 			user.getDriver().findElement(By.id("close-dialog-btn")).click();
 			Thread.sleep(300);
 		}
