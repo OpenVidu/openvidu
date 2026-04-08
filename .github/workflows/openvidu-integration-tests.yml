@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Configure OpenVidu Local Deployment
-        uses: OpenVidu/actions/start-openvidu-local-deployment@0f5592e91f0dca4c62e7a3cf412a6c17cf432b6d # v1.0.4
+        uses: OpenVidu/actions/start-openvidu-local-deployment@70a3934be074a1a5099349fe07cf2a7ae61ebd5d # v1.0.5
         with:
           ref-openvidu-local-deployment: development
           pre_startup_commands: |
@@ -52,5 +52,5 @@ jobs:
           retention-days: 7
       - name: Cleanup
         if: always()
-        uses: OpenVidu/actions/cleanup@0f5592e91f0dca4c62e7a3cf412a6c17cf432b6d # v1.0.4
+        uses: OpenVidu/actions/cleanup@70a3934be074a1a5099349fe07cf2a7ae61ebd5d # v1.0.5
 
