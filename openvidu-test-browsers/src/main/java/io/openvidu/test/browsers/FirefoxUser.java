@@ -49,6 +49,8 @@ public class FirefoxUser extends BrowserUser {
 
 		// ATTENTION: WITHOUT THIS FLAG H264 DOES NOT WORK IN SELENIUM-MANAGED FIREFOX
 		options.addPreference("media.webrtc.hw.h264.enabled", true);
+		// This flag makes livekit-server think that this is not a Firefox in Linux
+		options.addPreference("general.useragent.override", "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:149.0) Gecko/20100101 Firefox/149.0");
 
 		if (headless) {
 			options.addArguments("--headless");
