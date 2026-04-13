@@ -10,6 +10,7 @@
     "ng": "ng",
     "start": "ng serve --ssl --host 0.0.0.0",
     "start-insecure": "ng serve --host 0.0.0.0",
+    "start:ci": "ng build && http-server dist/openvidu-testapp-livekit/browser -p 4200 -a 0.0.0.0 -c-1",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test"
@@ -53,6 +54,7 @@
     "karma-coverage": "~2.2.1",
     "karma-jasmine": "~5.1.0",
     "karma-jasmine-html-reporter": "~2.2.0",
+    "http-server": "^14.1.1",
     "typescript": "~5.9.3"
   }
 }
