@@ -36,15 +36,22 @@ RUN set -eux; \
         docker-ce-cli \
         docker-compose-plugin \
         nodejs; \
+    HOME=/opt sh -c 'curl -fsSL https://github.com/AikidoSec/safe-chain/releases/latest/download/install-safe-chain.sh | sh -s -- --ci'; \
+    find /opt/.safe-chain/shims -type f -exec sed -i 's|\$HOME/.safe-chain|/opt/.safe-chain|g' {} +; \
+    chmod -R a+rX /opt/.safe-chain; \
+    printf 'export PATH="/opt/.safe-chain/shims:/opt/.safe-chain/bin:$PATH"\n' > /etc/profile.d/safe-chain.sh; \
+    chmod 0644 /etc/profile.d/safe-chain.sh; \
     npm install -g http-server@latest; \
     update-alternatives --set java /usr/lib/jvm/java-25-openjdk-amd64/bin/java; \
     apt clean; \
     rm -rf /var/lib/apt/lists/*
 
+ENV PATH=/opt/.safe-chain/shims:/opt/.safe-chain/bin:$PATH
+
 ENV MAVEN_VERSION=3.9.11
 ENV MAVEN_HOME=/usr/share/maven
 ENV PATH=$MAVEN_HOME/bin:$PATH
-RUN wget -q https://dlcdn.apache.org/maven/maven-3/${MAVEN_VERSION}/binaries/apache-maven-${MAVEN_VERSION}-bin.tar.gz && \
+RUN wget -q https://archive.apache.org/dist/maven/maven-3/${MAVEN_VERSION}/binaries/apache-maven-${MAVEN_VERSION}-bin.tar.gz && \
     tar -xzf apache-maven-${MAVEN_VERSION}-bin.tar.gz -C /opt && \
     ln -s /opt/apache-maven-${MAVEN_VERSION} $MAVEN_HOME && \
     rm apache-maven-${MAVEN_VERSION}-bin.tar.gz
