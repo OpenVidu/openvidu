@@ -52,7 +52,7 @@ public class OpenViduTestE2e {
 
 	private final static WaitStrategy waitBrowser = Wait.forLogMessage("^.*Started Selenium Standalone.*$", 1);
 
-	protected static String RTSP_SERVER_IMAGE = "bluenviron/mediamtx:latest-ffmpeg";
+	protected static String RTSP_SERVER_IMAGE = "bluenviron/mediamtx:1.17.1-ffmpeg";
 	protected static int RTSP_SRT_PORT = 8554;
 
 	// Key is the common name of the video codec. It must match the output log of
@@ -200,7 +200,7 @@ public class OpenViduTestE2e {
 		GenericContainer<?> rtspServerContainer = new GenericContainer<>(DockerImageName.parse(RTSP_SERVER_IMAGE))
 				.withCreateContainerCmdModifier(cmd -> cmd.withName("rtsp-" + Math.random() * 100000))
 				.withEnv(Map.of("MTX_LOGLEVEL", "info", "MTX_RTSPTRANSPORTS", "tcp", "MTX_RTSPADDRESS", ":" + rtspPort,
-						"MTX_HLS", "no", "MTX_RTSP", "yes", "MTX_WEBRTC", "yes", "MTX_SRT", "no", "MTX_RTMP", "no",
+						"MTX_HLS", "no", "MTX_RTSP", "yes", "MTX_WEBRTC", "no", "MTX_SRT", "no", "MTX_RTMP", "no",
 						"MTX_API", "no"))
 				.withNetworkMode("host")
 				.waitingFor(Wait.forLogMessage("^.*\\[RTSP\\] listener opened on :" + rtspPort + ".*$", 1));
