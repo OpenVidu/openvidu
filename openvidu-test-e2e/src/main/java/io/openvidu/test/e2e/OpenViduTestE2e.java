@@ -3,6 +3,7 @@ package io.openvidu.test.e2e;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.net.ServerSocket;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -191,13 +192,18 @@ public class OpenViduTestE2e {
 	 */
 	public String startRtspServer(String videoCodec, String audioCodec) throws Exception {
 
+		int rtspPort;
+		try (ServerSocket socket = new ServerSocket(0)) {
+			rtspPort = socket.getLocalPort();
+		}
+
 		GenericContainer<?> rtspServerContainer = new GenericContainer<>(DockerImageName.parse(RTSP_SERVER_IMAGE))
 				.withCreateContainerCmdModifier(cmd -> cmd.withName("rtsp-" + Math.random() * 100000))
-				.withEnv(Map.of("MTX_LOGLEVEL", "info", "MTX_RTSPTRANSPORTS", "tcp", "MTX_RTSPADDRESS", ":" + RTSP_SRT_PORT,
+				.withEnv(Map.of("MTX_LOGLEVEL", "info", "MTX_RTSPTRANSPORTS", "tcp", "MTX_RTSPADDRESS", ":" + rtspPort,
 						"MTX_HLS", "no", "MTX_RTSP", "yes", "MTX_WEBRTC", "yes", "MTX_SRT", "no", "MTX_RTMP", "no",
 						"MTX_API", "no"))
 				.withNetworkMode("host")
-				.waitingFor(Wait.forLogMessage("^.*\\[RTSP\\] listener opened on :" + RTSP_SRT_PORT + ".*$", 1));
+				.waitingFor(Wait.forLogMessage("^.*\\[RTSP\\] listener opened on :" + rtspPort + ".*$", 1));
 
 		rtspServerContainer.start();
 		containers.add(rtspServerContainer);
@@ -208,7 +214,7 @@ public class OpenViduTestE2e {
 		String rtspServerIp = "host.docker.internal";
 
 		String ffmpegCommand = "ffmpeg -i " + fileUrl + " " + codecs + " "
-				+ " -async 50 -strict -2 -f rtsp -rtsp_transport tcp rtsp://" + rtspServerIp + ":" + RTSP_SRT_PORT + "/"
+				+ " -async 50 -strict -2 -f rtsp -rtsp_transport tcp rtsp://" + rtspServerIp + ":" + rtspPort + "/"
 				+ RTSP_PATH;
 
 		// Clean adjacent white spaces or the ffmpeg command will fail
@@ -235,7 +241,7 @@ public class OpenViduTestE2e {
 			waitUntilLog(rtspServerContainer, regex, 15);
 		}
 
-		return "rtsp://host.docker.internal:" + RTSP_SRT_PORT + "/" + RTSP_PATH;
+		return "rtsp://host.docker.internal:" + rtspPort + "/" + RTSP_PATH;
 	}
 
 	/**
