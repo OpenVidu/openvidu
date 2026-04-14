@@ -16,7 +16,7 @@ on:
       TEST_IMAGE:
         description: "Docker image where to run the tests"
         required: true
-        default: "openvidu/openvidu-test-e2e:22.04"
+        default: "openvidu/openvidu-test-e2e:24.04"
       KURENTO_JAVA_COMMIT:
         description: 'Commit to use in kurento-java dependencies. If "default" the release version declared in property "version.kurento" of openvidu-parent/pom.xml will be used'
         required: true
@@ -45,12 +45,12 @@ jobs:
   main:
     runs-on: ubuntu-latest
     container:
-      image: ${{ inputs.TEST_IMAGE || 'openvidu/openvidu-test-e2e:22.04' }}
+      image: ${{ inputs.TEST_IMAGE || 'openvidu/openvidu-test-e2e:24.04' }}
       volumes:
         - /var/run/docker.sock:/var/run/docker.sock
         - /opt/openvidu:/opt/openvidu
     env:
-      TEST_IMAGE: ${{ inputs.TEST_IMAGE || 'openvidu/openvidu-test-e2e:22.04' }}
+      TEST_IMAGE: ${{ inputs.TEST_IMAGE || 'openvidu/openvidu-test-e2e:24.04' }}
       KURENTO_SNAPSHOTS_URL: ${{ secrets.KURENTO_SNAPSHOTS_URL }}
       KURENTO_MEDIA_SERVER_IMAGE: ${{ inputs.KURENTO_MEDIA_SERVER_IMAGE || 'kurento/kurento-media-server:7.0.1' }}
       KURENTO_JAVA_COMMIT: ${{ inputs.KURENTO_JAVA_COMMIT || 'default' }}
