@@ -107,15 +107,15 @@ jobs:
             docker run --network=host -d -p 4444:4444 ${{ env.CHROME_IMAGE }}
           fi
       - name: Run openvidu-local-deployment
-        uses: OpenVidu/actions/start-openvidu-local-deployment@974fe3ea43a038d0224bd293131c4087b539a722 # v1.0.6
+        uses: OpenVidu/actions/start-openvidu-local-deployment@d8dca35b4da1eab26ba914b64bb441081ff61ffd # v1.0.7
       - name: Start OpenVidu Call backend
-        uses: OpenVidu/actions/start-openvidu-call@974fe3ea43a038d0224bd293131c4087b539a722 # v1.0.6
+        uses: OpenVidu/actions/start-openvidu-call@d8dca35b4da1eab26ba914b64bb441081ff61ffd # v1.0.7
       - name: Build and Serve openvidu-components-angular Testapp
-        uses: OpenVidu/actions/start-openvidu-components-testapp@974fe3ea43a038d0224bd293131c4087b539a722 # v1.0.6
+        uses: OpenVidu/actions/start-openvidu-components-testapp@d8dca35b4da1eab26ba914b64bb441081ff61ffd # v1.0.7
       - name: Run Tests
         env:
           LAUNCH_MODE: CI
         run: npm run ${{ matrix.script }} --prefix openvidu-components-angular
       - name: Cleanup
         if: always()
-        uses: OpenVidu/actions/cleanup@974fe3ea43a038d0224bd293131c4087b539a722 # v1.0.6
+        uses: OpenVidu/actions/cleanup@d8dca35b4da1eab26ba914b64bb441081ff61ffd # v1.0.7
