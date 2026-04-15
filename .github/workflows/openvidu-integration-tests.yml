@@ -35,7 +35,7 @@ jobs:
         with:
           node-version: 24
       - name: Install safe-chain
-        run: curl -fsSL https://github.com/AikidoSec/safe-chain/releases/latest/download/install-safe-chain.sh | sh -s -- --ci
+        uses: OpenVidu/actions/install-safe-chain@0125dee363f943e399bf576e8e4c162fafcc5bdd # v1.0.16
 
       - name: Install dependencies
         working-directory: ./openvidu/openvidu-test-integration
