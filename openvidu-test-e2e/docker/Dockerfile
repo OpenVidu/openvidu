@@ -47,6 +47,8 @@ RUN set -eux; \
     rm -rf /var/lib/apt/lists/*
 
 ENV PATH=/opt/.safe-chain/shims:/opt/.safe-chain/bin:$PATH
+# Only check for ongoing malicious packages to avoid issues in CI
+ENV SAFE_CHAIN_MINIMUM_PACKAGE_AGE_HOURS=0
 
 ENV MAVEN_VERSION=3.9.11
 ENV MAVEN_HOME=/usr/share/maven
