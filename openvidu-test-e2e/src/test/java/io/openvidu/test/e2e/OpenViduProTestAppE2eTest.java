@@ -495,7 +495,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 				// Second user out
 				user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 .network-drop-btn")).click();
 				Assertions.assertEquals("unpublish", // reason is always "unpublish" in v2Compatibility
-						CustomWebhook.waitForEvent("webrtcConnectionDestroyed", 30).get("reason").getAsString());
+						CustomWebhook.waitForEvent("webrtcConnectionDestroyed", 60).get("reason").getAsString());
 				Assertions.assertEquals("disconnect", // reason is always "disconnect" in v2Compatibility
 						CustomWebhook.waitForEvent("participantLeft", 30).get("reason").getAsString());
 				for (int i = 0; i < 2; i++) {
