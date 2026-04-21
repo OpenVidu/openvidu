@@ -233,6 +233,16 @@
         </mat-form-field>
       </div>
     }
+    @if (dataTrackName !== undefined) {
+      <mat-divider></mat-divider>
+      <div>
+        <label>DataTrackOptions</label><br>
+        <mat-form-field>
+          <mat-label>Track Name</mat-label>
+          <input matInput id="dataTrack-name" placeholder="data_track_1" [(ngModel)]="dataTrackName"/>
+        </mat-form-field>
+      </div>
+    }
   </mat-dialog-content>
 
   <mat-dialog-actions>

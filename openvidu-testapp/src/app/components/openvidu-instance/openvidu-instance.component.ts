@@ -21,6 +21,7 @@ import {
   DataPublishOptions,
   DisconnectReason,
   LocalAudioTrack,
+  LocalDataTrack,
   LocalParticipant,
   LocalTrack,
   LocalTrackPublication,
@@ -28,6 +29,7 @@ import {
   MediaDeviceFailure,
   Participant,
   RemoteAudioTrack,
+  RemoteDataTrack,
   RemoteParticipant,
   RemoteTrack,
   RemoteTrackPublication,
@@ -143,7 +145,7 @@ export class OpenviduInstanceComponent {
     this.participantName += this.index;
     if (this.roomConf.startSession) {
       const token = await this.roomApiService.createToken(
-        { roomJoin: true },
+        { roomJoin: true, canPublishData: true },
         this.participantName,
         this.roomName
       );
@@ -163,7 +165,7 @@ export class OpenviduInstanceComponent {
   async createTokenAndConnectRoom() {
     this.connectRoom(
       await this.roomApiService.createToken(
-        { roomJoin: true },
+        { roomJoin: true, canPublishData: true },
         this.participantName,
         this.roomName
       )
@@ -1073,6 +1075,86 @@ export class OpenviduInstanceComponent {
                 isFinal ? 'said' : 'is saying'
               }: ${message}`,
               isFinal ? 'RoomEvent' : 'RoomEvent-InterimTranscription'
+            );
+          }
+        );
+      }
+    }
+
+    if (
+      firstTime ||
+      this.roomEvents.get(RoomEvent.DataTrackPublished) !==
+        oldValues.get(RoomEvent.DataTrackPublished)
+    ) {
+      this.room?.removeAllListeners(RoomEvent.DataTrackPublished);
+      if (this.roomEvents.get(RoomEvent.DataTrackPublished)) {
+        this.room!.on(
+          RoomEvent.DataTrackPublished,
+          (track: RemoteDataTrack) => {
+            this.updateEventList(
+              RoomEvent.DataTrackPublished,
+              { name: track.info.name, sid: track.info.sid, publisherIdentity: track.publisherIdentity },
+              `${track.publisherIdentity} (${track.info.name})`
+            );
+          }
+        );
+      }
+    }
+
+    if (
+      firstTime ||
+      this.roomEvents.get(RoomEvent.DataTrackUnpublished) !==
+        oldValues.get(RoomEvent.DataTrackUnpublished)
+    ) {
+      this.room?.removeAllListeners(RoomEvent.DataTrackUnpublished);
+      if (this.roomEvents.get(RoomEvent.DataTrackUnpublished)) {
+        this.room!.on(
+          RoomEvent.DataTrackUnpublished,
+          (sid: string) => {
+            this.updateEventList(
+              RoomEvent.DataTrackUnpublished,
+              { sid },
+              `sid: ${sid}`
+            );
+          }
+        );
+      }
+    }
+
+    if (
+      firstTime ||
+      this.roomEvents.get(RoomEvent.LocalDataTrackPublished) !==
+        oldValues.get(RoomEvent.LocalDataTrackPublished)
+    ) {
+      this.room?.removeAllListeners(RoomEvent.LocalDataTrackPublished);
+      if (this.roomEvents.get(RoomEvent.LocalDataTrackPublished)) {
+        this.room!.on(
+          RoomEvent.LocalDataTrackPublished,
+          (track: LocalDataTrack) => {
+            this.updateEventList(
+              RoomEvent.LocalDataTrackPublished,
+              { name: track.info?.name, sid: track.info?.sid },
+              `${track.info?.name}`
+            );
+          }
+        );
+      }
+    }
+
+    if (
+      firstTime ||
+      this.roomEvents.get(RoomEvent.LocalDataTrackUnpublished) !==
+        oldValues.get(RoomEvent.LocalDataTrackUnpublished)
+    ) {
+      this.room?.removeAllListeners(RoomEvent.LocalDataTrackUnpublished);
+      if (this.roomEvents.get(RoomEvent.LocalDataTrackUnpublished)) {
+        this.room!.on(
+          RoomEvent.LocalDataTrackUnpublished,
+          (sid: string) => {
+            this.updateEventList(
+              RoomEvent.LocalDataTrackUnpublished,
+              { sid },
+              `sid: ${sid}`
             );
           }
         );

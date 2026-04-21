@@ -4,6 +4,18 @@
     {{participant.identity}}</p>
     <div class="participant-buttons">
       @if (participant.isLocal) {
+        <button class="add-data-track-btn" (click)="addDataTrack()" title="New data track"
+          matTooltip="New data track" matTooltipClass="custom-tooltip">
+          <mat-icon aria-label="New data track">stream</mat-icon>
+        </button>
+      }
+      @if (participant.isLocal) {
+        <button class="options-data-track-btn" (click)="openDataTrackOptionsDialog()"
+          title="Data track options" matTooltip="Data track options" matTooltipClass="custom-tooltip">
+          <mat-icon aria-label="Data track options">more_vert</mat-icon>
+        </button>
+      }
+      @if (participant.isLocal) {
         <button class="add-audio-btn" (click)="addAudioTrack()" title="New audio track"
           matTooltip="New audio track" matTooltipClass="custom-tooltip">
           <mat-icon aria-label="New audio track">microphone</mat-icon>
@@ -70,6 +82,24 @@
             </mat-expansion-panel>
           }
         </mat-accordion>
+      </div>
+      <div class="data-tracks-container">
+        @for (track of localDataTracks; track track.info?.sid) {
+          <app-data-track
+            [index]="index"
+            [localDataTrack]="track"
+            [localParticipant]="localParticipant"
+            (trackUnpublished)="onLocalDataTrackUnpublished($event)"
+            (newTrackEvent)="onTrackEvent($event)">
+          </app-data-track>
+        }
+        @for (track of remoteDataTracks; track track.info.sid) {
+          <app-data-track
+            [index]="index"
+            [remoteDataTrack]="track"
+            (newTrackEvent)="onTrackEvent($event)">
+          </app-data-track>
+        }
       </div>
       <div class="audio-tracks-container">
         @for (trackPublication of participant.audioTrackPublications| keyvalue; track trackPublication) {

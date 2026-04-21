@@ -38,6 +38,8 @@ export class OptionsDialogComponent {
   allowDisablingVideo = true;
   allowDisablingScreen = true;
 
+  dataTrackName?: string;
+
   videoOption: true | false | 'custom';
   audioOption: true | false | 'custom';
   screenOption: true | false | 'custom';
@@ -62,6 +64,7 @@ export class OptionsDialogComponent {
     allowDisablingAudio?: boolean;
     allowDisablingVideo?: boolean;
     allowDisablingScreen?: boolean;
+    dataTrackName?: string;
   }>(MAT_DIALOG_DATA);
 
   constructor(
@@ -114,6 +117,9 @@ export class OptionsDialogComponent {
     if (this.data.allowDisablingScreen === false) {
       this.allowDisablingScreen = false;
     }
+    if (this.data.dataTrackName !== undefined) {
+      this.dataTrackName = this.data.dataTrackName;
+    }
     Room.getLocalDevices('videoinput').then((devices) => {
       this.inputVideoDevices = devices;
     });
@@ -152,6 +158,7 @@ export class OptionsDialogComponent {
       createLocalTracksOptions: this.createLocalTracksOptions,
       screenShareCaptureOptions: this.screenShareCaptureOptions,
       trackPublishOptions: this.trackPublishOptions,
+      dataTrackName: this.dataTrackName,
     });
   }
 

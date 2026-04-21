@@ -1,0 +1,25 @@
+<div class="parent-div">
+  <span class="data-track-name">{{getTrackName()}}</span>
+  <div class="bottom-div">
+    @if (localParticipant && localDataTrack) {
+      <button (click)="sendDataFrame()" class="data-btn send-data-frame-btn" matTooltip="Send data frame"
+        matTooltipClass="custom-tooltip">
+        <mat-icon aria-label="Send data frame" class="mat-icon material-icons" role="img"
+        aria-hidden="true">send</mat-icon>
+      </button>
+    }
+    @if (localParticipant && localDataTrack) {
+      <button (click)="unpublishDataTrack()" class="data-btn unpublish-data-track-btn" matTooltip="Unpublish data track"
+        matTooltipClass="custom-tooltip">
+        <mat-icon aria-label="Unpublish data track" class="mat-icon material-icons" role="img"
+        aria-hidden="true">stop</mat-icon>
+      </button>
+    }
+  </div>
+  @if (frameCount > 0) {
+    <div class="data-track-info">
+      <span class="data-track-frame-count">{{frameCount}}</span>
+      <span class="data-track-last-payload">{{lastPayload}}</span>
+    </div>
+  }
+</div>

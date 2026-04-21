@@ -382,6 +382,127 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 	}
 
 	@Test
+	@DisplayName("Data Tracks publish, subscribe, send and receive")
+	void dataTracksTest() throws Exception {
+
+		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
+
+		log.info("Data Tracks publish, subscribe, send and receive");
+
+		// Two participants, no audio/video publishing
+		for (int i = 0; i < 2; i++) {
+			WebElement addUserBtn = user.getDriver().findElement(By.id("add-user-btn"));
+			addUserBtn.click();
+			user.getDriver().findElement(By.cssSelector("#openvidu-instance-" + i + " .subscriber-checkbox")).click();
+			user.getDriver().findElement(By.cssSelector("#openvidu-instance-" + i + " .publisher-checkbox")).click();
+		}
+		user.getDriver().findElements(By.className("connect-btn")).forEach(el -> el.sendKeys(Keys.ENTER));
+		user.getEventManager().waitUntilEventReaches("signalConnected", "RoomEvent", 2);
+		user.getEventManager().waitUntilEventReaches("connected", "RoomEvent", 2);
+		user.getEventManager().waitUntilEventReaches("participantConnected", "RoomEvent", 1);
+		user.getEventManager().waitUntilEventReaches("participantActive", "RoomEvent", 1);
+
+		// Participant 0 publishes a data track
+		user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 .add-data-track-btn")).click();
+
+		// Wait for localDataTrackPublished on participant 0 and dataTrackPublished on participant 1
+		user.getEventManager().waitUntilEventReaches(0, "localDataTrackPublished", "RoomEvent", 1);
+		user.getEventManager().waitUntilEventReaches(1, "dataTrackPublished", "RoomEvent", 1);
+
+		// Verify event descriptions
+		user.getDriver().findElements(By.cssSelector(".localDataTrackPublished-TestParticipant0 .event-content"))
+				.forEach(el -> Assertions.assertTrue(el.getText().contains("data_track_1"),
+						"Expected localDataTrackPublished to contain track name 'data_track_1'"));
+		user.getDriver().findElements(By.cssSelector(".dataTrackPublished-TestParticipant1 .event-content"))
+				.forEach(el -> Assertions.assertTrue(
+						el.getText().contains("TestParticipant0") && el.getText().contains("data_track_1"),
+						"Expected dataTrackPublished to contain publisher identity and track name"));
+
+		// Participant 0 does not receive its own dataTrackPublished
+		Assertions.assertEquals(0, user.getEventManager().getNumEvents(0, "dataTrackPublished-RoomEvent").get(),
+				"Publisher should not receive dataTrackPublished for its own data track");
+
+		// Participant 0 sends data frames
+		org.openqa.selenium.JavascriptExecutor js = (org.openqa.selenium.JavascriptExecutor) user.getDriver();
+		js.executeScript("document.querySelector('#openvidu-instance-0 .send-data-frame-btn').click()");
+		js.executeScript("document.querySelector('#openvidu-instance-0 .send-data-frame-btn').click()");
+		js.executeScript("document.querySelector('#openvidu-instance-0 .send-data-frame-btn').click()");
+
+		// Wait for frames to arrive at participant 1
+		Thread.sleep(1000);
+		Long frameCount = (Long) js.executeScript(
+				"var el = document.querySelector('#openvidu-instance-1 .data-track-frame-count');" +
+						"return el ? parseInt(el.textContent) : 0;");
+		Assertions.assertEquals(frameCount, 3, "Expected 3 data track frames received, got " + frameCount);
+
+		String lastPayload = (String) js.executeScript(
+				"var el = document.querySelector('#openvidu-instance-1 .data-track-last-payload');" +
+						"return el ? el.textContent : '';");
+		Assertions.assertTrue(lastPayload.contains("DataTrackFrame from TestParticipant0"),
+				"Expected last payload to contain 'DataTrackFrame from TestParticipant0', got: " + lastPayload);
+
+		// Participant 0 unpublishes the data track
+		js.executeScript("document.querySelector('#openvidu-instance-0 .unpublish-data-track-btn').click()");
+
+		// Wait for unpublish events
+		user.getEventManager().waitUntilEventReaches(0, "localDataTrackUnpublished", "RoomEvent", 1);
+		user.getEventManager().waitUntilEventReaches(1, "dataTrackUnpublished", "RoomEvent", 1);
+
+		// Participant 0 does not receive its own dataTrackUnpublished
+		Assertions.assertEquals(0, user.getEventManager().getNumEvents(0, "dataTrackUnpublished-RoomEvent").get(),
+				"Publisher should not receive dataTrackUnpublished for its own data track");
+
+		user.getEventManager().clearAllCurrentEvents();
+
+		// Now participant 1 publishes a data track with custom name (bidirectional test)
+		String customTrackName = "my_custom_data_track";
+		user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 .options-data-track-btn")).click();
+		Thread.sleep(500);
+		WebElement trackNameInput = user.getDriver().findElement(By.id("dataTrack-name"));
+		trackNameInput.clear();
+		trackNameInput.sendKeys(customTrackName);
+		user.getDriver().findElement(By.id("close-dialog-btn")).click();
+		Thread.sleep(500);
+		user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 .add-data-track-btn")).click();
+
+		user.getEventManager().waitUntilEventReaches(1, "localDataTrackPublished", "RoomEvent", 1);
+		user.getEventManager().waitUntilEventReaches(0, "dataTrackPublished", "RoomEvent", 1);
+
+		// Verify participant 0 sees the custom track name on the remote data track
+		Thread.sleep(500);
+		String remoteTrackName = (String) js.executeScript(
+				"var el = document.querySelector('#openvidu-instance-0 .data-track-name');" +
+						"return el ? el.textContent.trim() : '';");
+		Assertions.assertEquals(customTrackName, remoteTrackName,
+				"Remote data track name should be '" + customTrackName + "', got: " + remoteTrackName);
+
+		// Participant 1 sends a data frame
+		js.executeScript("document.querySelector('#openvidu-instance-1 .send-data-frame-btn').click()");
+
+		// Wait for frame to arrive at participant 0
+		Thread.sleep(1000);
+
+		Long frameCount0 = (Long) js.executeScript(
+				"var el = document.querySelector('#openvidu-instance-0 .data-track-frame-count');" +
+						"return el ? parseInt(el.textContent) : 0;");
+		Assertions.assertTrue(frameCount0 >= 1,
+				"Expected at least 1 data track frame received by participant 0, got " + frameCount0);
+
+		String lastPayload0 = (String) js.executeScript(
+				"var el = document.querySelector('#openvidu-instance-0 .data-track-last-payload');" +
+						"return el ? el.textContent : '';");
+		Assertions.assertTrue(lastPayload0.contains("DataTrackFrame from TestParticipant1"),
+				"Expected last payload to contain 'DataTrackFrame from TestParticipant1', got: " + lastPayload0);
+
+		// Participant 1 unpublishes
+		js.executeScript("document.querySelector('#openvidu-instance-1 .unpublish-data-track-btn').click()");
+		user.getEventManager().waitUntilEventReaches(1, "localDataTrackUnpublished", "RoomEvent", 1);
+		user.getEventManager().waitUntilEventReaches(0, "dataTrackUnpublished", "RoomEvent", 1);
+
+		gracefullyLeaveParticipants(user, 2);
+	}
+
+	@Test
 	@DisplayName("One2One only audio")
 	void oneToOneOnlyAudioSession() throws Exception {
 

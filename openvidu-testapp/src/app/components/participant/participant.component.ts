@@ -10,15 +10,18 @@ import {
   CreateLocalTracksOptions,
   DataPacket_Kind,
   LocalAudioTrack,
+  LocalDataTrack,
   LocalParticipant,
   LocalTrack,
   LocalTrackPublication,
   LocalVideoTrack,
   Participant,
   ParticipantEvent,
+  RemoteDataTrack,
   RemoteTrack,
   RemoteTrackPublication,
   Room,
+  RoomEvent,
   ScreenShareCaptureOptions,
   SubscriptionError,
   Track,
@@ -38,13 +41,14 @@ import {
 import { OptionsDialogComponent } from '../dialogs/options-dialog/options-dialog.component';
 import { VideoTrackComponent } from '../video-track/video-track.component';
 import { AudioTrackComponent } from '../audio-track/audio-track.component';
+import { DataTrackComponent } from '../data-track/data-track.component';
 import { ParticipantEventCallbacks } from 'node_modules/livekit-client/dist/src/room/participant/Participant';
 
 @Component({
     selector: 'app-participant',
     templateUrl: './participant.component.html',
     styleUrl: './participant.component.css',
-    imports: [NgClass, KeyValuePipe, MatIconModule, MatTooltipModule, MatExpansionModule, VideoTrackComponent, AudioTrackComponent],
+    imports: [NgClass, KeyValuePipe, MatIconModule, MatTooltipModule, MatExpansionModule, VideoTrackComponent, AudioTrackComponent, DataTrackComponent],
 })
 export class ParticipantComponent {
   @Input()
@@ -65,6 +69,11 @@ export class ParticipantComponent {
   localParticipant: LocalParticipant | undefined;
 
   events: TestAppEvent[] = [];
+
+  localDataTracks: LocalDataTrack[] = [];
+  remoteDataTracks: RemoteDataTrack[] = [];
+  dataTrackCounter: number = 1;
+  dataTrackName: string = 'data_track_1';
 
   createLocalTracksOptions: CreateLocalTracksOptions;
   screenShareCaptureOptions: ScreenShareCaptureOptions = {};
@@ -91,10 +100,38 @@ export class ParticipantComponent {
     this.trackPublishOptions = JSON.parse(
       JSON.stringify(this.room.options.publishDefaults)
     );
+    if (!this.participant.isLocal) {
+      this.setupDataTrackListeners();
+    }
   }
 
   onTrackEvent(event: TestAppEvent) {
     this.events.push(event);
+    this.cdr.detectChanges();
+  }
+
+  async addDataTrack() {
+    const localParticipant = this.participant as LocalParticipant;
+    const track = await localParticipant.publishDataTrack({ name: this.dataTrackName });
+    this.localDataTracks.push(track);
+    this.dataTrackCounter++;
+    this.dataTrackName = 'data_track_' + this.dataTrackCounter;
+    this.cdr.detectChanges();
+  }
+
+  openDataTrackOptionsDialog() {
+    const dialogRef = this.dialog.open(OptionsDialogComponent, {
+      data: { dataTrackName: this.dataTrackName },
+    });
+    dialogRef.afterClosed().subscribe((result) => {
+      if (!!result) {
+        this.dataTrackName = result.dataTrackName;
+      }
+    });
+  }
+
+  onLocalDataTrackUnpublished(track: LocalDataTrack) {
+    this.localDataTracks = this.localDataTracks.filter((t) => t !== track);
     this.cdr.detectChanges();
   }
 
@@ -478,5 +515,26 @@ export class ParticipantComponent {
 
   sendDataLossy() {
     this.sendLossyDataToOneParticipant.emit(this.participant.identity);
+  }
+
+  private setupDataTrackListeners() {
+    this.room.on(
+      RoomEvent.DataTrackPublished,
+      (track: RemoteDataTrack) => {
+        if (track.publisherIdentity === this.participant.identity) {
+          this.remoteDataTracks.push(track);
+          this.cdr.detectChanges();
+        }
+      }
+    );
+    this.room.on(
+      RoomEvent.DataTrackUnpublished,
+      (sid: string) => {
+        this.remoteDataTracks = this.remoteDataTracks.filter(
+          (t) => t.info.sid !== sid
+        );
+        this.cdr.detectChanges();
+      }
+    );
   }
 }
