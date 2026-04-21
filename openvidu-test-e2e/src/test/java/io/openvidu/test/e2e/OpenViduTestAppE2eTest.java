@@ -353,6 +353,35 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 	}
 
 	@Test
+	@DisplayName("ConnectionQualityChanged")
+	void connectionQualityChangedTest() throws Exception {
+
+		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
+
+		log.info("ConnectionQualityChanged");
+
+		user.getDriver().findElement(By.id("auto-join-checkbox")).click();
+		user.getDriver().findElement(By.id("one2one-btn")).click();
+
+		user.getEventManager().waitUntilEventReaches("signalConnected", "RoomEvent", 2);
+		user.getEventManager().waitUntilEventReaches("connected", "RoomEvent", 2);
+		user.getEventManager().waitUntilEventReaches("localTrackPublished", "RoomEvent", 4);
+		user.getEventManager().waitUntilEventReaches("trackSubscribed", "RoomEvent", 4);
+		user.getEventManager().waitUntilEventReaches("connectionQualityChanged", "RoomEvent", 4);
+		user.getEventManager().waitUntilEventReaches("connectionQualityChanged", "ParticipantEvent", 4);
+
+		// Expect the connection quality events to include as text content: "excellent"
+		user.getDriver().findElements(By.cssSelector(".connectionQualityChanged-TestParticipant0 .event-content")).
+				forEach(el -> Assertions.assertTrue(el.getText().contains("excellent"),
+						"Expected connection quality to be excellent"));
+		user.getDriver().findElements(By.cssSelector(".connectionQualityChanged-TestParticipant1 .event-content")).
+		forEach(el -> Assertions.assertTrue(el.getText().contains("excellent"),
+				"Expected connection quality to be excellent"));
+
+		gracefullyLeaveParticipants(user, 2);
+	}
+
+	@Test
 	@DisplayName("One2One only audio")
 	void oneToOneOnlyAudioSession() throws Exception {
 
