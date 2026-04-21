@@ -371,12 +371,12 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		user.getEventManager().waitUntilEventReaches("connectionQualityChanged", "ParticipantEvent", 4);
 
 		// Expect the connection quality events to include as text content: "excellent"
-		user.getDriver().findElements(By.cssSelector(".connectionQualityChanged-TestParticipant0 .event-content")).
-				forEach(el -> Assertions.assertTrue(el.getText().contains("excellent"),
+		user.getDriver().findElements(By.cssSelector(".connectionQualityChanged-TestParticipant0 .event-content"))
+				.forEach(el -> Assertions.assertTrue(el.getText().contains("excellent"),
 						"Expected connection quality to be excellent"));
-		user.getDriver().findElements(By.cssSelector(".connectionQualityChanged-TestParticipant1 .event-content")).
-		forEach(el -> Assertions.assertTrue(el.getText().contains("excellent"),
-				"Expected connection quality to be excellent"));
+		user.getDriver().findElements(By.cssSelector(".connectionQualityChanged-TestParticipant1 .event-content"))
+				.forEach(el -> Assertions.assertTrue(el.getText().contains("excellent"),
+						"Expected connection quality to be excellent"));
 
 		gracefullyLeaveParticipants(user, 2);
 	}
@@ -1750,11 +1750,8 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 		user.getDriver().findElement(By.cssSelector("#start-" + egressType + "-egress-api-btn")).click();
 
-		// TODO: UNCOMMENT WHEN MEDIASOUP IS ABLE TO MANAGE ABRUPT
-		// CONNECTIONSTATECHANGED DISOCONNECTED/FAILED
-		// https://mediasoup.discourse.group/t/mediasoup-3-13-20-released-with-server-side-ice-consent-check-and-a-critical-fix/5864
-		// user.getEventManager().waitUntilEventReaches("recordingStatusChanged",
-		// "RoomEvent", 1);
+		user.getEventManager().waitUntilEventReaches("recordingStatusChanged",
+				"RoomEvent", 1);
 
 		WebElement egressIdField = user.getDriver().findElement(By.id("egress-id-field"));
 		WebDriverWait wait = new WebDriverWait(user.getDriver(), Duration.ofSeconds(10));
@@ -1775,11 +1772,8 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 			this.checkRecordingInEgressBackupFolder(egress);
 		}
 
-		// TODO: UNCOMMENT WHEN MEDIASOUP IS ABLE TO MANAGE ABRUPT
-		// CONNECTIONSTATECHANGED DISOCONNECTED/FAILED
-		// https://mediasoup.discourse.group/t/mediasoup-3-13-20-released-with-server-side-ice-consent-check-and-a-critical-fix/5864
-		// user.getEventManager().waitUntilEventReaches("recordingStatusChanged",
-		// "RoomEvent", 2);
+		user.getEventManager().waitUntilEventReaches("recordingStatusChanged",
+				"RoomEvent", 2);
 	}
 
 	private JsonObject waitUntilEgressStatus(OpenViduTestappUser user, String egressId, String egressStatus,
