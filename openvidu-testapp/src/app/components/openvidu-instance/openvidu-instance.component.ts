@@ -1219,14 +1219,6 @@ export class OpenviduInstanceComponent {
     this.sendData(destinationIdentity, false);
   }
 
-  sendDataLossyBurst(count: number = 500) {
-    for (let i = 0; i < count; i++) {
-      const strData = `Lossy burst ${i + 1}/${count} from ${this.room?.localParticipant.identity}`;
-      const data = new TextEncoder().encode(strData);
-      this.room?.localParticipant.publishData(data, { reliable: false });
-    }
-  }
-
   openInfoDialog() {
     const updateFunction = async (): Promise<string> => {
       const pub: PCTransport = this.getPublisherPC()!;
