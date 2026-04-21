@@ -770,7 +770,8 @@ export class OpenviduInstanceComponent {
             kind?: DataPacket_Kind,
             topic?: string
           ) => {
-            const decodedPayload = this.decoder.decode(payload);
+            let decodedPayload = this.decoder.decode(payload);
+            decodedPayload += ` (kind: ${DataPacket_Kind[kind!]})`;
             this.updateEventList(
               RoomEvent.DataReceived,
               { payload: decodedPayload, participant, kind, topic },
@@ -1195,19 +1196,35 @@ export class OpenviduInstanceComponent {
     });
   }
 
-  sendData(destinationIdentity?: string) {
+  sendData(destinationIdentity?: string, reliable: boolean = true) {
     let strData = `Message from ${this.room?.localParticipant.identity}`;
     strData += destinationIdentity
       ? ` to ${destinationIdentity}`
       : ' to all room';
     const data = new TextEncoder().encode(strData);
     let options: DataPublishOptions = {
-      reliable: true,
+      reliable,
     };
     if (destinationIdentity) {
       options.destinationIdentities = [destinationIdentity];
     }
     this.room?.localParticipant.publishData(data, options);
+  }
+
+  sendDataReliable(destinationIdentity?: string) {
+    this.sendData(destinationIdentity, true);
+  }
+
+  sendDataLossy(destinationIdentity?: string) {
+    this.sendData(destinationIdentity, false);
+  }
+
+  sendDataLossyBurst(count: number = 500) {
+    for (let i = 0; i < count; i++) {
+      const strData = `Lossy burst ${i + 1}/${count} from ${this.room?.localParticipant.identity}`;
+      const data = new TextEncoder().encode(strData);
+      this.room?.localParticipant.publishData(data, { reliable: false });
+    }
   }
 
   openInfoDialog() {

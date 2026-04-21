@@ -58,8 +58,14 @@
               <button class="peer-info-btn" (click)="openInfoDialog()" title="PCTransports info">
                 <mat-icon aria-label="PCTransports info button">info</mat-icon>
               </button>
-              <button class="message-btn" (click)="sendData()" title="Broadcast message to room">
-                <mat-icon aria-label="Send message button">chat</mat-icon>
+              <button class="message-reliable-btn" (click)="sendDataReliable()" title="Broadcast reliable message to room">
+                <mat-icon aria-label="Send reliable message button">chat_bubble</mat-icon>
+              </button>
+              <button class="message-lossy-btn" (click)="sendDataLossy()" title="Broadcast lossy message to room">
+                <mat-icon aria-label="Send lossy message button">chat_dashed</mat-icon>
+              </button>
+              <button class="message-lossy-burst-btn" (click)="sendDataLossyBurst()" title="Broadcast 500 lossy messages in burst">
+                <mat-icon aria-label="Send lossy burst button">fast_forward</mat-icon>
               </button>
               <button class="disconnect-btn" (click)="disconnectRoom()" title="Disconnect room">
                 <mat-icon aria-label="Disconnect button">clear</mat-icon>
@@ -89,7 +95,9 @@
             [index]="index"></app-participant>
             @for (participant of room.remoteParticipants | keyvalue; track participant) {
               <app-participant class="remote-participant"
-              [participant]="participant.value" [room]="room" [index]="index" (sendDataToOneParticipant)="sendData($event)"></app-participant>
+              [participant]="participant.value" [room]="room" [index]="index"
+              (sendReliableDataToOneParticipant)="sendDataReliable($event)"
+              (sendLossyDataToOneParticipant)="sendDataLossy($event)"></app-participant>
             }
           </div>
         </mat-card-content>

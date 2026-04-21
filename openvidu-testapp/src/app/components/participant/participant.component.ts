@@ -57,7 +57,10 @@ export class ParticipantComponent {
   index: number;
 
   @Output()
-  sendDataToOneParticipant = new EventEmitter<string>();
+  sendReliableDataToOneParticipant = new EventEmitter<string>();
+
+  @Output()
+  sendLossyDataToOneParticipant = new EventEmitter<string>();
 
   localParticipant: LocalParticipant | undefined;
 
@@ -340,7 +343,8 @@ export class ParticipantComponent {
       .on(
         ParticipantEvent.DataReceived,
         (payload: Uint8Array, kind: DataPacket_Kind) => {
-          const decodedPayload = this.decoder.decode(payload);
+          let decodedPayload = this.decoder.decode(payload);
+          decodedPayload += ` (kind: ${DataPacket_Kind[kind]})`;
           this.updateEventList(
             ParticipantEvent.DataReceived,
             'ParticipantEvent',
@@ -468,7 +472,11 @@ export class ParticipantComponent {
     this.testFeedService.pushNewEvent({ user: this.index, event });
   }
 
-  sendData() {
-    this.sendDataToOneParticipant.emit(this.participant.identity);
+  sendDataReliable() {
+    this.sendReliableDataToOneParticipant.emit(this.participant.identity);
+  }
+
+  sendDataLossy() {
+    this.sendLossyDataToOneParticipant.emit(this.participant.identity);
   }
 }

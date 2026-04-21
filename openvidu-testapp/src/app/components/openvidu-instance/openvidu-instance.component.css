@@ -38,6 +38,7 @@ mat-card.room-card {
     cursor: pointer;
     padding: 0;
     margin-right: 4px;
+    font-size: 22px;
 }
 
 .room-actions button:hover {
