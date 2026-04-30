@@ -121,7 +121,7 @@ validate_upgrade() {
       echo "Please follow these steps:"
       echo ""
       echo "  1. Upgrade ALL cluster nodes to version ${checkpoint}:"
-      echo "     sh <(curl -fsSL ${UPDATE_BASE_URL}${checkpoint}/update.sh)"
+      echo "     sh <(curl -fsSL ${UPDATE_BASE_URL}/${checkpoint}/update.sh)"
       echo ""
       echo "  2. Start OpenVidu on every node:"
       echo "     systemctl start openvidu"
@@ -181,7 +181,7 @@ validate_upgrade() {
     echo "Upgrading from $current to $next_version first..."
     TMP_UPDATE="$(mktemp /tmp/ov_update.XXXXXX)"
     update_script="$(get_update_script "$next_version")"
-    if ! curl -fsSL "${UPDATE_BASE_URL}$next_version/${update_script}" -o "$TMP_UPDATE"; then
+    if ! curl -fsSL "${UPDATE_BASE_URL}/$next_version/${update_script}" -o "$TMP_UPDATE"; then
       rm -f "$TMP_UPDATE"
       echo "ERROR: Failed to download update script for $next_version"
       exit 1
