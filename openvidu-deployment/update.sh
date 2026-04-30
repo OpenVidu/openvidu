@@ -1,9 +1,12 @@
 #!/bin/sh
 set -eu
+
+
 export INSTALL_PREFIX="${INSTALL_PREFIX:-/opt/openvidu}"
 export DOCKER_VERSION="${DOCKER_VERSION:-29.2.1}"
 export DOCKER_COMPOSE_VERSION="${DOCKER_COMPOSE_VERSION:-v5.0.2}"
 export OPENVIDU_VERSION="${OPENVIDU_VERSION:-main}"
+export UPDATE_BASE_URL="${UPDATE_BASE_URL:-http://get.openvidu.io/update}"
 export UPDATER_IMAGE="${UPDATER_IMAGE:-docker.io/openvidu/openvidu-updater:${OPENVIDU_VERSION}}"
 export MINIO_SERVER_IMAGE="${MINIO_SERVER_IMAGE:-docker.io/openvidu/minio:RELEASE.2026-03-04T16-04-53Z-r0}"
 export MINIO_CLIENT_IMAGE="${MINIO_CLIENT_IMAGE:-docker.io/openvidu/minio-client:RELEASE.2026-03-12T12-23-10Z}"
@@ -40,6 +43,17 @@ get_next_version() {
     "3.5.0") echo "3.6.0" ;;
     "3.6.0") echo "3.6.1" ;;
     *) echo "" ;;
+  esac
+}
+
+# Existing versions use update-new.sh to keep the original update.sh intact.
+# Future versions (3.7.x+) will use update.sh normally.
+get_update_script() {
+  case "$1" in
+    "3.1.0"|"3.2.0"|"3.3.0"|"3.4.0"|"3.4.1"|"3.5.0"|"3.6.0"|"3.6.1")
+      echo "update-new.sh" ;;
+    *)
+      echo "update.sh" ;;
   esac
 }
 
@@ -91,6 +105,37 @@ validate_upgrade() {
   current="$1"
   target="$2"
 
+  if [ "$current" = "$target" ]; then
+    echo "Your installed version is $current"
+    return 0
+  fi
+
+  # Only upgrades from 3.4.0 or 3.4.1 targeting a version > 3.5.0 must stop
+  # at 3.5.0 first.
+  checkpoint="3.5.0"
+  if [ "$current" = "3.4.0" ] || [ "$current" = "3.4.1" ]; then
+    if [ "$target" = "main" ] || ( printf '%s\n%s\n' "$checkpoint" "$target" | sort -V -C && [ "$target" != "$checkpoint" ] ); then
+      echo "WARNING: Upgrading through OpenVidu ${checkpoint} requires special steps."
+      echo "The upgrade process must stop at version ${checkpoint} before continuing."
+      echo ""
+      echo "Please follow these steps:"
+      echo ""
+      echo "  1. Upgrade ALL cluster nodes to version ${checkpoint}:"
+      echo "     sh <(curl -fsSL ${UPDATE_BASE_URL}${checkpoint}/update.sh)"
+      echo ""
+      echo "  2. Start OpenVidu on every node:"
+      echo "     systemctl start openvidu"
+      echo ""
+      echo "  3. Wait for initialization."
+      echo ""
+      echo "  4. Stop OpenVidu on every node:"
+      echo "     systemctl stop openvidu"
+      echo ""
+      echo "After completing these steps, re-run this upgrade script to continue."
+      exit 1
+    fi
+  fi
+
   if [ "$target" = "main" ]; then
     echo "WARNING: You are trying to upgrade to 'main' version."
     echo "This version is for OpenVidu developers and may be unstable."
@@ -111,23 +156,170 @@ validate_upgrade() {
 
   if [ "$target" = "$next_version" ]; then
     return 0
-  else
-    echo "ERROR: Version $current can only be upgraded to version $next_version"
-    echo "Please upgrade first to version $next_version"
-    echo "You can do it by running the following command:"
-    echo ""
-    echo ""
-    echo "    sh <(curl -fsSL http://get.openvidu.io/update/$next_version/update.sh)"
-    echo ""
-    echo ""
-    exit 1
   fi
+
+  while [ "$next_version" != "$target" ]; do
+    if [ -z "$next_version" ]; then
+      echo "ERROR: No upgrade path defined for version $current"
+      exit 1
+    fi
+    if [ "$NO_TTY_REQUESTED" != "yes" ]; then
+      echo "Upgrading to $next_version before the target version."
+      while true; do
+        printf "Proceed with upgrading to $next_version? [y/N]: "
+        read -r response
+        if [ "$response" = "y" ] || [ "$response" = "Y" ]; then
+          break
+        elif [ "$response" = "n" ] || [ "$response" = "N" ]; then
+          echo "Update cancelled"
+          exit 1
+        else
+          echo "Please answer 'y' or 'n'."
+        fi
+      done
+    fi
+    echo "Upgrading from $current to $next_version first..."
+    TMP_UPDATE="$(mktemp /tmp/ov_update.XXXXXX)"
+    update_script="$(get_update_script "$next_version")"
+    if ! curl -fsSL "${UPDATE_BASE_URL}$next_version/${update_script}" -o "$TMP_UPDATE"; then
+      rm -f "$TMP_UPDATE"
+      echo "ERROR: Failed to download update script for $next_version"
+      exit 1
+    fi
+    if ! env \
+      -u OPENVIDU_VERSION \
+      -u DOCKER_VERSION \
+      -u DOCKER_COMPOSE_VERSION \
+      -u UPDATER_IMAGE \
+      -u MINIO_SERVER_IMAGE \
+      -u MINIO_CLIENT_IMAGE \
+      -u MONGO_SERVER_IMAGE \
+      -u REDIS_SERVER_IMAGE \
+      -u BUSYBOX_IMAGE \
+      -u CADDY_SERVER_IMAGE \
+      -u CADDY_SERVER_PRO_IMAGE \
+      -u OPENVIDU_OPERATOR_IMAGE \
+      -u OPENVIDU_SERVER_PRO_IMAGE \
+      -u OPENVIDU_SERVER_IMAGE \
+      -u OPENVIDU_MEET_SERVER_IMAGE \
+      -u OPENVIDU_DASHBOARD_PRO_IMAGE \
+      -u OPENVIDU_DASHBOARD_IMAGE \
+      -u OPENVIDU_V2COMPATIBILITY_IMAGE \
+      -u OPENVIDU_AGENT_SPEECH_PROCESSING_IMAGE \
+      -u OPENVIDU_AGENT_PRO_SPEECH_PROCESSING_IMAGE \
+      -u LIVEKIT_INGRESS_SERVER_IMAGE \
+      -u LIVEKIT_EGRESS_SERVER_IMAGE \
+      -u PROMETHEUS_IMAGE \
+      -u PROMTAIL_IMAGE \
+      -u LOKI_IMAGE \
+      -u MIMIR_IMAGE \
+      -u GRAFANA_IMAGE \
+      sh "$TMP_UPDATE" $NO_TTY_FLAG; then
+      rm -f "$TMP_UPDATE"
+      echo "ERROR: Intermediate upgrade from $current to $next_version failed"
+      exit 1
+    fi
+    rm -f "$TMP_UPDATE"
+    current="$(grep version "${INSTALL_PREFIX}/deployment-info.yaml" | cut -d':' -f2 | sed 's/^ *"//;s/"$//')"
+    next_version="$(get_next_version "$current")"
+    if [ -z "$next_version" ]; then
+      echo "ERROR: No upgrade path found from version $current to $target"
+      exit 1
+    fi
+  done
+
+  return 0
 }
 
 # Check if executing as root
 if [ "$(id -u)" -ne 0 ]; then
   echo "Please run as root"
   exit 1
+fi
+
+# Check --no-tty
+if [ -z "${NO_TTY_REQUESTED:+x}" ]; then
+  NO_TTY_REQUESTED="no"
+  for arg in "$@"; do
+    if [ "$arg" = "--no-tty" ]; then
+      NO_TTY_REQUESTED="yes"
+      break
+    fi
+  done
+  export NO_TTY_REQUESTED
+fi
+
+NO_TTY_FLAG=""
+if [ "$NO_TTY_REQUESTED" = "yes" ]; then
+  NO_TTY_FLAG="--no-tty"
+fi
+
+# Ensure docker-compose shim exists
+if ! command -v docker-compose > /dev/null 2>&1; then
+  if docker compose version > /dev/null 2>&1; then
+    cat > /usr/local/bin/docker-compose <<'EOF'
+#!/bin/sh
+exec docker compose "$@"
+EOF
+    chmod 755 /usr/local/bin/docker-compose
+    mkdir -p /usr/local/lib/docker/cli-plugins
+    ln -sf /usr/local/bin/docker-compose /usr/local/lib/docker/cli-plugins/docker-compose
+  fi
+fi
+
+# Check Docker installation and version
+if [ "${OPENVIDU_SKIP_DOCKER_VERSION_CHECK:-}" != "true" ]; then
+  if ! command -v docker > /dev/null 2>&1; then
+    echo "ERROR: Docker is not installed. Docker is required to continue."
+    exit 1
+  else
+    CURRENT_DOCKER_VERSION=$(docker --version | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1)
+    VERSION_COMPARISON=$(compare_versions "$CURRENT_DOCKER_VERSION" "$DOCKER_VERSION")
+
+    if [ "$VERSION_COMPARISON" = "lower" ]; then
+      echo "WARNING: Docker version $CURRENT_DOCKER_VERSION is older than the recommended version $DOCKER_VERSION."
+      printf "Continue anyway? [Y/n]: "
+      read -r response
+      if [ "$response" != "n" ] && [ "$response" != "N" ]; then
+        export OPENVIDU_SKIP_DOCKER_VERSION_CHECK=true
+      else
+        echo "Update cancelled"
+        exit 1
+      fi
+    fi
+  fi
+fi
+
+# Check Docker Compose installation and version
+if [ "${OPENVIDU_SKIP_DOCKER_COMPOSE_VERSION_CHECK:-}" != "true" ]; then
+  DOCKER_COMPOSE_CMD=""
+  if command -v docker-compose > /dev/null 2>&1; then
+    DOCKER_COMPOSE_CMD="docker-compose"
+  elif docker compose version > /dev/null 2>&1; then
+    DOCKER_COMPOSE_CMD="docker compose"
+  fi
+
+  if [ -n "$DOCKER_COMPOSE_CMD" ]; then
+    CURRENT_DC_VERSION=$($DOCKER_COMPOSE_CMD --version | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1)
+    # Add 'v' prefix for proper comparison
+    CURRENT_DC_VERSION="v${CURRENT_DC_VERSION}"
+    VERSION_COMPARISON=$(compare_versions "$CURRENT_DC_VERSION" "$DOCKER_COMPOSE_VERSION")
+
+    if [ "$VERSION_COMPARISON" = "lower" ]; then
+      echo "WARNING: Docker Compose version $CURRENT_DC_VERSION is older than the recommended version $DOCKER_COMPOSE_VERSION."
+      printf "Continue anyway? [Y/n]: "
+      read -r response
+      if [ "$response" != "n" ] && [ "$response" != "N" ]; then
+        export OPENVIDU_SKIP_DOCKER_COMPOSE_VERSION_CHECK=true
+      else
+        echo "Update cancelled"
+        exit 1
+      fi
+    fi
+  else
+    echo "ERROR: Docker Compose is not installed. Docker Compose is required to continue."
+    exit 1
+  fi
 fi
 
 # Validate the upgrade path
@@ -137,87 +329,6 @@ validate_upgrade "$CURRENT_VERSION" "$OPENVIDU_VERSION"
 # Stop OpenVidu service
 echo "Stopping OpenVidu service..."
 systemctl stop openvidu
-
-# Check Docker installation and version
-DOCKER_NEEDED=false
-if ! command -v docker > /dev/null 2>&1; then
-  echo "Docker not found. Will install Docker version ${DOCKER_VERSION}."
-  DOCKER_NEEDED=true
-else
-  CURRENT_DOCKER_VERSION=$(docker --version | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1)
-  VERSION_COMPARISON=$(compare_versions "$CURRENT_DOCKER_VERSION" "$DOCKER_VERSION")
-
-  if [ "$VERSION_COMPARISON" = "lower" ]; then
-    echo "Docker version $CURRENT_DOCKER_VERSION is older than required version $DOCKER_VERSION."
-    echo "Please update Docker to version $DOCKER_VERSION or later."
-    exit 1
-  else
-    echo "Docker version $CURRENT_DOCKER_VERSION is compatible with required version $DOCKER_VERSION."
-  fi
-fi
-
-# Install Docker if needed
-if [ "$DOCKER_NEEDED" = true ]; then
-  curl -fsSL https://get.docker.com -o /tmp/get-docker.sh
-  sh /tmp/get-docker.sh --version "${DOCKER_VERSION}" || { echo "Can't install Docker automatically. Install it manually and run this script again"; exit 1; }
-fi
-
-# Check Docker Compose installation and version
-DOCKER_COMPOSE_NEEDED=false
-if ! command -v docker-compose > /dev/null 2>&1; then
-  echo "Docker Compose not found. Will install Docker Compose version ${DOCKER_COMPOSE_VERSION}."
-  DOCKER_COMPOSE_NEEDED=true
-else
-  CURRENT_DC_VERSION=$(docker-compose --version | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1)
-  # Add 'v' prefix for proper comparison
-  CURRENT_DC_VERSION="v${CURRENT_DC_VERSION}"
-  VERSION_COMPARISON=$(compare_versions "$CURRENT_DC_VERSION" "$DOCKER_COMPOSE_VERSION")
-
-  if [ "$VERSION_COMPARISON" = "lower" ]; then
-    echo "Docker Compose version $CURRENT_DC_VERSION is older than required version $DOCKER_COMPOSE_VERSION."
-    echo "Will update Docker Compose to version $DOCKER_COMPOSE_VERSION."
-    DOCKER_COMPOSE_NEEDED=true
-  else
-    echo "Docker Compose version $CURRENT_DC_VERSION is compatible with required version $DOCKER_COMPOSE_VERSION."
-  fi
-fi
-
-# Install or update Docker Compose if needed
-if [ "$DOCKER_COMPOSE_NEEDED" = true ]; then
-  TIME_LIMIT_SECONDS=20
-  START_TIME=$(awk 'BEGIN{srand(); print srand()}')
-  while true
-  do
-    CURRENT_TIME=$(awk 'BEGIN{srand(); print srand()}')
-    if [ $((CURRENT_TIME-START_TIME)) -gt $TIME_LIMIT_SECONDS ]; then
-      echo "Error downloading docker-compose. Could not download it in $TIME_LIMIT_SECONDS seconds"
-      rm -f /usr/local/bin/docker-compose
-      exit 1
-    fi
-    STATUS_RECEIVED=$(curl --retry 5 --retry-max-time 40 --write-out "%{http_code}\n" -L "https://github.com/docker/compose/releases/download/$DOCKER_COMPOSE_VERSION/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose)
-    CURL_EXIT_CODE=$?
-    if [ $CURL_EXIT_CODE -ne 0 ]; then
-      echo "Error downloading docker-compose. curl failed with exit code $CURL_EXIT_CODE. There are still $((TIME_LIMIT_SECONDS - (CURRENT_TIME - START_TIME))) seconds left to retry..."
-      rm -f /usr/local/bin/docker-compose
-      sleep 2
-      continue
-    fi
-    if [ "${STATUS_RECEIVED}" -ne "200" ]; then
-      echo "Error downloading docker-compose. Received HTTP status code $STATUS_RECEIVED. There are still $((TIME_LIMIT_SECONDS - (CURRENT_TIME - START_TIME))) seconds left to retry..."
-      rm -f /usr/local/bin/docker-compose
-      sleep 2
-      continue
-    fi
-    echo "Success downloading docker-compose version $DOCKER_COMPOSE_VERSION"
-    chmod 755 /usr/local/bin/docker-compose
-    break
-  done
-
-  # Create a symbolic link to docker-compose in the Docker CLI plugins directory
-  # so docker compose can be used also
-  mkdir -p /usr/local/lib/docker/cli-plugins
-  ln -sf /usr/local/bin/docker-compose /usr/local/lib/docker/cli-plugins/docker-compose
-fi
 
 # Check if docker is running with docker info
 if ! docker info >/dev/null 2>&1; then
