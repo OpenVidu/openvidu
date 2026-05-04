@@ -24,10 +24,10 @@ export OPENVIDU_AGENT_PRO_SPEECH_PROCESSING_IMAGE="${OPENVIDU_AGENT_PRO_SPEECH_P
 export LIVEKIT_INGRESS_SERVER_IMAGE="${LIVEKIT_INGRESS_SERVER_IMAGE:-docker.io/openvidu/ingress:${OPENVIDU_VERSION}}"
 export LIVEKIT_EGRESS_SERVER_IMAGE="${LIVEKIT_EGRESS_SERVER_IMAGE:-docker.io/openvidu/egress:${OPENVIDU_VERSION}}"
 export PROMETHEUS_IMAGE="${PROMETHEUS_IMAGE:-docker.io/prom/prometheus:v3.11.3}"
-export PROMTAIL_IMAGE="${PROMTAIL_IMAGE:-docker.io/grafana/promtail:3.6.10}"
-export LOKI_IMAGE="${LOKI_IMAGE:-docker.io/grafana/loki:3.6.10}"
+export PROMTAIL_IMAGE="${PROMTAIL_IMAGE:-docker.io/grafana/promtail:3.5.12}"
+export LOKI_IMAGE="${LOKI_IMAGE:-docker.io/grafana/loki:3.5.12}"
 export MIMIR_IMAGE="${MIMIR_IMAGE:-docker.io/openvidu/grafana-mimir:3.0.6-r0}"
-export GRAFANA_IMAGE="${GRAFANA_IMAGE:-docker.io/grafana/grafana:12.4.3}"
+export GRAFANA_IMAGE="${GRAFANA_IMAGE:-docker.io/grafana/grafana:12.3.6}"
 
 # Function to compare two version strings
 compare_versions() {
