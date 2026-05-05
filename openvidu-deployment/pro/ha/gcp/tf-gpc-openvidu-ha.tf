@@ -942,7 +942,7 @@ locals {
 #!/bin/bash -x
 set -e
 
-OPENVIDU_VERSION=3.7.0
+OPENVIDU_VERSION=main
 DOMAIN=
 YQ_VERSION=v4.53.2
 

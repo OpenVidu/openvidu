@@ -174,7 +174,7 @@ var stringInterpolationParams = {
 
 var installScriptTemplate = '''
 #!/bin/bash -x
-OPENVIDU_VERSION=3.7.0
+OPENVIDU_VERSION=main
 DOMAIN=
 
 echo "DPkg::Lock::Timeout \"-1\";" > /etc/apt/apt.conf.d/99timeout
