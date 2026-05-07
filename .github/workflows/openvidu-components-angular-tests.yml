@@ -35,7 +35,7 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
       - name: Install safe-chain
-        uses: OpenVidu/actions/install-safe-chain@58e9bb7b49e14849ee3cde9b532c4af48fe1d827 # v1.0.19
+        uses: OpenVidu/actions/install-safe-chain@1eb0c5759951f915de29647dedfa1ec8fbb5eeac # v1.0.20
       - name: Commit URL
         run: echo https://github.com/OpenVidu/openvidu/commit/${{ inputs.commit_sha || github.sha }}
       - name: Send Dispatch Event
@@ -96,7 +96,7 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
       - name: Install safe-chain
-        uses: OpenVidu/actions/install-safe-chain@58e9bb7b49e14849ee3cde9b532c4af48fe1d827 # v1.0.19
+        uses: OpenVidu/actions/install-safe-chain@1eb0c5759951f915de29647dedfa1ec8fbb5eeac # v1.0.20
       - name: Install wait-on package
         run: npm install -g wait-on
       - name: Run Chrome
@@ -107,15 +107,15 @@ jobs:
             docker run --network=host -d -p 4444:4444 ${{ env.CHROME_IMAGE }}
           fi
       - name: Run openvidu-local-deployment
-        uses: OpenVidu/actions/start-openvidu-local-deployment@58e9bb7b49e14849ee3cde9b532c4af48fe1d827 # v1.0.19
+        uses: OpenVidu/actions/start-openvidu-local-deployment@1eb0c5759951f915de29647dedfa1ec8fbb5eeac # v1.0.20
       - name: Start OpenVidu Call backend
-        uses: OpenVidu/actions/start-openvidu-call@58e9bb7b49e14849ee3cde9b532c4af48fe1d827 # v1.0.19
+        uses: OpenVidu/actions/start-openvidu-call@1eb0c5759951f915de29647dedfa1ec8fbb5eeac # v1.0.20
       - name: Build and Serve openvidu-components-angular Testapp
-        uses: OpenVidu/actions/start-openvidu-components-testapp@58e9bb7b49e14849ee3cde9b532c4af48fe1d827 # v1.0.19
+        uses: OpenVidu/actions/start-openvidu-components-testapp@1eb0c5759951f915de29647dedfa1ec8fbb5eeac # v1.0.20
       - name: Run Tests
         env:
           LAUNCH_MODE: CI
         run: npm run ${{ matrix.script }} --prefix openvidu-components-angular
       - name: Cleanup
         if: always()
-        uses: OpenVidu/actions/cleanup@58e9bb7b49e14849ee3cde9b532c4af48fe1d827 # v1.0.19
+        uses: OpenVidu/actions/cleanup@1eb0c5759951f915de29647dedfa1ec8fbb5eeac # v1.0.20
