@@ -4,6 +4,10 @@ import { AfterViewInit, Directive, ElementRef, HostListener, Input, OnDestroy, O
 import { ParticipantModel } from '../../models/participant.model';
 import { OpenViduComponentsConfigService } from '../../services/config/directive-config.service';
 
+function isVideoconferenceHost(elementRef: ElementRef): boolean {
+	return elementRef.nativeElement?.tagName?.toLowerCase() === 'ov-videoconference';
+}
+
 /**
  * Load default OpenVidu logo if custom one is not exist
  * @internal
@@ -70,7 +74,9 @@ export class LayoutRemoteParticipantsDirective {
 	) {}
 
 	ngOnDestroy(): void {
-		this.clear();
+		if (isVideoconferenceHost(this.elementRef)) {
+			this.clear();
+		}
 	}
 
 	ngAfterViewInit() {
@@ -117,7 +123,9 @@ export class ToolbarBrandingLogoDirective implements AfterViewInit, OnDestroy {
 	}
 
 	ngOnDestroy(): void {
-		this.clear();
+		if (isVideoconferenceHost(this.elementRef)) {
+			this.clear();
+		}
 	}
 	private clear() {
 		this._brandingLogo = '';
@@ -153,7 +161,9 @@ export class PrejoinDisplayParticipantName implements OnDestroy {
 	) {}
 
 	ngOnDestroy(): void {
-		this.clear();
+		if (isVideoconferenceHost(this.elementRef)) {
+			this.clear();
+		}
 	}
 
 	private clear() {
@@ -333,7 +343,7 @@ export class ToolbarViewRecordingsButtonDirective implements AfterViewInit, OnDe
 	}
 	private clear() {
 		this.viewRecordingsValue = false;
-		this.update(true);
+		this.update(this.viewRecordingsValue);
 	}
 
 	private update(value: boolean) {
@@ -469,7 +479,7 @@ export class RecordingActivityShowRecordingsListDirective implements AfterViewIn
 	}
 
 	private clear() {
-		this._value = true;
+		this._value = false;
 		this.update(this._value);
 	}
 

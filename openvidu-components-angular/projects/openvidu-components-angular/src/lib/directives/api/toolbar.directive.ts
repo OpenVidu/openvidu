@@ -2,6 +2,10 @@ import { AfterViewInit, Directive, ElementRef, Input, OnDestroy } from '@angular
 import { OpenViduComponentsConfigService } from '../../services/config/directive-config.service';
 import { ToolbarAdditionalButtonsPosition } from '../../models/toolbar.model';
 
+function isVideoconferenceHost(elementRef: ElementRef): boolean {
+	return elementRef.nativeElement?.tagName?.toLowerCase() === 'ov-videoconference';
+}
+
 /**
  * The **cameraButton** directive allows show/hide the camera toolbar button.
  *
@@ -53,7 +57,9 @@ export class ToolbarCameraButtonDirective implements AfterViewInit, OnDestroy {
 	}
 
 	ngOnDestroy(): void {
-		this.clear();
+		if (isVideoconferenceHost(this.elementRef)) {
+			this.clear();
+		}
 	}
 
 	private clear() {
@@ -117,7 +123,9 @@ export class ToolbarMicrophoneButtonDirective implements AfterViewInit, OnDestro
 	}
 
 	ngOnDestroy(): void {
-		this.clear();
+		if (isVideoconferenceHost(this.elementRef)) {
+			this.clear();
+		}
 	}
 
 	private clear() {
@@ -181,7 +189,9 @@ export class ToolbarScreenshareButtonDirective implements AfterViewInit, OnDestr
 	}
 
 	ngOnDestroy(): void {
-		this.clear();
+		if (isVideoconferenceHost(this.elementRef)) {
+			this.clear();
+		}
 	}
 
 	private clear() {
@@ -243,7 +253,9 @@ export class ToolbarRecordingButtonDirective implements AfterViewInit, OnDestroy
 	}
 
 	ngOnDestroy(): void {
-		this.clear();
+		if (isVideoconferenceHost(this.elementRef)) {
+			this.clear();
+		}
 	}
 	private clear() {
 		this.recordingValue = true;
@@ -305,7 +317,9 @@ export class ToolbarBroadcastingButtonDirective implements AfterViewInit, OnDest
 	}
 
 	ngOnDestroy(): void {
-		this.clear();
+		if (isVideoconferenceHost(this.elementRef)) {
+			this.clear();
+		}
 	}
 	private clear() {
 		this.broadcastingValue = true;
@@ -366,7 +380,9 @@ export class ToolbarFullscreenButtonDirective implements AfterViewInit, OnDestro
 		this.update(this.fullscreenValue);
 	}
 	ngOnDestroy(): void {
-		this.clear();
+		if (isVideoconferenceHost(this.elementRef)) {
+			this.clear();
+		}
 	}
 	private clear() {
 		this.fullscreenValue = true;
@@ -427,7 +443,9 @@ export class ToolbarBackgroundEffectsButtonDirective implements AfterViewInit, O
 		this.update(this.backgroundEffectsValue);
 	}
 	ngOnDestroy(): void {
-		this.clear();
+		if (isVideoconferenceHost(this.elementRef)) {
+			this.clear();
+		}
 	}
 	private clear() {
 		this.backgroundEffectsValue = true;
@@ -547,7 +565,9 @@ export class ToolbarSettingsButtonDirective implements AfterViewInit, OnDestroy 
 		this.update(this.settingsValue);
 	}
 	ngOnDestroy(): void {
-		this.clear();
+		if (isVideoconferenceHost(this.elementRef)) {
+			this.clear();
+		}
 	}
 	private clear() {
 		this.settingsValue = true;
@@ -609,7 +629,9 @@ export class ToolbarLeaveButtonDirective implements AfterViewInit, OnDestroy {
 	}
 
 	ngOnDestroy(): void {
-		this.clear();
+		if (isVideoconferenceHost(this.elementRef)) {
+			this.clear();
+		}
 	}
 	private clear() {
 		this.leaveValue = true;
@@ -672,7 +694,9 @@ export class ToolbarParticipantsPanelButtonDirective implements AfterViewInit, O
 	}
 
 	ngOnDestroy(): void {
-		this.clear();
+		if (isVideoconferenceHost(this.elementRef)) {
+			this.clear();
+		}
 	}
 	private clear() {
 		this.participantsPanelValue = true;
@@ -733,7 +757,9 @@ export class ToolbarChatPanelButtonDirective implements AfterViewInit, OnDestroy
 	}
 
 	ngOnDestroy(): void {
-		this.clear();
+		if (isVideoconferenceHost(this.elementRef)) {
+			this.clear();
+		}
 	}
 	private clear() {
 		this.toolbarChatPanelValue = true;
@@ -794,7 +820,9 @@ export class ToolbarActivitiesPanelButtonDirective implements AfterViewInit, OnD
 	}
 
 	ngOnDestroy(): void {
-		this.clear();
+		if (isVideoconferenceHost(this.elementRef)) {
+			this.clear();
+		}
 	}
 	private clear() {
 		this.toolbarActivitiesPanelValue = true;
@@ -856,7 +884,9 @@ export class ToolbarDisplayRoomNameDirective implements AfterViewInit, OnDestroy
 	}
 
 	ngOnDestroy(): void {
-		this.clear();
+		if (isVideoconferenceHost(this.elementRef)) {
+			this.clear();
+		}
 	}
 	private clear() {
 		this.displayRoomValue = true;

@@ -1,6 +1,10 @@
 import { AfterViewInit, Directive, ElementRef, Input, OnDestroy } from '@angular/core';
 import { OpenViduComponentsConfigService } from '../../services/config/directive-config.service';
 
+function isVideoconferenceHost(elementRef: ElementRef): boolean {
+	return elementRef.nativeElement?.tagName?.toLowerCase() === 'ov-videoconference';
+}
+
 /**
  * The **displayParticipantName** directive allows show/hide the participants name in stream component.
  *
@@ -38,7 +42,9 @@ export class StreamDisplayParticipantNameDirective implements AfterViewInit, OnD
 	) {}
 
 	ngOnDestroy(): void {
-		this.clear();
+		if (isVideoconferenceHost(this.elementRef)) {
+			this.clear();
+		}
 	}
 
 	ngAfterViewInit() {
@@ -94,7 +100,9 @@ export class StreamDisplayAudioDetectionDirective implements AfterViewInit, OnDe
 		this.update(this.displayAudioDetectionValue);
 	}
 	ngOnDestroy(): void {
-		this.clear();
+		if (isVideoconferenceHost(this.elementRef)) {
+			this.clear();
+		}
 	}
 
 	update(value: boolean) {
@@ -146,7 +154,9 @@ export class StreamVideoControlsDirective implements AfterViewInit, OnDestroy {
 	}
 
 	ngOnDestroy(): void {
-		this.clear();
+		if (isVideoconferenceHost(this.elementRef)) {
+			this.clear();
+		}
 	}
 
 	update(value: boolean) {

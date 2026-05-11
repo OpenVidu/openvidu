@@ -1,6 +1,10 @@
 import { Directive, AfterViewInit, OnDestroy, Input, ElementRef } from '@angular/core';
 import { OpenViduComponentsConfigService } from '../../services/config/directive-config.service';
 
+function isVideoconferenceHost(elementRef: ElementRef): boolean {
+	return elementRef.nativeElement?.tagName?.toLowerCase() === 'ov-videoconference';
+}
+
 /**
  * The **muteButton** directive allows show/hide the muted button in participant panel item component.
  *
@@ -41,7 +45,9 @@ export class ParticipantPanelItemMuteButtonDirective implements AfterViewInit, O
 		this.update(this.muteValue);
 	}
 	ngOnDestroy(): void {
-		this.clear();
+		if (isVideoconferenceHost(this.elementRef)) {
+			this.clear();
+		}
 	}
 	clear() {
 		this.muteValue = true;

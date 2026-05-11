@@ -1,6 +1,10 @@
 import { AfterViewInit, Directive, ElementRef, Input, OnDestroy } from '@angular/core';
 import { OpenViduComponentsConfigService } from '../../services/config/directive-config.service';
 
+function isVideoconferenceHost(elementRef: ElementRef): boolean {
+	return elementRef.nativeElement?.tagName?.toLowerCase() === 'ov-videoconference';
+}
+
 /**
  * The **recordingActivity** directive allows show/hide the recording activity in {@link ActivitiesPanelComponent}.
  *
@@ -41,7 +45,9 @@ export class ActivitiesPanelRecordingActivityDirective implements AfterViewInit,
 		this.update(this.recordingActivityValue);
 	}
 	ngOnDestroy(): void {
-		this.clear();
+		if (isVideoconferenceHost(this.elementRef)) {
+			this.clear();
+		}
 	}
 	clear() {
 		this.recordingActivityValue = true;
@@ -93,7 +99,9 @@ export class ActivitiesPanelBroadcastingActivityDirective implements AfterViewIn
 		this.update(this.broadcastingActivityValue);
 	}
 	ngOnDestroy(): void {
-		this.clear();
+		if (isVideoconferenceHost(this.elementRef)) {
+			this.clear();
+		}
 	}
 	clear() {
 		this.broadcastingActivityValue = true;
