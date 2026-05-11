@@ -99,7 +99,8 @@ export class ParticipantService {
 	 */
 	setLocalParticipant(participant: LocalParticipant) {
 		const room = this.openviduService.getRoom();
-		this.localParticipant = this.newParticipant({ participant, room });
+		const fallbackName = this.directiveService.getCurrentParticipantName() || this.storageSrv.getParticipantName() || undefined;
+		this.localParticipant = this.newParticipant({ participant, room, fallbackName });
 	}
 
 	/**

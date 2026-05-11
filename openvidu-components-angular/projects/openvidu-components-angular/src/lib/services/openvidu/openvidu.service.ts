@@ -276,10 +276,15 @@ export class OpenViduService {
 	 * @internal
 	 */
 	initializeAndSetToken(token: string, livekitUrl?: string): void {
-		const { livekitUrl: urlFromToken } = this.extractLivekitData(token);
+		const { livekitUrl: urlFromToken, participantName: participantNameFromToken } = this.extractLivekitData(token);
 
 		this.livekitToken = token;
 		const url = livekitUrl || urlFromToken;
+		const currentParticipantName = this.configService.getCurrentParticipantName() || this.storageService.getParticipantName() || undefined;
+		if (participantNameFromToken && participantNameFromToken !== currentParticipantName) {
+			this.storageService.setParticipantName(participantNameFromToken);
+			this.configService.updateGeneralConfig({ participantName: participantNameFromToken });
+		}
 
 		if (!url) {
 			this.log.e('LiveKit URL is not defined. Please, check the livekitUrl parameter of the VideoConferenceComponent');
@@ -751,7 +756,7 @@ export class OpenViduService {
 	 * @throws Error if there is an error decoding and parsing the token.
 	 * @internal
 	 */
-	private extractLivekitData(token: string): { livekitUrl?: string; livekitRoomAdmin: boolean } {
+	private extractLivekitData(token: string): { livekitUrl?: string; livekitRoomAdmin: boolean; participantName?: string } {
 		try {
 			const base64Url = token.split('.')[1];
 			const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
@@ -766,15 +771,17 @@ export class OpenViduService {
 			);
 
 			const payload = JSON.parse(jsonPayload);
+			const participantName = typeof payload?.name === 'string' && payload.name.trim() ? payload.name.trim() : undefined;
 			if (payload?.metadata) {
 				const tokenMetadata = JSON.parse(payload.metadata);
 				return {
 					livekitUrl: tokenMetadata.livekitUrl,
-					livekitRoomAdmin: !!tokenMetadata.roomAdmin
+					livekitRoomAdmin: !!tokenMetadata.roomAdmin,
+					participantName
 				};
 			}
 
-			return { livekitRoomAdmin: false };
+			return { livekitRoomAdmin: false, participantName };
 		} catch (error) {
 			throw new Error('Error decoding and parsing token: ' + error);
 		}

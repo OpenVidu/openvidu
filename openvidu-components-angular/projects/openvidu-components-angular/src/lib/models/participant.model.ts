@@ -90,6 +90,11 @@ export interface ParticipantProperties {
 	participant: LocalParticipant | RemoteParticipant;
 
 	/**
+	 * Fallback name used until the SDK participant name is available.
+	 */
+	fallbackName?: string;
+
+	/**
 	 * The room in which the participant is located, applicable only for local participants.
 	 */
 	room?: Room;
@@ -129,9 +134,11 @@ export class ParticipantModel {
 	private customVideoTrack: Partial<ParticipantTrackPublication>;
 	private _hasEncryptionError: boolean = false;
 	private _decryptedName: string | undefined;
+	private _fallbackName: string | undefined;
 
 	constructor(props: ParticipantProperties) {
 		this.participant = props.participant;
+		this._fallbackName = props.fallbackName?.trim() || undefined;
 		this.colorProfile = props.colorProfile ?? `hsl(${Math.random() * 360}, 100%, 80%)`;
 		this.room = props.room;
 		this.screenTrackPublicationDate = props.screenTrackPublicationDate ?? new Map<string, number>();
@@ -171,7 +178,7 @@ export class ParticipantModel {
 	 * @returns string
 	 */
 	get name(): string | undefined {
-		return this._decryptedName ?? this.participant.name;
+		return this._decryptedName?.trim() || this.participant.name?.trim() || this._fallbackName || this.participant.identity;
 	}
 
 	/**
@@ -312,6 +319,7 @@ export class ParticipantModel {
 	getProperties(): ParticipantProperties {
 		return {
 			participant: this.participant,
+			fallbackName: this._fallbackName,
 			room: this.room,
 			colorProfile: this.colorProfile,
 			screenTrackPublicationDate: this.screenTrackPublicationDate
