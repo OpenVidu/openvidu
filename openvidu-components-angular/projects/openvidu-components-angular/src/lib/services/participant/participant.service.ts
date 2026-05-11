@@ -317,6 +317,7 @@ export class ParticipantService {
 				this.updateRemoteParticipants();
 			}
 		});
+		this.updateLocalParticipant();
 	}
 
 	/**
