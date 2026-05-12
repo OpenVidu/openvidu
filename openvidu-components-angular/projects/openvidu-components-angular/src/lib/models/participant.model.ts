@@ -85,6 +85,12 @@ export interface ParticipantTrackPublication extends TrackPublication {
  */
 export interface ParticipantProperties {
 	/**
+	 * Resolves the preferred display name for the participant.
+	 * Used for local participants where the directive/token/storage priority must override SDK defaults.
+	 */
+	preferredNameResolver?: () => string | undefined;
+
+	/**
 	 * The participant instance, which can be either a local participant or a remote participant.
 	 */
 	participant: LocalParticipant | RemoteParticipant;
@@ -134,10 +140,12 @@ export class ParticipantModel {
 	private customVideoTrack: Partial<ParticipantTrackPublication>;
 	private _hasEncryptionError: boolean = false;
 	private _decryptedName: string | undefined;
+	private _preferredNameResolver: (() => string | undefined) | undefined;
 	private _fallbackName: string | undefined;
 
 	constructor(props: ParticipantProperties) {
 		this.participant = props.participant;
+		this._preferredNameResolver = props.preferredNameResolver;
 		this._fallbackName = props.fallbackName?.trim() || undefined;
 		this.colorProfile = props.colorProfile ?? `hsl(${Math.random() * 360}, 100%, 80%)`;
 		this.room = props.room;
@@ -178,7 +186,13 @@ export class ParticipantModel {
 	 * @returns string
 	 */
 	get name(): string | undefined {
-		return this._decryptedName?.trim() || this.participant.name?.trim() || this._fallbackName || this.participant.identity;
+		return (
+			this._decryptedName?.trim() ||
+			this._preferredNameResolver?.()?.trim() ||
+			this.participant.name?.trim() ||
+			this._fallbackName ||
+			this.participant.identity
+		);
 	}
 
 	/**
@@ -318,6 +332,7 @@ export class ParticipantModel {
 	 */
 	getProperties(): ParticipantProperties {
 		return {
+			preferredNameResolver: this._preferredNameResolver,
 			participant: this.participant,
 			fallbackName: this._fallbackName,
 			room: this.room,

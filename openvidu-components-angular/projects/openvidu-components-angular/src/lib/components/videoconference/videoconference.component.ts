@@ -928,9 +928,7 @@ export class VideoconferenceComponent implements OnDestroy, AfterViewInit {
 			// Always initialize the room when ready to join
 			this.openviduService.initRoom();
 
-			// Get the most current participant name from the service
-			// This ensures we have the latest value after any batch updates
-			const participantName = this.libService.getCurrentParticipantName() || this.latestParticipantName;
+			const participantName = this.openviduService.ensurePreferredLocalParticipantName();
 
 			if (this.componentState.isRoomReady) {
 				// Room is ready, hide prejoin and proceed
@@ -941,22 +939,8 @@ export class VideoconferenceComponent implements OnDestroy, AfterViewInit {
 				});
 			} else {
 				// Room not ready, request token if we have a participant name
-				if (participantName) {
-					this.log.d(`Requesting token for participant: ${participantName}`);
-					this.onTokenRequested.emit(participantName);
-				} else {
-					this.log.w('No participant name available when requesting token');
-					// Wait a bit and try again in case name is still propagating
-					setTimeout(() => {
-						const retryName = this.libService.getCurrentParticipantName() || this.latestParticipantName;
-						if (retryName) {
-							this.log.d(`Retrying token request for participant: ${retryName}`);
-							this.onTokenRequested.emit(retryName);
-						} else {
-							this.log.e('Still no participant name available after retry');
-						}
-					}, 10);
-				}
+				this.log.d(`Requesting token for participant: ${participantName}`);
+				this.onTokenRequested.emit(participantName);
 			}
 
 			// Emit onReadyToJoin event only if prejoin page was actually shown
@@ -1081,12 +1065,8 @@ export class VideoconferenceComponent implements OnDestroy, AfterViewInit {
 					// Add safety timeout in case name never arrives
 					setTimeout(() => {
 						if (!this.latestParticipantName) {
-							this.log.w('No participant name received after timeout, proceeding anyway');
-							const storedName = this.storageSrv.getParticipantName();
-							if (storedName) {
-								this.latestParticipantName = storedName;
-								this.libService.updateGeneralConfig({ participantName: storedName });
-							}
+							this.log.w('No participant name received after timeout, using fallback');
+							this.latestParticipantName = this.openviduService.ensurePreferredLocalParticipantName();
 							this._onReadyToJoin();
 						}
 					}, VideoconferenceComponent.PARTICIPANT_NAME_TIMEOUT_MS);

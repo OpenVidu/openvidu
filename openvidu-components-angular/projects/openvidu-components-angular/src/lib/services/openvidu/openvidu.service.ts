@@ -32,6 +32,8 @@ import { StorageService } from '../storage/storage.service';
 	providedIn: 'root'
 })
 export class OpenViduService {
+	private static readonly FALLBACK_PARTICIPANT_PREFIX = 'Participant';
+
 	/*
 	 * @internal
 	 */
@@ -56,6 +58,7 @@ export class OpenViduService {
 	private localTracks: LocalTrack[] = [];
 	private livekitToken = '';
 	private livekitUrl = '';
+	private tokenParticipantName: string | undefined;
 	private log: ILogger;
 
 	/**
@@ -202,8 +205,9 @@ export class OpenViduService {
 			await this.room.connect(this.livekitUrl, this.livekitToken);
 			this.log.d(`Successfully connected to room ${this.room.name}`);
 
-			const participantName = this.storageService.getParticipantName();
+			const participantName = this.getPreferredLocalParticipantName();
 			if (participantName) {
+				this.storageService.setParticipantName(participantName);
 				this.room.localParticipant.setName(participantName);
 			}
 		} catch (error) {
@@ -256,6 +260,41 @@ export class OpenViduService {
 		return this.room?.name;
 	}
 
+	getPreferredLocalParticipantName(): string | undefined {
+		return (
+			this.configService.getCurrentParticipantName()?.trim() ||
+			this.tokenParticipantName ||
+			this.storageService.getParticipantName()?.trim() ||
+			undefined
+		);
+	}
+
+	ensurePreferredLocalParticipantName(): string {
+		return this.getPreferredLocalParticipantName() || this.createFallbackParticipantName();
+	}
+
+	generateFallbackParticipantName(): string {
+		return `${OpenViduService.FALLBACK_PARTICIPANT_PREFIX}_${this.generateRandomSuffix()}`;
+	}
+
+	private generateRandomSuffix(length: number = 6): string {
+		return Math.random()
+			.toString(36)
+			.slice(2, 2 + length)
+			.padEnd(length, '0');
+	}
+
+	private createFallbackParticipantName(): string {
+		const storedParticipantName = this.storageService.getParticipantName()?.trim();
+		if (storedParticipantName) {
+			return storedParticipantName;
+		}
+
+		const fallbackName = this.generateFallbackParticipantName();
+		this.storageService.setParticipantName(fallbackName);
+		return fallbackName;
+	}
+
 	/**
 	 * Returns if local participant is connected to the room
 	 * @returns
@@ -279,11 +318,15 @@ export class OpenViduService {
 		const { livekitUrl: urlFromToken, participantName: participantNameFromToken } = this.extractLivekitData(token);
 
 		this.livekitToken = token;
+		this.tokenParticipantName = participantNameFromToken;
 		const url = livekitUrl || urlFromToken;
-		const currentParticipantName = this.configService.getCurrentParticipantName() || this.storageService.getParticipantName() || undefined;
-		if (participantNameFromToken && participantNameFromToken !== currentParticipantName) {
-			this.storageService.setParticipantName(participantNameFromToken);
+		const currentParticipantName = this.configService.getCurrentParticipantName()?.trim() || undefined;
+		const storedParticipantName = this.storageService.getParticipantName()?.trim() || undefined;
+		if (participantNameFromToken && !currentParticipantName) {
 			this.configService.updateGeneralConfig({ participantName: participantNameFromToken });
+			if (!storedParticipantName) {
+				this.storageService.setParticipantName(participantNameFromToken);
+			}
 		}
 
 		if (!url) {

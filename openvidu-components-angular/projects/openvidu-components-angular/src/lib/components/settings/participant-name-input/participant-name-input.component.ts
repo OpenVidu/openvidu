@@ -1,6 +1,6 @@
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
-import { Subscription } from 'rxjs';
 import { ParticipantService } from '../../../services/participant/participant.service';
+import { OpenViduService } from '../../../services/openvidu/openvidu.service';
 import { StorageService } from '../../../services/storage/storage.service';
 
 /**
@@ -14,7 +14,6 @@ import { StorageService } from '../../../services/storage/storage.service';
 })
 export class ParticipantNameInputComponent implements OnInit {
 	name: string;
-	localParticipantSubscription: Subscription;
 	@Input() isPrejoinPage: boolean;
 	@Input() error: boolean;
 	@Output() onNameUpdated = new EventEmitter<string>();
@@ -22,15 +21,15 @@ export class ParticipantNameInputComponent implements OnInit {
 
 	constructor(
 		private participantService: ParticipantService,
+		private openviduService: OpenViduService,
 		private storageSrv: StorageService
 	) {}
 
 	ngOnInit(): void {
-		this.subscribeToParticipantProperties();
 		const myName = this.participantService.getMyName();
 		const storedName = this.storageSrv.getParticipantName();
 
-		this.name = myName ?? storedName ?? this.generateRandomName();
+		this.name = myName ?? storedName ?? this.openviduService.generateFallbackParticipantName();
 
 		if (!myName && !storedName) {
 			this.storageSrv.setParticipantName(this.name);
@@ -62,17 +61,5 @@ export class ParticipantNameInputComponent implements OnInit {
 			this.updateName();
 			this.onEnterPressed.emit();
 		}
-	}
-
-	private subscribeToParticipantProperties() {
-		// this.localParticipantSubscription = this.participantService.localParticipant$.subscribe((p: ParticipantModel | undefined) => {
-		// 	if (p) {
-		// 		this.name = p.name;
-		// 	}
-		// });
-	}
-
-	private generateRandomName(): string {
-		return 'OpenVidu_User_' + Math.floor(Math.random() * 100);
 	}
 }
