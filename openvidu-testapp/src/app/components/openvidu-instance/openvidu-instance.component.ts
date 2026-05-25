@@ -175,6 +175,7 @@ export class OpenviduInstanceComponent {
   async connectRoom(token: string): Promise<void> {
     // creates a new room with options
     this.room = new Room(this.roomOptions);
+    (window as any)['room_' + this.index] = this.room;
 
     this.setupRoomEventListeners(new Map(), true);
 

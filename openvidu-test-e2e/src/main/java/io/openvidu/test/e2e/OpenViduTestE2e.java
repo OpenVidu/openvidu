@@ -475,6 +475,13 @@ public class OpenViduTestE2e {
 			}
 			browserUser = new ChromeUser("TestUser", 50, null, path, headless);
 			break;
+		case "chromeDtxAudio":
+			container = chromeContainer("selenium/standalone-chrome:" + CHROME_VERSION, 2147483648L, 1, false);
+			setupBrowserAux(BrowserNames.CHROME, container, false);
+			path = new File("/opt/openvidu/dtx_test_audio.wav").toPath();
+			checkMediafilePath(path);
+			browserUser = new ChromeUser("TestUser", 50, null, path, headless);
+			break;
 		case "chromeVirtualBackgroundFakeVideo":
 			container = chromeContainer("selenium/standalone-chrome:" + CHROME_VERSION, 2147483648L, 1, false);
 			setupBrowserAux(BrowserNames.CHROME, container, false);

@@ -533,6 +533,304 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 	}
 
 	@Test
+	@DisplayName("DTX enabled and disabled")
+	void dtxTest() throws Exception {
+
+		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
+
+		log.info("DTX enabled and disabled");
+
+		// Participant 0: Audio only, DTX enabled (default)
+		this.addPublisherSubscriber(user, true, false);
+
+		// Participant 1: Audio only, DTX disabled
+		this.addPublisherSubscriber(user, true, false);
+		int lastIndex = user.getDriver().findElements(By.cssSelector("app-openvidu-instance")).size() - 1;
+		this.waitForBackdropAndClick(user, "#room-options-btn-" + lastIndex);
+		Thread.sleep(300);
+		user.getDriver().findElement(By.id("trackPublish-dtx")).click();
+		user.getDriver().findElement(By.id("close-dialog-btn")).click();
+		Thread.sleep(300);
+
+		// Register callbacks to collect trackSubscriptionStatusChanged event
+		// descriptions
+		List<String> trackSubStatusDescriptions = Collections.synchronizedList(new ArrayList<>());
+		CountDownLatch trackSubStatusLatch = new CountDownLatch(4);
+		user.getEventManager().on("trackSubscriptionStatusChanged", "RoomEvent", json -> {
+			trackSubStatusDescriptions.add(json.getAsJsonObject().get("eventDescription").getAsString());
+			trackSubStatusLatch.countDown();
+		});
+
+		// Connect both participants
+		user.getDriver().findElements(By.className("connect-btn")).forEach(el -> el.sendKeys(Keys.ENTER));
+		user.getEventManager().waitUntilEventReaches("connected", "RoomEvent", 2);
+		user.getEventManager().waitUntilEventReaches("localTrackPublished", "RoomEvent", 2);
+		user.getEventManager().waitUntilEventReaches("localTrackSubscribed", "RoomEvent", 2);
+		user.getEventManager().waitUntilEventReaches("trackSubscribed", "RoomEvent", 2);
+
+		// Check for 4 trackSubscriptionStatusChanged (2 to "desired" and 2 to
+		// "subscribed")
+		user.getEventManager().waitUntilEventReaches("trackSubscriptionStatusChanged", "RoomEvent", 4);
+		if (!trackSubStatusLatch.await(10, TimeUnit.SECONDS)) {
+			Assertions.fail("Timeout waiting for 4 trackSubscriptionStatusChanged events");
+		}
+		Assertions.assertEquals(4, trackSubStatusDescriptions.size(),
+				"Expected 4 trackSubscriptionStatusChanged events");
+		Assertions.assertTrue(trackSubStatusDescriptions.contains("TestParticipant1 (microphone to desired)"),
+				"Missing event: TestParticipant1 (microphone to desired). Got: " + trackSubStatusDescriptions);
+		Assertions.assertTrue(trackSubStatusDescriptions.contains("TestParticipant1 (microphone to subscribed)"),
+				"Missing event: TestParticipant1 (microphone to subscribed). Got: " + trackSubStatusDescriptions);
+		Assertions.assertTrue(trackSubStatusDescriptions.contains("TestParticipant0 (microphone to desired)"),
+				"Missing event: TestParticipant0 (microphone to desired). Got: " + trackSubStatusDescriptions);
+		Assertions.assertTrue(trackSubStatusDescriptions.contains("TestParticipant0 (microphone to subscribed)"),
+				"Missing event: TestParticipant0 (microphone to subscribed). Got: " + trackSubStatusDescriptions);
+		user.getEventManager().off("trackSubscriptionStatusChanged", "RoomEvent");
+
+		Thread.sleep(1500);
+
+		org.openqa.selenium.JavascriptExecutor js = (org.openqa.selenium.JavascriptExecutor) user.getDriver();
+
+		// Participant 0: DTX enabled - SDP answer must contain usedtx=1
+		String sdp0 = (String) js.executeScript(
+				"var room = window['room_0'];"
+						+ "var pc = room.localParticipant.engine.pcManager.publisher._pc;"
+						+ "return pc.remoteDescription.sdp;");
+		Assertions.assertTrue(sdp0.contains("usedtx=1"),
+				"SDP answer should contain usedtx=1 when DTX is enabled. SDP: " + sdp0);
+
+		// Participant 1: DTX disabled - SDP answer must NOT contain usedtx=1
+		String sdp1 = (String) js.executeScript(
+				"var room = window['room_1'];"
+						+ "var pc = room.localParticipant.engine.pcManager.publisher._pc;"
+						+ "return pc.remoteDescription.sdp;");
+		Assertions.assertFalse(sdp1.contains("usedtx=1"),
+				"SDP answer should NOT contain usedtx=1 when DTX is disabled. SDP: " + sdp1);
+
+		gracefullyLeaveParticipants(user, 2);
+	}
+
+	@Test
+	@DisplayName("DTX packet rate reduction during silence")
+	void dtxPacketRateTest() throws Exception {
+
+		log.info("DTX packet rate reduction during silence");
+
+		// Generate a WAV file with 5s tone + 5s silence (10 seconds total).
+		// Chrome will loop this file as the fake audio capture source.
+		String dtxAudioPath = "/opt/openvidu/dtx_test_audio.wav";
+		String ffmpegCmd = "ffmpeg -y"
+				+ " -f lavfi -i sine=frequency=440:duration=5"
+				+ " -f lavfi -i anullsrc=r=48000:cl=mono"
+				+ " -filter_complex \"[1]atrim=duration=5[silence];[0][silence]concat=n=2:v=0:a=1[out]\""
+				+ " -map \"[out]\" -ar 48000 -ac 1 " + dtxAudioPath;
+		String ffmpegOutput = commandLine.executeCommand(ffmpegCmd, 30);
+		log.info("ffmpeg output: {}", ffmpegOutput);
+		java.io.File dtxAudioFile = new java.io.File(dtxAudioPath);
+		Assertions.assertTrue(dtxAudioFile.exists() && dtxAudioFile.length() > 0,
+				"Failed to generate DTX test audio file at " + dtxAudioPath);
+
+		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chromeDtxAudio");
+
+		// Participant 0: Audio only, DTX enabled (default)
+		this.addPublisherSubscriber(user, true, false);
+
+		// Participant 1: Audio only, DTX disabled
+		this.addPublisherSubscriber(user, true, false);
+		int lastIndex = user.getDriver().findElements(By.cssSelector("app-openvidu-instance")).size() - 1;
+		this.waitForBackdropAndClick(user, "#room-options-btn-" + lastIndex);
+		Thread.sleep(300);
+		user.getDriver().findElement(By.id("trackPublish-dtx")).click();
+		user.getDriver().findElement(By.id("close-dialog-btn")).click();
+		Thread.sleep(300);
+
+		// Connect both participants
+		user.getDriver().findElements(By.className("connect-btn")).forEach(el -> el.sendKeys(Keys.ENTER));
+		user.getEventManager().waitUntilEventReaches("connected", "RoomEvent", 2);
+		user.getEventManager().waitUntilEventReaches("localTrackPublished", "RoomEvent", 2);
+		user.getEventManager().waitUntilEventReaches("localTrackSubscribed", "RoomEvent", 2);
+		user.getEventManager().waitUntilEventReaches("trackSubscribed", "RoomEvent", 2);
+
+		org.openqa.selenium.JavascriptExecutor js = (org.openqa.selenium.JavascriptExecutor) user.getDriver();
+
+		Thread.sleep(1000);
+
+		// Sample packetsSent at 1-second intervals for 12 seconds.
+		// The 10-second WAV pattern (tone-silence) starts from Chrome's capture beginning.
+		// We sample enough to capture at least one full silence period.
+		int sampleCount = 12;
+		long[] packetsP0 = new long[sampleCount];
+		long[] packetsP1 = new long[sampleCount];
+		// Subscriber side: P0 subscribes to P1's audio (DTX disabled), P1 subscribes to P0's audio (DTX enabled)
+		long[] recvP0 = new long[sampleCount];
+		long[] recvP1 = new long[sampleCount];
+
+		for (int i = 0; i < sampleCount; i++) {
+			packetsP0[i] = (Long) js.executeAsyncScript(
+					"var callback = arguments[arguments.length - 1];"
+							+ "var roomIdx = 0;"
+							+ "var room = window['room_' + roomIdx];"
+							+ "var pc = room.localParticipant.engine.pcManager.publisher._pc;"
+							+ "pc.getStats().then(function(stats) {"
+							+ "  var packets = 0;"
+							+ "  stats.forEach(function(report) {"
+							+ "    if (report.type === 'outbound-rtp' && report.kind === 'audio') {"
+							+ "      packets = report.packetsSent;"
+							+ "    }"
+							+ "  });"
+							+ "  callback(packets);"
+							+ "});");
+			packetsP1[i] = (Long) js.executeAsyncScript(
+					"var callback = arguments[arguments.length - 1];"
+							+ "var roomIdx = 1;"
+							+ "var room = window['room_' + roomIdx];"
+							+ "var pc = room.localParticipant.engine.pcManager.publisher._pc;"
+							+ "pc.getStats().then(function(stats) {"
+							+ "  var packets = 0;"
+							+ "  stats.forEach(function(report) {"
+							+ "    if (report.type === 'outbound-rtp' && report.kind === 'audio') {"
+							+ "      packets = report.packetsSent;"
+							+ "    }"
+							+ "  });"
+							+ "  callback(packets);"
+							+ "});");
+			// Subscriber stats: inbound-rtp packetsReceived
+			recvP0[i] = (Long) js.executeAsyncScript(
+					"var callback = arguments[arguments.length - 1];"
+							+ "var room = window['room_0'];"
+							+ "var pc = room.localParticipant.engine.pcManager.subscriber._pc;"
+							+ "pc.getStats().then(function(stats) {"
+							+ "  var packets = 0;"
+							+ "  stats.forEach(function(report) {"
+							+ "    if (report.type === 'inbound-rtp' && report.kind === 'audio') {"
+							+ "      packets = report.packetsReceived;"
+							+ "    }"
+							+ "  });"
+							+ "  callback(packets);"
+							+ "});");
+			recvP1[i] = (Long) js.executeAsyncScript(
+					"var callback = arguments[arguments.length - 1];"
+							+ "var room = window['room_1'];"
+							+ "var pc = room.localParticipant.engine.pcManager.subscriber._pc;"
+							+ "pc.getStats().then(function(stats) {"
+							+ "  var packets = 0;"
+							+ "  stats.forEach(function(report) {"
+							+ "    if (report.type === 'inbound-rtp' && report.kind === 'audio') {"
+							+ "      packets = report.packetsReceived;"
+							+ "    }"
+							+ "  });"
+							+ "  callback(packets);"
+							+ "});");
+			if (i < sampleCount - 1) {
+				Thread.sleep(1000);
+			}
+		}
+
+		// Compute per-second packet rates
+		long[] rateP0 = new long[sampleCount - 1];
+		long[] rateP1 = new long[sampleCount - 1];
+		// Subscriber rates: P0 receives P1's audio (DTX off), P1 receives P0's audio
+		// (DTX on)
+		long[] recvRateP0 = new long[sampleCount - 1];
+		long[] recvRateP1 = new long[sampleCount - 1];
+		for (int i = 0; i < sampleCount - 1; i++) {
+			rateP0[i] = packetsP0[i + 1] - packetsP0[i];
+			rateP1[i] = packetsP1[i + 1] - packetsP1[i];
+			recvRateP0[i] = recvP0[i + 1] - recvP0[i];
+			recvRateP1[i] = recvP1[i + 1] - recvP1[i];
+		}
+
+		log.info("DTX test - Packet rates per second for P0 (DTX enabled): {}", java.util.Arrays.toString(rateP0));
+		log.info("DTX test - Packet rates per second for P1 (DTX disabled): {}", java.util.Arrays.toString(rateP1));
+		log.info("DTX test - Subscriber recv rates for P0 (receives P1, DTX disabled): {}",
+				java.util.Arrays.toString(recvRateP0));
+		log.info("DTX test - Subscriber recv rates for P1 (receives P0, DTX enabled): {}",
+				java.util.Arrays.toString(recvRateP1));
+
+		// P1 (DTX disabled) should have a relatively constant packet rate (~50
+		// packets/s for Opus at 20ms).
+		// P0 (DTX enabled) should show at least one interval with significantly lower
+		// packet rate during silence.
+		// Find the minimum packet rate for each participant.
+		long minRateP0 = Long.MAX_VALUE;
+		long minRateP1 = Long.MAX_VALUE;
+		long maxRateP0 = 0;
+		long maxRateP1 = 0;
+		for (int i = 0; i < rateP0.length; i++) {
+			if (rateP0[i] < minRateP0)
+				minRateP0 = rateP0[i];
+			if (rateP0[i] > maxRateP0)
+				maxRateP0 = rateP0[i];
+			if (rateP1[i] < minRateP1)
+				minRateP1 = rateP1[i];
+			if (rateP1[i] > maxRateP1)
+				maxRateP1 = rateP1[i];
+		}
+
+		log.info("DTX test - P0 (DTX enabled): min rate = {}, max rate = {}", minRateP0, maxRateP0);
+		log.info("DTX test - P1 (DTX disabled): min rate = {}, max rate = {}", minRateP1, maxRateP1);
+
+		// Assertion 1: P0 (DTX enabled) must have at least one interval where packet
+		// rate drops
+		// significantly below normal Opus rate. During silence with DTX, Opus sends
+		// comfort noise
+		// at ~1-5 packets/s vs ~50 packets/s normally. We use a generous threshold of
+		// 25 packets/s.
+		Assertions.assertTrue(minRateP0 < 25,
+				"DTX enabled participant should have at least one interval with packet rate < 25 packets/s "
+						+ "during silence, but minimum was " + minRateP0
+						+ ". Rates: " + java.util.Arrays.toString(rateP0));
+
+		// Assertion 2: P1 (DTX disabled) should maintain a consistently high packet
+		// rate.
+		// Even during silence, without DTX, Opus sends ~50 packets/s.
+		// We check that the minimum rate never drops below 30 packets/s.
+		Assertions.assertTrue(minRateP1 > 30,
+				"DTX disabled participant should maintain packet rate > 30 packets/s even during silence, "
+						+ "but minimum was " + minRateP1
+						+ ". Rates: " + java.util.Arrays.toString(rateP1));
+
+		// Assertion 3: The ratio between DTX-enabled min and DTX-disabled min should be
+		// significant.
+		// DTX-enabled silence rate should be at most half of DTX-disabled silence rate.
+		Assertions.assertTrue(minRateP0 < minRateP1 / 2,
+				"DTX enabled minimum rate (" + minRateP0 + ") should be less than half "
+						+ "of DTX disabled minimum rate (" + minRateP1 + ")");
+
+		// --- Subscriber side cross-validation ---
+		// P0's subscriber receives P1's audio (DTX disabled) → should have constant
+		// high rate
+		// P1's subscriber receives P0's audio (DTX enabled) → should show reduced rate
+		// during silence
+		long minRecvRateP0 = Long.MAX_VALUE;
+		long minRecvRateP1 = Long.MAX_VALUE;
+		for (int i = 0; i < recvRateP0.length; i++) {
+			if (recvRateP0[i] < minRecvRateP0)
+				minRecvRateP0 = recvRateP0[i];
+			if (recvRateP1[i] < minRecvRateP1)
+				minRecvRateP1 = recvRateP1[i];
+		}
+
+		log.info("DTX test - Subscriber P0 (receives DTX disabled): min recv rate = {}", minRecvRateP0);
+		log.info("DTX test - Subscriber P1 (receives DTX enabled): min recv rate = {}", minRecvRateP1);
+
+		// Assertion 4: P1's subscriber receives P0's DTX-enabled audio.
+		// During silence, packet rate should drop significantly (< 25 packets/s).
+		Assertions.assertTrue(minRecvRateP1 < 25,
+				"Subscriber receiving DTX-enabled audio should have at least one interval with recv rate "
+						+ "< 25 packets/s during silence, but minimum was " + minRecvRateP1
+						+ ". Rates: " + java.util.Arrays.toString(recvRateP1));
+
+		// Assertion 5: P0's subscriber receives P1's DTX-disabled audio.
+		// Packet rate should stay consistently high (> 30 packets/s).
+		Assertions.assertTrue(minRecvRateP0 > 30,
+				"Subscriber receiving DTX-disabled audio should maintain recv rate > 30 packets/s, "
+						+ "but minimum was " + minRecvRateP0
+						+ ". Rates: " + java.util.Arrays.toString(recvRateP0));
+
+		gracefullyLeaveParticipants(user, 2);
+	}
+
+	@Test
 	@DisplayName("One2One only video")
 	void oneToOneOnlyVideoSession() throws Exception {
 
