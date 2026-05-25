@@ -697,7 +697,8 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 			recvP0[i] = (Long) js.executeAsyncScript(
 					"var callback = arguments[arguments.length - 1];"
 							+ "var room = window['room_0'];"
-							+ "var pc = room.localParticipant.engine.pcManager.subscriber._pc;"
+							+ "var mgr = room.localParticipant.engine.pcManager;"
+							+ "var pc = (mgr.subscriber || mgr.publisher)._pc;" // subscriber is undefined in single-PC mode (pion)
 							+ "pc.getStats().then(function(stats) {"
 							+ "  var packets = 0;"
 							+ "  stats.forEach(function(report) {"
@@ -710,7 +711,8 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 			recvP1[i] = (Long) js.executeAsyncScript(
 					"var callback = arguments[arguments.length - 1];"
 							+ "var room = window['room_1'];"
-							+ "var pc = room.localParticipant.engine.pcManager.subscriber._pc;"
+							+ "var mgr = room.localParticipant.engine.pcManager;"
+							+ "var pc = (mgr.subscriber || mgr.publisher)._pc;" // subscriber is undefined in single-PC mode (pion)
 							+ "pc.getStats().then(function(stats) {"
 							+ "  var packets = 0;"
 							+ "  stats.forEach(function(report) {"
