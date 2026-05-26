@@ -136,19 +136,21 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		user.getDriver().findElement(By.id("one2one-btn")).click();
 		user.getEventManager().waitUntilEventReaches("signalConnected", "RoomEvent", 2);
 		user.getEventManager().waitUntilEventReaches("connected", "RoomEvent", 2);
+		user.getEventManager().waitUntilEventReaches("participantConnected", "RoomEvent", 1);
 		user.getEventManager().waitUntilEventReaches("participantActive", "RoomEvent", 2);
-		user.getEventManager().waitUntilEventReaches("connectionStateChanged", "RoomEvent", 2);
+		user.getEventManager().waitUntilEventReaches("active", "ParticipantEvent", 4);
+		user.getEventManager().waitUntilEventReaches("connectionStateChanged", "RoomEvent", 4);
 		user.getEventManager().waitUntilEventReaches("localTrackPublished", "RoomEvent", 4);
 		user.getEventManager().waitUntilEventReaches("localTrackPublished", "ParticipantEvent", 4);
+		user.getEventManager().waitUntilEventReaches("trackPublished", "RoomEvent", 4);
+		user.getEventManager().waitUntilEventReaches("trackPublished", "ParticipantEvent", 4);
 		user.getEventManager().waitUntilEventReaches("localTrackSubscribed", "RoomEvent", 4);
 		user.getEventManager().waitUntilEventReaches("localTrackSubscribed", "ParticipantEvent", 4);
 		user.getEventManager().waitUntilEventReaches("trackSubscribed", "RoomEvent", 4);
 		user.getEventManager().waitUntilEventReaches("trackSubscribed", "ParticipantEvent", 4);
 		user.getEventManager().waitUntilEventReaches("trackSubscriptionStatusChanged", "RoomEvent", 8);
-		// user.getEventManager().waitUntilEventReaches("trackStreamStateChanged",
-		// "RoomEvent", 2);
-		// user.getEventManager().waitUntilEventReaches("trackStreamStateChanged",
-		// "ParticipantEvent", 2);
+		user.getEventManager().waitUntilEventReaches("trackSubscriptionStatusChanged", "ParticipantEvent", 8);
+		user.getEventManager().waitUntilEventReaches("visibilityChanged", "TrackEvent", 2);
 
 		user.getWaiter().until(ExpectedConditions.numberOfElementsToBe(By.tagName("video"), 4));
 		user.getWaiter().until(ExpectedConditions.numberOfElementsToBe(By.tagName("audio"), 4));
@@ -405,7 +407,8 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		// Participant 0 publishes a data track
 		user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 .add-data-track-btn")).click();
 
-		// Wait for localDataTrackPublished on participant 0 and dataTrackPublished on participant 1
+		// Wait for localDataTrackPublished on participant 0 and dataTrackPublished on
+		// participant 1
 		user.getEventManager().waitUntilEventReaches(0, "localDataTrackPublished", "RoomEvent", 1);
 		user.getEventManager().waitUntilEventReaches(1, "dataTrackPublished", "RoomEvent", 1);
 
@@ -454,7 +457,8 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 		user.getEventManager().clearAllCurrentEvents();
 
-		// Now participant 1 publishes a data track with custom name (bidirectional test)
+		// Now participant 1 publishes a data track with custom name (bidirectional
+		// test)
 		String customTrackName = "my_custom_data_track";
 		user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 .options-data-track-btn")).click();
 		Thread.sleep(500);
@@ -655,12 +659,14 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		Thread.sleep(1000);
 
 		// Sample packetsSent at 1-second intervals for 12 seconds.
-		// The 10-second WAV pattern (tone-silence) starts from Chrome's capture beginning.
+		// The 10-second WAV pattern (tone-silence) starts from Chrome's capture
+		// beginning.
 		// We sample enough to capture at least one full silence period.
 		int sampleCount = 12;
 		long[] packetsP0 = new long[sampleCount];
 		long[] packetsP1 = new long[sampleCount];
-		// Subscriber side: P0 subscribes to P1's audio (DTX disabled), P1 subscribes to P0's audio (DTX enabled)
+		// Subscriber side: P0 subscribes to P1's audio (DTX disabled), P1 subscribes to
+		// P0's audio (DTX enabled)
 		long[] recvP0 = new long[sampleCount];
 		long[] recvP1 = new long[sampleCount];
 
@@ -698,7 +704,8 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 					"var callback = arguments[arguments.length - 1];"
 							+ "var room = window['room_0'];"
 							+ "var mgr = room.localParticipant.engine.pcManager;"
-							+ "var pc = (mgr.subscriber || mgr.publisher)._pc;" // subscriber is undefined in single-PC mode (pion)
+							+ "var pc = (mgr.subscriber || mgr.publisher)._pc;" // subscriber is undefined in single-PC
+																				// mode (pion)
 							+ "pc.getStats().then(function(stats) {"
 							+ "  var packets = 0;"
 							+ "  stats.forEach(function(report) {"
@@ -712,7 +719,8 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 					"var callback = arguments[arguments.length - 1];"
 							+ "var room = window['room_1'];"
 							+ "var mgr = room.localParticipant.engine.pcManager;"
-							+ "var pc = (mgr.subscriber || mgr.publisher)._pc;" // subscriber is undefined in single-PC mode (pion)
+							+ "var pc = (mgr.subscriber || mgr.publisher)._pc;" // subscriber is undefined in single-PC
+																				// mode (pion)
 							+ "pc.getStats().then(function(stats) {"
 							+ "  var packets = 0;"
 							+ "  stats.forEach(function(report) {"
@@ -1004,8 +1012,6 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 				user.getEventManager().waitUntilEventReaches("localTrackPublished", "RoomEvent", 2);
 				user.getEventManager().waitUntilEventReaches("localTrackSubscribed", "RoomEvent", 2);
 				user.getEventManager().waitUntilEventReaches("trackSubscribed", "RoomEvent", 4);
-				// user.getEventManager().waitUntilEventReaches("trackStreamStateChanged",
-				// "RoomEvent", 2);
 
 				user.getWaiter().until(ExpectedConditions.numberOfElementsToBe(By.tagName("video"), 3));
 				user.getWaiter().until(ExpectedConditions.numberOfElementsToBe(By.tagName("audio"), 3));
@@ -1554,6 +1560,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 			user.getDriver().findElement(By.id("room-events-btn-" + n)).sendKeys(Keys.ENTER);
 			Thread.sleep(300);
 			user.getDriver().findElement(By.cssSelector("button[name='activeSpeakersChanged']")).sendKeys(Keys.ENTER);
+			user.getDriver().findElement(By.cssSelector("button[name='isSpeakingChanged']")).sendKeys(Keys.ENTER);
 			user.getDriver().findElement(By.id("close-dialog-btn")).sendKeys(Keys.ENTER);
 			Thread.sleep(300);
 		}
@@ -2689,120 +2696,120 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 	 * NOTE 2: ingress SRT seems to support only video codecs H264 and MPEG-4
 	 */
 
-//	@Test
-//	@DisplayName("SRT ingress H264 + AAC")
-//	@Disabled // AAC audio codec stream fails if sent along a video stream
-//	void srtIngressTestH264_AAC() throws Exception {
-//		log.info("SRT ingress H264 + AAC");
-//		String srtUri = startSrtServer("H264", "AAC");
-//		urPullCommon("SRT", srtUri, true, true);
-//	}
-//
-//	@Test
-//	@DisplayName("SRT ingress H264 + AC3")
-//	void srtIngressTestH264_AC3() throws Exception {
-//		log.info("SRT ingress H264 + AC3");
-//		String srtUri = startSrtServer("H264", "AC3");
-//		urPullCommon("SRT", srtUri, true, true);
-//	}
-//
-//	@Test
-//	@DisplayName("SRT ingress H264 + OPUS")
-//	void srtIngressTestH264_OPUS() throws Exception {
-//		log.info("SRT ingress H264 + OPUS");
-//		String srtUri = startSrtServer("H264", "OPUS");
-//		urPullCommon("SRT", srtUri, true, true);
-//	}
-//
-//	@Test
-//	@DisplayName("SRT ingress H264 + MP3")
-//	void srtIngressTestH264_MP3() throws Exception {
-//		log.info("SRT ingress H264 + MP3");
-//		String srtUri = startSrtServer("H264", "MP3");
-//		urPullCommon("SRT", srtUri, true, true);
-//	}
-//
-//	@Test
-//	@DisplayName("SRT ingress MPEG-4 + AAC")
-//	@Disabled // AAC audio codec stream fails if sent along a video stream
-//	void srtIngressTestMPEG-4_AAC() throws Exception {
-//		log.info("SRT ingress MPEG-4 + AAC");
-//		String srtUri = startSrtServer("MPEG-4", "AAC");
-//		urPullCommon("SRT", srtUri, true, true);
-//	}
-//
-//	@Test
-//	@DisplayName("SRT ingress MPEG-4 + AC3")
-//	void srtIngressTestMPEG-4_AC3() throws Exception {
-//		log.info("SRT ingress MPEG-4 + AC3");
-//		String srtUri = startSrtServer("MPEG-4", "AC3");
-//		urPullCommon("SRT", srtUri, true, true);
-//	}
-//
-//	@Test
-//	@DisplayName("SRT ingress MPEG-4 + OPUS")
-//	void srtIngressTestMPEG-4_OPUS() throws Exception {
-//		log.info("SRT ingress MPEG-4 + OPUS");
-//		String srtUri = startSrtServer("MPEG-4", "OPUS");
-//		urPullCommon("SRT", srtUri, true, true);
-//	}
-//
-//	@Test
-//	@DisplayName("SRT ingress MPEG-4 + MP3")
-//	void srtIngressTestMPEG-4_MP3() throws Exception {
-//		log.info("SRT ingress MPEG-4 + MP3");
-//		String srtUri = startSrtServer("MPEG-4", "MP3");
-//		urPullCommon("SRT", srtUri, true, true);
-//	}
-//
-//	@Test
-//	@DisplayName("SRT ingress H264")
-//	void srtIngressTestH264() throws Exception {
-//		log.info("SRT ingress H264");
-//		String srtUri = startSrtServer("H264", null);
-//		urPullCommon("SRT", srtUri, true, false);
-//	}
-//
-//	@Test
-//	@DisplayName("SRT ingress MPEG-4")
-//	void srtIngressTestMPEG-4() throws Exception {
-//		log.info("SRT ingress MPEG-4");
-//		String srtUri = startSrtServer("MPEG-4", null);
-//		urPullCommon("SRT", srtUri, true, false);
-//	}
-//
-//	@Test
-//	@DisplayName("SRT ingress AAC")
-//	void srtIngressTestAAC() throws Exception {
-//		log.info("SRT ingress AAC");
-//		String srtUri = startSrtServer(null, "AAC");
-//		urPullCommon("SRT", srtUri, false, true);
-//	}
-//
-//	@Test
-//	@DisplayName("SRT ingress AC3")
-//	void srtIngressTestAC3() throws Exception {
-//		log.info("SRT ingress AC3");
-//		String srtUri = startSrtServer(null, "AC3");
-//		urPullCommon("SRT", srtUri, false, true);
-//	}
-//
-//	@Test
-//	@DisplayName("SRT ingress MP3")
-//	void srtIngressTestMP3() throws Exception {
-//		log.info("SRT ingress MP3");
-//		String srtUri = startSrtServer(null, "MP3");
-//		urPullCommon("SRT", srtUri, false, true);
-//	}
-//
-//	@Test
-//	@DisplayName("SRT ingress OPUS")
-//	@Disabled // A single OPUS audio stream fails
-//	void srtIngressTestOPUS() throws Exception {
-//		log.info("SRT ingress OPUS");
-//		String srtUri = startSrtServer(null, "OPUS");
-//		urPullCommon("SRT", srtUri, false, true);
-//	}
+	// @Test
+	// @DisplayName("SRT ingress H264 + AAC")
+	// @Disabled // AAC audio codec stream fails if sent along a video stream
+	// void srtIngressTestH264_AAC() throws Exception {
+	// log.info("SRT ingress H264 + AAC");
+	// String srtUri = startSrtServer("H264", "AAC");
+	// urPullCommon("SRT", srtUri, true, true);
+	// }
+	//
+	// @Test
+	// @DisplayName("SRT ingress H264 + AC3")
+	// void srtIngressTestH264_AC3() throws Exception {
+	// log.info("SRT ingress H264 + AC3");
+	// String srtUri = startSrtServer("H264", "AC3");
+	// urPullCommon("SRT", srtUri, true, true);
+	// }
+	//
+	// @Test
+	// @DisplayName("SRT ingress H264 + OPUS")
+	// void srtIngressTestH264_OPUS() throws Exception {
+	// log.info("SRT ingress H264 + OPUS");
+	// String srtUri = startSrtServer("H264", "OPUS");
+	// urPullCommon("SRT", srtUri, true, true);
+	// }
+	//
+	// @Test
+	// @DisplayName("SRT ingress H264 + MP3")
+	// void srtIngressTestH264_MP3() throws Exception {
+	// log.info("SRT ingress H264 + MP3");
+	// String srtUri = startSrtServer("H264", "MP3");
+	// urPullCommon("SRT", srtUri, true, true);
+	// }
+	//
+	// @Test
+	// @DisplayName("SRT ingress MPEG-4 + AAC")
+	// @Disabled // AAC audio codec stream fails if sent along a video stream
+	// void srtIngressTestMPEG-4_AAC() throws Exception {
+	// log.info("SRT ingress MPEG-4 + AAC");
+	// String srtUri = startSrtServer("MPEG-4", "AAC");
+	// urPullCommon("SRT", srtUri, true, true);
+	// }
+	//
+	// @Test
+	// @DisplayName("SRT ingress MPEG-4 + AC3")
+	// void srtIngressTestMPEG-4_AC3() throws Exception {
+	// log.info("SRT ingress MPEG-4 + AC3");
+	// String srtUri = startSrtServer("MPEG-4", "AC3");
+	// urPullCommon("SRT", srtUri, true, true);
+	// }
+	//
+	// @Test
+	// @DisplayName("SRT ingress MPEG-4 + OPUS")
+	// void srtIngressTestMPEG-4_OPUS() throws Exception {
+	// log.info("SRT ingress MPEG-4 + OPUS");
+	// String srtUri = startSrtServer("MPEG-4", "OPUS");
+	// urPullCommon("SRT", srtUri, true, true);
+	// }
+	//
+	// @Test
+	// @DisplayName("SRT ingress MPEG-4 + MP3")
+	// void srtIngressTestMPEG-4_MP3() throws Exception {
+	// log.info("SRT ingress MPEG-4 + MP3");
+	// String srtUri = startSrtServer("MPEG-4", "MP3");
+	// urPullCommon("SRT", srtUri, true, true);
+	// }
+	//
+	// @Test
+	// @DisplayName("SRT ingress H264")
+	// void srtIngressTestH264() throws Exception {
+	// log.info("SRT ingress H264");
+	// String srtUri = startSrtServer("H264", null);
+	// urPullCommon("SRT", srtUri, true, false);
+	// }
+	//
+	// @Test
+	// @DisplayName("SRT ingress MPEG-4")
+	// void srtIngressTestMPEG-4() throws Exception {
+	// log.info("SRT ingress MPEG-4");
+	// String srtUri = startSrtServer("MPEG-4", null);
+	// urPullCommon("SRT", srtUri, true, false);
+	// }
+	//
+	// @Test
+	// @DisplayName("SRT ingress AAC")
+	// void srtIngressTestAAC() throws Exception {
+	// log.info("SRT ingress AAC");
+	// String srtUri = startSrtServer(null, "AAC");
+	// urPullCommon("SRT", srtUri, false, true);
+	// }
+	//
+	// @Test
+	// @DisplayName("SRT ingress AC3")
+	// void srtIngressTestAC3() throws Exception {
+	// log.info("SRT ingress AC3");
+	// String srtUri = startSrtServer(null, "AC3");
+	// urPullCommon("SRT", srtUri, false, true);
+	// }
+	//
+	// @Test
+	// @DisplayName("SRT ingress MP3")
+	// void srtIngressTestMP3() throws Exception {
+	// log.info("SRT ingress MP3");
+	// String srtUri = startSrtServer(null, "MP3");
+	// urPullCommon("SRT", srtUri, false, true);
+	// }
+	//
+	// @Test
+	// @DisplayName("SRT ingress OPUS")
+	// @Disabled // A single OPUS audio stream fails
+	// void srtIngressTestOPUS() throws Exception {
+	// log.info("SRT ingress OPUS");
+	// String srtUri = startSrtServer(null, "OPUS");
+	// urPullCommon("SRT", srtUri, false, true);
+	// }
 
 	private void urPullCommon(String urlType, String uri, boolean withVideo, boolean withAudio) throws Exception {
 		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
