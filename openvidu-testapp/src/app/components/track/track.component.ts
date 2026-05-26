@@ -13,7 +13,6 @@ import {
   TrackEvent,
   LocalTrack,
   RemoteTrack,
-  TrackEventCallbacks,
   RemoteTrackPublication,
   AudioTrack,
   VideoTrack,
@@ -22,6 +21,10 @@ import {
   TestAppEvent,
   TestFeedService,
 } from 'src/app/services/test-feed.service';
+import {
+  registerTrackEventListeners,
+  removeAllManagedListeners,
+} from 'src/app/utils/event-listener-utils';
 
 @Component({
     selector: 'app-track',
@@ -42,6 +45,12 @@ export class TrackComponent {
   @Input()
   localParticipant: LocalParticipant | undefined;
 
+  @Input()
+  earlyTrackEvents: Map<string, TestAppEvent[]> = new Map();
+
+  @Input()
+  earlyTrackListeners: Map<string, Map<string, (...args: any[]) => void>> = new Map();
+
   protected finalElementRefId: string = '';
   private indexId: string;
   private trackId: string;
@@ -52,6 +61,8 @@ export class TrackComponent {
   trackSubscribed: boolean = true;
   trackEnabled: boolean = true;
 
+  private trackEventListeners: Map<string, (...args: any[]) => void> = new Map();
+
   constructor(protected testFeedService: TestFeedService) {}
 
   @Input() set index(index: number) {
@@ -61,6 +72,23 @@ export class TrackComponent {
 
   @Input() set track(track: AudioTrack | VideoTrack | undefined) {
     this._track = track;
+
+    // Drain early track events buffered before this component existed
+    if (this._track) {
+      const key = this._track.sid || this._track.mediaStreamID;
+      const earlyEvents = this.earlyTrackEvents?.get(key);
+      if (earlyEvents) {
+        for (const event of earlyEvents) {
+          this.newTrackEvent.emit(event as any);
+        }
+        this.earlyTrackEvents.delete(key);
+      }
+      const earlyListeners = this.earlyTrackListeners?.get(key);
+      if (earlyListeners) {
+        removeAllManagedListeners(this._track, earlyListeners);
+        this.earlyTrackListeners.delete(key);
+      }
+    }
 
     this.setupTrackEventListeners();
 
@@ -115,93 +143,22 @@ export class TrackComponent {
   }
 
   protected setupTrackEventListeners() {
-    // This is a link to the complete list of Track events
-    let callbacks: TrackEventCallbacks;
-    let events: TrackEvent;
+    if (!this._track) return;
 
-    this._track
-      ?.on(TrackEvent.Message, () => {
+    // Clear previous listeners (in case track changed)
+    removeAllManagedListeners(this._track, this.trackEventListeners);
+
+    this.trackEventListeners = registerTrackEventListeners(
+      this._track,
+      (eventType, eventContent, eventDescription) => {
         this.newTrackEvent.emit({
-          eventType: TrackEvent.Message,
+          eventType,
           eventCategory: 'TrackEvent',
-          eventContent: {},
-          eventDescription: this._track!.source,
+          eventContent,
+          eventDescription,
         });
-      })
-      .on(TrackEvent.Muted, () => {
-        this.newTrackEvent.emit({
-          eventType: TrackEvent.Muted,
-          eventCategory: 'TrackEvent',
-          eventContent: {},
-          eventDescription: this._track!.source,
-        });
-      })
-      .on(TrackEvent.Unmuted, () => {
-        this.newTrackEvent.emit({
-          eventType: TrackEvent.Unmuted,
-          eventCategory: 'TrackEvent',
-          eventContent: {},
-          eventDescription: this._track!.source,
-        });
-      })
-      .on(TrackEvent.AudioSilenceDetected, () => {
-        this.newTrackEvent.emit({
-          eventType: TrackEvent.AudioSilenceDetected,
-          eventCategory: 'TrackEvent',
-          eventContent: {},
-          eventDescription: this._track!.source,
-        });
-      })
-      .on(TrackEvent.Restarted, () => {
-        this.newTrackEvent.emit({
-          eventType: TrackEvent.Restarted,
-          eventCategory: 'TrackEvent',
-          eventContent: {},
-          eventDescription: this._track!.source,
-        });
-      })
-      .on(TrackEvent.Ended, () => {
-        this.newTrackEvent.emit({
-          eventType: TrackEvent.Ended,
-          eventCategory: 'TrackEvent',
-          eventContent: {},
-          eventDescription: this._track!.source,
-        });
-      })
-      .on(TrackEvent.VisibilityChanged, (visible: boolean) => {
-        this.newTrackEvent.emit({
-          eventType: TrackEvent.VisibilityChanged,
-          eventCategory: 'TrackEvent',
-          eventContent: { visible, track: this._track },
-          eventDescription: `${this._track!.source} is visible: ${visible}`,
-        });
-      })
-      .on(TrackEvent.VideoDimensionsChanged, (dimensions: Track.Dimensions) => {
-        this.newTrackEvent.emit({
-          eventType: TrackEvent.VideoDimensionsChanged,
-          eventCategory: 'TrackEvent',
-          eventContent: { dimensions, track: this._track },
-          eventDescription: `${this._track?.source} ${JSON.stringify(
-            dimensions
-          )}`,
-        });
-      })
-      .on(TrackEvent.UpstreamPaused, () => {
-        this.newTrackEvent.emit({
-          eventType: TrackEvent.UpstreamPaused,
-          eventCategory: 'TrackEvent',
-          eventContent: {},
-          eventDescription: this._track!.source,
-        });
-      })
-      .on(TrackEvent.UpstreamResumed, () => {
-        this.newTrackEvent.emit({
-          eventType: TrackEvent.UpstreamResumed,
-          eventCategory: 'TrackEvent',
-          eventContent: {},
-          eventDescription: this._track!.source,
-        });
-      });
+      }
+    );
   }
 
   protected getTrackOrigin(): string {

@@ -28,6 +28,7 @@ import {
   LocalVideoTrack,
   MediaDeviceFailure,
   Participant,
+  ParticipantEvent,
   RemoteAudioTrack,
   RemoteDataTrack,
   RemoteParticipant,
@@ -42,6 +43,7 @@ import {
   SubscriptionError,
   TextStreamReader,
   Track,
+  TrackEvent,
   TrackPublication,
   TrackPublishOptions,
 } from 'livekit-client';
@@ -58,6 +60,11 @@ import { InfoDialogComponent } from '../dialogs/info-dialog/info-dialog.componen
 import { ParticipantComponent } from '../participant/participant.component';
 import { RoomEventCallbacks } from 'node_modules/livekit-client/dist/src/room/Room';
 import PCTransport from 'node_modules/livekit-client/dist/src/room/PCTransport';
+import {
+  registerParticipantEventListeners,
+  registerTrackEventListeners,
+  removeAllManagedListeners,
+} from 'src/app/utils/event-listener-utils';
 
 @Component({
   selector: 'app-openvidu-instance',
@@ -74,6 +81,18 @@ export class OpenviduInstanceComponent {
 
   room?: Room;
   roomEvents: Map<RoomEvent, Boolean> = new Map<RoomEvent, boolean>();
+  participantEvents: Map<ParticipantEvent, boolean> = new Map<ParticipantEvent, boolean>();
+  trackEvents: Map<TrackEvent, boolean> = new Map<TrackEvent, boolean>();
+
+  private roomEventListeners: Map<string, (...args: any[]) => void> = new Map();
+
+  // Early event registration: buffers events for participant/track components
+  // that don't yet exist when the SDK fires events during connect()
+  earlyParticipantEvents: Map<string, TestAppEvent[]> = new Map();
+  earlyParticipantListeners: Map<string, Map<string, (...args: any[]) => void>> = new Map();
+  earlyTrackEvents: Map<string, TestAppEvent[]> = new Map();
+  earlyTrackListeners: Map<string, Map<string, (...args: any[]) => void>> = new Map();
+  private earlyParticipantConnectedListener: ((...args: any[]) => void) | undefined;
 
   roomName: string = 'TestRoom';
   participantName: string = 'TestParticipant';
@@ -142,6 +161,14 @@ export class OpenviduInstanceComponent {
       this.roomEvents.set(RoomEvent[event as keyof typeof RoomEvent], true);
       this.roomEvents.set(RoomEvent.ActiveSpeakersChanged, false);
     }
+    for (let event of Object.keys(ParticipantEvent)) {
+      this.participantEvents.set(ParticipantEvent[event as keyof typeof ParticipantEvent], true);
+        this.participantEvents.set(ParticipantEvent.IsSpeakingChanged, false);
+    }
+    for (let event of Object.keys(TrackEvent)) {
+      this.trackEvents.set(TrackEvent[event as keyof typeof TrackEvent], true);
+      this.trackEvents.set(TrackEvent.TimeSyncUpdate, false);
+    }
     this.participantName += this.index;
     if (this.roomConf.startSession) {
       const token = await this.roomApiService.createToken(
@@ -176,6 +203,16 @@ export class OpenviduInstanceComponent {
     // creates a new room with options
     this.room = new Room(this.roomOptions);
     (window as any)['room_' + this.index] = this.room;
+
+    // Register early participant event listeners on local participant BEFORE connect
+    this.registerEarlyParticipantListeners(this.room.localParticipant);
+
+    // Register early participant event listeners on remote participants as they connect
+    // This fires during connect() for participants already in the room
+    this.earlyParticipantConnectedListener = (participant: RemoteParticipant) => {
+      this.registerEarlyParticipantListeners(participant);
+    };
+    this.room.addListener(RoomEvent.ParticipantConnected, this.earlyParticipantConnectedListener as any);
 
     this.setupRoomEventListeners(new Map(), true);
 
@@ -216,6 +253,19 @@ export class OpenviduInstanceComponent {
     }
   }
 
+  private registerRoomListener(event: RoomEvent, listener: (...args: any[]) => void) {
+    this.room!.addListener(event, listener as any);
+    this.roomEventListeners.set(event, listener);
+  }
+
+  private unregisterRoomListener(event: RoomEvent | string) {
+    const existing = this.roomEventListeners.get(event as string);
+    if (existing) {
+      this.room?.removeListener(event as RoomEvent, existing as any);
+      this.roomEventListeners.delete(event as string);
+    }
+  }
+
   setupRoomEventListeners(oldValues: Map<string, boolean>, firstTime: boolean) {
     // This is a link to the complete list of Room events
     let callbacks: RoomEventCallbacks;
@@ -226,9 +276,9 @@ export class OpenviduInstanceComponent {
       this.roomEvents.get(RoomEvent.Connected) !==
         oldValues.get(RoomEvent.Connected)
     ) {
-      this.room?.removeAllListeners(RoomEvent.Connected);
+      this.unregisterRoomListener(RoomEvent.Connected);
       if (this.roomEvents.get(RoomEvent.Connected)) {
-        this.room!.on(RoomEvent.Connected, () => {
+        this.registerRoomListener(RoomEvent.Connected, () => {
           this.updateEventList(RoomEvent.Connected, {}, '');
           this.room!.remoteParticipants.forEach(
             (remoteParticipant: RemoteParticipant) => {
@@ -251,10 +301,23 @@ export class OpenviduInstanceComponent {
       this.roomEvents.get(RoomEvent.Reconnecting) !==
         oldValues.get(RoomEvent.Reconnecting)
     ) {
-      this.room?.removeAllListeners(RoomEvent.Reconnecting);
+      this.unregisterRoomListener(RoomEvent.Reconnecting);
       if (this.roomEvents.get(RoomEvent.Reconnecting)) {
-        this.room!.on(RoomEvent.Reconnecting, () => {
+        this.registerRoomListener(RoomEvent.Reconnecting, () => {
           this.updateEventList(RoomEvent.Reconnecting, {}, '');
+        });
+      }
+    }
+
+    if (
+      firstTime ||
+      this.roomEvents.get(RoomEvent.SignalReconnecting) !==
+        oldValues.get(RoomEvent.SignalReconnecting)
+    ) {
+      this.unregisterRoomListener(RoomEvent.SignalReconnecting);
+      if (this.roomEvents.get(RoomEvent.SignalReconnecting)) {
+        this.registerRoomListener(RoomEvent.SignalReconnecting, () => {
+          this.updateEventList(RoomEvent.SignalReconnecting, {}, '');
         });
       }
     }
@@ -264,9 +327,9 @@ export class OpenviduInstanceComponent {
       this.roomEvents.get(RoomEvent.Reconnected) !==
         oldValues.get(RoomEvent.Reconnected)
     ) {
-      this.room?.removeAllListeners(RoomEvent.Reconnected);
+      this.unregisterRoomListener(RoomEvent.Reconnected);
       if (this.roomEvents.get(RoomEvent.Reconnected)) {
-        this.room!.on(RoomEvent.Reconnected, () => {
+        this.registerRoomListener(RoomEvent.Reconnected, () => {
           this.updateEventList(RoomEvent.Reconnected, {}, '');
         });
       }
@@ -277,9 +340,9 @@ export class OpenviduInstanceComponent {
       this.roomEvents.get(RoomEvent.Disconnected) !==
         oldValues.get(RoomEvent.Disconnected)
     ) {
-      this.room?.removeAllListeners(RoomEvent.Disconnected);
+      this.unregisterRoomListener(RoomEvent.Disconnected);
       if (this.roomEvents.get(RoomEvent.Disconnected)) {
-        this.room!.on(RoomEvent.Disconnected, (reason?: DisconnectReason) => {
+        this.registerRoomListener(RoomEvent.Disconnected, (reason?: DisconnectReason) => {
           this.updateEventList(
             RoomEvent.Disconnected,
             {},
@@ -294,9 +357,9 @@ export class OpenviduInstanceComponent {
       this.roomEvents.get(RoomEvent.ConnectionStateChanged) !==
         oldValues.get(RoomEvent.ConnectionStateChanged)
     ) {
-      this.room?.removeAllListeners(RoomEvent.ConnectionStateChanged);
+      this.unregisterRoomListener(RoomEvent.ConnectionStateChanged);
       if (this.roomEvents.get(RoomEvent.ConnectionStateChanged)) {
-        this.room!.on(
+        this.registerRoomListener(
           RoomEvent.ConnectionStateChanged,
           (state: ConnectionState) => {
             this.updateEventList(
@@ -311,12 +374,29 @@ export class OpenviduInstanceComponent {
 
     if (
       firstTime ||
+      this.roomEvents.get(RoomEvent.Moved) !==
+        oldValues.get(RoomEvent.Moved)
+    ) {
+      this.unregisterRoomListener(RoomEvent.Moved);
+      if (this.roomEvents.get(RoomEvent.Moved)) {
+        this.registerRoomListener(RoomEvent.Moved, (name: string) => {
+          this.updateEventList(
+            RoomEvent.Moved,
+            { name },
+            `moved to room: ${name}`
+          );
+        });
+      }
+    }
+
+    if (
+      firstTime ||
       this.roomEvents.get(RoomEvent.MediaDevicesChanged) !==
         oldValues.get(RoomEvent.MediaDevicesChanged)
     ) {
-      this.room?.removeAllListeners(RoomEvent.MediaDevicesChanged);
+      this.unregisterRoomListener(RoomEvent.MediaDevicesChanged);
       if (this.roomEvents.get(RoomEvent.MediaDevicesChanged)) {
-        this.room!.on(RoomEvent.MediaDevicesChanged, () => {
+        this.registerRoomListener(RoomEvent.MediaDevicesChanged, () => {
           this.updateEventList(RoomEvent.MediaDevicesChanged, {}, '');
         });
       }
@@ -327,9 +407,9 @@ export class OpenviduInstanceComponent {
       this.roomEvents.get(RoomEvent.ParticipantConnected) !==
         oldValues.get(RoomEvent.ParticipantConnected)
     ) {
-      this.room?.removeAllListeners(RoomEvent.ParticipantConnected);
+      this.unregisterRoomListener(RoomEvent.ParticipantConnected);
       if (this.roomEvents.get(RoomEvent.ParticipantConnected)) {
-        this.room!.on(
+        this.registerRoomListener(
           RoomEvent.ParticipantConnected,
           (participant: RemoteParticipant) => {
             this.updateEventList(
@@ -347,9 +427,9 @@ export class OpenviduInstanceComponent {
       this.roomEvents.get(RoomEvent.ParticipantActive) !==
         oldValues.get(RoomEvent.ParticipantActive)
     ) {
-      this.room?.removeAllListeners(RoomEvent.ParticipantActive);
+      this.unregisterRoomListener(RoomEvent.ParticipantActive);
       if (this.roomEvents.get(RoomEvent.ParticipantActive)) {
-        this.room!.on(
+        this.registerRoomListener(
           RoomEvent.ParticipantActive,
           (participant: Participant) => {
             this.updateEventList(
@@ -367,9 +447,9 @@ export class OpenviduInstanceComponent {
       this.roomEvents.get(RoomEvent.ParticipantDisconnected) !==
         oldValues.get(RoomEvent.ParticipantDisconnected)
     ) {
-      this.room?.removeAllListeners(RoomEvent.ParticipantDisconnected);
+      this.unregisterRoomListener(RoomEvent.ParticipantDisconnected);
       if (this.roomEvents.get(RoomEvent.ParticipantDisconnected)) {
-        this.room!.on(
+        this.registerRoomListener(
           RoomEvent.ParticipantDisconnected,
           (participant: RemoteParticipant) => {
             this.updateEventList(
@@ -388,9 +468,9 @@ export class OpenviduInstanceComponent {
       this.roomEvents.get(RoomEvent.TrackPublished) !==
         oldValues.get(RoomEvent.TrackPublished)
     ) {
-      this.room?.removeAllListeners(RoomEvent.TrackPublished);
+      this.unregisterRoomListener(RoomEvent.TrackPublished);
       if (this.roomEvents.get(RoomEvent.TrackPublished)) {
-        this.room!.on(
+        this.registerRoomListener(
           RoomEvent.TrackPublished,
           (
             publication: RemoteTrackPublication,
@@ -414,9 +494,9 @@ export class OpenviduInstanceComponent {
       this.roomEvents.get(RoomEvent.TrackSubscribed) !==
         oldValues.get(RoomEvent.TrackSubscribed)
     ) {
-      this.room?.removeAllListeners(RoomEvent.TrackSubscribed);
+      this.unregisterRoomListener(RoomEvent.TrackSubscribed);
       if (this.roomEvents.get(RoomEvent.TrackSubscribed)) {
-        this.room!.on(
+        this.registerRoomListener(
           RoomEvent.TrackSubscribed,
           (
             track: RemoteTrack,
@@ -453,9 +533,9 @@ export class OpenviduInstanceComponent {
       this.roomEvents.get(RoomEvent.TrackSubscriptionFailed) !==
         oldValues.get(RoomEvent.TrackSubscriptionFailed)
     ) {
-      this.room?.removeAllListeners(RoomEvent.TrackSubscriptionFailed);
+      this.unregisterRoomListener(RoomEvent.TrackSubscriptionFailed);
       if (this.roomEvents.get(RoomEvent.TrackSubscriptionFailed)) {
-        this.room!.on(
+        this.registerRoomListener(
           RoomEvent.TrackSubscriptionFailed,
           (
             trackSid: string,
@@ -479,9 +559,9 @@ export class OpenviduInstanceComponent {
       this.roomEvents.get(RoomEvent.TrackUnpublished) !==
         oldValues.get(RoomEvent.TrackUnpublished)
     ) {
-      this.room?.removeAllListeners(RoomEvent.TrackUnpublished);
+      this.unregisterRoomListener(RoomEvent.TrackUnpublished);
       if (this.roomEvents.get(RoomEvent.TrackUnpublished)) {
-        this.room!.on(
+        this.registerRoomListener(
           RoomEvent.TrackUnpublished,
           (
             publication: RemoteTrackPublication,
@@ -502,9 +582,9 @@ export class OpenviduInstanceComponent {
       this.roomEvents.get(RoomEvent.TrackUnsubscribed) !==
         oldValues.get(RoomEvent.TrackUnsubscribed)
     ) {
-      this.room?.removeAllListeners(RoomEvent.TrackUnsubscribed);
+      this.unregisterRoomListener(RoomEvent.TrackUnsubscribed);
       if (this.roomEvents.get(RoomEvent.TrackUnsubscribed)) {
-        this.room!.on(
+        this.registerRoomListener(
           RoomEvent.TrackUnsubscribed,
           (
             track: Track,
@@ -543,9 +623,9 @@ export class OpenviduInstanceComponent {
       this.roomEvents.get(RoomEvent.TrackMuted) !==
         oldValues.get(RoomEvent.TrackMuted)
     ) {
-      this.room?.removeAllListeners(RoomEvent.TrackMuted);
+      this.unregisterRoomListener(RoomEvent.TrackMuted);
       if (this.roomEvents.get(RoomEvent.TrackMuted)) {
-        this.room!.on(
+        this.registerRoomListener(
           RoomEvent.TrackMuted,
           (publication: TrackPublication, participant: Participant) => {
             this.updateEventList(
@@ -563,9 +643,9 @@ export class OpenviduInstanceComponent {
       this.roomEvents.get(RoomEvent.TrackUnmuted) !==
         oldValues.get(RoomEvent.TrackUnmuted)
     ) {
-      this.room?.removeAllListeners(RoomEvent.TrackUnmuted);
+      this.unregisterRoomListener(RoomEvent.TrackUnmuted);
       if (this.roomEvents.get(RoomEvent.TrackUnmuted)) {
-        this.room!.on(
+        this.registerRoomListener(
           RoomEvent.TrackUnmuted,
           (publication: TrackPublication, participant: Participant) => {
             this.updateEventList(
@@ -583,9 +663,9 @@ export class OpenviduInstanceComponent {
       this.roomEvents.get(RoomEvent.LocalTrackPublished) !==
         oldValues.get(RoomEvent.LocalTrackPublished)
     ) {
-      this.room?.removeAllListeners(RoomEvent.LocalTrackPublished);
+      this.unregisterRoomListener(RoomEvent.LocalTrackPublished);
       if (this.roomEvents.get(RoomEvent.LocalTrackPublished)) {
-        this.room!.on(
+        this.registerRoomListener(
           RoomEvent.LocalTrackPublished,
           (
             publication: LocalTrackPublication,
@@ -611,9 +691,9 @@ export class OpenviduInstanceComponent {
       this.roomEvents.get(RoomEvent.LocalTrackUnpublished) !==
         oldValues.get(RoomEvent.LocalTrackUnpublished)
     ) {
-      this.room?.removeAllListeners(RoomEvent.LocalTrackUnpublished);
+      this.unregisterRoomListener(RoomEvent.LocalTrackUnpublished);
       if (this.roomEvents.get(RoomEvent.LocalTrackUnpublished)) {
-        this.room!.on(
+        this.registerRoomListener(
           RoomEvent.LocalTrackUnpublished,
           (
             publication: LocalTrackPublication,
@@ -635,9 +715,9 @@ export class OpenviduInstanceComponent {
       this.roomEvents.get(RoomEvent.LocalAudioSilenceDetected) !==
         oldValues.get(RoomEvent.LocalAudioSilenceDetected)
     ) {
-      this.room?.removeAllListeners(RoomEvent.LocalAudioSilenceDetected);
+      this.unregisterRoomListener(RoomEvent.LocalAudioSilenceDetected);
       if (this.roomEvents.get(RoomEvent.LocalAudioSilenceDetected)) {
-        this.room!.on(
+        this.registerRoomListener(
           RoomEvent.LocalAudioSilenceDetected,
           (publication: LocalTrackPublication) => {
             this.updateEventList(
@@ -655,9 +735,9 @@ export class OpenviduInstanceComponent {
       this.roomEvents.get(RoomEvent.ParticipantMetadataChanged) !==
         oldValues.get(RoomEvent.ParticipantMetadataChanged)
     ) {
-      this.room?.removeAllListeners(RoomEvent.ParticipantMetadataChanged);
+      this.unregisterRoomListener(RoomEvent.ParticipantMetadataChanged);
       if (this.roomEvents.get(RoomEvent.ParticipantMetadataChanged)) {
-        this.room!.on(
+        this.registerRoomListener(
           RoomEvent.ParticipantMetadataChanged,
           (metadata: string | undefined, participant: Participant) => {
             this.updateEventList(
@@ -675,9 +755,9 @@ export class OpenviduInstanceComponent {
       this.roomEvents.get(RoomEvent.ParticipantNameChanged) !==
         oldValues.get(RoomEvent.ParticipantNameChanged)
     ) {
-      this.room?.removeAllListeners(RoomEvent.ParticipantNameChanged);
+      this.unregisterRoomListener(RoomEvent.ParticipantNameChanged);
       if (this.roomEvents.get(RoomEvent.ParticipantNameChanged)) {
-        this.room!.on(
+        this.registerRoomListener(
           RoomEvent.ParticipantNameChanged,
           (name: string, participant: Participant) => {
             this.updateEventList(
@@ -692,12 +772,35 @@ export class OpenviduInstanceComponent {
 
     if (
       firstTime ||
+      this.roomEvents.get(RoomEvent.ParticipantAttributesChanged) !==
+        oldValues.get(RoomEvent.ParticipantAttributesChanged)
+    ) {
+      this.unregisterRoomListener(RoomEvent.ParticipantAttributesChanged);
+      if (this.roomEvents.get(RoomEvent.ParticipantAttributesChanged)) {
+        this.registerRoomListener(
+          RoomEvent.ParticipantAttributesChanged,
+          (
+            changedAttributes: Record<string, string>,
+            participant: RemoteParticipant | LocalParticipant
+          ) => {
+            this.updateEventList(
+              RoomEvent.ParticipantAttributesChanged,
+              { changedAttributes, participant },
+              `${participant.identity} ${JSON.stringify(changedAttributes)}`
+            );
+          }
+        );
+      }
+    }
+
+    if (
+      firstTime ||
       this.roomEvents.get(RoomEvent.ParticipantPermissionsChanged) !==
         oldValues.get(RoomEvent.ParticipantPermissionsChanged)
     ) {
-      this.room?.removeAllListeners(RoomEvent.ParticipantPermissionsChanged);
+      this.unregisterRoomListener(RoomEvent.ParticipantPermissionsChanged);
       if (this.roomEvents.get(RoomEvent.ParticipantPermissionsChanged)) {
-        this.room!.on(
+        this.registerRoomListener(
           RoomEvent.ParticipantPermissionsChanged,
           (
             prevPermissions: ParticipantPermission | undefined,
@@ -722,9 +825,9 @@ export class OpenviduInstanceComponent {
       this.roomEvents.get(RoomEvent.ActiveSpeakersChanged) !==
         oldValues.get(RoomEvent.ActiveSpeakersChanged)
     ) {
-      this.room?.removeAllListeners(RoomEvent.ActiveSpeakersChanged);
+      this.unregisterRoomListener(RoomEvent.ActiveSpeakersChanged);
       if (this.roomEvents.get(RoomEvent.ActiveSpeakersChanged)) {
-        this.room!.on(
+        this.registerRoomListener(
           RoomEvent.ActiveSpeakersChanged,
           (speakers: Participant[]) => {
             this.updateEventList(
@@ -746,9 +849,9 @@ export class OpenviduInstanceComponent {
       this.roomEvents.get(RoomEvent.RoomMetadataChanged) !==
         oldValues.get(RoomEvent.RoomMetadataChanged)
     ) {
-      this.room?.removeAllListeners(RoomEvent.RoomMetadataChanged);
+      this.unregisterRoomListener(RoomEvent.RoomMetadataChanged);
       if (this.roomEvents.get(RoomEvent.RoomMetadataChanged)) {
-        this.room!.on(RoomEvent.RoomMetadataChanged, (metadata: string) => {
+        this.registerRoomListener(RoomEvent.RoomMetadataChanged, (metadata: string) => {
           this.updateEventList(
             RoomEvent.RoomMetadataChanged,
             { metadata },
@@ -763,9 +866,9 @@ export class OpenviduInstanceComponent {
       this.roomEvents.get(RoomEvent.DataReceived) !==
         oldValues.get(RoomEvent.DataReceived)
     ) {
-      this.room?.removeAllListeners(RoomEvent.DataReceived);
+      this.unregisterRoomListener(RoomEvent.DataReceived);
       if (this.roomEvents.get(RoomEvent.DataReceived)) {
-        this.room!.on(
+        this.registerRoomListener(
           RoomEvent.DataReceived,
           (
             payload: Uint8Array,
@@ -787,12 +890,32 @@ export class OpenviduInstanceComponent {
 
     if (
       firstTime ||
+      this.roomEvents.get(RoomEvent.SipDTMFReceived) !==
+        oldValues.get(RoomEvent.SipDTMFReceived)
+    ) {
+      this.unregisterRoomListener(RoomEvent.SipDTMFReceived);
+      if (this.roomEvents.get(RoomEvent.SipDTMFReceived)) {
+        this.registerRoomListener(
+          RoomEvent.SipDTMFReceived,
+          (dtmf: any, participant?: RemoteParticipant) => {
+            this.updateEventList(
+              RoomEvent.SipDTMFReceived,
+              { dtmf, participant },
+              `${participant?.identity ?? 'unknown'} ${JSON.stringify(dtmf)}`
+            );
+          }
+        );
+      }
+    }
+
+    if (
+      firstTime ||
       this.roomEvents.get(RoomEvent.ConnectionQualityChanged) !==
         oldValues.get(RoomEvent.ConnectionQualityChanged)
     ) {
-      this.room?.removeAllListeners(RoomEvent.ConnectionQualityChanged);
+      this.unregisterRoomListener(RoomEvent.ConnectionQualityChanged);
       if (this.roomEvents.get(RoomEvent.ConnectionQualityChanged)) {
-        this.room!.on(
+        this.registerRoomListener(
           RoomEvent.ConnectionQualityChanged,
           (quality: ConnectionQuality, participant: Participant) => {
             this.updateEventList(
@@ -810,9 +933,9 @@ export class OpenviduInstanceComponent {
       this.roomEvents.get(RoomEvent.MediaDevicesError) !==
         oldValues.get(RoomEvent.MediaDevicesError)
     ) {
-      this.room?.removeAllListeners(RoomEvent.MediaDevicesError);
+      this.unregisterRoomListener(RoomEvent.MediaDevicesError);
       if (this.roomEvents.get(RoomEvent.MediaDevicesError)) {
-        this.room!.on(RoomEvent.MediaDevicesError, (error: Error) => {
+        this.registerRoomListener(RoomEvent.MediaDevicesError, (error: Error) => {
           this.updateEventList(
             RoomEvent.MediaDevicesError,
             {
@@ -830,9 +953,9 @@ export class OpenviduInstanceComponent {
       this.roomEvents.get(RoomEvent.TrackStreamStateChanged) !==
         oldValues.get(RoomEvent.TrackStreamStateChanged)
     ) {
-      this.room?.removeAllListeners(RoomEvent.TrackStreamStateChanged);
+      this.unregisterRoomListener(RoomEvent.TrackStreamStateChanged);
       if (this.roomEvents.get(RoomEvent.TrackStreamStateChanged)) {
-        this.room!.on(
+        this.registerRoomListener(
           RoomEvent.TrackStreamStateChanged,
           (
             publication: RemoteTrackPublication,
@@ -854,11 +977,11 @@ export class OpenviduInstanceComponent {
       this.roomEvents.get(RoomEvent.TrackSubscriptionPermissionChanged) !==
         oldValues.get(RoomEvent.TrackSubscriptionPermissionChanged)
     ) {
-      this.room?.removeAllListeners(
+      this.unregisterRoomListener(
         RoomEvent.TrackSubscriptionPermissionChanged
       );
       if (this.roomEvents.get(RoomEvent.TrackSubscriptionPermissionChanged)) {
-        this.room!.on(
+        this.registerRoomListener(
           RoomEvent.TrackSubscriptionPermissionChanged,
           (
             publication: RemoteTrackPublication,
@@ -880,9 +1003,9 @@ export class OpenviduInstanceComponent {
       this.roomEvents.get(RoomEvent.TrackSubscriptionStatusChanged) !==
         oldValues.get(RoomEvent.TrackSubscriptionStatusChanged)
     ) {
-      this.room?.removeAllListeners(RoomEvent.TrackSubscriptionStatusChanged);
+      this.unregisterRoomListener(RoomEvent.TrackSubscriptionStatusChanged);
       if (this.roomEvents.get(RoomEvent.TrackSubscriptionStatusChanged)) {
-        this.room!.on(
+        this.registerRoomListener(
           RoomEvent.TrackSubscriptionStatusChanged,
           (
             publication: RemoteTrackPublication,
@@ -904,9 +1027,9 @@ export class OpenviduInstanceComponent {
       this.roomEvents.get(RoomEvent.AudioPlaybackStatusChanged) !==
         oldValues.get(RoomEvent.AudioPlaybackStatusChanged)
     ) {
-      this.room?.removeAllListeners(RoomEvent.AudioPlaybackStatusChanged);
+      this.unregisterRoomListener(RoomEvent.AudioPlaybackStatusChanged);
       if (this.roomEvents.get(RoomEvent.AudioPlaybackStatusChanged)) {
-        this.room!.on(
+        this.registerRoomListener(
           RoomEvent.AudioPlaybackStatusChanged,
           (playing: boolean) => {
             this.updateEventList(
@@ -921,12 +1044,32 @@ export class OpenviduInstanceComponent {
 
     if (
       firstTime ||
+      this.roomEvents.get(RoomEvent.VideoPlaybackStatusChanged) !==
+        oldValues.get(RoomEvent.VideoPlaybackStatusChanged)
+    ) {
+      this.unregisterRoomListener(RoomEvent.VideoPlaybackStatusChanged);
+      if (this.roomEvents.get(RoomEvent.VideoPlaybackStatusChanged)) {
+        this.registerRoomListener(
+          RoomEvent.VideoPlaybackStatusChanged,
+          (playing: boolean) => {
+            this.updateEventList(
+              RoomEvent.VideoPlaybackStatusChanged,
+              { playing },
+              `canPlaybackVideo: ${playing}`
+            );
+          }
+        );
+      }
+    }
+
+    if (
+      firstTime ||
       this.roomEvents.get(RoomEvent.SignalConnected) !==
         oldValues.get(RoomEvent.SignalConnected)
     ) {
-      this.room?.removeAllListeners(RoomEvent.SignalConnected);
+      this.unregisterRoomListener(RoomEvent.SignalConnected);
       if (this.roomEvents.get(RoomEvent.SignalConnected)) {
-        this.room!.on(RoomEvent.SignalConnected, () => {
+        this.registerRoomListener(RoomEvent.SignalConnected, () => {
           this.updateEventList(RoomEvent.SignalConnected, {}, '');
         });
       }
@@ -937,9 +1080,9 @@ export class OpenviduInstanceComponent {
       this.roomEvents.get(RoomEvent.RecordingStatusChanged) !==
         oldValues.get(RoomEvent.RecordingStatusChanged)
     ) {
-      this.room?.removeAllListeners(RoomEvent.RecordingStatusChanged);
+      this.unregisterRoomListener(RoomEvent.RecordingStatusChanged);
       if (this.roomEvents.get(RoomEvent.RecordingStatusChanged)) {
-        this.room!.on(
+        this.registerRoomListener(
           RoomEvent.RecordingStatusChanged,
           (recording: boolean) => {
             this.updateEventList(
@@ -957,11 +1100,11 @@ export class OpenviduInstanceComponent {
       this.roomEvents.get(RoomEvent.ParticipantEncryptionStatusChanged) !==
         oldValues.get(RoomEvent.ParticipantEncryptionStatusChanged)
     ) {
-      this.room?.removeAllListeners(
+      this.unregisterRoomListener(
         RoomEvent.ParticipantEncryptionStatusChanged
       );
       if (this.roomEvents.get(RoomEvent.ParticipantEncryptionStatusChanged)) {
-        this.room!.on(
+        this.registerRoomListener(
           RoomEvent.ParticipantEncryptionStatusChanged,
           (encrypted: boolean, participant?: Participant) => {
             this.updateEventList(
@@ -979,9 +1122,9 @@ export class OpenviduInstanceComponent {
       this.roomEvents.get(RoomEvent.EncryptionError) !==
         oldValues.get(RoomEvent.EncryptionError)
     ) {
-      this.room?.removeAllListeners(RoomEvent.EncryptionError);
+      this.unregisterRoomListener(RoomEvent.EncryptionError);
       if (this.roomEvents.get(RoomEvent.EncryptionError)) {
-        this.room!.on(RoomEvent.EncryptionError, (error: Error) => {
+        this.registerRoomListener(RoomEvent.EncryptionError, (error: Error) => {
           this.updateEventList(
             RoomEvent.EncryptionError,
             { error: error.message },
@@ -996,9 +1139,9 @@ export class OpenviduInstanceComponent {
       this.roomEvents.get(RoomEvent.DCBufferStatusChanged) !==
         oldValues.get(RoomEvent.DCBufferStatusChanged)
     ) {
-      this.room?.removeAllListeners(RoomEvent.DCBufferStatusChanged);
+      this.unregisterRoomListener(RoomEvent.DCBufferStatusChanged);
       if (this.roomEvents.get(RoomEvent.DCBufferStatusChanged)) {
-        this.room!.on(
+        this.registerRoomListener(
           RoomEvent.DCBufferStatusChanged,
           (isLow: boolean, kind: any) => {
             this.updateEventList(
@@ -1016,9 +1159,9 @@ export class OpenviduInstanceComponent {
       this.roomEvents.get(RoomEvent.ActiveDeviceChanged) !==
         oldValues.get(RoomEvent.ActiveDeviceChanged)
     ) {
-      this.room?.removeAllListeners(RoomEvent.ActiveDeviceChanged);
+      this.unregisterRoomListener(RoomEvent.ActiveDeviceChanged);
       if (this.roomEvents.get(RoomEvent.ActiveDeviceChanged)) {
-        this.room!.on(
+        this.registerRoomListener(
           RoomEvent.ActiveDeviceChanged,
           (kind: MediaDeviceKind, deviceId: string) => {
             this.updateEventList(
@@ -1036,9 +1179,9 @@ export class OpenviduInstanceComponent {
       this.roomEvents.get(RoomEvent.LocalTrackSubscribed) !==
         oldValues.get(RoomEvent.LocalTrackSubscribed)
     ) {
-      this.room?.removeAllListeners(RoomEvent.LocalTrackSubscribed);
+      this.unregisterRoomListener(RoomEvent.LocalTrackSubscribed);
       if (this.roomEvents.get(RoomEvent.LocalTrackSubscribed)) {
-        this.room!.on(
+        this.registerRoomListener(
           RoomEvent.LocalTrackSubscribed,
           (
             publication: LocalTrackPublication,
@@ -1048,6 +1191,46 @@ export class OpenviduInstanceComponent {
               RoomEvent.LocalTrackSubscribed,
               { publication, participant },
               `${publication.source}`
+            );
+          }
+        );
+      }
+    }
+
+    if (
+      firstTime ||
+      this.roomEvents.get(RoomEvent.ChatMessage) !==
+        oldValues.get(RoomEvent.ChatMessage)
+    ) {
+      this.unregisterRoomListener(RoomEvent.ChatMessage);
+      if (this.roomEvents.get(RoomEvent.ChatMessage)) {
+        this.registerRoomListener(
+          RoomEvent.ChatMessage,
+          (message: any, participant?: RemoteParticipant | LocalParticipant) => {
+            this.updateEventList(
+              RoomEvent.ChatMessage,
+              { message, participant },
+              `${participant?.identity ?? 'unknown'}: ${message.message}`
+            );
+          }
+        );
+      }
+    }
+
+    if (
+      firstTime ||
+      this.roomEvents.get(RoomEvent.MetricsReceived) !==
+        oldValues.get(RoomEvent.MetricsReceived)
+    ) {
+      this.unregisterRoomListener(RoomEvent.MetricsReceived);
+      if (this.roomEvents.get(RoomEvent.MetricsReceived)) {
+        this.registerRoomListener(
+          RoomEvent.MetricsReceived,
+          (metrics: any, participant?: Participant) => {
+            this.updateEventList(
+              RoomEvent.MetricsReceived,
+              { metrics, participant },
+              `${participant?.identity ?? 'unknown'}`
             );
           }
         );
@@ -1087,9 +1270,9 @@ export class OpenviduInstanceComponent {
       this.roomEvents.get(RoomEvent.DataTrackPublished) !==
         oldValues.get(RoomEvent.DataTrackPublished)
     ) {
-      this.room?.removeAllListeners(RoomEvent.DataTrackPublished);
+      this.unregisterRoomListener(RoomEvent.DataTrackPublished);
       if (this.roomEvents.get(RoomEvent.DataTrackPublished)) {
-        this.room!.on(
+        this.registerRoomListener(
           RoomEvent.DataTrackPublished,
           (track: RemoteDataTrack) => {
             this.updateEventList(
@@ -1107,9 +1290,9 @@ export class OpenviduInstanceComponent {
       this.roomEvents.get(RoomEvent.DataTrackUnpublished) !==
         oldValues.get(RoomEvent.DataTrackUnpublished)
     ) {
-      this.room?.removeAllListeners(RoomEvent.DataTrackUnpublished);
+      this.unregisterRoomListener(RoomEvent.DataTrackUnpublished);
       if (this.roomEvents.get(RoomEvent.DataTrackUnpublished)) {
-        this.room!.on(
+        this.registerRoomListener(
           RoomEvent.DataTrackUnpublished,
           (sid: string) => {
             this.updateEventList(
@@ -1127,9 +1310,9 @@ export class OpenviduInstanceComponent {
       this.roomEvents.get(RoomEvent.LocalDataTrackPublished) !==
         oldValues.get(RoomEvent.LocalDataTrackPublished)
     ) {
-      this.room?.removeAllListeners(RoomEvent.LocalDataTrackPublished);
+      this.unregisterRoomListener(RoomEvent.LocalDataTrackPublished);
       if (this.roomEvents.get(RoomEvent.LocalDataTrackPublished)) {
-        this.room!.on(
+        this.registerRoomListener(
           RoomEvent.LocalDataTrackPublished,
           (track: LocalDataTrack) => {
             this.updateEventList(
@@ -1147,9 +1330,9 @@ export class OpenviduInstanceComponent {
       this.roomEvents.get(RoomEvent.LocalDataTrackUnpublished) !==
         oldValues.get(RoomEvent.LocalDataTrackUnpublished)
     ) {
-      this.room?.removeAllListeners(RoomEvent.LocalDataTrackUnpublished);
+      this.unregisterRoomListener(RoomEvent.LocalDataTrackUnpublished);
       if (this.roomEvents.get(RoomEvent.LocalDataTrackUnpublished)) {
-        this.room!.on(
+        this.registerRoomListener(
           RoomEvent.LocalDataTrackUnpublished,
           (sid: string) => {
             this.updateEventList(
@@ -1181,12 +1364,90 @@ export class OpenviduInstanceComponent {
 
   async disconnectRoom() {
     if (this.room) {
+      // Clean up early listeners that were never handed off
+      if (this.earlyParticipantConnectedListener) {
+        this.room.removeListener(
+          RoomEvent.ParticipantConnected,
+          this.earlyParticipantConnectedListener as any
+        );
+        this.earlyParticipantConnectedListener = undefined;
+      }
+      for (const [key, listeners] of this.earlyParticipantListeners) {
+        const participant =
+          this.room.localParticipant.sid === key || this.room.localParticipant.identity === key
+            ? this.room.localParticipant
+            : this.room.remoteParticipants.get(key);
+        if (participant) {
+          removeAllManagedListeners(participant, listeners);
+        }
+      }
+      this.earlyParticipantEvents.clear();
+      this.earlyParticipantListeners.clear();
+      for (const [, listeners] of this.earlyTrackListeners) {
+        // Track listeners are cleaned up by disconnect, but clear maps
+        listeners.clear();
+      }
+      this.earlyTrackEvents.clear();
+      this.earlyTrackListeners.clear();
+
       await this.room.disconnect();
       delete this.room;
       delete this.localTracks.audioTrack;
       delete this.localTracks.videoTrack;
       this.remoteTracks.clear();
     }
+  }
+
+  private registerEarlyParticipantListeners(participant: Participant) {
+    const key = participant.sid || participant.identity;
+    const buffer: TestAppEvent[] = [];
+    this.earlyParticipantEvents.set(key, buffer);
+
+    const listeners = registerParticipantEventListeners(
+      participant,
+      (eventType, eventContent, eventDescription) => {
+        if (this.participantEvents.size > 0 && !this.participantEvents.get(eventType)) return;
+        const event: TestAppEvent = {
+          eventType,
+          eventCategory: 'ParticipantEvent',
+          eventContent,
+          eventDescription,
+        };
+        buffer.push(event);
+        this.testFeedService.pushNewEvent({ user: this.index, event });
+
+        // When a track becomes available during early registration, register early track listeners too
+        if (eventType === ParticipantEvent.TrackSubscribed && eventContent.track) {
+          this.registerEarlyTrackListeners(eventContent.track);
+        } else if (eventType === ParticipantEvent.LocalTrackPublished && eventContent.publication?.track) {
+          this.registerEarlyTrackListeners(eventContent.publication.track);
+        }
+      },
+      this.decoder
+    );
+    this.earlyParticipantListeners.set(key, listeners);
+  }
+
+  private registerEarlyTrackListeners(track: Track) {
+    const key = track.sid || track.mediaStreamID;
+    const buffer: TestAppEvent[] = [];
+    this.earlyTrackEvents.set(key, buffer);
+
+    const listeners = registerTrackEventListeners(
+      track,
+      (eventType, eventContent, eventDescription) => {
+        if (this.trackEvents.size > 0 && !this.trackEvents.get(eventType)) return;
+        const event: TestAppEvent = {
+          eventType,
+          eventCategory: 'TrackEvent',
+          eventContent,
+          eventDescription,
+        };
+        buffer.push(event);
+        this.testFeedService.pushNewEvent({ user: this.index, event });
+      }
+    );
+    this.earlyTrackListeners.set(key, listeners);
   }
 
   async setCameraEnabled() {
@@ -1253,15 +1514,18 @@ export class OpenviduInstanceComponent {
     });
   }
 
-  openRoomEventsDialog() {
-    const oldValues: Map<string, boolean> = new Map(
+  openAllEventsDialog() {
+    const oldRoomValues: Map<string, boolean> = new Map(
       JSON.parse(JSON.stringify([...this.roomEvents]))
     );
-
     const dialogRef = this.dialog.open(EventsDialogComponent, {
       data: {
-        eventCollection: this.roomEvents,
-        target: 'Session',
+        eventGroups: [
+          { label: 'RoomEvent', eventCollection: this.roomEvents },
+          { label: 'ParticipantEvent', eventCollection: this.participantEvents },
+          { label: 'TrackEvent', eventCollection: this.trackEvents },
+        ],
+        target: 'All',
       },
       width: '800px',
       autoFocus: false,
@@ -1272,9 +1536,9 @@ export class OpenviduInstanceComponent {
       if (
         !!this.room &&
         JSON.stringify(Array.from(this.roomEvents.entries())) !==
-          JSON.stringify(Array.from(oldValues.entries()))
+          JSON.stringify(Array.from(oldRoomValues.entries()))
       ) {
-        this.setupRoomEventListeners(oldValues, false);
+        this.setupRoomEventListeners(oldRoomValues, false);
       }
     });
   }

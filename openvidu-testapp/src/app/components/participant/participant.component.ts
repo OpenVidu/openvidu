@@ -6,9 +6,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatExpansionModule } from '@angular/material/expansion';
 import {
   AudioCaptureOptions,
-  ConnectionQuality,
   CreateLocalTracksOptions,
-  DataPacket_Kind,
   LocalAudioTrack,
   LocalDataTrack,
   LocalParticipant,
@@ -23,7 +21,6 @@ import {
   Room,
   RoomEvent,
   ScreenShareCaptureOptions,
-  SubscriptionError,
   Track,
   TrackEvent,
   TrackPublication,
@@ -33,7 +30,6 @@ import {
   createLocalScreenTracks,
   createLocalVideoTrack,
 } from 'livekit-client';
-import { ParticipantPermission } from 'livekit-server-sdk';
 import {
   TestAppEvent,
   TestFeedService,
@@ -42,7 +38,10 @@ import { OptionsDialogComponent } from '../dialogs/options-dialog/options-dialog
 import { VideoTrackComponent } from '../video-track/video-track.component';
 import { AudioTrackComponent } from '../audio-track/audio-track.component';
 import { DataTrackComponent } from '../data-track/data-track.component';
-import { ParticipantEventCallbacks } from 'node_modules/livekit-client/dist/src/room/participant/Participant';
+import {
+  registerParticipantEventListeners,
+  removeAllManagedListeners,
+} from 'src/app/utils/event-listener-utils';
 
 @Component({
     selector: 'app-participant',
@@ -59,6 +58,24 @@ export class ParticipantComponent {
 
   @Input()
   index: number;
+
+  @Input()
+  participantEvents: Map<string, boolean> = new Map();
+
+  @Input()
+  trackEvents: Map<string, boolean> = new Map();
+
+  @Input()
+  earlyParticipantEvents: Map<string, TestAppEvent[]> = new Map();
+
+  @Input()
+  earlyParticipantListeners: Map<string, Map<string, (...args: any[]) => void>> = new Map();
+
+  @Input()
+  earlyTrackEvents: Map<string, TestAppEvent[]> = new Map();
+
+  @Input()
+  earlyTrackListeners: Map<string, Map<string, (...args: any[]) => void>> = new Map();
 
   @Output()
   sendReliableDataToOneParticipant = new EventEmitter<string>();
@@ -80,6 +97,8 @@ export class ParticipantComponent {
   trackPublishOptions?: TrackPublishOptions;
 
   private decoder = new TextDecoder();
+  private participantEventListeners: Map<string, (...args: any[]) => void> = new Map();
+  private roomListenersFromParticipant: Map<string, (...args: any[]) => void> = new Map();
 
   private dialog = inject(MatDialog);
 
@@ -89,6 +108,19 @@ export class ParticipantComponent {
   ) {}
 
   ngOnInit() {
+    // Drain early participant events buffered before this component existed
+    const key = this.participant.sid || this.participant.identity;
+    const earlyEvents = this.earlyParticipantEvents?.get(key);
+    if (earlyEvents) {
+      this.events.push(...earlyEvents);
+      this.earlyParticipantEvents.delete(key);
+    }
+    // Remove early listeners and replace with component-owned ones
+    const earlyListeners = this.earlyParticipantListeners?.get(key);
+    if (earlyListeners) {
+      removeAllManagedListeners(this.participant, earlyListeners);
+      this.earlyParticipantListeners.delete(key);
+    }
     this.setupParticipantEventListeners();
     this.localParticipant = this.participant.isLocal
       ? (this.participant as LocalParticipant)
@@ -106,7 +138,11 @@ export class ParticipantComponent {
   }
 
   onTrackEvent(event: TestAppEvent) {
+    if (this.trackEvents.size > 0 && !this.trackEvents.get(event.eventType)) {
+      return;
+    }
     this.events.push(event);
+    this.testFeedService.pushNewEvent({ user: this.index, event });
     this.cdr.detectChanges();
   }
 
@@ -246,251 +282,16 @@ export class ParticipantComponent {
    * [ParticipantEventCallbacks]
    */
   setupParticipantEventListeners() {
-    // This is a link to the complete list of Participant events
-    let callbacks: ParticipantEventCallbacks;
-    let events: ParticipantEvent;
+    // Remove any previous listeners
+    removeAllManagedListeners(this.participant, this.participantEventListeners);
 
-    this.participant
-
-      .on(
-        ParticipantEvent.TrackPublished,
-        (publication: RemoteTrackPublication) => {
-          this.updateEventList(
-            ParticipantEvent.TrackPublished,
-            'ParticipantEvent',
-            { publication },
-            publication.source
-          );
-        }
-      )
-
-      .on(
-        ParticipantEvent.TrackSubscribed,
-        (track: RemoteTrack, publication: RemoteTrackPublication) => {
-          this.updateEventList(
-            ParticipantEvent.TrackSubscribed,
-            'ParticipantEvent',
-            { track, publication },
-            publication.source
-          );
-        }
-      )
-
-      .on(
-        ParticipantEvent.TrackSubscriptionFailed,
-        (trackSid: string, reason?: SubscriptionError) => {
-          this.updateEventList(
-            ParticipantEvent.TrackSubscriptionFailed,
-            'ParticipantEvent',
-            { trackSid, reason },
-            trackSid +
-              ' . Reason: ' +
-              (reason ? SubscriptionError[reason] : reason)
-          );
-        }
-      )
-
-      .on(
-        ParticipantEvent.TrackUnpublished,
-        (publication: RemoteTrackPublication) => {
-          this.updateEventList(
-            ParticipantEvent.TrackUnpublished,
-            'ParticipantEvent',
-            { publication },
-            publication.source
-          );
-        }
-      )
-
-      .on(
-        ParticipantEvent.TrackUnsubscribed,
-        (track: RemoteTrack, publication: RemoteTrackPublication) => {
-          this.updateEventList(
-            ParticipantEvent.TrackUnsubscribed,
-            'ParticipantEvent',
-            { track, publication },
-            track.source
-          );
-        }
-      )
-
-      .on(ParticipantEvent.TrackMuted, (publication: TrackPublication) => {
-        this.updateEventList(
-          ParticipantEvent.TrackMuted,
-          'ParticipantEvent',
-          { publication },
-          publication.source
-        );
-      })
-
-      .on(ParticipantEvent.TrackUnmuted, (publication: TrackPublication) => {
-        this.updateEventList(
-          ParticipantEvent.TrackUnmuted,
-          'ParticipantEvent',
-          { publication },
-          publication.source
-        );
-      })
-
-      .on(
-        ParticipantEvent.LocalTrackPublished,
-        (publication: LocalTrackPublication) => {
-          this.updateEventList(
-            ParticipantEvent.LocalTrackPublished,
-            'ParticipantEvent',
-            { publication },
-            publication.source
-          );
-        }
-      )
-
-      .on(
-        ParticipantEvent.LocalTrackUnpublished,
-        (publication: LocalTrackPublication) => {
-          this.updateEventList(
-            ParticipantEvent.LocalTrackUnpublished,
-            'ParticipantEvent',
-            { publication },
-            publication.source
-          );
-        }
-      )
-
-      .on(
-        ParticipantEvent.ParticipantMetadataChanged,
-        (prevMetadata: string | undefined) => {
-          this.updateEventList(
-            ParticipantEvent.ParticipantMetadataChanged,
-            'ParticipantEvent',
-            { prevMetadata },
-            `previous: ${prevMetadata}, new: ${this.participant.metadata}`
-          );
-        }
-      )
-
-      .on(ParticipantEvent.ParticipantNameChanged, (name: string) => {
-        this.updateEventList(
-          ParticipantEvent.ParticipantNameChanged,
-          'ParticipantEvent',
-          { name },
-          `${name}`
-        );
-      })
-
-      .on(
-        ParticipantEvent.DataReceived,
-        (payload: Uint8Array, kind: DataPacket_Kind) => {
-          let decodedPayload = this.decoder.decode(payload);
-          decodedPayload += ` (kind: ${DataPacket_Kind[kind]})`;
-          this.updateEventList(
-            ParticipantEvent.DataReceived,
-            'ParticipantEvent',
-            { payload: decodedPayload, kind },
-            decodedPayload
-          );
-        }
-      )
-
-      .on(ParticipantEvent.IsSpeakingChanged, (speaking: boolean) => {
-        this.updateEventList(
-          ParticipantEvent.IsSpeakingChanged,
-          'ParticipantEvent',
-          { speaking },
-          `${speaking}`
-        );
-      })
-
-      .on(
-        ParticipantEvent.ConnectionQualityChanged,
-        (connectionQuality: ConnectionQuality) => {
-          this.updateEventList(
-            ParticipantEvent.ConnectionQualityChanged,
-            'ParticipantEvent',
-            { connectionQuality },
-            `${connectionQuality}`
-          );
-        }
-      )
-
-      .on(
-        ParticipantEvent.TrackStreamStateChanged,
-        (
-          publication: RemoteTrackPublication,
-          streamState: Track.StreamState
-        ) => {
-          this.updateEventList(
-            ParticipantEvent.TrackStreamStateChanged,
-            'ParticipantEvent',
-            { publication, streamState },
-            `${publication.source}: ${streamState}`
-          );
-        }
-      )
-
-      .on(
-        ParticipantEvent.TrackSubscriptionPermissionChanged,
-        (
-          publication: RemoteTrackPublication,
-          status: TrackPublication.PermissionStatus
-        ) => {
-          this.updateEventList(
-            ParticipantEvent.TrackSubscriptionPermissionChanged,
-            'ParticipantEvent',
-            { publication, status },
-            `${publication.source}: ${status}`
-          );
-        }
-      )
-
-      .on(ParticipantEvent.MediaDevicesError, (error: Error) => {
-        this.updateEventList(
-          ParticipantEvent.MediaDevicesError,
-          'ParticipantEvent',
-          { error },
-          `${error.message}`
-        );
-      })
-
-      .on(
-        ParticipantEvent.ParticipantPermissionsChanged,
-        (prevPermissions?: ParticipantPermission) => {
-          this.updateEventList(
-            ParticipantEvent.ParticipantPermissionsChanged,
-            'ParticipantEvent',
-            { prevPermissions },
-            `previous: ${prevPermissions}, new: ${JSON.stringify(
-              this.participant.permissions
-            )}`
-          );
-        }
-      )
-
-      .on(
-        ParticipantEvent.TrackSubscriptionStatusChanged,
-        (
-          publication: RemoteTrackPublication,
-          status: TrackPublication.SubscriptionStatus
-        ) => {
-          this.updateEventList(
-            ParticipantEvent.TrackSubscriptionStatusChanged,
-            'ParticipantEvent',
-            { publication, status },
-            `${publication.source}: ${status}`
-          );
-        }
-      )
-
-      .on(
-        ParticipantEvent.LocalTrackSubscribed,
-        (trackPublication: LocalTrackPublication) => {
-          this.updateEventList(
-            ParticipantEvent.LocalTrackSubscribed,
-            'ParticipantEvent',
-            { trackPublication },
-            trackPublication.source
-          );
-        }
-      );
+    this.participantEventListeners = registerParticipantEventListeners(
+      this.participant,
+      (eventType, eventContent, eventDescription) => {
+        this.updateEventList(eventType, 'ParticipantEvent', eventContent, eventDescription);
+      },
+      this.decoder
+    );
   }
 
   updateEventList(
@@ -499,6 +300,9 @@ export class ParticipantComponent {
     eventContent: any,
     eventDescription: string
   ) {
+    if (this.participantEvents.size > 0 && !this.participantEvents.get(eventType)) {
+      return;
+    }
     const event: TestAppEvent = {
       eventType,
       eventCategory,
@@ -518,23 +322,22 @@ export class ParticipantComponent {
   }
 
   private setupDataTrackListeners() {
-    this.room.on(
-      RoomEvent.DataTrackPublished,
-      (track: RemoteDataTrack) => {
-        if (track.publisherIdentity === this.participant.identity) {
-          this.remoteDataTracks.push(track);
-          this.cdr.detectChanges();
-        }
-      }
-    );
-    this.room.on(
-      RoomEvent.DataTrackUnpublished,
-      (sid: string) => {
-        this.remoteDataTracks = this.remoteDataTracks.filter(
-          (t) => t.info.sid !== sid
-        );
+    const publishedListener = (track: RemoteDataTrack) => {
+      if (track.publisherIdentity === this.participant.identity) {
+        this.remoteDataTracks.push(track);
         this.cdr.detectChanges();
       }
-    );
+    };
+    this.room.addListener(RoomEvent.DataTrackPublished, publishedListener);
+    this.roomListenersFromParticipant.set(RoomEvent.DataTrackPublished, publishedListener as any);
+
+    const unpublishedListener = (sid: string) => {
+      this.remoteDataTracks = this.remoteDataTracks.filter(
+        (t) => t.info.sid !== sid
+      );
+      this.cdr.detectChanges();
+    };
+    this.room.addListener(RoomEvent.DataTrackUnpublished, unpublishedListener);
+    this.roomListenersFromParticipant.set(RoomEvent.DataTrackUnpublished, unpublishedListener as any);
   }
 }

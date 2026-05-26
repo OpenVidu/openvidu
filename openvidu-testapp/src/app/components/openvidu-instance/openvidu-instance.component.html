@@ -27,7 +27,7 @@
               <mat-icon class="mat-icon-custom-ic" aria-label="Room API button">cloud_circle</mat-icon>
             </button>
             <button mat-icon-button title="Room events" [id]="'room-events-btn-' + index"
-              class="mat-icon-custom" (click)="openRoomEventsDialog()">
+              class="mat-icon-custom" (click)="openAllEventsDialog()">
               <mat-icon class="mat-icon-custom-ic"
               aria-label="Room events button">notifications</mat-icon>
             </button>
@@ -89,10 +89,15 @@
           </div>
           <div>
             <app-participant class="local-participant" [participant]="room.localParticipant" [room]="room"
-            [index]="index"></app-participant>
+            [index]="index" [participantEvents]="participantEvents" [trackEvents]="trackEvents"
+            [earlyParticipantEvents]="earlyParticipantEvents" [earlyParticipantListeners]="earlyParticipantListeners"
+            [earlyTrackEvents]="earlyTrackEvents" [earlyTrackListeners]="earlyTrackListeners"></app-participant>
             @for (participant of room.remoteParticipants | keyvalue; track participant) {
               <app-participant class="remote-participant"
               [participant]="participant.value" [room]="room" [index]="index"
+              [participantEvents]="participantEvents" [trackEvents]="trackEvents"
+              [earlyParticipantEvents]="earlyParticipantEvents" [earlyParticipantListeners]="earlyParticipantListeners"
+              [earlyTrackEvents]="earlyTrackEvents" [earlyTrackListeners]="earlyTrackListeners"
               (sendReliableDataToOneParticipant)="sendDataReliable($event)"
               (sendLossyDataToOneParticipant)="sendDataLossy($event)"></app-participant>
             }
