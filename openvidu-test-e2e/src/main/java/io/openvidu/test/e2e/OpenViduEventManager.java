@@ -20,10 +20,10 @@ package io.openvidu.test.e2e;
 import static org.openqa.selenium.OutputType.BASE64;
 
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Queue;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.CountDownLatch;
@@ -162,7 +162,7 @@ public class OpenViduEventManager {
 	}
 
 	public void on(int numberOfUser, String eventType, String eventCategory, Consumer<JsonObject> callback) {
-		this.eventCallbacksByUser.putIfAbsent(numberOfUser, new HashMap<>());
+		this.eventCallbacksByUser.putIfAbsent(numberOfUser, new ConcurrentHashMap<>());
 		this.eventCallbacksByUser.get(numberOfUser).putIfAbsent(eventType + "-" + eventCategory, new HashSet<>());
 		this.eventCallbacksByUser.get(numberOfUser).get(eventType + "-" + eventCategory).add(callback);
 	}
@@ -287,7 +287,7 @@ public class OpenViduEventManager {
 	}
 
 	public AtomicInteger getNumEvents(int numberOfUser, String eventTypeAndCategory) {
-		this.eventNumbersByUser.putIfAbsent(numberOfUser, new HashMap<>());
+		this.eventNumbersByUser.putIfAbsent(numberOfUser, new ConcurrentHashMap<>());
 		return this.eventNumbersByUser.get(numberOfUser).computeIfAbsent(eventTypeAndCategory,
 				k -> new AtomicInteger(0));
 	}
@@ -306,7 +306,7 @@ public class OpenViduEventManager {
 			for (int i = 0; i < getNumEvents(numberOfUser, eventTypeAndCategory).get(); i++) {
 				cd.countDown();
 			}
-			this.eventCountdownsByUser.putIfAbsent(numberOfUser, new HashMap<>());
+			this.eventCountdownsByUser.putIfAbsent(numberOfUser, new ConcurrentHashMap<>());
 			this.eventCountdownsByUser.get(numberOfUser).put(eventTypeAndCategory, cd);
 		});
 	}
@@ -368,7 +368,7 @@ public class OpenViduEventManager {
 
 			executeInNamedLock(numberOfUser + eventTypeAndCategory, () -> {
 				getNumEvents(numberOfUser, eventTypeAndCategory).incrementAndGet();
-				this.eventCountdownsByUser.putIfAbsent(numberOfUser, new HashMap<>());
+				this.eventCountdownsByUser.putIfAbsent(numberOfUser, new ConcurrentHashMap<>());
 				if (this.eventCountdownsByUser.get(numberOfUser).get(eventTypeAndCategory) != null) {
 					this.eventCountdownsByUser.get(numberOfUser).get(eventTypeAndCategory).countDown();
 				}
