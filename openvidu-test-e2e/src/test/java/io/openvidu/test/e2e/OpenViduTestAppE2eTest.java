@@ -1143,14 +1143,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 	private void forceCodecTest(OpenViduTestappUser user, String codec) throws Exception {
 		this.addOnlyPublisherVideo(user, false, false, false);
-
-		this.waitForBackdropAndClick(user, "#room-options-btn-0");
-		Thread.sleep(300);
-		user.getDriver().findElement(By.id("trackPublish-backupCodec")).click();
-		user.getDriver().findElement(By.id("trackPublish-videoCodec")).click();
-		this.waitForBackdropAndClick(user, "#mat-option-" + codec.toLowerCase());
-		this.waitForBackdropAndClick(user, "#close-dialog-btn");
-		Thread.sleep(300);
+		this.forceCodec(user, 0, codec);
 
 		this.addSubscriber(user, false);
 
@@ -1180,6 +1173,17 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		Assertions.assertEquals(expectedCodec, subscriberCodec);
 
 		gracefullyLeaveParticipants(user, 2);
+	}
+
+	private void forceCodec(OpenViduTestappUser user, int numberOfUser, String codec) throws InterruptedException {
+		String codecLowerCase = codec.toLowerCase();
+		this.waitForBackdropAndClick(user, "#room-options-btn-" + numberOfUser);
+		Thread.sleep(300);
+		user.getDriver().findElement(By.id("trackPublish-backupCodec")).click();
+		user.getDriver().findElement(By.id("trackPublish-videoCodec")).click();
+		this.waitForBackdropAndClick(user, "#mat-option-" + codecLowerCase);
+		this.waitForBackdropAndClick(user, "#close-dialog-btn");
+		Thread.sleep(300);
 	}
 
 	@Test
@@ -1236,13 +1240,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 				WebElement participantNameInput = chromeUser.getDriver().findElement(By.id("participant-name-input-0"));
 				participantNameInput.clear();
 				participantNameInput.sendKeys("CHROME_USER");
-				this.waitForBackdropAndClick(chromeUser, "#room-options-btn-0");
-				Thread.sleep(300);
-				chromeUser.getDriver().findElement(By.id("trackPublish-backupCodec")).click();
-				chromeUser.getDriver().findElement(By.id("trackPublish-videoCodec")).click();
-				this.waitForBackdropAndClick(chromeUser, "#mat-option-" + codec.toLowerCase());
-				this.waitForBackdropAndClick(chromeUser, "#close-dialog-btn");
-				Thread.sleep(300);
+				this.forceCodec(chromeUser, 0, codec);
 				chromeUser.getDriver().findElement(By.className("connect-btn")).click();
 				chromeUser.getEventManager().waitUntilEventReaches("localTrackSubscribed", "ParticipantEvent", 1);
 				// Check publisher's codec
@@ -2010,6 +2008,272 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 	}
 
 	@Test
+	@DisplayName("SVC VP9 adaptive stream disabled dynacast disabled")
+	void svcVP9AdaptiveStreamDisabledDynacastDisabledTest() throws Exception {
+		svcAdaptiveStreamDisabledDynacastDisabledTest("vp9");
+	}
+
+	@Test
+	@DisplayName("SVC VP9 adaptive stream enabled dynacast disabled")
+	void svcVP9AdaptiveStreamEnabledDynacastDisabledTest() throws Exception {
+		svcAdaptiveStreamEnabledDynacastDisabledTest("vp9");
+	}
+
+	@Test
+	@DisplayName("SVC VP9 dynacast enabled")
+	void svcVP9DynacastEnabledTest() throws Exception {
+		svcDynacastEnabledTest("vp9");
+	}
+
+	@Test
+	@DisplayName("SVC VP9 dynacast disabled")
+	void svcVP9DynacastDisabledTest() throws Exception {
+		svcDynacastDisabledTest("vp9");
+	}
+
+	@Test
+	@DisplayName("SVC AV1 adaptive stream disabled dynacast disabled")
+	void svcAV1AdaptiveStreamDisabledDynacastDisabledTest() throws Exception {
+		svcAdaptiveStreamDisabledDynacastDisabledTest("av1");
+	}
+
+	@Test
+	@DisplayName("SVC AV1 adaptive stream enabled dynacast disabled")
+	void svcAV1AdaptiveStreamEnabledDynacastDisabledTest() throws Exception {
+		svcAdaptiveStreamEnabledDynacastDisabledTest("av1");
+	}
+
+	@Test
+	@DisplayName("SVC AV1 dynacast enabled")
+	void svcAV1DynacastEnabledTest() throws Exception {
+		svcDynacastEnabledTest("av1");
+	}
+
+	@Test
+	@DisplayName("SVC AV1 dynacast disabled")
+	void svcAV1DynacastDisabledTest() throws Exception {
+		svcDynacastDisabledTest("av1");
+	}
+
+	private void svcAdaptiveStreamDisabledDynacastDisabledTest(String codec) throws Exception {
+		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
+
+		log.info("SVC {} adaptive stream disabled dynacast disabled", codec.toUpperCase());
+
+		this.addPublisher(user, false, false, false, false, false, true, 1920, 1080, "L2T2");
+		this.forceCodec(user, 0, codec);
+		this.addSubscriber(user, false);
+
+		user.getDriver().findElements(By.className("connect-btn")).forEach(el -> el.sendKeys(Keys.ENTER));
+
+		user.getEventManager().waitUntilEventReaches("signalConnected", "RoomEvent", 2);
+		user.getEventManager().waitUntilEventReaches("connected", "RoomEvent", 2);
+		user.getEventManager().waitUntilEventReaches("connectionStateChanged", "RoomEvent", 4);
+		user.getEventManager().waitUntilEventReaches("localTrackPublished", "RoomEvent", 1);
+		user.getEventManager().waitUntilEventReaches("localTrackSubscribed", "RoomEvent", 1);
+		user.getEventManager().waitUntilEventReaches("trackSubscribed", "RoomEvent", 1);
+		user.getEventManager().waitUntilEventReaches("trackSubscriptionStatusChanged", "RoomEvent", 2);
+
+		final int numberOfVideos = user.getDriver().findElements(By.tagName("video")).size();
+		Assertions.assertEquals(2, numberOfVideos, "Wrong number of videos");
+		final int numberOfAudios = user.getDriver().findElements(By.tagName("audio")).size();
+		Assertions.assertEquals(0, numberOfAudios, "Wrong number of audios");
+
+		Assertions.assertTrue(assertAllElementsHaveTracks(user, "video", false, true),
+				"HTMLVideoElements were expected to have only one video track");
+
+		WebElement subscriberVideo = user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 video.remote"));
+
+		// Check subscriber video codec
+		JsonArray layers = this.getLayersAsJsonArray(user, subscriberVideo);
+		String subscriberCodec = layers.get(0).getAsJsonObject().get("codec").getAsString();
+		Assertions.assertEquals("video/" + codec.toUpperCase(), subscriberCodec);
+
+		// Subscriber should settle in 1920x1080p
+		this.waitUntilSubscriberFrameWidthIs(user, subscriberVideo, 1920);
+
+		changeElementSize(user, subscriberVideo, 1000, 700);
+		Thread.sleep(2000);
+		int newFrameWidth = this.getSubscriberVideoFrameWidth(user, subscriberVideo);
+
+		Assertions.assertEquals(1920, newFrameWidth,
+				"With adaptive stream disabled subscriber's track resolution should NOT change");
+
+		int oldFrameWidth = newFrameWidth;
+		changeElementSize(user, subscriberVideo, 100, 30);
+		Thread.sleep(3000);
+		newFrameWidth = this.getSubscriberVideoFrameWidth(user, subscriberVideo);
+
+		Assertions.assertEquals(oldFrameWidth, newFrameWidth,
+				"With adaptive stream disabled subscriber's track resolution should NOT change");
+
+		oldFrameWidth = newFrameWidth;
+		oldFrameWidth = this.getSubscriberVideoFrameWidth(user, subscriberVideo);
+		changeElementSize(user, subscriberVideo, 1000, 700);
+		Thread.sleep(3000);
+		newFrameWidth = this.getSubscriberVideoFrameWidth(user, subscriberVideo);
+
+		Assertions.assertEquals(oldFrameWidth, newFrameWidth,
+				"With adaptive stream disabled subscriber's track resolution should NOT change");
+
+		gracefullyLeaveParticipants(user, 2);
+	}
+
+	private void svcAdaptiveStreamEnabledDynacastDisabledTest(String codec) throws Exception {
+		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
+
+		log.info("SVC {} adaptive stream enabled dynacast disabled", codec.toUpperCase());
+
+		this.addPublisher(user, false, false, false, false, false, true, 1920, 1080, "L2T2");
+		this.forceCodec(user, 0, codec);
+		this.addSubscriber(user, true);
+
+		user.getDriver().findElements(By.className("connect-btn")).forEach(el -> el.sendKeys(Keys.ENTER));
+
+		user.getEventManager().waitUntilEventReaches("signalConnected", "RoomEvent", 2);
+		user.getEventManager().waitUntilEventReaches("connected", "RoomEvent", 2);
+		user.getEventManager().waitUntilEventReaches("connectionStateChanged", "RoomEvent", 4);
+		user.getEventManager().waitUntilEventReaches("localTrackPublished", "RoomEvent", 1);
+		user.getEventManager().waitUntilEventReaches("localTrackSubscribed", "RoomEvent", 1);
+		user.getEventManager().waitUntilEventReaches("trackSubscribed", "RoomEvent", 1);
+		user.getEventManager().waitUntilEventReaches("trackSubscriptionStatusChanged", "RoomEvent", 2);
+
+		final int numberOfVideos = user.getDriver().findElements(By.tagName("video")).size();
+		Assertions.assertEquals(2, numberOfVideos, "Wrong number of videos");
+		final int numberOfAudios = user.getDriver().findElements(By.tagName("audio")).size();
+		Assertions.assertEquals(0, numberOfAudios, "Wrong number of audios");
+
+		Assertions.assertTrue(assertAllElementsHaveTracks(user, "video", false, true),
+				"HTMLVideoElements were expected to have only one video track");
+
+		WebElement subscriberVideo = user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 video.remote"));
+
+		// Check subscriber video codec
+		JsonArray layers = this.getLayersAsJsonArray(user, subscriberVideo);
+		String subscriberCodec = layers.get(0).getAsJsonObject().get("codec").getAsString();
+		Assertions.assertEquals("video/" + codec.toUpperCase(), subscriberCodec);
+
+		// Subscriber should settle in 960
+		this.waitUntilSubscriberFrameWidthIs(user, subscriberVideo, 960);
+
+		changeElementSize(user, subscriberVideo, 1000, 700);
+		Thread.sleep(2000);
+		int newFrameWidth = this.getSubscriberVideoFrameWidth(user, subscriberVideo);
+
+		Assertions.assertEquals(1920, newFrameWidth,
+				"With adaptive stream enabled subscriber's track resolution should change");
+
+		changeElementSize(user, subscriberVideo, 100, 30);
+		Thread.sleep(3000);
+		newFrameWidth = this.getSubscriberVideoFrameWidth(user, subscriberVideo);
+
+		Assertions.assertEquals(960, newFrameWidth,
+				"With adaptive stream enabled subscriber's track resolution should change");
+
+		newFrameWidth = this.getSubscriberVideoFrameWidth(user, subscriberVideo);
+		changeElementSize(user, subscriberVideo, 1000, 700);
+		Thread.sleep(3000);
+		newFrameWidth = this.getSubscriberVideoFrameWidth(user, subscriberVideo);
+
+		Assertions.assertEquals(1920, newFrameWidth,
+				"With adaptive stream enabled subscriber's track resolution should change");
+
+		gracefullyLeaveParticipants(user, 2);
+	}
+
+	private void svcDynacastEnabledTest(String codec) throws Exception {
+		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
+
+		log.info("SVC {} dynacast enabled", codec.toUpperCase());
+
+		// With SVC, dynacast only pauses the entire stream and not individual layers
+
+		this.addPublisher(user, false, false, true, false, false, true, 1920, 1080, "L2T2");
+		this.forceCodec(user, 0, codec);
+
+		user.getDriver().findElement(By.className("connect-btn")).sendKeys(Keys.ENTER);
+
+		user.getEventManager().waitUntilEventReaches("signalConnected", "RoomEvent", 1);
+		user.getEventManager().waitUntilEventReaches("connected", "RoomEvent", 1);
+		user.getEventManager().waitUntilEventReaches("connectionStateChanged", "RoomEvent", 2);
+		user.getEventManager().waitUntilEventReaches("localTrackPublished", "RoomEvent", 1);
+		user.getEventManager().clearAllCurrentEvents();
+
+		WebElement publisherVideo = user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 video.local"));
+
+		// With no subscribers and dynacast enabled, the entire SVC stream should
+		// finally reach inactive state
+		this.waitUntilPublisherLayerActive(user, publisherVideo, null, false);
+
+		// Only subscriber
+		this.addSubscriber(user, false);
+
+		user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 .connect-btn")).sendKeys(Keys.ENTER);
+		user.getEventManager().waitUntilEventReaches(0, "localTrackSubscribed", "RoomEvent", 1);
+		user.getEventManager().waitUntilEventReaches(1, "trackSubscribed", "RoomEvent", 1);
+		user.getEventManager().waitUntilEventReaches(1, "trackSubscriptionStatusChanged", "RoomEvent", 2);
+		user.getEventManager().clearAllCurrentEvents();
+
+		WebElement subscriberVideo = user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 video.remote"));
+
+		// Check subscriber video codec
+		JsonArray layers = this.getLayersAsJsonArray(user, subscriberVideo);
+		String subscriberCodec = layers.get(0).getAsJsonObject().get("codec").getAsString();
+		Assertions.assertEquals("video/" + codec.toUpperCase(), subscriberCodec);
+
+		// After subscription all layers should be active
+		this.waitUntilPublisherLayerActive(user, publisherVideo, null, true);
+
+		// Even after forcing the low quality layer in the subscriber, with dynacast
+		// enabled, the entire SVC stream should remain active in publisher
+		user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 #max-video-quality")).click();
+		this.waitForBackdropAndClick(user, "mat-option.mode-LOW");
+		this.waitUntilSubscriberFrameWidthIs(user, subscriberVideo, 960);
+
+		Thread.sleep(4000);
+		this.waitUntilPublisherLayerActive(user, publisherVideo, null, true);
+
+		// Only after pausing the subscriber track, the entire SVC stream should reach
+		// inactive state in publisher
+		WebElement toggleVideoBtn = user.getDriver()
+				.findElement(By.cssSelector("#openvidu-instance-1 .toggle-video-enabled"));
+		toggleVideoBtn.click();
+		this.waitUntilPublisherLayerActive(user, publisherVideo, null, false);
+
+		toggleVideoBtn.click();
+		this.waitUntilPublisherLayerActive(user, publisherVideo, null, true);
+
+		gracefullyLeaveParticipants(user, 2);
+	}
+
+	private void svcDynacastDisabledTest(String codec) throws Exception {
+		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
+
+		log.info("SVC {} dynacast disabled", codec.toUpperCase());
+
+		this.addPublisher(user, false, false, false, false, false, true, 1920, 1080, "L2T2");
+		this.forceCodec(user, 0, codec);
+
+		user.getDriver().findElement(By.className("connect-btn")).sendKeys(Keys.ENTER);
+
+		user.getEventManager().waitUntilEventReaches("signalConnected", "RoomEvent", 1);
+		user.getEventManager().waitUntilEventReaches("connected", "RoomEvent", 1);
+		user.getEventManager().waitUntilEventReaches("connectionStateChanged", "RoomEvent", 2);
+		user.getEventManager().waitUntilEventReaches("localTrackPublished", "RoomEvent", 1);
+		user.getEventManager().clearAllCurrentEvents();
+
+		WebElement publisherVideo = user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 video.local"));
+
+		// With no subscribers and dynacast disabled, the SVC stream should remain
+		// active in publisher
+		this.waitUntilPublisherLayerActive(user, publisherVideo, null, true);
+		Thread.sleep(8000);
+		this.waitUntilPublisherLayerActive(user, publisherVideo, null, true);
+
+		gracefullyLeaveParticipants(user, 1);
+	}
+
+	@Test
 	@DisplayName("SVC VP9 (L3T3_KEY)")
 	void svcVP9L3T3_KEYTest() throws Exception {
 		svcTest("VP9", "L3T3_KEY");
@@ -2034,17 +2298,10 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 	}
 
 	private void svcTest(String codec, String scalabilityMode) throws Exception {
-		final String codecLowerCase = codec.toLowerCase();
 		final String codecUpperCase = codec.toUpperCase();
 		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
-		this.addOnlyPublisherVideo(user, true, false, true, scalabilityMode);
-		this.waitForBackdropAndClick(user, "#room-options-btn-0");
-		Thread.sleep(300);
-		user.getDriver().findElement(By.id("trackPublish-backupCodec")).click();
-		user.getDriver().findElement(By.id("trackPublish-videoCodec")).click();
-		this.waitForBackdropAndClick(user, "#mat-option-" + codecLowerCase);
-		this.waitForBackdropAndClick(user, "#close-dialog-btn");
-		Thread.sleep(300);
+		this.addOnlyPublisherVideo(user, false, false, true, scalabilityMode);
+		this.forceCodec(user, 0, codec);
 		this.addSubscriber(user, false);
 		user.getDriver().findElements(By.className("connect-btn")).forEach(el -> el.sendKeys(Keys.ENTER));
 		user.getEventManager().waitUntilEventReaches("localTrackSubscribed", "ParticipantEvent", 1);
