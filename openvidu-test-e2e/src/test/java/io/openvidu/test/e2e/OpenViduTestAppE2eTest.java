@@ -1109,8 +1109,6 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 	@Test
 	@DisplayName("Chrome force H264")
-	// TODO: remove tag when not forcing VP8 with mediasoup
-	@OnlyPion
 	void chromeForceH264Test() throws Exception {
 		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
 		log.info("Chrome force H264");
@@ -1128,8 +1126,6 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 	@Test
 	@DisplayName("Chrome force VP9")
-	// TODO: remove tag when not forcing VP8 with mediasoup
-	@OnlyPion
 	void chromeForceVP9Test() throws Exception {
 		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
 		log.info("Chrome force VP9");
@@ -1195,8 +1191,6 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 	@Test
 	@DisplayName("Firefox subscribe to H264")
-	// TODO: remove tag when not forcing VP8 with mediasoup
-	@OnlyPion
 	void firefoxSubscribeToH264Test() throws Exception {
 		log.info("Firefox subscribe to H264");
 		firefoxSubscribeToCodecTest("h264", false);
@@ -1204,8 +1198,6 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 	@Test
 	@DisplayName("Firefox subscribe to VP9")
-	// TODO: remove tag when not forcing VP8 with mediasoup
-	@OnlyPion
 	void firefoxSubscribeToVP9Test() throws Exception {
 		log.info("Firefox subscribe to VP9");
 		firefoxSubscribeToCodecTest("vp9", false);
@@ -1220,8 +1212,6 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 	@Test
 	@DisplayName("Firefox subscribe to H264 simulcast")
-	// TODO: remove tag when not forcing VP8 with mediasoup
-	@OnlyPion
 	void firefoxSubscribeToH264SimulcastTest() throws Exception {
 		log.info("Firefox subscribe to H264 simulcast");
 		firefoxSubscribeToCodecTest("h264", true);
@@ -1229,8 +1219,6 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 	@Test
 	@DisplayName("Firefox subscribe to VP9 simulcast")
-	// TODO: remove tag when not forcing VP8 with mediasoup
-	@OnlyPion
 	void firefoxSubscribeToVP9SimulcastTest() throws Exception {
 		log.info("Firefox subscribe to VP9 simulcast");
 		firefoxSubscribeToCodecTest("vp9", true);
@@ -2018,6 +2006,140 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		this.waitUntilPublisherLayerActive(user, publisherVideo, null, true);
 		this.waitUntilPublisherBytesSentIncrease(user, publisherVideo, null, bytesSent);
 
+		gracefullyLeaveParticipants(user, 2);
+	}
+
+	@Test
+	@DisplayName("SVC VP9 (L3T3_KEY)")
+	void svcVP9L3T3_KEYTest() throws Exception {
+		svcTest("VP9", "L3T3_KEY");
+	}
+
+	@Test
+	@DisplayName("SVC AV1 (L3T3_KEY)")
+	void svcAV1L3T3_KEYTest() throws Exception {
+		svcTest("AV1", "L3T3_KEY");
+	}
+
+	@Test
+	@DisplayName("SVC VP9 (L2T2)")
+	void svcVP9L2T2Test() throws Exception {
+		svcTest("VP9", "L2T2");
+	}
+
+	@Test
+	@DisplayName("SVC AV1 (L2T2)")
+	void svcAV1L2T2Test() throws Exception {
+		svcTest("AV1", "L2T2");
+	}
+
+	private void svcTest(String codec, String scalabilityMode) throws Exception {
+		final String codecLowerCase = codec.toLowerCase();
+		final String codecUpperCase = codec.toUpperCase();
+		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
+		this.addOnlyPublisherVideo(user, true, false, true, scalabilityMode);
+		this.waitForBackdropAndClick(user, "#room-options-btn-0");
+		Thread.sleep(300);
+		user.getDriver().findElement(By.id("trackPublish-backupCodec")).click();
+		user.getDriver().findElement(By.id("trackPublish-videoCodec")).click();
+		this.waitForBackdropAndClick(user, "#mat-option-" + codecLowerCase);
+		this.waitForBackdropAndClick(user, "#close-dialog-btn");
+		Thread.sleep(300);
+		this.addSubscriber(user, false);
+		user.getDriver().findElements(By.className("connect-btn")).forEach(el -> el.sendKeys(Keys.ENTER));
+		user.getEventManager().waitUntilEventReaches("localTrackSubscribed", "ParticipantEvent", 1);
+		user.getEventManager().waitUntilEventReaches("trackSubscribed", "ParticipantEvent", 1);
+		user.getWaiter().until(ExpectedConditions.numberOfElementsToBe(By.tagName("video"), 2));
+		// Publisher video
+		WebElement publisherVideo = user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 video.local"));
+		this.waitUntilVideoLayersNotEmpty(user, publisherVideo);
+		Assertions.assertEquals(1, countNumberOfPublishedLayers(user, publisherVideo),
+				"VP9 SVC publisher should expose a single encoding entry with scalabilityMode metadata");
+		Assertions.assertEquals("video/" + codecUpperCase,
+				getPublisherVideoLayerAttribute(user, publisherVideo, null, "codec").getAsString());
+		Assertions.assertEquals(scalabilityMode,
+				getPublisherVideoLayerAttribute(user, publisherVideo, null, "scalabilityMode").getAsString());
+
+		// Subscriber video
+		WebElement subscriberVideo = user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 video.remote"));
+		waitUntilVideoLayersNotEmpty(user, subscriberVideo);
+		JsonArray layers = this.getLayersAsJsonArray(user, subscriberVideo);
+		String subscriberCodec = layers.get(0).getAsJsonObject().get("codec").getAsString();
+		Assertions.assertEquals("video/" + codecUpperCase, subscriberCodec);
+
+		// Validate SVC by dynamically switching subscriber quality and checking
+		// subscriber frameWidth transitions.
+		int spatialLayers = Integer.parseInt(scalabilityMode.substring(1, 2));
+		int highWidth = this.getSubscriberVideoFrameWidth(user, subscriberVideo);
+		user.getDriver().findElement(By.cssSelector("#close-dialog-btn")).click();
+		Thread.sleep(300);
+
+		if (spatialLayers >= 3) {
+			// 3 spatial layers (e.g. L3T3_KEY): layers are LOW, MEDIUM, HIGH.
+			// HIGH → MEDIUM → LOW, each a distinct lower resolution.
+			user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 #max-video-quality")).click();
+			this.waitForBackdropAndClick(user, "mat-option.mode-MEDIUM");
+			this.waitUntilSubscriberFrameWidthChanges(user, subscriberVideo, highWidth, false);
+			int mediumWidth = this.getSubscriberVideoFrameWidth(user, subscriberVideo);
+			user.getDriver().findElement(By.cssSelector("#close-dialog-btn")).click();
+			Thread.sleep(300);
+
+			user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 #max-video-quality")).click();
+			this.waitForBackdropAndClick(user, "mat-option.mode-LOW");
+			this.waitUntilSubscriberFrameWidthChanges(user, subscriberVideo, mediumWidth, false);
+			int lowWidth = this.getSubscriberVideoFrameWidth(user, subscriberVideo);
+			Assertions.assertTrue(highWidth > mediumWidth && mediumWidth > lowWidth,
+					"Expected HIGH > MEDIUM > LOW frame widths, but got HIGH=" + highWidth
+							+ ", MEDIUM=" + mediumWidth + ", LOW=" + lowWidth);
+			user.getDriver().findElement(By.cssSelector("#close-dialog-btn")).click();
+			Thread.sleep(300);
+
+			user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 #max-video-quality")).click();
+			this.waitForBackdropAndClick(user, "mat-option.mode-HIGH");
+			this.waitUntilSubscriberFrameWidthChanges(user, subscriberVideo, lowWidth, true);
+		} else {
+			// 2 spatial layers (e.g. L2T2): layers are LOW and MEDIUM only.
+			// HIGH and MEDIUM both map to the highest spatial layer (same width).
+			// Only LOW gives a distinct lower resolution.
+
+			// 1. Switch to MEDIUM: should stay at the same width as HIGH
+			user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 #max-video-quality")).click();
+			this.waitForBackdropAndClick(user, "mat-option.mode-MEDIUM");
+			Thread.sleep(4000);
+			int mediumWidth = this.getSubscriberVideoFrameWidth(user, subscriberVideo);
+			Assertions.assertEquals(highWidth, mediumWidth,
+					"With " + spatialLayers + " spatial layers, MEDIUM should equal HIGH width, but got HIGH="
+							+ highWidth + ", MEDIUM=" + mediumWidth);
+			user.getDriver().findElement(By.cssSelector("#close-dialog-btn")).click();
+			Thread.sleep(300);
+
+			// 2. Switch to LOW: should decrease
+			user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 #max-video-quality")).click();
+			this.waitForBackdropAndClick(user, "mat-option.mode-LOW");
+			this.waitUntilSubscriberFrameWidthChanges(user, subscriberVideo, mediumWidth, false);
+			int lowWidth = this.getSubscriberVideoFrameWidth(user, subscriberVideo);
+			Assertions.assertTrue(highWidth > lowWidth,
+					"Expected HIGH > LOW frame widths, but got HIGH=" + highWidth + ", LOW=" + lowWidth);
+			user.getDriver().findElement(By.cssSelector("#close-dialog-btn")).click();
+			Thread.sleep(300);
+
+			// 3. Switch to MEDIUM: should increase back to highest spatial layer
+			user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 #max-video-quality")).click();
+			this.waitForBackdropAndClick(user, "mat-option.mode-MEDIUM");
+			this.waitUntilSubscriberFrameWidthChanges(user, subscriberVideo, lowWidth, true);
+			int mediumWidth2 = this.getSubscriberVideoFrameWidth(user, subscriberVideo);
+			user.getDriver().findElement(By.cssSelector("#close-dialog-btn")).click();
+			Thread.sleep(300);
+
+			// 4. Switch to HIGH: should stay at the same width as MEDIUM
+			user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 #max-video-quality")).click();
+			this.waitForBackdropAndClick(user, "mat-option.mode-HIGH");
+			Thread.sleep(4000);
+			int finalHighWidth = this.getSubscriberVideoFrameWidth(user, subscriberVideo);
+			Assertions.assertEquals(mediumWidth2, finalHighWidth,
+					"With " + spatialLayers + " spatial layers, HIGH should equal MEDIUM width, but got MEDIUM="
+							+ mediumWidth2 + ", HIGH=" + finalHighWidth);
+		}
 		gracefullyLeaveParticipants(user, 2);
 	}
 
@@ -3161,7 +3283,17 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 	private void addOnlyPublisherVideo(OpenViduTestappUser user, boolean simulcast, boolean dynacast, boolean hd)
 			throws InterruptedException {
 		if (hd) {
-			this.addPublisher(user, false, simulcast, dynacast, false, false, true, 1920, 1080, "L1T3");
+			this.addPublisher(user, false, simulcast, dynacast, false, false, true, 1920, 1080, null);
+		} else {
+			this.addPublisher(user, false, simulcast, dynacast, false, false, true, null, null, null);
+		}
+	}
+
+	private void addOnlyPublisherVideo(OpenViduTestappUser user, boolean simulcast, boolean dynacast, boolean hd,
+			String scalabilityMode)
+			throws InterruptedException {
+		if (hd) {
+			this.addPublisher(user, false, simulcast, dynacast, false, false, true, 1920, 1080, scalabilityMode);
 		} else {
 			this.addPublisher(user, false, simulcast, dynacast, false, false, true, null, null, null);
 		}
@@ -3196,7 +3328,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		} else {
 			user.getDriver().findElement(By.id("video-capture-true")).click();
 			if (width != null || height != null || scalabilityMode != null) {
-				this.setPublisherCustomVideoProperties(user, 1920, 1080, "L1T3");
+				this.setPublisherCustomVideoProperties(user, width, height, scalabilityMode);
 			}
 		}
 		if (!simulcast) {
