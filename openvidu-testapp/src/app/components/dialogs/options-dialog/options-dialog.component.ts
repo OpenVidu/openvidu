@@ -19,6 +19,8 @@ import {
   Track,
   TrackPublishOptions,
   VideoCaptureOptions,
+  VideoPreset,
+  VideoPresets,
 } from 'livekit-client';
 
 @Component({
@@ -51,6 +53,25 @@ export class OptionsDialogComponent {
   customScreenShareResolution: boolean = false;
 
   ENUMERATION_SOURCE = Object.keys(Track.Source);
+
+  // Selectable presets for TrackPublishOptions.videoSimulcastLayers.
+  videoSimulcastLayerPresets: { name: string; preset: VideoPreset }[] = [
+    { name: 'h90', preset: VideoPresets.h90 },
+    { name: 'h180', preset: VideoPresets.h180 },
+    { name: 'h216', preset: VideoPresets.h216 },
+    { name: 'h360', preset: VideoPresets.h360 },
+    { name: 'h540', preset: VideoPresets.h540 },
+    { name: 'h720', preset: VideoPresets.h720 },
+    { name: 'h1080', preset: VideoPresets.h1080 },
+    { name: 'h1440', preset: VideoPresets.h1440 },
+    { name: 'h2160', preset: VideoPresets.h2160 },
+  ];
+
+  // mat-select compares option values by reference by default; match presets by
+  // resolution so a preselected videoSimulcastLayers array (possibly built from a
+  // different VideoPreset instance) still highlights the right options.
+  compareVideoPresets = (a: VideoPreset, b: VideoPreset): boolean =>
+    !!a && !!b && a.width === b.width && a.height === b.height;
 
   inputVideoDevices: MediaDeviceInfo[] = [];
 

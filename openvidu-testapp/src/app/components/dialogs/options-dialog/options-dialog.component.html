@@ -215,6 +215,14 @@
             }
           </mat-select>
         </mat-form-field>
+        <mat-form-field id="trackPublish-videoSimulcastLayers">
+          <mat-label>videoSimulcastLayers</mat-label>
+          <mat-select multiple [(value)]="trackPublishOptions.videoSimulcastLayers" [compareWith]="compareVideoPresets">
+            @for (item of videoSimulcastLayerPresets; track item.name) {
+              <mat-option [value]="item.preset" [id]="'mat-option-' + item.name">{{item.name}}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
         <mat-form-field class="inner-text">
           <mat-label>name</mat-label>
           <input matInput id="trackPublish-name" placeholder="name" [(ngModel)]="trackPublishOptions.name"/>

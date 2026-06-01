@@ -1296,6 +1296,181 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 	}
 
 	@Test
+	@DisplayName("Firefox H264 simulcast BWE convergence")
+	void firefoxH264SimulcastBweConvergenceTest() throws Exception {
+		log.info("Firefox H264 simulcast BWE convergence");
+		simulcastBweConvergenceTest("h264", "firefox");
+	}
+
+	@Test
+	@DisplayName("Firefox VP8 simulcast BWE convergence")
+	void firefoxVP8SimulcastBweConvergenceTest() throws Exception {
+		log.info("Firefox VP8 simulcast BWE convergence");
+		simulcastBweConvergenceTest("vp8", "firefox");
+	}
+
+	@Test
+	@DisplayName("Chrome H264 simulcast BWE convergence")
+	void chromeH264SimulcastBweConvergenceTest() throws Exception {
+		log.info("Chrome H264 simulcast BWE convergence");
+		simulcastBweConvergenceTest("h264", "chrome");
+	}
+
+	@Test
+	@DisplayName("Chrome VP8 simulcast BWE convergence")
+	void chromeVP8SimulcastBweConvergenceTest() throws Exception {
+		log.info("Chrome VP8 simulcast BWE convergence");
+		simulcastBweConvergenceTest("vp8", "chrome");
+	}
+
+	private void simulcastBweConvergenceTest(String publisherCodec, String subscriberBrowser) throws Exception {
+		final int EXPECTED_HIGHEST_WIDTH = 1920;
+		// With mediasoup the publisher's high simulcast layer can take ~20s to activate
+		// (a separate, still-open BWE issue from the subscriber-side). Allow margin
+		// above that so the test reflects "does it converge" rather than "is it fast".
+		final int BWE_CONVERGENCE_TIMEOUT_MS = 40000;
+		final int POLL_INTERVAL_MS = 2000;
+		final String subscriberLabel = subscriberBrowser.toUpperCase() + "_SUBSCRIBER";
+		final CountDownLatch latch = new CountDownLatch(2);
+		ExecutorService executor = Executors.newFixedThreadPool(2);
+		// Wall-clock timestamps of when each side first reports the 1920 layer.
+		// Comparing them tells whether a slow convergence is publisher-uplink or
+		// subscriber-downlink.
+		final java.util.concurrent.atomic.AtomicLong publisher1920AtMs = new java.util.concurrent.atomic.AtomicLong(-1);
+		final java.util.concurrent.atomic.AtomicLong subscriber1920AtMs = new java.util.concurrent.atomic.AtomicLong(
+				-1);
+
+		Future<?> task1 = executor.submit(() -> {
+			try {
+				OpenViduTestappUser chromeUser = setupBrowserAndConnectToOpenViduTestapp("chrome");
+				this.addOnlyPublisherVideo(chromeUser, true, false, false);
+				WebElement participantNameInput = chromeUser.getDriver()
+						.findElement(By.id("participant-name-input-0"));
+				participantNameInput.clear();
+				participantNameInput.sendKeys("CHROME_PUBLISHER");
+				this.forceCodec(chromeUser, 0, publisherCodec);
+				this.setPublisherSimulcastLayersAndResolution(chromeUser, 0, "h360", 1920, 1080);
+				chromeUser.getDriver().findElement(By.className("connect-btn")).click();
+				chromeUser.getEventManager().waitUntilEventReaches("localTrackSubscribed", "ParticipantEvent", 1);
+
+				// Measure when the PUBLISHER itself starts actively sending the 1920 (rid
+				// "f") layer (active==true && frameWidth==1920). Compared with the
+				// subscriber's 1920 time, this disambiguates publisher-uplink vs
+				// subscriber-downlink as the convergence bottleneck.
+				WebElement publisherVideo = chromeUser.getDriver()
+						.findElement(By.cssSelector("#openvidu-instance-0 video.local"));
+				waitUntilVideoLayersNotEmpty(chromeUser, publisherVideo);
+				long pubStart = System.currentTimeMillis();
+				while (System.currentTimeMillis() - pubStart < BWE_CONVERGENCE_TIMEOUT_MS) {
+					try {
+						String rawLayers = getLayersAsString(chromeUser, publisherVideo);
+						log.info("publisher [{}] raw layers: {}", publisherCodec, rawLayers);
+						// Highest active layer width across all simulcast layers (rid-agnostic).
+						Integer maxActiveWidth = null;
+						for (JsonElement el : JsonParser.parseString(rawLayers).getAsJsonArray()) {
+							JsonObject lo = el.getAsJsonObject();
+							JsonElement wEl = lo.get("frameWidth");
+							JsonElement aEl = lo.get("active");
+							boolean active = aEl != null && !aEl.isJsonNull() && aEl.getAsBoolean();
+							if (active && wEl != null && !wEl.isJsonNull()) {
+								int w = wEl.getAsInt();
+								if (maxActiveWidth == null || w > maxActiveWidth) {
+									maxActiveWidth = w;
+								}
+							}
+						}
+						if (maxActiveWidth != null && maxActiveWidth >= EXPECTED_HIGHEST_WIDTH) {
+							publisher1920AtMs.set(System.currentTimeMillis());
+							break;
+						}
+					} catch (Exception e) {
+						log.warn("Error getting publisher 'f' layer", e);
+					}
+					Thread.sleep(POLL_INTERVAL_MS);
+				}
+				latch.countDown();
+				latch.await(60, TimeUnit.SECONDS);
+				gracefullyLeaveParticipants(chromeUser, 1);
+			} catch (Exception e) {
+				Assertions.fail("Error while setting up Chrome publisher", e);
+			}
+		});
+
+		Future<?> task2 = executor.submit(() -> {
+			try {
+				OpenViduTestappUser subscriberUser = setupBrowserAndConnectToOpenViduTestapp(subscriberBrowser);
+				this.addSubscriber(subscriberUser, false);
+				WebElement participantNameInput = subscriberUser.getDriver()
+						.findElement(By.id("participant-name-input-0"));
+				participantNameInput.clear();
+				participantNameInput.sendKeys(subscriberLabel);
+				subscriberUser.getDriver().findElement(By.className("connect-btn")).click();
+				subscriberUser.getEventManager().waitUntilEventReaches("trackSubscribed", "ParticipantEvent", 1);
+				subscriberUser.getWaiter().until(ExpectedConditions.numberOfElementsToBe(By.tagName("video"), 1));
+				Assertions.assertTrue(assertAllElementsHaveTracks(subscriberUser, "video", false, true),
+						"HTMLVideoElements were expected to have only one video track");
+
+				WebElement subscriberVideo = subscriberUser.getDriver()
+						.findElement(By.cssSelector("#openvidu-instance-0 video.remote"));
+				waitUntilVideoLayersNotEmpty(subscriberUser, subscriberVideo);
+
+				// Poll for BWE convergence: subscriber should reach highest layer
+				long startTime = System.currentTimeMillis();
+				int lastWidth = 0;
+				boolean converged = false;
+				while (System.currentTimeMillis() - startTime < BWE_CONVERGENCE_TIMEOUT_MS) {
+					try {
+						lastWidth = getSubscriberVideoFrameWidth(subscriberUser, subscriberVideo);
+						log.info("{} subscriber frameWidth: {}", subscriberBrowser, lastWidth);
+						if (lastWidth == EXPECTED_HIGHEST_WIDTH) {
+							converged = true;
+							subscriber1920AtMs.set(System.currentTimeMillis());
+							break;
+						}
+					} catch (Exception e) {
+						log.warn("Error getting subscriber frameWidth", e);
+					}
+					Thread.sleep(POLL_INTERVAL_MS);
+				}
+				Assertions.assertTrue(converged,
+						subscriberBrowser + " subscriber BWE did not converge to highest layer. Last frameWidth: "
+								+ lastWidth + ". Expected: " + EXPECTED_HIGHEST_WIDTH);
+
+				latch.countDown();
+				latch.await(10, TimeUnit.SECONDS);
+				gracefullyLeaveParticipants(subscriberUser, 1);
+			} catch (Exception e) {
+				Assertions.fail("Error while setting up " + subscriberBrowser + " subscriber", e);
+			}
+		});
+
+		try {
+			task1.get();
+			task2.get();
+		} catch (ExecutionException ex) {
+			Assertions.fail("Error while running browsers in parallel", ex);
+		}
+
+		long pub = publisher1920AtMs.get();
+		long sub = subscriber1920AtMs.get();
+		String verdict;
+		if (pub < 0 && sub < 0) {
+			verdict = "neither publisher nor subscriber reached 1920 within timeout";
+		} else if (pub < 0) {
+			verdict = "subscriber reached 1920 but publisher never reported actively sending it (measurement gap)";
+		} else if (sub < 0) {
+			verdict = "publisher sent 1920 but subscriber never received it";
+		} else {
+			long deltaMs = sub - pub;
+			verdict = "subscriber got 1920 " + deltaMs + "ms after the publisher started sending it => "
+					+ (deltaMs > 6000 ? "SUBSCRIBER-DOWNLINK is the bottleneck"
+							: "PUBLISHER-UPLINK-gated (subscriber receives 1920 ~as soon as the publisher sends it)");
+		}
+		log.info("[BWE-SIDE] codec={} subscriber={} publisher1920AtMs={} subscriber1920AtMs={} => {}", publisherCodec,
+				subscriberBrowser, pub, sub, verdict);
+	}
+
+	@Test
 	@DisplayName("Firefox toggle subscription")
 	void firefoxToggleSubscriptionTest() throws Exception {
 		log.info("Firefox toggle subscription");
@@ -2612,8 +2787,6 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 	@Test
 	@DisplayName("Ingress VP8 Simulcast Chrome")
-	// TODO: remove tag when not forcing VP8 no-simulcast in ingress with mediasoup
-	@OnlyPion
 	void ingressVP8SimulcastChromeTest() throws Exception {
 		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
 
@@ -2627,8 +2800,6 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 	@Test
 	@DisplayName("Ingress VP8 Simulcast Firefox")
-	// TODO: remove tag when not forcing VP8 no-simulcast in ingress with mediasoup
-	@OnlyPion
 	void ingressVP8SimulcastFirefoxTest() throws Exception {
 		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("firefox");
 
@@ -2642,8 +2813,6 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 	@Test
 	@DisplayName("Ingress H264 Simulcast Chrome")
-	// TODO: remove tag when not forcing VP8 no-simulcast in ingress with mediasoup
-	@OnlyPion
 	void ingressH264SimulcastChromeTest() throws Exception {
 		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
 
@@ -2656,8 +2825,6 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 	@Test
 	@DisplayName("Ingress H264 Simulcast Firefox")
-	// TODO: remove tag when not forcing VP8 no-simulcast in ingress with mediasoup
-	@OnlyPion
 	void ingressH264SimulcastFirefoxTest() throws Exception {
 		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("firefox");
 
@@ -2670,8 +2837,6 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 	@Test
 	@DisplayName("Ingress H264 Simulcast two layers Chrome")
-	// TODO: remove tag when not forcing VP8 no-simulcast in ingress with mediasoup
-	@OnlyPion
 	void ingressH264SimulcastTwoLayersChromeTest() throws Exception {
 		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
 
@@ -2684,8 +2849,6 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 	@Test
 	@DisplayName("Ingress H264 Simulcast two layers Firefox")
-	// TODO: remove tag when not forcing VP8 no-simulcast in ingress with mediasoup
-	@OnlyPion
 	void ingressH264SimulcastTwoLayersFirefoxTest() throws Exception {
 		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("firefox");
 
@@ -2722,8 +2885,6 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 	@Test
 	@DisplayName("Ingress H264 No Simulcast Chrome")
-	// TODO: remove tag when not forcing VP8 no-simulcast in ingress with mediasoup
-	@OnlyPion
 	void ingressH264NoSimulcastChromeTest() throws Exception {
 		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
 
@@ -2736,8 +2897,6 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 	@Test
 	@DisplayName("Ingress H264 No Simulcast Firefox")
-	// TODO: remove tag when not forcing VP8 no-simulcast in ingress with mediasoup
-	@OnlyPion
 	void ingressH264NoSimulcastFirefoxTest() throws Exception {
 		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("firefox");
 
@@ -2746,75 +2905,6 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		ingressSimulcastTest(user, false, "h264", null);
 		WebElement subscriberVideo = user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 video.remote"));
 		testNoSimulcast(user, subscriberVideo);
-	}
-
-	@Test
-	@DisplayName("Custom ingress")
-	// TODO: remove tag when not using custom ingress image with mediasoup
-	@OnlyMediasoup
-	void customIngressTest() throws Exception {
-		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("firefox");
-
-		// With custom ingress and mediasoup it should force VP8 no simulcast with
-		// highest quality layer width, height, framerate and bitrate
-		log.info("Custom ingress");
-
-		this.addSubscriber(user, true);
-		user.getDriver().findElement(By.className("connect-btn")).sendKeys(Keys.ENTER);
-		user.getEventManager().waitUntilEventReaches("connected", "RoomEvent", 1);
-
-		// Try publishing H264 with 2 layer simulcast
-		createIngress(user, "H264_540P_25FPS_2_LAYERS", null, true, "HTTP", null);
-
-		user.getEventManager().waitUntilEventReaches("trackSubscribed", "ParticipantEvent", 1);
-		user.getWaiter().until(ExpectedConditions.numberOfElementsToBe(By.tagName("video"), 1));
-		int numberOfVideos = user.getDriver().findElements(By.tagName("video")).size();
-		Assertions.assertEquals(1, numberOfVideos, "Wrong number of videos");
-		Assertions.assertTrue(assertAllElementsHaveTracks(user, "video", false, true),
-				"HTMLVideoElements were expected to have only one video track");
-
-		// Should receive VP8 960x540 25 fps
-		WebElement subscriberVideo = user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 video.remote"));
-		waitUntilVideoLayersNotEmpty(user, subscriberVideo);
-		Assertions.assertEquals(1, getLayersAsJsonArray(user, subscriberVideo).size());
-		long bytesReceived = this.getSubscriberVideoBytesReceived(user, subscriberVideo);
-		this.waitUntilSubscriberBytesReceivedIncrease(user, subscriberVideo, bytesReceived);
-		this.waitUntilSubscriberFramesPerSecondNotZero(user, subscriberVideo);
-		JsonArray json = this.getLayersAsJsonArray(user, subscriberVideo);
-		String subscriberCodec = json.get(0).getAsJsonObject().get("codec").getAsString();
-		String expectedCodec = "video/VP8";
-		Assertions.assertEquals(expectedCodec, subscriberCodec);
-		this.waitUntilSubscriberFramesPerSecondIs(user, subscriberVideo, 25);
-		this.waitUntilSubscriberFrameWidthIs(user, subscriberVideo, 960);
-		this.waitUntilSubscriberFrameHeightIs(user, subscriberVideo, 540);
-
-		this.deleteAllIngresses(LK_INGRESS);
-		user.getEventManager().waitUntilEventReaches("trackUnpublished", "RoomEvent", 1);
-		user.getEventManager().waitUntilEventReaches("participantDisconnected", "RoomEvent", 1);
-
-		// Try publishing H264 with 3 layer simulcast
-		createIngress(user, "H264_1080P_30FPS_3_LAYERS_HIGH_MOTION", null, true, "HTTP", null);
-		user.getEventManager().waitUntilEventReaches("trackSubscribed", "ParticipantEvent", 1);
-		user.getWaiter().until(ExpectedConditions.numberOfElementsToBe(By.tagName("video"), 1));
-		numberOfVideos = user.getDriver().findElements(By.tagName("video")).size();
-		Assertions.assertEquals(1, numberOfVideos, "Wrong number of videos");
-		Assertions.assertTrue(assertAllElementsHaveTracks(user, "video", false, true),
-				"HTMLVideoElements were expected to have only one video track");
-
-		// Should receive VP8 1920x1080 30 fps
-		subscriberVideo = user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 video.remote"));
-		waitUntilVideoLayersNotEmpty(user, subscriberVideo);
-		Assertions.assertEquals(1, getLayersAsJsonArray(user, subscriberVideo).size());
-		bytesReceived = this.getSubscriberVideoBytesReceived(user, subscriberVideo);
-		this.waitUntilSubscriberBytesReceivedIncrease(user, subscriberVideo, bytesReceived);
-		this.waitUntilSubscriberFramesPerSecondNotZero(user, subscriberVideo);
-		json = this.getLayersAsJsonArray(user, subscriberVideo);
-		subscriberCodec = json.get(0).getAsJsonObject().get("codec").getAsString();
-		expectedCodec = "video/VP8";
-		Assertions.assertEquals(expectedCodec, subscriberCodec);
-		this.waitUntilSubscriberFramesPerSecondIs(user, subscriberVideo, 30);
-		this.waitUntilSubscriberFrameWidthIs(user, subscriberVideo, 1920);
-		this.waitUntilSubscriberFrameHeightIs(user, subscriberVideo, 1080);
 	}
 
 	@Test
@@ -3645,6 +3735,20 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 			Thread.sleep(300);
 		}
 		this.waitForBackdropAndClick(user, "#create-ingress-api-btn");
+		this.waitForBackdropAndClick(user, "#close-dialog-btn");
+		Thread.sleep(300);
+	}
+
+	private void setPublisherSimulcastLayersAndResolution(OpenViduTestappUser user, int numberOfUser,
+			String simulcastLayerName, Integer width, Integer height) throws InterruptedException {
+		this.waitForBackdropAndClick(user, "#room-options-btn-" + numberOfUser);
+		Thread.sleep(300);
+		this.setPublisherCustomVideoProperties(user, width, height, null);
+		user.getDriver().findElement(By.id("trackPublish-videoSimulcastLayers")).click();
+		this.waitForBackdropAndClick(user, "#mat-option-" + simulcastLayerName);
+		new org.openqa.selenium.interactions.Actions(user.getDriver())
+				.sendKeys(org.openqa.selenium.Keys.ESCAPE).perform();
+		Thread.sleep(300);
 		this.waitForBackdropAndClick(user, "#close-dialog-btn");
 		Thread.sleep(300);
 	}
