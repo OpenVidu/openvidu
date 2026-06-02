@@ -10,7 +10,8 @@
     "ng": "ng",
     "start": "ng serve --ssl --host 0.0.0.0",
     "start-insecure": "ng serve --host 0.0.0.0",
-    "start:ci": "ng build && http-server dist/openvidu-testapp-livekit/browser -p 4200 -a 0.0.0.0 -c-1",
+    "start:ci": "npm run build && npm run serve:ci",
+    "serve:ci": "http-server dist/openvidu-testapp-livekit/browser -p 4200 -a 0.0.0.0 -c-1",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test"
