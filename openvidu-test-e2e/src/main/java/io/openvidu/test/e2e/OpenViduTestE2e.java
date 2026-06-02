@@ -441,9 +441,9 @@ public class OpenViduTestE2e {
 			browserUser = new ChromeUser("TestUser", 50, headless);
 			break;
 		case "chromeTwoInstances":
-			container = chromeContainer("selenium/standalone-chrome:" + CHROME_VERSION, 2147483648L, 2, true);
+			container = chromeContainer("selenium/standalone-chrome:" + CHROME_VERSION, 2147483648L, 2, headless);
 			setupBrowserAux(BrowserNames.CHROME, container, false);
-			browserUser = new ChromeUser("TestUser", 50, true);
+			browserUser = new ChromeUser("TestUser", 50, headless);
 			break;
 		case "chromeAlternateScreenShare":
 			container = chromeContainer("selenium/standalone-chrome:" + CHROME_VERSION, 2147483648L, 1, false);
@@ -512,7 +512,7 @@ public class OpenViduTestE2e {
 		return browserUser;
 	}
 
-	private static boolean setupBrowserAux(BrowserNames browser, GenericContainer<?> container, boolean forceRestart) {
+	private static synchronized boolean setupBrowserAux(BrowserNames browser, GenericContainer<?> container, boolean forceRestart) {
 		if (isRemote(browser)) {
 			String dockerImage = container.getDockerImageName();
 			String ps = commandLine.executeCommand("docker ps | grep " + dockerImage, 30);

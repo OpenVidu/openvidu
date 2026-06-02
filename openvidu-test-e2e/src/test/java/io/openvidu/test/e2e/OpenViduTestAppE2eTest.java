@@ -70,8 +70,6 @@ import io.minio.errors.InvalidResponseException;
 import io.minio.errors.ServerException;
 import io.minio.errors.XmlParserException;
 import io.minio.messages.Item;
-import io.openvidu.test.e2e.annotations.OnlyMediasoup;
-import io.openvidu.test.e2e.annotations.OnlyPion;
 import livekit.LivekitIngress.IngressInfo;
 import livekit.LivekitIngress.IngressState;
 
@@ -1313,14 +1311,14 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 	@DisplayName("Chrome H264 simulcast BWE convergence")
 	void chromeH264SimulcastBweConvergenceTest() throws Exception {
 		log.info("Chrome H264 simulcast BWE convergence");
-		simulcastBweConvergenceTest("h264", "chrome");
+		simulcastBweConvergenceTest("h264", "chromeTwoInstances");
 	}
 
 	@Test
 	@DisplayName("Chrome VP8 simulcast BWE convergence")
 	void chromeVP8SimulcastBweConvergenceTest() throws Exception {
 		log.info("Chrome VP8 simulcast BWE convergence");
-		simulcastBweConvergenceTest("vp8", "chrome");
+		simulcastBweConvergenceTest("vp8", "chromeTwoInstances");
 	}
 
 	private void simulcastBweConvergenceTest(String publisherCodec, String subscriberBrowser) throws Exception {
@@ -1340,9 +1338,11 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		final java.util.concurrent.atomic.AtomicLong subscriber1920AtMs = new java.util.concurrent.atomic.AtomicLong(
 				-1);
 
+		final String publisherBrowser = subscriberBrowser == "chrome" ? "chromeTwoInstances" : "chrome";
+
 		Future<?> task1 = executor.submit(() -> {
 			try {
-				OpenViduTestappUser chromeUser = setupBrowserAndConnectToOpenViduTestapp("chrome");
+				OpenViduTestappUser chromeUser = setupBrowserAndConnectToOpenViduTestapp(publisherBrowser);
 				this.addOnlyPublisherVideo(chromeUser, true, false, false);
 				WebElement participantNameInput = chromeUser.getDriver()
 						.findElement(By.id("participant-name-input-0"));
