@@ -1311,14 +1311,14 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 	@DisplayName("Chrome H264 simulcast BWE convergence")
 	void chromeH264SimulcastBweConvergenceTest() throws Exception {
 		log.info("Chrome H264 simulcast BWE convergence");
-		simulcastBweConvergenceTest("h264", "chromeTwoInstances");
+		simulcastBweConvergenceTest("h264", "chrome");
 	}
 
 	@Test
 	@DisplayName("Chrome VP8 simulcast BWE convergence")
 	void chromeVP8SimulcastBweConvergenceTest() throws Exception {
 		log.info("Chrome VP8 simulcast BWE convergence");
-		simulcastBweConvergenceTest("vp8", "chromeTwoInstances");
+		simulcastBweConvergenceTest("vp8", "chrome");
 	}
 
 	private void simulcastBweConvergenceTest(String publisherCodec, String subscriberBrowser) throws Exception {
