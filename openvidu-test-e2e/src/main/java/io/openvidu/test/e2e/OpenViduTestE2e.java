@@ -14,10 +14,10 @@ import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
 
 import javax.net.ssl.SSLContext;
@@ -116,8 +116,8 @@ public class OpenViduTestE2e {
 	protected static final CommandLineExecutor commandLine = new CommandLineExecutor();
 	protected static final String RECORDING_IMAGE = "openvidu/openvidu-recording";
 
-	protected Collection<BrowserUser> browserUsers = new HashSet<>();
-	protected static Collection<GenericContainer<?>> containers = new HashSet<>();
+	protected Collection<BrowserUser> browserUsers = ConcurrentHashMap.newKeySet();
+	protected static Collection<GenericContainer<?>> containers = ConcurrentHashMap.newKeySet();
 
 	protected static RoomServiceClient LK;
 	protected static IngressServiceClient LK_INGRESS;
@@ -512,18 +512,22 @@ public class OpenViduTestE2e {
 		return browserUser;
 	}
 
-	private static synchronized boolean setupBrowserAux(BrowserNames browser, GenericContainer<?> container, boolean forceRestart) {
+	private static final Map<BrowserNames, Object> browserSetupLocks = new ConcurrentHashMap<>();
+
+	private static boolean setupBrowserAux(BrowserNames browser, GenericContainer<?> container, boolean forceRestart) {
 		if (isRemote(browser)) {
-			String dockerImage = container.getDockerImageName();
-			String ps = commandLine.executeCommand("docker ps | grep " + dockerImage, 30);
-			boolean containerAlreadyRunning = container.isRunning() || !ps.isBlank();
-			if (forceRestart && containerAlreadyRunning) {
-				container.stop();
-			}
-			if (!containerAlreadyRunning) {
-				container.start();
-				containers.add(container);
-				return true;
+			synchronized (browserSetupLocks.computeIfAbsent(browser, b -> new Object())) {
+				String dockerImage = container.getDockerImageName();
+				String ps = commandLine.executeCommand("docker ps | grep " + dockerImage, 30);
+				boolean containerAlreadyRunning = container.isRunning() || !ps.isBlank();
+				if (forceRestart && containerAlreadyRunning) {
+					container.stop();
+				}
+				if (!containerAlreadyRunning) {
+					container.start();
+					containers.add(container);
+					return true;
+				}
 			}
 		}
 		return false;

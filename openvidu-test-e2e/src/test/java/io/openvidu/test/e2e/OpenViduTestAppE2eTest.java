@@ -1338,7 +1338,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		final java.util.concurrent.atomic.AtomicLong subscriber1920AtMs = new java.util.concurrent.atomic.AtomicLong(
 				-1);
 
-		final String publisherBrowser = subscriberBrowser == "chromeTwoInstances" ? "chromeTwoInstances" : "chrome";
+		final String publisherBrowser = "chromeTwoInstances".equals(subscriberBrowser) ? "chromeTwoInstances" : "chrome";
 
 		Future<?> task1 = executor.submit(() -> {
 			try {
@@ -3590,13 +3590,14 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 				Assertions.fail(errMsg);
 			}
 		} finally {
-			// Close dialog
-			user.getWaiter().until(ExpectedConditions.presenceOfElementLocated(By.cssSelector("#close-dialog-btn")));
-			this.waitForBackdropAndClick(user, "#close-dialog-btn");
+			// Best-effort close of the info dialog
 			try {
-				Thread.sleep(500);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
+				if (!user.getDriver().findElements(By.cssSelector("#close-dialog-btn")).isEmpty()) {
+					this.waitForBackdropAndClick(user, "#close-dialog-btn");
+					Thread.sleep(500);
+				}
+			} catch (Exception e) {
+				log.warn("Best-effort info-dialog close failed (ignored): {}", e.getMessage());
 			}
 		}
 	}
