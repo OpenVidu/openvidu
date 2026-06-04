@@ -1609,6 +1609,16 @@ EOF
 #!/bin/bash -x
 set -e
 
+# Prevent concurrent/repeated runs. The check-abandoned cron fires every minute and would
+# otherwise launch this script again while a drain is already in progress, sending a second
+# SIGQUIT to the media node. LiveKit interprets the second signal as a forced shutdown
+# (force=true), which closes rooms and kicks out participants instead of waiting for them.
+exec 9>/var/lock/openvidu_shutdown.lock
+if ! flock -n 9; then
+  echo "Graceful shutdown already in progress, skipping..."
+  exit 0
+fi
+
 echo "Starting graceful shutdown of OpenVidu Media Node..."
 
 INSTANCE_NAME=$(curl -s "http://metadata.google.internal/computeMetadata/v1/instance/name" -H "Metadata-Flavor: Google")
