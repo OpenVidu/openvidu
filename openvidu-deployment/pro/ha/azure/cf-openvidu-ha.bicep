@@ -1365,6 +1365,10 @@ chmod +x /usr/local/bin/install.sh
 echo ${base64stop} | base64 -d > /usr/local/bin/stop_media_node.sh
 chmod +x /usr/local/bin/stop_media_node.sh
 
+# delete_media_node.sh
+echo ${base64delete_mediaNode} | base64 -d > /usr/local/bin/delete_media_node.sh
+chmod +x /usr/local/bin/delete_media_node.sh
+
 echo "DPkg::Lock::Timeout \"-1\";" > /etc/apt/apt.conf.d/99timeout
 
 apt-get update && apt-get install -y 
