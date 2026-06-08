@@ -6,30 +6,23 @@ function isVideoconferenceHost(elementRef: ElementRef): boolean {
 }
 
 /**
- * The **displayParticipantName** directive allows show/hide the participants name in stream component.
+ * The **streamDisplayParticipantName** directive allows show/hide the participants name in all stream components
+ * from the parent {@link VideoconferenceComponent}.
  *
  * Default: `true`
  *
- * It can be used in the parent element {@link VideoconferenceComponent} specifying the name of the `stream` component:
+ * To control visibility per individual stream use `[displayParticipantName]` directly on {@link StreamComponent}:
+ * `<ov-stream [displayParticipantName]="false"></ov-stream>`
  *
  * @example
  * <ov-videoconference [streamDisplayParticipantName]="false"></ov-videoconference>
- *
- * \
- * And it also can be used in the {@link StreamComponent}.
- * @example
- * <ov-stream [displayParticipantName]="false"></ov-stream>
  */
 @Directive({
-	selector: 'ov-videoconference[streamDisplayParticipantName], ov-stream[displayParticipantName]',
+	selector: 'ov-videoconference[streamDisplayParticipantName]',
 	standalone: false
 })
 export class StreamDisplayParticipantNameDirective implements AfterViewInit, OnDestroy {
 	@Input() set streamDisplayParticipantName(value: boolean) {
-		this.displayParticipantNameValue = value;
-		this.update(this.displayParticipantNameValue);
-	}
-	@Input() set displayParticipantName(value: boolean) {
 		this.displayParticipantNameValue = value;
 		this.update(this.displayParticipantNameValue);
 	}

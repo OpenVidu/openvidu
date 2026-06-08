@@ -499,7 +499,13 @@ export class ParticipantNameDirective implements AfterViewInit, OnDestroy {
 	/**
 	 * @ignore
 	 */
+	private _participantName: string;
+
+	/**
+	 * @ignore
+	 */
 	@Input() set participantName(name: string) {
+		this._participantName = name;
 		this.update(name);
 	}
 
@@ -515,7 +521,7 @@ export class ParticipantNameDirective implements AfterViewInit, OnDestroy {
 	 * @ignore
 	 */
 	ngAfterViewInit(): void {
-		this.update(this.participantName);
+		this.update(this._participantName);
 	}
 
 	/**

@@ -12,14 +12,14 @@
 	#streamContainer
 >
 	<div
-		*ngIf="!isMinimal && showParticipantName && !_track.isAudioTrack || (_track.isAudioTrack && _track.participant.onlyHasAudioTracks)"
+		*ngIf="(!isMinimal && showParticipantName && !_track.isAudioTrack) || (!isMinimal && showParticipantName && _track.isAudioTrack && _track.participant.onlyHasAudioTracks)"
 		id="participant-name-container"
 		class="participant-name"
 		[class.fullscreen]="isFullscreen"
 	>
 		<div class="participant-name-container">
 			<span id="participant-name">{{ _track.participant.name }}</span>
-			<span *ngIf="_track.isScreenTrack" id="participant-name">_SCREEN</span>
+			<span *ngIf="_track.isScreenTrack" id="participant-screen-label">_SCREEN</span>
 		</div>
 	</div>
 

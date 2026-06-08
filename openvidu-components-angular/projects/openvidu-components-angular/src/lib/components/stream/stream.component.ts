@@ -55,6 +55,7 @@ export class StreamComponent implements OnInit, OnDestroy {
 	 * @ignore
 	 */
 	showVideoControls: boolean = true;
+
 	/**
 	 * @ignore
 	 */
@@ -91,8 +92,17 @@ export class StreamComponent implements OnInit, OnDestroy {
 		this._track = track;
 	}
 
+	@Input()
+	set displayParticipantName(value: boolean) {
+		// A per-instance binding takes precedence over the global stream config and is
+		// immune to the timing window of the shared BehaviorSubject (see subscribeToStreamDirectives).
+		this._hasDisplayParticipantNameOverride = true;
+		this.showParticipantName = value;
+	}
+
 	private _streamContainer: ElementRef;
 	private destroy$ = new Subject<void>();
+	private _hasDisplayParticipantNameOverride = false;
 	private readonly HOVER_TIMEOUT = 2000;
 
 	/**
@@ -187,7 +197,9 @@ export class StreamComponent implements OnInit, OnDestroy {
 		this.libService.displayParticipantName$
 			.pipe(takeUntil(this.destroy$))
 			.subscribe((value: boolean) => {
-				this.showParticipantName = value;
+				if (!this._hasDisplayParticipantNameOverride) {
+					this.showParticipantName = value;
+				}
 				// this.cd.markForCheck();
 			});
 
