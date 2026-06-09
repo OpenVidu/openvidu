@@ -1,4 +1,6 @@
-@description('Stack name')
+@description('Stack name. Maximum 15 characters: used as the Azure Key Vault name prefix ("<stackName>-keyvault"), which is limited to 24 characters.')
+@minLength(3)
+@maxLength(15)
 param stackName string
 
 @description('''

@@ -28,9 +28,12 @@
                             "toolTip": "",
                             "constraints": {
                                 "required": true,
-                                "regex": "",
-                                "validationMessage": "",
-                                "validations": []
+                                "validations": [
+                                    {
+                                        "regex": "^[a-zA-Z][a-zA-Z0-9-]{1,13}[a-zA-Z0-9]$",
+                                        "message": "Must be 3-15 characters, start with a letter, contain only letters, numbers and hyphens, and not end with a hyphen. It is used as the Azure Key Vault name prefix (\"<stackName>-keyvault\"), which is limited to 24 characters."
+                                    }
+                                ]
                             },
                             "infoMessages": [],
                             "visible": true
