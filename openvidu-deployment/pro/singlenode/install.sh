@@ -25,6 +25,7 @@ export LIVEKIT_INGRESS_SERVER_IMAGE="${LIVEKIT_INGRESS_SERVER_IMAGE:-docker.io/o
 export LIVEKIT_EGRESS_SERVER_IMAGE="${LIVEKIT_EGRESS_SERVER_IMAGE:-docker.io/openvidu/egress:${OPENVIDU_VERSION}}"
 export PROMETHEUS_IMAGE="${PROMETHEUS_IMAGE:-docker.io/prom/prometheus:v3.12.0}"
 export PROMTAIL_IMAGE="${PROMTAIL_IMAGE:-docker.io/grafana/promtail:3.6.11}"
+export ALLOY_IMAGE="${ALLOY_IMAGE:-docker.io/grafana/alloy:v1.17.0}"
 export LOKI_IMAGE="${LOKI_IMAGE:-docker.io/openvidu/grafana-loki:3.7.2-r0}"
 export MIMIR_IMAGE="${MIMIR_IMAGE:-docker.io/openvidu/grafana-mimir:3.1.0-r0}"
 export GRAFANA_IMAGE="${GRAFANA_IMAGE:-docker.io/grafana/grafana:12.4.4}"
@@ -193,6 +194,7 @@ COMMON_DOCKER_OPTIONS="--network=host -v ${TMP_DIR}:/output \
     -e LIVEKIT_EGRESS_SERVER_IMAGE=$LIVEKIT_EGRESS_SERVER_IMAGE \
     -e PROMETHEUS_IMAGE=$PROMETHEUS_IMAGE \
     -e PROMTAIL_IMAGE=$PROMTAIL_IMAGE \
+    -e ALLOY_IMAGE=$ALLOY_IMAGE \
     -e LOKI_IMAGE=$LOKI_IMAGE \
     -e MIMIR_IMAGE=$MIMIR_IMAGE \
     -e GRAFANA_IMAGE=$GRAFANA_IMAGE \
