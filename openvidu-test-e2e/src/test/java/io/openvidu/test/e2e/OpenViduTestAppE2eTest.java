@@ -2016,9 +2016,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 		// Check subscriber's codec
 		WebElement subscriberVideo = user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 video.remote"));
-		waitUntilVideoLayersNotEmpty(user, subscriberVideo);
-		JsonArray json = this.getLayersAsJsonArray(user, subscriberVideo);
-		String subscriberCodec = json.get(0).getAsJsonObject().get("codec").getAsString();
+		String subscriberCodec = this.getSubscriberVideoCodec(user, subscriberVideo);
 		Assertions.assertEquals(expectedCodec, subscriberCodec);
 
 		gracefullyLeaveParticipants(user, 2);
@@ -2124,9 +2122,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 				// Check subscriber's codec
 				WebElement subscriberVideo = firefoxUser.getDriver()
 						.findElement(By.cssSelector("#openvidu-instance-0 video.remote"));
-				waitUntilVideoLayersNotEmpty(firefoxUser, subscriberVideo);
-				JsonArray json = this.getLayersAsJsonArray(firefoxUser, subscriberVideo);
-				String subscriberCodec = json.get(0).getAsJsonObject().get("codec").getAsString();
+				String subscriberCodec = this.getSubscriberVideoCodec(firefoxUser, subscriberVideo);
 				Assertions.assertEquals(expectedCodec, subscriberCodec);
 				latch.countDown();
 				latch.await(10, TimeUnit.SECONDS);
@@ -3112,8 +3108,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		WebElement subscriberVideo = user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 video.remote"));
 
 		// Check subscriber video codec
-		JsonArray layers = this.getLayersAsJsonArray(user, subscriberVideo);
-		String subscriberCodec = layers.get(0).getAsJsonObject().get("codec").getAsString();
+		String subscriberCodec = this.getSubscriberVideoCodec(user, subscriberVideo);
 		Assertions.assertEquals("video/" + codec.toUpperCase(), subscriberCodec);
 
 		// Subscriber should settle in 1920x1080p
@@ -3176,8 +3171,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		WebElement subscriberVideo = user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 video.remote"));
 
 		// Check subscriber video codec
-		JsonArray layers = this.getLayersAsJsonArray(user, subscriberVideo);
-		String subscriberCodec = layers.get(0).getAsJsonObject().get("codec").getAsString();
+		String subscriberCodec = this.getSubscriberVideoCodec(user, subscriberVideo);
 		Assertions.assertEquals("video/" + codec.toUpperCase(), subscriberCodec);
 
 		// Subscriber should settle in 960
@@ -3244,8 +3238,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		WebElement subscriberVideo = user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 video.remote"));
 
 		// Check subscriber video codec
-		JsonArray layers = this.getLayersAsJsonArray(user, subscriberVideo);
-		String subscriberCodec = layers.get(0).getAsJsonObject().get("codec").getAsString();
+		String subscriberCodec = this.getSubscriberVideoCodec(user, subscriberVideo);
 		Assertions.assertEquals("video/" + codec.toUpperCase(), subscriberCodec);
 
 		// After subscription all layers should be active
@@ -3346,9 +3339,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 		// Subscriber video
 		WebElement subscriberVideo = user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 video.remote"));
-		waitUntilVideoLayersNotEmpty(user, subscriberVideo);
-		JsonArray layers = this.getLayersAsJsonArray(user, subscriberVideo);
-		String subscriberCodec = layers.get(0).getAsJsonObject().get("codec").getAsString();
+		String subscriberCodec = this.getSubscriberVideoCodec(user, subscriberVideo);
 		Assertions.assertEquals("video/" + codecUpperCase, subscriberCodec);
 
 		// Validate SVC by dynamically switching subscriber quality and checking
@@ -4174,8 +4165,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 			long bytesReceived = this.getSubscriberVideoBytesReceived(user, subscriberVideo);
 			this.waitUntilSubscriberBytesReceivedIncrease(user, subscriberVideo, bytesReceived);
 			this.waitUntilSubscriberFramesPerSecondNotZero(user, subscriberVideo);
-			JsonArray json = this.getLayersAsJsonArray(user, subscriberVideo);
-			String subscriberCodec = json.get(0).getAsJsonObject().get("codec").getAsString();
+			String subscriberCodec = this.getSubscriberVideoCodec(user, subscriberVideo);
 			String expectedCodec = "video/VP8";
 			Assertions.assertEquals(expectedCodec, subscriberCodec);
 		}
@@ -4215,14 +4205,12 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 		// Check subscriber's codec
 		if (codec != null) {
-			JsonArray json = this.getLayersAsJsonArray(user, subscriberVideo);
-			String subscriberCodec = json.get(0).getAsJsonObject().get("codec").getAsString();
+			String subscriberCodec = this.getSubscriberVideoCodec(user, subscriberVideo);
 			String expectedCodec = "video/" + codec.toUpperCase();
 			Assertions.assertEquals(expectedCodec, subscriberCodec);
 		}
 		if (preset != null) {
-			JsonArray json = this.getLayersAsJsonArray(user, subscriberVideo);
-			String subscriberCodec = json.get(0).getAsJsonObject().get("codec").getAsString();
+			String subscriberCodec = this.getSubscriberVideoCodec(user, subscriberVideo);
 			Assertions.assertEquals("video/H264", subscriberCodec);
 		}
 	}
@@ -4305,6 +4293,18 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 				.getAsJsonObject().get("framesPerSecond") != null, "Timeout waiting for framesPerSecond to exist");
 		JsonArray json = this.getLayersAsJsonArray(user, subscriberVideo);
 		return json.get(0).getAsJsonObject().get("framesPerSecond").getAsInt();
+	}
+
+	private String getSubscriberVideoCodec(OpenViduTestappUser user, WebElement subscriberVideo) {
+		waitUntilVideoLayersNotEmpty(user, subscriberVideo);
+		// The "codec" field is derived from a separate "codec" stats report matched by
+		// codecId. In Firefox it may appear a few stat cycles after frames already flow,
+		// so wait for it to exist instead of reading it eagerly (which would NPE).
+		this.waitUntilAux(user, subscriberVideo,
+				() -> getLayersAsJsonArray(user, subscriberVideo).get(0).getAsJsonObject().get("codec") != null,
+				"Timeout waiting for codec to exist");
+		JsonArray json = this.getLayersAsJsonArray(user, subscriberVideo);
+		return json.get(0).getAsJsonObject().get("codec").getAsString();
 	}
 
 	// If rid is null, retrieve the first layer
