@@ -18,6 +18,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 
 import javax.net.ssl.SSLContext;
@@ -31,6 +32,7 @@ import org.junit.jupiter.api.Assertions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.GenericContainer;
+import org.testcontainers.containers.Network;
 import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.containers.wait.strategy.WaitStrategy;
 import org.testcontainers.utility.DockerImageName;
@@ -71,7 +73,8 @@ public class OpenViduTestE2e {
 			put("VP9", Triple.of("libvpx-vp9", "", "VP9"));
 			put("MPEG-4", Triple.of("mpeg4", "", "MPEG-4"));
 			put("M-JPEG", Triple.of("mjpeg", "-force_duplicated_matrix:v 1 -huffman:v 0", "M-JPEG"));
-			// put("AV1", Triple.of("libaom-av1", "", "AV1")); // NOT SUPPORTED BY THE RTSP SERVER
+			// put("AV1", Triple.of("libaom-av1", "", "AV1")); // NOT SUPPORTED BY THE RTSP
+			// SERVER
 			// (maybe gstreamer?)
 			// put("H265", Triple.of("libx265", "", "H265")); // NOT SUPPORTED BY INGRESS
 		}
@@ -119,6 +122,19 @@ public class OpenViduTestE2e {
 	protected Collection<BrowserUser> browserUsers = ConcurrentHashMap.newKeySet();
 	protected static Collection<GenericContainer<?>> containers = ConcurrentHashMap.newKeySet();
 
+	protected final int CONNECTION_QUALITY_OBSERVATION_MS = 22000;
+	protected static final int CONNECTION_QUALITY_STABLE_MS = 18000;
+
+	// Connection Quality Group 2: tracking for the isolated "chromeNetwork"
+	// browsers. Several can run at once (e.g. an impaired peer + a clean peer in
+	// the same test), so each gets a UNIQUE container name — keyed by its
+	// BrowserUser so a test can resolve the right one for Pumba via
+	// getNetemContainerName(user) — and its OWN docker network. All networks are
+	// closed in dispose().
+	protected Map<BrowserUser, String> netemContainerNames = new ConcurrentHashMap<>();
+	protected Collection<Network> netemNetworks = ConcurrentHashMap.newKeySet();
+	private final AtomicInteger netemContainerCounter = new AtomicInteger();
+
 	protected static RoomServiceClient LK;
 	protected static IngressServiceClient LK_INGRESS;
 
@@ -149,6 +165,66 @@ public class OpenViduTestE2e {
 				.withFileSystemBind("/opt/openvidu", "/opt/openvidu").withEnv(map).withNetworkMode("host")
 				.waitingFor(waitBrowser);
 		return chrome;
+	}
+
+	// Connection Quality Group 2: a Chrome container on its OWN isolated network
+	// namespace so Pumba
+	// can apply netem to ONLY this client's traffic (NOT host networking, which
+	// would impair the
+	// whole host, SFU included). It joins a DEDICATED, uniquely-named docker
+	// network created just
+	// for this test (not the shared default bridge), so the impairment never
+	// touches any other
+	// docker network. Each network is tracked in `netemNetworks` and closed in
+	// dispose().
+	//
+	// The client does NOT need to share the SFU's docker network. Signalling
+	// reaches the secure
+	// wss://<host-LAN-IP>:7443 URL (host-published by caddy-proxy), and WebRTC
+	// media reaches the
+	// SFU's advertised host LAN IP candidate (e.g. 10.10.1.203:7900-7999/udp),
+	// which the SFU
+	// publishes to the host. Any docker bridge can reach a host-published port via
+	// the host IP +
+	// DNAT — docker's inter-bridge isolation only blocks direct container↔container
+	// routing, not
+	// the published-port path — and the SFU being ICE-lite means the client just
+	// sends to that one
+	// candidate and gets replies back via UDP conntrack. So full network isolation
+	// works.
+	//
+	// The WebDriver port 4444 is published to a mapped host port for the
+	// RemoteWebDriver, and
+	// host.docker.internal (host-gateway) reaches the host-published testapp.
+	private GenericContainer<?> chromeContainerNetem(String image, long shmSize, int maxBrowserSessions,
+			boolean headless, String containerName) {
+		Map<String, String> map = new HashMap<>();
+		map.put("SE_OPTS", "--port 4444");
+		map.put("SE_EVENT_BUS_PUBLISH_PORT", "4542");
+		map.put("SE_EVENT_BUS_SUBSCRIBE_PORT", "4543");
+		if (headless) {
+			map.put("START_XVFB", "false");
+		}
+		if (maxBrowserSessions > 1) {
+			map.put("SE_NODE_OVERRIDE_MAX_SESSIONS", "true");
+			map.put("SE_NODE_MAX_SESSIONS", String.valueOf(maxBrowserSessions));
+		}
+		Network netemNetwork = Network.builder()
+				.createNetworkCmdModifier(cmd -> cmd.withName(containerName + "-net"))
+				.build();
+		this.netemNetworks.add(netemNetwork);
+		GenericContainer<?> chrome = new GenericContainer<>(DockerImageName.parse(image)).withSharedMemorySize(shmSize)
+				.withFileSystemBind("/opt/openvidu", "/opt/openvidu").withEnv(map)
+				.withNetwork(netemNetwork)
+				.withExposedPorts(4444)
+				.withExtraHost("host.docker.internal", "host-gateway")
+				.withCreateContainerCmdModifier(cmd -> cmd.withName(containerName))
+				.waitingFor(waitBrowser);
+		return chrome;
+	}
+
+	protected String getNetemContainerName(BrowserUser browserUser) {
+		return this.netemContainerNames.get(browserUser);
 	}
 
 	private GenericContainer<?> firefoxContainer(String image, long shmSize, int maxBrowserSessions, boolean headless) {
@@ -232,12 +308,14 @@ public class OpenViduTestE2e {
 		// e.g. "[path live] stream is available and online, 2 tracks (H264, Opus)"
 		if (videoCodec != null) {
 			String expectedVideoCodecLogValue = FFMPEG_VIDEO_CODEC_NAMES.get(videoCodec).getRight();
-			String regex = ".*\\[path " + RTSP_PATH + "\\] stream is available.*\\(.*(?i)(" + expectedVideoCodecLogValue + ").*\\).*";
+			String regex = ".*\\[path " + RTSP_PATH + "\\] stream is available.*\\(.*(?i)(" + expectedVideoCodecLogValue
+					+ ").*\\).*";
 			waitUntilLog(rtspServerContainer, regex, 15);
 		}
 		if (audioCodec != null) {
 			String expectedValue = FFMPEG_AUDIO_CODEC_NAMES.get(audioCodec).getRight();
-			String regex = ".*\\[path " + RTSP_PATH + "\\] stream is available.*\\(.*(?i)(" + expectedValue + ").*\\).*";
+			String regex = ".*\\[path " + RTSP_PATH + "\\] stream is available.*\\(.*(?i)(" + expectedValue
+					+ ").*\\).*";
 			waitUntilLog(rtspServerContainer, regex, 15);
 		}
 
@@ -435,77 +513,105 @@ public class OpenViduTestE2e {
 		boolean headless = false;
 
 		switch (browser) {
-		case "chrome":
-			container = chromeContainer("selenium/standalone-chrome:" + CHROME_VERSION, 2147483648L, 1, headless);
-			setupBrowserAux(BrowserNames.CHROME, container, false);
-			browserUser = new ChromeUser("TestUser", 50, headless);
-			break;
-		case "chromeTwoInstances":
-			container = chromeContainer("selenium/standalone-chrome:" + CHROME_VERSION, 2147483648L, 2, headless);
-			setupBrowserAux(BrowserNames.CHROME, container, false);
-			browserUser = new ChromeUser("TestUser", 50, headless);
-			break;
-		case "chromeAlternateScreenShare":
-			container = chromeContainer("selenium/standalone-chrome:" + CHROME_VERSION, 2147483648L, 1, false);
-			setupBrowserAux(BrowserNames.CHROME, container, false);
-			browserUser = new ChromeUser("TestUser", 50, "OpenVidu TestApp");
-			break;
-		case "chromeAlternateFakeVideo":
-			container = chromeContainer("selenium/standalone-chrome:" + CHROME_VERSION, 2147483648L, 1, false);
-			setupBrowserAux(BrowserNames.CHROME, container, false);
-			path = Paths.get("/opt/openvidu/barcode.y4m");
-			checkMediafilePath(path);
-			browserUser = new ChromeUser("TestUser", 50, path);
-			break;
-		case "chromeFakeAudio":
-			container = chromeContainer("selenium/standalone-chrome:" + CHROME_VERSION, 2147483648L, 1, false);
-			setupBrowserAux(BrowserNames.CHROME, container, false);
-			path = new File("/opt/openvidu/test.wav").toPath();
-			try {
-				checkMediafilePath(path);
-			} catch (Exception e) {
+			case "chrome":
+				container = chromeContainer("selenium/standalone-chrome:" + CHROME_VERSION, 2147483648L, 1, headless);
+				setupBrowserAux(BrowserNames.CHROME, container, false);
+				browserUser = new ChromeUser("TestUser", 50, headless);
+				break;
+			case "chromeTwoInstances":
+				container = chromeContainer("selenium/standalone-chrome:" + CHROME_VERSION, 2147483648L, 2, headless);
+				setupBrowserAux(BrowserNames.CHROME, container, false);
+				browserUser = new ChromeUser("TestUser", 50, headless);
+				break;
+			case "chromeNetwork":
+				// Bridged Chrome (in its own isolated Docker network) targetable by Pumba. A
+				// unique name
+				// (millis + counter) lets several run simultaneously; it is mapped to its
+				// BrowserUser below
+				// so a test can resolve it for Pumba via getNetemContainerName(user).
+				String netemContainerName = "openvidu-test-chrome-netem-" + System.currentTimeMillis() + "-"
+						+ this.netemContainerCounter.incrementAndGet();
+				container = chromeContainerNetem("selenium/standalone-chrome:" + CHROME_VERSION, 2147483648L, 1,
+						headless,
+						netemContainerName);
+				container.start();
+				containers.add(container);
+				// Point the RemoteWebDriver at this container's mapped WebDriver port setting
+				// REMOTE_URL_CHROME. Restore the property afterwards
+				String previousRemoteUrlChrome = System.getProperty("REMOTE_URL_CHROME");
+				System.setProperty("REMOTE_URL_CHROME", "http://localhost:" + container.getMappedPort(4444));
 				try {
-					FileUtils.copyURLToFile(
-							new URL("https://openvidu-loadtest-mediafiles.s3.amazonaws.com/interview.wav"),
-							new File("/opt/openvidu/test.wav"), 60000, 60000);
-				} catch (FileNotFoundException e2) {
-					e2.printStackTrace();
-					System.err.println("exception on: downLoadFile() function: " + e.getMessage());
+					browserUser = new ChromeUser("TestUser", 50, headless);
+				} finally {
+					if (previousRemoteUrlChrome == null) {
+						System.clearProperty("REMOTE_URL_CHROME");
+					} else {
+						System.setProperty("REMOTE_URL_CHROME", previousRemoteUrlChrome);
+					}
 				}
-			}
-			browserUser = new ChromeUser("TestUser", 50, null, path, headless);
-			break;
-		case "chromeDtxAudio":
-			container = chromeContainer("selenium/standalone-chrome:" + CHROME_VERSION, 2147483648L, 1, false);
-			setupBrowserAux(BrowserNames.CHROME, container, false);
-			path = new File("/opt/openvidu/dtx_test_audio.wav").toPath();
-			checkMediafilePath(path);
-			browserUser = new ChromeUser("TestUser", 50, null, path, headless);
-			break;
-		case "chromeVirtualBackgroundFakeVideo":
-			container = chromeContainer("selenium/standalone-chrome:" + CHROME_VERSION, 2147483648L, 1, false);
-			setupBrowserAux(BrowserNames.CHROME, container, false);
-			path = Paths.get("/opt/openvidu/girl.mjpeg");
-			checkMediafilePath(path);
-			browserUser = new ChromeUser("TestUser", 50, path, false);
-			break;
-		case "firefox":
-			container = firefoxContainer("selenium/standalone-firefox:" + FIREFOX_VERSION, 2147483648L, 1, false);
-			setupBrowserAux(BrowserNames.FIREFOX, container, false);
-			browserUser = new FirefoxUser("TestUser", 50, false, headless);
-			break;
-		case "firefoxDisabledOpenH264":
-			container = firefoxContainer("selenium/standalone-firefox:" + FIREFOX_VERSION, 2147483648L, 1, true);
-			setupBrowserAux(BrowserNames.FIREFOX, container, false);
-			browserUser = new FirefoxUser("TestUser", 50, true, headless);
-			break;
-		case "edge":
-			container = edgeContainer("selenium/standalone-edge:" + EDGE_VERSION, 2147483648L, 1, false);
-			setupBrowserAux(BrowserNames.EDGE, container, false);
-			browserUser = new EdgeUser("TestUser", 50, headless);
-			break;
-		default:
-			log.error("Browser {} not recognized", browser);
+				this.netemContainerNames.put(browserUser, netemContainerName);
+				break;
+			case "chromeAlternateScreenShare":
+				container = chromeContainer("selenium/standalone-chrome:" + CHROME_VERSION, 2147483648L, 1, false);
+				setupBrowserAux(BrowserNames.CHROME, container, false);
+				browserUser = new ChromeUser("TestUser", 50, "OpenVidu TestApp");
+				break;
+			case "chromeAlternateFakeVideo":
+				container = chromeContainer("selenium/standalone-chrome:" + CHROME_VERSION, 2147483648L, 1, false);
+				setupBrowserAux(BrowserNames.CHROME, container, false);
+				path = Paths.get("/opt/openvidu/barcode.y4m");
+				checkMediafilePath(path);
+				browserUser = new ChromeUser("TestUser", 50, path);
+				break;
+			case "chromeFakeAudio":
+				container = chromeContainer("selenium/standalone-chrome:" + CHROME_VERSION, 2147483648L, 1, false);
+				setupBrowserAux(BrowserNames.CHROME, container, false);
+				path = new File("/opt/openvidu/test.wav").toPath();
+				try {
+					checkMediafilePath(path);
+				} catch (Exception e) {
+					try {
+						FileUtils.copyURLToFile(
+								new URL("https://openvidu-loadtest-mediafiles.s3.amazonaws.com/interview.wav"),
+								new File("/opt/openvidu/test.wav"), 60000, 60000);
+					} catch (FileNotFoundException e2) {
+						e2.printStackTrace();
+						System.err.println("exception on: downLoadFile() function: " + e.getMessage());
+					}
+				}
+				browserUser = new ChromeUser("TestUser", 50, null, path, headless);
+				break;
+			case "chromeDtxAudio":
+				container = chromeContainer("selenium/standalone-chrome:" + CHROME_VERSION, 2147483648L, 1, false);
+				setupBrowserAux(BrowserNames.CHROME, container, false);
+				path = new File("/opt/openvidu/dtx_test_audio.wav").toPath();
+				checkMediafilePath(path);
+				browserUser = new ChromeUser("TestUser", 50, null, path, headless);
+				break;
+			case "chromeVirtualBackgroundFakeVideo":
+				container = chromeContainer("selenium/standalone-chrome:" + CHROME_VERSION, 2147483648L, 1, false);
+				setupBrowserAux(BrowserNames.CHROME, container, false);
+				path = Paths.get("/opt/openvidu/girl.mjpeg");
+				checkMediafilePath(path);
+				browserUser = new ChromeUser("TestUser", 50, path, false);
+				break;
+			case "firefox":
+				container = firefoxContainer("selenium/standalone-firefox:" + FIREFOX_VERSION, 2147483648L, 1, false);
+				setupBrowserAux(BrowserNames.FIREFOX, container, false);
+				browserUser = new FirefoxUser("TestUser", 50, false, headless);
+				break;
+			case "firefoxDisabledOpenH264":
+				container = firefoxContainer("selenium/standalone-firefox:" + FIREFOX_VERSION, 2147483648L, 1, true);
+				setupBrowserAux(BrowserNames.FIREFOX, container, false);
+				browserUser = new FirefoxUser("TestUser", 50, true, headless);
+				break;
+			case "edge":
+				container = edgeContainer("selenium/standalone-edge:" + EDGE_VERSION, 2147483648L, 1, false);
+				setupBrowserAux(BrowserNames.EDGE, container, false);
+				browserUser = new EdgeUser("TestUser", 50, headless);
+				break;
+			default:
+				log.error("Browser {} not recognized", browser);
 		}
 
 		this.browserUsers.add(browserUser);
@@ -536,20 +642,20 @@ public class OpenViduTestE2e {
 	private static boolean isRemote(BrowserNames browser) {
 		String remoteUrl = null;
 		switch (browser) {
-		case CHROME:
-			remoteUrl = System.getProperty("REMOTE_URL_CHROME");
-			break;
-		case FIREFOX:
-			remoteUrl = System.getProperty("REMOTE_URL_FIREFOX");
-			break;
-		case OPERA:
-			remoteUrl = System.getProperty("REMOTE_URL_OPERA");
-			break;
-		case EDGE:
-			remoteUrl = System.getProperty("REMOTE_URL_EDGE");
-			break;
-		case ANDROID:
-			return true;
+			case CHROME:
+				remoteUrl = System.getProperty("REMOTE_URL_CHROME");
+				break;
+			case FIREFOX:
+				remoteUrl = System.getProperty("REMOTE_URL_FIREFOX");
+				break;
+			case OPERA:
+				remoteUrl = System.getProperty("REMOTE_URL_OPERA");
+				break;
+			case EDGE:
+				remoteUrl = System.getProperty("REMOTE_URL_EDGE");
+				break;
+			case ANDROID:
+				return true;
 		}
 		return remoteUrl != null;
 	}
@@ -576,6 +682,21 @@ public class OpenViduTestE2e {
 			c.close();
 			it2.remove();
 		}
+
+		// Remove the dedicated netem docker networks (created in chromeContainerNetem),
+		// now that their
+		// containers have been stopped.
+		Iterator<Network> itNet = this.netemNetworks.iterator();
+		while (itNet.hasNext()) {
+			Network net = itNet.next();
+			try {
+				net.close();
+			} catch (Exception e) {
+				log.warn("Error closing netem docker network: {}", e.getMessage());
+			}
+			itNet.remove();
+		}
+		this.netemContainerNames.clear();
 	}
 
 	protected void closeAllRooms(RoomServiceClient client) {

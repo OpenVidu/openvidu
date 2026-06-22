@@ -37,6 +37,10 @@ public class AbstractOpenViduTestappE2eTest extends OpenViduTestE2e {
 		return testappUser;
 	}
 
+	protected String getNetemContainerName(OpenViduTestappUser user) {
+		return this.getNetemContainerName(user.getBrowserUser());
+	}
+
 	protected void gracefullyLeaveParticipants(OpenViduTestappUser user, int numberOfParticipants) throws Exception {
 		int accumulatedDisconnected = 0;
 		for (int j = 1; j <= numberOfParticipants; j++) {

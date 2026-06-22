@@ -108,6 +108,7 @@ export class OpenviduInstanceComponent {
         frameRate: 30,
       },
     },
+    singlePeerConnection: false
   };
   roomConnectOptions: RoomConnectOptions = {
     autoSubscribe: false,
@@ -1570,8 +1571,7 @@ export class OpenviduInstanceComponent {
     const updateFunction = async (): Promise<string> => {
       const pub: PCTransport = this.getPublisherPC()!;
       const sub: PCTransport = this.getSubscriberPC()!;
-      return JSON.stringify(
-        {
+      const info = {
           PCTransports: {
             publisher: {
               connectedAddress: await pub.getConnectedAddress(),
@@ -1579,18 +1579,22 @@ export class OpenviduInstanceComponent {
               iceConnectionState: pub.getICEConnectionState(),
               signallingState: pub.getSignallingState(),
             },
-            subscriber: {
-              connectedAddress: await sub.getConnectedAddress(),
-              connectionState: sub.getConnectionState(),
-              iceConnectionState: sub.getICEConnectionState(),
-              signallingState: sub.getSignallingState(),
-            },
           },
           RTCIceCandidateStats: {
             publisher: await this.getPublisherRTCIceCandidateStats(),
-            subscriber: await this.getSubscriberRTCIceCandidateStats(),
-          },
-        },
+          }
+        };
+      if (!!sub) {
+        (info.PCTransports as any).subscriber = {
+          connectedAddress: await sub.getConnectedAddress(),
+          connectionState: sub.getConnectionState(),
+          iceConnectionState: sub.getICEConnectionState(),
+          signallingState: sub.getSignallingState(),
+        };
+        (info.RTCIceCandidateStats as any).subscriber = await this.getSubscriberRTCIceCandidateStats();
+      }
+      return JSON.stringify(
+        info,
         null,
         2
       );

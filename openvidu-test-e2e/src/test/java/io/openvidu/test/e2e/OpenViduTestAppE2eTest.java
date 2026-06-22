@@ -25,9 +25,12 @@ import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.Callable;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -36,6 +39,8 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BiFunction;
 
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
@@ -46,6 +51,7 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.openqa.selenium.By;
+import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.Keys;
 import org.openqa.selenium.TakesScreenshot;
 import org.openqa.selenium.WebElement;
@@ -72,6 +78,7 @@ import io.minio.errors.XmlParserException;
 import io.minio.messages.Item;
 import livekit.LivekitIngress.IngressInfo;
 import livekit.LivekitIngress.IngressState;
+import livekit.LivekitModels.ConnectionQuality;
 
 import static org.openqa.selenium.OutputType.BASE64;
 
@@ -91,6 +98,13 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		checkFfmpegInstallation();
 		loadEnvironmentVariables();
 		setUpLiveKitClient();
+		CompletableFuture.runAsync(() -> {
+			try {
+				NetworkConditioner.pullImages();
+			} catch (Exception e) {
+				System.err.println("Download of images failed: " + e.getMessage());
+			}
+		});
 	}
 
 	@BeforeEach()
@@ -379,6 +393,843 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 						"Expected connection quality to be excellent"));
 
 		gracefullyLeaveParticipants(user, 2);
+	}
+
+	private List<WebElement> getConnectionQualityEventContents(OpenViduTestappUser user, int numberOfUser,
+			String participantName) {
+		String xpath = "//*[@id='openvidu-instance-" + numberOfUser
+				+ "']//mat-expansion-panel[.//mat-expansion-panel-header[contains(@class,'connectionQualityChanged-"
+				+ participantName + "')]]//div[contains(@class,'event-content')]";
+		return user.getDriver().findElements(By.xpath(xpath));
+	}
+
+	// Latest connection-quality level currently reported for a participant, or null
+	// if none yet.
+	private ConnectionQuality latestConnectionQuality(OpenViduTestappUser user, int numberOfUser,
+			String participantName) {
+		List<WebElement> contents = getConnectionQualityEventContents(user, numberOfUser, participantName);
+		for (int i = contents.size() - 1; i >= 0; i--) {
+			String text = contents.get(i).getAttribute("textContent");
+			if (text == null) {
+				continue;
+			}
+			text = text.toLowerCase().trim();
+			if (text.contains("excellent")) {
+				return ConnectionQuality.EXCELLENT;
+			}
+			if (text.contains("good")) {
+				return ConnectionQuality.GOOD;
+			}
+			if (text.contains("poor")) {
+				return ConnectionQuality.POOR;
+			}
+			if (text.contains("lost")) {
+				return ConnectionQuality.LOST;
+			}
+		}
+		return null;
+	}
+
+	// First loss% (ascending) at which the recorded quality equals `level`, or -1
+	// if never reached.
+	private static int firstLossReaching(Map<Integer, ConnectionQuality> observed, ConnectionQuality level) {
+		for (Entry<Integer, ConnectionQuality> e : observed.entrySet()) {
+			if (e.getValue() == level) {
+				return e.getKey();
+			}
+		}
+		return -1;
+	}
+
+	// Render the ramp results (publisher vs subscriber-self quality per loss step)
+	// + the band transitions as a single log table.
+	private static String buildRampResultTable(Map<Integer, ConnectionQuality> publisher,
+			Map<Integer, ConnectionQuality> subscriber) {
+		StringBuilder sb = new StringBuilder("\nConnectionQuality ramp-up results\n");
+		sb.append("  loss% | PunchbagUser (publisher) | RegularUser (subscriber, self)\n");
+		sb.append("  ------+--------------------------+-------------------------------\n");
+		ConnectionQuality prev = null;
+		for (Entry<Integer, ConnectionQuality> e : publisher.entrySet()) {
+			int pct = e.getKey();
+			ConnectionQuality pub = e.getValue();
+			ConnectionQuality sub = subscriber.get(pct);
+			String transition = (prev != null && pub != prev) ? "   <- " + prev + " -> " + pub : "";
+			sb.append(String.format("  %4d%% | %-24s | %-30s%s%n", pct, String.valueOf(pub), String.valueOf(sub),
+					transition));
+			prev = pub;
+		}
+		sb.append("  transitions: EXCELLENT->GOOD @").append(firstLossReaching(publisher, ConnectionQuality.GOOD))
+				.append("%, GOOD->POOR @").append(firstLossReaching(publisher, ConnectionQuality.POOR))
+				.append("%, POOR->LOST @").append(firstLossReaching(publisher, ConnectionQuality.LOST)).append("%");
+		return sb.toString();
+	}
+
+	private void assertConnectionQualityNeverDegraded(OpenViduTestappUser user, int numberOfUser,
+			String participantName) {
+		List<WebElement> contents = getConnectionQualityEventContents(user, numberOfUser, participantName);
+		Assertions.assertFalse(contents.isEmpty(), "Expected at least one connectionQualityChanged event for "
+				+ participantName + " in openvidu-instance-" + numberOfUser);
+		String latest = null;
+		for (WebElement el : contents) {
+			String quality = el.getAttribute("textContent");
+			if (quality == null) {
+				continue;
+			}
+			quality = quality.toLowerCase().trim();
+			if (quality.isEmpty()) {
+				continue;
+			}
+			Assertions.assertFalse(quality.contains("poor") || quality.contains("lost"),
+					"Connection quality for " + participantName + " (openvidu-instance-" + numberOfUser
+							+ ") must never be POOR or LOST under server-side-only conditions, but observed: '"
+							+ quality
+							+ "'");
+			latest = quality;
+		}
+		Assertions.assertNotNull(latest,
+				"No connection quality value found for " + participantName + " in openvidu-instance-" + numberOfUser);
+		Assertions.assertTrue(latest.contains("excellent"),
+				"Connection quality for " + participantName + " (openvidu-instance-" + numberOfUser
+						+ ") should settle on EXCELLENT, but the latest value was: '" + latest + "'");
+	}
+
+	@Test
+	@DisplayName("ConnectionQuality EXCELLENT with many published and subscribed tracks")
+	void connectionQualityManyTracksAlwaysExcellentTest() throws Exception {
+
+		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
+
+		log.info("ConnectionQuality EXCELLENT with many published and subscribed tracks");
+
+		final int N = 3;
+		user.getDriver().findElement(By.id("auto-join-checkbox")).click();
+		WebElement nInput = user.getDriver().findElement(By.id("one2many-input"));
+		nInput.clear();
+		nInput.sendKeys(String.valueOf(N));
+		user.getDriver().findElement(By.id("one2one-btn")).click();
+
+		// N participants, each publishing audio+video and subscribing to all others
+		user.getEventManager().waitUntilEventReaches("connected", "RoomEvent", N);
+		user.getEventManager().waitUntilEventReaches("localTrackPublished", "RoomEvent", 2 * N);
+		user.getEventManager().waitUntilEventReaches("connectionQualityChanged", "RoomEvent", N);
+
+		// Let quality settle and give any (wrong) degradation time to surface
+		Thread.sleep(CONNECTION_QUALITY_OBSERVATION_MS);
+
+		for (int i = 0; i < N; i++) {
+			assertConnectionQualityNeverDegraded(user, i, "TestParticipant" + i);
+		}
+
+		gracefullyLeaveParticipants(user, N);
+	}
+
+	@Test
+	@DisplayName("ConnectionQuality EXCELLENT when publisher pauses a track")
+	void connectionQualityPublisherPauseAlwaysExcellentTest() throws Exception {
+
+		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
+
+		log.info("ConnectionQuality EXCELLENT when publisher pauses a track");
+
+		user.getDriver().findElement(By.id("auto-join-checkbox")).click();
+		user.getDriver().findElement(By.id("one2one-btn")).click();
+
+		user.getEventManager().waitUntilEventReaches("connected", "RoomEvent", 2);
+		user.getEventManager().waitUntilEventReaches("localTrackPublished", "RoomEvent", 4);
+		user.getEventManager().waitUntilEventReaches("trackSubscribed", "RoomEvent", 4);
+		user.getEventManager().waitUntilEventReaches("connectionQualityChanged", "RoomEvent", 2);
+
+		// Publisher (instance 0) pauses (mutes) its video track -> the scorer heals to
+		// EXCELLENT (mute -> cMaxScore), so quality must not degrade.
+		user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 .mute-unmute-video")).sendKeys(Keys.ENTER);
+		user.getEventManager().waitUntilEventReaches("trackMuted", "RoomEvent", 2);
+
+		Thread.sleep(CONNECTION_QUALITY_OBSERVATION_MS);
+
+		assertConnectionQualityNeverDegraded(user, 0, "TestParticipant0");
+		assertConnectionQualityNeverDegraded(user, 1, "TestParticipant1");
+
+		gracefullyLeaveParticipants(user, 2);
+	}
+
+	@Test
+	@DisplayName("ConnectionQuality EXCELLENT when subscriber pauses a track")
+	void connectionQualitySubscriberPauseAlwaysExcellentTest() throws Exception {
+
+		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
+
+		log.info("ConnectionQuality EXCELLENT when subscriber pauses a track");
+
+		user.getDriver().findElement(By.id("auto-join-checkbox")).click();
+		user.getDriver().findElement(By.id("one2one-btn")).click();
+
+		user.getEventManager().waitUntilEventReaches("connected", "RoomEvent", 2);
+		user.getEventManager().waitUntilEventReaches("trackSubscribed", "RoomEvent", 4);
+		user.getEventManager().waitUntilEventReaches("connectionQualityChanged", "RoomEvent", 2);
+
+		// Subscriber (instance 1) disables playback of the subscribed video track ->
+		// the
+		// DownTrack forwarder is muted and the downstream scorer heals to EXCELLENT.
+		user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 .toggle-video-enabled")).sendKeys(Keys.ENTER);
+
+		Thread.sleep(CONNECTION_QUALITY_OBSERVATION_MS);
+
+		assertConnectionQualityNeverDegraded(user, 0, "TestParticipant0");
+		assertConnectionQualityNeverDegraded(user, 1, "TestParticipant1");
+
+		gracefullyLeaveParticipants(user, 2);
+	}
+
+	@Test
+	@DisplayName("ConnectionQuality EXCELLENT when Dynacast pauses an unsubscribed track")
+	void connectionQualityDynacastPauseAlwaysExcellentTest() throws Exception {
+
+		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
+
+		log.info("ConnectionQuality EXCELLENT when Dynacast pauses an unsubscribed track");
+
+		// Instance 0: video-only publisher with Dynacast + simulcast enabled.
+		this.addPublisher(user, false, true, true, false, false, true, null, null, null);
+		// Instance 1: subscriber only.
+		this.addSubscriber(user, true);
+
+		user.getDriver().findElements(By.className("connect-btn")).forEach(el -> el.sendKeys(Keys.ENTER));
+
+		user.getEventManager().waitUntilEventReaches("connected", "RoomEvent", 2);
+		user.getEventManager().waitUntilEventReaches("trackSubscribed", "RoomEvent", 1);
+		user.getEventManager().waitUntilEventReaches("connectionQualityChanged", "RoomEvent", 1);
+
+		// Subscriber unsubscribes from the only track -> the publisher's track becomes
+		// fully unwatched -> Dynacast pauses it -> the publisher stops sending and the
+		// mediasoup Producer score would decay to 0. Connection quality MUST stay
+		// EXCELLENT, NOT drop to POOR/LOST.
+		user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 .toggle-video-subscribed"))
+				.sendKeys(Keys.ENTER);
+
+		// Generous wait: Dynacast pause delay + producer inactivity (~1.5s) + EMA +
+		// room ticks
+		Thread.sleep(CONNECTION_QUALITY_OBSERVATION_MS + 10000);
+
+		assertConnectionQualityNeverDegraded(user, 0, "TestParticipant0");
+
+		gracefullyLeaveParticipants(user, 2);
+	}
+
+	@Test
+	@DisplayName("ConnectionQuality EXCELLENT when Adaptive Stream pauses a track")
+	void connectionQualityAdaptiveStreamPauseAlwaysExcellentTest() throws Exception {
+
+		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
+
+		log.info("ConnectionQuality EXCELLENT when Adaptive Stream pauses a track");
+
+		// one2one publishes audio+video with Adaptive Stream enabled (testapp default).
+		user.getDriver().findElement(By.id("auto-join-checkbox")).click();
+		user.getDriver().findElement(By.id("one2one-btn")).click();
+
+		user.getEventManager().waitUntilEventReaches("connected", "RoomEvent", 2);
+		user.getEventManager().waitUntilEventReaches("trackSubscribed", "RoomEvent", 4);
+		user.getEventManager().waitUntilEventReaches("connectionQualityChanged", "RoomEvent", 2);
+
+		// Hide the remote video elements so Adaptive Stream pauses those subscriptions
+		// (Adaptive Stream pauses tracks whose <video> element is not visible). Whether
+		// or not the auto-pause triggers in headless, the quality must remain
+		// EXCELLENT.
+		((JavascriptExecutor) user.getDriver()).executeScript(
+				"document.querySelectorAll('video.remote').forEach(v => v.style.display = 'none');");
+
+		Thread.sleep(CONNECTION_QUALITY_OBSERVATION_MS);
+
+		assertConnectionQualityNeverDegraded(user, 0, "TestParticipant0");
+		assertConnectionQualityNeverDegraded(user, 1, "TestParticipant1");
+
+		gracefullyLeaveParticipants(user, 2);
+	}
+
+	private void waitUntilConnectionQuality(OpenViduTestappUser user, int numberOfUser, String participantName,
+			java.util.function.Predicate<String> matcher, int timeoutSeconds, String errMsg)
+			throws InterruptedException {
+		long start = System.currentTimeMillis();
+		String latest = "<none>";
+		while (System.currentTimeMillis() - start < timeoutSeconds * 1000L) {
+			List<WebElement> contents = getConnectionQualityEventContents(user, numberOfUser, participantName);
+			if (!contents.isEmpty()) {
+				String text = contents.get(contents.size() - 1).getAttribute("textContent");
+				if (text != null) {
+					latest = text.toLowerCase().trim();
+					if (matcher.test(latest)) {
+						return;
+					}
+				}
+			}
+			Thread.sleep(1000);
+		}
+		Assertions.fail(errMsg + " (latest observed for " + participantName + ": '" + latest + "')");
+	}
+
+	/**
+	 * Wait until a participant's connection quality SETTLES — no new
+	 * connectionQualityChanged level-change event for
+	 * {@link #CONNECTION_QUALITY_STABLE_MS} — and then assert the settled (latest)
+	 * level is {@code expectedLevel} (LiveKit's {@link ConnectionQuality}).
+	 *
+	 * Unlike {@link #waitUntilConnectionQuality}, which returns the instant a level
+	 * is merely OBSERVED, this checks the LAST event, so a transient pass-through
+	 * (e.g. EXCELLENT -> GOOD -> POOR) is NOT mistaken for "settled at GOOD", and a
+	 * quality that never degrades (stays EXCELLENT) is not mistaken either. Fails
+	 * if it settles at a different level or never settles within
+	 * {@code timeoutSeconds}.
+	 */
+	private void assertConnectionQualitySettlesAt(OpenViduTestappUser user, int numberOfUser, String participantName,
+			ConnectionQuality expectedLevel, int timeoutSeconds, String errMsg)
+			throws InterruptedException {
+		long start = System.currentTimeMillis();
+		String settledLevel = null;
+		long stableSince = start;
+		while (System.currentTimeMillis() - start < timeoutSeconds * 1000L) {
+			List<WebElement> contents = getConnectionQualityEventContents(user, numberOfUser, participantName);
+			String current = null;
+			if (!contents.isEmpty()) {
+				String text = contents.get(contents.size() - 1).getAttribute("textContent");
+				if (text != null && !text.isBlank()) {
+					current = text.toLowerCase().trim();
+				}
+			}
+			if (current != null) {
+				if (!current.equals(settledLevel)) {
+					// A new (different) latest level resets the stabilization timer.
+					settledLevel = current;
+					stableSince = System.currentTimeMillis();
+				} else if (System.currentTimeMillis() - stableSince >= CONNECTION_QUALITY_STABLE_MS) {
+					Assertions.assertTrue(settledLevel.contains(expectedLevel.name().toLowerCase()),
+							errMsg + " (connection quality for " + participantName + " settled at '" + settledLevel
+									+ "', expected " + expectedLevel + ")");
+					return;
+				}
+			}
+			Thread.sleep(500);
+		}
+		Assertions.fail(errMsg + " (connection quality for " + participantName + " did not settle within "
+				+ timeoutSeconds + "s; latest observed: '" + settledLevel + "')");
+	}
+
+	/** A task that may throw a checked exception, for {@link #runInParallel}. */
+	@FunctionalInterface
+	private interface ThrowingRunnable {
+		void run() throws Exception;
+	}
+
+	/**
+	 * Run the given tasks concurrently (one thread each), wait for all to finish,
+	 * then propagate the first failure — AssertionError or any exception — to the
+	 * caller's thread, so assertions inside the tasks actually fail the test (an
+	 * AssertionError thrown in a worker thread would otherwise be lost). Each task
+	 * MUST drive a distinct WebDriver, since a Selenium driver is not thread-safe.
+	 */
+	private void runInParallel(ThrowingRunnable... tasks) throws Exception {
+		ExecutorService executor = Executors.newFixedThreadPool(tasks.length);
+		try {
+			List<Callable<Void>> callables = new ArrayList<>();
+			for (ThrowingRunnable task : tasks) {
+				callables.add(() -> {
+					task.run();
+					return null;
+				});
+			}
+			for (Future<Void> future : executor.invokeAll(callables)) {
+				try {
+					future.get();
+				} catch (ExecutionException e) {
+					Throwable cause = e.getCause() != null ? e.getCause() : e;
+					if (cause instanceof Error) {
+						throw (Error) cause;
+					}
+					if (cause instanceof Exception) {
+						throw (Exception) cause;
+					}
+					throw new RuntimeException(cause);
+				}
+			}
+		} finally {
+			executor.shutdownNow();
+		}
+	}
+
+	private String getLivekitWssUrlFromReadyCheckContainer() {
+		String logs = commandLine.executeCommand("docker logs ready-check 2>&1", 30);
+		if (logs != null && !logs.isBlank()) {
+
+			/*-----------------LiveKit Server API-----------------
+				- Access from this machine:
+					- http://localhost:7880
+					- ws://localhost:7880
+				- Access from other devices in your LAN:
+					- https://10-10-1-203.openvidu-local.dev:7443
+					- wss://10-10-1-203.openvidu-local.dev:7443   <-- We want this value
+				- Credentials:
+					- API Key: devkey
+					- API Secret: secret
+			----------------------------------------------------*/
+
+			java.util.regex.Matcher m = java.util.regex.Pattern
+					.compile(
+							"LiveKit Server API.*?Access from other devices in your LAN.*?(wss://[A-Za-z0-9.\\-]+:\\d+)",
+							java.util.regex.Pattern.DOTALL)
+					.matcher(logs);
+			if (m.find()) {
+				return m.group(1);
+			}
+		}
+		return null;
+	}
+
+	private String getConnectedSfuPortForPublisherPC(OpenViduTestappUser user, int numberOfUser)
+			throws InterruptedException {
+		return extractConnectedSfuPort(readPcTransportsInfoJson(user, numberOfUser), "publisher");
+	}
+
+	private String getConnectedSfuPortForSubscriberPC(OpenViduTestappUser user, int numberOfUser)
+			throws InterruptedException {
+		return extractConnectedSfuPort(readPcTransportsInfoJson(user, numberOfUser), "subscriber");
+	}
+
+	private static String extractConnectedSfuPort(String json, String transport) {
+		if (json == null) {
+			return null;
+		}
+		// Locate the transport's object, e.g. "publisher": { ... }. Matching the object
+		// form '{' (not '[') ignores the RTCIceCandidateStats arrays. No such element
+		// => return null.
+		java.util.regex.Matcher object = java.util.regex.Pattern.compile("\"" + transport + "\"\\s*:\\s*\\{([^}]*)\\}")
+				.matcher(json);
+		if (!object.find()) {
+			return null;
+		}
+		// Within that object, read the connectedAddress port ("ip:port" or the empty-IP
+		// ":port" form).
+		java.util.regex.Matcher port = java.util.regex.Pattern.compile("\"connectedAddress\"\\s*:\\s*\"[^\"]*:(\\d+)\"")
+				.matcher(object.group(1));
+		return port.find() ? port.group(1) : null;
+	}
+
+	private String readPcTransportsInfoJson(OpenViduTestappUser user, int numberOfUser) throws InterruptedException {
+		user.getDriver().findElement(By.cssSelector("#openvidu-instance-" + numberOfUser + " .peer-info-btn")).click();
+		final java.util.regex.Pattern addrPattern = java.util.regex.Pattern
+				.compile("\"connectedAddress\"\\s*:\\s*\"[^\"]*:(\\d+)\"");
+		String json = null;
+		for (int i = 0; i < 10; i++) {
+			try {
+				json = user.getDriver().findElement(By.id("info-text-area")).getDomProperty("value");
+				if (json != null && addrPattern.matcher(json).find()) {
+					break;
+				}
+			} catch (org.openqa.selenium.NoSuchElementException ignored) {
+			}
+			Thread.sleep(500);
+		}
+		try {
+			user.getDriver().findElement(By.id("close-dialog-btn")).click();
+		} catch (org.openqa.selenium.NoSuchElementException ignored) {
+		}
+		return json;
+	}
+
+	private Pair<OpenViduTestappUser, OpenViduTestappUser> connectionQualityTest(boolean isPublisher,
+			boolean isSubscriber, Integer outboundPacketLoss, Integer inboundPacketLoss) throws Exception {
+
+		// Connect to LiveKit server from a secure URL
+		String secureLivekitUrlFromOpenViduLocalDeployment = getLivekitWssUrlFromReadyCheckContainer();
+
+		Assertions.assertNotNull(secureLivekitUrlFromOpenViduLocalDeployment,
+				"Could not obtain the LiveKit wss:// URL from the 'ready-check' container log. Is openvidu-local-deployment running? ");
+		log.info("Using LiveKit URL: {}", secureLivekitUrlFromOpenViduLocalDeployment);
+
+		NetworkConditioner.pullImages();
+
+		// Connect to the openvidu-testapp through "host.docker.internal"
+		final String secureAppUrl = APP_URL.replace("localhost", "host.docker.internal");
+
+		OpenViduTestappUser punchbagUser = new OpenViduTestappUser(setupBrowser("chromeNetwork"));
+		this.testappUsers.add(punchbagUser);
+		punchbagUser.getDriver().get(secureAppUrl);
+		WebElement urlInput = punchbagUser.getDriver().findElement(By.id("livekit-url"));
+		urlInput.clear();
+		urlInput.sendKeys(secureLivekitUrlFromOpenViduLocalDeployment);
+		WebElement keyInput = punchbagUser.getDriver().findElement(By.id("livekit-api-key"));
+		keyInput.clear();
+		keyInput.sendKeys(LIVEKIT_API_KEY);
+		WebElement secretInput = punchbagUser.getDriver().findElement(By.id("livekit-api-secret"));
+		secretInput.clear();
+		secretInput.sendKeys(LIVEKIT_API_SECRET);
+		punchbagUser.getEventManager().startPolling();
+
+		if (!isPublisher && !isSubscriber) {
+			throw new IllegalArgumentException("At least one of isPublisher or isSubscriber must be true");
+		}
+		if (isPublisher) {
+			this.addPublisher(punchbagUser, isSubscriber, false, false, false, true, true, null, null, null);
+		} else {
+			// Publish audio only (and keep subscribing) so the OTHER user subscribes to
+			// PunchbagUser and therefore also receives its connectionQualityChanged events
+			// - a user only gets quality events for itself and the participants it is
+			// subscribed to. PunchbagUser still subscribes to RegularUser's audio+video,
+			// which is the downlink actually impaired in this scenario; the extra audio
+			// uplink stays clean and does not affect its (min-based) quality.
+			this.addPublisher(punchbagUser, true, false, false, false, true, false, null, null, null);
+		}
+
+		WebElement participantNameInput = punchbagUser.getDriver().findElement(By.id("participant-name-input-0"));
+		participantNameInput.clear();
+		participantNameInput.sendKeys("PunchbagUser");
+
+		punchbagUser.getDriver().findElement(By.cssSelector(".connect-btn")).sendKeys(Keys.ENTER);
+		punchbagUser.getEventManager().waitUntilEventReaches("connected", "RoomEvent", 1);
+		// PunchbagUser always publishes now: audio+video as a publisher, audio only as
+		// a subscriber.
+		punchbagUser.getEventManager().waitUntilEventReaches("localTrackPublished", "RoomEvent", isPublisher ? 2 : 1);
+		punchbagUser.getEventManager().waitUntilEventReaches("connectionQualityChanged", "RoomEvent", 1);
+		punchbagUser.getEventManager().waitUntilEventReaches("connectionQualityChanged", "ParticipantEvent", 1);
+
+		waitUntilConnectionQuality(punchbagUser, 0, "PunchbagUser", q -> q.contains("excellent"), 20,
+				"Expected baseline connection quality to be EXCELLENT before impairment");
+
+		OpenViduTestappUser regularUser = new OpenViduTestappUser(setupBrowser("chromeNetwork"));
+		this.testappUsers.add(regularUser);
+		regularUser.getDriver().get(secureAppUrl);
+		urlInput = regularUser.getDriver().findElement(By.id("livekit-url"));
+		urlInput.clear();
+		urlInput.sendKeys(secureLivekitUrlFromOpenViduLocalDeployment);
+		keyInput = regularUser.getDriver().findElement(By.id("livekit-api-key"));
+		keyInput.clear();
+		keyInput.sendKeys(LIVEKIT_API_KEY);
+		secretInput = regularUser.getDriver().findElement(By.id("livekit-api-secret"));
+		secretInput.clear();
+		secretInput.sendKeys(LIVEKIT_API_SECRET);
+		regularUser.getEventManager().startPolling();
+
+		if (isSubscriber) {
+			this.addPublisher(regularUser, true, false, false, false, true, true, null, null, null);
+		} else {
+			this.addSubscriber(regularUser, false);
+		}
+		participantNameInput = regularUser.getDriver().findElement(By.id("participant-name-input-0"));
+		participantNameInput.clear();
+		participantNameInput.sendKeys("RegularUser");
+
+		regularUser.getDriver().findElement(By.cssSelector(".connect-btn")).sendKeys(Keys.ENTER);
+		if (isPublisher) {
+			regularUser.getEventManager().waitUntilEventReaches("trackSubscribed", "RoomEvent", 2);
+			punchbagUser.getEventManager().waitUntilEventReaches("localTrackSubscribed", "RoomEvent", 2);
+		}
+		if (isSubscriber) {
+			punchbagUser.getEventManager().waitUntilEventReaches("trackSubscribed", "RoomEvent", 2);
+			regularUser.getEventManager().waitUntilEventReaches("localTrackSubscribed", "RoomEvent", 2);
+		}
+
+		regularUser.getEventManager().waitUntilEventReaches("connectionQualityChanged", "RoomEvent", 2);
+		regularUser.getEventManager().waitUntilEventReaches("connectionQualityChanged", "ParticipantEvent", 2);
+		punchbagUser.getEventManager().waitUntilEventReaches("connectionQualityChanged", "RoomEvent", 1);
+		punchbagUser.getEventManager().waitUntilEventReaches("connectionQualityChanged", "ParticipantEvent", 1);
+
+		waitUntilConnectionQuality(regularUser, 0, "RegularUser", q -> q.contains("excellent"), 20,
+				"Expected baseline connection quality to be EXCELLENT");
+		waitUntilConnectionQuality(regularUser, 0, "PunchbagUser", q -> q.contains("excellent"), 20,
+				"Expected baseline connection quality to be EXCELLENT");
+
+		// Read the media port this client's publisher PC is connected to in
+		// openvidu-server
+		String publisherPortInSfu = getConnectedSfuPortForPublisherPC(punchbagUser, 0);
+		Assertions.assertFalse(publisherPortInSfu == null || publisherPortInSfu.isBlank(),
+				"Could not read the connected media port for the publisher PC");
+		// Read the media port this client's subscriber PC is connected to in
+		// openvidu-server
+		String subscriberPortInSfue = getConnectedSfuPortForSubscriberPC(punchbagUser, 0);
+		if (subscriberPortInSfue == null) {
+			log.info("Pion single peer connection mode is in use. Only publisher PC available, using port "
+					+ publisherPortInSfu);
+		}
+
+		punchbagUser.getEventManager().clearAllCurrentEvents();
+		regularUser.getEventManager().clearAllCurrentEvents();
+
+		if (outboundPacketLoss != null) {
+			// Drop packets the client sends through the publisher PC
+			NetworkConditioner.applyLossToOutboundPackets(getNetemContainerName(punchbagUser), publisherPortInSfu,
+					outboundPacketLoss, 10000);
+		}
+		if (inboundPacketLoss != null) {
+			// Drop packets the client receives through the subscriber PC (or publisher PC
+			// if single-PC mode)
+			NetworkConditioner.applyLossToInboundPackets(getNetemContainerName(punchbagUser),
+					NetworkConditioner.Protocol.UDP,
+					subscriberPortInSfue != null ? subscriberPortInSfue : publisherPortInSfu, inboundPacketLoss, 10000);
+		}
+
+		return new ImmutablePair<>(punchbagUser, regularUser);
+	}
+
+	@Test
+	@DisplayName("ConnectionQuality POOR publisher test")
+	void connectionQualityPoorPublisherTest() throws Exception {
+
+		log.info("ConnectionQuality POOR publisher test");
+
+		Pair<OpenViduTestappUser, OpenViduTestappUser> users = connectionQualityTest(true, false, 75, null);
+		OpenViduTestappUser punchbagUser = users.getLeft();
+		OpenViduTestappUser regularUser = users.getRight();
+
+		punchbagUser.getEventManager().waitUntilEventReaches(0, "connectionQualityChanged", "RoomEvent", 1);
+		regularUser.getEventManager().waitUntilEventReaches(0, "connectionQualityChanged", "RoomEvent", 1);
+
+		// Quality must degrade BELOW EXCELLENT (to GOOD or POOR)
+		runInParallel(
+				() -> waitUntilConnectionQuality(punchbagUser, 0, "PunchbagUser",
+						q -> q.contains("good") || q.contains("poor"), 45,
+						"Expected connection quality to degrade to GOOD or POOR"),
+				() -> waitUntilConnectionQuality(regularUser, 0, "PunchbagUser",
+						q -> q.contains("good") || q.contains("poor"), 45,
+						"Expected connection quality to degrade to GOOD or POOR"));
+
+		// Remove the impairment; quality must recover OUT of POOR (to GOOD or better)
+		NetworkConditioner.clear();
+
+		punchbagUser.getEventManager().waitUntilEventReaches(0, "connectionQualityChanged", "RoomEvent", 2);
+		regularUser.getEventManager().waitUntilEventReaches(0, "connectionQualityChanged", "RoomEvent", 2);
+
+		waitUntilConnectionQuality(punchbagUser, 0, "PunchbagUser", q -> q.contains("good") || q.contains("excellent"),
+				45, "Expected connection quality to RECOVER (to GOOD or better) after clearing impairment");
+		waitUntilConnectionQuality(regularUser, 0, "PunchbagUser", q -> q.contains("good") || q.contains("excellent"),
+				45, "Expected connection quality to RECOVER (to GOOD or better) after clearing impairment");
+
+		gracefullyLeaveParticipants(punchbagUser, 1);
+	}
+
+	@Test
+	@DisplayName("ConnectionQuality GOOD publisher test")
+	void connectionQualityGoodPublisherTest() throws Exception {
+
+		log.info("ConnectionQuality GOOD publisher test");
+
+		Pair<OpenViduTestappUser, OpenViduTestappUser> users = connectionQualityTest(true, false, 15, null);
+		OpenViduTestappUser punchbagUser = users.getLeft();
+		OpenViduTestappUser regularUser = users.getRight();
+
+		punchbagUser.getEventManager().waitUntilEventReaches(0, "connectionQualityChanged", "RoomEvent", 1);
+		regularUser.getEventManager().waitUntilEventReaches(0, "connectionQualityChanged", "RoomEvent", 1);
+
+		// Quality must SETTLE at GOOD
+		runInParallel(
+				() -> assertConnectionQualitySettlesAt(punchbagUser, 0, "PunchbagUser",
+						ConnectionQuality.GOOD, 45, "Expected connection quality to settle at GOOD"),
+				() -> assertConnectionQualitySettlesAt(regularUser, 0, "PunchbagUser",
+						ConnectionQuality.GOOD, 45, "Expected connection quality to settle at GOOD"));
+
+		// Remove the impairment; quality must recover toward EXCELLENT
+		NetworkConditioner.clear();
+
+		punchbagUser.getEventManager().waitUntilEventReaches(0, "connectionQualityChanged", "RoomEvent", 2);
+		regularUser.getEventManager().waitUntilEventReaches(0, "connectionQualityChanged", "RoomEvent", 2);
+
+		waitUntilConnectionQuality(punchbagUser, 0, "PunchbagUser", q -> q.contains("excellent"), 45,
+				"Expected connection quality to RECOVER to EXCELLENT after clearing impairment");
+		waitUntilConnectionQuality(regularUser, 0, "PunchbagUser", q -> q.contains("excellent"), 45,
+				"Expected connection quality to RECOVER to EXCELLENT after clearing impairment");
+
+		gracefullyLeaveParticipants(punchbagUser, 1);
+	}
+
+	@Test
+	@DisplayName("ConnectionQuality LOST publisher test")
+	void connectionQualityLostPublisherTest() throws Exception {
+
+		log.info("ConnectionQuality LOST publisher test");
+
+		Pair<OpenViduTestappUser, OpenViduTestappUser> users = connectionQualityTest(true, false, 99, null);
+		OpenViduTestappUser punchbagUser = users.getLeft();
+		OpenViduTestappUser regularUser = users.getRight();
+
+		punchbagUser.getEventManager().waitUntilEventReaches(0, "connectionQualityChanged", "RoomEvent", 1);
+		regularUser.getEventManager().waitUntilEventReaches(0, "connectionQualityChanged", "RoomEvent", 1);
+
+		waitUntilConnectionQuality(punchbagUser, 0, "PunchbagUser", q -> q.contains("lost"), 45,
+				"Expected connection quality to reach LOST");
+		waitUntilConnectionQuality(regularUser, 0, "PunchbagUser", q -> q.contains("lost"), 45,
+				"Expected connection quality to reach LOST");
+
+		// Remove the impairment; quality must recover toward EXCELLENT
+		NetworkConditioner.clear();
+
+		punchbagUser.getEventManager().waitUntilEventReaches(0, "connectionQualityChanged", "RoomEvent", 2);
+		regularUser.getEventManager().waitUntilEventReaches(0, "connectionQualityChanged", "RoomEvent", 2);
+
+		waitUntilConnectionQuality(punchbagUser, 0, "PunchbagUser", q -> q.contains("excellent"), 45,
+				"Expected connection quality to RECOVER to EXCELLENT after clearing impairment");
+		waitUntilConnectionQuality(regularUser, 0, "PunchbagUser", q -> q.contains("excellent"), 45,
+				"Expected connection quality to RECOVER to EXCELLENT after clearing impairment");
+
+		gracefullyLeaveParticipants(punchbagUser, 1);
+	}
+
+	@Test
+	@DisplayName("ConnectionQuality POOR subscriber test")
+	void connectionQualityPoorSubscriberTest() throws Exception {
+		log.info("ConnectionQuality POOR subscriber test");
+
+		Pair<OpenViduTestappUser, OpenViduTestappUser> users = connectionQualityTest(false, true, null, 50);
+		OpenViduTestappUser punchbagUser = users.getLeft();
+		OpenViduTestappUser regularUser = users.getRight();
+
+		punchbagUser.getEventManager().waitUntilEventReaches(0, "connectionQualityChanged", "RoomEvent", 1);
+		regularUser.getEventManager().waitUntilEventReaches(0, "connectionQualityChanged", "RoomEvent", 1);
+		punchbagUser.getEventManager().waitUntilEventReaches(0, "connectionQualityChanged", "ParticipantEvent", 1);
+		regularUser.getEventManager().waitUntilEventReaches(0, "connectionQualityChanged", "ParticipantEvent", 1);
+
+		// Quality must SETTLE at POOR
+		runInParallel(
+				() -> assertConnectionQualitySettlesAt(punchbagUser, 0, "PunchbagUser",
+						ConnectionQuality.POOR, 45, "Expected connection quality to settle at POOR"),
+				() -> assertConnectionQualitySettlesAt(regularUser, 0, "PunchbagUser",
+						ConnectionQuality.POOR, 45, "Expected connection quality to settle at POOR"));
+
+		// Remove the impairment; quality must recover OUT of POOR (to GOOD or better)
+		NetworkConditioner.clear();
+
+		punchbagUser.getEventManager().waitUntilEventReaches(0, "connectionQualityChanged", "RoomEvent", 3);
+		regularUser.getEventManager().waitUntilEventReaches(0, "connectionQualityChanged", "RoomEvent", 3);
+		punchbagUser.getEventManager().waitUntilEventReaches(0, "connectionQualityChanged", "ParticipantEvent", 3);
+		regularUser.getEventManager().waitUntilEventReaches(0, "connectionQualityChanged", "ParticipantEvent", 3);
+
+		waitUntilConnectionQuality(punchbagUser, 0, "PunchbagUser", q -> q.contains("good") || q.contains("excellent"),
+				45, "Expected connection quality to RECOVER (to GOOD or better) after clearing impairment");
+		waitUntilConnectionQuality(regularUser, 0, "PunchbagUser", q -> q.contains("good") || q.contains("excellent"),
+				45, "Expected connection quality to RECOVER (to GOOD or better) after clearing impairment");
+
+		gracefullyLeaveParticipants(punchbagUser, 1);
+	}
+
+	@Test
+	@DisplayName("ConnectionQuality GOOD subscriber test")
+	void connectionQualityGoodSubscriberTest() throws Exception {
+		log.info("ConnectionQuality GOOD subscriber test");
+
+		// Moderate inbound loss (22%) that degrades the subscriber below EXCELLENT
+		Pair<OpenViduTestappUser, OpenViduTestappUser> users = connectionQualityTest(false, true, null, 22);
+		OpenViduTestappUser punchbagUser = users.getLeft();
+		OpenViduTestappUser regularUser = users.getRight();
+
+		punchbagUser.getEventManager().waitUntilEventReaches(0, "connectionQualityChanged", "RoomEvent", 1);
+		regularUser.getEventManager().waitUntilEventReaches(0, "connectionQualityChanged", "RoomEvent", 1);
+		punchbagUser.getEventManager().waitUntilEventReaches(0, "connectionQualityChanged", "ParticipantEvent", 1);
+		regularUser.getEventManager().waitUntilEventReaches(0, "connectionQualityChanged", "ParticipantEvent", 1);
+
+		// Quality must degrade to GOOD or POOR (engine-divergent level -- see above)
+		runInParallel(
+				() -> waitUntilConnectionQuality(punchbagUser, 0, "PunchbagUser",
+						q -> q.contains("good") || q.contains("poor"), 45,
+						"Expected connection quality to degrade to GOOD or POOR"),
+				() -> waitUntilConnectionQuality(regularUser, 0, "PunchbagUser",
+						q -> q.contains("good") || q.contains("poor"), 45,
+						"Expected connection quality to degrade to GOOD or POOR"));
+
+		// Remove the impairment; quality must recover toward EXCELLENT
+		NetworkConditioner.clear();
+
+		punchbagUser.getEventManager().waitUntilEventReaches(0, "connectionQualityChanged", "RoomEvent", 2);
+		regularUser.getEventManager().waitUntilEventReaches(0, "connectionQualityChanged", "RoomEvent", 2);
+
+		waitUntilConnectionQuality(punchbagUser, 0, "PunchbagUser", q -> q.contains("excellent"), 45,
+				"Expected connection quality to RECOVER to EXCELLENT after clearing impairment");
+		waitUntilConnectionQuality(regularUser, 0, "PunchbagUser", q -> q.contains("excellent"), 45,
+				"Expected connection quality to RECOVER to EXCELLENT after clearing impairment");
+
+		gracefullyLeaveParticipants(punchbagUser, 1);
+	}
+
+	@Test
+	@DisplayName("ConnectionQuality ramp up test")
+	void connectionQualityRampUpTest() throws Exception {
+		log.info("ConnectionQuality ramp up test");
+
+		Pair<OpenViduTestappUser, OpenViduTestappUser> users = connectionQualityTest(true, false, 0, null);
+		OpenViduTestappUser punchbagUser = users.getLeft();
+		OpenViduTestappUser regularUser = users.getRight();
+
+		// Quality must SETTLE at EXCELLENT
+		runInParallel(
+				() -> assertConnectionQualitySettlesAt(punchbagUser, 0, "PunchbagUser",
+						ConnectionQuality.EXCELLENT, 45, "Expected connection quality to settle at EXCELLENT"),
+				() -> assertConnectionQualitySettlesAt(regularUser, 0, "PunchbagUser",
+						ConnectionQuality.EXCELLENT, 45, "Expected connection quality to settle at EXCELLENT"));
+
+		String container = getNetemContainerName(punchbagUser);
+		final int HOLD_SECONDS = 8;
+
+		// Ramp the PUBLISHER's uplink loss and record, at each step, the settled
+		// quality of both the impaired publisher (PunchbagUser) and the untouched
+		// subscriber's OWN quality (RegularUser).
+		Map<Integer, ConnectionQuality> publisherQuality = new LinkedHashMap<>();
+		Map<Integer, ConnectionQuality> subscriberQuality = new LinkedHashMap<>();
+		try {
+			for (int pct = 5; pct <= 95; pct += 5) {
+				log.info("Packet loss to " + pct + "%");
+				NetworkConditioner.updateOutboundLossPercent(container, pct);
+				Thread.sleep(HOLD_SECONDS * 1000L);
+				publisherQuality.put(pct, latestConnectionQuality(punchbagUser, 0, "PunchbagUser"));
+				subscriberQuality.put(pct, latestConnectionQuality(regularUser, 0, "RegularUser"));
+			}
+
+			// Final step: a TOTAL blackout (100% loss) across the WHOLE SFU media port
+			// range (7900-7999)
+			final int BLACKOUT_PCT = 100;
+			NetworkConditioner.blackoutOutbound(container, "7900-7999", 120);
+			ConnectionQuality pubBlackout = latestConnectionQuality(punchbagUser, 0, "PunchbagUser");
+			long lostDeadline = System.currentTimeMillis() + 45000L;
+			while (pubBlackout != ConnectionQuality.LOST && System.currentTimeMillis() < lostDeadline) {
+				Thread.sleep(1000L);
+				pubBlackout = latestConnectionQuality(punchbagUser, 0, "PunchbagUser");
+			}
+			publisherQuality.put(BLACKOUT_PCT, pubBlackout);
+			subscriberQuality.put(BLACKOUT_PCT, latestConnectionQuality(regularUser, 0, "RegularUser"));
+
+			log.info(buildRampResultTable(publisherQuality, subscriberQuality));
+
+			int firstGood = firstLossReaching(publisherQuality, ConnectionQuality.GOOD);
+			int firstPoor = firstLossReaching(publisherQuality, ConnectionQuality.POOR);
+			int firstLost = firstLossReaching(publisherQuality, ConnectionQuality.LOST);
+			Assertions.assertTrue(firstGood >= 10 && firstGood <= 20,
+					"EXCELLENT->GOOD transition expected between 10% and 20% loss, but first GOOD was at " + firstGood
+							+ "%");
+			Assertions.assertTrue(firstPoor >= 20 && firstPoor <= 50,
+					"GOOD->POOR transition expected between 20% and 50% loss, but first POOR was at " + firstPoor
+							+ "%");
+			Assertions.assertTrue(firstPoor > firstGood,
+					"POOR must appear after GOOD (firstGood=" + firstGood + "%, firstPoor=" + firstPoor + "%)");
+			Assertions.assertTrue(firstLost >= 50,
+					"POOR->LOST transition expected ONLY at severe loss (>=50%), but first LOST was at " + firstLost
+							+ "%");
+			Assertions.assertTrue(firstLost > firstPoor,
+					"LOST must appear after POOR (firstPoor=" + firstPoor + "%, firstLost=" + firstLost + "%)");
+
+			// Subscriber's own network is always EXCELLENT
+			for (Entry<Integer, ConnectionQuality> e : subscriberQuality.entrySet()) {
+				ConnectionQuality sq = e.getValue();
+				Assertions.assertFalse(
+						sq == ConnectionQuality.GOOD || sq == ConnectionQuality.POOR || sq == ConnectionQuality.LOST,
+						"RegularUser (subscriber) network is NOT impaired, so its own connection quality must stay "
+								+ "EXCELLENT, but was " + sq + " at " + e.getKey() + "% publisher loss");
+			}
+		} finally {
+			NetworkConditioner.clear();
+		}
+
+		waitUntilConnectionQuality(punchbagUser, 0, "PunchbagUser",
+				q -> q.contains("good") || q.contains("excellent"), 80,
+				"Expected connection quality to RECOVER (to GOOD or better) after clearing impairment");
+		waitUntilConnectionQuality(regularUser, 0, "PunchbagUser",
+				q -> q.contains("good") || q.contains("excellent"), 80,
+				"Expected connection quality to RECOVER (to GOOD or better) after clearing impairment");
+
+		gracefullyLeaveParticipants(punchbagUser, 1);
 	}
 
 	@Test
@@ -1338,7 +2189,8 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		final java.util.concurrent.atomic.AtomicLong subscriber1920AtMs = new java.util.concurrent.atomic.AtomicLong(
 				-1);
 
-		final String publisherBrowser = "chromeTwoInstances".equals(subscriberBrowser) ? "chromeTwoInstances" : "chrome";
+		final String publisherBrowser = "chromeTwoInstances".equals(subscriberBrowser) ? "chromeTwoInstances"
+				: "chrome";
 
 		Future<?> task1 = executor.submit(() -> {
 			try {
