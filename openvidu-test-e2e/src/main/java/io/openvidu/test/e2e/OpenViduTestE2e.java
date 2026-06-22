@@ -227,6 +227,13 @@ public class OpenViduTestE2e {
 		return this.netemContainerNames.get(browserUser);
 	}
 
+	// scheme://host[:port] of a URL (drops any path/trailing slash), for use as a
+	// browser origin.
+	private static String originOf(String url) {
+		java.net.URI u = java.net.URI.create(url.trim());
+		return u.getScheme() + "://" + u.getHost() + (u.getPort() > 0 ? ":" + u.getPort() : "");
+	}
+
 	private GenericContainer<?> firefoxContainer(String image, long shmSize, int maxBrowserSessions, boolean headless) {
 		Map<String, String> map = new HashMap<>();
 		map.put("SE_OPTS", "--port 4445");
@@ -524,11 +531,7 @@ public class OpenViduTestE2e {
 				browserUser = new ChromeUser("TestUser", 50, headless);
 				break;
 			case "chromeNetwork":
-				// Bridged Chrome (in its own isolated Docker network) targetable by Pumba. A
-				// unique name
-				// (millis + counter) lets several run simultaneously; it is mapped to its
-				// BrowserUser below
-				// so a test can resolve it for Pumba via getNetemContainerName(user).
+				// Bridged Chrome (in its own isolated Docker network) targetable by Pumba
 				String netemContainerName = "openvidu-test-chrome-netem-" + System.currentTimeMillis() + "-"
 						+ this.netemContainerCounter.incrementAndGet();
 				container = chromeContainerNetem("selenium/standalone-chrome:" + CHROME_VERSION, 2147483648L, 1,
@@ -540,6 +543,12 @@ public class OpenViduTestE2e {
 				// REMOTE_URL_CHROME. Restore the property afterwards
 				String previousRemoteUrlChrome = System.getProperty("REMOTE_URL_CHROME");
 				System.setProperty("REMOTE_URL_CHROME", "http://localhost:" + container.getMappedPort(4444));
+				// The netem browser reaches the testapp via host.docker.internal; over plain
+				// HTTP that is an insecure context (no mediaDevices / Web Crypto). Mark that
+				// origin as secure for this browser.
+				String netemAppOrigin = originOf(APP_URL.replace("localhost", "host.docker.internal"));
+				String previousSecureOrigin = System.getProperty("CHROME_TREAT_INSECURE_ORIGIN_AS_SECURE");
+				System.setProperty("CHROME_TREAT_INSECURE_ORIGIN_AS_SECURE", netemAppOrigin);
 				try {
 					browserUser = new ChromeUser("TestUser", 50, headless);
 				} finally {
@@ -547,6 +556,11 @@ public class OpenViduTestE2e {
 						System.clearProperty("REMOTE_URL_CHROME");
 					} else {
 						System.setProperty("REMOTE_URL_CHROME", previousRemoteUrlChrome);
+					}
+					if (previousSecureOrigin == null) {
+						System.clearProperty("CHROME_TREAT_INSECURE_ORIGIN_AS_SECURE");
+					} else {
+						System.setProperty("CHROME_TREAT_INSECURE_ORIGIN_AS_SECURE", previousSecureOrigin);
 					}
 				}
 				this.netemContainerNames.put(browserUser, netemContainerName);

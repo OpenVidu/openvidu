@@ -81,6 +81,12 @@ public class ChromeUser extends BrowserUser {
 			options.addArguments("--mute-audio");
 		}
 
+		String treatSecureOrigin = System.getProperty("CHROME_TREAT_INSECURE_ORIGIN_AS_SECURE");
+		if (treatSecureOrigin != null && !treatSecureOrigin.isBlank()) {
+			options.addArguments("--unsafely-treat-insecure-origin-as-secure=" + treatSecureOrigin);
+			options.addArguments("--user-data-dir=/tmp/chrome-netem-profile");
+		}
+
 		if (REMOTE_URL != null && !REMOTE_URL.isBlank()) {
 			log.info("Using URL {} to connect to remote web driver", REMOTE_URL);
 			try {
