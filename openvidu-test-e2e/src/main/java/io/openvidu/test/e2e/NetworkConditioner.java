@@ -230,6 +230,38 @@ public class NetworkConditioner {
 	}
 
 	/**
+	 * Dump connectivity diagnostics for a bridged (netem) container towards the SFU, to debug why the
+	 * isolated browser can't establish (e.g. in CI). Everything is probed from INSIDE the container's
+	 * own network namespace (via the nettools sidecar), so it reflects exactly what the browser sees:
+	 * its own IPs/routes/DNS, DNS resolution of the LiveKit host, and TCP/ICMP reachability of the
+	 * signaling port. Best-effort: each probe tolerates missing tools / failures (logged inline).
+	 */
+	public static void logConnectivityDiagnostics(String netemContainer, String host, int signalingPort) {
+		log.info("===== NETEM CONNECTIVITY DIAGNOSTICS (container={}, target={}:{}) =====", netemContainer, host,
+				signalingPort);
+		String script = String.join("; ", "echo '--- id/hostname ---'", "hostname 2>&1; id 2>&1",
+				"echo '--- container IPs (hostname -i) ---'", "hostname -i 2>&1",
+				"echo '--- all interfaces (ip -o addr) ---'", "ip -o addr 2>&1", "echo '--- routes (ip route) ---'",
+				"ip route 2>&1", "echo '--- /etc/resolv.conf ---'", "cat /etc/resolv.conf 2>&1",
+				"echo '--- DNS resolve " + host + " (nslookup) ---'", "nslookup " + host + " 2>&1",
+				"echo '--- ping " + host + " ---'", "ping -c3 -W2 " + host + " 2>&1",
+				"echo '--- TCP reach " + host + ":" + signalingPort + " (nc) ---'",
+				"nc -w4 -v " + host + " " + signalingPort + " </dev/null 2>&1",
+				"echo '--- HTTPS GET " + host + ":" + signalingPort + " (wget) ---'",
+				"wget -T6 -t1 --no-check-certificate -O /dev/null https://" + host + ":" + signalingPort + " 2>&1");
+		String cmd = "docker run --rm --network container:" + netemContainer + " --cap-add NET_ADMIN --entrypoint sh "
+				+ NETTOOLS_IMAGE + " -c \"" + script + "\" 2>&1";
+		String out;
+		try {
+			out = commandLine.executeCommand(cmd, 60);
+		} catch (Exception e) {
+			out = "(diagnostics sidecar failed: " + e + ")";
+		}
+		log.info("[netem-diag]\n{}", out);
+		log.info("===== END NETEM CONNECTIVITY DIAGNOSTICS =====");
+	}
+
+	/**
 	 * Add delay + jitter to the target container's. OUTBOUND only: Pumba can only
 	 * delay with netem/tc, which is egress-only.
 	 */

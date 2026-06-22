@@ -783,6 +783,49 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		return null;
 	}
 
+	/**
+	 * Dump everything needed to understand why the bridged (netem) PunchbagUser can't reach the SFU via
+	 * the LiveKit URL. Logs both ends: (1) from the docker HOST, the SFU container's networks + the IPs
+	 * it advertises for ICE (NODE_IP / the openvidu-pro container IP) and the host's own interfaces;
+	 * (2) from INSIDE the netem container's netns, its IPs/routes/DNS and TCP/ICMP reachability of the
+	 * LiveKit signaling host (see {@link NetworkConditioner#logConnectivityDiagnostics}); (3) best-effort
+	 * browser console logs. Entirely best-effort -- never throws, so the real failure still surfaces.
+	 */
+	private void dumpNetemEstablishmentDiagnostics(OpenViduTestappUser user, String livekitUrl) {
+		try {
+			log.error("===== PunchbagUser establishment FAILED; dumping diagnostics. LiveKit URL = {} =====",
+					livekitUrl);
+			String hostPort = livekitUrl.replaceFirst("^wss?://", "").replaceFirst("/.*$", "");
+			String host = hostPort.contains(":") ? hostPort.substring(0, hostPort.indexOf(':')) : hostPort;
+			int port = hostPort.contains(":") ? Integer.parseInt(hostPort.substring(hostPort.indexOf(':') + 1)) : 7443;
+
+			// (1) SFU container view + host interfaces, from the docker host
+			log.error("[sfu-diag] docker inspect openvidu Networks ->\n{}",
+					commandLine.executeCommand("docker inspect -f '{{json .NetworkSettings.Networks}}' openvidu 2>&1", 30));
+			log.error("[sfu-diag] openvidu IP-related env (NODE_IP / LAN_*) ->\n{}", commandLine.executeCommand(
+					"docker inspect -f '{{range .Config.Env}}{{println .}}{{end}}' openvidu 2>&1 | grep -iE 'NODE_IP|LAN_|EXTERNAL|_IP' || true",
+					30));
+			log.error("[sfu-diag] docker host interfaces ->\n{}",
+					commandLine.executeCommand("ip -o addr 2>&1 || ifconfig -a 2>&1 || true", 30));
+
+			// (2) Netem container network-side probes (inside its own netns)
+			NetworkConditioner.logConnectivityDiagnostics(getNetemContainerName(user), host, port);
+
+			// (3) Browser console (best-effort; may be empty without goog:loggingPrefs)
+			try {
+				org.openqa.selenium.logging.LogEntries entries = user.getDriver().manage().logs()
+						.get(org.openqa.selenium.logging.LogType.BROWSER);
+				StringBuilder sb = new StringBuilder();
+				entries.forEach(en -> sb.append(en.getLevel()).append(' ').append(en.getMessage()).append('\n'));
+				log.error("[browser-console] PunchbagUser ->\n{}", sb.length() == 0 ? "(empty)" : sb.toString());
+			} catch (Exception ce) {
+				log.error("[browser-console] unavailable: {}", ce.getMessage());
+			}
+		} catch (Exception diagEx) {
+			log.error("Diagnostics dump itself failed (ignoring)", diagEx);
+		}
+	}
+
 	private String getConnectedSfuPortForPublisherPC(OpenViduTestappUser user, int numberOfUser)
 			throws InterruptedException {
 		return extractConnectedSfuPort(readPcTransportsInfoJson(user, numberOfUser), "publisher");
@@ -883,7 +926,13 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		participantNameInput.sendKeys("PunchbagUser");
 
 		punchbagUser.getDriver().findElement(By.cssSelector(".connect-btn")).sendKeys(Keys.ENTER);
-		punchbagUser.getEventManager().waitUntilEventReaches("connected", "RoomEvent", 1);
+		try {
+			punchbagUser.getEventManager().waitUntilEventReaches("connected", "RoomEvent", 1);
+		} catch (Exception e) {
+			// The bridged (netem) PunchbagUser failed to establish (seen in CI). Dump why before failing.
+			dumpNetemEstablishmentDiagnostics(punchbagUser, secureLivekitUrlFromOpenViduLocalDeployment);
+			throw e;
+		}
 		// PunchbagUser always publishes now: audio+video as a publisher, audio only as
 		// a subscriber.
 		punchbagUser.getEventManager().waitUntilEventReaches("localTrackPublished", "RoomEvent", isPublisher ? 2 : 1);
