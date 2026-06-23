@@ -4322,52 +4322,38 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 	}
 
 	private int getSubscriberVideoFrameWidth(OpenViduTestappUser user, WebElement subscriberVideo) {
-		waitUntilVideoLayersNotEmpty(user, subscriberVideo);
-		this.waitUntilAux(user, subscriberVideo,
-				() -> getLayersAsJsonArray(user, subscriberVideo).get(0).getAsJsonObject().get("frameWidth") != null,
-				"Timeout waiting for frameWidth to exist");
-		JsonArray json = this.getLayersAsJsonArray(user, subscriberVideo);
-		return json.get(0).getAsJsonObject().get("frameWidth").getAsInt();
+		return getSubscriberVideoLayerStat(user, subscriberVideo, "frameWidth", JsonElement::getAsInt);
 	}
 
 	private int getSubscriberVideoFrameHeight(OpenViduTestappUser user, WebElement subscriberVideo) {
-		waitUntilVideoLayersNotEmpty(user, subscriberVideo);
-		this.waitUntilAux(user, subscriberVideo,
-				() -> getLayersAsJsonArray(user, subscriberVideo).get(0).getAsJsonObject().get("frameHeight") != null,
-				"Timeout waiting for frameHeight to exist");
-		JsonArray json = this.getLayersAsJsonArray(user, subscriberVideo);
-		return json.get(0).getAsJsonObject().get("frameHeight").getAsInt();
+		return getSubscriberVideoLayerStat(user, subscriberVideo, "frameHeight", JsonElement::getAsInt);
 	}
 
 	private long getSubscriberVideoBytesReceived(OpenViduTestappUser user, WebElement subscriberVideo) {
-		waitUntilVideoLayersNotEmpty(user, subscriberVideo);
-		this.waitUntilAux(user, subscriberVideo,
-				() -> getLayersAsJsonArray(user, subscriberVideo).get(0).getAsJsonObject().get("bytesReceived") != null,
-				"Timeout waiting for bytesReceived to exist");
-		JsonArray json = this.getLayersAsJsonArray(user, subscriberVideo);
-		return json.get(0).getAsJsonObject().get("bytesReceived").getAsLong();
+		return getSubscriberVideoLayerStat(user, subscriberVideo, "bytesReceived", JsonElement::getAsLong);
 	}
 
 	private int getSubscriberVideoFramesPerSecond(OpenViduTestappUser user, WebElement subscriberVideo) {
-		waitUntilVideoLayersNotEmpty(user, subscriberVideo);
-		this.waitUntilAux(user, subscriberVideo, () -> getLayersAsJsonArray(user, subscriberVideo).get(0)
-				.getAsJsonObject().get("framesPerSecond") != null, "Timeout waiting for framesPerSecond to exist");
-		JsonArray json = this.getLayersAsJsonArray(user, subscriberVideo);
-		return json.get(0).getAsJsonObject().get("framesPerSecond").getAsInt();
+		return getSubscriberVideoLayerStat(user, subscriberVideo, "framesPerSecond", JsonElement::getAsInt);
 	}
 
 	private String getSubscriberVideoCodec(OpenViduTestappUser user, WebElement subscriberVideo) {
+		return getSubscriberVideoLayerStat(user, subscriberVideo, "codec", JsonElement::getAsString);
+	}
+
+	private <T> T getSubscriberVideoLayerStat(OpenViduTestappUser user, WebElement subscriberVideo, String field,
+			java.util.function.Function<JsonElement, T> extractor) {
 		waitUntilVideoLayersNotEmpty(user, subscriberVideo);
-		final java.util.concurrent.atomic.AtomicReference<String> codec = new java.util.concurrent.atomic.AtomicReference<>();
+		final java.util.concurrent.atomic.AtomicReference<T> value = new java.util.concurrent.atomic.AtomicReference<>();
 		this.waitUntilAux(user, subscriberVideo, () -> {
-			JsonElement codecElement = getLayersAsJsonArray(user, subscriberVideo).get(0).getAsJsonObject().get("codec");
-			if (codecElement != null && !codecElement.isJsonNull()) {
-				codec.set(codecElement.getAsString());
+			JsonElement element = getLayersAsJsonArray(user, subscriberVideo).get(0).getAsJsonObject().get(field);
+			if (element != null && !element.isJsonNull()) {
+				value.set(extractor.apply(element));
 				return true;
 			}
 			return false;
-		}, "Timeout waiting for codec to exist");
-		return codec.get();
+		}, "Timeout waiting for " + field + " to exist");
+		return value.get();
 	}
 
 	// If rid is null, retrieve the first layer
