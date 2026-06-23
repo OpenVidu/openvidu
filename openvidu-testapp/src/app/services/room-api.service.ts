@@ -3,6 +3,7 @@ import { Injectable } from '@angular/core';
 
 import {
   AccessToken,
+  AgentDispatchClient,
   CreateIngressOptions,
   DirectFileOutput,
   EgressClient,
@@ -25,7 +26,9 @@ import {
 import { LivekitParamsService } from './livekit-params.service';
 import { VideoQuality } from 'livekit-client';
 import {
+  AgentDispatch,
   IngressVideoEncodingOptions,
+  JobRestartPolicy,
   VideoCodec,
   VideoLayer,
 } from '@livekit/protocol';
@@ -46,6 +49,7 @@ export class RoomApiService {
   private roomServiceClient: RoomServiceClient;
   private egressClient: EgressClient;
   private ingressClient: IngressClient;
+  private agentDispatchClient: AgentDispatchClient;
 
   constructor(
     private http: HttpClient,
@@ -62,6 +66,11 @@ export class RoomApiService {
       this.livekitParamsService.getParams().livekitApiSecret
     );
     this.ingressClient = new IngressClient(
+      this.getRestUrl(),
+      this.livekitParamsService.getParams().livekitApiKey,
+      this.livekitParamsService.getParams().livekitApiSecret
+    );
+    this.agentDispatchClient = new AgentDispatchClient(
       this.getRestUrl(),
       this.livekitParamsService.getParams().livekitApiKey,
       this.livekitParamsService.getParams().livekitApiSecret
@@ -326,6 +335,38 @@ export class RoomApiService {
       this.livekitParamsService.getParams().livekitApiSecret
     );
     return await ingressClient.deleteIngress(ingressId);
+  }
+
+  /*
+   * Agent Dispatch API
+   * https://docs.livekit.io/reference/agents/agent-dispatch-service-api/
+   */
+
+  async createDispatch(
+    roomName: string,
+    agentName: string,
+    metadata?: string,
+    restartPolicy?: JobRestartPolicy
+  ): Promise<AgentDispatch> {
+    return await this.agentDispatchClient.createDispatch(roomName, agentName, {
+      metadata,
+      restartPolicy,
+    });
+  }
+
+  async getDispatch(
+    dispatchId: string,
+    roomName: string
+  ): Promise<AgentDispatch | undefined> {
+    return await this.agentDispatchClient.getDispatch(dispatchId, roomName);
+  }
+
+  async listDispatch(roomName: string): Promise<AgentDispatch[]> {
+    return await this.agentDispatchClient.listDispatch(roomName);
+  }
+
+  async deleteDispatch(dispatchId: string, roomName: string): Promise<void> {
+    return await this.agentDispatchClient.deleteDispatch(dispatchId, roomName);
   }
 
   private getRestUrl() {

@@ -127,6 +127,14 @@ mat-chip-row {
   margin-bottom: 7px;
 }
 
+.agent-dispatch-options {
+  margin-bottom: 7px;
+}
+
+#agent-restart-policy-select {
+  margin-left: 6px;
+}
+
 #ingress-url-type-select {
   margin-left: 6px;
 }

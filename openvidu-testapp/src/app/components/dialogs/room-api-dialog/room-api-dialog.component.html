@@ -256,6 +256,68 @@
 
     <mat-divider></mat-divider>
 
+    <div>
+      <label class="label">Agent Dispatch API</label>
+      <mat-form-field class="inner-text-input" [style.fontSize.px]=14>
+        <mat-label>Room</mat-label>
+        <input matInput id="agent-room-name-field" placeholder="Room" [(ngModel)]="agentRoomName">
+      </mat-form-field>
+      <mat-form-field class="inner-text-input" [style.fontSize.px]=14>
+        <mat-label>Agent name</mat-label>
+        <input matInput id="agent-name-field" placeholder="Agent name" [(ngModel)]="agentName">
+      </mat-form-field>
+      <mat-form-field class="inner-text-input" [style.fontSize.px]=14>
+        <mat-label>Dispatch ID</mat-label>
+        <input matInput id="agent-dispatch-id-field" placeholder="Dispatch ID" [(ngModel)]="agentDispatchId">
+      </mat-form-field>
+    </div>
+
+    <div class="button-group">
+      <span style="display: inline-block" [matTooltip]="!agentRoomName ? 'Room required' : 'Agent name required'"
+        [matTooltipDisabled]="!!agentRoomName && !!agentName">
+        <button mat-button id="create-dispatch-api-btn" (click)="createDispatch()"
+          [disabled]="!agentRoomName || !agentName">Create Dispatch</button>
+      </span>
+      <span style="display: inline-block" matTooltip='"Room" required' [matTooltipDisabled]="!!agentRoomName">
+        <button mat-button id="list-dispatch-api-btn" (click)="listDispatch()" [disabled]="!agentRoomName">List
+        Dispatch</button>
+      </span>
+      <span style="display: inline-block" matTooltip='"Room" and "Dispatch ID" required'
+        [matTooltipDisabled]="!!agentRoomName && !!agentDispatchId">
+        <button mat-button id="get-dispatch-api-btn" (click)="getDispatch()"
+          [disabled]="!agentRoomName || !agentDispatchId">Get Dispatch</button>
+      </span>
+      <span style="display: inline-block" matTooltip='"Room" and "Dispatch ID" required'
+        [matTooltipDisabled]="!!agentRoomName && !!agentDispatchId">
+        <button mat-button id="delete-dispatch-api-btn" (click)="deleteDispatch()"
+          [disabled]="!agentRoomName || !agentDispatchId">Delete Dispatch</button>
+      </span>
+      <span style="display: inline-block" matTooltip='"Room" required' [matTooltipDisabled]="!!agentRoomName">
+        <button mat-button id="delete-all-dispatch-api-btn" (click)="deleteAllDispatch()" [disabled]="!agentRoomName"
+          style="font-style: italic; font-size: 0.75rem; margin-left: 5px;">Delete all</button>
+      </span>
+    </div>
+
+    <label class="label">Dispatch options</label>
+    <div class="agent-dispatch-options">
+      <mat-form-field class="inner-text-input" [style.fontSize.px]=14>
+        <mat-label>Metadata</mat-label>
+        <input matInput id="agent-metadata-field" placeholder="Metadata" [(ngModel)]="agentMetadata">
+      </mat-form-field>
+      <mat-form-field id="agent-restart-policy-select">
+        <mat-label>Restart policy</mat-label>
+        <mat-select [(value)]="agentRestartPolicySelected">
+          @for (policy of AGENT_RESTART_POLICIES; track policy) {
+            <mat-option [value]="policy.value" [id]="'mat-option-' + policy.viewValue">
+              {{policy.viewValue}}
+            </mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+    </div>
+
+    <mat-divider></mat-divider>
+
     <mat-form-field id="response-text-area" appearance="fill">
       <textarea id="api-response-text-area" [(ngModel)]="response" matInput readonly></textarea>
       <button mat-button id="clear-response-text-area-btn" (click)="response=''">Clear</button>

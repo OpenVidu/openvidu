@@ -13,7 +13,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
-import { VideoCodec } from '@livekit/protocol';
+import { JobRestartPolicy, VideoCodec } from '@livekit/protocol';
 import { LocalParticipant } from 'livekit-client';
 
 import {
@@ -84,6 +84,17 @@ export class RoomApiDialogComponent {
   ingressUrlType: string = 'HTTP';
   ingressUrlUri: string;
 
+  agentRoomName: string;
+  agentName: string = 'speech-processing';
+  agentDispatchId: string;
+  agentMetadata: string;
+  agentRestartPolicySelected: JobRestartPolicy = JobRestartPolicy.JRP_ON_FAILURE;
+
+  AGENT_RESTART_POLICIES: { value: JobRestartPolicy; viewValue: string }[] = [
+    { value: JobRestartPolicy.JRP_ON_FAILURE, viewValue: 'On failure' },
+    { value: JobRestartPolicy.JRP_NEVER, viewValue: 'Never' },
+  ];
+
   response: string;
 
   INGRESS_INPUT_TYPES: { value: IngressInput; viewValue: string }[] = [
@@ -141,6 +152,7 @@ export class RoomApiDialogComponent {
       .values()
       .next().value?.trackSid!;
     this.ingressRoomName = this.room?.name;
+    this.agentRoomName = this.room?.name;
   }
 
   async listRooms() {
@@ -360,6 +372,81 @@ export class RoomApiDialogComponent {
       });
       await Promise.all(promises);
       this.response = 'Deleted ' + promises.length + ' ingresses';
+    } catch (error: any) {
+      this.response = error;
+    }
+  }
+
+  async createDispatch() {
+    console.log('Creating agent dispatch');
+    try {
+      const dispatch = await this.roomApiService.createDispatch(
+        this.agentRoomName,
+        this.agentName,
+        this.agentMetadata || undefined,
+        this.agentRestartPolicySelected
+      );
+      this.response = JSON.stringify(dispatch, null, 4);
+      this.agentDispatchId = dispatch.id;
+    } catch (error: any) {
+      this.response = error;
+    }
+  }
+
+  async getDispatch() {
+    console.log('Getting agent dispatch');
+    try {
+      const dispatch = await this.roomApiService.getDispatch(
+        this.agentDispatchId,
+        this.agentRoomName
+      );
+      this.response = dispatch
+        ? JSON.stringify(dispatch, null, 4)
+        : 'Dispatch not found';
+    } catch (error: any) {
+      this.response = error;
+    }
+  }
+
+  async listDispatch() {
+    console.log('Listing agent dispatches');
+    try {
+      const dispatches = await this.roomApiService.listDispatch(
+        this.agentRoomName
+      );
+      this.response = JSON.stringify(dispatches, null, 4);
+    } catch (error: any) {
+      this.response = error;
+    }
+  }
+
+  async deleteDispatch() {
+    console.log('Deleting agent dispatch');
+    try {
+      await this.roomApiService.deleteDispatch(
+        this.agentDispatchId,
+        this.agentRoomName
+      );
+      this.response = 'Agent dispatch deleted';
+    } catch (error: any) {
+      this.response = error;
+    }
+  }
+
+  async deleteAllDispatch() {
+    console.log('Deleting all agent dispatches');
+    try {
+      const promises: Promise<void>[] = [];
+      const dispatches = await this.roomApiService.listDispatch(
+        this.agentRoomName
+      );
+      dispatches.forEach((d) => {
+        promises.push(
+          this.roomApiService.deleteDispatch(d.id, this.agentRoomName)
+        );
+      });
+      await Promise.all(promises);
+      this.response = 'Deleted ' + promises.length + ' agent dispatches';
     } catch (error: any) {
       this.response = error;
     }
