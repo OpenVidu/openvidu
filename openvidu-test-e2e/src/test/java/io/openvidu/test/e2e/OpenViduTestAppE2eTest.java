@@ -4358,14 +4358,16 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 	private String getSubscriberVideoCodec(OpenViduTestappUser user, WebElement subscriberVideo) {
 		waitUntilVideoLayersNotEmpty(user, subscriberVideo);
-		// The "codec" field is derived from a separate "codec" stats report matched by
-		// codecId. In Firefox it may appear a few stat cycles after frames already
-		// flow, so wait for it to exist instead of reading it early to avoid a NPE.
-		this.waitUntilAux(user, subscriberVideo,
-				() -> getLayersAsJsonArray(user, subscriberVideo).get(0).getAsJsonObject().get("codec") != null,
-				"Timeout waiting for codec to exist");
-		JsonArray json = this.getLayersAsJsonArray(user, subscriberVideo);
-		return json.get(0).getAsJsonObject().get("codec").getAsString();
+		final java.util.concurrent.atomic.AtomicReference<String> codec = new java.util.concurrent.atomic.AtomicReference<>();
+		this.waitUntilAux(user, subscriberVideo, () -> {
+			JsonElement codecElement = getLayersAsJsonArray(user, subscriberVideo).get(0).getAsJsonObject().get("codec");
+			if (codecElement != null && !codecElement.isJsonNull()) {
+				codec.set(codecElement.getAsString());
+				return true;
+			}
+			return false;
+		}, "Timeout waiting for codec to exist");
+		return codec.get();
 	}
 
 	// If rid is null, retrieve the first layer
