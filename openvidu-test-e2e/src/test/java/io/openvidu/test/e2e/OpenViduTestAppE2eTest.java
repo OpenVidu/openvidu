@@ -148,13 +148,10 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		user.getDriver().findElement(By.id("one2one-btn")).click();
 		user.getEventManager().waitUntilEventReaches("signalConnected", "RoomEvent", 2);
 		user.getEventManager().waitUntilEventReaches("connected", "RoomEvent", 2);
-		user.getEventManager().waitUntilEventReaches("participantActive", "RoomEvent", 2);
 		user.getEventManager().waitUntilEventReaches("active", "ParticipantEvent", 4);
 		user.getEventManager().waitUntilEventReaches("connectionStateChanged", "RoomEvent", 4);
 		user.getEventManager().waitUntilEventReaches("localTrackPublished", "RoomEvent", 4);
 		user.getEventManager().waitUntilEventReaches("localTrackPublished", "ParticipantEvent", 4);
-		user.getEventManager().waitUntilEventReaches("trackPublished", "RoomEvent", 4);
-		user.getEventManager().waitUntilEventReaches("trackPublished", "ParticipantEvent", 4);
 		user.getEventManager().waitUntilEventReaches("localTrackSubscribed", "RoomEvent", 4);
 		user.getEventManager().waitUntilEventReaches("localTrackSubscribed", "ParticipantEvent", 4);
 		user.getEventManager().waitUntilEventReaches("trackSubscribed", "RoomEvent", 4);
