@@ -105,6 +105,25 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 				System.err.println("Download of images failed: " + e.getMessage());
 			}
 		});
+		CompletableFuture.runAsync(OpenViduTestAppE2eTest::pullRemoteBrowserImages);
+	}
+
+	private static void pullRemoteBrowserImages() {
+		pullRemoteBrowserImage("REMOTE_URL_CHROME", "selenium/standalone-chrome:" + CHROME_VERSION);
+		pullRemoteBrowserImage("REMOTE_URL_FIREFOX", "selenium/standalone-firefox:" + FIREFOX_VERSION);
+		pullRemoteBrowserImage("REMOTE_URL_EDGE", "selenium/standalone-edge:" + EDGE_VERSION);
+	}
+
+	private static void pullRemoteBrowserImage(String remoteUrlProperty, String image) {
+		if (System.getProperty(remoteUrlProperty) == null) {
+			return; // This browser runs as a native driver here. No Docker image to pull
+		}
+		try {
+			log.info("Pre-pulling Selenium image {}", image);
+			commandLine.executeCommand("docker pull " + image, 300);
+		} catch (Exception e) {
+			System.err.println("Pre-pull of " + image + " failed: " + e.getMessage());
+		}
 	}
 
 	@BeforeEach()
@@ -779,12 +798,9 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 	}
 
 	/**
-	 * Dump everything needed to understand why the bridged (netem) PunchbagUser can't reach the SFU via
-	 * the LiveKit URL. Logs both ends: (1) from the docker HOST, the SFU container's networks + the IPs
-	 * it advertises for ICE (NODE_IP / the openvidu-pro container IP) and the host's own interfaces;
-	 * (2) from INSIDE the netem container's netns, its IPs/routes/DNS and TCP/ICMP reachability of the
-	 * LiveKit signaling host (see {@link NetworkConditioner#logConnectivityDiagnostics}); (3) best-effort
-	 * browser console logs. Entirely best-effort -- never throws, so the real failure still surfaces.
+	 * Dump everything needed to understand why the bridged (netem) PunchbagUser
+	 * can't reach the SFU via
+	 * the LiveKit URL.
 	 */
 	private void dumpNetemEstablishmentDiagnostics(OpenViduTestappUser user, String livekitUrl) {
 		try {
@@ -796,7 +812,8 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 			// (1) SFU container view + host interfaces, from the docker host
 			log.error("[sfu-diag] docker inspect openvidu Networks ->\n{}",
-					commandLine.executeCommand("docker inspect -f '{{json .NetworkSettings.Networks}}' openvidu 2>&1", 30));
+					commandLine.executeCommand("docker inspect -f '{{json .NetworkSettings.Networks}}' openvidu 2>&1",
+							30));
 			log.error("[sfu-diag] openvidu IP-related env (NODE_IP / LAN_*) ->\n{}", commandLine.executeCommand(
 					"docker inspect -f '{{range .Config.Env}}{{println .}}{{end}}' openvidu 2>&1 | grep -iE 'NODE_IP|LAN_|EXTERNAL|_IP' || true",
 					30));
@@ -924,7 +941,8 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		try {
 			punchbagUser.getEventManager().waitUntilEventReaches("connected", "RoomEvent", 1);
 		} catch (Exception e) {
-			// The bridged (netem) PunchbagUser failed to establish (seen in CI). Dump why before failing.
+			// The bridged (netem) PunchbagUser failed to establish (seen in CI). Dump why
+			// before failing.
 			dumpNetemEstablishmentDiagnostics(punchbagUser, secureLivekitUrlFromOpenViduLocalDeployment);
 			throw e;
 		}
@@ -4341,8 +4359,8 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 	private String getSubscriberVideoCodec(OpenViduTestappUser user, WebElement subscriberVideo) {
 		waitUntilVideoLayersNotEmpty(user, subscriberVideo);
 		// The "codec" field is derived from a separate "codec" stats report matched by
-		// codecId. In Firefox it may appear a few stat cycles after frames already flow,
-		// so wait for it to exist instead of reading it eagerly (which would NPE).
+		// codecId. In Firefox it may appear a few stat cycles after frames already
+		// flow, so wait for it to exist instead of reading it early to avoid a NPE.
 		this.waitUntilAux(user, subscriberVideo,
 				() -> getLayersAsJsonArray(user, subscriberVideo).get(0).getAsJsonObject().get("codec") != null,
 				"Timeout waiting for codec to exist");
