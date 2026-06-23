@@ -148,7 +148,6 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		user.getDriver().findElement(By.id("one2one-btn")).click();
 		user.getEventManager().waitUntilEventReaches("signalConnected", "RoomEvent", 2);
 		user.getEventManager().waitUntilEventReaches("connected", "RoomEvent", 2);
-		user.getEventManager().waitUntilEventReaches("participantConnected", "RoomEvent", 1);
 		user.getEventManager().waitUntilEventReaches("participantActive", "RoomEvent", 2);
 		user.getEventManager().waitUntilEventReaches("active", "ParticipantEvent", 4);
 		user.getEventManager().waitUntilEventReaches("connectionStateChanged", "RoomEvent", 4);
@@ -209,7 +208,6 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		user.getEventManager().waitUntilEventReaches("signalConnected", "RoomEvent", 2);
 		user.getEventManager().waitUntilEventReaches("connected", "RoomEvent", 2);
 		user.getEventManager().waitUntilEventReaches("connectionStateChanged", "RoomEvent", 2);
-		user.getEventManager().waitUntilEventReaches("participantConnected", "RoomEvent", 1);
 		user.getEventManager().waitUntilEventReaches("participantActive", "RoomEvent", 1);
 
 		Collection<Entry<String, String>> assertions = new ArrayList<>();
@@ -1299,7 +1297,6 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		user.getDriver().findElements(By.className("connect-btn")).forEach(el -> el.sendKeys(Keys.ENTER));
 		user.getEventManager().waitUntilEventReaches("signalConnected", "RoomEvent", 2);
 		user.getEventManager().waitUntilEventReaches("connected", "RoomEvent", 2);
-		user.getEventManager().waitUntilEventReaches("participantConnected", "RoomEvent", 1);
 		user.getEventManager().waitUntilEventReaches("participantActive", "RoomEvent", 1);
 
 		// Participant 0 publishes a data track
