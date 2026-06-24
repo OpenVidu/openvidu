@@ -4353,6 +4353,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 			}
 			return false;
 		}, "Timeout waiting for " + field + " to exist");
+		openInfoDialog(user, subscriberVideo);
 		return value.get();
 	}
 
