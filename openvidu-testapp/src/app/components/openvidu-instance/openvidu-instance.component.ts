@@ -84,6 +84,10 @@ export class OpenviduInstanceComponent {
   participantEvents: Map<ParticipantEvent, boolean> = new Map<ParticipantEvent, boolean>();
   trackEvents: Map<TrackEvent, boolean> = new Map<TrackEvent, boolean>();
 
+  // When false, interim transcription events are not added to the event list
+  // (only final transcription events are rendered)
+  renderInterimTranscriptionEvents: boolean = true;
+
   private roomEventListeners: Map<string, (...args: any[]) => void> = new Map();
 
   // Early event registration: buffers events for participant/track components
@@ -1251,6 +1255,9 @@ export class OpenviduInstanceComponent {
             const message = await reader.readAll();
             const isFinal =
               reader.info.attributes!['lk.transcription_final'] === 'true';
+            if (!isFinal && !this.renderInterimTranscriptionEvents) {
+              return;
+            }
             this.updateEventList(
               isFinal
                 ? ('finalTranscription' as any)
@@ -1519,10 +1526,18 @@ export class OpenviduInstanceComponent {
     const oldRoomValues: Map<string, boolean> = new Map(
       JSON.parse(JSON.stringify([...this.roomEvents]))
     );
+    const interimTranscriptionToggle = {
+      label: 'Render interim transcription events',
+      checked: this.renderInterimTranscriptionEvents,
+    };
     const dialogRef = this.dialog.open(EventsDialogComponent, {
       data: {
         eventGroups: [
-          { label: 'RoomEvent', eventCollection: this.roomEvents },
+          {
+            label: 'RoomEvent',
+            eventCollection: this.roomEvents,
+            extraToggles: [interimTranscriptionToggle],
+          },
           { label: 'ParticipantEvent', eventCollection: this.participantEvents },
           { label: 'TrackEvent', eventCollection: this.trackEvents },
         ],
@@ -1534,6 +1549,7 @@ export class OpenviduInstanceComponent {
     });
 
     dialogRef.afterClosed().subscribe((result) => {
+      this.renderInterimTranscriptionEvents = interimTranscriptionToggle.checked;
       if (
         !!this.room &&
         JSON.stringify(Array.from(this.roomEvents.entries())) !==

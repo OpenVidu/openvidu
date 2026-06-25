@@ -6,11 +6,17 @@ import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatButtonModule } from '@angular/material/button';
 
+export interface ExtraToggle {
+    label: string;
+    checked: boolean;
+}
+
 export interface EventGroup {
     label: string;
     eventCollection: Map<string, boolean>;
     eventArray: string[];
     checkAll: boolean;
+    extraToggles?: ExtraToggle[];
 }
 
 @Component({
@@ -48,6 +54,18 @@ export interface EventGroup {
                 }
               </div>
             </div>
+            @if (group.extraToggles && group.extraToggles.length > 0) {
+              <mat-divider></mat-divider>
+              @for (extraToggle of group.extraToggles; track extraToggle.label) {
+                <div class="toggle extra-toggle">
+                  <mat-slide-toggle
+                    [(ngModel)]="extraToggle.checked"
+                    [name]="extraToggle.label"
+                    color="warn">{{extraToggle.label}}
+                  </mat-slide-toggle>
+                </div>
+              }
+            }
           }
         </mat-dialog-content>
         <mat-dialog-actions>
@@ -60,7 +78,8 @@ export interface EventGroup {
         '.col-50 {flex-basis: 50%; box-sizing: border-box; padding-left: 20px; }',
         '.toggle { }',
         '.group-label { margin-top: 15px; margin-bottom: 5px; }',
-        '.group-label:first-child { margin-top: 0; }'
+        '.group-label:first-child { margin-top: 0; }',
+        '.extra-toggle { margin-top: 5px; }'
     ],
     imports: [SlicePipe, FormsModule, MatDialogModule, MatSlideToggleModule, MatDividerModule, MatButtonModule],
 })
@@ -76,11 +95,12 @@ export class EventsDialogComponent {
         const data = this.dialogData;
         this.target = data.target;
         if (data.eventGroups) {
-            this.eventGroups = data.eventGroups.map((g: { label: string; eventCollection: Map<string, boolean> }) => ({
+            this.eventGroups = data.eventGroups.map((g: { label: string; eventCollection: Map<string, boolean>; extraToggles?: ExtraToggle[] }) => ({
                 label: g.label,
                 eventCollection: g.eventCollection,
                 eventArray: Array.from(g.eventCollection.keys()),
                 checkAll: Array.from(g.eventCollection.values()).every(v => v),
+                extraToggles: g.extraToggles,
             }));
         } else {
             // Backward compatibility: single eventCollection
