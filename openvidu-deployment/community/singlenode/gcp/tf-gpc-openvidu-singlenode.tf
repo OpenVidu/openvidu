@@ -90,6 +90,10 @@ locals {
   yq_arch         = local.is_arm_instance ? "arm64" : "amd64"
 
   ubuntu_image = local.is_arm_instance ? "ubuntu-os-cloud/ubuntu-2404-noble-arm64-v20241219" : "ubuntu-os-cloud/ubuntu-2404-noble-amd64-v20241219"
+
+  # C4A (Axion) does not support pd-standard boot disks — it requires Hyperdisk.
+  # Mirror the pro/elastic template's logic so ARM singlenode deploys succeed.
+  is_c4a_instance = startswith(var.instanceType, "c4a-")
 }
 
 # Compute instance for OpenVidu
@@ -104,7 +108,7 @@ resource "google_compute_instance" "openvidu_server" {
     initialize_params {
       image = local.ubuntu_image
       size  = 100
-      type  = "pd-standard"
+      type  = local.is_c4a_instance ? "hyperdisk-balanced" : "pd-standard"
     }
   }
 
