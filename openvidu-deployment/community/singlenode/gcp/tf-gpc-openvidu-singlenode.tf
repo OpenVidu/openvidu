@@ -182,8 +182,7 @@ echo 1 > /usr/local/bin/openvidu_install_counter.txt
 if [[ "${var.domainName}" == "" ]]; then
   [ ! -d "/usr/share/openvidu" ] && mkdir -p /usr/share/openvidu
   EXTERNAL_IP=$(get_meta "instance/network-interfaces/0/access-configs/0/external-ip")
-  RANDOM_DOMAIN_STRING=$(tr -dc 'a-z' < /dev/urandom | head -c 8)
-  DOMAIN=openvidu-$RANDOM_DOMAIN_STRING-$(echo $EXTERNAL_IP | tr '.' '-').sslip.io
+  DOMAIN="$EXTERNAL_IP"
 else
   DOMAIN="${var.domainName}"
 fi
