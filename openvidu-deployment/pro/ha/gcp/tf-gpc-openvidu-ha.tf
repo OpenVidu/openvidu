@@ -983,8 +983,7 @@ if [[ $MASTER_NODE_NUM -eq 1 ]] && [[ "$ALL_SECRETS_GENERATED" == "false" ]]; th
   # Configure Domain name
   if [[ "${var.domainName}" == "" ]]; then
     EXTERNAL_IP=$(gcloud compute addresses describe "${lower("${var.stackName}-nlb-ip")}" --region ${var.region} --format="get(address)")
-    RANDOM_DOMAIN_STRING=$(tr -dc 'a-z' < /dev/urandom | head -c 8)
-    DOMAIN="openvidu-$RANDOM_DOMAIN_STRING-$(echo $EXTERNAL_IP | tr '.' '-').sslip.io"
+    DOMAIN="$EXTERNAL_IP"
   else
     DOMAIN="${var.domainName}"
   fi

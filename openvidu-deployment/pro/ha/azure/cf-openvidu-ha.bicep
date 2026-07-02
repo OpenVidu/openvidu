@@ -6,7 +6,7 @@ param stackName string
 @description('''
 [selfsigned] Not recommended for production use. Just for testing purposes or development environments. You don't need a FQDN to use this option.
 [owncert] Valid for production environments. Use your own certificate. You need a FQDN to use this option.
-[letsencrypt] Valid for production environments. Can be used with or without a FQDN (if no FQDN is provided, a random sslip.io domain will be used).
+[letsencrypt] Valid for production environments. Can be used with or without a FQDN (if no FQDN is provided, the public IP will be used).
 ''')
 @allowed([
   'selfsigned'
@@ -350,8 +350,7 @@ if [[ $MASTER_NODE_NUM -eq 1 ]] && [[ "$ALL_SECRETS_GENERATED" == "" || "$ALL_SE
       exit 1
     fi
 
-    RANDOM_DOMAIN_STRING=$(tr -dc 'a-z' < /dev/urandom | head -c 8)
-    DOMAIN="openvidu-$RANDOM_DOMAIN_STRING-$(echo "$PUBLIC_IP" | tr '.' '-').sslip.io"
+    DOMAIN="$PUBLIC_IP"
   else
     DOMAIN=${domainName}
   fi
