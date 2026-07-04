@@ -67,6 +67,9 @@
               <button class="disconnect-btn" (click)="disconnectRoom()" title="Disconnect room">
                 <mat-icon aria-label="Disconnect button">clear</mat-icon>
               </button>
+              <button class="remove-instance-btn" (click)="remove.emit()" title="Remove instance">
+                <mat-icon aria-label="Remove instance button">delete</mat-icon>
+              </button>
             </div>
           </div>
         </mat-card-header>

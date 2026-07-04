@@ -11,6 +11,8 @@ import { OpenviduInstanceComponent } from '../openvidu-instance/openvidu-instanc
 import stringify from 'json-stringify-safe';
 
 export interface RoomConf {
+  // Stable unique id for this instance
+  uid: number;
   subscriber: boolean;
   publisher: boolean;
   startSession: boolean;
@@ -36,6 +38,11 @@ export class TestSessionsComponent {
   // OpenViduInstance collection
   users: RoomConf[] = [];
 
+  // Monotonic counter assigning a stable uid to each instance. Reset only on a
+  // full clear (removeAllUsers / loadScenario), never on individual removals, so
+  // uids are never reused while instances come and go.
+  private nextUid = 0;
+
   numberParticipants = 2;
   autoJoin = false;
 
@@ -54,8 +61,12 @@ export class TestSessionsComponent {
     this.eventsInfoSubscription.unsubscribe();
   }
 
+  private pushUser(conf: Omit<RoomConf, 'uid'>): void {
+    this.users.push({ uid: this.nextUid++, ...conf });
+  }
+
   addUser(): void {
-    this.users.push({
+    this.pushUser({
       subscriber: true,
       publisher: true,
       startSession: false,
@@ -66,13 +77,19 @@ export class TestSessionsComponent {
     this.users.pop();
   }
 
+  // Remove a single instance by its stable uid (emitted by its remove button).
+  removeUserByUid(uid: number): void {
+    this.users = this.users.filter((user) => user.uid !== uid);
+  }
+
   removeAllUsers(): void {
     this.users = [];
+    this.nextUid = 0;
   }
 
   private loadSubsPubs(n: number): void {
     for (let i = 0; i < n; i++) {
-      this.users.push({
+      this.pushUser({
         subscriber: true,
         publisher: true,
         startSession: this.autoJoin,
@@ -82,7 +99,7 @@ export class TestSessionsComponent {
 
   private loadSubs(n: number): void {
     for (let i = 0; i < n; i++) {
-      this.users.push({
+      this.pushUser({
         subscriber: true,
         publisher: false,
         startSession: this.autoJoin,
@@ -92,7 +109,7 @@ export class TestSessionsComponent {
 
   private loadPubs(n: number): void {
     for (let i = 0; i < n; i++) {
-      this.users.push({
+      this.pushUser({
         subscriber: false,
         publisher: true,
         startSession: this.autoJoin,
@@ -102,6 +119,7 @@ export class TestSessionsComponent {
 
   loadScenario(subsPubs: number, pubs: number, subs: number): void {
     this.users = [];
+    this.nextUid = 0;
     this.loadSubsPubs(subsPubs);
     this.loadPubs(pubs);
     this.loadSubs(subs);

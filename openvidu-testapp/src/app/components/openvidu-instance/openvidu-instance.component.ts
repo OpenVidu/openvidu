@@ -1,4 +1,11 @@
-import { Component, HostListener, Input, inject } from '@angular/core';
+import {
+  Component,
+  EventEmitter,
+  HostListener,
+  Input,
+  Output,
+  inject,
+} from '@angular/core';
 import { NgClass, KeyValuePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
@@ -78,6 +85,9 @@ export class OpenviduInstanceComponent {
 
   @Input()
   index: number;
+
+  @Output()
+  remove = new EventEmitter<void>();
 
   room?: Room;
   roomEvents: Map<RoomEvent, Boolean> = new Map<RoomEvent, boolean>();

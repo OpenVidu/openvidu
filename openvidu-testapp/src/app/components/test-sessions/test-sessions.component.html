@@ -22,8 +22,8 @@
   </div>
 
   <div class="instance-div">
-    @for (user of users; track user; let i = $index) {
-      <app-openvidu-instance @fadeAnimation [attr.id]="'openvidu-instance-' + i" [roomConf]="user" [index]="i">
+    @for (user of users; track user.uid) {
+      <app-openvidu-instance @fadeAnimation [attr.id]="'openvidu-instance-' + user.uid" [roomConf]="user" [index]="user.uid" (remove)="removeUserByUid(user.uid)">
       </app-openvidu-instance>
     }
   </div>
