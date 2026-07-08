@@ -356,6 +356,13 @@ if [[ $MASTER_NODE_NUM -eq 1 ]] && [[ "$ALL_SECRETS_GENERATED" == "" || "$ALL_SE
   fi
   DOMAIN="$(/usr/local/bin/store_secret.sh save DOMAIN-NAME "${DOMAIN}")"
 
+  # Publish service URLs early (idempotent; after_install re-writes byte-identical values)
+  OPENVIDU_URL="$(/usr/local/bin/store_secret.sh save OPENVIDU-URL "https://${DOMAIN}/")"
+  LIVEKIT_URL="$(/usr/local/bin/store_secret.sh save LIVEKIT-URL "wss://${DOMAIN}/")"
+  DASHBOARD_URL="$(/usr/local/bin/store_secret.sh save DASHBOARD-URL "https://${DOMAIN}/dashboard/")"
+  GRAFANA_URL="$(/usr/local/bin/store_secret.sh save GRAFANA-URL "https://${DOMAIN}/grafana/")"
+  MINIO_URL="$(/usr/local/bin/store_secret.sh save MINIO-URL "https://${DOMAIN}/minio-console/")"
+
   # Meet initial admin user and password
   MEET_INITIAL_ADMIN_USER="$(/usr/local/bin/store_secret.sh save MEET-INITIAL-ADMIN-USER "admin")"
   if [[ "${initialMeetAdminPassword}" != '' ]]; then
@@ -404,6 +411,9 @@ while true; do
   fi
     sleep 5
 done
+
+# Wait until master-node-1 has generated all shared secrets before fetching them
+while [[ "$(az keyvault secret show --vault-name ${keyVaultName} --name ALL-SECRETS-GENERATED --query value -o tsv 2>/dev/null)" != "true" ]]; do sleep 5; done
 
 
 # Fetch the values in the keyvault
@@ -763,10 +773,17 @@ az network public-ip show \
 var check_app_readyScriptMaster = '''
 #!/bin/bash
 set -e
+MAX_WAIT=1200
+WAIT_INTERVAL=5
+ELAPSED_TIME=0
 while true; do
   HTTP_STATUS=$(curl -Ik http://localhost:7880/health/caddy | head -n1 | awk '{print $2}')
-  if [ $HTTP_STATUS == 200 ]; then
+  if [ "$HTTP_STATUS" = "200" ]; then
     break
+  fi
+  ELAPSED_TIME=$((ELAPSED_TIME + WAIT_INTERVAL))
+  if [ $ELAPSED_TIME -ge $MAX_WAIT ]; then
+    exit 1
   fi
   sleep 5
 done
@@ -793,11 +810,35 @@ set -e
 INSTALL_DIR="/opt/openvidu"
 CLUSTER_CONFIG_DIR="${INSTALL_DIR}/config/cluster"
 
-az login --identity
+# Retry login + storage key fetch to allow the Contributor role assignment to propagate
+MAX_WAIT=100
+WAIT_INTERVAL=1
+ELAPSED_TIME=0
+set +e
+while true; do
+  az login --identity
 
-# Config azure blob storage
-AZURE_ACCOUNT_NAME="${storageAccountName}"
-AZURE_ACCOUNT_KEY=$(az storage account keys list --account-name ${storageAccountName} --query '[0].value' -o tsv)
+  # Config azure blob storage
+  AZURE_ACCOUNT_NAME="${storageAccountName}"
+  AZURE_ACCOUNT_KEY=$(az storage account keys list --account-name ${storageAccountName} --query '[0].value' -o tsv)
+
+  # If the key was fetched successfully, exit the loop
+  if [ $? -eq 0 ]; then
+    break
+  fi
+
+  # If not, wait and check again incrementing the time
+  ELAPSED_TIME=$((ELAPSED_TIME + WAIT_INTERVAL))
+
+  # If exceeded the maximum time, exit with error
+  if [ $ELAPSED_TIME -ge $MAX_WAIT ]; then
+    exit 1
+  fi
+
+  # Esperar antes de la próxima comprobación
+  sleep $WAIT_INTERVAL
+done
+set -e
 AZURE_CONTAINER_NAME="${storageAccountContainerName}"
 
 sed -i "s|AZURE_ACCOUNT_NAME=.*|AZURE_ACCOUNT_NAME=$AZURE_ACCOUNT_NAME|" "${CLUSTER_CONFIG_DIR}/openvidu.env"

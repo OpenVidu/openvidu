@@ -1622,6 +1622,13 @@ Resources:
                 # If the private IP is the same as the first master node, generate the secrets
                 if [[ $MASTER_NODE_NUM -eq 1 ]] && [[ "$ALL_SECRETS_GENERATED" == "false" ]]; then
                   DOMAIN="$(/usr/local/bin/store_secret.sh save DOMAIN_NAME "${DomainName}")"
+                  # Publish access URLs early so other nodes can read them during phase 2
+                  # (idempotent: after_install rewrites these same byte-identical values later)
+                  /usr/local/bin/store_secret.sh save OPENVIDU_URL "https://${!DOMAIN}/"
+                  /usr/local/bin/store_secret.sh save LIVEKIT_URL "wss://${!DOMAIN}/"
+                  /usr/local/bin/store_secret.sh save DASHBOARD_URL "https://${!DOMAIN}/dashboard/"
+                  /usr/local/bin/store_secret.sh save GRAFANA_URL "https://${!DOMAIN}/grafana/"
+                  /usr/local/bin/store_secret.sh save MINIO_URL "https://${!DOMAIN}/minio-console/"
                   OPENVIDU_PRO_LICENSE="$(/usr/local/bin/store_secret.sh save OPENVIDU_PRO_LICENSE "${OpenViduLicense}")"
                   OPENVIDU_RTC_ENGINE="$(/usr/local/bin/store_secret.sh save OPENVIDU_RTC_ENGINE "${RTCEngine}")"
                   # Store version so media nodes can use it to install the same version
@@ -1657,17 +1664,28 @@ Resources:
                   ALL_SECRETS_GENERATED="$(/usr/local/bin/store_secret.sh save ALL_SECRETS_GENERATED "true")"
                 fi
 
-                # Fetch the shared secret again
-                SHARED_SECRET=$(aws secretsmanager get-secret-value \
-                  --region ${AWS::Region} \
-                  --secret-id openvidu-ha-${AWS::Region}-${AWS::StackName} \
-                  --query SecretString --output text)
+                # Fetch the shared secret again, waiting until master-1 has generated all secrets.
+                # Bounded (up to 900s at 5s): a genuinely stuck master-1 still surfaces after the deadline.
+                SECRETS_WAIT_ATTEMPTS=0
+                SECRETS_WAIT_MAX=180
+                while true; do
+                  SHARED_SECRET=$(aws secretsmanager get-secret-value \
+                    --region ${AWS::Region} \
+                    --secret-id openvidu-ha-${AWS::Region}-${AWS::StackName} \
+                    --query SecretString --output text || echo 'none')
 
-                ALL_SECRETS_GENERATED=$(echo "$SHARED_SECRET" | jq -r '.ALL_SECRETS_GENERATED')
-                if [[ "${!ALL_SECRETS_GENERATED}" == "false" ]]; then
-                  echo "Error: Secrets not generated"
-                  exit 1
-                fi
+                  ALL_SECRETS_GENERATED=$(echo "$SHARED_SECRET" | jq -r '.ALL_SECRETS_GENERATED')
+                  if [[ "${!ALL_SECRETS_GENERATED}" == "true" ]]; then
+                    break
+                  fi
+
+                  SECRETS_WAIT_ATTEMPTS=$((SECRETS_WAIT_ATTEMPTS + 1))
+                  if [[ $SECRETS_WAIT_ATTEMPTS -ge $SECRETS_WAIT_MAX ]]; then
+                    echo "Error: Secrets not generated"
+                    exit 1
+                  fi
+                  sleep 5
+                done
 
                 # sending the signal call
                 cfn-signal -e $? --stack ${AWS::StackId} --resource "$SIGNAL_NAME" --region ${AWS::Region}
@@ -2124,6 +2142,27 @@ Resources:
           # Start OpenVidu
           systemctl start openvidu || { echo "[OpenVidu] error starting OpenVidu"; exit 1; }
 
+          # Local readiness gate: wait up to 300s for Caddy health, restart once if it does not converge
+          OPENVIDU_READY=false
+          for i in $(seq 1 60); do
+            if curl -fsS http://127.0.0.1:7880/health/caddy >/dev/null 2>&1; then
+              OPENVIDU_READY=true
+              break
+            fi
+            sleep 5
+          done
+          if [ "$OPENVIDU_READY" != "true" ]; then
+            echo "[OpenVidu] not healthy after 300s, restarting once"
+            systemctl restart openvidu || true
+            for i in $(seq 1 60); do
+              if curl -fsS http://127.0.0.1:7880/health/caddy >/dev/null 2>&1; then
+                OPENVIDU_READY=true
+                break
+              fi
+              sleep 5
+            done
+          fi
+
           # Update shared secret
           /usr/local/bin/after_install.sh || { echo "[OpenVidu] error updating shared secret"; exit 1; }
 
@@ -2179,6 +2218,27 @@ Resources:
 
           # Start OpenVidu
           systemctl start openvidu || { echo "[OpenVidu] error starting OpenVidu"; exit 1; }
+
+          # Local readiness gate: wait up to 300s for Caddy health, restart once if it does not converge
+          OPENVIDU_READY=false
+          for i in $(seq 1 60); do
+            if curl -fsS http://127.0.0.1:7880/health/caddy >/dev/null 2>&1; then
+              OPENVIDU_READY=true
+              break
+            fi
+            sleep 5
+          done
+          if [ "$OPENVIDU_READY" != "true" ]; then
+            echo "[OpenVidu] not healthy after 300s, restarting once"
+            systemctl restart openvidu || true
+            for i in $(seq 1 60); do
+              if curl -fsS http://127.0.0.1:7880/health/caddy >/dev/null 2>&1; then
+                OPENVIDU_READY=true
+                break
+              fi
+              sleep 5
+            done
+          fi
 
           # Update shared secret
           /usr/local/bin/after_install.sh || { echo "[OpenVidu] error updating shared secret"; exit 1; }
@@ -2236,6 +2296,27 @@ Resources:
           # Start OpenVidu
           systemctl start openvidu || { echo "[OpenVidu] error starting OpenVidu"; exit 1; }
 
+          # Local readiness gate: wait up to 300s for Caddy health, restart once if it does not converge
+          OPENVIDU_READY=false
+          for i in $(seq 1 60); do
+            if curl -fsS http://127.0.0.1:7880/health/caddy >/dev/null 2>&1; then
+              OPENVIDU_READY=true
+              break
+            fi
+            sleep 5
+          done
+          if [ "$OPENVIDU_READY" != "true" ]; then
+            echo "[OpenVidu] not healthy after 300s, restarting once"
+            systemctl restart openvidu || true
+            for i in $(seq 1 60); do
+              if curl -fsS http://127.0.0.1:7880/health/caddy >/dev/null 2>&1; then
+                OPENVIDU_READY=true
+                break
+              fi
+              sleep 5
+            done
+          fi
+
           # Update shared secret
           /usr/local/bin/after_install.sh || { echo "[OpenVidu] error updating shared secret"; exit 1; }
 
@@ -2291,6 +2372,27 @@ Resources:
 
           # Start OpenVidu
           systemctl start openvidu || { echo "[OpenVidu] error starting OpenVidu"; exit 1; }
+
+          # Local readiness gate: wait up to 300s for Caddy health, restart once if it does not converge
+          OPENVIDU_READY=false
+          for i in $(seq 1 60); do
+            if curl -fsS http://127.0.0.1:7880/health/caddy >/dev/null 2>&1; then
+              OPENVIDU_READY=true
+              break
+            fi
+            sleep 5
+          done
+          if [ "$OPENVIDU_READY" != "true" ]; then
+            echo "[OpenVidu] not healthy after 300s, restarting once"
+            systemctl restart openvidu || true
+            for i in $(seq 1 60); do
+              if curl -fsS http://127.0.0.1:7880/health/caddy >/dev/null 2>&1; then
+                OPENVIDU_READY=true
+                break
+              fi
+              sleep 5
+            done
+          fi
 
           # Update shared secret
           /usr/local/bin/after_install.sh || { echo "[OpenVidu] error updating shared secret"; exit 1; }

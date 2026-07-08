@@ -989,6 +989,18 @@ if [[ $MASTER_NODE_NUM -eq 1 ]] && [[ "$ALL_SECRETS_GENERATED" == "false" ]]; th
   fi
   DOMAIN="$(/usr/local/bin/store_secret.sh save DOMAIN_NAME "$DOMAIN")"
 
+  # Publish derived URLs early so phase-2 consumers don't race on them (idempotent; after_install re-writes identical values later)
+  OPENVIDU_URL="https://$${DOMAIN}/"
+  LIVEKIT_URL="wss://$${DOMAIN}/"
+  DASHBOARD_URL="https://$${DOMAIN}/dashboard/"
+  GRAFANA_URL="https://$${DOMAIN}/grafana/"
+  MINIO_URL="https://$${DOMAIN}/minio-console/"
+  echo -n "$OPENVIDU_URL" | gcloud secrets versions add OPENVIDU_URL --data-file=-
+  echo -n "$LIVEKIT_URL" | gcloud secrets versions add LIVEKIT_URL --data-file=-
+  echo -n "$DASHBOARD_URL" | gcloud secrets versions add DASHBOARD_URL --data-file=-
+  echo -n "$GRAFANA_URL" | gcloud secrets versions add GRAFANA_URL --data-file=-
+  echo -n "$MINIO_URL" | gcloud secrets versions add MINIO_URL --data-file=-
+
   # Meet initial admin user and password
   MEET_INITIAL_ADMIN_USER="$(/usr/local/bin/store_secret.sh save MEET_INITIAL_ADMIN_USER "admin")"
   if [[ "${var.initialMeetAdminPassword}" != '' ]]; then
@@ -1037,6 +1049,9 @@ while true; do
   fi
   sleep 5
 done
+
+# Wait for master-1 to finish generating all shared secrets before reading them
+while ! gcloud secrets versions access latest --secret=ALL_SECRETS_GENERATED 2>/dev/null | grep -q "true"; do echo "Waiting for master-1 to finish generating secrets..."; sleep 5; done
 
 # Fetch all values from Secret Manager
 MASTER_NODE_1_PRIVATE_IP=$(gcloud secrets versions access latest --secret=MASTER_NODE_1_PRIVATE_IP)
