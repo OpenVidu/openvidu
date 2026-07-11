@@ -81,6 +81,7 @@
         "test": {
           "builder": "@angular/build:karma",
           "options": {
+            "externalDependencies": ["node:crypto"],
             "polyfills": [
               "zone.js",
               "zone.js/testing",

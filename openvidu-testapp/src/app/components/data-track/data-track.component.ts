@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, Output, ChangeDetectorRef } from '@angular/core';
+import { Component, EventEmitter, Input, Output, ChangeDetectorRef, ChangeDetectionStrategy } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import {
@@ -15,6 +15,7 @@ import {
   selector: 'app-data-track',
   templateUrl: './data-track.component.html',
   styleUrl: './data-track.component.css',
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [MatIconModule, MatTooltipModule],
 })
 export class DataTrackComponent {

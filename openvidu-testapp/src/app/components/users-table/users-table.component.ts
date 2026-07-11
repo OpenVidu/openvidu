@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, ChangeDetectionStrategy } from '@angular/core';
 import { AudioTrack, VideoTrack } from 'livekit-client';
 import { MatBadgeModule } from '@angular/material/badge';
 import { CallbackPipe } from 'src/app/pipes/callback.pipe';
@@ -9,6 +9,7 @@ import { User } from '../test-scenarios/test-scenarios.component';
   selector: 'app-users-table',
   styleUrl: 'users-table.component.css',
   templateUrl: 'users-table.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [MatBadgeModule, CallbackPipe, TableVideoComponent],
 })
 export class UsersTableComponent {

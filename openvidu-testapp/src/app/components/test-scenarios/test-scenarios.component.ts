@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Subscription } from 'rxjs';
 
@@ -49,6 +49,7 @@ export interface User {
   selector: 'app-test-scenarios',
   templateUrl: './test-scenarios.component.html',
   styleUrl: './test-scenarios.component.css',
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [FormsModule, MatButtonModule, MatFormFieldModule, MatInputModule, MatIconModule, UsersTableComponent],
 })
 export class TestScenariosComponent implements OnInit, OnDestroy {

@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Component, EventEmitter, Input, Output, ChangeDetectionStrategy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -7,6 +7,7 @@ import { MatInputModule } from '@angular/material/input';
     selector: 'app-video-resolution',
     templateUrl: './video-resolution.component.html',
     styleUrl: './video-resolution.component.css',
+    changeDetection: ChangeDetectionStrategy.Eager,
     imports: [FormsModule, MatFormFieldModule, MatInputModule],
 })
 export class VideoResolutionComponent {

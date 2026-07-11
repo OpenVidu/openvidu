@@ -1,6 +1,6 @@
 import { LiveAnnouncer } from '@angular/cdk/a11y';
 import { COMMA, ENTER } from '@angular/cdk/keycodes';
-import { Component, inject } from '@angular/core';
+import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatChipInputEvent, MatChipsModule } from '@angular/material/chips';
 import { MatDialogRef, MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
@@ -40,6 +40,7 @@ import {
     selector: 'app-room-api-dialog',
     templateUrl: './room-api-dialog.component.html',
     styleUrl: './room-api-dialog.component.css',
+    changeDetection: ChangeDetectionStrategy.Eager,
     imports: [FormsModule, MatDialogModule, MatFormFieldModule, MatInputModule, MatButtonModule, MatCheckboxModule, MatDividerModule, MatSelectModule, MatChipsModule, MatIconModule, MatTooltipModule, MatSlideToggleModule],
 })
 export class RoomApiDialogComponent {

@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, Output, ChangeDetectorRef, inject } from '@angular/core';
+import { Component, EventEmitter, Input, Output, ChangeDetectorRef, inject, ChangeDetectionStrategy } from '@angular/core';
 import { NgClass, KeyValuePipe } from '@angular/common';
 import { MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
@@ -47,6 +47,7 @@ import {
     selector: 'app-participant',
     templateUrl: './participant.component.html',
     styleUrl: './participant.component.css',
+    changeDetection: ChangeDetectionStrategy.Eager,
     imports: [NgClass, KeyValuePipe, MatIconModule, MatTooltipModule, MatExpansionModule, VideoTrackComponent, AudioTrackComponent, DataTrackComponent],
 })
 export class ParticipantComponent {

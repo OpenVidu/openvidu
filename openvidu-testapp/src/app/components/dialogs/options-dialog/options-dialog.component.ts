@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
 import { NgClass, UpperCasePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogRef, MatDialogModule } from '@angular/material/dialog';
@@ -27,6 +27,7 @@ import {
     selector: 'app-options-dialog',
     templateUrl: './options-dialog.component.html',
     styleUrl: './options-dialog.component.css',
+    changeDetection: ChangeDetectionStrategy.Eager,
     imports: [NgClass, UpperCasePipe, FormsModule, MatDialogModule, MatRadioModule, MatDividerModule, MatCheckboxModule, MatFormFieldModule, MatInputModule, MatSelectModule, MatButtonModule, VideoResolutionComponent],
 })
 export class OptionsDialogComponent {

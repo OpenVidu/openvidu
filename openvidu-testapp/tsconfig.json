@@ -2,7 +2,6 @@
 {
   "compileOnSave": false,
   "compilerOptions": {
-    "baseUrl": "./",
     "outDir": "./dist/out-tsc",
     "forceConsistentCasingInFileNames": true,
     "esModuleInterop": true,
@@ -22,6 +21,8 @@
     "strictPropertyInitialization": false,
     "skipLibCheck": true,
     "paths": {
+      "src/*": ["./src/*"],
+      "node_modules/*": ["./node_modules/*"],
       "crypto": ["./node_modules/crypto-browserify"],
       "node:crypto": ["./node_modules/crypto-browserify"],
       "stream": ["./node_modules/stream-browserify"],

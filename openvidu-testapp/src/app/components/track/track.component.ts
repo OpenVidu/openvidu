@@ -5,6 +5,7 @@ import {
   Input,
   Output,
   ViewChild,
+  ChangeDetectionStrategy
 } from '@angular/core';
 import {
   TrackPublication,
@@ -28,6 +29,7 @@ import {
 
 @Component({
     selector: 'app-track',
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: '',
 })
 export class TrackComponent {

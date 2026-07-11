@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
 import { SlicePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
@@ -81,6 +81,7 @@ export interface EventGroup {
         '.group-label:first-child { margin-top: 0; }',
         '.extra-toggle { margin-top: 5px; }'
     ],
+    changeDetection: ChangeDetectionStrategy.Eager,
     imports: [SlicePipe, FormsModule, MatDialogModule, MatSlideToggleModule, MatDividerModule, MatButtonModule],
 })
 export class EventsDialogComponent {

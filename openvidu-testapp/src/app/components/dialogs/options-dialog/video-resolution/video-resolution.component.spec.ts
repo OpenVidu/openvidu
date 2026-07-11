@@ -8,7 +8,7 @@ describe('VideoResolutionComponent', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      declarations: [VideoResolutionComponent]
+      imports: [VideoResolutionComponent]
     });
     fixture = TestBed.createComponent(VideoResolutionComponent);
     component = fixture.componentInstance;

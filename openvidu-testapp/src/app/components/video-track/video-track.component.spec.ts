@@ -8,7 +8,7 @@ describe('VideoTrackComponent', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      declarations: [VideoTrackComponent]
+      imports: [VideoTrackComponent]
     });
     fixture = TestBed.createComponent(VideoTrackComponent);
     component = fixture.componentInstance;

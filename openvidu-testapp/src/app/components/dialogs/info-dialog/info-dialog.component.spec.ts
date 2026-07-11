@@ -1,5 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
+import { MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { InfoDialogComponent } from './info-dialog.component';
 
 describe('InfoDialogComponent', () => {
@@ -8,7 +9,8 @@ describe('InfoDialogComponent', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      declarations: [InfoDialogComponent]
+      imports: [InfoDialogComponent],
+      providers: [{ provide: MAT_DIALOG_DATA, useValue: {} }]
     });
     fixture = TestBed.createComponent(InfoDialogComponent);
     component = fixture.componentInstance;

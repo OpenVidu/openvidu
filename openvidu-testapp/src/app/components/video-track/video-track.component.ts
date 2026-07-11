@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
 import { NgClass } from '@angular/common';
 import {
   LocalTrack,
@@ -20,6 +20,7 @@ import { MatSelectModule } from '@angular/material/select';
   selector: 'app-video-track',
   templateUrl: './video-track.component.html',
   styleUrl: './video-track.component.css',
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [NgClass, MatIconModule, MatTooltipModule, MatFormFieldModule, MatSelectModule],
 })
 export class VideoTrackComponent extends TrackComponent {

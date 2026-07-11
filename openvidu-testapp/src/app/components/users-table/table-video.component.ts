@@ -4,6 +4,7 @@ import {
   AfterViewInit,
   ViewChild,
   ElementRef,
+  ChangeDetectionStrategy
 } from '@angular/core';
 import { AudioTrack, VideoTrack } from 'livekit-client';
 
@@ -12,6 +13,7 @@ import { AudioTrack, VideoTrack } from 'livekit-client';
     template: `
     <video #mediaElement [id]="videoId" autoplay playsinline></video>
   `,
+    changeDetection: ChangeDetectionStrategy.Eager,
     styles: [
         `
       video {

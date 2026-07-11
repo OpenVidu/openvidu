@@ -1,5 +1,5 @@
 import { animate, style, transition, trigger } from '@angular/animations';
-import { Component } from '@angular/core';
+import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Subscription } from 'rxjs';
 import { TestFeedService } from 'src/app/services/test-feed.service';
@@ -30,6 +30,7 @@ export interface RoomConf {
             ]),
         ]),
     ],
+    changeDetection: ChangeDetectionStrategy.Eager,
     imports: [FormsModule, MatButtonModule, MatCheckboxModule, MatFormFieldModule, MatInputModule, OpenviduInstanceComponent],
 })
 export class TestSessionsComponent {

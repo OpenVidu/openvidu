@@ -5,6 +5,7 @@ import {
   Input,
   Output,
   inject,
+  ChangeDetectionStrategy
 } from '@angular/core';
 import { NgClass, KeyValuePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -77,6 +78,7 @@ import {
   selector: 'app-openvidu-instance',
   templateUrl: './openvidu-instance.component.html',
   styleUrl: './openvidu-instance.component.css',
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [NgClass, KeyValuePipe, FormsModule, MatCardModule, MatFormFieldModule, MatInputModule, MatIconModule, MatButtonModule, MatCheckboxModule, MatExpansionModule, ParticipantComponent],
 })
 export class OpenviduInstanceComponent {

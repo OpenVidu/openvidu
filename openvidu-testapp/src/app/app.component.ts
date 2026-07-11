@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterOutlet, RouterLink } from '@angular/router';
 import { LogLevel, setLogLevel } from 'livekit-client';
@@ -13,6 +13,7 @@ import { MatButtonModule } from '@angular/material/button';
     selector: 'app-root',
     templateUrl: './app.component.html',
     styleUrl: './app.component.css',
+    changeDetection: ChangeDetectionStrategy.Eager,
     imports: [FormsModule, RouterOutlet, RouterLink, MatSidenavModule, MatToolbarModule, MatFormFieldModule, MatInputModule, MatButtonModule],
 })
 export class AppComponent {

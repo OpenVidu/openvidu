@@ -5,6 +5,7 @@ import {
   OnDestroy,
   ViewChild,
   inject,
+  ChangeDetectionStrategy
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogRef, MatDialogModule } from '@angular/material/dialog';
@@ -28,6 +29,7 @@ import {
   selector: 'app-processor-dialog',
   templateUrl: './processor-dialog.component.html',
   styleUrl: './processor-dialog.component.css',
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [FormsModule, MatDialogModule, MatSlideToggleModule, MatFormFieldModule, MatSelectModule, MatSliderModule, MatButtonModule, MatTooltipModule, MatDividerModule, MatIconModule, MatInputModule],
 })
 export class ProcessorDialogComponent implements AfterViewInit, OnDestroy {

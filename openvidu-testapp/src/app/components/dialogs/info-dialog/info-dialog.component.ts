@@ -1,4 +1,4 @@
-import { Component, NgZone, OnDestroy, ViewChild, inject } from '@angular/core';
+import { Component, NgZone, OnDestroy, ViewChild, inject, ChangeDetectionStrategy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CdkTextareaAutosize } from '@angular/cdk/text-field';
 import { take } from 'rxjs/operators';
@@ -11,6 +11,7 @@ import { MatButtonModule } from '@angular/material/button';
   selector: 'app-info-dialog',
   templateUrl: './info-dialog.component.html',
   styleUrl: './info-dialog.component.css',
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [FormsModule, CdkTextareaAutosize, MatDialogModule, MatFormFieldModule, MatInputModule, MatButtonModule],
 })
 export class InfoDialogComponent implements OnDestroy {

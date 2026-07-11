@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { NgClass } from '@angular/common';
 import { LocalTrack } from 'livekit-client';
 import { MatIconModule } from '@angular/material/icon';
@@ -9,6 +9,7 @@ import { TrackComponent } from '../track/track.component';
     selector: 'app-audio-track',
     templateUrl: './audio-track.component.html',
     styleUrl: './audio-track.component.css',
+    changeDetection: ChangeDetectionStrategy.Eager,
     imports: [NgClass, MatIconModule, MatTooltipModule],
 })
 export class AudioTrackComponent extends TrackComponent {
