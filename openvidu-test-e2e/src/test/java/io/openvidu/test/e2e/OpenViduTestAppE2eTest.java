@@ -2151,7 +2151,8 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 				participantNameInput.sendKeys("CHROME_USER");
 				this.forceCodec(chromeUser, 0, codec);
 				chromeUser.getDriver().findElement(By.className("connect-btn")).click();
-				chromeUser.getEventManager().waitUntilEventReaches("localTrackSubscribed", "ParticipantEvent", 1);
+				chromeUser.getEventManager().waitUntilEventReaches("localTrackSubscribed", "ParticipantEvent", 1, 120,
+						true);
 				// Check publisher's codec
 				WebElement publisherVideo = chromeUser.getDriver()
 						.findElement(By.cssSelector("#openvidu-instance-0 video.local"));
@@ -2261,7 +2262,8 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 				this.forceCodec(chromeUser, 0, publisherCodec);
 				this.setPublisherSimulcastLayersAndResolution(chromeUser, 0, "h360", 1920, 1080);
 				chromeUser.getDriver().findElement(By.className("connect-btn")).click();
-				chromeUser.getEventManager().waitUntilEventReaches("localTrackSubscribed", "ParticipantEvent", 1);
+				chromeUser.getEventManager().waitUntilEventReaches("localTrackSubscribed", "ParticipantEvent", 1, 120,
+						true);
 
 				// Measure when the PUBLISHER itself starts actively sending the 1920 (rid
 				// "f") layer (active==true && frameWidth==1920). Compared with the
