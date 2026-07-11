@@ -4016,8 +4016,6 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 	@Test
 	@DisplayName("RTSP ingress AAC")
-	@Disabled // Audio ingress is flaky, only works if the ingress inmediately connects to the
-				// RTSP server
 	void rtspIngressAACTest() throws Exception {
 		log.info("RTSP ingress AAC");
 		String rtspUri = startRtspServer(null, "AAC");
@@ -4026,8 +4024,6 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 	@Test
 	@DisplayName("RTSP ingress MP3")
-	@Disabled // Audio ingress is flaky, only works if the ingress inmediately connects to the
-				// RTSP server
 	void rtspIngressMP3Test() throws Exception {
 		log.info("RTSP ingress MP3");
 		String rtspUri = startRtspServer(null, "MP3");
@@ -4036,8 +4032,6 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 	@Test
 	@DisplayName("RTSP ingress OPUS")
-	@Disabled // Audio ingress is flaky, only works if the ingress inmediately connects to the
-				// RTSP server
 	void rtspIngressOPUSTest() throws Exception {
 		log.info("RTSP ingress OPUS");
 		String rtspUri = startRtspServer(null, "OPUS");
@@ -4046,8 +4040,6 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 	@Test
 	@DisplayName("RTSP ingress G711")
-	@Disabled // Audio ingress is flaky, only works if the ingress inmediately connects to the
-				// RTSP server
 	void rtspIngressG711Test() throws Exception {
 		log.info("RTSP ingress G711");
 		String rtspUri = startRtspServer(null, "G711");
