@@ -296,7 +296,12 @@ public class OpenViduTestE2e {
 		String codecs = getCodecs(videoCodec, audioCodec);
 		String rtspServerIp = "host.docker.internal";
 
-		String ffmpegCommand = "ffmpeg -i " + fileUrl + " " + codecs + " "
+		// -re paces the publisher at native frame rate, like the live camera it
+		// simulates. Without it, cheap codecs (MJPEG, MPEG-4) encode the whole file
+		// many times faster than realtime on fast runners: mediamtx discards most
+		// frames and, when ffmpeg finishes early and exits, terminates the reader
+		// session, killing the ingress mid-test.
+		String ffmpegCommand = "ffmpeg -re -i " + fileUrl + " " + codecs + " "
 				+ " -async 50 -strict -2 -f rtsp -rtsp_transport tcp rtsp://" + rtspServerIp + ":" + rtspPort + "/"
 				+ RTSP_PATH;
 
@@ -337,8 +342,9 @@ public class OpenViduTestE2e {
 		String fileUrl = getFileUrl(videoCodec != null, audioCodec != null, true);
 		String codecs = getCodecs(videoCodec, audioCodec);
 
-		String ffmpegCommand = "ffmpeg -i " + fileUrl + " " + codecs + " -strict -2 -f mpegts srt://:" + RTSP_SRT_PORT
-				+ "?mode=listener";
+		// -re: see startRtspServer.
+		String ffmpegCommand = "ffmpeg -re -i " + fileUrl + " " + codecs + " -strict -2 -f mpegts srt://:"
+				+ RTSP_SRT_PORT + "?mode=listener";
 
 		// Clean adjacent white spaces or the ffmpeg command will fail
 		ffmpegCommand = ffmpegCommand.trim().replaceAll(" +", " ");
