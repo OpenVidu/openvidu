@@ -76,6 +76,13 @@ export class TestFeedService {
       "rtcConfig",
       "options",
       "connectOptions",
+      "processor",
+      "processorElement",
+      "transformer",
+      "trackGenerator",
+      "sourceDummy",
+      "canvas",
+      "displayCanvas",
     ]);
 
     // 2. SCOPED BLOCKLIST (Parent -> Child removal)
@@ -85,12 +92,18 @@ export class TestFeedService {
     };
 
     const seen = new WeakSet();
+    // Global traversal budget: an event should never serialize into a huge
+    // object graph (e.g. a track processor referencing the MediaPipe WASM
+    // module, whose HEAP* typed arrays would otherwise be enumerated
+    // byte by byte and freeze the tab).
+    let nodeBudget = 5000;
 
     // 3. RECURSIVE WALKER
     const traverse = (
       current: any,
       nodeName: string | null,
-      parentName: string | null
+      parentName: string | null,
+      depth: number = 0
     ): any => {
       // JSON.stringify cannot handle BigInt. Convert it to string.
       if (typeof current === "bigint") {
@@ -102,6 +115,17 @@ export class TestFeedService {
         return current;
       }
 
+      // A2. Never enumerate binary buffers (typed arrays have one enumerable
+      // entry PER BYTE: a WASM heap view would explode the JS heap).
+      if (ArrayBuffer.isView(current) || current instanceof ArrayBuffer) {
+        return undefined;
+      }
+
+      // A3. Depth / size guards
+      if (depth > 10 || --nodeBudget <= 0) {
+        return undefined;
+      }
+
       // B. Handle Circular References
       if (seen.has(current)) {
         return undefined;
@@ -111,7 +135,7 @@ export class TestFeedService {
       // C. Handle Arrays
       if (Array.isArray(current)) {
         return current
-          .map((item) => traverse(item, null, nodeName))
+          .map((item) => traverse(item, null, nodeName, depth + 1))
           .filter((item) => item !== undefined);
       }
 
@@ -147,7 +171,7 @@ export class TestFeedService {
           }
         }
 
-        const cleanedValue = traverse(childValue, childKey, nodeName);
+        const cleanedValue = traverse(childValue, childKey, nodeName, depth + 1);
         if (cleanedValue !== undefined) {
           copy[childKey] = cleanedValue;
         }
