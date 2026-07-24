@@ -553,7 +553,7 @@
                 "datetime": "[steps('parameters SCALING').datetime]",
                 "automationAccountName": "[steps('parameters SCALING').automationAccountName]",
                 "storageAccountName": "[steps('parameters STORAGE').storageAccountName]",
-                "containerName": "[steps('parameters STORAGE').containerName]",
+                "appDataContainerName": "[steps('parameters STORAGE').containerName]",
                 "additionalInstallFlags": "[steps('FLAGS').additionalInstallFlags]"
             }
         }
