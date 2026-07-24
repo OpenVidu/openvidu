@@ -20,14 +20,15 @@ resource "google_secret_manager_secret" "openvidu_shared_info" {
     "OPENVIDU_PRO_LICENSE", "OPENVIDU_RTC_ENGINE", "REDIS_PASSWORD", "MONGO_ADMIN_USERNAME",
     "MONGO_ADMIN_PASSWORD", "MONGO_REPLICA_SET_KEY", "MINIO_ACCESS_KEY", "MINIO_SECRET_KEY",
     "DASHBOARD_ADMIN_USERNAME", "DASHBOARD_ADMIN_PASSWORD", "GRAFANA_ADMIN_USERNAME",
-    "GRAFANA_ADMIN_PASSWORD", "ENABLED_MODULES", "OPENVIDU_VERSION", "ALL_SECRETS_GENERATED",
-    "MASTER_NODE_1_PRIVATE_IP", "MASTER_NODE_2_PRIVATE_IP", "MASTER_NODE_3_PRIVATE_IP", "MASTER_NODE_4_PRIVATE_IP"
+    "GRAFANA_ADMIN_PASSWORD", "ENABLED_MODULES", "OPENVIDU_VERSION", "ALL_SECRETS_GENERATED"
   ])
 
   secret_id = each.key
   replication {
     auto {}
   }
+
+  depends_on = [google_project_service.secretmanager_api]
 }
 
 # GCS buckets for HA deployment
@@ -37,6 +38,8 @@ resource "google_storage_bucket" "appdata_bucket" {
   location                    = var.region
   force_destroy               = true
   uniform_bucket_level_access = true
+
+  depends_on = [google_project_service.storage_api]
 }
 
 resource "google_storage_bucket" "clusterdata_bucket" {
@@ -45,12 +48,16 @@ resource "google_storage_bucket" "clusterdata_bucket" {
   location                    = var.region
   force_destroy               = true
   uniform_bucket_level_access = true
+
+  depends_on = [google_project_service.storage_api]
 }
 
 # Service account for the instances
 resource "google_service_account" "service_account" {
   account_id   = lower("${substr(var.stackName, 0, 12)}-sa")
   display_name = "OpenVidu instance service account"
+
+  depends_on = [google_project_service.iam_api]
 }
 
 # IAM bindings for the service account
@@ -58,6 +65,8 @@ resource "google_project_iam_member" "iam_project_role" {
   project = var.projectId
   role    = "roles/owner"
   member  = "serviceAccount:${google_service_account.service_account.email}"
+
+  depends_on = [google_project_service.cloudresourcemanager_api]
 }
 
 # External SSH access to Master Nodes
@@ -72,6 +81,8 @@ resource "google_compute_firewall" "external_master_ssh" {
 
   source_ranges = ["0.0.0.0/0"]
   target_tags   = [lower("${var.stackName}-master-node")]
+
+  depends_on = [google_project_service.compute_api]
 }
 
 # External access to Media Nodes (SSH and media traffic)
@@ -90,6 +101,8 @@ resource "google_compute_firewall" "external_media_access" {
 
   source_ranges = ["0.0.0.0/0"]
   target_tags   = [lower("${var.stackName}-media-node")]
+
+  depends_on = [google_project_service.compute_api]
 }
 
 # Load Balancer health checks and HTTP traffic to Master Nodes
@@ -104,6 +117,8 @@ resource "google_compute_firewall" "lb_to_master_http" {
 
   source_ranges = ["0.0.0.0/0"]
   target_tags   = [lower("${var.stackName}-master-node")]
+
+  depends_on = [google_project_service.compute_api]
 }
 
 # Master node internal services communication
@@ -129,6 +144,8 @@ resource "google_compute_firewall" "master_to_master_internal" {
 
   source_tags = [lower("${var.stackName}-master-node")]
   target_tags = [lower("${var.stackName}-master-node")]
+
+  depends_on = [google_project_service.compute_api]
 }
 
 # Media Nodes to Master Nodes communication
@@ -153,6 +170,8 @@ resource "google_compute_firewall" "media_to_master_services" {
 
   source_tags = [lower("${var.stackName}-media-node")]
   target_tags = [lower("${var.stackName}-master-node")]
+
+  depends_on = [google_project_service.compute_api]
 }
 
 # Master Nodes to Media Nodes communication
@@ -171,6 +190,8 @@ resource "google_compute_firewall" "master_to_media_services" {
 
   source_tags = [lower("${var.stackName}-master-node")]
   target_tags = [lower("${var.stackName}-media-node")]
+
+  depends_on = [google_project_service.compute_api]
 }
 
 
@@ -179,6 +200,8 @@ resource "google_compute_address" "nlb_ip" {
   count  = var.publicIpAddress == "" ? 1 : 0
   name   = lower("${var.stackName}-nlb-ip")
   region = var.region
+
+  depends_on = [google_project_service.compute_api]
 }
 
 # Data source for existing IP address when publicIpAddress is provided
@@ -206,6 +229,8 @@ resource "google_compute_region_health_check" "tcp_health_check" {
   timeout_sec         = 5
   healthy_threshold   = 3
   unhealthy_threshold = 4
+
+  depends_on = [google_project_service.compute_api]
 }
 
 # Regional backend service for the TCP NLB
@@ -289,6 +314,34 @@ locals {
   is_c4a_instance = startswith(var.masterNodesInstanceType, "c4a-")
 }
 
+# Default subnetwork the master instances live in (they use network = "default" with no
+# explicit subnetwork, so GCP places them in the auto-mode default subnetwork of the region)
+data "google_compute_subnetwork" "default" {
+  name   = "default"
+  region = var.region
+
+  depends_on = [google_project_service.compute_api]
+}
+
+# Static internal IPs for the master nodes. Reserving them up front lets the media instance
+# template and every master receive the full list without waiting for the master instances to
+# boot, which removes the runtime IP-exchange handshake through Secret Manager.
+resource "google_compute_address" "master_internal_ip" {
+  count        = 4
+  name         = lower("${var.stackName}-master-node-${count.index + 1}-internal-ip")
+  address_type = "INTERNAL"
+  region       = var.region
+  subnetwork   = data.google_compute_subnetwork.default.id
+
+  depends_on = [google_project_service.compute_api]
+}
+
+locals {
+  # Master node private IPs come from the reserved static internal addresses (index 0 -> master
+  # node 1, ...). Comma-separated to match the installer's --master-node-private-ip-list format.
+  master_node_private_ip_list = join(",", google_compute_address.master_internal_ip[*].address)
+}
+
 # Master Node 1
 resource "google_compute_instance" "openvidu_master_node_1" {
   name         = lower("${var.stackName}-master-node-1")
@@ -305,13 +358,15 @@ resource "google_compute_instance" "openvidu_master_node_1" {
   }
 
   network_interface {
-    network = "default"
+    network    = "default"
+    network_ip = google_compute_address.master_internal_ip[0].address
     access_config {}
   }
 
   metadata = {
     stackName                = var.stackName
     masterNodeNum            = "1"
+    masterNodePrivateIPList  = local.master_node_private_ip_list
     domainName               = var.domainName
     certificateType          = var.certificateType
     ownPublicCertificate     = var.ownPublicCertificate
@@ -355,13 +410,15 @@ resource "google_compute_instance" "openvidu_master_node_2" {
   }
 
   network_interface {
-    network = "default"
+    network    = "default"
+    network_ip = google_compute_address.master_internal_ip[1].address
     access_config {}
   }
 
   metadata = {
     stackName                = var.stackName
     masterNodeNum            = "2"
+    masterNodePrivateIPList  = local.master_node_private_ip_list
     domainName               = var.domainName
     certificateType          = var.certificateType
     ownPublicCertificate     = var.ownPublicCertificate
@@ -387,8 +444,6 @@ resource "google_compute_instance" "openvidu_master_node_2" {
     node-type = "master"
     node-num  = "2"
   }
-
-  depends_on = [google_compute_instance.openvidu_master_node_1]
 }
 
 # Master Node 3
@@ -407,13 +462,15 @@ resource "google_compute_instance" "openvidu_master_node_3" {
   }
 
   network_interface {
-    network = "default"
+    network    = "default"
+    network_ip = google_compute_address.master_internal_ip[2].address
     access_config {}
   }
 
   metadata = {
     stackName                = var.stackName
     masterNodeNum            = "3"
+    masterNodePrivateIPList  = local.master_node_private_ip_list
     domainName               = var.domainName
     certificateType          = var.certificateType
     ownPublicCertificate     = var.ownPublicCertificate
@@ -439,8 +496,6 @@ resource "google_compute_instance" "openvidu_master_node_3" {
     node-type = "master"
     node-num  = "3"
   }
-
-  depends_on = [google_compute_instance.openvidu_master_node_2]
 }
 
 # Master Node 4
@@ -459,13 +514,15 @@ resource "google_compute_instance" "openvidu_master_node_4" {
   }
 
   network_interface {
-    network = "default"
+    network    = "default"
+    network_ip = google_compute_address.master_internal_ip[3].address
     access_config {}
   }
 
   metadata = {
     stackName                = var.stackName
     masterNodeNum            = "4"
+    masterNodePrivateIPList  = local.master_node_private_ip_list
     domainName               = var.domainName
     certificateType          = var.certificateType
     ownPublicCertificate     = var.ownPublicCertificate
@@ -491,8 +548,6 @@ resource "google_compute_instance" "openvidu_master_node_4" {
     node-type = "master"
     node-num  = "4"
   }
-
-  depends_on = [google_compute_instance.openvidu_master_node_3]
 }
 
 # ------------------------- scale in resources -------------------------
@@ -800,6 +855,12 @@ resource "google_cloudfunctions2_function" "scalein_function" {
     }
     service_account_email = google_service_account.service_account.email
   }
+
+  depends_on = [
+    google_project_service.cloudfunctions_api,
+    google_project_service.cloudbuild_api,
+    google_project_service.run_api
+  ]
 }
 
 # Cloud Scheduler to trigger the function every 5 minutes
@@ -829,6 +890,8 @@ resource "google_cloud_scheduler_job" "scale_scheduler" {
       service_account_email = google_service_account.service_account.email
     }
   }
+
+  depends_on = [google_project_service.cloudscheduler_api]
 }
 
 locals {
@@ -858,7 +921,7 @@ resource "google_compute_instance_template" "media_node_template" {
 
   metadata = {
     stackName               = var.stackName
-    masterNodePrivateIPList = "${google_compute_instance.openvidu_master_node_1.network_interface[0].network_ip},${google_compute_instance.openvidu_master_node_2.network_interface[0].network_ip},${google_compute_instance.openvidu_master_node_3.network_interface[0].network_ip},${google_compute_instance.openvidu_master_node_4.network_interface[0].network_ip}"
+    masterNodePrivateIPList = local.master_node_private_ip_list
     bucketAppDataName       = local.isEmptyAppData ? google_storage_bucket.appdata_bucket[0].name : var.GCSAppDataBucketName
     bucketClusterDataName   = local.isEmptyClusterData ? google_storage_bucket.clusterdata_bucket[0].name : var.GCSClusterDataBucketName
     region                  = var.region
@@ -880,13 +943,6 @@ resource "google_compute_instance_template" "media_node_template" {
   lifecycle {
     create_before_destroy = true
   }
-
-  depends_on = [
-    google_compute_instance.openvidu_master_node_1,
-    google_compute_instance.openvidu_master_node_2,
-    google_compute_instance.openvidu_master_node_3,
-    google_compute_instance.openvidu_master_node_4
-  ]
 }
 
 # Managed Instance Group for Media Nodes
@@ -904,13 +960,6 @@ resource "google_compute_region_instance_group_manager" "media_node_group" {
     name = "http"
     port = 7880
   }
-
-  depends_on = [
-    google_compute_instance.openvidu_master_node_1,
-    google_compute_instance.openvidu_master_node_2,
-    google_compute_instance.openvidu_master_node_3,
-    google_compute_instance.openvidu_master_node_4
-  ]
 }
 
 # Autoscaler for Media Nodes
@@ -969,11 +1018,8 @@ get_meta() { curl -s -H "Metadata-Flavor: Google" "$${METADATA_URL}/$1"; }
 # Get master node number from metadata
 MASTER_NODE_NUM=$(get_meta "instance/attributes/masterNodeNum")
 
-# Get own private IP
-PRIVATE_IP=$(get_meta "instance/network-interfaces/0/ip")
-
-# Store current private IP
-PRIVATE_IP="$(/usr/local/bin/store_secret.sh save MASTER_NODE_$${MASTER_NODE_NUM}_PRIVATE_IP $PRIVATE_IP)"
+# Get the list of master node private IPs (static internal IPs passed via metadata)
+MASTER_NODE_PRIVATE_IP_LIST=$(get_meta "instance/attributes/masterNodePrivateIPList")
 
 # Check if secrets have been generated
 ALL_SECRETS_GENERATED=$(gcloud secrets versions access latest --secret=ALL_SECRETS_GENERATED 2>/dev/null || echo "false")
@@ -1033,33 +1079,20 @@ if [[ $MASTER_NODE_NUM -eq 1 ]] && [[ "$ALL_SECRETS_GENERATED" == "false" ]]; th
   ALL_SECRETS_GENERATED="$(/usr/local/bin/store_secret.sh save ALL_SECRETS_GENERATED "true")"
 fi
 
-# Wait for all master nodes to store their private IPs
-while true; do
-  MASTER_NODE_1_PRIVATE_IP=$(gcloud secrets versions access latest --secret=MASTER_NODE_1_PRIVATE_IP 2>/dev/null || echo "")
-  MASTER_NODE_2_PRIVATE_IP=$(gcloud secrets versions access latest --secret=MASTER_NODE_2_PRIVATE_IP 2>/dev/null || echo "")
-  MASTER_NODE_3_PRIVATE_IP=$(gcloud secrets versions access latest --secret=MASTER_NODE_3_PRIVATE_IP 2>/dev/null || echo "")
-  MASTER_NODE_4_PRIVATE_IP=$(gcloud secrets versions access latest --secret=MASTER_NODE_4_PRIVATE_IP 2>/dev/null || echo "")
-
-  # Check if all master nodes have stored their private IPs
-  if [[ "$MASTER_NODE_1_PRIVATE_IP" != "" ]] &&
-      [[ "$MASTER_NODE_2_PRIVATE_IP" != "" ]] &&
-      [[ "$MASTER_NODE_3_PRIVATE_IP" != "" ]] &&
-      [[ "$MASTER_NODE_4_PRIVATE_IP" != "" ]]; then
-    break
+# Wait for master-1 to finish generating all shared secrets before reading them.
+# Bounded to 360 iterations x 5s = 30 minutes.
+i=0
+while ! gcloud secrets versions access latest --secret=ALL_SECRETS_GENERATED 2>/dev/null | grep -q "true"; do
+  i=$((i + 1))
+  if [ "$i" -ge 360 ]; then
+    echo "Timed out after 30 minutes waiting for master-1 to finish generating secrets" >&2
+    exit 1
   fi
+  echo "Waiting for master-1 to finish generating secrets..."
   sleep 5
 done
 
-# Wait for master-1 to finish generating all shared secrets before reading them
-while ! gcloud secrets versions access latest --secret=ALL_SECRETS_GENERATED 2>/dev/null | grep -q "true"; do echo "Waiting for master-1 to finish generating secrets..."; sleep 5; done
-
 # Fetch all values from Secret Manager
-MASTER_NODE_1_PRIVATE_IP=$(gcloud secrets versions access latest --secret=MASTER_NODE_1_PRIVATE_IP)
-MASTER_NODE_2_PRIVATE_IP=$(gcloud secrets versions access latest --secret=MASTER_NODE_2_PRIVATE_IP)
-MASTER_NODE_3_PRIVATE_IP=$(gcloud secrets versions access latest --secret=MASTER_NODE_3_PRIVATE_IP)
-MASTER_NODE_4_PRIVATE_IP=$(gcloud secrets versions access latest --secret=MASTER_NODE_4_PRIVATE_IP)
-MASTER_NODE_PRIVATE_IP_LIST="$MASTER_NODE_1_PRIVATE_IP,$MASTER_NODE_2_PRIVATE_IP,$MASTER_NODE_3_PRIVATE_IP,$MASTER_NODE_4_PRIVATE_IP"
-
 DOMAIN=$(gcloud secrets versions access latest --secret=DOMAIN_NAME)
 OPENVIDU_PRO_LICENSE=$(gcloud secrets versions access latest --secret=OPENVIDU_PRO_LICENSE)
 OPENVIDU_RTC_ENGINE=$(gcloud secrets versions access latest --secret=OPENVIDU_RTC_ENGINE)
@@ -1082,8 +1115,15 @@ LIVEKIT_API_KEY=$(gcloud secrets versions access latest --secret=LIVEKIT_API_KEY
 LIVEKIT_API_SECRET=$(gcloud secrets versions access latest --secret=LIVEKIT_API_SECRET)
 ENABLED_MODULES=$(gcloud secrets versions access latest --secret=ENABLED_MODULES)
 
-# Build install command
-INSTALL_COMMAND="sh <(curl -fsSL http://get.openvidu.io/pro/ha/$OPENVIDU_VERSION/install_ov_master_node.sh)"
+# Build install command. Download the installer to a file first: process substitution
+# (sh <(curl ...)) would silently run an empty script and exit 0 on a transient curl failure.
+INSTALLER_SCRIPT="/tmp/install_ov_master_node.sh"
+curl -fsSL --retry 8 --retry-all-errors --retry-delay 5 -o "$INSTALLER_SCRIPT" "http://get.openvidu.io/pro/ha/$OPENVIDU_VERSION/install_ov_master_node.sh"
+if [ ! -s "$INSTALLER_SCRIPT" ]; then
+  echo "Downloaded OpenVidu master node installer is empty or missing" >&2
+  exit 1
+fi
+INSTALL_COMMAND="sh $INSTALLER_SCRIPT"
 
 # Common arguments
 COMMON_ARGS=(
@@ -1434,10 +1474,17 @@ EOF
 
   check_app_ready_script = <<-EOF
 #!/bin/bash
+# Bounded to 240 iterations x 5s = 20 minutes.
+i=0
 while true; do
   HTTP_STATUS=$(curl -Ik http://localhost:7880/health/caddy 2>/dev/null | head -n1 | awk '{print $2}')
   if [ "$HTTP_STATUS" == "200" ]; then
     break
+  fi
+  i=$((i + 1))
+  if [ "$i" -ge 240 ]; then
+    echo "Timed out after 20 minutes waiting for OpenVidu to become ready" >&2
+    exit 1
   fi
   sleep 5
 done
@@ -1513,8 +1560,6 @@ CONFIG_S3_EOF
 
   echo "DPkg::Lock::Timeout \"-1\";" > /etc/apt/apt.conf.d/99timeout
 
-  apt-get update && apt-get install -y
-
   GCLOUD_VERSION=573.0.0
   # Install google cli
   if ! command -v gcloud >/dev/null 2>&1; then
@@ -1578,8 +1623,15 @@ MASTER_NODE_PRIVATE_IP_LIST=$(get_meta "instance/attributes/masterNodePrivateIPL
 STACK_NAME=$(get_meta "instance/attributes/stackName")
 PRIVATE_IP=$(get_meta "instance/network-interfaces/0/ip")
 
-# Wait for master nodes to be ready by checking secrets
+# Wait for master nodes to be ready by checking secrets.
+# Bounded to 180 iterations x 10s = 30 minutes.
+i=0
 while ! gcloud secrets versions access latest --secret=ALL_SECRETS_GENERATED 2>/dev/null | grep -q "true"; do
+  i=$((i + 1))
+  if [ "$i" -ge 180 ]; then
+    echo "Timed out after 30 minutes waiting for master nodes to initialize secrets" >&2
+    exit 1
+  fi
   echo "Waiting for master nodes to initialize secrets..."
   sleep 10
 done
@@ -1597,8 +1649,16 @@ if [[ "$OPENVIDU_VERSION" == "none" ]]; then
   exit 1
 fi
 
-# Build install command for media node
-INSTALL_COMMAND="sh <(curl -fsSL http://get.openvidu.io/pro/ha/$OPENVIDU_VERSION/install_ov_media_node.sh)"
+# Build install command for media node. Download the installer to a file first: process
+# substitution (sh <(curl ...)) would silently run an empty script and exit 0 on a transient
+# curl failure.
+INSTALLER_SCRIPT="/tmp/install_ov_media_node.sh"
+curl -fsSL --retry 8 --retry-all-errors --retry-delay 5 -o "$INSTALLER_SCRIPT" "http://get.openvidu.io/pro/ha/$OPENVIDU_VERSION/install_ov_media_node.sh"
+if [ ! -s "$INSTALLER_SCRIPT" ]; then
+  echo "Downloaded OpenVidu media node installer is empty or missing" >&2
+  exit 1
+fi
+INSTALL_COMMAND="sh $INSTALLER_SCRIPT"
 
 # Media node arguments
 COMMON_ARGS=(
@@ -1698,51 +1758,55 @@ EOF
 #!/bin/bash -x
 set -eu -o pipefail
 
-# Create scripts
-cat > /usr/local/bin/install.sh << 'INSTALL_EOF'
+# Check if installation already completed
+if [ -f /usr/local/bin/openvidu_install_counter.txt ]; then
+  # Launch on reboot
+  systemctl start openvidu || { echo "[OpenVidu] error starting OpenVidu"; exit 1; }
+else
+  # Create scripts
+  cat > /usr/local/bin/install.sh << 'INSTALL_EOF'
 ${local.install_script_media}
 INSTALL_EOF
-chmod +x /usr/local/bin/install.sh
+  chmod +x /usr/local/bin/install.sh
 
-cat > /usr/local/bin/graceful_shutdown.sh << 'GRACEFUL_SHUTDOWN_EOF'
+  cat > /usr/local/bin/graceful_shutdown.sh << 'GRACEFUL_SHUTDOWN_EOF'
 ${local.graceful_shutdown_script}
 GRACEFUL_SHUTDOWN_EOF
-chmod +x /usr/local/bin/graceful_shutdown.sh
+  chmod +x /usr/local/bin/graceful_shutdown.sh
 
-echo "DPkg::Lock::Timeout \"-1\";" > /etc/apt/apt.conf.d/99timeout
+  echo "DPkg::Lock::Timeout \"-1\";" > /etc/apt/apt.conf.d/99timeout
 
-apt-get update && apt-get install -y
+  GCLOUD_VERSION=573.0.0
+  # Install google cli
+  if ! command -v gcloud >/dev/null 2>&1; then
+    curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | gpg --dearmor -o /usr/share/keyrings/cloud.google.gpg
+    echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" | tee -a /etc/apt/sources.list.d/google-cloud-sdk.list
+    apt-get update && apt-get install -y google-cloud-cli=$${GCLOUD_VERSION}-0
+  fi
 
-GCLOUD_VERSION=573.0.0
-# Install google cli
-if ! command -v gcloud >/dev/null 2>&1; then
-  curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | gpg --dearmor -o /usr/share/keyrings/cloud.google.gpg
-  echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" | tee -a /etc/apt/sources.list.d/google-cloud-sdk.list
-  apt-get update && apt-get install -y google-cloud-cli=$${GCLOUD_VERSION}-0
-fi
+  # Authenticate with gcloud using instance service account
+  gcloud auth activate-service-account --key-file=/dev/null 2>/dev/null || true
+  gcloud config set account $(curl -s "http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/email" -H "Metadata-Flavor: Google")
+  gcloud config set project $(curl -s "http://metadata.google.internal/computeMetadata/v1/project/project-id" -H "Metadata-Flavor: Google")
 
-# Authenticate with gcloud using instance service account
-gcloud auth activate-service-account --key-file=/dev/null 2>/dev/null || true
-gcloud config set account $(curl -s "http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/email" -H "Metadata-Flavor: Google")
-gcloud config set project $(curl -s "http://metadata.google.internal/computeMetadata/v1/project/project-id" -H "Metadata-Flavor: Google")
+  export HOME="/root"
 
-export HOME="/root"
+  # Install OpenVidu Media Node
+  /usr/local/bin/install.sh || { echo "[OpenVidu] error installing OpenVidu Media Node"; exit 1; }
 
-# Install OpenVidu Media Node
-/usr/local/bin/install.sh || { echo "[OpenVidu] error installing OpenVidu Media Node"; exit 1; }
+  # Mark installation as complete
+  echo "installation_complete" > /usr/local/bin/openvidu_install_counter.txt
 
-# Mark installation as complete
-echo "installation_complete" > /usr/local/bin/openvidu_install_counter.txt
+  # Start OpenVidu
+  systemctl start openvidu || { echo "[OpenVidu] error starting OpenVidu"; exit 1; }
 
-# Start OpenVidu
-systemctl start openvidu || { echo "[OpenVidu] error starting OpenVidu"; exit 1; }
-
-# Add cron job to check if instance is abandoned every minute
-cat > /usr/local/bin/check_abandoned.sh << 'CHECK_ABANDONED_EOF'
+  # Add cron job to check if instance is abandoned every minute
+  cat > /usr/local/bin/check_abandoned.sh << 'CHECK_ABANDONED_EOF'
 ${local.crontab_job_media}
 CHECK_ABANDONED_EOF
-chmod +x /usr/local/bin/check_abandoned.sh
+  chmod +x /usr/local/bin/check_abandoned.sh
 
-echo "*/1 * * * * /usr/local/bin/check_abandoned.sh > /var/log/openvidu-abandoned-check.log 2>&1" | crontab -
+  echo "*/1 * * * * /usr/local/bin/check_abandoned.sh > /var/log/openvidu-abandoned-check.log 2>&1" | crontab -
+fi
 EOF
 }
