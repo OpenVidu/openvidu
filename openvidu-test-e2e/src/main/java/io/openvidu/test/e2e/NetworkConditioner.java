@@ -25,6 +25,16 @@ public class NetworkConditioner {
 	 * path is dead).
 	 */
 	public static final String SFU_ICE_TCP_PORT = "7881";
+
+	/**
+	 * UDP port of the SFU's embedded TURN server (livekit.yaml
+	 * {@code turn.udp_port}). Same reasoning as {@link #SFU_ICE_TCP_PORT}: it is the
+	 * last route out of a media blackout, since a client whose host and srflx
+	 * candidates are all dead falls back to allocating a TURN relay. Blocking the
+	 * listener is enough; the relay range ({@code turn.relay_range_*}) is where the
+	 * TURN server sends from towards the peer, never a destination of the client.
+	 */
+	public static final String SFU_TURN_UDP_PORT = "3478";
 	private static final String DOCKER_SOCK = "/var/run/docker.sock";
 
 	// Where Pumba installs the netem qdisc of a port-scoped netem impairment. Pumba
@@ -227,14 +237,16 @@ public class NetworkConditioner {
 	 * Stops the running Pumba first (avoids conflicting root qdiscs), then installs
 	 * an iptables OUTPUT DROP rule over the whole UDP {@code mediaPortRange} (e.g.
 	 * "7900-7999") plus one over the SFU's ICE-TCP port
-	 * ({@link #SFU_ICE_TCP_PORT}), so the browser's reconnect cannot fail over to
-	 * TCP and escape the blackout.
+	 * ({@link #SFU_ICE_TCP_PORT}) and one over its TURN listener
+	 * ({@link #SFU_TURN_UDP_PORT}), so the browser's reconnect cannot fail over to
+	 * TCP or to a relay candidate and escape the blackout.
 	 */
 	public static void blackoutOutbound(String targetContainer, String mediaPortRange, int durationSec) {
 		clear();
 		final String iptablesRange = mediaPortRange.replace('-', ':'); // iptables ranges are low:high
-		log.info("Total OUTBOUND blackout (100% loss) on container {} across SFU media port range {} and "
-				+ "ICE-TCP port {} (iptables OUTPUT DROP)", targetContainer, mediaPortRange, SFU_ICE_TCP_PORT);
+		log.info("Total OUTBOUND blackout (100% loss) on container {} across SFU media port range {}, "
+				+ "ICE-TCP port {} and TURN port {} (iptables OUTPUT DROP)", targetContainer, mediaPortRange,
+				SFU_ICE_TCP_PORT, SFU_TURN_UDP_PORT);
 		String out = nettools(targetContainer, "iptables",
 				"-A OUTPUT -o eth0 -p udp --dport " + iptablesRange + " -j DROP");
 		log.info("blackout iptables -A OUTPUT (udp {}) result: {}", iptablesRange, out);
@@ -243,6 +255,9 @@ public class NetworkConditioner {
 		String outTcp = nettools(targetContainer, "iptables",
 				"-A OUTPUT -o eth0 -p tcp --dport " + SFU_ICE_TCP_PORT + " -j DROP");
 		log.info("blackout iptables -A OUTPUT (tcp {}) result: {}", SFU_ICE_TCP_PORT, outTcp);
+		String outTurn = nettools(targetContainer, "iptables",
+				"-A OUTPUT -o eth0 -p udp --dport " + SFU_TURN_UDP_PORT + " -j DROP");
+		log.info("blackout iptables -A OUTPUT (udp {}) result: {}", SFU_TURN_UDP_PORT, outTurn);
 		blackoutContainer = targetContainer;
 	}
 

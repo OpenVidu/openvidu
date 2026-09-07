@@ -721,9 +721,10 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 	 * then propagate the first failure — AssertionError or any exception — to the
 	 * caller's thread, so assertions inside the tasks actually fail the test (an
 	 * AssertionError thrown in a worker thread would otherwise be lost). Every
-	 * failure is logged and the ones after the first travel as suppressed exceptions
-	 * of the propagated one, so no browser's error is masked by another's. Each task
-	 * MUST drive a distinct WebDriver, since a Selenium driver is not thread-safe.
+	 * failure is logged and the ones after the first travel as suppressed
+	 * exceptions of the propagated one, so no browser's error is masked by
+	 * another's. Each task MUST drive a distinct WebDriver, since a Selenium driver
+	 * is not thread-safe.
 	 */
 	private void runInParallel(ThrowingRunnable... tasks) throws Exception {
 		ExecutorService executor = Executors.newFixedThreadPool(tasks.length);
@@ -1103,9 +1104,11 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 		log.info("ConnectionQuality LOST publisher test");
 
-		Pair<OpenViduTestappUser, OpenViduTestappUser> users = connectionQualityTest(true, false, 99, null);
+		Pair<OpenViduTestappUser, OpenViduTestappUser> users = connectionQualityTest(true, false, null, null);
 		OpenViduTestappUser punchbagUser = users.getLeft();
 		OpenViduTestappUser regularUser = users.getRight();
+
+		NetworkConditioner.blackoutOutbound(getNetemContainerName(punchbagUser), "7900-7999", 120);
 
 		punchbagUser.getEventManager().waitUntilEventReaches(0, "connectionQualityChanged", "RoomEvent", 1);
 		regularUser.getEventManager().waitUntilEventReaches(0, "connectionQualityChanged", "RoomEvent", 1);
