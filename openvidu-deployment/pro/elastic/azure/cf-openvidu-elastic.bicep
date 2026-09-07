@@ -831,7 +831,7 @@ echo ${base64config_blobStorage} | base64 -d > /usr/local/bin/config_blobStorage
 chmod +x /usr/local/bin/config_blobStorage.sh
 
 # Install azure cli
-AZURE_CLI_VERSION=2.87.0
+AZURE_CLI_VERSION=2.90.0
 apt-get install -y apt-transport-https ca-certificates gnupg lsb-release
 curl -sLS https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor -o /etc/apt/trusted.gpg.d/microsoft.gpg
 echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/trusted.gpg.d/microsoft.gpg] https://packages.microsoft.com/repos/azure-cli/ $(lsb_release -cs) main" | tee /etc/apt/sources.list.d/azure-cli.list
@@ -1079,7 +1079,7 @@ echo "DPkg::Lock::Timeout \"-1\";" > /etc/apt/apt.conf.d/99timeout
 apt-get update && apt-get install -y jq
 
 # Install azure cli
-AZURE_CLI_VERSION=2.87.0
+AZURE_CLI_VERSION=2.90.0
 apt-get install -y apt-transport-https ca-certificates gnupg lsb-release
 curl -sLS https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor -o /etc/apt/trusted.gpg.d/microsoft.gpg
 echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/trusted.gpg.d/microsoft.gpg] https://packages.microsoft.com/repos/azure-cli/ $(lsb_release -cs) main" | tee /etc/apt/sources.list.d/azure-cli.list
