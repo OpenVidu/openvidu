@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -38,6 +39,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BiFunction;
 
@@ -67,6 +69,8 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
+import io.livekit.server.AccessToken;
+import io.livekit.server.RoomList;
 import io.minio.BucketExistsArgs;
 import io.minio.ListObjectsArgs;
 import io.minio.MinioClient;
@@ -81,6 +85,8 @@ import io.minio.messages.Item;
 import livekit.LivekitIngress.IngressInfo;
 import livekit.LivekitIngress.IngressState;
 import livekit.LivekitModels.ConnectionQuality;
+import okhttp3.Request;
+import okhttp3.Response;
 
 /**
  * E2E tests for openvidu-testapp.
@@ -92,6 +98,10 @@ import livekit.LivekitModels.ConnectionQuality;
 @DisplayName("E2E tests for OpenVidu TestApp")
 @ExtendWith(SpringExtension.class)
 public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
+
+	// A server node with older stats is considered dead. The server updates them
+	// every second, and its own health check allows up to 4 seconds
+	private final static int SERVER_NODE_STALE_HEARTBEAT_SECONDS = 15;
 
 	@BeforeAll()
 	protected static void setupAll() throws Exception {
@@ -1865,31 +1875,127 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 		log.info("Massive session");
 
-		final Integer NUMBER_OF_USERS = 8;
+		final int NUMBER_OF_USERS = 8;
+		user.getDriver().findElement(By.id("toolbar-scenarios")).sendKeys(Keys.ENTER);
+		runMassiveSession(user, NUMBER_OF_USERS);
+	}
+
+	@Test
+	@DisplayName("Massive session loop")
+	void massiveSessionLoopTest() throws Exception {
+
+		final int NUMBER_OF_ITERATIONS = 10;
+		final int MIN_NUMBER_OF_USERS = 5;
+		final int MAX_NUMBER_OF_USERS = 8;
+
+		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
+
+		log.info("Massive session loop");
+
+		// The very same server process must be alive after every iteration
+		final List<String> serverNodes = getLiveServerNodes();
+		log.info("Server nodes alive before the loop: {}", serverNodes);
 
 		user.getDriver().findElement(By.id("toolbar-scenarios")).sendKeys(Keys.ENTER);
 
+		for (int iteration = 1; iteration <= NUMBER_OF_ITERATIONS; iteration++) {
+			final int numberOfUsers = ThreadLocalRandom.current().nextInt(MIN_NUMBER_OF_USERS,
+					MAX_NUMBER_OF_USERS + 1);
+			log.info("Massive session loop iteration {}/{} with {} users", iteration, NUMBER_OF_ITERATIONS,
+					numberOfUsers);
+			try {
+				runMassiveSession(user, numberOfUsers);
+			} catch (Exception | AssertionError e) {
+				// A dead server is a better error than the event timeout it causes here
+				assertSameServerProcesses(serverNodes, iteration);
+				throw e;
+			}
+			assertSameServerProcesses(serverNodes, iteration);
+			user.getEventManager().clearAllCurrentEvents();
+		}
+	}
+
+	private void runMassiveSession(OpenViduTestappUser user, int numberOfUsers) throws Exception {
+
 		WebElement many2ManyInput = user.getDriver().findElement(By.id("m2m-input"));
 		many2ManyInput.clear();
-		many2ManyInput.sendKeys(NUMBER_OF_USERS.toString());
+		many2ManyInput.sendKeys(Integer.toString(numberOfUsers));
 
 		user.getDriver().findElement(By.id("m2m-btn")).click();
 
-		user.getEventManager().waitUntilEventReaches("signalConnected", "RoomEvent", NUMBER_OF_USERS);
-		user.getEventManager().waitUntilEventReaches("connected", "RoomEvent", NUMBER_OF_USERS);
-		user.getEventManager().waitUntilEventReaches("localTrackPublished", "RoomEvent", NUMBER_OF_USERS * 2);
-		user.getEventManager().waitUntilEventReaches("localTrackSubscribed", "RoomEvent", NUMBER_OF_USERS * 2);
+		user.getEventManager().waitUntilEventReaches("signalConnected", "RoomEvent", numberOfUsers);
+		user.getEventManager().waitUntilEventReaches("connected", "RoomEvent", numberOfUsers);
+		user.getEventManager().waitUntilEventReaches("localTrackPublished", "RoomEvent", numberOfUsers * 2);
+		user.getEventManager().waitUntilEventReaches("localTrackSubscribed", "RoomEvent", numberOfUsers * 2);
 		user.getEventManager().waitUntilEventReaches("trackSubscribed", "RoomEvent",
-				(NUMBER_OF_USERS) * (NUMBER_OF_USERS - 1) * 2);
+				numberOfUsers * (numberOfUsers - 1) * 2);
 
 		user.getWaiter()
-				.until(ExpectedConditions.numberOfElementsToBe(By.tagName("video"), NUMBER_OF_USERS * NUMBER_OF_USERS));
+				.until(ExpectedConditions.numberOfElementsToBe(By.tagName("video"), numberOfUsers * numberOfUsers));
 		Assertions.assertTrue(assertAllElementsHaveTracks(user, "video", true, true),
 				"HTMLVideoElements were expected to have a video track and an audio track attached");
 
 		user.getDriver().findElement(By.id("finish-btn")).click();
 
-		user.getEventManager().waitUntilEventReaches("disconnected", "RoomEvent", NUMBER_OF_USERS);
+		user.getEventManager().waitUntilEventReaches("disconnected", "RoomEvent", numberOfUsers);
+
+		// Wait until no video is left
+		user.getWaiter().until(ExpectedConditions.numberOfElementsToBe(By.tagName("video"), 0));
+		user.getWaiter().until(ExpectedConditions.elementToBeClickable(By.id("m2m-btn")));
+	}
+
+	// Fails if the openvidu-server process is not the same one that was running
+	// when expectedServerNodes was gathered: either it does not answer any more, or
+	// it was killed and restarted
+	private void assertSameServerProcesses(List<String> expectedServerNodes, int iteration) {
+		List<String> serverNodes;
+		try {
+			serverNodes = getLiveServerNodes();
+		} catch (Exception e) {
+			throw new AssertionError("openvidu-server did not answer to GET " + LIVEKIT_HTTP_URL
+					+ "twirp/debug in iteration " + iteration + ". The server process is dead", e);
+		}
+		Assertions.assertEquals(expectedServerNodes, serverNodes,
+				"openvidu-server was killed and restarted during iteration " + iteration);
+	}
+
+	// Server nodes currently alive, as node id plus start time.
+	// Nodes with a stale heartbeat are ignored.
+	private List<String> getLiveServerNodes() throws Exception {
+
+		AccessToken accessToken = new AccessToken(LIVEKIT_API_KEY, LIVEKIT_API_SECRET);
+		accessToken.setIdentity("openvidu-e2e-test");
+		accessToken.addGrants(new RoomList(true));
+
+		Request request = new Request.Builder().url(LIVEKIT_HTTP_URL + "twirp/debug")
+				.header("Authorization", "Bearer " + accessToken.toJwt()).build();
+
+		try (Response response = LK_HTTP_CLIENT.newCall(request).execute()) {
+			if (!response.isSuccessful()) {
+				throw new IOException("GET " + request.url() + " returned HTTP " + response.code());
+			}
+			JsonArray nodes = JsonParser.parseString(response.body().string()).getAsJsonObject()
+					.getAsJsonArray("nodes");
+			final long now = Instant.now().getEpochSecond();
+			List<String> liveServerNodes = new ArrayList<>();
+			for (JsonElement node : nodes) {
+				JsonObject nodeJson = node.getAsJsonObject();
+				JsonObject stats = nodeJson.getAsJsonObject("stats");
+				// Unix seconds, absent in the JSON when 0
+				long startedAt = stats != null && stats.has("started_at") ? stats.get("started_at").getAsLong() : 0;
+				long updatedAt = stats != null && stats.has("updated_at") ? stats.get("updated_at").getAsLong() : 0;
+				if (now - updatedAt > SERVER_NODE_STALE_HEARTBEAT_SECONDS) {
+					log.info("Ignoring server node {}: its heartbeat is {} seconds old",
+							nodeJson.get("id").getAsString(), now - updatedAt);
+					continue;
+				}
+				liveServerNodes.add(nodeJson.get("id").getAsString() + " (started at " + startedAt + ")");
+			}
+			Assertions.assertFalse(liveServerNodes.isEmpty(),
+					"No openvidu-server node is alive according to GET " + request.url());
+			Collections.sort(liveServerNodes);
+			return liveServerNodes;
+		}
 	}
 
 	@Test

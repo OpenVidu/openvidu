@@ -144,6 +144,12 @@ public class OpenViduTestE2e {
 	protected static RoomServiceClient LK;
 	protected static IngressServiceClient LK_INGRESS;
 
+	// HTTP(S) base URL of LIVEKIT_URL (always ending with "/") and an HTTP client
+	// trusting self-signed certificates (to call the endpoints of the server not
+	// covered by the server SDKs)
+	protected static String LIVEKIT_HTTP_URL;
+	protected static OkHttpClient LK_HTTP_CLIENT;
+
 	protected static void checkFfmpegInstallation() {
 		String ffmpegOutput = commandLine.executeCommand("which ffmpeg", 60);
 		if (ffmpegOutput == null || ffmpegOutput.isEmpty()) {
@@ -581,6 +587,9 @@ public class OpenViduTestE2e {
 		}
 		String url = (("wss".equals(uri.getScheme()) || "https".equals(uri.getScheme())) ? "https" : "http") + "://"
 				+ uri.getAuthority() + uri.getPath();
+
+		LIVEKIT_HTTP_URL = url.endsWith("/") ? url : url + "/";
+		LK_HTTP_CLIENT = okHttpClientBuilder(new OkHttpClient.Builder());
 
 		LK = RoomServiceClient.create(url.toString(), LIVEKIT_API_KEY, LIVEKIT_API_SECRET, false,
 				(okHttpClientBuilder) -> okHttpClientBuilder(okHttpClientBuilder));
