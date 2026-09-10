@@ -1403,18 +1403,18 @@ fi
 if [ -x "$(command -v docker)" ]; then
 
   echo "Stopping media node services and waiting for termination..."
-  docker container kill --signal=SIGQUIT openvidu || true
-  docker container kill --signal=SIGQUIT ingress || true
-  docker container kill --signal=SIGQUIT egress || true
-  for agent_container in $(docker ps --filter "label=openvidu-agent=true" --format '{{.Names}}'); do
-    docker container kill --signal=SIGQUIT "$agent_container" || true
+  docker container kill --signal=SIGQUIT openvidu 2>/dev/null || true
+  docker container kill --signal=SIGQUIT ingress 2>/dev/null || true
+  docker container kill --signal=SIGQUIT egress 2>/dev/null || true
+  for agent_container in $(docker ps --filter "label=openvidu-agent=true" --format '{{.Names}}' 2>/dev/null); do
+    docker container kill --signal=SIGQUIT "$agent_container" 2>/dev/null || true
   done
 
   # Wait for running containers to not be openvidu, ingress or egress
-  while [ $(docker ps --filter "label=openvidu-agent=true" -q | wc -l) -gt 0 ] || \
-        [ $(docker inspect -f '{{.State.Running}}' openvidu 2>/dev/null) == "true" ] || \
-        [ $(docker inspect -f '{{.State.Running}}' ingress 2>/dev/null) == "true" ] || \
-        [ $(docker inspect -f '{{.State.Running}}' egress 2>/dev/null) == "true" ]; do
+  while [ "$(docker ps --filter 'label=openvidu-agent=true' -q 2>/dev/null | wc -l)" -gt 0 ] || \
+        [ "$(docker inspect -f '{{.State.Running}}' openvidu 2>/dev/null)" = "true" ] || \
+        [ "$(docker inspect -f '{{.State.Running}}' ingress 2>/dev/null)" = "true" ] || \
+        [ "$(docker inspect -f '{{.State.Running}}' egress 2>/dev/null)" = "true" ]; do
     echo "Waiting for containers to stop..."
     sleep 5
   done
