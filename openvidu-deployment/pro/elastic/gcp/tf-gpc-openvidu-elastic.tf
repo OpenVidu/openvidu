@@ -1348,7 +1348,7 @@ if [ -x "$(command -v docker)" ]; then
   docker container kill --signal=SIGQUIT ingress || true
   docker container kill --signal=SIGQUIT egress || true
   for agent_container in $(docker ps --filter "label=openvidu-agent=true" --format '{{.Names}}'); do
-    docker container kill --signal=SIGQUIT "$agent_container"
+    docker container kill --signal=SIGQUIT "$agent_container" || true
   done
 
   # Wait for running containers to not be openvidu, ingress, egress or an openvidu agent
