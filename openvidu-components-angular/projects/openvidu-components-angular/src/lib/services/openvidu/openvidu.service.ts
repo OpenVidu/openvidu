@@ -23,6 +23,7 @@ import {
 	VideoPresets
 } from 'livekit-client';
 import { ILogger } from '../../models/logger.model';
+import { retryOnTransientMediaDeviceError } from '../../utils/utils';
 import { OpenViduComponentsConfigService } from '../config/directive-config.service';
 import { DeviceService } from '../device/device.service';
 import { LoggerService } from '../logger/logger.service';
@@ -508,7 +509,7 @@ export class OpenViduService {
 				newLocalTracks = await this.createTracksWithFallback(options);
 			} else {
 				// Original behavior - all or nothing
-				newLocalTracks = await createLocalTracks(options);
+				newLocalTracks = await this.createTracksWithRetry(options);
 			}
 
 			// Apply background processor to the new video track.
@@ -542,7 +543,7 @@ export class OpenViduService {
 		// Try to create video track separately
 		if (options.video) {
 			try {
-				const videoTracks = await createLocalTracks({ video: options.video });
+				const videoTracks = await this.createTracksWithRetry({ video: options.video });
 				tracks.push(...videoTracks);
 				this.log.d('Video track created successfully');
 			} catch (error) {
@@ -554,7 +555,7 @@ export class OpenViduService {
 		// Try to create audio track separately
 		if (options.audio) {
 			try {
-				const audioTracks = await createLocalTracks({ audio: options.audio });
+				const audioTracks = await this.createTracksWithRetry({ audio: options.audio });
 				tracks.push(...audioTracks);
 				this.log.d('Audio track created successfully');
 			} catch (error) {
@@ -563,6 +564,14 @@ export class OpenViduService {
 		}
 
 		return tracks;
+	}
+
+	private async createTracksWithRetry(options: CreateLocalTracksOptions): Promise<LocalTrack[]> {
+		return retryOnTransientMediaDeviceError(
+			() => createLocalTracks(options),
+			(error, attempt, delayMs) =>
+				this.log.w(`Transient media device error on attempt ${attempt}, retrying in ${delayMs}ms`, error)
+		);
 	}
 
 	private toDeviceConstraint(deviceId?: string): ConstrainDOMString {
