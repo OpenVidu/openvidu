@@ -268,12 +268,7 @@ public class OpenViduTestAppE2eServerSdkTest extends AbstractOpenViduTestappE2eT
 	 * over the page, which would block the later clicks on the video controls.
 	 */
 	private void selectSubscriberVideoQuality(Subscriber subscriber, String quality) throws InterruptedException {
-		OpenViduTestappUser user = subscriber.user();
-		if (!user.getDriver().findElements(By.cssSelector("app-info-dialog")).isEmpty()) {
-			user.getDriver().findElement(By.cssSelector("#close-dialog-btn")).click();
-			Thread.sleep(300);
-		}
-		this.selectMatOption(user, subscriber.instanceSelector() + " #max-video-quality", quality);
+		this.selectSubscriberVideoQuality(subscriber.user(), subscriber.instanceSelector(), quality);
 	}
 
 	/**

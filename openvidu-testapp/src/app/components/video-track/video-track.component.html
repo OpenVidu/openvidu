@@ -23,7 +23,7 @@
       <mat-form-field id="restart-video-resolution" class="video-btn quality-option" matTooltip="Restart video at resolution" matTooltipClass="custom-tooltip">
         <mat-select [(value)]="restartResolution" (selectionChange)="onRestartResolutionChange()">
           @for (r of ['1920x1080', '1280x720', '640x360', '320x180']; track r) {
-            <mat-option [value]="r" [ngClass]="'res-' + r">{{r}}</mat-option>
+            <mat-option [value]="r" [id]="'mat-option-' + r" [ngClass]="'res-' + r">{{r}}</mat-option>
           }
         </mat-select>
       </mat-form-field>

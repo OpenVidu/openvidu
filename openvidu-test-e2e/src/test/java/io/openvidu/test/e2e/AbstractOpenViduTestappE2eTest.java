@@ -9,7 +9,6 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicLong;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
@@ -260,6 +259,45 @@ public class AbstractOpenViduTestappE2eTest extends OpenViduTestE2e {
 		return isStatPresent(statValue) ? String.valueOf(statValue) : "absent";
 	}
 
+	// Every subscriber stat that says something about the state of the inbound
+	// video, so that a wait that times out reports what it actually saw instead
+	// of only the one value it was comparing
+	protected String describeSubscriberVideoLayer(JsonObject layer) {
+		return "Last observed: frameWidth=" + describeStat(getLayerCounter(layer, "frameWidth")) + " frameHeight="
+				+ describeStat(getLayerCounter(layer, "frameHeight")) + " framesPerSecond="
+				+ describeStat(getLayerCounter(layer, "framesPerSecond")) + " framesReceived="
+				+ describeStat(getLayerCounter(layer, "framesReceived")) + " framesDecoded="
+				+ describeStat(getLayerCounter(layer, "framesDecoded")) + " keyFramesDecoded="
+				+ describeStat(getLayerCounter(layer, "keyFramesDecoded")) + " framesDropped="
+				+ describeStat(getLayerCounter(layer, "framesDropped")) + " freezeCount="
+				+ describeStat(getLayerCounter(layer, "freezeCount")) + " bytesReceived="
+				+ describeStat(getLayerCounter(layer, "bytesReceived"));
+	}
+
+	// The three states a stalled subscriber video can be in, told apart by
+	// framesReceived (frames the depacketizer assembled, before the decoder) and
+	// framesDecoded. bytesReceived alone cannot tell them apart: it also counts
+	// retransmissions and the padding the SFU sends to probe for bandwidth, so it
+	// grows even while no frame at all reaches the decoder
+	protected String diagnoseSubscriberVideoLayer(JsonObject layer) {
+		long framesReceived = getLayerCounter(layer, "framesReceived");
+		long framesDecoded = getLayerCounter(layer, "framesDecoded");
+		if (!isStatPresent(framesReceived) || !isStatPresent(framesDecoded)) {
+			return "getStats() reported no frame counters for this track, so the subscriber never got as far as"
+					+ " receiving media on it";
+		}
+		if (framesReceived <= 0) {
+			return "The subscriber is not receiving assembled frames at all: the media is not reaching it";
+		}
+		if (framesDecoded <= 0) {
+			return "The subscriber IS receiving assembled frames (" + framesReceived
+					+ ") but decoded none of them: the media that reaches it is undecodable (a Producer bound to"
+					+ " the wrong codec, or a missing or wrong dependency descriptor)";
+		}
+		return "The subscriber received " + framesReceived + " assembled frame(s) and decoded " + framesDecoded
+				+ " of them, so media did flow at some point";
+	}
+
 	// If rid is null, retrieve the first layer
 	protected JsonElement getPublisherVideoLayerAttribute(OpenViduTestappUser user, WebElement publisherVideo,
 			String rid,
@@ -296,25 +334,31 @@ public class AbstractOpenViduTestappE2eTest extends OpenViduTestE2e {
 	}
 
 	protected void waitUntilSubscriberFramesPerSecondNotZero(OpenViduTestappUser user, WebElement videoElement) {
-		// Kept across iterations only to tell "absent" from "present and 0" if the
-		// wait times out. Those two mean very different things here, and the
-		// original message ("waiting for framesPerSecond to exist") named neither
-		final AtomicLong lastFps = new AtomicLong(-1);
+		// Kept across iterations only to report what the last sample actually held
+		// if the wait times out. An absent framesPerSecond and a present 0 mean very
+		// different things here, and neither of them says whether the media reached
+		// the subscriber at all: only framesReceived (frames the depacketizer
+		// assembled) against framesDecoded tells "nothing is arriving" from
+		// "something is arriving that the decoder cannot use"
+		final JsonObject[] lastLayer = { new JsonObject() };
 		this.waitUntilAux(user, videoElement, () -> {
 			// Chrome only starts reporting framesPerSecond once the decoder has
 			// produced frames for a whole second, so right after playback starts
 			// it is legitimately absent for a while: a "not yet", not a failure
 			JsonObject layer = this.getSubscriberVideoLayer(user, videoElement);
+			lastLayer[0] = layer;
 			long fps = this.getLayerCounter(layer, "framesPerSecond");
-			lastFps.set(fps);
 			return isStatPresent(fps) && fps > 0;
 		}, () -> {
-			long fps = lastFps.get();
+			long fps = this.getLayerCounter(lastLayer[0], "framesPerSecond");
 			return "Timeout waiting for video track to have a framesPerSecond greater than 0. Last value: "
-					+ describeStat(fps) + (isStatPresent(fps) ? ""
+					+ describeStat(fps)
+					+ (isStatPresent(fps) ? ""
 							: ". Chrome omits framesPerSecond altogether when the decoder produced no frame"
 									+ " during the last second, so this subscriber video was frozen for the"
-									+ " whole wait, not merely slow to start");
+									+ " whole wait, not merely slow to start")
+					+ ". " + describeSubscriberVideoLayer(lastLayer[0]) + ". "
+					+ diagnoseSubscriberVideoLayer(lastLayer[0]);
 		});
 	}
 
@@ -336,13 +380,8 @@ public class AbstractOpenViduTestappE2eTest extends OpenViduTestE2e {
 			lastLayer[0] = layer;
 			long frameWidth = this.getLayerCounter(layer, "frameWidth");
 			return isStatPresent(frameWidth) && frameWidth == expectedFrameWidth;
-		}, () -> "Timeout waiting for video track to have a frameWidth of " + expectedFrameWidth
-				+ ". Last observed: frameWidth=" + describeStat(getLayerCounter(lastLayer[0], "frameWidth"))
-				+ " frameHeight=" + describeStat(getLayerCounter(lastLayer[0], "frameHeight")) + " framesPerSecond="
-				+ describeStat(getLayerCounter(lastLayer[0], "framesPerSecond")) + " framesDecoded="
-				+ describeStat(getLayerCounter(lastLayer[0], "framesDecoded")) + " keyFramesDecoded="
-				+ describeStat(getLayerCounter(lastLayer[0], "keyFramesDecoded")) + " bytesReceived="
-				+ describeStat(getLayerCounter(lastLayer[0], "bytesReceived")));
+		}, () -> "Timeout waiting for video track to have a frameWidth of " + expectedFrameWidth + ". "
+				+ describeSubscriberVideoLayer(lastLayer[0]));
 	}
 
 	protected void waitUntilSubscriberFrameHeightIs(OpenViduTestappUser user, WebElement videoElement,
@@ -356,11 +395,18 @@ public class AbstractOpenViduTestappE2eTest extends OpenViduTestE2e {
 
 	protected void waitUntilSubscriberFrameWidthChanges(OpenViduTestappUser user, WebElement videoElement,
 			final int oldFrameWidth, final boolean shouldBeHigher) {
+		final JsonObject[] lastLayer = { new JsonObject() };
 		this.waitUntilAux(user, videoElement, () -> {
 			JsonObject layer = this.getSubscriberVideoLayer(user, videoElement);
+			lastLayer[0] = layer;
 			long frameWidth = this.getLayerCounter(layer, "frameWidth");
 			return isStatPresent(frameWidth) && frameWidth != oldFrameWidth;
-		}, "Timeout waiting for video track to reach a " + (shouldBeHigher ? "higher" : "lower") + " resolution");
+		}, () -> "Timeout waiting for video track to reach a " + (shouldBeHigher ? "higher" : "lower")
+				+ " resolution than " + oldFrameWidth + ". " + describeSubscriberVideoLayer(lastLayer[0]) + ". "
+				// frameWidth is the width of the last frame the decoder produced, so a
+				// video that froze keeps reporting the old width forever and looks
+				// exactly like a layer switch that never happened
+				+ diagnoseSubscriberVideoLayer(lastLayer[0]));
 		int newFrameWidth = this.getSubscriberVideoFrameWidth(user, videoElement);
 		if (shouldBeHigher) {
 			Assertions.assertTrue(newFrameWidth > oldFrameWidth,
@@ -742,6 +788,27 @@ public class AbstractOpenViduTestappE2eTest extends OpenViduTestE2e {
 		}
 		Assertions.fail("Could not select option '" + optionText + "' of " + formFieldCssSelector + " after "
 				+ maxAttempts + " attempts");
+	}
+
+	/**
+	 * Selects the max video quality (LOW, MEDIUM or HIGH) of the remote video of a
+	 * testapp instance, closing the track info dialog first if it is open (its
+	 * backdrop covers the video controls).
+	 *
+	 * The selection is verified (selectMatOption). An unverified click that only
+	 * opens and closes the mat-select panel leaves the quality untouched and
+	 * raises nothing: setVideoQuality() is never called, no UpdateTrackSettings
+	 * ever reaches the server, and the wait that follows times out reporting that
+	 * the subscriber never changed layer, when in fact nothing was ever asked of
+	 * it.
+	 */
+	protected void selectSubscriberVideoQuality(OpenViduTestappUser user, String instanceSelector, String quality)
+			throws InterruptedException {
+		if (!user.getDriver().findElements(By.cssSelector("app-info-dialog")).isEmpty()) {
+			this.waitAndClick(user, "#close-dialog-btn");
+			Thread.sleep(300);
+		}
+		this.selectMatOption(user, instanceSelector + " #max-video-quality", quality);
 	}
 
 	/**
