@@ -3,6 +3,7 @@ package io.openvidu.test.e2e;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.net.DatagramSocket;
 import java.net.ServerSocket;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -32,6 +33,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.testcontainers.DockerClientFactory;
 import org.testcontainers.containers.BindMode;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.Network;
@@ -60,8 +62,7 @@ public class OpenViduTestE2e {
 
 	private final static WaitStrategy waitBrowser = Wait.forLogMessage("^.*Started Selenium Standalone.*$", 1);
 
-	protected static String RTSP_SERVER_IMAGE = "bluenviron/mediamtx:1.19.2-ffmpeg";
-	protected static int RTSP_SRT_PORT = 8554;
+	protected static String RTSP_SERVER_IMAGE = "bluenviron/mediamtx:1.21.0-ffmpeg";
 
 	// Key is the common name of the video codec. It must match the output log of
 	// the RTSP server when receiving it.
@@ -296,7 +297,7 @@ public class OpenViduTestE2e {
 				.withCreateContainerCmdModifier(cmd -> cmd.withName("rtsp-" + Math.random() * 100000))
 				.withEnv(Map.of("MTX_LOGLEVEL", "info", "MTX_RTSPTRANSPORTS", "tcp", "MTX_RTSPADDRESS", ":" + rtspPort,
 						"MTX_HLS", "no", "MTX_RTSP", "yes", "MTX_WEBRTC", "no", "MTX_SRT", "no", "MTX_RTMP", "no",
-						"MTX_API", "no"))
+						"MTX_MOQ", "no", "MTX_API", "no"))
 				.withNetworkMode("host")
 				.waitingFor(Wait.forLogMessage("^.*\\[RTSP\\] started with listeners on :" + rtspPort + ".*$", 1));
 
@@ -351,27 +352,50 @@ public class OpenViduTestE2e {
 	 */
 	public String startSrtServer(String videoCodec, String audioCodec) throws Exception {
 
+		int srtPort;
+		try (DatagramSocket socket = new DatagramSocket(0)) {
+			srtPort = socket.getLocalPort();
+		}
+		String hostGatewayIp = getDockerHostGatewayIp();
+		int unusedRtspPort;
+		try (ServerSocket socket = new ServerSocket(0)) {
+			unusedRtspPort = socket.getLocalPort();
+		}
+
 		String fileUrl = getFileUrl(videoCodec != null, audioCodec != null, true);
 		String codecs = getCodecs(videoCodec, audioCodec);
 
 		// -re: see startRtspServer.
-		String ffmpegCommand = "ffmpeg -re -i " + fileUrl + " " + codecs + " -strict -2 -f mpegts srt://:"
-				+ RTSP_SRT_PORT + "?mode=listener";
+		String ffmpegCommand = "ffmpeg -re -i " + fileUrl + " " + codecs + " -strict -2 -f mpegts srt://"
+				+ hostGatewayIp
+				+ ":" + srtPort + "?mode=listener";
 
 		// Clean adjacent white spaces or the ffmpeg command will fail
 		ffmpegCommand = ffmpegCommand.trim().replaceAll(" +", " ");
 
 		GenericContainer<?> srtServerContainer = new GenericContainer<>(DockerImageName.parse(RTSP_SERVER_IMAGE))
 				.withCreateContainerCmdModifier(cmd -> cmd.withName("ffmpeg-" + Math.random() * 100000))
-				.withEnv("MTX_PATHS_RTSP_RUNONINIT", ffmpegCommand)
+				.withEnv(Map.ofEntries(Map.entry("MTX_LOGLEVEL", "info"), Map.entry("MTX_RTSPTRANSPORTS", "tcp"),
+						Map.entry("MTX_RTSPADDRESS", ":" + unusedRtspPort), Map.entry("MTX_HLS", "no"),
+						Map.entry("MTX_RTSP", "yes"), Map.entry("MTX_WEBRTC", "no"), Map.entry("MTX_SRT", "no"),
+						Map.entry("MTX_RTMP", "no"), Map.entry("MTX_MOQ", "no"), Map.entry("MTX_API", "no"),
+						Map.entry("MTX_PATHS_RTSP_RUNONINIT", ffmpegCommand)))
+				.withNetworkMode("host")
 				.waitingFor(Wait.forLogMessage(".*" + fileUrl + ".+", 1));
 
 		srtServerContainer.start();
 		containers.add(srtServerContainer);
 
-		String srtServerIp = srtServerContainer.getContainerInfo().getNetworkSettings().getIpAddress();
+		return "srt://host.docker.internal:" + srtPort;
+	}
 
-		return "srt://" + srtServerIp + ":" + RTSP_SRT_PORT;
+	/**
+	 * The host address that host.docker.internal resolves to inside containers
+	 * created with host-gateway: the gateway of Docker's default bridge network.
+	 */
+	private String getDockerHostGatewayIp() {
+		return DockerClientFactory.instance().client().inspectNetworkCmd().withNetworkId("bridge").exec().getIpam()
+				.getConfig().get(0).getGateway();
 	}
 
 	public void startServerSdkPublisher(String sdk, String roomName, String codec) throws Exception {

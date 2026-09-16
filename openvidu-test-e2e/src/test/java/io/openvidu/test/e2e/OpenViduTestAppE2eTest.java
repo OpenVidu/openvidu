@@ -4621,8 +4621,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 	@Test
 	@DisplayName("RTSP ingress AC3")
-	@Disabled // AC3 audio codec not supported through RTSP server with a single audio PCMU
-				// track
+	@Disabled // ffmpeg cannot payload AC-3 into RTP, see above
 	void rtspIngressAC3Test() throws Exception {
 		log.info("RTSP ingress AC3");
 		String rtspUri = startRtspServer(null, "AC3");
@@ -4630,127 +4629,121 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 	}
 
 	/**
-	 * NOTE 1: ingress with SRT pull does not work in the local network when ingress
-	 * process is a Docker container
-	 */
-	/**
-	 * NOTE 2: ingress SRT seems to support only video codecs H264 and MPEG-4
+	 * NOTE: SRT ingest carries MPEG-TS, so only the codecs MPEG-TS can carry are
+	 * tested: H264 and MPEG-4 video; AAC, AC3, MP3 and OPUS audio.
 	 */
 
-	// @Test
-	// @DisplayName("SRT ingress H264 + AAC")
-	// @Disabled // AAC audio codec stream fails if sent along a video stream
-	// void srtIngressTestH264_AAC() throws Exception {
-	// log.info("SRT ingress H264 + AAC");
-	// String srtUri = startSrtServer("H264", "AAC");
-	// urPullCommon("SRT", srtUri, true, true);
-	// }
-	//
-	// @Test
-	// @DisplayName("SRT ingress H264 + AC3")
-	// void srtIngressTestH264_AC3() throws Exception {
-	// log.info("SRT ingress H264 + AC3");
-	// String srtUri = startSrtServer("H264", "AC3");
-	// urPullCommon("SRT", srtUri, true, true);
-	// }
-	//
-	// @Test
-	// @DisplayName("SRT ingress H264 + OPUS")
-	// void srtIngressTestH264_OPUS() throws Exception {
-	// log.info("SRT ingress H264 + OPUS");
-	// String srtUri = startSrtServer("H264", "OPUS");
-	// urPullCommon("SRT", srtUri, true, true);
-	// }
-	//
-	// @Test
-	// @DisplayName("SRT ingress H264 + MP3")
-	// void srtIngressTestH264_MP3() throws Exception {
-	// log.info("SRT ingress H264 + MP3");
-	// String srtUri = startSrtServer("H264", "MP3");
-	// urPullCommon("SRT", srtUri, true, true);
-	// }
-	//
-	// @Test
-	// @DisplayName("SRT ingress MPEG-4 + AAC")
-	// @Disabled // AAC audio codec stream fails if sent along a video stream
-	// void srtIngressTestMPEG-4_AAC() throws Exception {
-	// log.info("SRT ingress MPEG-4 + AAC");
-	// String srtUri = startSrtServer("MPEG-4", "AAC");
-	// urPullCommon("SRT", srtUri, true, true);
-	// }
-	//
-	// @Test
-	// @DisplayName("SRT ingress MPEG-4 + AC3")
-	// void srtIngressTestMPEG-4_AC3() throws Exception {
-	// log.info("SRT ingress MPEG-4 + AC3");
-	// String srtUri = startSrtServer("MPEG-4", "AC3");
-	// urPullCommon("SRT", srtUri, true, true);
-	// }
-	//
-	// @Test
-	// @DisplayName("SRT ingress MPEG-4 + OPUS")
-	// void srtIngressTestMPEG-4_OPUS() throws Exception {
-	// log.info("SRT ingress MPEG-4 + OPUS");
-	// String srtUri = startSrtServer("MPEG-4", "OPUS");
-	// urPullCommon("SRT", srtUri, true, true);
-	// }
-	//
-	// @Test
-	// @DisplayName("SRT ingress MPEG-4 + MP3")
-	// void srtIngressTestMPEG-4_MP3() throws Exception {
-	// log.info("SRT ingress MPEG-4 + MP3");
-	// String srtUri = startSrtServer("MPEG-4", "MP3");
-	// urPullCommon("SRT", srtUri, true, true);
-	// }
-	//
-	// @Test
-	// @DisplayName("SRT ingress H264")
-	// void srtIngressTestH264() throws Exception {
-	// log.info("SRT ingress H264");
-	// String srtUri = startSrtServer("H264", null);
-	// urPullCommon("SRT", srtUri, true, false);
-	// }
-	//
-	// @Test
-	// @DisplayName("SRT ingress MPEG-4")
-	// void srtIngressTestMPEG-4() throws Exception {
-	// log.info("SRT ingress MPEG-4");
-	// String srtUri = startSrtServer("MPEG-4", null);
-	// urPullCommon("SRT", srtUri, true, false);
-	// }
-	//
-	// @Test
-	// @DisplayName("SRT ingress AAC")
-	// void srtIngressTestAAC() throws Exception {
-	// log.info("SRT ingress AAC");
-	// String srtUri = startSrtServer(null, "AAC");
-	// urPullCommon("SRT", srtUri, false, true);
-	// }
-	//
-	// @Test
-	// @DisplayName("SRT ingress AC3")
-	// void srtIngressTestAC3() throws Exception {
-	// log.info("SRT ingress AC3");
-	// String srtUri = startSrtServer(null, "AC3");
-	// urPullCommon("SRT", srtUri, false, true);
-	// }
-	//
-	// @Test
-	// @DisplayName("SRT ingress MP3")
-	// void srtIngressTestMP3() throws Exception {
-	// log.info("SRT ingress MP3");
-	// String srtUri = startSrtServer(null, "MP3");
-	// urPullCommon("SRT", srtUri, false, true);
-	// }
-	//
-	// @Test
-	// @DisplayName("SRT ingress OPUS")
-	// @Disabled // A single OPUS audio stream fails
-	// void srtIngressTestOPUS() throws Exception {
-	// log.info("SRT ingress OPUS");
-	// String srtUri = startSrtServer(null, "OPUS");
-	// urPullCommon("SRT", srtUri, false, true);
-	// }
+	@Test
+	@DisplayName("SRT ingress H264 + AAC")
+	void srtIngressH264_AACTest() throws Exception {
+		log.info("SRT ingress H264 + AAC");
+		String srtUri = startSrtServer("H264", "AAC");
+		urPullCommon("SRT", srtUri, true, true);
+	}
+
+	@Test
+	@DisplayName("SRT ingress H264 + AC3")
+	void srtIngressH264_AC3Test() throws Exception {
+		log.info("SRT ingress H264 + AC3");
+		String srtUri = startSrtServer("H264", "AC3");
+		urPullCommon("SRT", srtUri, true, true);
+	}
+
+	@Test
+	@DisplayName("SRT ingress H264 + OPUS")
+	void srtIngressH264_OPUSTest() throws Exception {
+		log.info("SRT ingress H264 + OPUS");
+		String srtUri = startSrtServer("H264", "OPUS");
+		urPullCommon("SRT", srtUri, true, true);
+	}
+
+	@Test
+	@DisplayName("SRT ingress H264 + MP3")
+	void srtIngressH264_MP3Test() throws Exception {
+		log.info("SRT ingress H264 + MP3");
+		String srtUri = startSrtServer("H264", "MP3");
+		urPullCommon("SRT", srtUri, true, true);
+	}
+
+	@Test
+	@DisplayName("SRT ingress MPEG-4 + AAC")
+	void srtIngressMPEG4_AACTest() throws Exception {
+		log.info("SRT ingress MPEG-4 + AAC");
+		String srtUri = startSrtServer("MPEG-4", "AAC");
+		urPullCommon("SRT", srtUri, true, true);
+	}
+
+	@Test
+	@DisplayName("SRT ingress MPEG-4 + AC3")
+	void srtIngressMPEG4_AC3Test() throws Exception {
+		log.info("SRT ingress MPEG-4 + AC3");
+		String srtUri = startSrtServer("MPEG-4", "AC3");
+		urPullCommon("SRT", srtUri, true, true);
+	}
+
+	@Test
+	@DisplayName("SRT ingress MPEG-4 + OPUS")
+	void srtIngressMPEG4_OPUSTest() throws Exception {
+		log.info("SRT ingress MPEG-4 + OPUS");
+		String srtUri = startSrtServer("MPEG-4", "OPUS");
+		urPullCommon("SRT", srtUri, true, true);
+	}
+
+	@Test
+	@DisplayName("SRT ingress MPEG-4 + MP3")
+	void srtIngressMPEG4_MP3Test() throws Exception {
+		log.info("SRT ingress MPEG-4 + MP3");
+		String srtUri = startSrtServer("MPEG-4", "MP3");
+		urPullCommon("SRT", srtUri, true, true);
+	}
+
+	@Test
+	@DisplayName("SRT ingress H264")
+	void srtIngressH264Test() throws Exception {
+		log.info("SRT ingress H264");
+		String srtUri = startSrtServer("H264", null);
+		urPullCommon("SRT", srtUri, true, false);
+	}
+
+	@Test
+	@DisplayName("SRT ingress MPEG-4")
+	void srtIngressMPEG4Test() throws Exception {
+		log.info("SRT ingress MPEG-4");
+		String srtUri = startSrtServer("MPEG-4", null);
+		urPullCommon("SRT", srtUri, true, false);
+	}
+
+	@Test
+	@DisplayName("SRT ingress AAC")
+	void srtIngressAACTest() throws Exception {
+		log.info("SRT ingress AAC");
+		String srtUri = startSrtServer(null, "AAC");
+		urPullCommon("SRT", srtUri, false, true);
+	}
+
+	@Test
+	@DisplayName("SRT ingress AC3")
+	void srtIngressAC3Test() throws Exception {
+		log.info("SRT ingress AC3");
+		String srtUri = startSrtServer(null, "AC3");
+		urPullCommon("SRT", srtUri, false, true);
+	}
+
+	@Test
+	@DisplayName("SRT ingress MP3")
+	void srtIngressMP3Test() throws Exception {
+		log.info("SRT ingress MP3");
+		String srtUri = startSrtServer(null, "MP3");
+		urPullCommon("SRT", srtUri, false, true);
+	}
+
+	@Test
+	@DisplayName("SRT ingress OPUS")
+	void srtIngressOPUSTest() throws Exception {
+		log.info("SRT ingress OPUS");
+		String srtUri = startSrtServer(null, "OPUS");
+		urPullCommon("SRT", srtUri, false, true);
+	}
 
 	private void urPullCommon(String urlType, String uri, boolean withVideo, boolean withAudio) throws Exception {
 		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
