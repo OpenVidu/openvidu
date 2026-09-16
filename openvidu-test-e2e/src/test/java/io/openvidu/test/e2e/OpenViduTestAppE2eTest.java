@@ -437,6 +437,46 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		return null;
 	}
 
+	private static int qualityRank(ConnectionQuality quality) {
+		if (quality == null) {
+			return Integer.MAX_VALUE;
+		}
+		switch (quality) {
+			case LOST:
+				return 0;
+			case POOR:
+				return 1;
+			case GOOD:
+				return 2;
+			case EXCELLENT:
+				return 3;
+			default:
+				return Integer.MAX_VALUE;
+		}
+	}
+
+	private static ConnectionQuality worstQuality(ConnectionQuality a, ConnectionQuality b) {
+		return qualityRank(b) < qualityRank(a) ? b : a;
+	}
+
+	// Holds the current impairment for `holdMillis` and records, for that loss
+	// step, the WORST quality each participant reported at any point during it.
+	private void holdAndRecordWorstQuality(OpenViduTestappUser publisher, OpenViduTestappUser subscriber,
+			long holdMillis, int lossPct, Map<Integer, ConnectionQuality> publisherQuality,
+			Map<Integer, ConnectionQuality> subscriberQuality) throws InterruptedException {
+		final long sampleIntervalMillis = 1000;
+		final long deadline = System.currentTimeMillis() + holdMillis;
+		ConnectionQuality worstPublisher = null;
+		ConnectionQuality worstSubscriber = null;
+		do {
+			worstPublisher = worstQuality(worstPublisher, latestConnectionQuality(publisher, 0, "PunchbagUser"));
+			worstSubscriber = worstQuality(worstSubscriber, latestConnectionQuality(subscriber, 0, "RegularUser"));
+			Thread.sleep(sampleIntervalMillis);
+		} while (System.currentTimeMillis() < deadline);
+		publisherQuality.put(lossPct, worstPublisher);
+		subscriberQuality.put(lossPct, worstSubscriber);
+	}
+
 	// First loss% (ascending) at which the recorded quality equals `level`, or -1
 	// if never reached.
 	private static int firstLossReaching(Map<Integer, ConnectionQuality> observed, ConnectionQuality level) {
@@ -1237,18 +1277,17 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		final int STEP_PCT = 10;
 		final int HOLD_SECONDS = 16;
 
-		// Ramp the PUBLISHER's uplink loss and record, at each step, the settled
-		// quality of both the impaired publisher (PunchbagUser) and the untouched
-		// subscriber's OWN quality (RegularUser).
+		// Ramp the PUBLISHER's uplink loss and record, at each step, the WORST
+		// quality seen during the whole hold, for both the impaired publisher
+		// (PunchbagUser) and the untouched subscriber's OWN quality (RegularUser).
 		Map<Integer, ConnectionQuality> publisherQuality = new LinkedHashMap<>();
 		Map<Integer, ConnectionQuality> subscriberQuality = new LinkedHashMap<>();
 		try {
 			for (int pct = STEP_PCT; pct <= 90; pct += STEP_PCT) {
 				log.info("Packet loss to " + pct + "%");
 				NetworkConditioner.updateOutboundLossPercent(container, pct);
-				Thread.sleep(HOLD_SECONDS * 1000L);
-				publisherQuality.put(pct, latestConnectionQuality(punchbagUser, 0, "PunchbagUser"));
-				subscriberQuality.put(pct, latestConnectionQuality(regularUser, 0, "RegularUser"));
+				holdAndRecordWorstQuality(punchbagUser, regularUser, HOLD_SECONDS * 1000L, pct, publisherQuality,
+						subscriberQuality);
 			}
 
 			// Final step: a TOTAL blackout (100% loss) across the WHOLE SFU media port
@@ -1264,24 +1303,25 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 			publisherQuality.put(BLACKOUT_PCT, pubBlackout);
 			subscriberQuality.put(BLACKOUT_PCT, latestConnectionQuality(regularUser, 0, "RegularUser"));
 
-			log.info(buildRampResultTable(publisherQuality, subscriberQuality));
+			final String table = buildRampResultTable(publisherQuality, subscriberQuality);
+			log.info(table);
 
 			int firstGood = firstLossReaching(publisherQuality, ConnectionQuality.GOOD);
 			int firstPoor = firstLossReaching(publisherQuality, ConnectionQuality.POOR);
 			int firstLost = firstLossReaching(publisherQuality, ConnectionQuality.LOST);
 			Assertions.assertTrue(firstGood >= 10 && firstGood <= 20,
 					"EXCELLENT->GOOD transition expected between 10% and 20% loss, but first GOOD was at " + firstGood
-							+ "%");
+							+ "%" + table);
 			Assertions.assertTrue(firstPoor >= 20 && firstPoor <= 50,
 					"GOOD->POOR transition expected between 20% and 50% loss, but first POOR was at " + firstPoor
-							+ "%");
+							+ "%" + table);
 			Assertions.assertTrue(firstPoor > firstGood,
-					"POOR must appear after GOOD (firstGood=" + firstGood + "%, firstPoor=" + firstPoor + "%)");
+					"POOR must appear after GOOD (firstGood=" + firstGood + "%, firstPoor=" + firstPoor + "%)" + table);
 			Assertions.assertTrue(firstLost >= 50,
 					"POOR->LOST transition expected ONLY at severe loss (>=50%), but first LOST was at " + firstLost
-							+ "%");
+							+ "%" + table);
 			Assertions.assertTrue(firstLost > firstPoor,
-					"LOST must appear after POOR (firstPoor=" + firstPoor + "%, firstLost=" + firstLost + "%)");
+					"LOST must appear after POOR (firstPoor=" + firstPoor + "%, firstLost=" + firstLost + "%)" + table);
 
 			// Subscriber's own network is always EXCELLENT
 			for (Entry<Integer, ConnectionQuality> e : subscriberQuality.entrySet()) {
@@ -1289,7 +1329,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 				Assertions.assertFalse(
 						sq == ConnectionQuality.GOOD || sq == ConnectionQuality.POOR || sq == ConnectionQuality.LOST,
 						"RegularUser (subscriber) network is NOT impaired, so its own connection quality must stay "
-								+ "EXCELLENT, but was " + sq + " at " + e.getKey() + "% publisher loss");
+								+ "EXCELLENT, but was " + sq + " at " + e.getKey() + "% publisher loss" + table);
 			}
 		} finally {
 			NetworkConditioner.clear();

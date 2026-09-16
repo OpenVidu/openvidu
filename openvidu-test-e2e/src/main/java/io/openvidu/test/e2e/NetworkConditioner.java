@@ -28,7 +28,8 @@ public class NetworkConditioner {
 
 	/**
 	 * UDP port of the SFU's embedded TURN server (livekit.yaml
-	 * {@code turn.udp_port}). Same reasoning as {@link #SFU_ICE_TCP_PORT}: it is the
+	 * {@code turn.udp_port}). Same reasoning as {@link #SFU_ICE_TCP_PORT}: it is
+	 * the
 	 * last route out of a media blackout, since a client whose host and srflx
 	 * candidates are all dead falls back to allocating a TURN relay. Blocking the
 	 * listener is enough; the relay range ({@code turn.relay_range_*}) is where the
@@ -57,6 +58,16 @@ public class NetworkConditioner {
 	// directly, not via Pumba). Tracked so clear() can flush it. See
 	// blackoutOutbound().
 	private static String blackoutContainer;
+
+	// Container Pumba is currently impairing. Tracked so that clear() can scrub its
+	// network namespace itself instead of trusting Pumba to have reverted.
+	private static String impairedContainer;
+
+	// SIGTERM-to-SIGKILL grace given to Pumba on clear(). Reverting is not just a
+	// syscall for Pumba: it starts ANOTHER container (the nettools sidecar) to run
+	// the tc/iptables delete, so on a loaded Docker daemon it can take much longer
+	// than the usual 1-2 s. Killed halfway, it leaves the impairment installed.
+	private static final int PUMBA_STOP_GRACE_SEC = 20;
 
 	public enum Direction {
 		OUTBOUND, INBOUND
@@ -225,6 +236,7 @@ public class NetworkConditioner {
 			cmd = pumbaRun() + " iptables " + opts + " loss --mode random --probability "
 					+ String.format(Locale.US, "%.2f", probability) + " " + targetContainer;
 		}
+		impairedContainer = targetContainer;
 		runPumba(cmd);
 	}
 
@@ -307,17 +319,25 @@ public class NetworkConditioner {
 		}
 		String cmd = pumbaRun() + " netem " + opts + " delay --time " + delayMs + " --jitter " + jitterMs + " "
 				+ targetContainer;
+		impairedContainer = targetContainer;
 		runPumba(cmd);
 	}
 
 	/**
-	 * Stop the current Pumba container (SIGTERM) so it reverts the netem qdisc /
-	 * iptables rule immediately.
+	 * Remove every impairment: stop the current Pumba container (SIGTERM, so it
+	 * reverts the netem qdisc / iptables rule itself) and then scrub the target's
+	 * network namespace anyway, so that the impairment is gone whether or not
+	 * Pumba got to revert it.
 	 */
 	public static void clear() {
+		final String target = impairedContainer;
+		impairedContainer = null;
 		if (currentPumbaContainerName != null) {
 			log.info("Clearing network impairment (stopping Pumba container {})", currentPumbaContainerName);
-			commandLine.executeCommand("docker stop -t 5 " + currentPumbaContainerName, 30);
+			String out = commandLine.executeCommand(
+					"docker stop -t " + PUMBA_STOP_GRACE_SEC + " " + currentPumbaContainerName + " 2>&1",
+					PUMBA_STOP_GRACE_SEC + 30);
+			log.info("docker stop {} result: {}", currentPumbaContainerName, out);
 			currentPumbaContainerName = null;
 		}
 		if (blackoutContainer != null) {
@@ -326,6 +346,20 @@ public class NetworkConditioner {
 			nettools(blackoutContainer, "iptables", "-F OUTPUT");
 			blackoutContainer = null;
 		}
+		if (target != null) {
+			scrubImpairments(target);
+		}
+	}
+
+	/**
+	 * Delete anything Pumba may have left behind in {@code targetContainer}'s
+	 * network namespace: its INPUT DROP rules (ingress loss) and the root qdisc
+	 * tree carrying its netem (egress loss/delay).
+	 */
+	private static void scrubImpairments(String targetContainer) {
+		String out = nettools(targetContainer, "sh", "-c \"iptables -F INPUT; tc qdisc del dev eth0 root\"");
+		log.info("Scrubbing leftover impairments on container {} (iptables -F INPUT; tc qdisc del dev eth0 root): {}",
+				targetContainer, out.isBlank() ? "removed" : out.trim());
 	}
 
 	/**
