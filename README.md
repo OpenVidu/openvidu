@@ -1,6 +1,5 @@
 [![Backers on Open Collective](https://opencollective.com/openvidu/backers/badge.svg)](#backers) [![Sponsors on Open Collective](https://opencollective.com/openvidu/sponsors/badge.svg)](#sponsors)
 [![License badge](https://img.shields.io/badge/license-Apache2-orange.svg)](http://www.apache.org/licenses/LICENSE-2.0)
-[![OpenVidu integration tests](https://github.com/OpenVidu/openvidu/actions/workflows/openvidu-integration-tests.yml/badge.svg)](https://github.com/OpenVidu/openvidu/actions/workflows/openvidu-integration-tests.yml)
 
 
 [![Documentation](https://img.shields.io/badge/docs-openvidu.io-blue)](https://openvidu.io/latest/docs/)
