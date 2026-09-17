@@ -25,11 +25,18 @@ with over a decade of experience building WebRTC systems. It ships as two produc
 ### OpenVidu Meet
 
 **[OpenVidu Meet](https://openvidu.io/latest/meet/)** is a ready-to-use, self-hosted video
-conferencing application: an open-source alternative to Zoom, Google Meet and Jitsi Meet that
-needs no code to deploy, and that you can embed in your own product through a web component,
-a REST API and webhooks.
+conferencing application: an open-source alternative to Zoom, Google Meet and Jitsi Meet.
 
-<a href="https://openvidu.io/latest/meet/"><img src="https://openvidu.io/latest/assets/images/meet/embedded/use-cases/support-meeting.png" alt="OpenVidu Meet running inside a customer support web application: a two-participant video call with recording, screen sharing, chat and call controls" width="560"></a>
+**Using it requires no code.** You deploy it and it works — rooms, recordings, chat, screen
+sharing and moderation included. It is also highly customizable: brand it with your own name,
+logo and colours, and choose which features each participant gets.
+
+<a href="https://openvidu.io/latest/meet/"><img src="docs/images/openvidu-meet-app.jpg" alt="The OpenVidu Meet application: a video meeting with two participants, the self-view, and the toolbar with camera, microphone, screen sharing, captions and recording controls" width="560"></a>
+
+**With minimal effort it embeds into your own application**, through an `<iframe>` or the
+OpenVidu Meet **web component**, and is driven from your backend with a REST API and webhooks:
+
+<a href="https://openvidu.io/latest/meet/embedded/"><img src="https://openvidu.io/latest/assets/images/meet/embedded/use-cases/support-meeting.png" alt="OpenVidu Meet embedded inside a customer support web application: a two-participant video call with recording, screen sharing, chat and call controls, surrounded by the host application's own interface" width="560"></a>
 
 ### OpenVidu Platform
 
