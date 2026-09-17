@@ -1,11 +1,10 @@
 [![Backers on Open Collective](https://opencollective.com/openvidu/backers/badge.svg)](#backers) [![Sponsors on Open Collective](https://opencollective.com/openvidu/sponsors/badge.svg)](#sponsors)
 [![License badge](https://img.shields.io/badge/license-Apache2-orange.svg)](http://www.apache.org/licenses/LICENSE-2.0)
 [![OpenVidu integration tests](https://github.com/OpenVidu/openvidu/actions/workflows/openvidu-integration-tests.yml/badge.svg)](https://github.com/OpenVidu/openvidu/actions/workflows/openvidu-integration-tests.yml)
-[![Npm version](https://img.shields.io/npm/v/openvidu-components-angular?label=npm-version)](https://npmjs.org/package/openvidu-components-angular)
-[![Npm downloads](https://img.shields.io/npm/dw/openvidu-components-angular?label=npm-downloads)](https://npmjs.org/package/openvidu-components-angular)
 
 
 [![Documentation](https://img.shields.io/badge/docs-openvidu.io-blue)](https://openvidu.io/latest/docs/)
+[![openvidu-server version](https://img.shields.io/docker/v/openvidu/openvidu-server?sort=semver&label=openvidu-server)](https://hub.docker.com/r/openvidu/openvidu-server/tags)
 [![Docker badge](https://img.shields.io/docker/pulls/openvidu/openvidu-server.svg)](https://hub.docker.com/r/openvidu/openvidu-server)
 [![Support badge](https://img.shields.io/badge/support-sof-yellowgreen.svg)](https://openvidu.discourse.group/)
 [![Twitter Follow](https://img.shields.io/twitter/follow/openvidu.svg?style=social)](https://twitter.com/openvidu)
@@ -30,7 +29,7 @@ conferencing application: an open-source alternative to Zoom, Google Meet and Ji
 needs no code to deploy, and that you can embed in your own product through a web component,
 a REST API and webhooks.
 
-[![OpenVidu Meet running inside a customer support web application: a two-participant video call with recording, screen sharing, chat and call controls](https://openvidu.io/latest/assets/images/meet/embedded/use-cases/support-meeting.png)](https://openvidu.io/latest/meet/)
+<a href="https://openvidu.io/latest/meet/"><img src="https://openvidu.io/latest/assets/images/meet/embedded/use-cases/support-meeting.png" alt="OpenVidu Meet running inside a customer support web application: a two-participant video call with recording, screen sharing, chat and call controls" width="560"></a>
 
 ### OpenVidu Platform
 
