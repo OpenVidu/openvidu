@@ -36,7 +36,7 @@ logo and colours, and choose which features each participant gets.
 **With minimal effort it embeds into your own application**, through an `<iframe>` or the
 OpenVidu Meet **web component**, and is driven from your backend with a REST API and webhooks:
 
-<a href="https://openvidu.io/latest/meet/embedded/"><img src="https://openvidu.io/latest/assets/images/meet/embedded/use-cases/support-meeting.png" alt="OpenVidu Meet embedded inside a customer support web application: a two-participant video call with recording, screen sharing, chat and call controls, surrounded by the host application's own interface" width="560"></a>
+<a href="https://openvidu.io/latest/meet/embedded/intro/"><img src="https://openvidu.io/latest/assets/images/meet/embedded/use-cases/support-meeting.png" alt="OpenVidu Meet embedded inside a customer support web application: a two-participant video call with recording, screen sharing, chat and call controls, surrounded by the host application's own interface" width="560"></a>
 
 ### OpenVidu Platform
 
