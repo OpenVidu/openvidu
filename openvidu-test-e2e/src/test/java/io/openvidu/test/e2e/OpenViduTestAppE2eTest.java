@@ -946,6 +946,11 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 				"Could not obtain the LiveKit wss:// URL from the 'ready-check' container log. Is openvidu-local-deployment running? ");
 		log.info("Using LiveKit URL: {}", secureLivekitUrlFromOpenViduLocalDeployment);
 
+		// Both browsers below are bridged into their own Docker network and reach the
+		// SFU through this public wildcard name: pin its address so that they never
+		// depend on the runner's DNS to open the signaling WebSocket
+		pinHostForNetemBrowser(secureLivekitUrlFromOpenViduLocalDeployment);
+
 		NetworkConditioner.pullImages();
 
 		// Connect to the openvidu-testapp through "host.docker.internal"

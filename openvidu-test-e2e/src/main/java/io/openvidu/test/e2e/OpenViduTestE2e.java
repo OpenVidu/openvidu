@@ -4,10 +4,12 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.DatagramSocket;
+import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.net.UnknownHostException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -142,6 +144,15 @@ public class OpenViduTestE2e {
 	protected Collection<Network> netemNetworks = ConcurrentHashMap.newKeySet();
 	private final AtomicInteger netemContainerCounter = new AtomicInteger();
 
+	// Host name pinned in /etc/hosts of the bridged ("chromeNetwork") browsers, and
+	// the address it resolved to. See pinHostForNetemBrowser.
+	private static String netemPinnedHostName;
+	private static String netemPinnedHostAddress;
+
+	// Resolved once per JVM, so that after the first success a later DNS outage
+	// cannot stop a bridged browser from being pinned.
+	private static final Map<String, String> resolvedHostAddresses = new ConcurrentHashMap<>();
+
 	protected static RoomServiceClient LK;
 	protected static IngressServiceClient LK_INGRESS;
 
@@ -233,7 +244,65 @@ public class OpenViduTestE2e {
 				.withExtraHost("host.docker.internal", "host-gateway")
 				.withCreateContainerCmdModifier(cmd -> cmd.withName(containerName))
 				.waitingFor(waitBrowser);
+		if (netemPinnedHostName != null) {
+			log.info("Pinning {} to {} in the /etc/hosts of bridged browser {}", netemPinnedHostName,
+					netemPinnedHostAddress, containerName);
+			chrome.withExtraHost(netemPinnedHostName, netemPinnedHostAddress);
+		}
 		return chrome;
+	}
+
+	/**
+	 * Pins the host of {@code url} to its current address in the /etc/hosts of
+	 * every bridged ("chromeNetwork") browser created from now on, so that the
+	 * browser never has to resolve it.
+	 *
+	 * Those browsers sit in their own Docker network and reach the SFU through the
+	 * deployment's public wildcard name
+	 * ({@code <ip-with-dashes>.openvidu-local.dev}, which the TLS certificate is
+	 * issued for, so the name cannot simply be replaced by the address). Resolving
+	 * it is a real DNS query, and it is the only thing in the connection-quality
+	 * tests that depends on the runner having working external DNS at connect
+	 * time: every other browser in the suite talks to localhost. When that DNS
+	 * blinks, the browser never opens the signaling WebSocket and the test fails
+	 * 50 s later waiting for "connected", with the connectivity dump reporting
+	 * "bad address" for a name Docker's own resolver still had cached (CI run
+	 * 35203642658, where a 3-minute outage also stretched a 3 s "docker pull" to
+	 * 171 s).
+	 *
+	 * Best-effort: if the name cannot be resolved right now (and was not resolved
+	 * earlier in this JVM), nothing is pinned and the browser resolves it itself,
+	 * exactly as before.
+	 */
+	protected static void pinHostForNetemBrowser(String url) {
+		netemPinnedHostName = null;
+		netemPinnedHostAddress = null;
+		if (url == null || url.isBlank()) {
+			return;
+		}
+		String host;
+		try {
+			host = URI.create(url.trim()).getHost();
+		} catch (IllegalArgumentException e) {
+			log.warn("Not a URL, so nothing to pin for the bridged browsers: {}", url);
+			return;
+		}
+		if (host == null || host.isBlank()) {
+			return;
+		}
+		String address = resolvedHostAddresses.get(host);
+		if (address == null) {
+			try {
+				address = InetAddress.getByName(host).getHostAddress();
+				resolvedHostAddresses.put(host, address);
+			} catch (UnknownHostException e) {
+				log.warn("Could not resolve {} to pin it in the bridged browsers' /etc/hosts ({}). They will have to"
+						+ " resolve it through DNS themselves.", host, e.toString());
+				return;
+			}
+		}
+		netemPinnedHostName = host;
+		netemPinnedHostAddress = address;
 	}
 
 	protected String getNetemContainerName(BrowserUser browserUser) {
