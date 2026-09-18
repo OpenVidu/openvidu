@@ -1042,6 +1042,11 @@ Parameters:
     AllowedPattern: ^.+$
     ConstraintDescription: You must specify a list of subnet IDs
 
+  LoadBalancerSubnets:
+    Description: "(Optional) Public subnets for the internet-facing Load Balancer. Leave empty to place the Load Balancer in the OpenViduMasterNodeSubnets (default behavior). Set it to dedicated public subnets to keep the Master Nodes in private subnets with NAT egress."
+    Type: CommaDelimitedList
+    Default: ""
+
   MasterNodesDiskSize:
     Description: Size of the disk in GB
     Type: Number
@@ -1092,6 +1097,7 @@ Metadata:
           - OpenViduVPC
           - OpenViduMasterNodeSubnets
           - OpenViduMediaNodeSubnets
+          - LoadBalancerSubnets
       - Label:
           default: Volumes configuration
         Parameters:
@@ -1104,6 +1110,7 @@ Metadata:
 Conditions:
   CreateRecordingsBucket: !Equals [!Ref S3AppDataBucketName, ""]
   CreateClusterDataBucket: !Equals [!Ref S3ClusterDataBucketName, ""]
+  HasLoadBalancerSubnets: !Not [!Equals [!Join ["", !Ref LoadBalancerSubnets], ""]]
   IsMasterGraviton: !Or
     - !Equals [ !Select [ 0, !Split ['.', !Ref MasterNodeInstanceType ]], 't4g']
     - !Equals [ !Select [ 0, !Split ['.', !Ref MasterNodeInstanceType ]], 'c6g']
@@ -1391,6 +1398,8 @@ Resources:
             Action:
               - 'sts:AssumeRole'
       Path: "/"
+      ManagedPolicyArns:
+           - !Sub arn:${AWS::Partition}:iam::aws:policy/AmazonSSMManagedInstanceCore
       Policies:
         - PolicyName: !Sub openvidu-master-policy-${AWS::Region}-${AWS::StackName}
           PolicyDocument:
@@ -3293,7 +3302,7 @@ Resources:
           - ''
           - - OpenViduHA-
             - !Select [4, !Split ['-', !Select [2, !Split ['/', !Ref AWS::StackId]]]]
-      Subnets: !Ref OpenViduMasterNodeSubnets
+      Subnets: !If [HasLoadBalancerSubnets, !Ref LoadBalancerSubnets, !Ref OpenViduMasterNodeSubnets]
       SecurityGroups:
         - !Ref OpenViduLoadBalancerSG
       Type: network
