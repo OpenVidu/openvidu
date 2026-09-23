@@ -938,6 +938,22 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 	private Pair<OpenViduTestappUser, OpenViduTestappUser> connectionQualityTest(boolean isPublisher,
 			boolean isSubscriber, Integer outboundPacketLoss, Integer inboundPacketLoss) throws Exception {
+		return connectionQualityTest(isPublisher, isSubscriber, outboundPacketLoss, inboundPacketLoss, false);
+	}
+
+	/**
+	 * {@code videoOptimizations} means simulcast, dynacast and adaptiveStream
+	 * enabled for both users, as OpenVidu Meet has them, with a 1280x720 camera, so
+	 * the camera is published as three VP8 simulcast layers. Without them the camera
+	 * is a single 640x480 layer. Audio is the same in both cases (Opus with the
+	 * livekit-client defaults, DTX and RED).
+	 */
+	private Pair<OpenViduTestappUser, OpenViduTestappUser> connectionQualityTest(boolean isPublisher,
+			boolean isSubscriber, Integer outboundPacketLoss, Integer inboundPacketLoss, boolean videoOptimizations)
+			throws Exception {
+
+		final Integer width = videoOptimizations ? 1280 : null;
+		final Integer height = videoOptimizations ? 720 : null;
 
 		// Connect to LiveKit server from a secure URL
 		String secureLivekitUrlFromOpenViduLocalDeployment = getLivekitWssUrlFromReadyCheckContainer();
@@ -974,7 +990,8 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 			throw new IllegalArgumentException("At least one of isPublisher or isSubscriber must be true");
 		}
 		if (isPublisher) {
-			this.addPublisher(punchbagUser, isSubscriber, false, false, false, true, true, null, null, null);
+			this.addPublisher(punchbagUser, isSubscriber, videoOptimizations, videoOptimizations, videoOptimizations,
+					true, true, width, height, null);
 		} else {
 			// Publish audio only (and keep subscribing) so the OTHER user subscribes to
 			// PunchbagUser and therefore also receives its connectionQualityChanged events
@@ -982,7 +999,8 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 			// subscribed to. PunchbagUser still subscribes to RegularUser's audio+video,
 			// which is the downlink actually impaired in this scenario; the extra audio
 			// uplink stays clean and does not affect its (min-based) quality.
-			this.addPublisher(punchbagUser, true, false, false, false, true, false, null, null, null);
+			this.addPublisher(punchbagUser, true, videoOptimizations, videoOptimizations, videoOptimizations, true,
+					false, null, null, null);
 		}
 
 		WebElement participantNameInput = punchbagUser.getDriver().findElement(By.id("participant-name-input-0"));
@@ -1022,9 +1040,10 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		regularUser.getEventManager().startPolling();
 
 		if (isSubscriber) {
-			this.addPublisher(regularUser, true, false, false, false, true, true, null, null, null);
+			this.addPublisher(regularUser, true, videoOptimizations, videoOptimizations, videoOptimizations, true, true,
+					width, height, null);
 		} else {
-			this.addSubscriber(regularUser, false);
+			this.addSubscriber(regularUser, videoOptimizations);
 		}
 		participantNameInput = regularUser.getDriver().findElement(By.id("participant-name-input-0"));
 		participantNameInput.clear();
@@ -1193,8 +1212,24 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 		log.info("ConnectionQuality LOST publisher does not make its subscriber LOST");
 
+		// Single-layer camera: both published tracks keep a frozen score in mediasoup
+		lostPublisherDoesNotMakeSubscriberLost(false);
+	}
+
+	@Test
+	@DisplayName("ConnectionQuality LOST publisher with OpenVidu Meet media does not make its subscriber LOST")
+	void connectionQualityLostMeetPublisherSubscriberNotLostTest() throws Exception {
+
+		log.info("ConnectionQuality LOST publisher with OpenVidu Meet media does not make its subscriber LOST");
+
+		lostPublisherDoesNotMakeSubscriberLost(true);
+	}
+
+	private void lostPublisherDoesNotMakeSubscriberLost(boolean videoOptimizations) throws Exception {
+
 		// PunchbagUser publishes audio and video, RegularUser only subscribes to them
-		Pair<OpenViduTestappUser, OpenViduTestappUser> users = connectionQualityTest(true, false, null, null);
+		Pair<OpenViduTestappUser, OpenViduTestappUser> users = connectionQualityTest(true, false, null, null,
+				videoOptimizations);
 		OpenViduTestappUser punchbagUser = users.getLeft();
 		OpenViduTestappUser regularUser = users.getRight();
 
@@ -1204,8 +1239,11 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		try {
 			waitUntilConnectionQuality(regularUser, 0, "PunchbagUser", q -> q.contains("lost"), 45,
 					"Expected the publisher's connection quality to reach LOST");
-			// Leave a couple more server quality ticks (every 5 s) to be reported
-			Thread.sleep(10000);
+			// Leave three more server quality ticks (every 5 s) to be reported. With a
+			// single-layer camera the publisher goes LOST when its media is found stale,
+			// in the same tick as a subscriber wrongly would. A silent simulcast camera is
+			// LOST two ticks before that, when mediasoup zeroes its score
+			Thread.sleep(15000);
 
 			// RegularUser's own network is not impaired, so the publisher's outage must
 			// not be reported as LOST for RegularUser itself. Its instance lists its own
