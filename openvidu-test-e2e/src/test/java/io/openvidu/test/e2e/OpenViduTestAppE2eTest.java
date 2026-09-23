@@ -1188,6 +1188,47 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 	}
 
 	@Test
+	@DisplayName("ConnectionQuality LOST publisher does not make its subscriber LOST")
+	void connectionQualityLostPublisherSubscriberNotLostTest() throws Exception {
+
+		log.info("ConnectionQuality LOST publisher does not make its subscriber LOST");
+
+		// PunchbagUser publishes audio and video, RegularUser only subscribes to them
+		Pair<OpenViduTestappUser, OpenViduTestappUser> users = connectionQualityTest(true, false, null, null);
+		OpenViduTestappUser punchbagUser = users.getLeft();
+		OpenViduTestappUser regularUser = users.getRight();
+
+		// Cut the publisher's media uplink at once while its quality is EXCELLENT,
+		// keeping its signaling up: a sudden network outage on the publisher's side
+		NetworkConditioner.blackoutOutbound(getNetemContainerName(punchbagUser), "7900-7999", 120);
+		try {
+			waitUntilConnectionQuality(regularUser, 0, "PunchbagUser", q -> q.contains("lost"), 45,
+					"Expected the publisher's connection quality to reach LOST");
+			// Leave a couple more server quality ticks (every 5 s) to be reported
+			Thread.sleep(10000);
+
+			// RegularUser's own network is not impaired, so the publisher's outage must
+			// not be reported as LOST for RegularUser itself. Its instance lists its own
+			// ParticipantEvents ("lost") and the RoomEvents of every participant
+			// ("<identity> (lost)"), PunchbagUser's included: only RegularUser's count
+			List<String> qualities = new ArrayList<>();
+			for (WebElement el : getConnectionQualityEventContents(regularUser, 0, "RegularUser")) {
+				String text = el.getAttribute("textContent");
+				if (text != null) {
+					qualities.add(text.toLowerCase().trim());
+				}
+			}
+			Assertions.assertFalse(qualities.stream().anyMatch(q -> q.equals("lost") || q.equals("regularuser (lost)")),
+					"RegularUser only subscribes to the LOST publisher and its own network is not impaired, "
+							+ "so its own connection quality must never be LOST. Observed: " + qualities);
+		} finally {
+			NetworkConditioner.clear();
+		}
+
+		gracefullyLeaveParticipants(punchbagUser, 1);
+	}
+
+	@Test
 	@DisplayName("ConnectionQuality POOR subscriber test")
 	void connectionQualityPoorSubscriberTest() throws Exception {
 		log.info("ConnectionQuality POOR subscriber test");
