@@ -19,10 +19,19 @@ public class NetworkConditioner {
 	private static final String NETTOOLS_IMAGE = "ghcr.io/alexei-led/pumba-alpine-nettools:sha-19e0a46";
 
 	/**
-	 * TCP port of the SFU's ICE-TCP candidates (livekit.yaml {@code rtc.tcp_port}).
-	 * Every OUTBOUND impairment meant to cut a publisher's media must cover it too.
-	 * (clients can reconnect to this port with an ICE restart when the UDP media
-	 * path is dead).
+	 * Port range of the SFU's host candidates (livekit.yaml
+	 * {@code rtc.port_range_start} / {@code rtc.port_range_end}): their UDP ports
+	 * with both engines, and the TCP ports of their ICE-TCP candidates too with
+	 * mediasoup, where each transport listens for ICE-TCP on a port of its own.
+	 */
+	public static final String SFU_RTC_PORT_RANGE = "7900-7999";
+
+	/**
+	 * TCP port of the SFU's ICE-TCP candidates with pion (livekit.yaml
+	 * {@code rtc.tcp_port}). Every OUTBOUND impairment meant to cut a publisher's
+	 * media must cover it too, and TCP over {@link #SFU_RTC_PORT_RANGE} for
+	 * mediasoup (clients can reconnect over ICE-TCP with an ICE restart when the
+	 * UDP media path is dead).
 	 */
 	public static final String SFU_ICE_TCP_PORT = "7881";
 
@@ -50,13 +59,14 @@ public class NetworkConditioner {
 	// 7900-7999) is 100 ports. This value covers it.
 	private static final int MAX_EXPANDED_PORTS = 1024;
 
-	// Name of the currently-running Pumba container to clear it.
-	private static String currentPumbaContainerName;
+	// Names of the running Pumba containers, to stop them all on clear(). A test
+	// may run several at once: each Pumba iptables command drops a single L4
+	// protocol, see blockInboundPackets().
+	private static final List<String> pumbaContainerNames = new ArrayList<>();
 
-	// Container that currently has an OUTBOUND blackout rule (a single iptables
-	// OUTPUT DROP added
-	// directly, not via Pumba). Tracked so clear() can flush it. See
-	// blackoutOutbound().
+	// Container that currently has OUTBOUND DROP rules (iptables OUTPUT rules
+	// added directly, not via Pumba). Tracked so clear() can flush them. See
+	// blockOutboundPackets().
 	private static String blackoutContainer;
 
 	// Both Pumba images are pinned to an immutable tag: pulling them once per JVM
@@ -113,6 +123,53 @@ public class NetworkConditioner {
 				+ " with origin port " + remotePorts + " during " + durationSec + " seconds");
 		applyLoss(targetContainer, NetworkConditioner.Direction.INBOUND, protocol, remotePorts, lossPercent,
 				durationSec);
+	}
+
+	/**
+	 * Drop every packet entering {@code targetContainer} from {@code remotePorts}
+	 * over {@code protocol}, and wait until the drop is actually installed: Pumba
+	 * runs detached and adds its iptables rules from a sidecar container of its
+	 * own, which can take a few seconds. Each call starts one more Pumba container,
+	 * so that several protocols can be blocked at once. {@link #clear()} stops them
+	 * all.
+	 */
+	public static void blockInboundPackets(String targetContainer, Protocol protocol, String remotePorts,
+			int durationSec) {
+		final String ports = expandPorts(remotePorts);
+		if (ports == null) {
+			throw new IllegalArgumentException("blockInboundPackets needs the source ports to block");
+		}
+		applyLossToInboundPackets(targetContainer, protocol, remotePorts, 100, durationSec);
+		final String proto = "-p " + protocol.name().toLowerCase(Locale.US) + " ";
+		final List<String> missingPorts = new ArrayList<>(List.of(ports.split(",")));
+		final long deadline = System.currentTimeMillis() + 60000;
+		while (true) {
+			// Split on the rule prefix: the command output comes with its lines joined
+			String[] rules = nettools(targetContainer, "iptables", "-S INPUT").split("-A INPUT");
+			missingPorts.removeIf(port -> {
+				for (String rule : rules) {
+					if (rule.contains(proto) && rule.contains("--sport " + port + " ") && rule.contains("DROP")) {
+						return true;
+					}
+				}
+				return false;
+			});
+			if (missingPorts.isEmpty()) {
+				log.info("Pumba is dropping every {} packet entering container {} from port {}", protocol,
+						targetContainer, remotePorts);
+				return;
+			}
+			if (System.currentTimeMillis() > deadline) {
+				throw new IllegalStateException("Pumba did not install its INPUT DROP rules on container "
+						+ targetContainer + " for " + protocol + " source ports " + missingPorts);
+			}
+			try {
+				Thread.sleep(1000);
+			} catch (InterruptedException e) {
+				Thread.currentThread().interrupt();
+				throw new IllegalStateException(e);
+			}
+		}
 	}
 
 	/**
@@ -260,30 +317,33 @@ public class NetworkConditioner {
 	 * (iptables matches {@code low:high} directly) reliably blocks all media,
 	 * unlike a flaky 100-filter netem
 	 *
-	 * Stops the running Pumba first (avoids conflicting root qdiscs), then installs
-	 * an iptables OUTPUT DROP rule over the whole UDP {@code mediaPortRange} (e.g.
-	 * "7900-7999") plus one over the SFU's ICE-TCP port
-	 * ({@link #SFU_ICE_TCP_PORT}) and one over its TURN listener
-	 * ({@link #SFU_TURN_UDP_PORT}), so the browser's reconnect cannot fail over to
-	 * TCP or to a relay candidate and escape the blackout.
+	 * Stops the running Pumba first (avoids conflicting root qdiscs), then drops
+	 * UDP and TCP over the whole {@code mediaPortRange} (e.g. "7900-7999"), TCP to
+	 * the SFU's ICE-TCP port ({@link #SFU_ICE_TCP_PORT}) and UDP to its TURN
+	 * listener ({@link #SFU_TURN_UDP_PORT}), so the browser's reconnect cannot fail
+	 * over to TCP or to a relay candidate and escape the blackout.
 	 */
 	public static void blackoutOutbound(String targetContainer, String mediaPortRange, int durationSec) {
 		clear();
-		final String iptablesRange = mediaPortRange.replace('-', ':'); // iptables ranges are low:high
-		log.info("Total OUTBOUND blackout (100% loss) on container {} across SFU media port range {}, "
-				+ "ICE-TCP port {} and TURN port {} (iptables OUTPUT DROP)", targetContainer, mediaPortRange,
-				SFU_ICE_TCP_PORT, SFU_TURN_UDP_PORT);
-		String out = nettools(targetContainer, "iptables",
-				"-A OUTPUT -o eth0 -p udp --dport " + iptablesRange + " -j DROP");
-		log.info("blackout iptables -A OUTPUT (udp {}) result: {}", iptablesRange, out);
-		// clear() flushes the whole OUTPUT chain, so this rule goes away with the other
-		// one
-		String outTcp = nettools(targetContainer, "iptables",
-				"-A OUTPUT -o eth0 -p tcp --dport " + SFU_ICE_TCP_PORT + " -j DROP");
-		log.info("blackout iptables -A OUTPUT (tcp {}) result: {}", SFU_ICE_TCP_PORT, outTcp);
-		String outTurn = nettools(targetContainer, "iptables",
-				"-A OUTPUT -o eth0 -p udp --dport " + SFU_TURN_UDP_PORT + " -j DROP");
-		log.info("blackout iptables -A OUTPUT (udp {}) result: {}", SFU_TURN_UDP_PORT, outTurn);
+		blockOutboundPackets(targetContainer, Protocol.UDP, mediaPortRange);
+		blockOutboundPackets(targetContainer, Protocol.TCP, mediaPortRange);
+		blockOutboundPackets(targetContainer, Protocol.TCP, SFU_ICE_TCP_PORT);
+		blockOutboundPackets(targetContainer, Protocol.UDP, SFU_TURN_UDP_PORT);
+	}
+
+	/**
+	 * Drop every packet leaving {@code targetContainer} towards {@code remotePorts}
+	 * (a single port or a range) over {@code protocol}, with an iptables OUTPUT
+	 * rule added directly: Pumba cannot filter the egress by protocol.
+	 * {@link #clear()} flushes it.
+	 */
+	public static void blockOutboundPackets(String targetContainer, Protocol protocol, String remotePorts) {
+		final String proto = protocol.name().toLowerCase(Locale.US);
+		final String ports = remotePorts.replace('-', ':'); // iptables ranges are low:high
+		String out = nettools(targetContainer, "iptables", "-A OUTPUT -o eth0 -p " + proto + " --dport " + ports
+				+ " -j DROP");
+		log.info("Dropping every {} packet leaving container {} towards port {} (iptables -A OUTPUT): {}", protocol,
+				targetContainer, remotePorts, out.isBlank() ? "done" : out.trim());
 		blackoutContainer = targetContainer;
 	}
 
@@ -338,25 +398,27 @@ public class NetworkConditioner {
 	}
 
 	/**
-	 * Remove every impairment: stop the current Pumba container (SIGTERM, so it
-	 * reverts the netem qdisc / iptables rule itself) and then scrub the target's
+	 * Remove every impairment: stop the running Pumba containers (SIGTERM, so they
+	 * revert the netem qdisc / iptables rules themselves) and then scrub the target's
 	 * network namespace anyway, so that the impairment is gone whether or not
 	 * Pumba got to revert it.
 	 */
 	public static void clear() {
 		final String target = impairedContainer;
 		impairedContainer = null;
-		if (currentPumbaContainerName != null) {
-			log.info("Clearing network impairment (stopping Pumba container {})", currentPumbaContainerName);
-			String out = commandLine.executeCommand(
-					"docker stop -t " + PUMBA_STOP_GRACE_SEC + " " + currentPumbaContainerName + " 2>&1",
+		if (!pumbaContainerNames.isEmpty()) {
+			// A single docker stop stops all of them in parallel
+			final String names = String.join(" ", pumbaContainerNames);
+			pumbaContainerNames.clear();
+			log.info("Clearing network impairment (stopping Pumba containers {})", names);
+			String out = commandLine.executeCommand("docker stop -t " + PUMBA_STOP_GRACE_SEC + " " + names + " 2>&1",
 					PUMBA_STOP_GRACE_SEC + 30);
-			log.info("docker stop {} result: {}", currentPumbaContainerName, out);
-			currentPumbaContainerName = null;
+			log.info("docker stop {} result: {}", names, out);
 		}
 		if (blackoutContainer != null) {
-			log.info("Clearing OUTBOUND blackout (flushing iptables OUTPUT) on container {}", blackoutContainer);
-			// Flush the OUTPUT chain: the blackout DROP is the only rule we ever add there
+			log.info("Clearing OUTBOUND drops (flushing iptables OUTPUT) on container {}", blackoutContainer);
+			// Flush the OUTPUT chain: the DROP rules of blockOutboundPackets() are the only
+			// ones we ever add there
 			nettools(blackoutContainer, "iptables", "-F OUTPUT");
 			blackoutContainer = null;
 		}
@@ -444,9 +506,9 @@ public class NetworkConditioner {
 	}
 
 	private static String pumbaRun() {
-		currentPumbaContainerName = "pumba-netem-" + System.currentTimeMillis();
-		return "docker run -d --name " + currentPumbaContainerName + " --rm -v " + DOCKER_SOCK + ":" + DOCKER_SOCK + " "
-				+ PUMBA_IMAGE;
+		final String name = "pumba-netem-" + System.currentTimeMillis() + "-" + pumbaContainerNames.size();
+		pumbaContainerNames.add(name);
+		return "docker run -d --name " + name + " --rm -v " + DOCKER_SOCK + ":" + DOCKER_SOCK + " " + PUMBA_IMAGE;
 	}
 
 	private static void runPumba(String cmd) {

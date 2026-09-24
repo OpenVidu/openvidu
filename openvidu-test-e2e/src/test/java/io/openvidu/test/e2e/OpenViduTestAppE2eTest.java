@@ -20,6 +20,8 @@ package io.openvidu.test.e2e;
 import io.openvidu.test.e2e.annotations.OnlyMediasoup;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
@@ -54,6 +56,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.Keys;
@@ -962,36 +966,9 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		final Integer width = videoOptimizations ? 1280 : null;
 		final Integer height = videoOptimizations ? 720 : null;
 
-		// Connect to LiveKit server from a secure URL
-		String secureLivekitUrlFromOpenViduLocalDeployment = getLivekitWssUrlFromReadyCheckContainer();
+		final String secureLivekitUrlFromOpenViduLocalDeployment = prepareNetemBrowsers();
 
-		Assertions.assertNotNull(secureLivekitUrlFromOpenViduLocalDeployment,
-				"Could not obtain the LiveKit wss:// URL from the 'ready-check' container log. Is openvidu-local-deployment running? ");
-		log.info("Using LiveKit URL: {}", secureLivekitUrlFromOpenViduLocalDeployment);
-
-		// Both browsers below are bridged into their own Docker network and reach the
-		// SFU through this public wildcard name: pin its address so that they never
-		// depend on the runner's DNS to open the signaling WebSocket
-		pinHostForNetemBrowser(secureLivekitUrlFromOpenViduLocalDeployment);
-
-		NetworkConditioner.pullImages();
-
-		// Connect to the openvidu-testapp through "host.docker.internal"
-		final String secureAppUrl = APP_URL.replace("localhost", "host.docker.internal");
-
-		OpenViduTestappUser punchbagUser = new OpenViduTestappUser(setupBrowser("chromeNetwork"));
-		this.testappUsers.add(punchbagUser);
-		punchbagUser.getDriver().get(secureAppUrl);
-		WebElement urlInput = punchbagUser.getDriver().findElement(By.id("livekit-url"));
-		urlInput.clear();
-		urlInput.sendKeys(secureLivekitUrlFromOpenViduLocalDeployment);
-		WebElement keyInput = punchbagUser.getDriver().findElement(By.id("livekit-api-key"));
-		keyInput.clear();
-		keyInput.sendKeys(LIVEKIT_API_KEY);
-		WebElement secretInput = punchbagUser.getDriver().findElement(By.id("livekit-api-secret"));
-		secretInput.clear();
-		secretInput.sendKeys(LIVEKIT_API_SECRET);
-		punchbagUser.getEventManager().startPolling();
+		OpenViduTestappUser punchbagUser = setupNetemBrowserUser(secureLivekitUrlFromOpenViduLocalDeployment);
 
 		if (!isPublisher && !isSubscriber) {
 			throw new IllegalArgumentException("At least one of isPublisher or isSubscriber must be true");
@@ -1010,10 +987,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 					false, null, null, null);
 		}
 
-		WebElement participantNameInput = punchbagUser.getDriver().findElement(By.id("participant-name-input-0"));
-		participantNameInput.clear();
-		participantNameInput.sendKeys("PunchbagUser");
-		setConnectionQualityRoomName(punchbagUser, roomName);
+		setParticipantAndRoomName(punchbagUser, "PunchbagUser", roomName);
 
 		punchbagUser.getDriver().findElement(By.cssSelector(".connect-btn")).sendKeys(Keys.ENTER);
 		try {
@@ -1033,19 +1007,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		waitUntilConnectionQuality(punchbagUser, 0, "PunchbagUser", q -> q.contains("excellent"), 20,
 				"Expected baseline connection quality to be EXCELLENT before impairment");
 
-		OpenViduTestappUser regularUser = new OpenViduTestappUser(setupBrowser("chromeNetwork"));
-		this.testappUsers.add(regularUser);
-		regularUser.getDriver().get(secureAppUrl);
-		urlInput = regularUser.getDriver().findElement(By.id("livekit-url"));
-		urlInput.clear();
-		urlInput.sendKeys(secureLivekitUrlFromOpenViduLocalDeployment);
-		keyInput = regularUser.getDriver().findElement(By.id("livekit-api-key"));
-		keyInput.clear();
-		keyInput.sendKeys(LIVEKIT_API_KEY);
-		secretInput = regularUser.getDriver().findElement(By.id("livekit-api-secret"));
-		secretInput.clear();
-		secretInput.sendKeys(LIVEKIT_API_SECRET);
-		regularUser.getEventManager().startPolling();
+		OpenViduTestappUser regularUser = setupNetemBrowserUser(secureLivekitUrlFromOpenViduLocalDeployment);
 
 		if (isSubscriber) {
 			this.addPublisher(regularUser, true, videoOptimizations, videoOptimizations, videoOptimizations, true, true,
@@ -1053,10 +1015,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		} else {
 			this.addSubscriber(regularUser, videoOptimizations);
 		}
-		participantNameInput = regularUser.getDriver().findElement(By.id("participant-name-input-0"));
-		participantNameInput.clear();
-		participantNameInput.sendKeys("RegularUser");
-		setConnectionQualityRoomName(regularUser, roomName);
+		setParticipantAndRoomName(regularUser, "RegularUser", roomName);
 
 		regularUser.getDriver().findElement(By.cssSelector(".connect-btn")).sendKeys(Keys.ENTER);
 		if (isPublisher) {
@@ -1095,10 +1054,14 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		regularUser.getEventManager().clearAllCurrentEvents();
 
 		if (outboundPacketLoss != null) {
-			// Drop packets the client sends through the publisher PC. The SFU's ICE-TCP
-			// port is impaired alike to avoid TCP fallbacks from the client side
+			// Drop packets the client sends through the publisher PC. pion's ICE-TCP port
+			// is impaired alike to avoid TCP fallbacks from the client side. mediasoup's
+			// are
+			// ports of the RTC range, one per transport, so they are cut altogether
 			NetworkConditioner.applyLossToOutboundPackets(getNetemContainerName(punchbagUser),
 					publisherPortInSfu + "," + NetworkConditioner.SFU_ICE_TCP_PORT, outboundPacketLoss, 10000);
+			NetworkConditioner.blockOutboundPackets(getNetemContainerName(punchbagUser),
+					NetworkConditioner.Protocol.TCP, NetworkConditioner.SFU_RTC_PORT_RANGE);
 		}
 		if (inboundPacketLoss != null) {
 			// Drop packets the client receives through the subscriber PC (or publisher PC
@@ -1111,7 +1074,52 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		return new ImmutablePair<>(punchbagUser, regularUser);
 	}
 
-	private void setConnectionQualityRoomName(OpenViduTestappUser user, String roomName) {
+	/**
+	 * Get ready to open bridged ("chromeNetwork") browsers, the only ones that
+	 * {@link NetworkConditioner} can impair, and return the secure LiveKit URL they
+	 * must connect to.
+	 */
+	private String prepareNetemBrowsers() {
+		String secureLivekitUrl = getLivekitWssUrlFromReadyCheckContainer();
+		Assertions.assertNotNull(secureLivekitUrl,
+				"Could not obtain the LiveKit wss:// URL from the 'ready-check' container log. Is openvidu-local-deployment running? ");
+		log.info("Using LiveKit URL: {}", secureLivekitUrl);
+
+		// Bridged browsers live in their own Docker network and reach the SFU through
+		// this public wildcard name: pin its address so that they never depend on the
+		// runner's DNS to open the signaling WebSocket
+		pinHostForNetemBrowser(secureLivekitUrl);
+
+		NetworkConditioner.pullImages();
+		return secureLivekitUrl;
+	}
+
+	/**
+	 * Open the openvidu-testapp in a new bridged ("chromeNetwork") browser, with
+	 * the connection settings filled in and its events being polled.
+	 */
+	private OpenViduTestappUser setupNetemBrowserUser(String secureLivekitUrl) throws Exception {
+		OpenViduTestappUser user = new OpenViduTestappUser(setupBrowser("chromeNetwork"));
+		this.testappUsers.add(user);
+		// Connect to the openvidu-testapp through "host.docker.internal"
+		user.getDriver().get(APP_URL.replace("localhost", "host.docker.internal"));
+		WebElement urlInput = user.getDriver().findElement(By.id("livekit-url"));
+		urlInput.clear();
+		urlInput.sendKeys(secureLivekitUrl);
+		WebElement keyInput = user.getDriver().findElement(By.id("livekit-api-key"));
+		keyInput.clear();
+		keyInput.sendKeys(LIVEKIT_API_KEY);
+		WebElement secretInput = user.getDriver().findElement(By.id("livekit-api-secret"));
+		secretInput.clear();
+		secretInput.sendKeys(LIVEKIT_API_SECRET);
+		user.getEventManager().startPolling();
+		return user;
+	}
+
+	private void setParticipantAndRoomName(OpenViduTestappUser user, String participantName, String roomName) {
+		WebElement participantNameInput = user.getDriver().findElement(By.id("participant-name-input-0"));
+		participantNameInput.clear();
+		participantNameInput.sendKeys(participantName);
 		WebElement roomNameInput = user.getDriver().findElement(By.id("room-name-input-0"));
 		roomNameInput.clear();
 		roomNameInput.sendKeys(roomName);
@@ -1197,7 +1205,8 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		OpenViduTestappUser punchbagUser = users.getLeft();
 		OpenViduTestappUser regularUser = users.getRight();
 
-		NetworkConditioner.blackoutOutbound(getNetemContainerName(punchbagUser), "7900-7999", 120);
+		NetworkConditioner.blackoutOutbound(getNetemContainerName(punchbagUser),
+				NetworkConditioner.SFU_RTC_PORT_RANGE, 120);
 
 		punchbagUser.getEventManager().waitUntilEventReaches(0, "connectionQualityChanged", "RoomEvent", 1);
 		regularUser.getEventManager().waitUntilEventReaches(0, "connectionQualityChanged", "RoomEvent", 1);
@@ -1250,7 +1259,8 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 		// Cut the publisher's media uplink at once while its quality is EXCELLENT,
 		// keeping its signaling up: a sudden network outage on the publisher's side
-		NetworkConditioner.blackoutOutbound(getNetemContainerName(punchbagUser), "7900-7999", 120);
+		NetworkConditioner.blackoutOutbound(getNetemContainerName(punchbagUser),
+				NetworkConditioner.SFU_RTC_PORT_RANGE, 120);
 		try {
 			waitUntilConnectionQuality(regularUser, 0, "PunchbagUser", q -> q.contains("lost"), 45,
 					"Expected the publisher's connection quality to reach LOST");
@@ -1299,7 +1309,8 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		// short network outage on the publisher's side. Its quality may well go LOST,
 		// but once the network is back its session must go on (resumed, not left and
 		// joined again)
-		NetworkConditioner.blackoutOutbound(getNetemContainerName(punchbagUser), "7900-7999", OUTAGE_SECONDS);
+		NetworkConditioner.blackoutOutbound(getNetemContainerName(punchbagUser),
+				NetworkConditioner.SFU_RTC_PORT_RANGE, OUTAGE_SECONDS);
 		try {
 			Thread.sleep(OUTAGE_SECONDS * 1000L);
 		} finally {
@@ -1437,7 +1448,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 			// Final step: a TOTAL blackout (100% loss) across the WHOLE SFU media port
 			// range (7900-7999)
 			final int BLACKOUT_PCT = 100;
-			NetworkConditioner.blackoutOutbound(container, "7900-7999", 120);
+			NetworkConditioner.blackoutOutbound(container, NetworkConditioner.SFU_RTC_PORT_RANGE, 120);
 			ConnectionQuality pubBlackout = latestConnectionQuality(punchbagUser, 0, "PunchbagUser");
 			long lostDeadline = System.currentTimeMillis() + 45000L;
 			while (pubBlackout != ConnectionQuality.LOST && System.currentTimeMillis() < lostDeadline) {
@@ -1487,6 +1498,266 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 				"Expected connection quality to RECOVER (to GOOD or better) after clearing impairment");
 
 		gracefullyLeaveParticipants(punchbagUser, 1);
+	}
+
+	/**
+	 * Every way a client can reach the SFU of openvidu-local-deployment: a host
+	 * candidate of the SFU over UDP ({@code rtc.port_range_*}) or over TCP
+	 * ({@code rtc.tcp_port} with pion, a port of the RTC range per transport with
+	 * mediasoup), or a relay candidate of the client allocated from the SFU's
+	 * embedded TURN server over UDP ({@code turn.udp_port}, the only TURN listener
+	 * it has). Each one knows the inbound packets to drop so that it is the only
+	 * way left.
+	 *
+	 * The type of the client's selected local candidate is not enough to tell the
+	 * paths apart: it is peer-reflexive on all of them whenever there is a NAT
+	 * between the client and the SFU, like here, where both run in Docker bridge
+	 * networks and the SFU gets the client's packets, directly or from the TURN
+	 * relay, from the docker0 gateway through the published ports. A relayed
+	 * candidate still carries the {@code relayProtocol} and {@code url} of the
+	 * relay candidate it is based on.
+	 */
+	enum IceCandidateType {
+
+		HOST_UDP(false, "udp"), HOST_TCP(false, "tcp"), RELAY_UDP(true, "udp");
+
+		// The ICE-TCP ports of both engines
+		static final String SFU_TCP_PORTS = NetworkConditioner.SFU_ICE_TCP_PORT + ","
+				+ NetworkConditioner.SFU_RTC_PORT_RANGE;
+
+		// Of the local candidate the client must end up connected through
+		final boolean relay;
+		final String protocol;
+
+		IceCandidateType(boolean relay, String protocol) {
+			this.relay = relay;
+			this.protocol = protocol;
+		}
+
+		/**
+		 * Drop every answer of the SFU on the other paths, so that the connectivity
+		 * checks of their candidate pairs fail. The Pumba duration outlasts the test:
+		 * {@link NetworkConditioner#clear()} removes the drops at its end.
+		 */
+		void blockTheOtherPaths(String container) {
+			final int durationSec = 600;
+			switch (this) {
+				case HOST_UDP -> {
+					NetworkConditioner.blockInboundPackets(container, NetworkConditioner.Protocol.TCP, SFU_TCP_PORTS,
+							durationSec);
+					NetworkConditioner.blockInboundPackets(container, NetworkConditioner.Protocol.UDP,
+							NetworkConditioner.SFU_TURN_UDP_PORT, durationSec);
+				}
+				case HOST_TCP -> NetworkConditioner.blockInboundPackets(container, NetworkConditioner.Protocol.UDP,
+						NetworkConditioner.SFU_RTC_PORT_RANGE + "," + NetworkConditioner.SFU_TURN_UDP_PORT,
+						durationSec);
+				case RELAY_UDP -> {
+					NetworkConditioner.blockInboundPackets(container, NetworkConditioner.Protocol.UDP,
+							NetworkConditioner.SFU_RTC_PORT_RANGE, durationSec);
+					NetworkConditioner.blockInboundPackets(container, NetworkConditioner.Protocol.TCP, SFU_TCP_PORTS,
+							durationSec);
+				}
+			}
+		}
+	}
+
+	@ParameterizedTest(name = "ICE candidate type {0}")
+	@EnumSource(IceCandidateType.class)
+	void iceCandidateTypeTest(IceCandidateType iceCandidateType) throws Exception {
+
+		log.info("ICE candidate type {}", iceCandidateType);
+
+		// mediasoup transports listen for ICE-TCP on the RTC port range, which the
+		// deployment only publishes over UDP
+		final boolean publishTcpPortRange = iceCandidateType.protocol.equals("tcp");
+		if (publishTcpPortRange) {
+			setSfuTcpPortRangePublished(true);
+		}
+		try {
+			final String secureLivekitUrl = prepareNetemBrowsers();
+			// A room of its own, like connectionQualityTest: a failed ICE connection makes
+			// LiveKit prefer TCP for the same room name and identity for a while
+			final String roomName = "IceCandidateType" + System.currentTimeMillis();
+
+			OpenViduTestappUser punchbagUser = setupNetemBrowserUser(secureLivekitUrl);
+			try {
+				// Before connecting: ICE checks all candidate pairs at once and keeps the
+				// first one that works
+				iceCandidateType.blockTheOtherPaths(getNetemContainerName(punchbagUser));
+
+				// PunchbagUser publishes audio and video and subscribes to RegularUser's, so
+				// that media goes both ways through the forced candidate
+				this.addPublisher(punchbagUser, true, false, false, false, true, true, null, null, null);
+				setParticipantAndRoomName(punchbagUser, "PunchbagUser", roomName);
+				punchbagUser.getDriver().findElement(By.cssSelector(".connect-btn")).sendKeys(Keys.ENTER);
+				try {
+					punchbagUser.getEventManager().waitUntilEventReaches("connected", "RoomEvent", 1);
+				} catch (Exception e) {
+					Assertions.fail("PunchbagUser could not connect with only its " + iceCandidateType
+							+ " candidates able to reach the SFU", e);
+				}
+				punchbagUser.getEventManager().waitUntilEventReaches("localTrackPublished", "RoomEvent", 2);
+
+				OpenViduTestappUser regularUser = setupNetemBrowserUser(secureLivekitUrl);
+				this.addPublisher(regularUser, true, false, false, false, true, true, null, null, null);
+				setParticipantAndRoomName(regularUser, "RegularUser", roomName);
+				regularUser.getDriver().findElement(By.cssSelector(".connect-btn")).sendKeys(Keys.ENTER);
+				regularUser.getEventManager().waitUntilEventReaches("connected", "RoomEvent", 1);
+				punchbagUser.getEventManager().waitUntilEventReaches("trackSubscribed", "RoomEvent", 2);
+				regularUser.getEventManager().waitUntilEventReaches("trackSubscribed", "RoomEvent", 2);
+
+				// Media plays both ways...
+				waitUntilSubscriberFramesDecodedIncrease(punchbagUser,
+						punchbagUser.getDriver().findElement(By.cssSelector("#openvidu-instance-0 video.remote")));
+				waitUntilSubscriberFramesDecodedIncrease(regularUser,
+						regularUser.getDriver().findElement(By.cssSelector("#openvidu-instance-0 video.remote")));
+				Assertions.assertTrue(assertAllElementsHaveTracks(punchbagUser, "audio.remote", true, false),
+						"PunchbagUser's HTMLAudioElements were expected to have only one audio track");
+				// ...with nothing lost on the way
+				waitUntilConnectionQuality(punchbagUser, 0, "PunchbagUser", q -> q.contains("excellent"), 20,
+						"Expected PunchbagUser's own connection quality to be EXCELLENT through " + iceCandidateType);
+				waitUntilConnectionQuality(regularUser, 0, "PunchbagUser", q -> q.contains("excellent"), 20,
+						"Expected PunchbagUser's connection quality seen by RegularUser to be EXCELLENT through "
+								+ iceCandidateType);
+
+				// ...and through the forced candidate
+				assertConnectedThroughIceCandidateType(readPcTransportsInfoJson(punchbagUser, 0), iceCandidateType);
+				Assertions.assertEquals(0,
+						punchbagUser.getEventManager().getNumEvents("reconnecting-RoomEvent").get(),
+						"PunchbagUser was expected to connect through " + iceCandidateType + " at the first attempt");
+			} finally {
+				NetworkConditioner.clear();
+			}
+
+			gracefullyLeaveParticipants(punchbagUser, 1);
+		} finally {
+			if (publishTcpPortRange) {
+				setSfuTcpPortRangePublished(false);
+			}
+		}
+	}
+
+	/**
+	 * Add/Remove the TCP port range from the "openvidu" container in the
+	 * openvidu-local-deployment. It replicates the declared UDP port range.
+	 */
+	private void setSfuTcpPortRangePublished(boolean published) throws Exception {
+		String[] labels = commandLine.executeCommand("docker inspect -f '"
+				+ "{{index .Config.Labels \"com.docker.compose.project\"}}|"
+				+ "{{index .Config.Labels \"com.docker.compose.project.working_dir\"}}|"
+				+ "{{index .Config.Labels \"com.docker.compose.project.config_files\"}}' openvidu", 30).trim()
+				.split("\\|");
+		Assertions.assertEquals(3, labels.length, "The openvidu container was not started by Docker Compose");
+		final String project = labels[0];
+		final String workingDir = labels[1];
+		final List<String> configFiles = List.of(labels[2].split(","));
+
+		final String range = NetworkConditioner.SFU_RTC_PORT_RANGE;
+		final String udpMapping = range + ":" + range + "/udp";
+		final String tcpMapping = range + ":" + range + "/tcp";
+		Path composeFile = null;
+		for (String configFile : configFiles) {
+			if (Files.readString(Path.of(configFile)).contains(udpMapping)) {
+				composeFile = Path.of(configFile);
+			}
+		}
+		Assertions.assertNotNull(composeFile, "No mapping " + udpMapping + " in " + configFiles);
+
+		final String original = Files.readString(composeFile)
+				.replaceAll("(?m)^[ \\t]*- " + java.util.regex.Pattern.quote(tcpMapping) + "\\R", "");
+		String updated = original;
+		if (published) {
+			java.util.regex.Matcher udpLine = java.util.regex.Pattern
+					.compile("(?m)^([ \\t]*- )" + java.util.regex.Pattern.quote(udpMapping) + "(\\R)")
+					.matcher(original);
+			Assertions.assertTrue(udpLine.find(), "No mapping " + udpMapping + " in " + composeFile);
+			updated = new StringBuilder(original)
+					.insert(udpLine.end(), udpLine.group(1) + tcpMapping + udpLine.group(2))
+					.toString();
+		}
+		log.info("{} port mapping {} in {} and recreating the openvidu service", published ? "Adding" : "Removing",
+				tcpMapping, composeFile);
+		Files.writeString(composeFile, updated);
+
+		StringBuilder compose = new StringBuilder("docker compose -p ").append(project).append(" --project-directory ")
+				.append(workingDir);
+		configFiles.forEach(configFile -> compose.append(" -f ").append(configFile));
+		// Compose only recreates the service if its configuration changed
+		log.info("docker compose up result: {}",
+				commandLine.executeCommand(compose + " up -d --no-deps openvidu 2>&1", 180));
+
+		// The SFU is ready once its API answers again
+		final long deadline = System.currentTimeMillis() + 120000;
+		while (true) {
+			try {
+				if (LK.listRooms().execute().isSuccessful()) {
+					return;
+				}
+			} catch (IOException e) {
+				// Not listening yet
+			}
+			if (System.currentTimeMillis() > deadline) {
+				throw new IllegalStateException("openvidu did not come back after being recreated");
+			}
+			Thread.sleep(1000);
+		}
+	}
+
+	/**
+	 * Check in the peer-info JSON of {@link #readPcTransportsInfoJson} that every
+	 * peer connection of the user is connected through a local candidate of
+	 * {@code iceCandidateType}, paired with the SFU's host candidate of the same
+	 * protocol.
+	 */
+	private void assertConnectedThroughIceCandidateType(String json, IceCandidateType iceCandidateType) {
+		Assertions.assertNotNull(json, "Could not read the peer-info dialog");
+		log.info("Peer-info of the user forced to {}: {}", iceCandidateType, json);
+		JsonObject info = JsonParser.parseString(json).getAsJsonObject();
+		JsonObject pcTransports = info.getAsJsonObject("PCTransports");
+		JsonObject selectedLocalCandidates = info.getAsJsonObject("RTCIceCandidateStats");
+		// Only the publisher PC exists in single peer connection mode
+		for (String pc : pcTransports.keySet()) {
+			final String context = " of the " + pc + " PC forced to " + iceCandidateType + ". Peer-info: " + json;
+			JsonObject transport = pcTransports.getAsJsonObject(pc);
+			Assertions.assertEquals("connected", transport.get("connectionState").getAsString(),
+					"Wrong connectionState" + context);
+			String iceConnectionState = transport.get("iceConnectionState").getAsString();
+			Assertions.assertTrue(iceConnectionState.equals("connected") || iceConnectionState.equals("completed"),
+					"Wrong iceConnectionState " + iceConnectionState + context);
+
+			JsonArray selected = selectedLocalCandidates.getAsJsonArray(pc);
+			Assertions.assertEquals(1, selected.size(), "Expected exactly one selected local candidate" + context);
+			JsonObject local = selected.get(0).getAsJsonObject();
+			final String candidateType = local.get("candidateType").getAsString();
+			Assertions.assertTrue(
+					iceCandidateType.relay ? List.of("relay", "prflx").contains(candidateType)
+							: List.of("host", "srflx", "prflx").contains(candidateType),
+					"Wrong type " + candidateType + " of the selected local candidate" + context);
+			Assertions.assertEquals(iceCandidateType.protocol, local.get("protocol").getAsString(),
+					"Wrong protocol of the selected local candidate" + context);
+			if (iceCandidateType.relay) {
+				Assertions.assertTrue(local.has("relayProtocol") && local.has("url"),
+						"The selected local candidate is not relayed" + context);
+				Assertions.assertEquals("udp", local.get("relayProtocol").getAsString(),
+						"Wrong protocol towards the TURN server" + context);
+				String url = local.get("url").getAsString();
+				Assertions.assertTrue(
+						url.startsWith("turn:") && url.contains(":" + NetworkConditioner.SFU_TURN_UDP_PORT + "?"),
+						"The relay candidate was not allocated from the SFU's TURN server" + context);
+			} else {
+				Assertions.assertFalse(local.has("relayProtocol"), "The selected local candidate is relayed" + context);
+			}
+
+			// The remote end is always a host candidate of the SFU: the relay path goes
+			// from the TURN server to its UDP one
+			String connectedAddress = transport.get("connectedAddress").getAsString();
+			String remotePort = connectedAddress.substring(connectedAddress.lastIndexOf(':') + 1);
+			String sfuPorts = iceCandidateType.protocol.equals("tcp") ? IceCandidateType.SFU_TCP_PORTS
+					: NetworkConditioner.SFU_RTC_PORT_RANGE;
+			Assertions.assertTrue(List.of(NetworkConditioner.expandPorts(sfuPorts).split(",")).contains(remotePort),
+					"Not connected to a " + iceCandidateType.protocol + " port of the SFU (" + sfuPorts + ")"
+							+ context);
+		}
 	}
 
 	@Test
