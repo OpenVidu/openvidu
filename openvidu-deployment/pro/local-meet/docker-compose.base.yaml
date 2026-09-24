@@ -122,7 +122,7 @@ services:
         LIVEKIT_OPENVIDU_NODE_PRIVATE_IP="$$(hostname -i)"
         export LIVEKIT_OPENVIDU_NODE_PRIVATE_IP
 
-        ./livekit-server "$@"
+        exec ./livekit-server "$@"
       OPENVIDU_V2_COMPAT_ENTRYPOINT: |
         #!/bin/sh
         set -e

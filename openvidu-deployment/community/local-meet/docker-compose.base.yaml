@@ -115,7 +115,7 @@ services:
             echo "Using as NODE_IP: $$LAN_PRIVATE_IP"
             export NODE_IP="$$LAN_PRIVATE_IP"
         fi
-        ./livekit-server "$@"
+        exec ./livekit-server "$@"
       OPENVIDU_MEET_ENTRYPOINT: |
         #!/bin/bash
         . /scripts/utils.sh
