@@ -1626,6 +1626,9 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 				Assertions.assertEquals(0,
 						punchbagUser.getEventManager().getNumEvents("reconnecting-RoomEvent").get(),
 						"PunchbagUser was expected to connect through " + iceCandidateType + " at the first attempt");
+
+				// With no participants left, recreating openvidu stops it gracefully
+				gracefullyLeaveParticipants(regularUser, 1);
 			} finally {
 				NetworkConditioner.clear();
 			}
@@ -1686,7 +1689,9 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 			simulateIceCandidateProtocolSwitch(punchbagUser, "force-tls", 2);
 			assertMediaThroughIceCandidateType(punchbagUser, regularUser, IceCandidateType.RELAY_UDP, 3);
 
+			// With no participants left, recreating openvidu stops it gracefully
 			gracefullyLeaveParticipants(punchbagUser, 1);
+			gracefullyLeaveParticipants(regularUser, 1);
 		} finally {
 			setSfuTcpPortRangePublished(false);
 		}
@@ -1828,6 +1833,8 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 					.insert(udpLine.end(), udpLine.group(1) + tcpMapping + udpLine.group(2))
 					.toString();
 		}
+		final List<String> oldNodes = new ArrayList<>();
+		getServerNodes().forEach(node -> oldNodes.add(node.getAsJsonObject().get("id").getAsString()));
 		log.info("{} port mapping {} in {} and recreating the openvidu service", published ? "Adding" : "Removing",
 				tcpMapping, composeFile);
 		Files.writeString(composeFile, updated);
@@ -1839,18 +1846,27 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		log.info("docker compose up result: {}",
 				commandLine.executeCommand(compose + " up -d --no-deps openvidu 2>&1", 180));
 
-		// The SFU is ready once its API answers again
+		// An old node that was killed instead of shut down stays SERVING in Redis
+		// until the new one detects it dead (~30 s), and rooms created meanwhile
+		// can be allocated to it: wait until only the new node is left, serving
 		final long deadline = System.currentTimeMillis() + 120000;
+		JsonArray nodes = null;
 		while (true) {
 			try {
-				if (LK.listRooms().execute().isSuccessful()) {
+				nodes = getServerNodes();
+				JsonObject node = nodes.size() == 1 ? nodes.get(0).getAsJsonObject() : null;
+				// State 1 is SERVING (0, STARTING_UP, is absent in the JSON)
+				if (node != null && !oldNodes.contains(node.get("id").getAsString()) && node.has("state")
+						&& node.get("state").getAsInt() == 1) {
+					log.info("openvidu recreated: node {} replaced {}", node.get("id").getAsString(), oldNodes);
 					return;
 				}
 			} catch (IOException e) {
 				// Not listening yet
 			}
 			if (System.currentTimeMillis() > deadline) {
-				throw new IllegalStateException("openvidu did not come back after being recreated");
+				throw new IllegalStateException("openvidu did not come back after being recreated. Old nodes "
+						+ oldNodes + ", current nodes " + nodes);
 			}
 			Thread.sleep(1000);
 		}
@@ -2570,6 +2586,29 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 	// Server nodes currently alive, as node id plus start time.
 	// Nodes with a stale heartbeat are ignored.
 	private List<String> getLiveServerNodes() throws Exception {
+		final long now = Instant.now().getEpochSecond();
+		List<String> liveServerNodes = new ArrayList<>();
+		for (JsonElement node : getServerNodes()) {
+			JsonObject nodeJson = node.getAsJsonObject();
+			JsonObject stats = nodeJson.getAsJsonObject("stats");
+			// Unix seconds, absent in the JSON when 0
+			long startedAt = stats != null && stats.has("started_at") ? stats.get("started_at").getAsLong() : 0;
+			long updatedAt = stats != null && stats.has("updated_at") ? stats.get("updated_at").getAsLong() : 0;
+			if (now - updatedAt > SERVER_NODE_STALE_HEARTBEAT_SECONDS) {
+				log.info("Ignoring server node {}: its heartbeat is {} seconds old", nodeJson.get("id").getAsString(),
+						now - updatedAt);
+				continue;
+			}
+			liveServerNodes.add(nodeJson.get("id").getAsString() + " (started at " + startedAt + ")");
+		}
+		Assertions.assertFalse(liveServerNodes.isEmpty(),
+				"No openvidu-server node is alive according to GET " + LIVEKIT_HTTP_URL + "twirp/debug");
+		Collections.sort(liveServerNodes);
+		return liveServerNodes;
+	}
+
+	// Server nodes registered in the cluster (livekit.Node as JSON)
+	private JsonArray getServerNodes() throws Exception {
 
 		AccessToken accessToken = new AccessToken(LIVEKIT_API_KEY, LIVEKIT_API_SECRET);
 		accessToken.setIdentity("openvidu-e2e-test");
@@ -2582,27 +2621,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 			if (!response.isSuccessful()) {
 				throw new IOException("GET " + request.url() + " returned HTTP " + response.code());
 			}
-			JsonArray nodes = JsonParser.parseString(response.body().string()).getAsJsonObject()
-					.getAsJsonArray("nodes");
-			final long now = Instant.now().getEpochSecond();
-			List<String> liveServerNodes = new ArrayList<>();
-			for (JsonElement node : nodes) {
-				JsonObject nodeJson = node.getAsJsonObject();
-				JsonObject stats = nodeJson.getAsJsonObject("stats");
-				// Unix seconds, absent in the JSON when 0
-				long startedAt = stats != null && stats.has("started_at") ? stats.get("started_at").getAsLong() : 0;
-				long updatedAt = stats != null && stats.has("updated_at") ? stats.get("updated_at").getAsLong() : 0;
-				if (now - updatedAt > SERVER_NODE_STALE_HEARTBEAT_SECONDS) {
-					log.info("Ignoring server node {}: its heartbeat is {} seconds old",
-							nodeJson.get("id").getAsString(), now - updatedAt);
-					continue;
-				}
-				liveServerNodes.add(nodeJson.get("id").getAsString() + " (started at " + startedAt + ")");
-			}
-			Assertions.assertFalse(liveServerNodes.isEmpty(),
-					"No openvidu-server node is alive according to GET " + request.url());
-			Collections.sort(liveServerNodes);
-			return liveServerNodes;
+			return JsonParser.parseString(response.body().string()).getAsJsonObject().getAsJsonArray("nodes");
 		}
 	}
 
