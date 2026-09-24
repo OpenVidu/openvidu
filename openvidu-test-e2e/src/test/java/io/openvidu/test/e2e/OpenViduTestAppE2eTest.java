@@ -65,6 +65,7 @@ import org.openqa.selenium.StaleElementReferenceException;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
+import org.opentest4j.AssertionFailedError;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import com.google.common.collect.ImmutableList;
@@ -1635,6 +1636,110 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 				setSfuTcpPortRangePublished(false);
 			}
 		}
+	}
+
+	/**
+	 * Switch the ICE candidates of a connected participant mid-call, the way
+	 * LiveKit itself does after an ICE failure: livekit-client's
+	 * room.simulateScenario("force-tcp" / "force-tls") makes LiveKit store an ICE
+	 * preference for the participant, and then makes the client reconnect from
+	 * scratch (new PeerConnections) with it. "force-tcp" drops every non-TCP
+	 * candidate of the SFU, and "force-tls" forces a relay over TURN/TLS. The
+	 * local deployment has no TURN/TLS, so LiveKit hands out its TURN/UDP servers
+	 * for it instead.
+	 */
+	@Test
+	@DisplayName("ICE candidate type switch")
+	void iceCandidateTypeSwitchTest() throws Exception {
+
+		log.info("ICE candidate type switch");
+
+		// mediasoup transports listen for ICE-TCP on the RTC port range, which the
+		// deployment only publishes over UDP
+		setSfuTcpPortRangePublished(true);
+		try {
+			final String secureLivekitUrl = prepareNetemBrowsers();
+			// A room of its own: LiveKit keeps the forced ICE preference of a room name
+			// and identity for a while
+			final String roomName = "IceCandidateTypeSwitch" + System.currentTimeMillis();
+
+			// Both users publish audio and video and subscribe to each other's
+			OpenViduTestappUser punchbagUser = setupNetemBrowserUser(secureLivekitUrl);
+			this.addPublisher(punchbagUser, true, false, false, false, true, true, null, null, null);
+			setParticipantAndRoomName(punchbagUser, "PunchbagUser", roomName);
+			punchbagUser.getDriver().findElement(By.cssSelector(".connect-btn")).sendKeys(Keys.ENTER);
+			punchbagUser.getEventManager().waitUntilEventReaches("connected", "RoomEvent", 1);
+			punchbagUser.getEventManager().waitUntilEventReaches("localTrackPublished", "RoomEvent", 2);
+
+			OpenViduTestappUser regularUser = setupNetemBrowserUser(secureLivekitUrl);
+			this.addPublisher(regularUser, true, false, false, false, true, true, null, null, null);
+			setParticipantAndRoomName(regularUser, "RegularUser", roomName);
+			regularUser.getDriver().findElement(By.cssSelector(".connect-btn")).sendKeys(Keys.ENTER);
+			regularUser.getEventManager().waitUntilEventReaches("connected", "RoomEvent", 1);
+
+			// UDP first: the candidates ICE prefers
+			assertMediaThroughIceCandidateType(punchbagUser, regularUser, IceCandidateType.HOST_UDP, 1);
+
+			simulateIceCandidateProtocolSwitch(punchbagUser, "force-tcp", 1);
+			assertMediaThroughIceCandidateType(punchbagUser, regularUser, IceCandidateType.HOST_TCP, 2);
+
+			simulateIceCandidateProtocolSwitch(punchbagUser, "force-tls", 2);
+			assertMediaThroughIceCandidateType(punchbagUser, regularUser, IceCandidateType.RELAY_UDP, 3);
+
+			gracefullyLeaveParticipants(punchbagUser, 1);
+		} finally {
+			setSfuTcpPortRangePublished(false);
+		}
+	}
+
+	/**
+	 * Run room.simulateScenario(scenario) in the user's livekit-client and wait
+	 * for the reconnection it triggers, the given one since the user connected.
+	 */
+	private void simulateIceCandidateProtocolSwitch(OpenViduTestappUser user, String scenario, int reconnection)
+			throws Exception {
+		log.info("Simulating scenario {} in livekit-client", scenario);
+		((JavascriptExecutor) user.getDriver()).executeScript("window['room_0'].simulateScenario(arguments[0]);",
+				scenario);
+		user.getEventManager().waitUntilEventReaches("reconnected", "RoomEvent", reconnection);
+	}
+
+	/**
+	 * Check that the media of PunchbagUser, a participant that has just
+	 * connected or reconnected for the given time, goes both ways through
+	 * {@code iceCandidateType} with nothing lost on the way.
+	 */
+	private void assertMediaThroughIceCandidateType(OpenViduTestappUser punchbagUser, OpenViduTestappUser regularUser,
+			IceCandidateType iceCandidateType, int connection) throws Exception {
+		// Every connection subscribes both users again to the other's audio and video
+		punchbagUser.getEventManager().waitUntilEventReaches("trackSubscribed", "RoomEvent", 2 * connection);
+		regularUser.getEventManager().waitUntilEventReaches("trackSubscribed", "RoomEvent", 2 * connection);
+
+		// The PeerConnections of a reconnection are new: give them time to connect
+		final long deadline = System.currentTimeMillis() + 30000;
+		while (true) {
+			try {
+				assertConnectedThroughIceCandidateType(readPcTransportsInfoJson(punchbagUser, 0), iceCandidateType);
+				break;
+			} catch (AssertionFailedError e) {
+				if (System.currentTimeMillis() > deadline) {
+					throw e;
+				}
+				Thread.sleep(1000);
+			}
+		}
+
+		for (OpenViduTestappUser user : List.of(punchbagUser, regularUser)) {
+			user.getWaiter().until(
+					ExpectedConditions.numberOfElementsToBe(By.cssSelector("#openvidu-instance-0 video.remote"), 1));
+			waitUntilSubscriberFramesDecodedIncrease(user,
+					user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 video.remote")));
+		}
+		waitUntilConnectionQuality(punchbagUser, 0, "PunchbagUser", q -> q.contains("excellent"), 20,
+				"Expected PunchbagUser's own connection quality to be EXCELLENT through " + iceCandidateType);
+		waitUntilConnectionQuality(regularUser, 0, "PunchbagUser", q -> q.contains("excellent"), 20,
+				"Expected PunchbagUser's connection quality seen by RegularUser to be EXCELLENT through "
+						+ iceCandidateType);
 	}
 
 	/**
