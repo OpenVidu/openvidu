@@ -1692,6 +1692,54 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		}
 	}
 
+	@Test
+	@DisplayName("ICE restart Chrome")
+	void iceRestartChromeTest() throws Exception {
+		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
+		log.info("ICE restart Chrome");
+		iceRestartAux(user);
+	}
+
+	@Test
+	@DisplayName("ICE restart Firefox")
+	void iceRestartFirefoxTest() throws Exception {
+		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("firefox");
+		log.info("ICE restart Firefox");
+		iceRestartAux(user);
+	}
+
+	private void iceRestartAux(OpenViduTestappUser user) throws Exception {
+		// Two participants that publish and subscribe to each other
+		user.getDriver().findElement(By.id("auto-join-checkbox")).click();
+		user.getDriver().findElement(By.id("one2one-btn")).click();
+		user.getEventManager().waitUntilEventReaches("trackSubscribed", "RoomEvent", 4);
+		WebElement remoteVideo = user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 video.remote"));
+		waitUntilSubscriberFramesDecodedIncrease(user, remoteVideo);
+
+		// The ICE credentials of the SFU in TestParticipant0's publisher PeerConnection
+		final JavascriptExecutor js = (JavascriptExecutor) user.getDriver();
+		final String publisher = "window['room_0'].localParticipant.engine.pcManager.publisher";
+		final String getSfuUfrag = "return " + publisher
+				+ "._pc.remoteDescription.sdp.match(/a=ice-ufrag:(\\S+)/)[1];";
+		final String sfuUfrag = (String) js.executeScript(getSfuUfrag);
+
+		// The ICE restart livekit-client does to resume a session
+		js.executeScript("window['room_0'].localParticipant.engine.pcManager.triggerIceRestart();");
+
+		// The SFU answers with new ICE credentials, the PeerConnection connects with
+		// them and TestParticipant1 keeps receiving TestParticipant0's media
+		user.getWaiter().until(d -> !sfuUfrag.equals(js.executeScript(getSfuUfrag)));
+		user.getWaiter()
+				.until(d -> "connected".equals(js.executeScript("return " + publisher + ".getConnectionState();")));
+		waitUntilSubscriberFramesDecodedIncrease(user, remoteVideo);
+		Assertions.assertEquals(0, user.getEventManager().getNumEvents("reconnecting-RoomEvent").get(),
+				"An ICE restart must not make livekit-client reconnect");
+		Assertions.assertEquals(0, user.getEventManager().getNumEvents("participantDisconnected-RoomEvent").get(),
+				"An ICE restart must not make any participant leave");
+
+		gracefullyLeaveParticipants(user, 2);
+	}
+
 	/**
 	 * Run room.simulateScenario(scenario) in the user's livekit-client and wait
 	 * for the reconnection it triggers, the given one since the user connected.
