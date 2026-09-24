@@ -943,15 +943,22 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 	/**
 	 * {@code videoOptimizations} means simulcast, dynacast and adaptiveStream
-	 * enabled for both users, as OpenVidu Meet has them, with a 1280x720 camera, so
-	 * the camera is published as three VP8 simulcast layers. Without them the camera
-	 * is a single 640x480 layer. Audio is the same in both cases (Opus with the
-	 * livekit-client defaults, DTX and RED).
+	 * enabled for both users with a 1280x720 camera, so the camera is published as
+	 * three VP8 simulcast layers. Without them the camera is a single 640x480
+	 * layer. Audio is the same in both cases (Opus with the livekit-client
+	 * defaults, DTX and RED).
+	 *
+	 * The unique room name is because livekit-server stores an ICE config cache
+	 * (`iceConfigCache`) of [roomName, participantIdentity] that can force a
+	 * participant to use TCP candidates during 5 minutes. Both room names and
+	 * participant identities can survive between different Room entities, so one
+	 * test could affect the next.
 	 */
 	private Pair<OpenViduTestappUser, OpenViduTestappUser> connectionQualityTest(boolean isPublisher,
 			boolean isSubscriber, Integer outboundPacketLoss, Integer inboundPacketLoss, boolean videoOptimizations)
 			throws Exception {
 
+		final String roomName = "ConnectionQuality" + System.currentTimeMillis();
 		final Integer width = videoOptimizations ? 1280 : null;
 		final Integer height = videoOptimizations ? 720 : null;
 
@@ -1006,6 +1013,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		WebElement participantNameInput = punchbagUser.getDriver().findElement(By.id("participant-name-input-0"));
 		participantNameInput.clear();
 		participantNameInput.sendKeys("PunchbagUser");
+		setConnectionQualityRoomName(punchbagUser, roomName);
 
 		punchbagUser.getDriver().findElement(By.cssSelector(".connect-btn")).sendKeys(Keys.ENTER);
 		try {
@@ -1048,6 +1056,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		participantNameInput = regularUser.getDriver().findElement(By.id("participant-name-input-0"));
 		participantNameInput.clear();
 		participantNameInput.sendKeys("RegularUser");
+		setConnectionQualityRoomName(regularUser, roomName);
 
 		regularUser.getDriver().findElement(By.cssSelector(".connect-btn")).sendKeys(Keys.ENTER);
 		if (isPublisher) {
@@ -1100,6 +1109,12 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		}
 
 		return new ImmutablePair<>(punchbagUser, regularUser);
+	}
+
+	private void setConnectionQualityRoomName(OpenViduTestappUser user, String roomName) {
+		WebElement roomNameInput = user.getDriver().findElement(By.id("room-name-input-0"));
+		roomNameInput.clear();
+		roomNameInput.sendKeys(roomName);
 	}
 
 	@Test
@@ -1217,10 +1232,10 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 	}
 
 	@Test
-	@DisplayName("ConnectionQuality LOST publisher with OpenVidu Meet media does not make its subscriber LOST")
-	void connectionQualityLostMeetPublisherSubscriberNotLostTest() throws Exception {
+	@DisplayName("ConnectionQuality LOST publisher with video optimizations enabled does not make its subscriber LOST")
+	void connectionQualityLostPublisherWithVideoOptimizationsSubscriberNotLostTest() throws Exception {
 
-		log.info("ConnectionQuality LOST publisher with OpenVidu Meet media does not make its subscriber LOST");
+		log.info("ConnectionQuality LOST publisher with video optimizations enabled does not make its subscriber LOST");
 
 		lostPublisherDoesNotMakeSubscriberLost(true);
 	}
@@ -1262,6 +1277,51 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		} finally {
 			NetworkConditioner.clear();
 		}
+
+		gracefullyLeaveParticipants(punchbagUser, 1);
+	}
+
+	@Test
+	@DisplayName("ConnectionQuality short publisher outage keeps its session")
+	void connectionQualityShortPublisherOutageKeepsSessionTest() throws Exception {
+
+		log.info("ConnectionQuality short publisher outage keeps its session");
+
+		final int OUTAGE_SECONDS = 18;
+
+		// PunchbagUser publishes with video optimizations and RegularUser only
+		// subscribes to it
+		Pair<OpenViduTestappUser, OpenViduTestappUser> users = connectionQualityTest(true, false, null, null, true);
+		OpenViduTestappUser punchbagUser = users.getLeft();
+		OpenViduTestappUser regularUser = users.getRight();
+
+		// Cut the publisher's media uplink for a while, keeping its signaling up: a
+		// short network outage on the publisher's side. Its quality may well go LOST,
+		// but once the network is back its session must go on (resumed, not left and
+		// joined again)
+		NetworkConditioner.blackoutOutbound(getNetemContainerName(punchbagUser), "7900-7999", OUTAGE_SECONDS);
+		try {
+			Thread.sleep(OUTAGE_SECONDS * 1000L);
+		} finally {
+			NetworkConditioner.clear();
+		}
+
+		waitUntilConnectionQuality(regularUser, 0, "PunchbagUser", q -> q.contains("good") || q.contains("excellent"),
+				45, "Expected the publisher's connection quality to RECOVER after the outage");
+		// livekit-client (>= 2.22) does a full reconnect 10 s after its own quality is
+		// LOST, unless a better quality arrives first: leave time for a late one
+		Thread.sleep(15000);
+
+		int participantDisconnected = regularUser.getEventManager().getNumEvents("participantDisconnected-RoomEvent")
+				.get();
+		Assertions.assertEquals(0, participantDisconnected,
+				"PunchbagUser left and joined again after a " + OUTAGE_SECONDS + " s outage instead of keeping its "
+						+ "session (localTrackPublished: "
+						+ punchbagUser.getEventManager().getNumEvents("localTrackPublished-RoomEvent").get()
+						+ ", reconnecting: "
+						+ punchbagUser.getEventManager().getNumEvents("reconnecting-RoomEvent").get()
+						+ ", reconnected: "
+						+ punchbagUser.getEventManager().getNumEvents("reconnected-RoomEvent").get() + ")");
 
 		gracefullyLeaveParticipants(punchbagUser, 1);
 	}
