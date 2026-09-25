@@ -1043,12 +1043,12 @@ Parameters:
     ConstraintDescription: You must specify a list of subnet IDs
 
   LoadBalancerSubnets:
-    Description: "(Optional) Public subnets for the internet-facing Load Balancer. Leave empty to place the Load Balancer in the OpenViduMasterNodeSubnets (default behavior). Set it to dedicated public subnets to keep the Master Nodes in private subnets with NAT egress."
+    Description: "(Optional) Public subnets for the internet-facing Load Balancer. Leave empty to place the Load Balancer in the OpenViduMasterNodeSubnets (default behavior). Set it to dedicated public subnets to keep the Master Nodes in private subnets with outbound internet access (for example, a NAT gateway)."
     Type: CommaDelimitedList
     Default: ""
 
   TurnDomainName:
-    Description: "(Optional) Domain for a dedicated TURN Load Balancer in front of the Media Nodes. Set it (with TurnCertificateARN) when the Media Nodes run in private subnets, so media is relayed by the Media Nodes instead of the Master Nodes. Point it (A/ALIAS) to the TurnLoadBalancerDNS output."
+    Description: "(Optional) Domain for TURN over TLS, served by a dedicated TURN Load Balancer that forwards it directly to the Media Nodes instead of through the Master Nodes. Set it together with TurnCertificateARN and point it (A/ALIAS) to the TurnLoadBalancerDNS output."
     Type: String
     Default: ""
 
@@ -1336,6 +1336,7 @@ Resources:
       Role: !GetAtt LambdaExecutionRole.Arn
       Code:
         ZipFile: |
+          import boto3
           import cfnresponse
 
           def lambda_handler(event, context):
@@ -1353,6 +1354,16 @@ Resources:
                       'Subnet3': subnets[2],
                       'Subnet4': subnets[3],
                   }
+
+                  # Media Nodes are private when their subnets do not assign public IPs
+                  media_subnets = event['ResourceProperties'].get('MediaSubnets', [])
+                  media_private = 'false'
+                  if event['RequestType'] != 'Delete' and media_subnets:
+                      described = boto3.client('ec2').describe_subnets(SubnetIds=media_subnets)['Subnets']
+                      if any(not s.get('MapPublicIpOnLaunch', False) for s in described):
+                          media_private = 'true'
+                  responseData['MediaNodesPrivate'] = media_private
+
                   cfnresponse.send(event, context, cfnresponse.SUCCESS, responseData)
 
               except Exception as e:
@@ -1367,6 +1378,7 @@ Resources:
     Properties:
       ServiceToken: !GetAtt SubnetProcessorFunction.Arn
       Subnets: !Ref OpenViduMasterNodeSubnets
+      MediaSubnets: !Ref OpenViduMediaNodeSubnets
 
   LambdaLogGroup:
     UpdateReplacePolicy: Retain
@@ -1397,6 +1409,10 @@ Resources:
                   - logs:CreateLogStream
                   - logs:PutLogEvents
                 Resource: !Sub 'arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/SubnetProcessor-${AWS::Region}-${AWS::StackName}:*'
+              - Effect: Allow
+                Action:
+                  - ec2:DescribeSubnets
+                Resource: '*'
 
   OpenViduMasterNodeRole:
     Type: AWS::IAM::Role
@@ -1848,6 +1864,59 @@ Resources:
               mode: '000755'
               owner: root
               group: root
+            '/usr/local/bin/registry_mirror.sh':
+              content: !Sub |
+                #!/bin/bash
+                set -e
+                # Pull-through cache of Docker Hub for the Media Nodes. Only when the Media Nodes are
+                # in private subnets: they all reach Docker Hub from the same NAT IP, and Docker Hub
+                # rate-limits anonymous pulls per IP. Media Nodes with a public IP pull directly.
+                if [[ "${SubnetProcessor.MediaNodesPrivate}" != "true" ]]; then
+                  exit 0
+                fi
+                REGISTRY_VERSION=v3.1.2
+                ARCH="$(dpkg --print-architecture)"
+                curl -fsSL --retry 8 --retry-all-errors --retry-delay 5 -o /tmp/registry.tar.gz \
+                  "https://github.com/distribution/distribution/releases/download/${!REGISTRY_VERSION}/registry_${!REGISTRY_VERSION#v}_linux_${!ARCH}.tar.gz"
+                tar xzf /tmp/registry.tar.gz -C /usr/local/bin registry
+                rm -f /tmp/registry.tar.gz
+                mkdir -p /etc/registry-mirror /var/lib/registry-mirror
+                cat > /etc/registry-mirror/config.yml <<'EOF'
+                version: 0.1
+                log:
+                  level: info
+                storage:
+                  filesystem:
+                    rootdirectory: /var/lib/registry-mirror
+                  delete:
+                    enabled: true
+                http:
+                  addr: :5555
+                proxy:
+                  remoteurl: https://registry-1.docker.io
+                  ttl: 168h
+                EOF
+                cat > /etc/systemd/system/registry-mirror.service <<'EOF'
+                [Unit]
+                Description=Docker Hub pull-through cache for the OpenVidu Media Nodes
+                After=network-online.target
+                Wants=network-online.target
+
+                [Service]
+                # No OpenTelemetry collector: do not export traces
+                Environment=OTEL_TRACES_EXPORTER=none
+                ExecStart=/usr/local/bin/registry serve /etc/registry-mirror/config.yml
+                Restart=always
+                RestartSec=5
+
+                [Install]
+                WantedBy=multi-user.target
+                EOF
+                systemctl daemon-reload
+                systemctl enable --now registry-mirror
+              mode: "000755"
+              owner: "root"
+              group: "root"
             '/usr/local/bin/config_s3.sh':
               content: !Sub
                 - |
@@ -2186,6 +2255,9 @@ Resources:
 
           cfn-init -v --region ${AWS::Region} --stack ${AWS::StackName} --resource OpenViduMasterLaunchTemplate
 
+          # Registry mirror for Media Nodes in private subnets (not required: they fall back to Docker Hub)
+          /usr/local/bin/registry_mirror.sh || echo "[OpenVidu] registry mirror not started"
+
           export MASTER_NODE_NUM=1
 
           # Install OpenVidu
@@ -2264,6 +2336,9 @@ Resources:
           fi
 
           cfn-init -v --region ${AWS::Region} --stack ${AWS::StackName} --resource OpenViduMasterLaunchTemplate
+
+          # Registry mirror for Media Nodes in private subnets (not required: they fall back to Docker Hub)
+          /usr/local/bin/registry_mirror.sh || echo "[OpenVidu] registry mirror not started"
 
           export MASTER_NODE_NUM=2
 
@@ -2344,6 +2419,9 @@ Resources:
 
           cfn-init -v --region ${AWS::Region} --stack ${AWS::StackName} --resource OpenViduMasterLaunchTemplate
 
+          # Registry mirror for Media Nodes in private subnets (not required: they fall back to Docker Hub)
+          /usr/local/bin/registry_mirror.sh || echo "[OpenVidu] registry mirror not started"
+
           export MASTER_NODE_NUM=3
 
           # Install OpenVidu
@@ -2422,6 +2500,9 @@ Resources:
           fi
 
           cfn-init -v --region ${AWS::Region} --stack ${AWS::StackName} --resource OpenViduMasterLaunchTemplate
+
+          # Registry mirror for Media Nodes in private subnets (not required: they fall back to Docker Hub)
+          /usr/local/bin/registry_mirror.sh || echo "[OpenVidu] registry mirror not started"
 
           export MASTER_NODE_NUM=4
 
@@ -2565,6 +2646,10 @@ Resources:
                 MASTER_NODE_PRIVATE_IP_LIST="$MASTER_NODE_1_PRIVATE_IP,$MASTER_NODE_2_PRIVATE_IP,$MASTER_NODE_3_PRIVATE_IP,$MASTER_NODE_4_PRIVATE_IP"
                 REDIS_PASSWORD=$(echo "$SHARED_SECRET" | jq -r '.REDIS_PASSWORD')
 
+                # Registry mirror of the Master Nodes, before the installer pulls the images
+                /usr/local/bin/config_registry_mirror.sh "$MASTER_NODE_1_PRIVATE_IP" "$MASTER_NODE_2_PRIVATE_IP" "$MASTER_NODE_3_PRIVATE_IP" "$MASTER_NODE_4_PRIVATE_IP" \
+                  || echo "Registry mirror not configured: pulling from Docker Hub"
+
                 # Download first: sh <(curl ...) would silently run an empty script on a transient curl failure
                 INSTALLER_SCRIPT="/tmp/install_ov_media_node.sh"
                 curl -fsSL --retry 8 --retry-all-errors --retry-delay 5 -o "$INSTALLER_SCRIPT" "http://get.openvidu.io/pro/ha/$OPENVIDU_VERSION/install_ov_media_node.sh"
@@ -2594,6 +2679,56 @@ Resources:
               mode: '000755'
               owner: root
               group: root
+            '/usr/local/bin/config_registry_mirror.sh':
+              content: !Sub |
+                #!/bin/bash
+                set -e
+                # Pull Docker Hub images through the registry mirror of the Master Nodes
+                # (registry_mirror.sh), only when this Media Node has no public IP. Docker falls
+                # back to Docker Hub if no mirror answers.
+                # Usage: config_registry_mirror.sh <master-1-ip> <master-2-ip> <master-3-ip> <master-4-ip>
+                if [[ "${SubnetProcessor.MediaNodesPrivate}" != "true" ]]; then
+                  exit 0
+                fi
+                TOKEN="$(curl -sf -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 21600")"
+                if curl -sf -H "X-aws-ec2-metadata-token: $TOKEN" http://169.254.169.254/latest/meta-data/public-ipv4 > /dev/null; then
+                  exit 0
+                fi
+                MASTER_IPS=("$@")
+                # Wait up to 5 minutes for a mirror: on a new stack, the Master Nodes start it at boot
+                MIRROR_READY=false
+                for i in $(seq 1 60); do
+                  for MASTER_IP in "${!MASTER_IPS[@]}"; do
+                    if curl -sf --max-time 3 "http://$MASTER_IP:5555/v2/" > /dev/null; then
+                      MIRROR_READY=true
+                      break
+                    fi
+                  done
+                  if [[ "$MIRROR_READY" == "true" ]]; then
+                    break
+                  fi
+                  sleep 5
+                done
+                if [[ "$MIRROR_READY" != "true" ]]; then
+                  echo "No registry mirror answers in the Master Nodes: pulling from Docker Hub"
+                  exit 0
+                fi
+                MIRRORS="$(printf '%s:5555\n' "${!MASTER_IPS[@]}" | jq -R . | jq -s .)"
+                mkdir -p /etc/docker
+                if [[ ! -s /etc/docker/daemon.json ]]; then
+                  echo '{}' > /etc/docker/daemon.json
+                fi
+                jq --argjson m "$MIRRORS" \
+                  '."registry-mirrors" = ($m | map("http://" + .)) | ."insecure-registries" = ((."insecure-registries" // []) + $m | unique)' \
+                  /etc/docker/daemon.json > /etc/docker/daemon.json.tmp
+                mv /etc/docker/daemon.json.tmp /etc/docker/daemon.json
+                if systemctl is-active --quiet docker; then
+                  systemctl restart docker
+                fi
+                echo "Pulling Docker Hub images through: $(jq -c '."registry-mirrors"' /etc/docker/daemon.json)"
+              mode: "000755"
+              owner: "root"
+              group: "root"
             '/usr/local/bin/set_as_unhealthy.sh':
               content: !Sub |
                 #!/bin/bash
@@ -2988,6 +3123,15 @@ Resources:
       IpProtocol: tcp
       FromPort: 7880
       ToPort: 7880
+      SourceSecurityGroupId: !Ref OpenViduMediaNodeSG
+
+  OpenViduMediaNodeToMasterRegistryMirrorIngress:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !Ref OpenViduMasterNodeSG
+      IpProtocol: tcp
+      FromPort: 5555
+      ToPort: 5555
       SourceSecurityGroupId: !Ref OpenViduMediaNodeSG
 
   OpenViduMediaNodeToMasterRedisIngressSG:
@@ -3500,9 +3644,9 @@ Resources:
           Value: !Sub ${AWS::StackName} - OpenVidu HA - Master Target Group
 
   # Dedicated TURN Load Balancer (only when TurnDomainName + TurnCertificateARN are set).
-  # Terminates TLS on 443 and forwards to the Media Nodes' TURN TLS port 5349, so media
-  # of clients that cannot reach the Media Nodes directly is relayed by the Media Nodes
-  # themselves instead of going through the Master Nodes.
+  # Terminates TLS on 443 and forwards to the Media Nodes' TURN TLS port 5349, so TURN
+  # over TLS is relayed by the Media Nodes themselves instead of going through the
+  # Master Nodes.
   TurnLoadBalancerSG:
     Type: AWS::EC2::SecurityGroup
     Condition: TurnTLSIsEnabled
@@ -3589,6 +3733,9 @@ Outputs:
   ServicesAndCredentials:
     Description: Services and credentials
     Value: !Sub https://${AWS::Region}.console.aws.amazon.com/secretsmanager/home?region=${AWS::Region}#!/secret?name=openvidu-ha-${AWS::Region}-${AWS::StackName}
+  LoadBalancerDNS:
+    Description: DNS of the main Load Balancer - point DomainName (A/ALIAS) here
+    Value: !GetAtt LoadBalancer.DNSName
 
   TurnLoadBalancerDNS:
     Condition: TurnTLSIsEnabled
