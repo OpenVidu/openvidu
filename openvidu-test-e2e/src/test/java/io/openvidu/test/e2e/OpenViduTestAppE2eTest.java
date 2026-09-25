@@ -2819,10 +2819,18 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 	}
 
 	private void forceCodec(OpenViduTestappUser user, int numberOfUser, String codec) throws InterruptedException {
+		forceCodec(user, numberOfUser, codec, true);
+	}
+
+	private void forceCodec(OpenViduTestappUser user, int numberOfUser, String codec, boolean disableBackupCodec)
+			throws InterruptedException {
 		String codecLowerCase = codec.toLowerCase();
 		this.waitAndClick(user, "#room-options-btn-" + numberOfUser);
 		Thread.sleep(300);
-		user.getDriver().findElement(By.id("trackPublish-backupCodec")).click();
+		if (disableBackupCodec) {
+			// Enabled by default
+			user.getDriver().findElement(By.id("trackPublish-backupCodec")).click();
+		}
 		user.getDriver().findElement(By.id("trackPublish-videoCodec")).click();
 		this.waitAndClick(user, "#mat-option-" + codecLowerCase);
 		this.waitAndClick(user, "#close-dialog-btn");
@@ -2837,24 +2845,17 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 	}
 
 	@Test
-	@DisplayName("Firefox subscribe to H264")
-	void firefoxSubscribeToH264Test() throws Exception {
-		log.info("Firefox subscribe to H264");
-		firefoxSubscribeToCodecTest("h264", false);
-	}
-
-	@Test
-	@DisplayName("Firefox subscribe to VP9")
-	void firefoxSubscribeToVP9Test() throws Exception {
-		log.info("Firefox subscribe to VP9");
-		firefoxSubscribeToCodecTest("vp9", false);
-	}
-
-	@Test
 	@DisplayName("Firefox subscribe to VP8 simulcast")
 	void firefoxSubscribeToVP8SimulcastTest() throws Exception {
 		log.info("Firefox subscribe to VP8 simulcast");
 		firefoxSubscribeToCodecTest("vp8", true);
+	}
+
+	@Test
+	@DisplayName("Firefox subscribe to H264")
+	void firefoxSubscribeToH264Test() throws Exception {
+		log.info("Firefox subscribe to H264");
+		firefoxSubscribeToCodecTest("h264", false);
 	}
 
 	@Test
@@ -2865,13 +2866,51 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 	}
 
 	@Test
-	@DisplayName("Firefox subscribe to VP9 simulcast")
-	void firefoxSubscribeToVP9SimulcastTest() throws Exception {
-		log.info("Firefox subscribe to VP9 simulcast");
-		firefoxSubscribeToCodecTest("vp9", true);
+	@DisplayName("Firefox subscribe to VP9 without SVC")
+	void firefoxSubscribeToVP9Test() throws Exception {
+		log.info("Firefox subscribe to VP9 without SVC");
+		firefoxSubscribeToCodecTest("vp9", false, "L1T1", false, List.of("video/VP9"));
+	}
+
+	@Test
+	@DisplayName("Firefox subscribe to VP9 with SVC")
+	void firefoxSubscribeToVP9SvcTest() throws Exception {
+		log.info("Firefox subscribe to VP9 with SVC");
+		firefoxSubscribeToCodecTest("vp9", false, "L3T3_KEY", false, List.of("video/VP9"));
+	}
+
+	@Test
+	@DisplayName("Firefox subscribe to AV1 without SVC")
+	void firefoxSubscribeToAV1Test() throws Exception {
+		log.info("Firefox subscribe to AV1 without SVC");
+		firefoxSubscribeToCodecTest("av1", false, "L1T1", false, List.of("video/AV1"));
+	}
+
+	@Test
+	@DisplayName("Firefox subscribe to AV1 with SVC")
+	void firefoxSubscribeToAV1SvcTest() throws Exception {
+		log.info("Firefox subscribe to AV1 with SVC");
+		firefoxSubscribeToCodecTest("av1", false, "L3T3_KEY", false, List.of("video/AV1"));
+	}
+
+	/**
+	 * Firefox negotiates AV1 but cannot decode AV1 SVC (Bugzilla 1571470), which
+	 * is what an AV1 simulcast publication is: it must receive the publisher's
+	 * VP8 backup codec instead, or AV1 once it decodes SVC
+	 */
+	@Test
+	@DisplayName("Firefox subscribe to AV1 SVC with backup codec")
+	void firefoxSubscribeToAV1SvcWithBackupCodecTest() throws Exception {
+		log.info("Firefox subscribe to AV1 SVC with backup codec");
+		firefoxSubscribeToCodecTest("av1", true, "L3T3_KEY", true, List.of("video/VP8", "video/AV1"));
 	}
 
 	private void firefoxSubscribeToCodecTest(String codec, boolean simulcast) throws Exception {
+		firefoxSubscribeToCodecTest(codec, simulcast, null, false, List.of("video/" + codec.toUpperCase()));
+	}
+
+	private void firefoxSubscribeToCodecTest(String codec, boolean simulcast, String scalabilityMode,
+			boolean backupCodec, List<String> expectedSubscriberCodecs) throws Exception {
 		final String expectedCodec = "video/" + codec.toUpperCase();
 		final CountDownLatch latch = new CountDownLatch(2);
 		ExecutorService executor = Executors.newFixedThreadPool(2);
@@ -2879,11 +2918,11 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		Future<?> task1 = executor.submit(() -> {
 			try {
 				OpenViduTestappUser chromeUser = setupBrowserAndConnectToOpenViduTestapp("chrome");
-				this.addOnlyPublisherVideo(chromeUser, simulcast, false, false);
+				this.addPublisher(chromeUser, false, simulcast, false, false, false, true, null, null, scalabilityMode);
 				WebElement participantNameInput = chromeUser.getDriver().findElement(By.id("participant-name-input-0"));
 				participantNameInput.clear();
 				participantNameInput.sendKeys("CHROME_USER");
-				this.forceCodec(chromeUser, 0, codec);
+				this.forceCodec(chromeUser, 0, codec, !backupCodec);
 				chromeUser.getDriver().findElement(By.className("connect-btn")).click();
 				chromeUser.getEventManager().waitUntilEventReaches("localTrackSubscribed", "ParticipantEvent", 1, 120,
 						true);
@@ -2920,7 +2959,9 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 				WebElement subscriberVideo = firefoxUser.getDriver()
 						.findElement(By.cssSelector("#openvidu-instance-0 video.remote"));
 				String subscriberCodec = this.getSubscriberVideoCodec(firefoxUser, subscriberVideo);
-				Assertions.assertEquals(expectedCodec, subscriberCodec);
+				Assertions.assertTrue(expectedSubscriberCodecs.contains(subscriberCodec),
+						"Expected the Firefox subscriber to receive one of " + expectedSubscriberCodecs + ", but got "
+								+ subscriberCodec);
 				this.waitUntilSubscriberFramesDecodedIncrease(firefoxUser, subscriberVideo);
 				latch.countDown();
 				latch.await(10, TimeUnit.SECONDS);
