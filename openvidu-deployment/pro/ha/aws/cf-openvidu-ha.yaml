@@ -1047,6 +1047,16 @@ Parameters:
     Type: CommaDelimitedList
     Default: ""
 
+  TurnDomainName:
+    Description: "(Optional) Domain for a dedicated TURN Load Balancer in front of the Media Nodes. Set it (with TurnCertificateARN) when the Media Nodes run in private subnets, so media is relayed by the Media Nodes instead of the Master Nodes. Point it (A/ALIAS) to the TurnLoadBalancerDNS output."
+    Type: String
+    Default: ""
+
+  TurnCertificateARN:
+    Description: "(Optional) ACM certificate ARN for TurnDomainName, used on the TURN Load Balancer 443 TLS listener."
+    Type: String
+    Default: ""
+
   MasterNodesDiskSize:
     Description: Size of the disk in GB
     Type: Number
@@ -1062,6 +1072,8 @@ Metadata:
         Parameters:
           - DomainName
           - OpenViduCertificateARN
+          - TurnDomainName
+          - TurnCertificateARN
       - Label:
           default: OpenVidu High Availability configuration
         Parameters:
@@ -1111,6 +1123,7 @@ Conditions:
   CreateRecordingsBucket: !Equals [!Ref S3AppDataBucketName, ""]
   CreateClusterDataBucket: !Equals [!Ref S3ClusterDataBucketName, ""]
   HasLoadBalancerSubnets: !Not [!Equals [!Join ["", !Ref LoadBalancerSubnets], ""]]
+  TurnTLSIsEnabled: !And [!Not [!Equals [!Ref TurnDomainName, ""]], !Not [!Equals [!Ref TurnCertificateARN, ""]]]
   IsMasterGraviton: !Or
     - !Equals [ !Select [ 0, !Split ['.', !Ref MasterNodeInstanceType ]], 't4g']
     - !Equals [ !Select [ 0, !Split ['.', !Ref MasterNodeInstanceType ]], 'c6g']
@@ -1818,6 +1831,12 @@ Resources:
                       COMMON_ARGS+=("$extra_flag")
                     fi
                   done
+                fi
+
+                # Dedicated TURN Load Balancer (only when TurnDomainName and TurnCertificateARN are set,
+                # the same condition as the TURN Load Balancer resources)
+                if [[ "${TurnDomainName}" != "" && "${TurnCertificateARN}" != "" ]]; then
+                  COMMON_ARGS+=("--turn-domain-name=${TurnDomainName}")
                 fi
 
                 # Construct the final command
@@ -2744,6 +2763,7 @@ Resources:
         Version: !GetAtt OpenViduMediaNodeLaunchTemplate.DefaultVersionNumber
       TargetGroupARNs:
         - !Ref OpenViduMediaNodeRTMPTG
+        - !If [TurnTLSIsEnabled, !Ref OpenViduTurnMediaNodeTG, !Ref AWS::NoValue]
       MinSize: !Ref MinNumberOfMediaNodes
       MaxSize: !Ref MaxNumberOfMediaNodes
       DesiredCapacity: !Ref InitialNumberOfMediaNodes
@@ -3325,7 +3345,7 @@ Resources:
     Properties:
       DefaultActions:
         - Type: forward
-          TargetGroupArn: !Ref OpenViduMasterNodeWithTurnTLSTG
+          TargetGroupArn: !If [TurnTLSIsEnabled, !Ref OpenViduMasterNodeTG, !Ref OpenViduMasterNodeWithTurnTLSTG]
       LoadBalancerArn: !Ref LoadBalancer
       Port: 443
       Protocol: TLS
@@ -3444,7 +3464,133 @@ Resources:
         - Key: Name
           Value: !Sub ${AWS::StackName} - OpenVidu HA - RTMP Target Group
 
+  # Master Node HTTP (Caddy 7880) for the main 443 listener when TurnDomainName is set.
+  OpenViduMasterNodeTG:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Condition: TurnTLSIsEnabled
+    Properties:
+      Name:
+        Fn::Join:
+          - ''
+          - - OpenVidu-
+            - !Select [4, !Split ['-', !Select [2, !Split ['/', !Ref AWS::StackId]]]]
+      TargetType: instance
+      Targets:
+        - Id: !Ref OpenViduMasterNode1
+        - Id: !Ref OpenViduMasterNode2
+        - Id: !Ref OpenViduMasterNode3
+        - Id: !Ref OpenViduMasterNode4
+      VpcId: !Ref OpenViduVPC
+      Port: 7880
+      Protocol: TCP
+      Matcher:
+        HttpCode: '200'
+      HealthCheckIntervalSeconds: 10
+      HealthCheckPath: /health/caddy
+      HealthCheckProtocol: HTTP
+      HealthCheckPort: '7880'
+      HealthCheckTimeoutSeconds: 5
+      HealthyThresholdCount: 3
+      UnhealthyThresholdCount: 4
+      TargetGroupAttributes:
+        - Key: deregistration_delay.timeout_seconds
+          Value: 60
+      Tags:
+        - Key: Name
+          Value: !Sub ${AWS::StackName} - OpenVidu HA - Master Target Group
+
+  # Dedicated TURN Load Balancer (only when TurnDomainName + TurnCertificateARN are set).
+  # Terminates TLS on 443 and forwards to the Media Nodes' TURN TLS port 5349, so media
+  # of clients that cannot reach the Media Nodes directly is relayed by the Media Nodes
+  # themselves instead of going through the Master Nodes.
+  TurnLoadBalancerSG:
+    Type: AWS::EC2::SecurityGroup
+    Condition: TurnTLSIsEnabled
+    Properties:
+      GroupDescription: Security group for the dedicated TURN Load Balancer
+      GroupName: !Sub openvidu-ha-turn-lb-sg-${AWS::Region}-${AWS::StackName}
+      VpcId: !Ref OpenViduVPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIpv6: ::/0
+
+  TurnLoadBalancerToMediaNode5349Ingress:
+    Type: AWS::EC2::SecurityGroupIngress
+    Condition: TurnTLSIsEnabled
+    Properties:
+      GroupId: !Ref OpenViduMediaNodeSG
+      IpProtocol: tcp
+      FromPort: 5349
+      ToPort: 5349
+      SourceSecurityGroupId: !Ref TurnLoadBalancerSG
+
+  TurnLoadBalancer:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Condition: TurnTLSIsEnabled
+    Properties:
+      Name:
+        Fn::Join:
+          - ''
+          - - OpenViduHA-Turn-
+            - !Select [4, !Split ['-', !Select [2, !Split ['/', !Ref AWS::StackId]]]]
+      Subnets: !If [HasLoadBalancerSubnets, !Ref LoadBalancerSubnets, !Ref OpenViduMediaNodeSubnets]
+      SecurityGroups:
+        - !Ref TurnLoadBalancerSG
+      Type: network
+      Tags:
+        - Key: Name
+          Value: !Sub ${AWS::StackName} - OpenVidu HA - TURN Load Balancer
+
+  OpenViduTurnMediaNodeTG:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Condition: TurnTLSIsEnabled
+    Properties:
+      Name:
+        Fn::Join:
+          - ''
+          - - OVTurnMedia-
+            - !Select [4, !Split ['-', !Select [2, !Split ['/', !Ref AWS::StackId]]]]
+      VpcId: !Ref OpenViduVPC
+      Port: 5349
+      Protocol: TCP
+      HealthCheckProtocol: TCP
+      HealthCheckPort: '5349'
+      HealthCheckIntervalSeconds: 10
+      HealthCheckTimeoutSeconds: 5
+      HealthyThresholdCount: 3
+      UnhealthyThresholdCount: 4
+      TargetGroupAttributes:
+        - Key: deregistration_delay.timeout_seconds
+          Value: 60
+      Tags:
+        - Key: Name
+          Value: !Sub ${AWS::StackName} - OpenVidu HA - TURN Media Target Group
+
+  TurnMediaNodeListener:
+    Type: 'AWS::ElasticLoadBalancingV2::Listener'
+    Condition: TurnTLSIsEnabled
+    Properties:
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref OpenViduTurnMediaNodeTG
+      LoadBalancerArn: !Ref TurnLoadBalancer
+      Port: 443
+      Protocol: TLS
+      Certificates:
+        - CertificateArn: !Ref TurnCertificateARN
+
 Outputs:
   ServicesAndCredentials:
     Description: Services and credentials
     Value: !Sub https://${AWS::Region}.console.aws.amazon.com/secretsmanager/home?region=${AWS::Region}#!/secret?name=openvidu-ha-${AWS::Region}-${AWS::StackName}
+
+  TurnLoadBalancerDNS:
+    Condition: TurnTLSIsEnabled
+    Description: DNS of the dedicated TURN Load Balancer - point TurnDomainName (A/ALIAS) here
+    Value: !GetAtt TurnLoadBalancer.DNSName
