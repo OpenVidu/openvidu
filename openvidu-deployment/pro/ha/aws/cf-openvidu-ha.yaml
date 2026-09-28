@@ -1701,7 +1701,63 @@ Resources:
                   LIVEKIT_API_KEY="$(/usr/local/bin/store_secret.sh generate LIVEKIT_API_KEY "API" 12)"
                   LIVEKIT_API_SECRET="$(/usr/local/bin/store_secret.sh generate LIVEKIT_API_SECRET)"
                   ENABLED_MODULES="$(/usr/local/bin/store_secret.sh save ENABLED_MODULES "observability,v2compatibility,openviduMeet")"
-                  ALL_SECRETS_GENERATED="$(/usr/local/bin/store_secret.sh save ALL_SECRETS_GENERATED "true")"
+
+                  # Every store_secret.sh call above is a read-modify-write of the whole JSON, and a read
+                  # right after a write can still return the previous version (eventual consistency): the
+                  # key written a moment earlier is then silently dropped (seen live: LIVEKIT_API_KEY back
+                  # to "none", every master waiting 5 minutes on an incomplete secret and failing). So
+                  # write the complete set once more from the values above, together with
+                  # ALL_SECRETS_GENERATED, and read it back until all of it is really there.
+                  SECRETS_WANTED="$(jq -n \
+                    --arg DOMAIN_NAME "${!DOMAIN}" \
+                    --arg OPENVIDU_URL "https://${!DOMAIN}/" \
+                    --arg LIVEKIT_URL "wss://${!DOMAIN}/" \
+                    --arg DASHBOARD_URL "https://${!DOMAIN}/dashboard/" \
+                    --arg GRAFANA_URL "https://${!DOMAIN}/grafana/" \
+                    --arg MINIO_URL "https://${!DOMAIN}/minio-console/" \
+                    --arg OPENVIDU_PRO_LICENSE "${!OPENVIDU_PRO_LICENSE}" \
+                    --arg OPENVIDU_RTC_ENGINE "${!OPENVIDU_RTC_ENGINE}" \
+                    --arg OPENVIDU_VERSION "${!OPENVIDU_VERSION}" \
+                    --arg MEET_INITIAL_ADMIN_USER "${!MEET_INITIAL_ADMIN_USER}" \
+                    --arg MEET_INITIAL_ADMIN_PASSWORD "${!MEET_INITIAL_ADMIN_PASSWORD}" \
+                    --arg MEET_INITIAL_API_KEY "${!MEET_INITIAL_API_KEY}" \
+                    --arg REDIS_PASSWORD "${!REDIS_PASSWORD}" \
+                    --arg MONGO_ADMIN_USERNAME "${!MONGO_ADMIN_USERNAME}" \
+                    --arg MONGO_ADMIN_PASSWORD "${!MONGO_ADMIN_PASSWORD}" \
+                    --arg MONGO_REPLICA_SET_KEY "${!MONGO_REPLICA_SET_KEY}" \
+                    --arg MINIO_ACCESS_KEY "${!MINIO_ACCESS_KEY}" \
+                    --arg MINIO_SECRET_KEY "${!MINIO_SECRET_KEY}" \
+                    --arg DASHBOARD_ADMIN_USERNAME "${!DASHBOARD_ADMIN_USERNAME}" \
+                    --arg DASHBOARD_ADMIN_PASSWORD "${!DASHBOARD_ADMIN_PASSWORD}" \
+                    --arg GRAFANA_ADMIN_USERNAME "${!GRAFANA_ADMIN_USERNAME}" \
+                    --arg GRAFANA_ADMIN_PASSWORD "${!GRAFANA_ADMIN_PASSWORD}" \
+                    --arg LIVEKIT_API_KEY "${!LIVEKIT_API_KEY}" \
+                    --arg LIVEKIT_API_SECRET "${!LIVEKIT_API_SECRET}" \
+                    --arg ENABLED_MODULES "${!ENABLED_MODULES}" \
+                    --arg ALL_SECRETS_GENERATED "true" \
+                    '$ARGS.named')"
+                  SECRETS_VERIFIED=false
+                  for SECRETS_WRITE_ATTEMPT in $(seq 1 30); do
+                    CURRENT_SECRET="$(aws secretsmanager get-secret-value \
+                      --region ${AWS::Region} \
+                      --secret-id openvidu-ha-${AWS::Region}-${AWS::StackName} \
+                      --query SecretString --output text)"
+                    if echo "$CURRENT_SECRET" | jq -e --argjson want "$SECRETS_WANTED" \
+                        '. as $cur | $want | to_entries | all(.value == $cur[.key])' > /dev/null; then
+                      SECRETS_VERIFIED=true
+                      break
+                    fi
+                    aws secretsmanager update-secret \
+                      --region ${AWS::Region} \
+                      --secret-id openvidu-ha-${AWS::Region}-${AWS::StackName} \
+                      --secret-string "$(echo "$CURRENT_SECRET" | jq --argjson want "$SECRETS_WANTED" '. + $want')" > /dev/null 2>&1
+                    sleep 2
+                  done
+                  if [[ "$SECRETS_VERIFIED" != "true" ]]; then
+                    echo "Error: the shared secret could not be verified complete after 30 writes"
+                    exit 1
+                  fi
+                  ALL_SECRETS_GENERATED="true"
                 fi
 
                 # Fetch the shared secret again, waiting until master-1 has generated all secrets.
