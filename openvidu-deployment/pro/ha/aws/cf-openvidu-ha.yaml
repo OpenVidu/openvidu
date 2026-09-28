@@ -1880,7 +1880,7 @@ Resources:
                   "https://github.com/distribution/distribution/releases/download/${!REGISTRY_VERSION}/registry_${!REGISTRY_VERSION#v}_linux_${!ARCH}.tar.gz"
                 tar xzf /tmp/registry.tar.gz -C /usr/local/bin registry
                 rm -f /tmp/registry.tar.gz
-                mkdir -p /etc/registry-mirror /var/lib/registry-mirror
+                mkdir -p /etc/registry-mirror
                 cat > /etc/registry-mirror/config.yml <<'EOF'
                 version: 0.1
                 log:
@@ -1906,6 +1906,20 @@ Resources:
                 # No OpenTelemetry collector: do not export traces
                 Environment=OTEL_TRACES_EXPORTER=none
                 ExecStart=/usr/local/bin/registry serve /etc/registry-mirror/config.yml
+                # Unprivileged: a transient user that can only write its own cache
+                # (/var/lib/registry-mirror); 5555 needs no capabilities
+                DynamicUser=yes
+                StateDirectory=registry-mirror
+                CapabilityBoundingSet=
+                PrivateDevices=yes
+                ProtectKernelTunables=yes
+                ProtectKernelModules=yes
+                ProtectControlGroups=yes
+                RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+                RestrictNamespaces=yes
+                LockPersonality=yes
+                SystemCallArchitectures=native
+                SystemCallFilter=@system-service
                 Restart=always
                 RestartSec=5
 
