@@ -36,7 +36,7 @@ param openviduLicense string
   'pion'
   'mediasoup'
 ])
-param rtcEngine string = 'pion'
+param rtcEngine string = 'mediasoup'
 
 @description('Initial password for the \'admin\' user in OpenVidu Meet. If not provided, a random password will be generated.')
 @secure()

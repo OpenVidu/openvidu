@@ -44,7 +44,7 @@ param openviduLicense string
   'pion'
   'mediasoup'
 ])
-param rtcEngine string = 'pion'
+param rtcEngine string = 'mediasoup'
 
 // Azure instance config
 @description('Specifies the azure vm size for your OpenVidu instance. You can use any valid Azure VM size (e.g., Standard_B4s, Standard_D4s_v5, Standard_E4ps_v5). See https://learn.microsoft.com/en-us/azure/virtual-machines/sizes for available sizes.')

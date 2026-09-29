@@ -106,7 +106,7 @@ variable "openviduLicense" {
 variable "RTCEngine" {
   description = "RTCEngine media engine to use. Allowed values are 'pion' and 'mediasoup'."
   type        = string
-  default     = "pion"
+  default     = "mediasoup"
   validation {
     condition     = contains(["pion", "mediasoup"], var.RTCEngine)
     error_message = "RTCEngine must be one of: pion, mediasoup"

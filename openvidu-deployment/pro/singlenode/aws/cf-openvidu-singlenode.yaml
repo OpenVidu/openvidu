@@ -74,7 +74,7 @@ Parameters:
     AllowedValues:
       - pion
       - mediasoup
-    Default: pion
+    Default: mediasoup
 
   # EC2 Instance configuration
   InstanceType:

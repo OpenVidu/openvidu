@@ -152,7 +152,7 @@ services:
             rtc:
                 # WebRTC engine selection
                 # Values: pion, mediasoup
-                engine: ${RTC_ENGINE:-pion}
+                engine: ${RTC_ENGINE:-mediasoup}
             mediasoup:
                 # Global toggle to enable debugging logs from mediasoup.
                 # In most debugging cases, using just an asterisk ("*") here is enough,

@@ -27,7 +27,7 @@ Parameters:
     AllowedValues:
       - pion
       - mediasoup
-    Default: pion
+    Default: mediasoup
 
   MasterNodeInstanceType:
     Description: "Specifies the EC2 instance type for your OpenVidu Master Node"

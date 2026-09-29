@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.46.1.21595",
-      "templateHash": "10392120801247158281"
+      "templateHash": "9754478578006111917"
     }
   },
   "parameters": {
@@ -78,7 +78,7 @@
     },
     "rtcEngine": {
       "type": "string",
-      "defaultValue": "pion",
+      "defaultValue": "mediasoup",
       "allowedValues": [
         "pion",
         "mediasoup"

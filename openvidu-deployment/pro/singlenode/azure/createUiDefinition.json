@@ -231,7 +231,7 @@
                             "type": "Microsoft.Common.DropDown",
                             "label": "Rtc Engine",
                             "subLabel": "RTCEngine media engine to use",
-                            "defaultValue": "pion",
+                            "defaultValue": "mediasoup",
                             "toolTip": "",
                             "constraints": {
                                 "required": false,
