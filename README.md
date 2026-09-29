@@ -1,12 +1,10 @@
 [![Backers on Open Collective](https://opencollective.com/openvidu/backers/badge.svg)](#backers) [![Sponsors on Open Collective](https://opencollective.com/openvidu/sponsors/badge.svg)](#sponsors)
 [![License badge](https://img.shields.io/badge/license-Apache2-orange.svg)](http://www.apache.org/licenses/LICENSE-2.0)
-[![OpenVidu Tests](https://github.com/OpenVidu/openvidu/actions/workflows/openvidu-ce-test.yml/badge.svg)](https://github.com/OpenVidu/openvidu/actions/workflows/openvidu-ce-test.yml)
-[![Npm version](https://img.shields.io/npm/v/openvidu-browser?label=npm-version)](https://npmjs.org/package/openvidu-browser)
-[![Npm downloads](https://img.shields.io/npm/dw/openvidu-browser?label=npm2-downloads)](https://npmjs.org/package/openvidu-browser)
 
 
-[![Documentation Status](https://readthedocs.org/projects/openvidu/badge/?version=stable)](https://docs.openvidu.io/en/stable/?badge=stable)
-[![Docker badge](https://img.shields.io/docker/pulls/openvidu/openvidu-server-kms.svg)](https://hub.docker.com/r/openvidu/openvidu-server-kms)
+[![Documentation](https://img.shields.io/badge/docs-openvidu.io-blue)](https://openvidu.io/latest/docs/)
+[![openvidu-server version](https://img.shields.io/docker/v/openvidu/openvidu-server?sort=semver&label=openvidu-server)](https://hub.docker.com/r/openvidu/openvidu-server/tags)
+[![Docker badge](https://img.shields.io/docker/pulls/openvidu/openvidu-server.svg)](https://hub.docker.com/r/openvidu/openvidu-server)
 [![Support badge](https://img.shields.io/badge/support-sof-yellowgreen.svg)](https://openvidu.discourse.group/)
 [![Twitter Follow](https://img.shields.io/twitter/follow/openvidu.svg?style=social)](https://twitter.com/openvidu)
 
@@ -19,15 +17,39 @@ Visit [openvidu.io](https://openvidu.io)
 
 ## What is OpenVidu?
 
-OpenVidu is a platform for building real-time video conferencing applications.
-It's built on top of [LiveKit](https://livekit.io) and [mediasoup](https://mediasoup.org),
-and is developed by a team with over a decade of experience building WebRTC systems.
+OpenVidu is a self-hosted real-time video and audio stack, built on top of
+[LiveKit](https://livekit.io) and [mediasoup](https://mediasoup.org), and developed by a team
+with over a decade of experience building WebRTC systems. It ships as two products:
 
-- **Self-hosted**: deploy it on your own infrastructure (AWS, GCP, Azure, Oracle,
-  DigitalOcean, on-premises) or use it as a managed service.
-- **API-compatible with LiveKit**: use any LiveKit client/server SDK unchanged.
-- **[OpenVidu Meet](https://github.com/OpenVidu/openvidu-meet)**: a fully-featured
-  video conferencing app that ships on top of this platform, ready to use or embed.
+### OpenVidu Meet
+
+**[OpenVidu Meet](https://openvidu.io/latest/meet/)** is a ready-to-use, self-hosted video
+conferencing application: an open-source alternative to Zoom, Google Meet and Jitsi Meet.
+
+**Using it requires no code.** You deploy it and it works — rooms, recordings, chat, screen
+sharing and moderation included. It is also highly customizable: brand it with your own name,
+logo and colours, and choose which features each participant gets.
+
+<a href="https://openvidu.io/latest/meet/"><img src="docs/images/openvidu-meet-app.jpg" alt="The OpenVidu Meet application: a video meeting with two participants, the self-view, and the toolbar with camera, microphone, screen sharing, captions and recording controls" width="560"></a>
+
+**With minimal effort it embeds into your own application**, through an `<iframe>` or the
+OpenVidu Meet **web component**, and is driven from your backend with a REST API and webhooks:
+
+<a href="https://openvidu.io/latest/meet/embedded/intro/"><img src="https://openvidu.io/latest/assets/images/meet/embedded/use-cases/support-meeting.png" alt="OpenVidu Meet embedded inside a customer support web application: a two-participant video call with recording, screen sharing, chat and call controls, surrounded by the host application's own interface" width="560"></a>
+
+### OpenVidu Platform
+
+**[OpenVidu Platform](https://openvidu.io/latest/docs/)** is the programmable client and server
+SDKs for building custom WebRTC applications with low-level control over media, on top of
+LiveKit and mediasoup. It is **API-compatible with LiveKit**: any LiveKit client/server SDK
+works unchanged.
+
+### Both products
+
+- **Self-hosted only**: deploy them on your own infrastructure (AWS, GCP, Azure, Oracle,
+  DigitalOcean, on-premises). There is no hosted/SaaS tier: OpenVidu PRO is a paid, self-hosted
+  edition, and the OpenVidu team offers
+  [support and consultancy](https://openvidu.io/support/).
 - Advanced media features: recording, RTMP/streaming egress, AI agents (transcription,
   translation), virtual backgrounds, and more.
 
@@ -36,7 +58,7 @@ and is developed by a team with over a decade of experience building WebRTC syst
 - 📖 [Documentation](https://openvidu.io/latest/docs/)
 - 🚀 [Try it locally](https://github.com/OpenVidu/openvidu-local-deployment)
 - 💻 [Tutorials](https://github.com/OpenVidu/openvidu-tutorials)
-- 🎥 [OpenVidu Meet](https://github.com/OpenVidu/openvidu-meet) — the reference app
+- 🎥 [OpenVidu Meet](https://openvidu.io/latest/meet/) — the ready-to-use video conferencing app ([source](https://github.com/OpenVidu/openvidu-meet))
 
 ## Community Forum
 
