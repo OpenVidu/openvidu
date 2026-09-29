@@ -1615,11 +1615,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 				Assertions.assertTrue(assertAllElementsHaveTracks(punchbagUser, "audio.remote", true, false),
 						"PunchbagUser's HTMLAudioElements were expected to have only one audio track");
 				// ...with nothing lost on the way
-				waitUntilConnectionQuality(punchbagUser, 0, "PunchbagUser", q -> q.contains("excellent"), 20,
-						"Expected PunchbagUser's own connection quality to be EXCELLENT through " + iceCandidateType);
-				waitUntilConnectionQuality(regularUser, 0, "PunchbagUser", q -> q.contains("excellent"), 20,
-						"Expected PunchbagUser's connection quality seen by RegularUser to be EXCELLENT through "
-								+ iceCandidateType);
+				assertConnectionQualityStaysExcellent(punchbagUser, regularUser, iceCandidateType);
 
 				// ...and through the forced candidate
 				assertConnectedThroughIceCandidateType(readPcTransportsInfoJson(punchbagUser, 0), iceCandidateType);
@@ -1764,9 +1760,14 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 	 */
 	private void assertMediaThroughIceCandidateType(OpenViduTestappUser punchbagUser, OpenViduTestappUser regularUser,
 			IceCandidateType iceCandidateType, int connection) throws Exception {
-		// Every connection subscribes both users again to the other's audio and video
-		punchbagUser.getEventManager().waitUntilEventReaches("trackSubscribed", "RoomEvent", 2 * connection);
+		// Every connection subscribes both users again to the other's audio and video.
+		// RegularUser never reconnects, so its trackSubscribed RoomEvents add up; those
+		// of PunchbagUser can go missing after a reconnection (see
+		// waitUntilSubscribedToAudioAndVideo), so both users' subscriptions are also
+		// read from livekit-client's own state
 		regularUser.getEventManager().waitUntilEventReaches("trackSubscribed", "RoomEvent", 2 * connection);
+		waitUntilSubscribedToAudioAndVideo(punchbagUser, "RegularUser");
+		waitUntilSubscribedToAudioAndVideo(regularUser, "PunchbagUser");
 
 		// The PeerConnections of a reconnection are new: give them time to connect
 		final long deadline = System.currentTimeMillis() + 30000;
@@ -1788,11 +1789,78 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 			waitUntilSubscriberFramesDecodedIncrease(user,
 					user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 video.remote")));
 		}
-		waitUntilConnectionQuality(punchbagUser, 0, "PunchbagUser", q -> q.contains("excellent"), 20,
-				"Expected PunchbagUser's own connection quality to be EXCELLENT through " + iceCandidateType);
-		waitUntilConnectionQuality(regularUser, 0, "PunchbagUser", q -> q.contains("excellent"), 20,
-				"Expected PunchbagUser's connection quality seen by RegularUser to be EXCELLENT through "
-						+ iceCandidateType);
+		assertConnectionQualityStaysExcellent(punchbagUser, regularUser, iceCandidateType);
+	}
+
+	/**
+	 * Wait until the livekit-client of {@code user} is subscribed to the audio and
+	 * the video of {@code remoteIdentity} through its current PeerConnections: the
+	 * Room is connected, and both tracks are live and received over a connected
+	 * DTLS transport, which the closed PeerConnections of a previous connection no
+	 * longer have.
+	 */
+	private void waitUntilSubscribedToAudioAndVideo(OpenViduTestappUser user, String remoteIdentity) {
+		// Empty when subscribed, what is missing otherwise
+		final String script = "const room = window['room_0'];"
+				+ "const who = room.localParticipant.identity + ' subscribing to ' + arguments[0] + ': ';"
+				+ "if (room.state !== 'connected') return who + 'room ' + room.state;"
+				+ "const participant = room.remoteParticipants.get(arguments[0]);"
+				+ "if (!participant) return who + 'no such participant';"
+				+ "const publications = Array.from(participant.trackPublications.values());"
+				+ "const missing = ['audio', 'video'].filter(kind => !publications.some(pub => pub.kind === kind"
+				+ "  && pub.isSubscribed && pub.track?.mediaStreamTrack.readyState === 'live'"
+				+ "  && pub.track.receiver?.transport?.state === 'connected'));"
+				+ "return missing.length ? who + 'no ' + missing.join(' or ')"
+				+ "  + ' track received over a connected transport' : '';";
+		final JavascriptExecutor js = (JavascriptExecutor) user.getDriver();
+		try {
+			user.getWaiter().until(d -> "".equals(js.executeScript(script, remoteIdentity)));
+		} catch (org.openqa.selenium.TimeoutException e) {
+			Assertions.fail(String.valueOf(js.executeScript(script, remoteIdentity)), e);
+		}
+	}
+
+	/**
+	 * Assert that the connection quality for PunchbagUser's is EXCELLENT and that
+	 * it stays EXCELLENT over time.
+	 */
+	private void assertConnectionQualityStaysExcellent(OpenViduTestappUser punchbagUser,
+			OpenViduTestappUser regularUser, IceCandidateType iceCandidateType) throws InterruptedException {
+		final long firstUpdateTimeoutMillis = 20000;
+		final long holdMillis = 15000;
+		final JavascriptExecutor punchbagJs = (JavascriptExecutor) punchbagUser.getDriver();
+		final JavascriptExecutor regularJs = (JavascriptExecutor) regularUser.getDriver();
+		final String sid = (String) punchbagJs.executeScript("return window['room_0'].localParticipant.sid;");
+		final String ownScript = "return window['room_0'].localParticipant.connectionQuality;";
+		final String seenScript = "const participant = window['room_0'].remoteParticipants.get('PunchbagUser');"
+				+ "return participant?.sid === arguments[0] ? participant.connectionQuality : 'unknown';";
+		final long start = System.currentTimeMillis();
+		long holdStart = -1;
+		while (true) {
+			final String own = (String) punchbagJs.executeScript(ownScript);
+			final String seen = (String) regularJs.executeScript(seenScript, sid);
+			final long now = System.currentTimeMillis();
+			final String levels = "own '" + own + "', seen by RegularUser '" + seen + "'";
+			if (holdStart < 0) {
+				// 'unknown' until the first update of the session reaches each browser
+				if (!"unknown".equals(own) && !"unknown".equals(seen)) {
+					holdStart = now;
+				} else if (now - start > firstUpdateTimeoutMillis) {
+					Assertions.fail("No connection quality reported for PunchbagUser's session " + sid + " through "
+							+ iceCandidateType + " (" + levels + ")");
+				}
+			}
+			if (holdStart >= 0) {
+				if (!"excellent".equals(own) || !"excellent".equals(seen)) {
+					Assertions.fail("Expected PunchbagUser's connection quality to stay EXCELLENT through "
+							+ iceCandidateType + ", but " + (now - holdStart) / 1000 + " s in it was " + levels);
+				}
+				if (now - holdStart >= holdMillis) {
+					return;
+				}
+			}
+			Thread.sleep(1000);
+		}
 	}
 
 	/**
