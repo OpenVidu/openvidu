@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.46.1.21595",
-      "templateHash": "9754478578006111917"
+      "templateHash": "15897828754510748124"
     }
   },
   "parameters": {
@@ -510,10 +510,7 @@
               "sourceAddressPrefix": "*",
               "sourcePortRange": "*",
               "destinationAddressPrefix": "*",
-              "destinationPortRanges": [
-                "50000",
-                "60000"
-              ],
+              "destinationPortRange": "50000-60000",
               "access": "Allow",
               "priority": 180,
               "direction": "Inbound"

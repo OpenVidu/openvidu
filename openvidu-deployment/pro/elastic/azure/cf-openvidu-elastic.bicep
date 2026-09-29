@@ -1856,10 +1856,7 @@ resource openviduMediaNodeNSG 'Microsoft.Network/networkSecurityGroups@2023-11-0
           sourceAddressPrefix: '*'
           sourcePortRange: '*'
           destinationAddressPrefix: '*'
-          destinationPortRanges: [
-            '50000'
-            '60000'
-          ]
+          destinationPortRange: '50000-60000'
           access: 'Allow'
           priority: 140
           direction: 'Inbound'
