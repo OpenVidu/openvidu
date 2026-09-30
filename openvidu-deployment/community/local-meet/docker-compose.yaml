@@ -33,7 +33,7 @@ services:
         condition: service_completed_successfully
 
   redis:
-    image: docker.io/redis:8.10.1-alpine
+    image: docker.io/redis:8.10.2-alpine
     restart: unless-stopped
     ports:
       - 6379:6379
