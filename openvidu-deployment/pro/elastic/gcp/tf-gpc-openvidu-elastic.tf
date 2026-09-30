@@ -260,7 +260,9 @@ resource "google_compute_region_health_check" "media_node_health_check" {
   name   = lower("${var.stackName}-media-node-health-check")
   region = var.region
 
-  # TCP-only, generous thresholds: auto-heal recreation kills live WebRTC sessions
+  # TCP (not HTTP /): during a master/Redis outage LiveKit answers 406 on every media node at
+  # once, so an HTTP check would recreate the whole fleet. Generous thresholds because auto-heal
+  # recreation kills live WebRTC sessions; the on-node watchdog owns application-level health.
   tcp_health_check {
     port = 7880
   }
@@ -268,7 +270,7 @@ resource "google_compute_region_health_check" "media_node_health_check" {
   check_interval_sec  = 30
   timeout_sec         = 10
   healthy_threshold   = 2
-  unhealthy_threshold = 5
+  unhealthy_threshold = 10
 
   depends_on = [google_project_service.compute_api]
 }
@@ -289,10 +291,11 @@ resource "google_compute_region_instance_group_manager" "media_node_group" {
     port = 7880
   }
 
-  # initial_delay_sec generous so media nodes finish installing before health checks can recreate them
+  # VM/process backstop only. initial_delay_sec at the 3600 s max so autohealing never recreates a
+  # still-bootstrapping node; the marker-aware on-node watchdog owns bootstrap-failure detection.
   auto_healing_policies {
     health_check      = google_compute_region_health_check.media_node_health_check.id
-    initial_delay_sec = 600
+    initial_delay_sec = 3600
   }
 
   depends_on = [google_compute_instance.openvidu_master_node]
@@ -1334,6 +1337,12 @@ if ! flock -n 9; then
   exit 0
 fi
 
+# Stop the health watchdog so it does not request a replacement while this node drains. The
+# pause file is honored on the watchdog's next loop regardless of when the unit stops; it is
+# cleared on reboot.
+touch /run/openvidu-media-health.paused
+systemctl stop openvidu-media-health 2>/dev/null || true
+
 echo "Starting graceful shutdown of OpenVidu Media Node..."
 
 INSTANCE_NAME=$(curl -s "http://metadata.google.internal/computeMetadata/v1/instance/name" -H "Metadata-Flavor: Google")
@@ -1350,6 +1359,11 @@ if [ -x "$(command -v docker)" ]; then
   for agent_container in $(docker ps --filter "label=openvidu-agent=true" --format '{{.Names}}' 2>/dev/null); do
     docker container kill --signal=SIGQUIT "$agent_container" 2>/dev/null || true
   done
+
+  # A node being replaced because it is unhealthy must not wait for sessions to drain.
+  if [ -f /run/openvidu-unhealthy ]; then
+    docker ps -q | xargs -r docker kill >/dev/null 2>&1 || true
+  fi
 
   # Wait for running containers to not be openvidu, ingress, egress or an openvidu agent
   while [ "$(docker ps --filter 'label=openvidu-agent=true' -q 2>/dev/null | wc -l)" -gt 0 ] || \
@@ -1399,9 +1413,253 @@ else
 fi
 EOF
 
+  media_health_watchdog_script = <<-EOF
+#!/bin/bash
+# OpenVidu Media Node health watchdog.
+#
+# Asks the cloud to replace this Media Node with a new one, keeping the number of
+# Media Nodes, through /usr/local/bin/openvidu-media-replace.sh, when:
+#   - its bootstrap failed (the user-data wrote the bootstrap-failed marker): after a
+#     cool-down, so a persistent failure does not churn nodes and can be inspected,
+#   - its bootstrap did not finish BOOTSTRAP_DEADLINE_SEC after boot,
+#   - LiveKit fails its health check (HTTP 200 on PROBE_URL): for HARD_UNHEALTHY_AFTER_SEC
+#     while it is down (connection refused or closed), or for SOFT_UNHEALTHY_AFTER_SEC
+#     while it answers an error or times out. Soft failures are not counted while the CPU
+#     is saturated (an overloaded LiveKit reports Not Ready), and no failure is counted in
+#     the WARMUP_SEC after openvidu.service (re)started.
+# Nothing is replaced while no master answers a Redis PING (MASTER_ADDRS): a master outage
+# fails the health check of every Media Node at once, and a new node could not bootstrap
+# either. Once requested, the replacement is requested again every REPLACE_RETRY_SEC until
+# the node goes away.
+#
+# Settings: /etc/openvidu/media-health.env (sourced every cycle; MASTER_ADDRS="ip:port ...")
+# Pause:    touch /etc/openvidu/media-health.disabled (drain scripts use /run/openvidu-media-health.paused)
+# Logs:     journalctl -u openvidu-media-health
+#
+# This file is embedded verbatim in CloudFormation !Sub blocks, Bicep strings and
+# Terraform heredocs, so it must never contain a dollar sign or a percent sign followed
+# by an opening brace, nor two opening braces in a row.
+
+STATE_DIR=/var/lib/openvidu-media-health
+INSTALLED_MARKER="$STATE_DIR/installed"
+BOOTSTRAP_FAILED_MARKER="$STATE_DIR/bootstrap-failed"
+REPLACE_SCRIPT=/usr/local/bin/openvidu-media-replace.sh
+ENV_FILE=/etc/openvidu/media-health.env
+PAUSE_FILE=/etc/openvidu/media-health.disabled
+DRAIN_PAUSE_FILE=/run/openvidu-media-health.paused
+
+log() { echo "[media-health] $*"; }
+
+# Seconds since boot: monotonic, unaffected by clock steps
+uptime_sec() { cut -d. -f1 /proc/uptime; }
+
+# Busy CPU percentage since the previous call, in BUSY (0 on the first call)
+cpu_busy() {
+    read -r _ c_user c_nice c_system c_idle c_iowait c_irq c_softirq c_steal _ < /proc/stat
+    total=$((c_user + c_nice + c_system + c_idle + c_iowait + c_irq + c_softirq + c_steal))
+    idle=$((c_idle + c_iowait))
+    BUSY=0
+    if [ -n "$PREV_TOTAL" ] && [ "$total" -gt "$PREV_TOTAL" ]; then
+        BUSY=$((100 * (total - PREV_TOTAL - idle + PREV_IDLE) / (total - PREV_TOTAL)))
+    fi
+    PREV_TOTAL=$total
+    PREV_IDLE=$idle
+}
+
+# openvidu.service entered the active state less than WARMUP_SEC ago
+openvidu_starting() {
+    since=$(systemctl show -p ActiveEnterTimestampMonotonic --value openvidu 2>/dev/null)
+    case "$since" in ''|0|*[!0-9]*) return 1 ;; esac
+    [ $(($(uptime_sec) - since / 1000000)) -lt "$WARMUP_SEC" ]
+}
+
+# A master answers a Redis PING (+PONG, or -NOAUTH when a password is required). A bare
+# TCP connect would also succeed against a wedged Redis.
+master_serving() {
+    [ -n "$MASTER_ADDRS" ] || return 1
+    for addr in $MASTER_ADDRS; do
+        host=$(echo "$addr" | cut -d: -f1)
+        port=$(echo "$addr" | cut -d: -f2)
+        reply=$(timeout 5 bash -c 'exec 3<>"/dev/tcp/$0/$1" && printf "PING\r\n" >&3 && head -c 7 <&3' "$host" "$port" 2>/dev/null)
+        case "$reply" in
+            +PONG*|-NOAUTH*) return 0 ;;
+        esac
+    done
+    return 1
+}
+
+# Request the replacement of this node ($1 = reason). Gated on a master answering, except
+# in the bootstrap phase before the master addresses are known.
+request_replacement() {
+    now=$(uptime_sec)
+    if [ -n "$REQUESTED_AT" ] && [ $((now - REQUESTED_AT)) -lt "$REPLACE_RETRY_SEC" ]; then
+        return
+    fi
+    if [ -n "$MASTER_ADDRS" ] || [ -f "$INSTALLED_MARKER" ]; then
+        if ! master_serving; then
+            if [ -z "$HOLD_LOGGED_AT" ] || [ $((now - HOLD_LOGGED_AT)) -ge 600 ]; then
+                log "$1, but no master answers a Redis PING (MASTER_ADDRS='$MASTER_ADDRS'): not replacing this node"
+                HOLD_LOGGED_AT=$now
+            fi
+            return
+        fi
+    fi
+    log "$1: requesting the replacement of this node"
+    if "$REPLACE_SCRIPT" "$1"; then
+        REQUESTED_AT=$now
+        log "replacement requested"
+    else
+        log "the replacement request failed, retrying in $INTERVAL_SEC s"
+    fi
+}
+
+mkdir -p "$STATE_DIR"
+REQUESTED_AT=""
+HOLD_LOGGED_AT=""
+FAILED_SEEN_AT=""
+FAIL_SINCE=""
+SATURATED=""
+PREV_TOTAL=""
+PREV_IDLE=""
+log "started"
+
+while true; do
+    PROBE_URL=http://127.0.0.1:7880/
+    INTERVAL_SEC=30
+    HARD_UNHEALTHY_AFTER_SEC=300
+    SOFT_UNHEALTHY_AFTER_SEC=600
+    CPU_SATURATED_PCT=90
+    WARMUP_SEC=900
+    BOOTSTRAP_DEADLINE_SEC=5400
+    BOOTSTRAP_FAILURE_COOLDOWN_SEC=600
+    REPLACE_RETRY_SEC=600
+    MASTER_ADDRS=""
+    [ -f "$ENV_FILE" ] && . "$ENV_FILE"
+    NOW=$(uptime_sec)
+    cpu_busy
+
+    if [ -f "$PAUSE_FILE" ] || [ -f "$DRAIN_PAUSE_FILE" ]; then
+        FAIL_SINCE=""
+    elif [ -f "$BOOTSTRAP_FAILED_MARKER" ]; then
+        if [ -z "$FAILED_SEEN_AT" ]; then
+            FAILED_SEEN_AT=$NOW
+            log "bootstrap failed ($(head -c 300 "$BOOTSTRAP_FAILED_MARKER")): replacing this node in $BOOTSTRAP_FAILURE_COOLDOWN_SEC s"
+        fi
+        if [ $((NOW - FAILED_SEEN_AT)) -ge "$BOOTSTRAP_FAILURE_COOLDOWN_SEC" ]; then
+            request_replacement "bootstrap failed: $(head -c 300 "$BOOTSTRAP_FAILED_MARKER")"
+        fi
+    elif [ ! -f "$INSTALLED_MARKER" ]; then
+        if [ "$NOW" -ge "$BOOTSTRAP_DEADLINE_SEC" ]; then
+            request_replacement "bootstrap not finished $BOOTSTRAP_DEADLINE_SEC s after boot"
+        fi
+    elif curl -sf -o /dev/null --connect-timeout 3 --max-time 15 "$PROBE_URL"; then
+        [ -n "$FAIL_SINCE" ] && log "LiveKit healthy again after $((NOW - FAIL_SINCE)) s"
+        FAIL_SINCE=""
+        SATURATED=""
+    else
+        RC=$?
+        case "$RC" in
+            7|52|56) KIND=hard ;;
+            *) KIND=soft ;;
+        esac
+        if openvidu_starting; then
+            FAIL_SINCE=""
+        elif [ "$KIND" = soft ] && [ "$BUSY" -ge "$CPU_SATURATED_PCT" ]; then
+            [ -n "$SATURATED" ] || log "LiveKit not ready (curl exit $RC) with the CPU $BUSY% busy: not counted"
+            SATURATED=1
+            FAIL_SINCE=""
+        else
+            SATURATED=""
+            if [ -z "$FAIL_SINCE" ]; then
+                FAIL_SINCE=$NOW
+                log "LiveKit health check failed (curl exit $RC)"
+            fi
+            LIMIT=$SOFT_UNHEALTHY_AFTER_SEC
+            [ "$KIND" = hard ] && LIMIT=$HARD_UNHEALTHY_AFTER_SEC
+            if [ $((NOW - FAIL_SINCE)) -ge "$LIMIT" ]; then
+                request_replacement "LiveKit unhealthy for $((NOW - FAIL_SINCE)) s (curl exit $RC)"
+            fi
+        fi
+    fi
+    sleep "$INTERVAL_SEC"
+done
+EOF
+
+  media_replace_script = <<-EOF
+#!/bin/bash
+# Requests the replacement of THIS media node while keeping the media node count: it asks the
+# regional MIG to recreate the instance (delete + create in place, same name, new instance id,
+# fresh disk). Called by the health watchdog and by the bootstrap-failure hook; it never stops
+# or signals the watchdog (its caller, in the same cgroup).
+
+REASON="$1"
+mkdir -p /var/lib/openvidu-media-health
+echo "$(date -u +%FT%TZ) $REASON" >> /var/lib/openvidu-media-health/replace-requests.log
+# Tell the drain script this node is being replaced so it skips waiting for sessions.
+touch /run/openvidu-unhealthy
+
+META="http://metadata.google.internal/computeMetadata/v1"
+meta() { curl -s -H "Metadata-Flavor: Google" "$META/$1"; }
+
+SELF_NAME=$(meta "instance/name")
+PROJECT_ID=$(meta "project/project-id")
+ZONE=$(meta "instance/zone" | cut -d/ -f4)
+REGION=$(echo "$ZONE" | sed 's/-[a-z]$//')
+STACK_NAME=$(meta "instance/attributes/stackName")
+MIG_NAME=$(echo "$STACK_NAME" | tr '[:upper:]' '[:lower:]')-media-node-group
+
+# Recreate keeps the MIG size. Retry transient API errors. A "not a member / already being
+# deleted, abandoned or recreated" error means the node is already leaving the group (e.g.
+# scaled in): nothing to do.
+i=0
+while [ "$i" -lt 5 ]; do
+  i=$((i + 1))
+  if OUT=$(gcloud compute instance-groups managed recreate-instances "$MIG_NAME" \
+      --instances="$SELF_NAME" --region="$REGION" --project="$PROJECT_ID" --quiet 2>&1); then
+    echo "[media-replace] recreate requested for $SELF_NAME"
+    exit 0
+  fi
+  case "$OUT" in
+    *"not a member"*|*"being deleted"*|*"being recreated"*|*abandon*|*ABANDON*)
+      echo "[media-replace] $SELF_NAME already leaving the group, nothing to do: $OUT"
+      exit 0
+      ;;
+  esac
+  echo "[media-replace] recreate attempt $i for $SELF_NAME failed: $OUT"
+  sleep 12
+done
+echo "[media-replace] gave up requesting recreate of $SELF_NAME after $i attempts"
+exit 1
+EOF
+
+  media_health_unit = <<-EOF
+[Unit]
+Description=OpenVidu Media Node health watchdog
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/openvidu-media-health.sh
+Restart=always
+RestartSec=30
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
   user_data_media = <<-EOF
 #!/bin/bash -x
 set -eu -o pipefail
+
+# Records a media-node bootstrap failure so the health watchdog replaces this node after a
+# cool-down, then aborts the bootstrap.
+ov_media_bootstrap_failed() {
+  echo "[OpenVidu] media node bootstrap failed: $1"
+  mkdir -p /var/lib/openvidu-media-health
+  echo "$1" > /var/lib/openvidu-media-health/bootstrap-failed
+  exit 1
+}
 
 # Check if installation already completed
 if [ -f /usr/local/bin/openvidu_install_counter.txt ]; then
@@ -1420,6 +1678,21 @@ ${local.graceful_shutdown_script}
 GRACEFUL_SHUTDOWN_EOF
   chmod +x /usr/local/bin/graceful_shutdown.sh
 
+  # Media node health watchdog + its replacement script and unit
+  cat > /usr/local/bin/openvidu-media-health.sh << 'MEDIA_HEALTH_EOF'
+${local.media_health_watchdog_script}
+MEDIA_HEALTH_EOF
+  chmod +x /usr/local/bin/openvidu-media-health.sh
+
+  cat > /usr/local/bin/openvidu-media-replace.sh << 'MEDIA_REPLACE_EOF'
+${local.media_replace_script}
+MEDIA_REPLACE_EOF
+  chmod +x /usr/local/bin/openvidu-media-replace.sh
+
+  cat > /etc/systemd/system/openvidu-media-health.service << 'MEDIA_HEALTH_UNIT_EOF'
+${local.media_health_unit}
+MEDIA_HEALTH_UNIT_EOF
+
   echo "DPkg::Lock::Timeout \"-1\";" > /etc/apt/apt.conf.d/99timeout
 
   GCLOUD_VERSION=573.0.0
@@ -1437,14 +1710,28 @@ GRACEFUL_SHUTDOWN_EOF
 
   export HOME="/root"
 
+  # Start the media node health watchdog now: gcloud (which its replacement needs) is installed,
+  # and starting before install.sh lets the watchdog cover a hung bootstrap too. Write the master
+  # address(es) first (before the installed marker) so the anti-storm guard is always populated.
+  mkdir -p /etc/openvidu
+  MASTER_NODE_PRIVATE_IP=$(curl -s "http://metadata.google.internal/computeMetadata/v1/instance/attributes/masterNodePrivateIP" -H "Metadata-Flavor: Google")
+  [ -n "$MASTER_NODE_PRIVATE_IP" ] || ov_media_bootstrap_failed "could not determine master node private IP"
+  echo "MASTER_ADDRS=\"$MASTER_NODE_PRIVATE_IP:7000\"" > /etc/openvidu/media-health.env
+  systemctl daemon-reload
+  systemctl enable --now openvidu-media-health
+
   # Install OpenVidu Media Node
-  /usr/local/bin/install.sh || { echo "[OpenVidu] error installing OpenVidu Media Node"; exit 1; }
+  /usr/local/bin/install.sh || ov_media_bootstrap_failed "install.sh failed"
 
   # Mark installation as complete
   echo "installation_complete" > /usr/local/bin/openvidu_install_counter.txt
 
   # Start OpenVidu
-  systemctl start openvidu || { echo "[OpenVidu] error starting OpenVidu"; exit 1; }
+  systemctl start openvidu || ov_media_bootstrap_failed "systemctl start openvidu failed"
+
+  # Bootstrap finished: hand runtime replacement to the watchdog (never on a failure path).
+  mkdir -p /var/lib/openvidu-media-health
+  touch /var/lib/openvidu-media-health/installed
 
   # Add cron job to check if instance is abandoned every minute
   cat > /usr/local/bin/check_abandoned.sh << 'CHECK_ABANDONED_EOF'
