@@ -3299,6 +3299,9 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		WebElement enableToggle = user.getDriver()
 				.findElement(By.cssSelector("#openvidu-instance-1 .toggle-video-enabled"));
 		enableToggle.click();
+		// The server applies a subscriber's disable after a 100 ms debounce and the info
+		// dialog samples getStats asynchronously: let both settle before the reference value
+		Thread.sleep(1000);
 		bytesReceived = this.getSubscriberVideoBytesReceived(user, subscriberVideo);
 		Thread.sleep(1250);
 		Assertions.assertEquals(bytesReceived, this.getSubscriberVideoBytesReceived(user, subscriberVideo),
