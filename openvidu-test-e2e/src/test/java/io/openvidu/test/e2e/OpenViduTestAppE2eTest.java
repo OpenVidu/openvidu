@@ -58,6 +58,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.Keys;
@@ -77,6 +78,7 @@ import com.google.gson.JsonParser;
 import io.livekit.server.AccessToken;
 import io.livekit.server.RoomList;
 import io.minio.BucketExistsArgs;
+import io.minio.DownloadObjectArgs;
 import io.minio.ListObjectsArgs;
 import io.minio.MinioClient;
 import io.minio.Result;
@@ -4856,6 +4858,211 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		}
 		if (!videoFound[0]) {
 			Assertions.fail("Recording media file not found in egress backup folder");
+		}
+	}
+
+	@ParameterizedTest(name = "Track egress {0} {1}")
+	@CsvSource({ "vp8,single", "vp8,simulcast", "h264,single", "h264,simulcast", "vp9,L1T1", "vp9,L3T3",
+			"av1,L1T1", "av1,L3T3" })
+	void trackEgressVideoCodecTest(String codec, String layers) throws Exception {
+		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
+
+		log.info("Track egress {} {}", codec, layers);
+
+		// A single participant publishing a single 1280x720 video track (Chrome sends
+		// fewer than 3 spatial layers below that): simulcast or not for VP8 and H264,
+		// an explicit scalability mode for the SVC codecs (without one, livekit-client
+		// publishes them L3T3_KEY)
+		final boolean simulcast = "simulcast".equals(layers);
+		final String scalabilityMode = layers.startsWith("L") ? layers : null;
+		final boolean singleLayer = !simulcast && !"L3T3".equals(scalabilityMode);
+		this.addPublisher(user, false, simulcast, false, false, false, true, 1280, 720, scalabilityMode);
+		this.forceCodec(user, 0, codec);
+		user.getDriver().findElement(By.cssSelector(".connect-btn")).sendKeys(Keys.ENTER);
+		user.getEventManager().waitUntilEventReaches("localTrackPublished", "RoomEvent", 1);
+
+		// The publisher sends the requested codec and layers
+		WebElement publisherVideo = user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 video.local"));
+		this.waitUntilVideoLayersNotEmpty(user, publisherVideo);
+		Assertions.assertEquals("video/" + codec.toUpperCase(),
+				getPublisherVideoLayerAttribute(user, publisherVideo, null, "codec").getAsString());
+		if (scalabilityMode != null) {
+			Assertions.assertEquals(scalabilityMode,
+					getPublisherVideoLayerAttribute(user, publisherVideo, null, "scalabilityMode").getAsString());
+		} else {
+			int publishedLayers = countNumberOfPublishedLayers(user, publisherVideo);
+			Assertions.assertTrue(simulcast ? publishedLayers > 1 : publishedLayers == 1,
+					"Wrong number of simulcast layers: " + publishedLayers);
+		}
+		// And it sends its top layer before the egress starts: Chrome turns its top
+		// simulcast layer on as its uplink estimate allows, which toward mediasoup
+		// takes up to 20 s for H264
+		this.waitUntilPublisherSendsWidth(user, publisherVideo, 1280, 40);
+		this.waitAndClick(user, "#close-dialog-btn");
+		Thread.sleep(300);
+
+		// The API dialog fills in the room and the video track
+		user.getDriver().findElement(By.cssSelector("#room-api-btn-0")).click();
+		Thread.sleep(300);
+		user.getDriver().findElement(By.cssSelector("#start-track-egress-api-btn")).click();
+		WebElement egressIdField = user.getDriver().findElement(By.id("egress-id-field"));
+		new WebDriverWait(user.getDriver(), Duration.ofSeconds(10))
+				.until(ExpectedConditions.textToBePresentInElementValue(egressIdField, "EG_"));
+		String egressId = egressIdField.getDomProperty("value");
+
+		if ("av1".equals(codec)) {
+			// Like every egress subscribing through the server SDK, Track Egress cannot
+			// write AV1: it fails as soon as it subscribes to the track
+			JsonObject egress = this.waitUntilEgressStatus(user, egressId, "EGRESS_FAILED", 20000);
+			Assertions.assertTrue(egress.get("error").getAsString().toLowerCase().contains("av1"),
+					"The egress error must name the AV1 codec: " + egress);
+			return;
+		}
+
+		// Long enough for the egress to reach the top layer of a multi-layer track
+		this.waitUntilEgressStatus(user, egressId, "EGRESS_ACTIVE", 10000);
+		Thread.sleep(8000);
+		user.getDriver().findElement(By.cssSelector("#stop-egress-api-btn")).click();
+		JsonObject egress = this.waitUntilEgressStatus(user, egressId, "EGRESS_COMPLETE", 10000);
+
+		this.assertHealthyVideoRecording(this.downloadRecording(egress), codec, 5, 1280, 720, singleLayer);
+	}
+
+	private void waitUntilPublisherSendsWidth(OpenViduTestappUser user, WebElement publisherVideo, int width,
+			int timeoutSeconds) throws InterruptedException {
+		final long deadline = System.currentTimeMillis() + timeoutSeconds * 1000L;
+		JsonArray layers = null;
+		while (System.currentTimeMillis() < deadline) {
+			layers = getLayersAsJsonArray(user, publisherVideo);
+			for (JsonElement layer : layers) {
+				JsonElement frameWidth = layer.getAsJsonObject().get("frameWidth");
+				if (frameWidth != null && !frameWidth.isJsonNull() && frameWidth.getAsInt() == width) {
+					return;
+				}
+			}
+			Thread.sleep(500);
+		}
+		Assertions.fail("The publisher did not send its " + width + " px layer in " + timeoutSeconds + " s: " + layers);
+	}
+
+	/**
+	 * Downloads the media file of a completed egress, from MinIO or, when the
+	 * deployment has none, from the egress container's backup folder.
+	 */
+	private Path downloadRecording(JsonObject egress) throws Exception {
+		String filename = egress.get("file").getAsJsonObject().get("filename").getAsString();
+		Path file = Files.createTempDirectory("egress").resolve(Path.of(filename).getFileName());
+		if (isMinioAvailable()) {
+			MinioClient.builder().endpoint("localhost", 9000, false).credentials("minioadmin", "minioadmin").build()
+					.downloadObject(DownloadObjectArgs.builder().bucket("openvidu-appdata").object(filename)
+							.filename(file.toString()).build());
+		} else {
+			runMediaCommand("docker", "cp", "egress:/home/egress/backup_storage/" + filename, file.toString());
+		}
+		return file;
+	}
+
+	/**
+	 * The file is a playable recording of a single video track: the codec's native
+	 * container holding one track of the given codec, starting with a keyframe,
+	 * decoding without errors, lasting at least minSeconds at a real frame rate,
+	 * showing a moving picture, and reaching the published width x height: in every
+	 * frame for a single-layer track, from the top layer on for a multi-layer one
+	 * (the egress starts on a low layer and moves up as its bandwidth allows).
+	 */
+	private void assertHealthyVideoRecording(Path file, String codec, double minSeconds, int width, int height,
+			boolean singleLayer) throws Exception {
+		String container = "h264".equals(codec) ? "mp4" : "webm";
+		Assertions.assertTrue(file.toString().endsWith("." + container), "Wrong file extension: " + file);
+
+		JsonObject probe = JsonParser.parseString(runMediaCommand("ffprobe", "-v", "error", "-show_format",
+				"-show_streams", "-count_frames", "-of", "json", file.toString())[0]).getAsJsonObject();
+		JsonObject format = probe.getAsJsonObject("format");
+		JsonArray streams = probe.getAsJsonArray("streams");
+		log.info("Track egress recording {}: {}, {}", file.getFileName(), format, streams);
+		Assertions.assertTrue(format.get("format_name").getAsString().contains(container),
+				"Wrong container: " + format);
+		Assertions.assertEquals(1, streams.size(), "A single track expected: " + streams);
+		JsonObject video = streams.get(0).getAsJsonObject();
+		Assertions.assertEquals("video", video.get("codec_type").getAsString());
+		Assertions.assertEquals(codec, video.get("codec_name").getAsString());
+		Assertions.assertTrue(video.get("width").getAsInt() >= 16 && video.get("height").getAsInt() >= 16,
+				"Wrong video size: " + video);
+
+		double duration = format.get("duration").getAsDouble();
+		int frames = video.get("nb_read_frames").getAsInt();
+		Assertions.assertTrue(duration >= minSeconds && duration < 30, "Wrong duration: " + duration + " s");
+		Assertions.assertTrue(frames / duration >= 10,
+				"Too few frames: " + frames + " in " + duration + " s");
+
+		// Starts with a keyframe, and its timestamps never go back. A simulcast layer
+		// switch gives the keyframe of the new layer the timestamp of the frame it
+		// replaces, so a timestamp may repeat on a keyframe of a multi-layer track only
+		List<String[]> packets = runMediaCommand("ffprobe", "-v", "error", "-select_streams", "v:0",
+				"-show_entries", "packet=dts_time,flags", "-of", "csv=p=0", file.toString())[0].lines()
+				.map(l -> l.trim().split(",")).filter(p -> p.length == 2 && !"N/A".equals(p[0])).toList();
+		Assertions.assertTrue(packets.get(0)[1].startsWith("K"), "The recording must start with a keyframe");
+		for (int i = 1; i < packets.size(); i++) {
+			double dts = Double.parseDouble(packets.get(i)[0]);
+			double previous = Double.parseDouble(packets.get(i - 1)[0]);
+			Assertions.assertTrue(dts > previous || (dts == previous && !singleLayer && packets.get(i)[1].startsWith("K")),
+					"Wrong timestamp " + dts + " after " + previous + " (flags " + packets.get(i)[1] + ")");
+		}
+
+		// Decode every frame: no errors, the picture moves (Chrome's fake camera changes
+		// on every frame) and reaches the published size. VP9 goes through libvpx, the
+		// decoder of browsers and GStreamer: FFmpeg's own shows only the base layer of a
+		// VP9 SVC superframe
+		List<String> command = new ArrayList<>(List.of("ffmpeg", "-nostdin", "-loglevel", "level+info"));
+		if ("vp9".equals(codec)) {
+			command.addAll(List.of("-c:v", "libvpx-vp9"));
+		}
+		command.addAll(List.of("-i", file.toString(), "-map", "0:v", "-vf", "showinfo", "-fps_mode", "passthrough",
+				"-enc_time_base", "demux", "-f", "null", "-"));
+		String decodeLog = runMediaCommand(command.toArray(new String[0]))[1];
+		// Errors of the demuxer and the decoder: the null muxer's own complaints about a
+		// repeated timestamp are covered above
+		List<String> errors = decodeLog.lines().filter(l -> l.contains("[error]") || l.contains("[fatal]"))
+				.filter(l -> !l.startsWith("[null @")).toList();
+		Assertions.assertTrue(errors.isEmpty(), "Decoding reported errors: " + errors);
+		java.util.regex.Matcher frame = java.util.regex.Pattern
+				.compile("Parsed_showinfo.* n: *\\d+ .* s:(\\d+x\\d+) .* checksum:([0-9A-F]+)").matcher(decodeLog);
+		Map<String, Long> framesBySize = new LinkedHashMap<>();
+		List<String> checksums = new ArrayList<>();
+		while (frame.find()) {
+			framesBySize.merge(frame.group(1), 1L, Long::sum);
+			checksums.add(frame.group(2));
+		}
+		log.info("Track egress recording {}: decoded frames by size {}", file.getFileName(), framesBySize);
+		Assertions.assertEquals(frames, checksums.size(), "Every frame must be decoded");
+		long distinct = checksums.stream().distinct().count();
+		Assertions.assertTrue(distinct >= checksums.size() / 2,
+				"The video looks frozen: " + distinct + " distinct frames out of " + checksums.size());
+
+		String expected = width + "x" + height;
+		if (singleLayer) {
+			Assertions.assertEquals(Map.of(expected, (long) checksums.size()), framesBySize,
+					"Every frame of a single-layer track must be " + expected);
+		} else {
+			Assertions.assertTrue(framesBySize.containsKey(expected),
+					"The recording must reach the top layer " + expected + ": " + framesBySize);
+		}
+	}
+
+	/** Runs a command and returns its stdout and stderr; it must exit with 0. */
+	private static String[] runMediaCommand(String... command) throws IOException, InterruptedException {
+		Path out = Files.createTempFile("media-command", ".out");
+		Path err = Files.createTempFile("media-command", ".err");
+		try {
+			Process process = new ProcessBuilder(command).redirectOutput(out.toFile()).redirectError(err.toFile())
+					.start();
+			Assertions.assertTrue(process.waitFor(120, TimeUnit.SECONDS), "Timeout: " + String.join(" ", command));
+			Assertions.assertEquals(0, process.exitValue(),
+					String.join(" ", command) + " failed: " + Files.readString(err));
+			return new String[] { Files.readString(out), Files.readString(err) };
+		} finally {
+			Files.deleteIfExists(out);
+			Files.deleteIfExists(err);
 		}
 	}
 
