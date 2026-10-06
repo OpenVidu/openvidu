@@ -1461,8 +1461,8 @@ var openviduMediaHealthScript = '''
 #     the WARMUP_SEC after openvidu.service (re)started.
 # Nothing is replaced while no master answers a Redis PING (MASTER_ADDRS): a master outage
 # fails the health check of every Media Node at once, and a new node could not bootstrap
-# either. Once requested, the replacement is requested again every REPLACE_RETRY_SEC until
-# the node goes away.
+# either; LiveKit failures are not counted until a master answers again. Once requested,
+# the replacement is requested again every REPLACE_RETRY_SEC until the node goes away.
 #
 # Settings: /etc/openvidu/media-health.env (sourced every cycle; MASTER_ADDRS="ip:port ...")
 # Pause:    touch /etc/openvidu/media-health.disabled (drain scripts use /run/openvidu-media-health.paused)
@@ -1601,6 +1601,14 @@ while true; do
         esac
         if openvidu_starting; then
             FAIL_SINCE=""
+        elif ! master_serving; then
+            # A master outage fails the health check of every Media Node at once: not counted,
+            # so LiveKit gets the whole window to reconnect once a master answers again
+            FAIL_SINCE=""
+            if [ -z "$HOLD_LOGGED_AT" ] || [ $((NOW - HOLD_LOGGED_AT)) -ge 600 ]; then
+                log "LiveKit health check failed (curl exit $RC), but no master answers a Redis PING (MASTER_ADDRS='$MASTER_ADDRS'): not counted"
+                HOLD_LOGGED_AT=$NOW
+            fi
         elif [ "$KIND" = soft ] && [ "$BUSY" -ge "$CPU_SATURATED_PCT" ]; then
             [ -n "$SATURATED" ] || log "LiveKit not ready (curl exit $RC) with the CPU $BUSY% busy: not counted"
             SATURATED=1
