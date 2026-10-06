@@ -2210,8 +2210,13 @@ Resources:
                     PREV_IDLE=$idle
                 }
 
-                # openvidu.service entered the active state less than WARMUP_SEC ago
+                # openvidu.service is running and entered the active state less than WARMUP_SEC ago
+                # (a stopped or failed openvidu.service is not starting: no warm-up for it)
                 openvidu_starting() {
+                    case "$(systemctl show -p ActiveState --value openvidu 2>/dev/null)" in
+                        active|activating|reloading) ;;
+                        *) return 1 ;;
+                    esac
                     since=$(systemctl show -p ActiveEnterTimestampMonotonic --value openvidu 2>/dev/null)
                     case "$since" in ''|0|*[!0-9]*) return 1 ;; esac
                     [ $(($(uptime_sec) - since / 1000000)) -lt "$WARMUP_SEC" ]
