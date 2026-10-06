@@ -1410,8 +1410,13 @@ Resources:
   NewEIP:
     Type: 'AWS::EC2::EIP'
     Condition: PublicElasticIPAbsent
+
+  NewEIPAssociation:
+    Type: 'AWS::EC2::EIPAssociation'
+    Condition: PublicElasticIPAbsent
     Properties:
       InstanceId: !Ref OpenViduMasterNode
+      AllocationId: !GetAtt NewEIP.AllocationId
 
   IMDSv2LaunchTemplateMasterNode:
     Type: AWS::EC2::LaunchTemplate
@@ -1469,8 +1474,7 @@ Resources:
 
                 # Configure Domain and other parameters
                 if [[ "${DomainName}" == '' ]]; then
-                  PublicHostname=$(curl -s -H "X-aws-ec2-metadata-token: $TOKEN" http://169.254.169.254/latest/meta-data/public-hostname)
-                  DOMAIN=$(echo "$PublicHostname" | cut -d'.' -f1 | sed 's/^ec2-//' | tr '-' '.')
+                  DOMAIN=$(curl -s -H "X-aws-ec2-metadata-token: $TOKEN" http://169.254.169.254/latest/meta-data/public-ipv4)
                 else
                   DOMAIN=${DomainName}
                 fi
@@ -1940,56 +1944,64 @@ Resources:
         - Key: Name
           Value: !Sub ${AWS::StackName} - OpenVidu Elastic - Master Node
       UserData:
-        Fn::Base64: !Sub |
-          #!/bin/bash
-          set -eu -o pipefail
+        Fn::Base64: !Sub
+          - |
+            #!/bin/bash
+            set -eu -o pipefail
 
-          echo "DPkg::Lock::Timeout \"-1\";" > /etc/apt/apt.conf.d/99timeout
-
-          apt-get update && apt-get install -y \
-                python3-pip \
-                ec2-instance-connect
-
-          CFN_BOOTSTRAP_VERSION=2.0-39
-          # Detect Ubuntu version and install cfn-bootstrap accordingly
-          UBUNTU_VERSION=$(lsb_release -rs | cut -d. -f1)
-          if [ "$UBUNTU_VERSION" -ge 24 ]; then
-            python3 -m pip install --break-system-packages https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-py3-${!CFN_BOOTSTRAP_VERSION}.tar.gz
-          else
-            python3 -m pip install https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-py3-${!CFN_BOOTSTRAP_VERSION}.tar.gz
-          fi
-
-          cfn-init --region ${AWS::Region} --stack ${AWS::StackId} --resource OpenViduMasterNode
-
-          export HOME="/root"
-
-          # Install OpenVidu
-          /usr/local/bin/install.sh || { echo "[OpenVidu] error installing OpenVidu"; exit 1; }
-
-          # Config S3 bucket
-          /usr/local/bin/config_s3.sh || { echo "[OpenVidu] error configuring S3 bucket"; exit 1; }
-
-          # Start OpenVidu
-          systemctl start openvidu || { echo "[OpenVidu] error starting OpenVidu"; exit 1; }
-
-          # Update shared secret
-          /usr/local/bin/after_install.sh || { echo "[OpenVidu] error updating shared secret"; exit 1; }
-
-          # Launch on reboot
-          echo "@reboot /usr/local/bin/restart.sh &> /var/log/openvidu-restart.log" | crontab
-
-          # Local readiness gate: wait up to 300s for Caddy health, restart once if it does not converge
-          OPENVIDU_READY=false
-          for i in $(seq 1 60); do
-            if curl -fsS http://127.0.0.1:7880/health/caddy >/dev/null 2>&1; then
-              OPENVIDU_READY=true
-              break
+            # Wait for the Elastic IP: CloudFormation associates it only after the instance
+            # is created, and until then the instance may have another public IP (or none,
+            # and no Internet access)
+            TOKEN=$(curl -s -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 21600")
+            CURRENT_PUBLIC_IP=""
+            for _ in $(seq 1 120); do
+              CURRENT_PUBLIC_IP=$(curl -sf -H "X-aws-ec2-metadata-token: $TOKEN" http://169.254.169.254/latest/meta-data/public-ipv4 || true)
+              if [[ "$CURRENT_PUBLIC_IP" == "${ExpectedPublicIp}" ]]; then
+                break
+              fi
+              sleep 5
+            done
+            if [[ "$CURRENT_PUBLIC_IP" != "${ExpectedPublicIp}" ]]; then
+              echo "[OpenVidu] Elastic IP ${ExpectedPublicIp} not attached after 10 minutes"
+              exit 1
             fi
-            sleep 5
-          done
-          if [ "$OPENVIDU_READY" != "true" ]; then
-            echo "[OpenVidu] not healthy after 300s, restarting once"
-            systemctl restart openvidu || true
+
+            echo "DPkg::Lock::Timeout \"-1\";" > /etc/apt/apt.conf.d/99timeout
+
+            apt-get update && apt-get install -y \
+                  python3-pip \
+                  ec2-instance-connect
+
+            CFN_BOOTSTRAP_VERSION=2.0-39
+            # Detect Ubuntu version and install cfn-bootstrap accordingly
+            UBUNTU_VERSION=$(lsb_release -rs | cut -d. -f1)
+            if [ "$UBUNTU_VERSION" -ge 24 ]; then
+              python3 -m pip install --break-system-packages https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-py3-${!CFN_BOOTSTRAP_VERSION}.tar.gz
+            else
+              python3 -m pip install https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-py3-${!CFN_BOOTSTRAP_VERSION}.tar.gz
+            fi
+
+            cfn-init --region ${AWS::Region} --stack ${AWS::StackId} --resource OpenViduMasterNode
+
+            export HOME="/root"
+
+            # Install OpenVidu
+            /usr/local/bin/install.sh || { echo "[OpenVidu] error installing OpenVidu"; exit 1; }
+
+            # Config S3 bucket
+            /usr/local/bin/config_s3.sh || { echo "[OpenVidu] error configuring S3 bucket"; exit 1; }
+
+            # Start OpenVidu
+            systemctl start openvidu || { echo "[OpenVidu] error starting OpenVidu"; exit 1; }
+
+            # Update shared secret
+            /usr/local/bin/after_install.sh || { echo "[OpenVidu] error updating shared secret"; exit 1; }
+
+            # Launch on reboot
+            echo "@reboot /usr/local/bin/restart.sh &> /var/log/openvidu-restart.log" | crontab
+
+            # Local readiness gate: wait up to 300s for Caddy health, restart once if it does not converge
+            OPENVIDU_READY=false
             for i in $(seq 1 60); do
               if curl -fsS http://127.0.0.1:7880/health/caddy >/dev/null 2>&1; then
                 OPENVIDU_READY=true
@@ -1997,14 +2009,25 @@ Resources:
               fi
               sleep 5
             done
-          fi
+            if [ "$OPENVIDU_READY" != "true" ]; then
+              echo "[OpenVidu] not healthy after 300s, restarting once"
+              systemctl restart openvidu || true
+              for i in $(seq 1 60); do
+                if curl -fsS http://127.0.0.1:7880/health/caddy >/dev/null 2>&1; then
+                  OPENVIDU_READY=true
+                  break
+                fi
+                sleep 5
+              done
+            fi
 
-          # Disable errexit so cfn-signal always runs and reports readiness via $? (fast-fail instead of a PT20M timeout)
-          set +e
-          [ "$OPENVIDU_READY" = "true" ]
+            # Disable errexit so cfn-signal always runs and reports readiness via $? (fast-fail instead of a PT20M timeout)
+            set +e
+            [ "$OPENVIDU_READY" = "true" ]
 
-          # sending the finish call
-          cfn-signal -e $? --stack ${AWS::StackId} --resource WaitCondition --region ${AWS::Region}
+            # sending the finish call
+            cfn-signal -e $? --stack ${AWS::StackId} --resource WaitCondition --region ${AWS::Region}
+          - ExpectedPublicIp: !If [PublicElasticIPPresent, !Ref PublicElasticIP, !Ref NewEIP]
 
       BlockDeviceMappings:
         - DeviceName: /dev/sda1
