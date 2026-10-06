@@ -3702,8 +3702,8 @@ Resources:
     Properties:
       GroupId: !Ref OpenViduMediaNodeSG
       IpProtocol: tcp
-      FromPort: 1945
-      ToPort: 1945
+      FromPort: 1935
+      ToPort: 1935
       SourceSecurityGroupId: !Ref OpenViduLoadBalancerSG
 
   OpenViduLoadBalancerToMediaNodeIngressHealthCheckSG:
@@ -3775,12 +3775,12 @@ Resources:
           ToPort: 443
           CidrIpv6: ::/0
         - IpProtocol: tcp
-          FromPort: 1935
-          ToPort: 1935
+          FromPort: 1945
+          ToPort: 1945
           CidrIp: 0.0.0.0/0
         - IpProtocol: tcp
-          FromPort: 1935
-          ToPort: 1935
+          FromPort: 1945
+          ToPort: 1945
           CidrIpv6: ::/0
 
   LoadBalancer:
@@ -3830,7 +3830,8 @@ Resources:
         - Type: forward
           TargetGroupArn: !Ref OpenViduMediaNodeRTMPTG
       LoadBalancerArn: !Ref LoadBalancer
-      Port: 1935
+      # RTMPS on 1945: the port OpenVidu advertises in the RTMP Ingress URL behind a load balancer
+      Port: 1945
       Protocol: TLS
       Certificates:
         - CertificateArn: !Ref OpenViduCertificateARN
@@ -3916,7 +3917,8 @@ Resources:
           - - OVRTMP-
             - !Select [4, !Split ['-', !Select [2, !Split ['/', !Ref AWS::StackId]]]]
       VpcId: !Ref OpenViduVPC
-      Port: 1945
+      # RTMP port of the ingress service on the Media Nodes
+      Port: 1935
       Protocol: TCP
       Matcher:
         HttpCode: '200'

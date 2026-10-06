@@ -2152,7 +2152,7 @@ resource LoadBalancer 'Microsoft.Network/loadBalancers@2024-05-01' = {
           backendAddressPool: {
             id: resourceId('Microsoft.Network/loadBalancers/backendAddressPools', lbName, lbBackendPoolNameMasterNode)
           }
-          frontendPort: 1935
+          frontendPort: 1945
           backendPort: 1945
           enableFloatingIP: false
           protocol: 'Tcp'
@@ -2495,6 +2495,26 @@ resource loadBalancerToMasterIngress 'Microsoft.Network/networkSecurityGroups/se
     destinationPortRange: '443'
     access: 'Allow'
     priority: 110
+    direction: 'Inbound'
+  }
+}
+
+// RTMPS Ingress: the Load Balancer keeps the client IP, so the masters must accept 1945 from anywhere
+resource loadBalancerToMasterRtmpIngress 'Microsoft.Network/networkSecurityGroups/securityRules@2023-11-01' = {
+  parent: openviduMasterNodeNSG
+  name: 'loadBalancer_to_masterNode_RTMP_INGRESS'
+  properties: {
+    protocol: 'Tcp'
+    sourceAddressPrefix: '*'
+    sourcePortRange: '*'
+    destinationApplicationSecurityGroups: [
+      {
+        id: openviduMasterNodeASG.id
+      }
+    ]
+    destinationPortRange: '1945'
+    access: 'Allow'
+    priority: 111
     direction: 'Inbound'
   }
 }

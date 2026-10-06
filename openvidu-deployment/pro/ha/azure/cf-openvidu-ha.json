@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.46.1.21595",
-      "templateHash": "1339858443803788925"
+      "templateHash": "9885917927692102096"
     }
   },
   "parameters": {
@@ -858,7 +858,7 @@
               "backendAddressPool": {
                 "id": "[resourceId('Microsoft.Network/loadBalancers/backendAddressPools', variables('lbName'), variables('lbBackendPoolNameMasterNode'))]"
               },
-              "frontendPort": 1935,
+              "frontendPort": 1945,
               "backendPort": 1945,
               "enableFloatingIP": false,
               "protocol": "Tcp",
@@ -1241,6 +1241,29 @@
         "destinationPortRange": "443",
         "access": "Allow",
         "priority": 110,
+        "direction": "Inbound"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/applicationSecurityGroups', format('{0}-masterNodeASG', parameters('stackName')))]",
+        "[resourceId('Microsoft.Network/networkSecurityGroups', format('{0}-masterNodeNSG', parameters('stackName')))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Network/networkSecurityGroups/securityRules",
+      "apiVersion": "2023-11-01",
+      "name": "[format('{0}/{1}', format('{0}-masterNodeNSG', parameters('stackName')), 'loadBalancer_to_masterNode_RTMP_INGRESS')]",
+      "properties": {
+        "protocol": "Tcp",
+        "sourceAddressPrefix": "*",
+        "sourcePortRange": "*",
+        "destinationApplicationSecurityGroups": [
+          {
+            "id": "[resourceId('Microsoft.Network/applicationSecurityGroups', format('{0}-masterNodeASG', parameters('stackName')))]"
+          }
+        ],
+        "destinationPortRange": "1945",
+        "access": "Allow",
+        "priority": 111,
         "direction": "Inbound"
       },
       "dependsOn": [

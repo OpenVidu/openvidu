@@ -286,13 +286,14 @@ resource "google_compute_forwarding_rule" "tcp_80" {
   ip_address            = local.nlb_ip_address
 }
 
-# Forwarding rule for TCP 1935
-resource "google_compute_forwarding_rule" "tcp_1935" {
-  name                  = lower("${var.stackName}-tcp-1935-rule")
+# Forwarding rule for TCP 1945 (RTMPS: the port OpenVidu advertises in the RTMP Ingress URL
+# behind a load balancer; a passthrough NLB cannot translate ports)
+resource "google_compute_forwarding_rule" "tcp_1945" {
+  name                  = lower("${var.stackName}-tcp-1945-rule")
   region                = var.region
   load_balancing_scheme = "EXTERNAL"
   backend_service       = google_compute_region_backend_service.tcp_backend.id
-  port_range            = "1935"
+  port_range            = "1945"
   ip_protocol           = "TCP"
   ip_address            = local.nlb_ip_address
 }
