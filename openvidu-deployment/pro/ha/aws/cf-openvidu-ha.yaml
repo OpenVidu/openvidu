@@ -3922,7 +3922,7 @@ Resources:
           # Generate a not too long and unique target id
           # Getting a unique identifier from the stack id
           - ''
-          - - OVRTMP-
+          - - OVRTMPS-
             - !Select [4, !Split ['-', !Select [2, !Split ['/', !Ref AWS::StackId]]]]
       VpcId: !Ref OpenViduVPC
       # RTMP port of the ingress service on the Media Nodes
