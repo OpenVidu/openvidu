@@ -1,66 +1,79 @@
 # Changelog
 
-Notable changes to the OpenVidu deployment templates for AWS, Azure and Google Cloud.
+Every release groups its `Added`, `Improved` and `Fixed` entries by the cloud they apply to:
 
-## Unreleased
+- **All clouds**: changes that behave the same on every cloud.
+- **AWS**, **Azure**, **Google Cloud**, **Oracle Cloud** and **DigitalOcean**: what is specific to that
+  cloud's templates.
 
-### Automatic replacement of unhealthy Media Nodes
+The AWS, Azure and Google Cloud templates live in this folder. The Oracle Cloud and DigitalOcean templates live
+in the [openvidu-oracle](https://github.com/OpenVidu/openvidu-oracle) and
+[openvidu-digitalocean](https://github.com/OpenVidu/openvidu-digitalocean) repositories.
 
-Elastic and High Availability deployments on AWS, Azure and Google Cloud now detect a
-Media Node that stops working and replace it with a new one automatically, keeping the
-same number of Media Nodes. Before, a broken Media Node stayed in the cluster until
-someone noticed it and replaced it by hand.
+## 3.10.0 (unreleased)
 
-#### How it works
+### Added
 
-Every Media Node runs a small health watchdog (the `openvidu-media-health` systemd
-service). Every 30 seconds it checks that the node's media server answers its health
-check, and it asks the cloud to replace the node when:
+#### All clouds
 
-- **The media server is down** (it does not accept connections) for 5 minutes.
-- **The media server is not responding properly** (errors or timeouts) for 10 minutes.
-  This is not counted while the node's CPU is saturated, because an overloaded media
-  server can briefly report itself as not ready.
-- **The node's installation failed**. It waits 10 minutes first, so a failure can still be
-  inspected and a persistent problem does not keep creating new nodes in a loop.
-- **The node's installation has not finished** 90 minutes after it booted.
+- Elastic and High Availability deployments replace an unhealthy Media Node with a new one automatically,
+  keeping the same number of Media Nodes. Before, a broken Media Node stayed in the cluster until it was
+  replaced by hand. Every Media Node runs a health watchdog (the `openvidu-media-health` systemd service)
+  that checks its media server every 30 seconds and asks the cloud to replace the node when:
+  - the media server does not accept connections for 5 minutes,
+  - the media server answers with errors or timeouts for 10 minutes (not counted while the node's CPU is
+    saturated, because an overloaded media server briefly reports itself as not ready),
+  - the node's installation failed (after a 10 minute wait, so the failure can be inspected and a persistent
+    problem does not create new nodes in a loop),
+  - or the node's installation has not finished 90 minutes after it booted.
+- Safeguards of the Media Node watchdog:
+  - No Media Node is replaced while no Master Node is reachable: a Master Node outage makes every Media Node
+    fail its health check at once, and a new node could not join the cluster either. Once a Master Node is
+    back, the media server gets its full time window to reconnect before the watchdog acts.
+  - Failures are not counted during the first 15 minutes after OpenVidu (re)starts on the node.
+  - The watchdog pauses itself while a node is drained during a normal scale-in.
+  - `journalctl -u openvidu-media-health` on a Media Node shows what it is doing, and
+    `sudo touch /etc/openvidu/media-health.disabled` pauses it (for example during manual maintenance);
+    deleting the file resumes it.
 
-The replacement is done by each cloud's own mechanism:
+#### AWS
 
-| Cloud | What happens |
-|---|---|
-| AWS | The instance is marked unhealthy in its Auto Scaling Group, which drains it and launches a new one. |
-| Google Cloud | The instance is recreated in its managed instance group with a fresh disk. The group's native autohealing (TCP check on port 7880) also covers a VM that stops responding altogether. |
-| Azure | The instance is reimaged in its Virtual Machine Scale Set, so the number of instances never changes. |
+- An unhealthy Media Node is marked unhealthy in its Auto Scaling Group, which drains it and launches a new
+  one.
 
-#### Built-in safeguards
+#### Azure
 
-- **Master Node outages do not trigger replacements.** If no Master Node is reachable,
-  every Media Node fails its health check at once and a new node could not join the
-  cluster either. The watchdog waits, and once a Master Node is back it gives the media
-  server its full time window to reconnect before acting.
-- **Restarts are not mistaken for failures.** Failures are not counted during the first
-  15 minutes after OpenVidu (re)starts on the node.
-- **Graceful scale-in is preserved.** The watchdog pauses itself while a node is being
-  drained during a normal scale-in.
+- An unhealthy Media Node is reimaged in its Virtual Machine Scale Set, so the number of instances never
+  changes.
 
-#### Operating the watchdog
+#### Google Cloud
 
-- See what it is doing: `journalctl -u openvidu-media-health` on the Media Node.
-- Pause it, for example during manual maintenance on a node:
-  `sudo touch /etc/openvidu/media-health.disabled`. Delete the file to resume.
+- An unhealthy Media Node is recreated in its managed instance group with a fresh disk. The group's native
+  autohealing (TCP health check on port 7880), now also enabled in High Availability deployments, covers a
+  Media Node VM that stops responding altogether.
 
-#### High Availability Master Nodes
+#### Oracle Cloud
 
-In High Availability deployments, the load balancer keeps checking the health of each
-Master Node: if one stops responding it no longer receives traffic, and the other Master
-Nodes keep serving.
+- An unhealthy Media Node is terminated and its instance pool launches a new one. With a fixed number of
+  Media Nodes, the node is detached from the pool, which launches its replacement, and then terminated.
+
+#### DigitalOcean
+
+- With autoscaling, an unhealthy Media Node is tagged so the autoscaler deletes it and creates a new one. With
+  a fixed number of Media Nodes, the Droplet is rebuilt in place.
 
 ### Fixed
 
-- **RTMP ingress in High Availability deployments.** OpenVidu gives RTMP publishers an
-  ingress URL on port 1945 (`rtmps://<your-domain>:1945/rtmp`), but the load balancer
-  only accepted RTMP on port 1935, so publishing to that URL failed. The load balancer
-  now accepts RTMPS on port 1945 on AWS, Azure and Google Cloud. If you publish RTMP to
-  an HA deployment, use the URL OpenVidu returns when the ingress is created, and allow
-  port 1945 in any firewall in front of your publishers.
+#### All clouds
+
+- High Availability: publishing to an RTMP ingress failed. OpenVidu returns the ingress URL on port 1945
+  (`rtmps://<your-domain>:1945/rtmp`), but the load balancer only accepted RTMP on port 1935. The load
+  balancer now accepts RTMPS on port 1945. Publish to the URL OpenVidu returns when the ingress is created, and
+  allow port 1945 in any firewall in front of your publishers.
+
+#### AWS
+
+- Single node and Elastic: the Elastic IP was attached only after the instance had started booting, so the
+  domain could be derived from a temporary public IP, or the instance could start without Internet access and
+  fail its installation. The Elastic IP is now known in advance, and the instance waits up to 10 minutes for
+  it before installing anything.
