@@ -329,6 +329,28 @@ public class NetworkConditioner {
 		blockOutboundPackets(targetContainer, Protocol.TCP, mediaPortRange);
 		blockOutboundPackets(targetContainer, Protocol.TCP, SFU_ICE_TCP_PORT);
 		blockOutboundPackets(targetContainer, Protocol.UDP, SFU_TURN_UDP_PORT);
+		// No test may go on without the blackout it asked for. Checked once all the
+		// rules are in: a check after each one would make the first ones last longer.
+		// Split on the rule prefix: the command output comes with its lines joined
+		String[] rules = nettools(targetContainer, "iptables", "-S OUTPUT").split("-A OUTPUT");
+		List<String> missing = new ArrayList<>();
+		for (String drop : List.of("udp " + mediaPortRange, "tcp " + mediaPortRange, "tcp " + SFU_ICE_TCP_PORT,
+				"udp " + SFU_TURN_UDP_PORT)) {
+			String[] protoPorts = drop.split(" ");
+			String proto = "-p " + protoPorts[0] + " ";
+			String dport = "--dport " + protoPorts[1].replace('-', ':') + " ";
+			boolean found = false;
+			for (String rule : rules) {
+				found |= rule.contains(proto) && rule.contains(dport) && rule.contains("DROP");
+			}
+			if (!found) {
+				missing.add(drop);
+			}
+		}
+		if (!missing.isEmpty()) {
+			throw new IllegalStateException(
+					"The blackout of container " + targetContainer + " lacks the DROP rules for " + missing);
+		}
 	}
 
 	/**
@@ -395,6 +417,60 @@ public class NetworkConditioner {
 				+ targetContainer;
 		impairedContainer = targetContainer;
 		runPumba(cmd);
+	}
+
+	/**
+	 * Limit the bandwidth of the packets leaving {@code targetContainer} towards
+	 * {@code remotePorts} to {@code rate} (a tc rate such as "250kbit"), during
+	 * {@code durationSec}. OUTBOUND only, like every netem impairment: the packets
+	 * beyond the rate wait in a queue, as at a congested link, so the sender's
+	 * bandwidth estimation sees the delay grow before any loss.
+	 */
+	public static void applyRateLimitToOutboundPackets(String targetContainer, String remotePorts, String rate,
+			int durationSec) {
+		log.info("Limiting the packets leaving container {} towards port {} to {} during {} seconds",
+				targetContainer, remotePorts, rate, durationSec);
+		StringBuilder opts = new StringBuilder("--duration ").append(durationSec).append("s --interface eth0")
+				.append(" --tc-image ").append(NETTOOLS_IMAGE);
+		final String ports = expandPorts(remotePorts);
+		if (ports != null) {
+			opts.append(" --ingress-port ").append(ports);
+		}
+		impairedContainer = targetContainer;
+		runPumba(pumbaRun() + " netem " + opts + " rate --rate " + rate + " " + targetContainer);
+	}
+
+	/**
+	 * Impair the packets leaving {@code targetContainer} towards {@code remotePorts}
+	 * with several netem settings at once, as a poor uplink has them: {@code netem}
+	 * is a netem specification such as "delay 50ms 30ms loss random 5% rate 300kbit".
+	 * Pumba runs one netem command at a time, and two of them cannot share an
+	 * interface, so this installs the qdisc itself, the way Pumba does: a prio root
+	 * whose third band carries the netem, with one u32 filter per destination port;
+	 * everything else goes through the second band, untouched. Nothing reverts it
+	 * but {@link #clear()}, which deletes the target's root qdisc.
+	 */
+	public static void applyOutboundNetem(String targetContainer, String remotePorts, String netem) {
+		final String ports = expandPorts(remotePorts);
+		if (ports == null) {
+			throw new IllegalArgumentException("applyOutboundNetem needs the destination ports to impair");
+		}
+		StringBuilder script = new StringBuilder("tc qdisc add dev eth0 root handle 1: prio bands 3 priomap")
+				.append(" 1".repeat(16)).append(" && tc qdisc add dev eth0 parent 1:3 handle 30: netem ").append(netem);
+		for (String port : ports.split(",")) {
+			script.append(" && tc filter add dev eth0 parent 1: protocol ip prio 1 u32 match ip dport ").append(port)
+					.append(" 0xffff flowid 1:3");
+		}
+		log.info("Impairing the packets leaving container {} towards port {} with netem {}", targetContainer,
+				remotePorts, netem);
+		impairedContainer = targetContainer;
+		String out = nettools(targetContainer, "sh", "-c \"" + script + "\"", 120);
+		// a command that timed out returns no output either
+		String qdiscs = nettools(targetContainer, "tc", "qdisc show dev eth0");
+		if (!out.isBlank() || !qdiscs.contains("netem")) {
+			throw new IllegalStateException(
+					"Could not install netem " + netem + " on " + targetContainer + ": " + out + " / " + qdiscs);
+		}
 	}
 
 	/**
