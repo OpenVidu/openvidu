@@ -63,6 +63,10 @@
         <input matInput id="egress-room-name-field" placeholder="Room" [(ngModel)]="egressRoomName">
       </mat-form-field>
       <mat-form-field class="inner-text-input" [style.fontSize.px]=14>
+        <mat-label>Participant</mat-label>
+        <input matInput id="egress-participant-identity-field" placeholder="Participant" [(ngModel)]="egressParticipantIdentity">
+      </mat-form-field>
+      <mat-form-field class="inner-text-input" [style.fontSize.px]=14>
         <mat-label>Audio Track</mat-label>
         <input matInput id="audio-track-id-field" placeholder="Audio Track ID" [(ngModel)]="audioTrackId">
       </mat-form-field>
@@ -92,6 +96,11 @@
         <button mat-button id="start-track-egress-api-btn" (click)="startTrackEgress()"
           [disabled]="!egressRoomName || (!!audioTrackId && !!videoTrackId || !audioTrackId && !videoTrackId)">Start
         Track Egress</button>
+      </span>
+      <span style="display: inline-block" matTooltip='"Room" and "Participant" required'
+        [matTooltipDisabled]="!!egressRoomName && !!egressParticipantIdentity">
+        <button mat-button id="start-participant-passthrough-egress-api-btn" (click)="startParticipantPassthroughEgress()"
+          [disabled]="!egressRoomName || !egressParticipantIdentity">Start Participant Passthrough Egress</button>
       </span>
       <span style="display: inline-block" matTooltip='"Egress ID" required' [matTooltipDisabled]="!!egressId">
         <button mat-button id="stop-egress-api-btn" (click)="stopEgress()" [disabled]="!egressId">Stop Egress</button>

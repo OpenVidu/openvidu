@@ -8,6 +8,8 @@ import {
   DirectFileOutput,
   EgressClient,
   EgressInfo,
+  EncodedFileOutput,
+  EncodedFileType,
   EncodedOutputs,
   EncodingOptions,
   EncodingOptionsPreset,
@@ -207,6 +209,29 @@ export class RoomApiService {
       output = outputAux as DirectFileOutput;
     }
     return await this.egressClient.startTrackEgress(roomName, output, track_id);
+  }
+
+  /**
+   * The participant's audio and video tracks, as they are published, without
+   * transcoding, in one Matroska file (OpenVidu egress: PASSTHROUGH for an
+   * audio track plus a video track). Needs exactly one file output of the
+   * default file type: ".webm" filepaths give WebM, anything else Matroska.
+   */
+  async startParticipantPassthroughEgress(
+    roomName: string,
+    identity: string
+  ): Promise<EgressInfo> {
+    const file = new EncodedFileOutput({
+      fileType: EncodedFileType.DEFAULT_FILETYPE,
+      filepath:
+        'ParticipantPassthrough-{room_id}-{room_name}-{time}-{publisher_identity}.mkv',
+    });
+    return await this.egressClient.startParticipantEgress(
+      roomName,
+      identity,
+      { file },
+      { encodingOptions: EncodingOptionsPreset.PASSTHROUGH }
+    );
   }
 
   async stopEgress(egressId: string): Promise<EgressInfo> {

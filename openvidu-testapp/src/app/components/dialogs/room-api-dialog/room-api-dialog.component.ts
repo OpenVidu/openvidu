@@ -55,6 +55,7 @@ export class RoomApiDialogComponent {
   muteTrack: boolean = true;
 
   egressRoomName: string;
+  egressParticipantIdentity: string;
   egressId: string;
   audioTrackId: string;
   videoTrackId: string;
@@ -146,6 +147,7 @@ export class RoomApiDialogComponent {
       .values()
       .next().value?.trackSid!;
     this.egressRoomName = this.room?.name;
+    this.egressParticipantIdentity = this.localParticipant?.identity;
     this.audioTrackId = this.localParticipant?.audioTrackPublications
       .values()
       .next().value?.trackSid!;
@@ -300,6 +302,20 @@ export class RoomApiDialogComponent {
       const egress = await this.roomApiService.startTrackEgress(
         this.egressRoomName,
         !!this.audioTrackId ? this.audioTrackId : this.videoTrackId
+      );
+      this.response = JSON.stringify(egress, null, 4);
+      this.egressId = egress.egressId;
+    } catch (error: any) {
+      this.response = error;
+    }
+  }
+
+  async startParticipantPassthroughEgress() {
+    console.log('Starting participant passthrough egress');
+    try {
+      const egress = await this.roomApiService.startParticipantPassthroughEgress(
+        this.egressRoomName,
+        this.egressParticipantIdentity
       );
       this.response = JSON.stringify(egress, null, 4);
       this.egressId = egress.egressId;
