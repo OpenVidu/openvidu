@@ -48,6 +48,7 @@ import io.livekit.server.RoomCreate;
 import io.livekit.server.RoomRecord;
 import io.minio.DownloadObjectArgs;
 import io.minio.MinioClient;
+import io.openvidu.test.browsers.utils.Ffmpeg;
 import livekit.LivekitModels.ParticipantInfo;
 import livekit.LivekitModels.TrackInfo;
 import livekit.LivekitModels.TrackSource;
@@ -89,8 +90,8 @@ import okhttp3.Response;
  *
  * Needs the Compose deployment (egress + MinIO) running openvidu/egress-pro,
  * which exits at startup without a valid OpenVidu PRO license (the CI workflow
- * "OpenVidu Pro E2E Egress Pro tests" sets both up), and ffmpeg/ffprobe on the
- * host, with libvpx and libdav1d.
+ * "OpenVidu Pro E2E Egress Pro tests" sets both up). ffmpeg and ffprobe run in
+ * the Docker image of {@link Ffmpeg}, never the host's.
  *
  * @author Pablo Fuente (pablofuenteperez@gmail.com)
  */
@@ -235,7 +236,7 @@ public class OpenViduTestAppE2eEgressProTest extends AbstractOpenViduTestappE2eT
 
 	@BeforeAll()
 	protected static void setupAll() throws Exception {
-		checkFfmpegInstallation();
+		pullFfmpegImage();
 		loadEnvironmentVariables();
 		setUpLiveKitClient();
 		syncMediaScript = Files.readString(Paths.get("src/test/resources/participant-passthrough-sync-media.js"));
@@ -3041,8 +3042,8 @@ public class OpenViduTestAppE2eEgressProTest extends AbstractOpenViduTestappE2eT
 		}
 
 		private void probe() throws Exception {
-			Exec probe = Exec.run(60, "ffprobe", "-v", "error", "-show_format", "-show_streams", "-of", "json",
-					file.toString());
+			Exec probe = Exec.run(60, Ffmpeg.command("ffprobe", "-v", "error", "-show_format", "-show_streams", "-of",
+					"json", file.toString()));
 			Assertions.assertEquals(0, probe.exitCode, "ffprobe failed on " + file + ": " + probe.stderr);
 			JsonObject json = JsonParser.parseString(probe.stdout).getAsJsonObject();
 			JsonObject format = json.getAsJsonObject("format");
@@ -3060,8 +3061,8 @@ public class OpenViduTestAppE2eEgressProTest extends AbstractOpenViduTestappE2eT
 		}
 
 		private void readPackets() throws Exception {
-			Exec packets = Exec.run(120, "ffprobe", "-v", "error", "-show_entries", "packet=stream_index,pts_time",
-					"-of", "csv=p=0", file.toString());
+			Exec packets = Exec.run(120, Ffmpeg.command("ffprobe", "-v", "error", "-show_entries",
+					"packet=stream_index,pts_time", "-of", "csv=p=0", file.toString()));
 			Assertions.assertEquals(0, packets.exitCode, "ffprobe could not read the packets: " + packets.stderr);
 			for (String line : packets.stdout.split("\n")) {
 				String[] fields = line.trim().split(",");
@@ -3078,8 +3079,8 @@ public class OpenViduTestAppE2eEgressProTest extends AbstractOpenViduTestappE2eT
 		private void decode() throws Exception {
 			// passthrough timestamps in the demuxer's time base: frames 33 +/- 1 ms apart
 			// must not collide in a 1/30 s encoder time base
-			Exec decode = Exec.run(300, "ffmpeg", "-nostdin", "-v", "error", "-i", file.toString(), "-map", "0",
-					"-fps_mode", "passthrough", "-enc_time_base", "demux", "-f", "null", "-");
+			Exec decode = Exec.run(300, Ffmpeg.command("ffmpeg", "-nostdin", "-v", "error", "-i", file.toString(), "-map",
+					"0", "-fps_mode", "passthrough", "-enc_time_base", "demux", "-f", "null", "-"));
 			decodeErrors = decode.exitCode == 0 ? decode.stderr.trim()
 					: "exit " + decode.exitCode + ": " + decode.stderr;
 		}
@@ -3103,7 +3104,7 @@ public class OpenViduTestAppE2eEgressProTest extends AbstractOpenViduTestappE2eT
 				command.addAll(List.of("-i", file.toString(), "-map", "0:" + s.index, "-fps_mode", "passthrough", "-vf",
 						"crop=iw:2:0:trunc(ih/4)*2,scale=" + BAR_ROW_WIDTH + ":1:flags=area,format=gray,showinfo",
 						"-f", "rawvideo", rows.toString()));
-				Exec frames = Exec.run(300, command.toArray(new String[0]));
+				Exec frames = Exec.run(300, Ffmpeg.command(command));
 				Assertions.assertEquals(0, frames.exitCode, "ffmpeg could not read the video: " + frames.stderr);
 				Matcher pts = SHOWINFO_PTS.matcher(frames.stderr);
 				while (pts.find()) {
@@ -3145,8 +3146,9 @@ public class OpenViduTestAppE2eEgressProTest extends AbstractOpenViduTestappE2eT
 			}
 			s.bar.sort((a, b) -> Double.compare(a[0], b[0]));
 			countBrokenPictures(s, barRuns);
-			Exec sizes = Exec.run(300, "ffprobe", "-v", "error", "-select_streams", String.valueOf(s.index),
-					"-show_entries", "frame=pts_time,width,height", "-of", "csv=p=0", file.toString());
+			Exec sizes = Exec.run(300, Ffmpeg.command("ffprobe", "-v", "error", "-select_streams",
+					String.valueOf(s.index), "-show_entries", "frame=pts_time,width,height", "-of", "csv=p=0",
+					file.toString()));
 			Assertions.assertEquals(0, sizes.exitCode, "ffprobe could not read the frame sizes: " + sizes.stderr);
 			for (String line : sizes.stdout.split("\n")) {
 				String[] fields = line.trim().split(",");
@@ -3279,8 +3281,8 @@ public class OpenViduTestAppE2eEgressProTest extends AbstractOpenViduTestappE2eT
 		}
 
 		private void readAudio(FileTrack s) throws Exception {
-			Exec beeps = Exec.run(300, "ffmpeg", "-nostdin", "-copyts", "-i", file.toString(), "-map", "0:" + s.index,
-					"-af", "silencedetect=n=-30dB:d=0.3", "-f", "null", "-");
+			Exec beeps = Exec.run(300, Ffmpeg.command("ffmpeg", "-nostdin", "-copyts", "-i", file.toString(), "-map",
+					"0:" + s.index, "-af", "silencedetect=n=-30dB:d=0.3", "-f", "null", "-"));
 			Assertions.assertEquals(0, beeps.exitCode, "ffmpeg could not read the audio: " + beeps.stderr);
 			// A beep is sound between a silence_end and the next silence_start. One cut
 			// short (the track resumed, after silence, in the middle of a beep) does not

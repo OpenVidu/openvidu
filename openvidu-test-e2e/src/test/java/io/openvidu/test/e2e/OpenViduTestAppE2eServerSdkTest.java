@@ -50,6 +50,7 @@ public class OpenViduTestAppE2eServerSdkTest extends AbstractOpenViduTestappE2eT
 
 	@BeforeAll()
 	protected static void setupAll() throws Exception {
+		pullFfmpegImage();
 		loadEnvironmentVariables();
 		setUpLiveKitClient();
 		CompletableFuture.runAsync(OpenViduTestAppE2eServerSdkTest::pullRemoteBrowserImages);

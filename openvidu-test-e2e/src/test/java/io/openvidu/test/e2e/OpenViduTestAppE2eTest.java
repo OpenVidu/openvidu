@@ -87,6 +87,7 @@ import io.minio.errors.InvalidResponseException;
 import io.minio.errors.ServerException;
 import io.minio.errors.XmlParserException;
 import io.minio.messages.Item;
+import io.openvidu.test.browsers.utils.Ffmpeg;
 import livekit.LivekitIngress.IngressInfo;
 import livekit.LivekitIngress.IngressState;
 import livekit.LivekitModels.ConnectionQuality;
@@ -110,7 +111,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 	@BeforeAll()
 	protected static void setupAll() throws Exception {
-		checkFfmpegInstallation();
+		pullFfmpegImage();
 		loadEnvironmentVariables();
 		setUpLiveKitClient();
 		CompletableFuture.runAsync(() -> {
@@ -2165,11 +2166,11 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		// Generate a WAV file with 5s tone + 5s silence (10 seconds total).
 		// Chrome will loop this file as the fake audio capture source.
 		String dtxAudioPath = "/opt/openvidu/dtx_test_audio.wav";
-		String ffmpegCmd = "ffmpeg -y"
+		String ffmpegCmd = Ffmpeg.shellCommand("ffmpeg", "-y"
 				+ " -f lavfi -i sine=frequency=440:duration=5"
 				+ " -f lavfi -i anullsrc=r=48000:cl=mono"
 				+ " -filter_complex \"[1]atrim=duration=5[silence];[0][silence]concat=n=2:v=0:a=1[out]\""
-				+ " -map \"[out]\" -ar 48000 -ac 1 " + dtxAudioPath;
+				+ " -map \"[out]\" -ar 48000 -ac 1 " + dtxAudioPath);
 		String ffmpegOutput = commandLine.executeCommand(ffmpegCmd, 30);
 		log.info("ffmpeg output: {}", ffmpegOutput);
 		java.io.File dtxAudioFile = new java.io.File(dtxAudioPath);

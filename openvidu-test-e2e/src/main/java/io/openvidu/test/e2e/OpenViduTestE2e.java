@@ -55,6 +55,7 @@ import io.openvidu.test.browsers.EdgeUser;
 import io.openvidu.test.browsers.FirefoxUser;
 import io.openvidu.test.browsers.utils.BrowserNames;
 import io.openvidu.test.browsers.utils.CommandLineExecutor;
+import io.openvidu.test.browsers.utils.Ffmpeg;
 import livekit.LivekitIngress.IngressInfo;
 import livekit.LivekitModels.Room;
 import okhttp3.OkHttpClient;
@@ -162,15 +163,13 @@ public class OpenViduTestE2e {
 	protected static String LIVEKIT_HTTP_URL;
 	protected static OkHttpClient LK_HTTP_CLIENT;
 
-	protected static void checkFfmpegInstallation() {
-		String ffmpegOutput = commandLine.executeCommand("which ffmpeg", 60);
-		if (ffmpegOutput == null || ffmpegOutput.isEmpty()) {
-			log.error("ffmpeg package is not installed in the host machine");
-			Assertions.fail();
-			return;
-		} else {
-			log.info("ffmpeg is installed and accesible");
+	protected static void pullFfmpegImage() {
+		try {
+			Ffmpeg.pullImage();
+		} catch (Exception e) {
+			Assertions.fail("Could not pull the ffmpeg image " + Ffmpeg.IMAGE + ": " + e.getMessage());
 		}
+		log.info("ffmpeg and ffprobe run in Docker image {}", Ffmpeg.IMAGE);
 	}
 
 	private GenericContainer<?> chromeContainer(String image, long shmSize, int maxBrowserSessions, boolean headless) {
@@ -598,8 +597,8 @@ public class OpenViduTestE2e {
 			for (Map.Entry<String, String> layer : layerSizes.entrySet()) {
 				Path videoFile = mediaDir
 						.resolve("test-video-" + layer.getValue() + "." + ("h264".equals(codec) ? "h264" : "ivf"));
-				commandLine.executeCommand("ffmpeg -y -f lavfi -i testsrc=size=" + layer.getValue()
-						+ ":rate=30 -t 5 -pix_fmt yuv420p " + encoder + " " + videoFile, 120);
+				commandLine.executeCommand(Ffmpeg.shellCommand("ffmpeg", "-y -f lavfi -i testsrc=size="
+						+ layer.getValue() + ":rate=30 -t 5 -pix_fmt yuv420p " + encoder + " " + videoFile), 120);
 				if (!Files.exists(videoFile) || Files.size(videoFile) == 0) {
 					Assertions.fail("ffmpeg could not generate the " + codec + " test file " + videoFile);
 				}

@@ -35,6 +35,7 @@ import io.minio.BucketExistsArgs;
 import io.minio.DownloadObjectArgs;
 import io.minio.MinioClient;
 import io.openvidu.test.browsers.BrowserUser;
+import io.openvidu.test.browsers.utils.Ffmpeg;
 
 import static org.openqa.selenium.OutputType.BASE64;
 
@@ -1180,8 +1181,8 @@ public class AbstractOpenViduTestappE2eTest extends OpenViduTestE2e {
 		String container = "h264".equals(codec) ? "mp4" : "webm";
 		Assertions.assertTrue(file.toString().endsWith("." + container), "Wrong file extension: " + file);
 
-		JsonObject probe = JsonParser.parseString(runMediaCommand("ffprobe", "-v", "error", "-show_format",
-				"-show_streams", "-count_packets", "-of", "json", file.toString())[0]).getAsJsonObject();
+		JsonObject probe = JsonParser.parseString(runMediaCommand(Ffmpeg.command("ffprobe", "-v", "error", "-show_format",
+				"-show_streams", "-count_packets", "-of", "json", file.toString()))[0]).getAsJsonObject();
 		JsonObject format = probe.getAsJsonObject("format");
 		JsonArray streams = probe.getAsJsonArray("streams");
 		log.info("Track egress recording {}: {}, {}", file.getFileName(), format, streams);
@@ -1203,8 +1204,8 @@ public class AbstractOpenViduTestappE2eTest extends OpenViduTestE2e {
 		// Starts with a keyframe, and its timestamps never go back. A simulcast layer
 		// switch gives the keyframe of the new layer the timestamp of the frame it
 		// replaces, so a timestamp may repeat on a keyframe of a multi-layer track only
-		List<String[]> packets = runMediaCommand("ffprobe", "-v", "error", "-select_streams", "v:0",
-				"-show_entries", "packet=dts_time,flags", "-of", "csv=p=0", file.toString())[0].lines()
+		List<String[]> packets = runMediaCommand(Ffmpeg.command("ffprobe", "-v", "error", "-select_streams", "v:0",
+				"-show_entries", "packet=dts_time,flags", "-of", "csv=p=0", file.toString()))[0].lines()
 				.map(l -> l.trim().split(",")).filter(p -> p.length == 2 && !"N/A".equals(p[0])).toList();
 		Assertions.assertTrue(packets.get(0)[1].startsWith("K"), "The recording must start with a keyframe");
 		for (int i = 1; i < packets.size(); i++) {
@@ -1226,7 +1227,7 @@ public class AbstractOpenViduTestappE2eTest extends OpenViduTestE2e {
 		}
 		command.addAll(List.of("-i", file.toString(), "-map", "0:v", "-vf", "showinfo", "-fps_mode", "passthrough",
 				"-enc_time_base", "demux", "-f", "null", "-"));
-		String decodeLog = runMediaCommand(command.toArray(new String[0]))[1];
+		String decodeLog = runMediaCommand(Ffmpeg.command(command))[1];
 		// Errors of the demuxer and the decoder: the null muxer's own complaints about a
 		// repeated timestamp are covered above
 		List<String> errors = decodeLog.lines().filter(l -> l.contains("[error]") || l.contains("[fatal]"))

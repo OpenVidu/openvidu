@@ -151,7 +151,7 @@ public class MultimediaFileMetadata {
 
 	private JsonObject executeFfprobeCommand(String filePath) {
 		log.info("Running ffprobe command on '{}'", filePath);
-		String cmd = "ffprobe -v quiet -print_format json -show_format -show_streams " + filePath;
+		String cmd = Ffmpeg.shellCommand("ffprobe", "-v quiet -print_format json -show_format -show_streams " + filePath);
 		return JsonParser.parseString(this.executer.executeCommand(cmd, 60)).getAsJsonObject();
 	}
 
@@ -161,7 +161,7 @@ public class MultimediaFileMetadata {
 		String pathCopy = null;
 		pathCopy = java.nio.file.Files.move(source, source.resolveSibling("COPY." + extension)).toString();
 		log.warn("Fixing file '{}' with ffmpeg", filePath);
-		String cmd = "ffmpeg -i " + pathCopy + " -vcodec copy -acodec copy " + filePath;
+		String cmd = Ffmpeg.shellCommand("ffmpeg", "-i " + pathCopy + " -vcodec copy -acodec copy " + filePath);
 		this.executer.executeCommand(cmd, 60);
 		new File(pathCopy).delete();
 	}
