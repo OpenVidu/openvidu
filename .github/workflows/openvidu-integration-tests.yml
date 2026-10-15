@@ -6,21 +6,40 @@ on:
     paths:
       - "openvidu-test-integration/**"
       - ".github/workflows/openvidu-integration-tests.yml"
+  pull_request:
+    branches:
+      - master
+    paths:
+      - "openvidu-test-integration/**"
+      - ".github/workflows/openvidu-integration-tests.yml"
   workflow_dispatch:
 
 jobs:
   integration-tests:
     name: Integration tests
-    timeout-minutes: 30
-    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    runs-on: ${{ vars.LABEL_WORKER_SELFHOSTED }}
     steps:
+      # Until OpenVidu/openvidu-livekit#17 is merged, the OpenVidu server image is built from its branch.
+      - name: Checkout openvidu-livekit
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          repository: OpenVidu/openvidu-livekit
+          ref: feature/analytics-v2
+          path: openvidu-livekit
+
+      - name: Build the OpenVidu server image
+        run: docker build -t openvidu-server:integration openvidu-livekit
+
       - name: Configure OpenVidu Local Deployment
         uses: OpenVidu/actions/start-openvidu-local-deployment@ccd21721ffb48bdeb889526d3a0b496c451ffd48 # v1.0.24
         with:
           ref-openvidu-local-deployment: development
+          # Batches every second and a reconciler run every 10 s, instead of 10 s and 60 s.
           pre_startup_commands: |
             sed -i 's/interval: 10s/interval: 1s/' livekit.yaml
             sed -i '/interval: 1s/a \        fixer_interval: 10s' livekit.yaml
+            yq e -i '.services.openvidu.image = "openvidu-server:integration"' docker-compose.yaml
       - name: Install LiveKit CLI
         run: |
           curl -sSL https://get.livekit.io/cli | bash
