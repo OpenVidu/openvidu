@@ -31,4 +31,37 @@ export class LocalDeployment {
         console.log(`Stopping container ${containerName}...`);
         execCommand(`docker compose -f ${LOCAL_DEPLOYMENT_PATH} stop ${containerName}`);
     }
+
+    /** SIGTERM and, after the timeout, SIGKILL: a short timeout cuts the shutdown of the service short. */
+    static stopContainerWithTimeout(containerName: string, timeoutSeconds: number) {
+        console.log(`Stopping container ${containerName} with a ${timeoutSeconds} s timeout...`);
+        execCommand(`docker stop --timeout=${timeoutSeconds} ${containerName}`);
+    }
+
+    /** SIGKILL, as a crash: the service gets no chance to shut down. */
+    static killContainer(containerName: string) {
+        console.log(`Killing container ${containerName}...`);
+        execCommand(`docker kill ${containerName}`);
+    }
+
+    static restartContainer(containerName: string) {
+        console.log(`Restarting container ${containerName}...`);
+        execCommand(`docker restart ${containerName}`);
+    }
+
+    /** Waits until the OpenVidu server logs that its analytics database is initialized after the given time. */
+    static async waitForAnalytics(since: Date, timeoutSeconds = 60) {
+        const deadline = Date.now() + timeoutSeconds * 1000;
+        const sinceArg = since.toISOString();
+
+        while (Date.now() < deadline) {
+            const logs = execCommand(`docker logs --since ${sinceArg} openvidu 2>&1 || true`);
+            if (logs.includes("analytics database initialized")) {
+                return;
+            }
+            await sleep(1);
+        }
+
+        throw new Error("The OpenVidu server did not initialize its analytics database");
+    }
 }

@@ -7,6 +7,7 @@ const LIVEKIT_API_SECRET = "secret";
 const LK_CLI = "lk";
 
 export class Livekit {
+    /** Joins a participant that publishes the demo video and audio tracks; returns the pid of the CLI. */
     static joinParticipantToRoom(participantIdentity: string, roomName: string): number {
         const args = [
             "room",
