@@ -1656,6 +1656,9 @@ var media_replaceScriptMediaTemplate = '''
 mkdir -p /var/lib/openvidu-media-health
 echo "$(date -u +%FT%TZ) $1" >> /var/lib/openvidu-media-health/replace-requests.log
 touch /run/openvidu-unhealthy
+# Withdrawn if the request fails: the node then stays, and if it recovers
+# a later scale-in must still wait for its sessions
+trap '[ $? -eq 0 ] || rm -f /run/openvidu-unhealthy' EXIT
 
 RESOURCE_GROUP_NAME=${resourceGroupName}
 VM_SCALE_SET_NAME=${vmScaleSetName}

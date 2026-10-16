@@ -1994,6 +1994,9 @@ mkdir -p /var/lib/openvidu-media-health
 echo "$(date -u +%FT%TZ) $REASON" >> /var/lib/openvidu-media-health/replace-requests.log
 # Tell the drain script this node is being replaced so it skips waiting for sessions.
 touch /run/openvidu-unhealthy
+# Withdrawn if the request fails: the node then stays, and if it recovers
+# a later scale-in must still wait for its sessions
+trap '[ $? -eq 0 ] || rm -f /run/openvidu-unhealthy' EXIT
 
 META="http://metadata.google.internal/computeMetadata/v1"
 meta() { curl -s -H "Metadata-Flavor: Google" "$META/$1"; }

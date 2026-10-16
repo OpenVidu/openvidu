@@ -2996,6 +2996,9 @@ Resources:
                 echo "$(date -u +%FT%TZ) $1" >> /var/lib/openvidu-media-health/replace-requests.log
                 # Let stop_media_node.sh know this node is unhealthy, so it does not wait for sessions
                 touch /run/openvidu-unhealthy
+                # Withdrawn if the request fails: the node then stays, and if it recovers
+                # a later scale-in must still wait for its sessions
+                trap '[ $? -eq 0 ] || rm -f /run/openvidu-unhealthy' EXIT
 
                 # Token for IMDSv2
                 TOKEN=$(curl -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 21600")
