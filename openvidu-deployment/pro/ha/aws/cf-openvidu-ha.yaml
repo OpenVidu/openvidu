@@ -1048,7 +1048,7 @@ Parameters:
     Default: ""
 
   TurnDomainName:
-    Description: "(Optional) Domain for TURN over TLS, served by a dedicated TURN Load Balancer that forwards it directly to the Media Nodes instead of through the Master Nodes. Set it together with TurnCertificateARN and point it (A/ALIAS) to the TurnLoadBalancerDNS output."
+    Description: "(Optional) Domain for TURN over TLS, served by a dedicated TURN Load Balancer that forwards it directly to the Media Nodes instead of through the Master Nodes. Set it together with TurnCertificateARN and point it (A/ALIAS) to the TurnLoadBalancerDNS output. If LoadBalancerSubnets is also set and the Media Nodes are in other (private) subnets, a second Load Balancer (TurnUDPLoadBalancerDNS output) also forwards TURN over UDP 443 to the Media Nodes, so media goes over UDP, with TURN over TLS as the fallback."
     Type: String
     Default: ""
 
@@ -1124,6 +1124,11 @@ Conditions:
   CreateClusterDataBucket: !Equals [!Ref S3ClusterDataBucketName, ""]
   HasLoadBalancerSubnets: !Not [!Equals [!Join ["", !Ref LoadBalancerSubnets], ""]]
   TurnTLSIsEnabled: !And [!Not [!Equals [!Ref TurnDomainName, ""]], !Not [!Equals [!Ref TurnCertificateARN, ""]]]
+  # Media Nodes behind the TURN Load Balancer in other subnets than the Load Balancers (private subnets)
+  TurnUDPIsEnabled: !And
+    - !Condition TurnTLSIsEnabled
+    - !Condition HasLoadBalancerSubnets
+    - !Not [!Equals [!Join [",", !Ref LoadBalancerSubnets], !Join [",", !Ref OpenViduMediaNodeSubnets]]]
   IsMasterGraviton: !Or
     - !Equals [ !Select [ 0, !Split ['.', !Ref MasterNodeInstanceType ]], 't4g']
     - !Equals [ !Select [ 0, !Split ['.', !Ref MasterNodeInstanceType ]], 'c6g']
@@ -1364,6 +1369,11 @@ Resources:
                           media_private = 'true'
                   responseData['MediaNodesPrivate'] = media_private
 
+                  # TURN over UDP through the TURN UDP Load Balancer, only for private Media Nodes:
+                  # public ones keep announcing their own public IP
+                  turn_udp = event['ResourceProperties'].get('TurnUDP', 'false') == 'true'
+                  responseData['TurnUDPEnabled'] = 'true' if turn_udp and media_private == 'true' else 'false'
+
                   cfnresponse.send(event, context, cfnresponse.SUCCESS, responseData)
 
               except Exception as e:
@@ -1379,6 +1389,7 @@ Resources:
       ServiceToken: !GetAtt SubnetProcessorFunction.Arn
       Subnets: !Ref OpenViduMasterNodeSubnets
       MediaSubnets: !Ref OpenViduMediaNodeSubnets
+      TurnUDP: !If [TurnUDPIsEnabled, 'true', 'false']
 
   LambdaLogGroup:
     UpdateReplacePolicy: Retain
@@ -1783,8 +1794,7 @@ Resources:
                   sleep 5
                 done
 
-                # sending the signal call
-                cfn-signal -e $? --stack ${AWS::StackId} --resource "$SIGNAL_NAME" --region ${AWS::Region}
+                # The WaitCondition is signalled by the UserData once OpenVidu is healthy
 
                 IP_WAIT_ATTEMPTS=0
                 IP_WAIT_MAX=360
@@ -1909,6 +1919,11 @@ Resources:
                 # the same condition as the TURN Load Balancer resources)
                 if [[ "${TurnDomainName}" != "" && "${TurnCertificateARN}" != "" ]]; then
                   COMMON_ARGS+=("--turn-domain-name=${TurnDomainName}")
+                fi
+
+                # TURN UDP Load Balancer: each Media Node announces the Load Balancer IP of its zone
+                if [[ "${SubnetProcessor.TurnUDPEnabled}" == "true" ]]; then
+                  COMMON_ARGS+=("--force-media-node-public-ip")
                 fi
 
                 # Construct the final command
@@ -2330,14 +2345,19 @@ Resources:
 
           export MASTER_NODE_NUM=1
 
+          # Report the result to CloudFormation: success only once OpenVidu is healthy on this node
+          signal_cfn() { cfn-signal -e "$1" --reason "$2" --stack ${AWS::StackId} --resource MasterNodesWaitCondition1 --region ${AWS::Region} || true; }
+          fail() { echo "[OpenVidu] $1"; signal_cfn 1 "Master Node 1: $1"; exit 1; }
+          trap 'fail "unexpected error at line $LINENO"' ERR
+
           # Install OpenVidu
-          /usr/local/bin/install.sh "MasterNodesWaitCondition1" || { echo "[OpenVidu] error installing OpenVidu"; exit 1; }
+          /usr/local/bin/install.sh "MasterNodesWaitCondition1" || fail "error installing OpenVidu"
 
           # Config S3 bucket
-          /usr/local/bin/config_s3.sh || { echo "[OpenVidu] error configuring S3 bucket"; exit 1; }
+          /usr/local/bin/config_s3.sh || fail "error configuring S3 bucket"
 
           # Start OpenVidu
-          systemctl start openvidu || { echo "[OpenVidu] error starting OpenVidu"; exit 1; }
+          systemctl start openvidu || fail "error starting OpenVidu"
 
           # Local readiness gate: wait up to 300s for Caddy health, restart once if it does not converge
           OPENVIDU_READY=false
@@ -2360,8 +2380,13 @@ Resources:
             done
           fi
 
+          if [ "$OPENVIDU_READY" != "true" ]; then
+            fail "OpenVidu not healthy after installing"
+          fi
+
           # Update shared secret
-          /usr/local/bin/after_install.sh || { echo "[OpenVidu] error updating shared secret"; exit 1; }
+          /usr/local/bin/after_install.sh || fail "error updating shared secret"
+          signal_cfn 0 "OpenVidu installed and healthy"
 
           # Launch on reboot
           echo "@reboot /usr/local/bin/restart.sh &> /var/log/openvidu-restart.log" | crontab
@@ -2371,7 +2396,7 @@ Resources:
     Type: 'AWS::CloudFormation::WaitCondition'
     CreationPolicy:
       ResourceSignal:
-        Timeout: PT20M
+        Timeout: PT40M
         Count: '1'
 
   OpenViduMasterNode2:
@@ -2412,14 +2437,19 @@ Resources:
 
           export MASTER_NODE_NUM=2
 
+          # Report the result to CloudFormation: success only once OpenVidu is healthy on this node
+          signal_cfn() { cfn-signal -e "$1" --reason "$2" --stack ${AWS::StackId} --resource MasterNodesWaitCondition2 --region ${AWS::Region} || true; }
+          fail() { echo "[OpenVidu] $1"; signal_cfn 1 "Master Node 2: $1"; exit 1; }
+          trap 'fail "unexpected error at line $LINENO"' ERR
+
           # Install OpenVidu
-          /usr/local/bin/install.sh "MasterNodesWaitCondition2" || { echo "[OpenVidu] error installing OpenVidu"; exit 1; }
+          /usr/local/bin/install.sh "MasterNodesWaitCondition2" || fail "error installing OpenVidu"
 
           # Config S3 bucket
-          /usr/local/bin/config_s3.sh || { echo "[OpenVidu] error configuring S3 bucket"; exit 1; }
+          /usr/local/bin/config_s3.sh || fail "error configuring S3 bucket"
 
           # Start OpenVidu
-          systemctl start openvidu || { echo "[OpenVidu] error starting OpenVidu"; exit 1; }
+          systemctl start openvidu || fail "error starting OpenVidu"
 
           # Local readiness gate: wait up to 300s for Caddy health, restart once if it does not converge
           OPENVIDU_READY=false
@@ -2442,8 +2472,13 @@ Resources:
             done
           fi
 
+          if [ "$OPENVIDU_READY" != "true" ]; then
+            fail "OpenVidu not healthy after installing"
+          fi
+
           # Update shared secret
-          /usr/local/bin/after_install.sh || { echo "[OpenVidu] error updating shared secret"; exit 1; }
+          /usr/local/bin/after_install.sh || fail "error updating shared secret"
+          signal_cfn 0 "OpenVidu installed and healthy"
 
           # Launch on reboot
           echo "@reboot /usr/local/bin/restart.sh &> /var/log/openvidu-restart.log" | crontab
@@ -2453,7 +2488,7 @@ Resources:
     Type: 'AWS::CloudFormation::WaitCondition'
     CreationPolicy:
       ResourceSignal:
-        Timeout: PT20M
+        Timeout: PT40M
         Count: '1'
 
   OpenViduMasterNode3:
@@ -2494,14 +2529,19 @@ Resources:
 
           export MASTER_NODE_NUM=3
 
+          # Report the result to CloudFormation: success only once OpenVidu is healthy on this node
+          signal_cfn() { cfn-signal -e "$1" --reason "$2" --stack ${AWS::StackId} --resource MasterNodesWaitCondition3 --region ${AWS::Region} || true; }
+          fail() { echo "[OpenVidu] $1"; signal_cfn 1 "Master Node 3: $1"; exit 1; }
+          trap 'fail "unexpected error at line $LINENO"' ERR
+
           # Install OpenVidu
-          /usr/local/bin/install.sh "MasterNodesWaitCondition3" || { echo "[OpenVidu] error installing OpenVidu"; exit 1; }
+          /usr/local/bin/install.sh "MasterNodesWaitCondition3" || fail "error installing OpenVidu"
 
           # Config S3 bucket
-          /usr/local/bin/config_s3.sh || { echo "[OpenVidu] error configuring S3 bucket"; exit 1; }
+          /usr/local/bin/config_s3.sh || fail "error configuring S3 bucket"
 
           # Start OpenVidu
-          systemctl start openvidu || { echo "[OpenVidu] error starting OpenVidu"; exit 1; }
+          systemctl start openvidu || fail "error starting OpenVidu"
 
           # Local readiness gate: wait up to 300s for Caddy health, restart once if it does not converge
           OPENVIDU_READY=false
@@ -2524,8 +2564,13 @@ Resources:
             done
           fi
 
+          if [ "$OPENVIDU_READY" != "true" ]; then
+            fail "OpenVidu not healthy after installing"
+          fi
+
           # Update shared secret
-          /usr/local/bin/after_install.sh || { echo "[OpenVidu] error updating shared secret"; exit 1; }
+          /usr/local/bin/after_install.sh || fail "error updating shared secret"
+          signal_cfn 0 "OpenVidu installed and healthy"
 
           # Launch on reboot
           echo "@reboot /usr/local/bin/restart.sh &> /var/log/openvidu-restart.log" | crontab
@@ -2535,7 +2580,7 @@ Resources:
     Type: 'AWS::CloudFormation::WaitCondition'
     CreationPolicy:
       ResourceSignal:
-        Timeout: PT20M
+        Timeout: PT40M
         Count: '1'
 
   OpenViduMasterNode4:
@@ -2576,14 +2621,19 @@ Resources:
 
           export MASTER_NODE_NUM=4
 
+          # Report the result to CloudFormation: success only once OpenVidu is healthy on this node
+          signal_cfn() { cfn-signal -e "$1" --reason "$2" --stack ${AWS::StackId} --resource MasterNodesWaitCondition4 --region ${AWS::Region} || true; }
+          fail() { echo "[OpenVidu] $1"; signal_cfn 1 "Master Node 4: $1"; exit 1; }
+          trap 'fail "unexpected error at line $LINENO"' ERR
+
           # Install OpenVidu
-          /usr/local/bin/install.sh "MasterNodesWaitCondition4" || { echo "[OpenVidu] error installing OpenVidu"; exit 1; }
+          /usr/local/bin/install.sh "MasterNodesWaitCondition4" || fail "error installing OpenVidu"
 
           # Config S3 bucket
-          /usr/local/bin/config_s3.sh || { echo "[OpenVidu] error configuring S3 bucket"; exit 1; }
+          /usr/local/bin/config_s3.sh || fail "error configuring S3 bucket"
 
           # Start OpenVidu
-          systemctl start openvidu || { echo "[OpenVidu] error starting OpenVidu"; exit 1; }
+          systemctl start openvidu || fail "error starting OpenVidu"
 
           # Local readiness gate: wait up to 300s for Caddy health, restart once if it does not converge
           OPENVIDU_READY=false
@@ -2606,8 +2656,13 @@ Resources:
             done
           fi
 
+          if [ "$OPENVIDU_READY" != "true" ]; then
+            fail "OpenVidu not healthy after installing"
+          fi
+
           # Update shared secret
-          /usr/local/bin/after_install.sh || { echo "[OpenVidu] error updating shared secret"; exit 1; }
+          /usr/local/bin/after_install.sh || fail "error updating shared secret"
+          signal_cfn 0 "OpenVidu installed and healthy"
 
           # Launch on reboot
           echo "@reboot /usr/local/bin/restart.sh &> /var/log/openvidu-restart.log" | crontab
@@ -2616,7 +2671,7 @@ Resources:
     Type: 'AWS::CloudFormation::WaitCondition'
     CreationPolicy:
       ResourceSignal:
-        Timeout: PT20M
+        Timeout: PT40M
         Count: '1'
 
   OpenViduMediaNodeLaunchTemplate:
@@ -2626,6 +2681,14 @@ Resources:
       AWS::CloudFormation::Init:
         config:
           files:
+            '/etc/openvidu/turn-udp-lb-dns':
+              Fn::If:
+                - TurnUDPIsEnabled
+                - content: !GetAtt TurnUDPLoadBalancer.DNSName
+                  mode: '000644'
+                  owner: root
+                  group: root
+                - !Ref AWS::NoValue
             '/usr/local/bin/install.sh':
               content: !Sub |
                 #!/bin/bash
@@ -2740,6 +2803,34 @@ Resources:
                   "--private-ip=$PRIVATE_IP"
                   "--redis-password=$REDIS_PASSWORD"
                 )
+
+                # TURN UDP Load Balancer: announce its public IP in this Availability Zone, so clients get
+                # turn:<that IP>:443 for TURN over UDP. Its zonal DNS name (<az>.<DNS name>) resolves to it.
+                # With cross-zone load balancing any of its IPs reaches every Media Node, so use any of
+                # them if this zone has none. Without it, clients fall back to TURN over TLS.
+                if [[ "${SubnetProcessor.TurnUDPEnabled}" == "true" ]]; then
+                  TURN_UDP_LB_DNS="$(cat /etc/openvidu/turn-udp-lb-dns 2>/dev/null || true)"
+                  AZ="$(curl -H "X-aws-ec2-metadata-token: $TOKEN" -s http://169.254.169.254/latest/meta-data/placement/availability-zone)"
+                  PUBLIC_IP=""
+                  for i in $(seq 1 60); do
+                    if [[ "$TURN_UDP_LB_DNS" == "" ]]; then
+                      break
+                    fi
+                    PUBLIC_IP="$(getent ahostsv4 "$AZ.$TURN_UDP_LB_DNS" | awk 'NR == 1 { print $1 }')"
+                    if [[ "$PUBLIC_IP" == "" ]]; then
+                      PUBLIC_IP="$(getent ahostsv4 "$TURN_UDP_LB_DNS" | awk 'NR == 1 { print $1 }')"
+                    fi
+                    if [[ "$PUBLIC_IP" != "" ]]; then
+                      break
+                    fi
+                    sleep 5
+                  done
+                  if [[ "$PUBLIC_IP" == "" ]]; then
+                    echo "TURN UDP Load Balancer IP not found: clients will use TURN over TLS"
+                    PUBLIC_IP="$PRIVATE_IP"
+                  fi
+                  COMMON_ARGS+=("--public-ip=$PUBLIC_IP")
+                fi
 
                 # Construct the final command with all arguments
                 FINAL_COMMAND="$INSTALL_COMMAND $(printf "%s " "${!COMMON_ARGS[@]}")"
@@ -3237,6 +3328,7 @@ Resources:
       TargetGroupARNs:
         - !Ref OpenViduMediaNodeRTMPTG
         - !If [TurnTLSIsEnabled, !Ref OpenViduTurnMediaNodeTG, !Ref AWS::NoValue]
+        - !If [TurnUDPIsEnabled, !Ref OpenViduTurnUDPMediaNodeTG, !Ref AWS::NoValue]
       MinSize: !Ref MinNumberOfMediaNodes
       MaxSize: !Ref MaxNumberOfMediaNodes
       DesiredCapacity: !Ref InitialNumberOfMediaNodes
@@ -4003,6 +4095,13 @@ Resources:
           FromPort: 443
           ToPort: 443
           CidrIpv6: ::/0
+        - !If
+          - TurnUDPIsEnabled
+          - IpProtocol: udp
+            FromPort: 443
+            ToPort: 443
+            CidrIp: 0.0.0.0/0
+          - !Ref AWS::NoValue
 
   TurnLoadBalancerToMediaNode5349Ingress:
     Type: AWS::EC2::SecurityGroupIngress
@@ -4069,6 +4168,66 @@ Resources:
       Certificates:
         - CertificateArn: !Ref TurnCertificateARN
 
+  # TURN over UDP 443 (only with Media Nodes outside the Load Balancer subnets). A second Load Balancer,
+  # because an NLB cannot have a UDP and a TLS listener on the same port. It keeps the static IP that
+  # AWS assigns to it in each zone, and the Media Nodes announce the one of their zone to the clients.
+  TurnUDPLoadBalancer:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Condition: TurnUDPIsEnabled
+    Properties:
+      Name:
+        Fn::Join:
+          - ''
+          - - OpenViduHA-TurnUDP-
+            - !Select [4, !Split ['-', !Select [2, !Split ['/', !Ref AWS::StackId]]]]
+      Scheme: internet-facing
+      Subnets: !Ref LoadBalancerSubnets
+      SecurityGroups:
+        - !Ref TurnLoadBalancerSG
+      LoadBalancerAttributes:
+        - Key: load_balancing.cross_zone.enabled
+          Value: 'true'
+      Type: network
+      Tags:
+        - Key: Name
+          Value: !Sub ${AWS::StackName} - OpenVidu HA - TURN UDP Load Balancer
+
+  OpenViduTurnUDPMediaNodeTG:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Condition: TurnUDPIsEnabled
+    Properties:
+      Name:
+        Fn::Join:
+          - ''
+          - - OVTurnUDP-
+            - !Select [4, !Split ['-', !Select [2, !Split ['/', !Ref AWS::StackId]]]]
+      VpcId: !Ref OpenViduVPC
+      Port: 443
+      Protocol: UDP
+      HealthCheckProtocol: TCP
+      HealthCheckPort: '5349'
+      HealthCheckIntervalSeconds: 10
+      HealthCheckTimeoutSeconds: 5
+      HealthyThresholdCount: 3
+      UnhealthyThresholdCount: 4
+      TargetGroupAttributes:
+        - Key: deregistration_delay.timeout_seconds
+          Value: 60
+      Tags:
+        - Key: Name
+          Value: !Sub ${AWS::StackName} - OpenVidu HA - TURN UDP Media Target Group
+
+  TurnUDPMediaNodeListener:
+    Type: 'AWS::ElasticLoadBalancingV2::Listener'
+    Condition: TurnUDPIsEnabled
+    Properties:
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref OpenViduTurnUDPMediaNodeTG
+      LoadBalancerArn: !Ref TurnUDPLoadBalancer
+      Port: 443
+      Protocol: UDP
+
 Outputs:
   ServicesAndCredentials:
     Description: Services and credentials
@@ -4081,3 +4240,8 @@ Outputs:
     Condition: TurnTLSIsEnabled
     Description: DNS of the dedicated TURN Load Balancer - point TurnDomainName (A/ALIAS) here
     Value: !GetAtt TurnLoadBalancer.DNSName
+
+  TurnUDPLoadBalancerDNS:
+    Condition: TurnUDPIsEnabled
+    Description: DNS of the TURN UDP Load Balancer (no record needed; clients send media over UDP 443 to the IPs it resolves to)
+    Value: !GetAtt TurnUDPLoadBalancer.DNSName
