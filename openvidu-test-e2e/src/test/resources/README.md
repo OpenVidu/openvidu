@@ -12,9 +12,14 @@ Minimal LiveKit server RTC SDK publisher programs used by
 | `dotnet-publisher/` | `Livekit.Rtc.Dotnet`                      | synthetic frames (FFI)  |
 
 Each program is launched by `OpenViduTestE2e#startServerSdkPublisher` inside a
-plain runtime container of its language (see that method for the images, run
-commands and per-SDK dependency caches). The directory is mounted read-only at
-`/app`, copied to `/work` and run there. The program must print the exact line
+plain runtime container of its language (see that method for the images and run
+commands). The directory is mounted read-only at `/app`, copied to `/work` and
+run there. The dependency cache at `/cache` is a Docker volume that lives only
+for the test JVM that created it (one per SDK, removed with the containers when
+the JVM ends), so a run never sees the downloads, builds or caches of a previous
+run or of another job on the same machine; within a run the publishers of an SDK
+share it, which keeps the Rust publisher's libwebrtc build to one per run. The
+program must print the exact line
 `TRACK_PUBLISHED` once the track is published: the Java test waits for it before
 asserting, and stops the container when the test ends, so the programs never
 exit on their own.

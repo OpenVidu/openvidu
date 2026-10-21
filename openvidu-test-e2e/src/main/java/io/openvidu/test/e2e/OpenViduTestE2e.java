@@ -16,6 +16,7 @@ import java.nio.file.Paths;
 import java.time.Duration;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -42,6 +43,9 @@ import org.testcontainers.containers.Network;
 import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.containers.wait.strategy.WaitStrategy;
 import org.testcontainers.utility.DockerImageName;
+
+import com.github.dockerjava.api.model.Mount;
+import com.github.dockerjava.api.model.MountType;
 
 import io.livekit.server.AccessToken;
 import io.livekit.server.CanPublish;
@@ -470,6 +474,34 @@ public class OpenViduTestE2e {
 		startServerSdkPublisher(sdk, roomName, codec, 1);
 	}
 
+	// Dependency cache volumes of the server SDK publishers, one per SDK, created
+	// on first use and alive only for this JVM.
+	private static final Map<String, String> SDK_CACHE_VOLUMES = new ConcurrentHashMap<>();
+
+	/**
+	 * Name of the dependency cache volume of the given SDK for this JVM, creating
+	 * it on first use. The volume carries the Testcontainers session labels, so
+	 * Ryuk removes it when the JVM ends, the same way it removes the containers;
+	 * a shutdown hook removes it too for the runs that disable Ryuk.
+	 */
+	private static String sdkCacheVolume(String sdk) {
+		return SDK_CACHE_VOLUMES.computeIfAbsent(sdk, s -> {
+			String name = "openvidu-e2e-sdk-cache-" + s + "-" + DockerClientFactory.SESSION_ID;
+			Map<String, String> labels = new HashMap<>(DockerClientFactory.DEFAULT_LABELS);
+			labels.put(DockerClientFactory.TESTCONTAINERS_SESSION_ID_LABEL, DockerClientFactory.SESSION_ID);
+			DockerClientFactory.instance().client().createVolumeCmd().withName(name).withLabels(labels).exec();
+			Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+				try {
+					DockerClientFactory.instance().client().removeVolumeCmd(name).exec();
+				} catch (Exception e) {
+					// Already removed by Ryuk, or still used by a container Ryuk is
+					// about to remove together with the volume
+				}
+			}));
+			return name;
+		});
+	}
+
 	/**
 	 * Starts a LiveKit server RTC SDK participant (a minimal program at
 	 * src/test/resources/&lt;sdk&gt;-publisher) in a plain runtime container
@@ -478,8 +510,11 @@ public class OpenViduTestE2e {
 	 * simulcast for VP8/H264 and without SVC (scalabilityMode L1T1) for VP9/AV1.
 	 *
 	 * The container mounts the program read-only at /app, copies it to /work and
-	 * runs it there, with a per-SDK dependency cache mounted at /cache so
-	 * repeated runs skip downloads. Returns once the program logs
+	 * runs it there. /cache is a Docker volume that exists only for the current
+	 * test JVM (see {@link #sdkCacheVolume}): nothing of a previous run or of
+	 * another job on the same machine reaches the program, while the publishers
+	 * of one SDK still share their downloads (and the rust build, which takes up
+	 * to 30 minutes from cold) within the run. Returns once the program logs
 	 * TRACK_PUBLISHED. The container is stopped automatically on test dispose.
 	 */
 	public void startServerSdkPublisher(String sdk, String roomName, String codec, int layers) throws Exception {
@@ -542,14 +577,21 @@ public class OpenViduTestE2e {
 		env.put("VIDEO_LAYERS", String.valueOf(layers));
 
 		String programDir = Paths.get("src/test/resources/" + sdk + "-publisher").toAbsolutePath().toString();
-		Path cacheDir = Paths.get(System.getProperty("java.io.tmpdir"), "openvidu-e2e-sdk-cache", sdk);
-		Files.createDirectories(cacheDir);
+		String cacheVolume = sdkCacheVolume(sdk);
 
 		GenericContainer<?> publisherContainer = new GenericContainer<>(DockerImageName.parse(image))
 				.withCreateContainerCmdModifier(
 						cmd -> cmd.withName(sdk + "-publisher-" + (int) (Math.random() * 100000)))
-				.withNetworkMode("host").withFileSystemBind(programDir, "/app", BindMode.READ_ONLY)
-				.withFileSystemBind(cacheDir.toString(), "/cache").withEnv(env)
+				// Not withFileSystemBind: it resolves its first argument as a host path
+				.withCreateContainerCmdModifier(cmd -> {
+					List<Mount> mounts = new ArrayList<>();
+					if (cmd.getHostConfig().getMounts() != null) {
+						mounts.addAll(cmd.getHostConfig().getMounts());
+					}
+					mounts.add(new Mount().withType(MountType.VOLUME).withSource(cacheVolume).withTarget("/cache"));
+					cmd.getHostConfig().withMounts(mounts);
+				})
+				.withNetworkMode("host").withFileSystemBind(programDir, "/app", BindMode.READ_ONLY).withEnv(env)
 				.withCommand("sh", "-c", "mkdir -p /work && cp -r /app/. /work && cd /work && " + runCommand)
 				.withLogConsumer(
 						frame -> log.info("[{}-publisher] {}", sdk, frame.getUtf8String().stripTrailing()))
