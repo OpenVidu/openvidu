@@ -22,8 +22,6 @@ import io.openvidu.test.e2e.annotations.OnlyMediasoup;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.AbstractMap;
@@ -80,12 +78,7 @@ import io.livekit.server.RoomList;
 import io.minio.ListObjectsArgs;
 import io.minio.MinioClient;
 import io.minio.Result;
-import io.minio.errors.ErrorResponseException;
-import io.minio.errors.InsufficientDataException;
-import io.minio.errors.InternalException;
-import io.minio.errors.InvalidResponseException;
-import io.minio.errors.ServerException;
-import io.minio.errors.XmlParserException;
+import io.minio.errors.MinioException;
 import io.minio.messages.Item;
 import io.openvidu.test.browsers.utils.Ffmpeg;
 import livekit.LivekitIngress.IngressInfo;
@@ -4637,9 +4630,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 			Item object = null;
 			try {
 				object = result.get();
-			} catch (InvalidKeyException | ErrorResponseException | IllegalArgumentException | InsufficientDataException
-					| InternalException | InvalidResponseException | NoSuchAlgorithmException | ServerException
-					| XmlParserException | IOException e) {
+			} catch (MinioException | IllegalArgumentException e) {
 				e.printStackTrace();
 				Assertions.fail("Error accessing Minio object");
 			}

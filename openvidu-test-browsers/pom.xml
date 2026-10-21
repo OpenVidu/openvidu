@@ -41,22 +41,21 @@
 	</developers>
 
 	<properties>
-		<java.version>17</java.version>
-		<maven.compiler.source>${java.version}</maven.compiler.source>
-		<maven.compiler.target>${java.version}</maven.compiler.target>
+		<java.version>25</java.version>
+		<maven.compiler.release>${java.version}</maven.compiler.release>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 		<openvidu.scm.url>https://github.com/OpenVidu/openvidu</openvidu.scm.url>
 		<openvidu.scm.connection>git@github.com:OpenVidu/openvidu.git</openvidu.scm.connection>
 
-		<version.spring-boot>4.0.0</version.spring-boot>
-		<version.openvidu.java.client>2.32.1</version.openvidu.java.client>
-		<version.slf4j>2.0.17</version.slf4j>
-		<version.selenium>4.41.0</version.selenium>
-		<version.gson>2.13.2</version.gson>
+		<version.spring-boot>4.1.1</version.spring-boot>
+		<version.openvidu.java.client>2.32.2</version.openvidu.java.client>
+		<version.slf4j>2.0.20</version.slf4j>
+		<version.selenium>4.51.0</version.selenium>
+		<version.gson>2.14.0</version.gson>
 		<version.jcodec>0.2.5</version.jcodec>
-		<version.junit>5.14.1</version.junit>
-		<version.appium>10.0.0</version.appium>
+		<version.junit>6.1.3</version.junit>
+		<version.appium>11.0.0</version.appium>
 	</properties>
 
 	<dependencies>
@@ -114,8 +113,7 @@
 				<artifactId>maven-compiler-plugin</artifactId>
 				<version>3.14.1</version>
 				<configuration>
-					<source>${java.version}</source>
-					<target>${java.version}</target>
+					<release>${java.version}</release>
 				</configuration>
 			</plugin>
 		</plugins>
