@@ -69,7 +69,7 @@ import okhttp3.Response;
  * timeline (OpenVidu egress fork: the PASSTHROUGH preset extended from one
  * track to an audio track plus a video track). It is requested with
  * StartParticipantEgress, or with StartEgress and a MediaSource, and preset
- * PASSTHROUGH.
+ * PASSTHROUGH. Video VP8, VP9 and AV1 (SVC included) and H.264, audio Opus.
  *
  * Publishers are openvidu-testapp instances whose camera, screen and microphone
  * are replaced (src/test/resources/participant-passthrough-sync-media.js) by
@@ -333,40 +333,27 @@ public class OpenViduTestAppE2eEgressProTest extends AbstractOpenViduTestappE2eT
 	}
 
 	@Test
-	@DisplayName("AV1 from the start is not supported")
-	void av1FromTheStartNotSupportedTest() throws Exception {
-		log.info("Participant Passthrough: AV1 from the start is not supported");
-		String room = uniqueRoom("av1-start");
-		joinPublisher("chrome", room, "alice", "av1", true, true, true);
-
-		// like every other egress, it fails on a track it cannot handle when started
-		String egressId = startParticipantRecording(room, "alice", filepath(room, "alice", "mkv"));
-		JsonObject info = waitUntilEgressEnds(egressId, 60);
-		Assertions.assertEquals("EGRESS_FAILED", info.get("status").getAsString(), "Unexpected egress end: " + info);
-		String error = info.has("error") ? info.get("error").getAsString() : "";
-		Assertions.assertTrue(error.toLowerCase(Locale.ROOT).contains("av1"),
-				"The egress error must name the AV1 codec: " + info);
+	@DisplayName("AV1 audio and video from the start")
+	void av1AudioAndVideoTest() throws Exception {
+		log.info("Participant Passthrough: AV1 audio and video from the start");
+		// SVC (L3T3_KEY, livekit-client's default for AV1): the egress may start on a
+		// low layer and moves up, as with simulcast
+		audioAndVideoFromTheStart("chrome", "av1", true, "mkv");
 	}
 
 	@Test
-	@DisplayName("AV1 published later is not supported")
-	void av1PublishedLaterNotSupportedTest() throws Exception {
-		log.info("Participant Passthrough: AV1 published later is not supported");
-		String room = uniqueRoom("av1-later");
-		Publisher alice = joinPublisher("chrome", room, "alice", "av1", true, true, false);
+	@DisplayName("AV1 without SVC")
+	void av1WithoutSvcTest() throws Exception {
+		log.info("Participant Passthrough: AV1 without SVC");
+		Recording recording = audioAndVideoFromTheStart("chrome", "av1", false, "mkv");
+		recording.video(0).assertConstantSize(CAMERA_WIDTH, CAMERA_HEIGHT);
+	}
 
-		String egressId = startParticipantRecording(room, "alice", filepath(room, "alice", "mkv"));
-		waitUntilEgressStatus(egressId, "EGRESS_ACTIVE", 20);
-		Thread.sleep(4000);
-		alice.addVideo();
-
-		// like every other egress, it fails on a track it cannot handle, whenever it
-		// is published
-		JsonObject info = waitUntilEgressEnds(egressId, 30);
-		Assertions.assertEquals("EGRESS_FAILED", info.get("status").getAsString(), "Unexpected egress end: " + info);
-		String error = info.has("error") ? info.get("error").getAsString() : "";
-		Assertions.assertTrue(error.toLowerCase(Locale.ROOT).contains("av1"),
-				"The egress error must name the AV1 codec: " + info);
+	@Test
+	@DisplayName("WebM file with AV1")
+	void webmAv1Test() throws Exception {
+		log.info("Participant Passthrough: WebM file with AV1");
+		audioAndVideoFromTheStart("chrome", "av1", true, "webm");
 	}
 
 	// ------------------------------------------------------------------------
@@ -435,6 +422,13 @@ public class OpenViduTestAppE2eEgressProTest extends AbstractOpenViduTestappE2eT
 	void audioFirstThenH264VideoTest() throws Exception {
 		log.info("Participant Passthrough: audio first, H264 video added later");
 		audioFirstThenVideo("h264");
+	}
+
+	@Test
+	@DisplayName("Audio first, AV1 video added later")
+	void audioFirstThenAv1VideoTest() throws Exception {
+		log.info("Participant Passthrough: audio first, AV1 video added later");
+		audioFirstThenVideo("av1");
 	}
 
 	@Test
@@ -794,6 +788,13 @@ public class OpenViduTestAppE2eEgressProTest extends AbstractOpenViduTestappE2eT
 	}
 
 	@Test
+	@DisplayName("Unpublish and publish again AV1 video")
+	void unpublishRepublishAv1VideoTest() throws Exception {
+		log.info("Participant Passthrough: unpublish and publish again AV1 video");
+		unpublishRepublishVideo("av1");
+	}
+
+	@Test
 	@DisplayName("Unpublish and publish again audio")
 	void unpublishRepublishAudioTest() throws Exception {
 		log.info("Participant Passthrough: unpublish and publish again audio");
@@ -876,31 +877,43 @@ public class OpenViduTestAppE2eEgressProTest extends AbstractOpenViduTestappE2eT
 	@DisplayName("Publish video again with another codec")
 	void republishVideoWithAnotherCodecTest() throws Exception {
 		log.info("Participant Passthrough: publish video again with another codec");
-		String room = uniqueRoom("republish-codec");
-		Publisher alice = joinPublisher("chrome", room, "alice", "vp8", true, true, true);
+		republishVideoWithAnotherCodec("vp8", "h264");
+	}
+
+	@Test
+	@DisplayName("Publish video again as AV1")
+	void republishVideoAsAv1Test() throws Exception {
+		log.info("Participant Passthrough: publish video again as AV1");
+		republishVideoWithAnotherCodec("vp8", "av1");
+	}
+
+	private void republishVideoWithAnotherCodec(String first, String second) throws Exception {
+		String room = uniqueRoom("republish-codec-" + second);
+		Publisher alice = joinPublisher("chrome", room, "alice", first, true, true, true);
 
 		String egressId = startParticipantRecording(room, "alice", filepath(room, "alice", "mkv"));
 		waitUntilEgressStatus(egressId, "EGRESS_ACTIVE", 20);
 		Thread.sleep(5000);
 		alice.unpublishVideo();
-		alice.setVideoCodec("h264");
+		alice.setVideoCodec(second);
 		alice.addVideo();
 		Thread.sleep(7000);
 
-		// a VP8 track cannot continue as H264: the file gets a second video track
+		// a track of one codec cannot continue as another: the file gets a second
+		// video track
 		Recording recording = stopAndGetRecording(egressId);
 		recording.assertFinalized();
-		recording.assertTracks("audio:opus", "video:vp8", "video:h264");
+		recording.assertTracks("audio:opus", "video:" + first, "video:" + second);
 		recording.assertHealthy();
 		recording.assertStartTogether();
 		recording.assertAvSync(8);
-		FileTrack vp8 = recording.videoWithCodec("vp8");
-		FileTrack h264 = recording.videoWithCodec("h264");
-		Assertions.assertTrue(vp8.lastPacketTime() <= h264.firstPacketTime(),
-				"The H264 track must follow the VP8 track: " + vp8 + " / " + h264);
-		vp8.assertMarkers(3);
-		h264.assertMarkers(4);
-		h264.assertReachedSize(CAMERA_WIDTH, CAMERA_HEIGHT);
+		FileTrack before = recording.videoWithCodec(first);
+		FileTrack after = recording.videoWithCodec(second);
+		Assertions.assertTrue(before.lastPacketTime() <= after.firstPacketTime(),
+				"The " + second + " track must follow the " + first + " track: " + before + " / " + after);
+		before.assertMarkers(3);
+		after.assertMarkers(4);
+		after.assertReachedSize(CAMERA_WIDTH, CAMERA_HEIGHT);
 		Assertions.assertEquals(1, recording.ofType("video").stream().filter(s -> s.isDefault).count(),
 				"Exactly one video track must be the default one: " + recording.streams);
 	}
@@ -1176,6 +1189,13 @@ public class OpenViduTestAppE2eEgressProTest extends AbstractOpenViduTestappE2eT
 	}
 
 	@Test
+	@DisplayName("Packet loss from the SFU to the egress AV1")
+	void egressPacketLossAv1Test() throws Exception {
+		log.info("Participant Passthrough: packet loss from the SFU to the egress AV1");
+		networkTrouble(Trouble.EGRESS_LOSS, "av1");
+	}
+
+	@Test
 	@DisplayName("Packet loss on the publisher's uplink VP8")
 	void publisherPacketLossVp8Test() throws Exception {
 		log.info("Participant Passthrough: packet loss on the publisher's uplink VP8");
@@ -1208,6 +1228,13 @@ public class OpenViduTestAppE2eEgressProTest extends AbstractOpenViduTestappE2eT
 	void publisherCongestionH264Test() throws Exception {
 		log.info("Participant Passthrough: publisher's uplink congested H264");
 		networkTrouble(Trouble.PUBLISHER_CONGESTION, "h264");
+	}
+
+	@Test
+	@DisplayName("Publisher's uplink congested AV1")
+	void publisherCongestionAv1Test() throws Exception {
+		log.info("Participant Passthrough: publisher's uplink congested AV1");
+		networkTrouble(Trouble.PUBLISHER_CONGESTION, "av1");
 	}
 
 	@Test
@@ -2520,7 +2547,7 @@ public class OpenViduTestAppE2eEgressProTest extends AbstractOpenViduTestappE2eT
 	 */
 	private Recording getRecording(JsonObject egressInfo) throws Exception {
 		String key = fileKey(egressInfo);
-		Path local = Files.createTempDirectory("participant-passthrough").resolve(Paths.get(key).getFileName());
+		Path local = newDownloadDir("participant-passthrough").resolve(Paths.get(key).getFileName());
 		minio.downloadObject(DownloadObjectArgs.builder().bucket(MINIO_BUCKET).object(key)
 				.filename(local.toString()).build());
 		return Recording.analyze(local);
@@ -2539,7 +2566,7 @@ public class OpenViduTestAppE2eEgressProTest extends AbstractOpenViduTestappE2eT
 	 */
 	private Recording snapshotRecordingInProgress(String egressId) throws Exception {
 		String remote = fileBeingRecorded(egressId);
-		Path local = Files.createTempDirectory("participant-passthrough-live").resolve(Paths.get(remote).getFileName());
+		Path local = newDownloadDir("participant-passthrough-live").resolve(Paths.get(remote).getFileName());
 		Exec copy = Exec.run(60, "docker", "cp", EGRESS_CONTAINER + ":" + remote, local.toString());
 		Assertions.assertEquals(0, copy.exitCode, "Could not copy the file being recorded: " + copy.stderr);
 		return Recording.analyze(local);

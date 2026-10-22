@@ -6,6 +6,7 @@ import java.nio.file.Path;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -15,9 +16,13 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Stream;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.extension.ExtensionContext;
+import org.junit.jupiter.api.extension.TestWatcher;
 import org.openqa.selenium.By;
 import org.openqa.selenium.Keys;
 import org.openqa.selenium.TakesScreenshot;
@@ -39,9 +44,19 @@ import io.openvidu.test.browsers.utils.Ffmpeg;
 
 import static org.openqa.selenium.OutputType.BASE64;
 
+@ExtendWith(AbstractOpenViduTestappE2eTest.DeleteDownloadsOfPassedTests.class)
 public class AbstractOpenViduTestappE2eTest extends OpenViduTestE2e {
 
+	/**
+	 * Where the tests download the recordings they analyse. A test that passes
+	 * deletes its downloads; one that fails keeps them, and the egress-pro CI
+	 * workflow uploads this directory when the tests fail.
+	 */
+	protected static final Path DOWNLOADS_DIR = Path.of("target", "e2e-downloads").toAbsolutePath();
+
 	protected Collection<OpenViduTestappUser> testappUsers = new HashSet<>();
+
+	private final List<Path> downloadDirs = new ArrayList<>();
 
 	protected String getLivekitWssUrlFromReadyCheckContainer() {
 		String logs = commandLine.executeCommand("docker logs ready-check 2>&1", 30);
@@ -1157,7 +1172,7 @@ public class AbstractOpenViduTestappE2eTest extends OpenViduTestE2e {
 	 */
 	protected Path downloadRecording(JsonObject egress) throws Exception {
 		String filename = egress.get("file").getAsJsonObject().get("filename").getAsString();
-		Path file = Files.createTempDirectory("egress").resolve(Path.of(filename).getFileName());
+		Path file = newDownloadDir("egress").resolve(Path.of(filename).getFileName());
 		if (isMinioAvailable()) {
 			MinioClient.builder().endpoint("localhost", 9000, false).credentials("minioadmin", "minioadmin").build()
 					.downloadObject(DownloadObjectArgs.builder().bucket("openvidu-appdata").object(filename)
@@ -1273,6 +1288,39 @@ public class AbstractOpenViduTestappE2eTest extends OpenViduTestE2e {
 		} finally {
 			Files.deleteIfExists(out);
 			Files.deleteIfExists(err);
+		}
+	}
+
+	/** A new directory under {@link #DOWNLOADS_DIR} for what the running test downloads. */
+	protected Path newDownloadDir(String prefix) throws IOException {
+		Path dir = Files.createTempDirectory(Files.createDirectories(DOWNLOADS_DIR), prefix);
+		downloadDirs.add(dir);
+		return dir;
+	}
+
+	/** Deletes the downloads of a test that passed, and logs where a failed one kept them. */
+	public static class DeleteDownloadsOfPassedTests implements TestWatcher {
+
+		@Override
+		public void testSuccessful(ExtensionContext context) {
+			context.getTestInstance().filter(AbstractOpenViduTestappE2eTest.class::isInstance)
+					.map(AbstractOpenViduTestappE2eTest.class::cast).ifPresent(test -> {
+						for (Path dir : test.downloadDirs) {
+							try (Stream<Path> files = Files.walk(dir)) {
+								files.sorted(Comparator.reverseOrder()).forEach(f -> f.toFile().delete());
+							} catch (IOException e) {
+								log.warn("Could not delete the downloads in {}: {}", dir, e.getMessage());
+							}
+						}
+					});
+		}
+
+		@Override
+		public void testFailed(ExtensionContext context, Throwable cause) {
+			context.getTestInstance().filter(AbstractOpenViduTestappE2eTest.class::isInstance)
+					.map(AbstractOpenViduTestappE2eTest.class::cast).filter(test -> !test.downloadDirs.isEmpty())
+					.ifPresent(test -> log.info("Downloads of failed test {} kept in {}", context.getDisplayName(),
+							test.downloadDirs));
 		}
 	}
 }
