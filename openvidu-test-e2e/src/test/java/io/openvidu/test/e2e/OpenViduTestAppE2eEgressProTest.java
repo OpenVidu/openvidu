@@ -1210,6 +1210,20 @@ public class OpenViduTestAppE2eEgressProTest extends AbstractOpenViduTestappE2eT
 	}
 
 	@Test
+	@DisplayName("Packet loss on the publisher's uplink H264")
+	void publisherPacketLossH264Test() throws Exception {
+		log.info("Participant Passthrough: packet loss on the publisher's uplink H264");
+		networkTrouble(Trouble.PUBLISHER_LOSS, "h264");
+	}
+
+	@Test
+	@DisplayName("Packet loss on the publisher's uplink AV1")
+	void publisherPacketLossAv1Test() throws Exception {
+		log.info("Participant Passthrough: packet loss on the publisher's uplink AV1");
+		networkTrouble(Trouble.PUBLISHER_LOSS, "av1");
+	}
+
+	@Test
 	@DisplayName("Publisher's uplink congested VP8")
 	void publisherCongestionVp8Test() throws Exception {
 		log.info("Participant Passthrough: publisher's uplink congested VP8");
@@ -1249,6 +1263,20 @@ public class OpenViduTestAppE2eEgressProTest extends AbstractOpenViduTestappE2eT
 	void publisherJitterH264Test() throws Exception {
 		log.info("Participant Passthrough: jitter on the publisher's uplink H264");
 		networkTrouble(Trouble.PUBLISHER_JITTER, "h264");
+	}
+
+	@Test
+	@DisplayName("Jitter on the publisher's uplink VP9")
+	void publisherJitterVp9Test() throws Exception {
+		log.info("Participant Passthrough: jitter on the publisher's uplink VP9");
+		networkTrouble(Trouble.PUBLISHER_JITTER, "vp9");
+	}
+
+	@Test
+	@DisplayName("Jitter on the publisher's uplink AV1")
+	void publisherJitterAv1Test() throws Exception {
+		log.info("Participant Passthrough: jitter on the publisher's uplink AV1");
+		networkTrouble(Trouble.PUBLISHER_JITTER, "av1");
 	}
 
 	@Test
