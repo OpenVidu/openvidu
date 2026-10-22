@@ -11,6 +11,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.DoubleSummaryStatistics;
 import java.util.List;
+import java.util.Map;
 import java.util.Locale;
 import java.util.Random;
 import java.util.concurrent.CompletableFuture;
@@ -36,6 +37,7 @@ import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.Keys;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.interactions.Actions;
+import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import com.google.gson.JsonArray;
@@ -230,6 +232,7 @@ public class OpenViduTestAppE2eEgressProTest extends AbstractOpenViduTestappE2eT
 	// The testapp components of the local tracks, by source
 	private static final String CAMERA = "app-video-track:has(video.local[id*='--camera--'])";
 	private static final String MICROPHONE = "app-audio-track:has(audio.local[id*='--microphone--'])";
+	private static final String SCREEN = "app-video-track:has(video.local[id*='--screen_share--'])";
 
 	private static String syncMediaScript;
 	private static MinioClient minio;
@@ -1387,6 +1390,713 @@ public class OpenViduTestAppE2eEgressProTest extends AbstractOpenViduTestappE2eT
 	// Screen share
 	// ------------------------------------------------------------------------
 
+	// ----- Several tracks of a kind: simultaneous tracks of the same source -----
+
+	@Test
+	@DisplayName("Two cameras at once")
+	void twoCamerasTest() throws Exception {
+		log.info("Participant Passthrough: two cameras at once");
+		String room = uniqueRoom("two-cameras");
+		Publisher alice = joinPublisher("chrome", room, "alice", "vp8", true, true, true);
+		String egressId = startParticipantRecording(room, "alice", filepath(room, "alice", "mkv"));
+		waitUntilEgressStatus(egressId, "EGRESS_ACTIVE", 20);
+		Thread.sleep(4000);
+		alice.addVideo();
+		Thread.sleep(8000);
+		// the second camera is a track of its own, non-default: players keep showing the first
+		Recording recording = stopAndGetRecording(egressId);
+		recording.assertFinalized();
+		recording.assertTracks("audio:opus", "video:vp8", "video:vp8");
+		recording.assertHealthy();
+		recording.assertStartTogether();
+		recording.assertAvSync(5);
+		Assertions.assertEquals(2, recording.allNamed("camera").size(), "Two camera tracks: " + recording.streams);
+		recording.assertDefaults("camera", "microphone");
+		FileTrack first = recording.named("camera", 0);
+		FileTrack second = recording.named("camera", 1);
+		Assertions.assertTrue(first.isDefault && !second.isDefault, "The first camera is the default: " + recording.streams);
+		first.assertReachedSize(CAMERA_WIDTH, CAMERA_HEIGHT);
+		second.assertReachedSize(CAMERA_WIDTH, CAMERA_HEIGHT);
+		first.assertMarkers(9);
+		second.assertMarkers(5);
+		double secondStart = second.firstPacketTime() - first.firstPacketTime();
+		Assertions.assertTrue(secondStart > 2 && secondStart < 7,
+				"The second camera must start about 4 s after the first, not " + secondStart + " s: " + second);
+		Assertions.assertTrue(first.lastPacketTime() > second.firstPacketTime() + 5,
+				"The first camera must go on next to the second: " + first + " / " + second);
+	}
+
+	@Test
+	@DisplayName("Two microphones at once")
+	void twoMicrophonesTest() throws Exception {
+		log.info("Participant Passthrough: two microphones at once");
+		String room = uniqueRoom("two-mics");
+		Publisher alice = joinPublisher("chrome", room, "alice", "vp8", true, true, true);
+		String egressId = startParticipantRecording(room, "alice", filepath(room, "alice", "mkv"));
+		waitUntilEgressStatus(egressId, "EGRESS_ACTIVE", 20);
+		Thread.sleep(4000);
+		alice.addAudio();
+		Thread.sleep(8000);
+		// the second microphone is a track of its own, non-default; both carry the beeps
+		Recording recording = stopAndGetRecording(egressId);
+		recording.assertFinalized();
+		recording.assertTracks("audio:opus", "audio:opus", "video:vp8");
+		recording.assertHealthy();
+		recording.assertStartTogether();
+		recording.assertAvSync(5);
+		recording.assertDefaults("camera", "microphone");
+		FileTrack first = recording.named("microphone", 0);
+		FileTrack second = recording.named("microphone", 1);
+		Assertions.assertTrue(first.isDefault && !second.isDefault,
+				"The first microphone is the default: " + recording.streams);
+		first.assertMarkers(9);
+		second.assertMarkers(5);
+		double secondStart = second.firstPacketTime() - first.firstPacketTime();
+		Assertions.assertTrue(secondStart > 2 && secondStart < 7,
+				"The second microphone must start about 4 s after the first, not " + secondStart + " s: " + second);
+	}
+
+	@Test
+	@DisplayName("First camera unpublished, the second stays non-default, a third continues the first")
+	void firstCameraUnpublishedSecondStaysTest() throws Exception {
+		log.info("Participant Passthrough: first camera unpublished while a second one goes on");
+		String room = uniqueRoom("first-camera-off");
+		Publisher alice = joinPublisher("chrome", room, "alice", "vp8", true, true, true);
+		String egressId = startParticipantRecording(room, "alice", filepath(room, "alice", "mkv"));
+		waitUntilEgressStatus(egressId, "EGRESS_ACTIVE", 20);
+		Thread.sleep(3000);
+		alice.addVideo();
+		Thread.sleep(4000);
+		alice.unpublishVideo(0);
+		Thread.sleep(4000);
+		alice.addVideo();
+		Thread.sleep(5000);
+		// the default track ends with the first camera and continues with the third;
+		// the second camera stays in its own, non-default track throughout
+		Recording recording = stopAndGetRecording(egressId);
+		recording.assertFinalized();
+		recording.assertTracks("audio:opus", "video:vp8", "video:vp8");
+		recording.assertHealthy();
+		recording.assertAvSync(5);
+		recording.assertDefaults("camera", "microphone");
+		FileTrack first = recording.named("camera", 0);
+		FileTrack second = recording.named("camera", 1);
+		Assertions.assertTrue(first.isDefault && !second.isDefault, "The first camera is the default: " + recording.streams);
+		List<double[]> gaps = first.gaps(1);
+		Assertions.assertEquals(1, gaps.size(),
+				"The default track must have one gap, between the first camera and the third: " + first);
+		double gap = gaps.get(0)[1] - gaps.get(0)[0];
+		Assertions.assertTrue(gap > 2 && gap < 7, "The gap must last about 4 s, not " + gap + " s: " + first);
+		Assertions.assertTrue(second.gaps(1).isEmpty(), "The second camera must go on throughout: " + second);
+		Assertions.assertTrue(first.lastPacketTime() > second.firstPacketTime() + 6,
+				"The third camera must continue the default track to the end: " + first + " / " + second);
+	}
+
+	@Test
+	@DisplayName("First microphone unpublished, the second stays non-default")
+	void firstMicrophoneUnpublishedTest() throws Exception {
+		log.info("Participant Passthrough: first microphone unpublished while a second one goes on");
+		String room = uniqueRoom("first-mic-off");
+		Publisher alice = joinPublisher("chrome", room, "alice", "vp8", true, true, true);
+		String egressId = startParticipantRecording(room, "alice", filepath(room, "alice", "mkv"));
+		waitUntilEgressStatus(egressId, "EGRESS_ACTIVE", 20);
+		Thread.sleep(3000);
+		alice.addAudio();
+		Thread.sleep(4000);
+		alice.unpublishAudio(0);
+		Thread.sleep(6000);
+		// the default audio track is silence from then on; the second microphone keeps
+		// its beeps in its own, non-default track
+		Recording recording = stopAndGetRecording(egressId);
+		recording.assertFinalized();
+		recording.assertTracks("audio:opus", "audio:opus", "video:vp8");
+		recording.assertHealthy();
+		recording.assertAvSync(5);
+		recording.assertDefaults("camera", "microphone");
+		FileTrack first = recording.named("microphone", 0);
+		FileTrack second = recording.named("microphone", 1);
+		Assertions.assertTrue(first.isDefault && !second.isDefault,
+				"The first microphone is the default: " + recording.streams);
+		double firstLastBeep = first.markers.get(first.markers.size() - 1);
+		double secondLastBeep = second.markers.get(second.markers.size() - 1);
+		Assertions.assertTrue(secondLastBeep > firstLastBeep + 4,
+				"The second microphone must beep on after the first was unpublished: " + first + " / " + second);
+		Assertions.assertTrue(first.lastPacketTime() > second.lastPacketTime() - 1,
+				"The default audio track must be filled to the end: " + first + " / " + second);
+	}
+
+	@Test
+	@DisplayName("Camera, microphone, screen and its audio published before the recording starts")
+	void everythingAtOnceTest() throws Exception {
+		log.info("Participant Passthrough: every track published before the recording starts");
+		String room = uniqueRoom("everything");
+		Publisher alice = joinPublisher("chrome", room, "alice", "vp8", true, true, true);
+		alice.addScreen(true);
+		Thread.sleep(2000);
+		String egressId = startParticipantRecording(room, "alice", filepath(room, "alice", "mkv"));
+		waitUntilEgressStatus(egressId, "EGRESS_ACTIVE", 20);
+		Thread.sleep(10000);
+		// the four tracks are subscribed at start and start together
+		Recording recording = stopAndGetRecording(egressId);
+		recording.assertFinalized();
+		recording.assertTracks("audio:opus", "audio:opus", "video:vp8", "video:vp8");
+		recording.assertHealthy();
+		recording.assertAvSync(5);
+		recording.assertDefaults("camera", "microphone");
+		double firstStart = recording.streams.stream().mapToDouble(FileTrack::firstPacketTime).min().getAsDouble();
+		double lastStart = recording.streams.stream().mapToDouble(FileTrack::firstPacketTime).max().getAsDouble();
+		Assertions.assertTrue(lastStart - firstStart < 3.5,
+				"The four tracks must start together, not " + (lastStart - firstStart) + " s apart: " + recording.streams);
+		for (FileTrack track : recording.streams) {
+			track.assertMarkers(6);
+		}
+	}
+
+	@Test
+	@DisplayName("Six tracks: two cameras, two microphones, screen and its audio")
+	void sixTracksTest() throws Exception {
+		log.info("Participant Passthrough: six tracks");
+		String room = uniqueRoom("six-tracks");
+		Publisher alice = joinPublisher("chrome", room, "alice", "vp8", true, true, true);
+		alice.addVideo();
+		alice.addAudio();
+		alice.addScreen(true);
+		Thread.sleep(2000);
+		String egressId = startParticipantRecording(room, "alice", filepath(room, "alice", "mkv"));
+		waitUntilEgressStatus(egressId, "EGRESS_ACTIVE", 20);
+		Thread.sleep(12000);
+		Recording recording = stopAndGetRecording(egressId);
+		recording.assertFinalized();
+		recording.assertTracks("audio:opus", "audio:opus", "audio:opus", "video:vp8", "video:vp8", "video:vp8");
+		recording.assertHealthy();
+		recording.assertAvSync(5);
+		recording.assertDefaults("camera", "microphone");
+		Assertions.assertEquals(2, recording.allNamed("camera").size(), "Two camera tracks: " + recording.streams);
+		Assertions.assertEquals(2, recording.allNamed("microphone").size(), "Two microphone tracks: " + recording.streams);
+		Assertions.assertTrue(recording.named("camera", 0).isDefault && recording.named("microphone", 0).isDefault,
+				"The first camera and the first microphone are the defaults: " + recording.streams);
+		recording.named("screen_share").assertReachedSize(SCREEN_WIDTH, SCREEN_HEIGHT);
+		for (FileTrack track : recording.streams) {
+			track.assertMarkers(6);
+		}
+	}
+
+	// ----- Order of arrival versus the default flag -----
+
+	@Test
+	@DisplayName("Screen shared before the camera is published")
+	void screenBeforeCameraTest() throws Exception {
+		log.info("Participant Passthrough: screen shared before the camera");
+		String room = uniqueRoom("screen-first");
+		Publisher alice = joinPublisher("chrome", room, "alice", "vp8", true, true, false);
+		alice.addScreen();
+		String egressId = startParticipantRecording(room, "alice", filepath(room, "alice", "mkv"));
+		waitUntilEgressStatus(egressId, "EGRESS_ACTIVE", 20);
+		Thread.sleep(5000);
+		alice.addVideo();
+		Thread.sleep(8000);
+		// the camera takes the default flag from the screen when it arrives
+		Recording recording = stopAndGetRecording(egressId);
+		recording.assertFinalized();
+		recording.assertTracks("audio:opus", "video:vp8", "video:vp8");
+		recording.assertHealthy();
+		recording.assertAvSync(5);
+		recording.assertDefaults("camera", "microphone");
+		FileTrack screen = recording.named("screen_share");
+		FileTrack camera = recording.named("camera");
+		Assertions.assertTrue(screen.index < camera.index, "The screen is the earlier track: " + recording.streams);
+		Assertions.assertTrue(camera.firstPacketTime() > screen.firstPacketTime() + 3,
+				"The camera starts after the screen: " + camera + " / " + screen);
+		camera.assertReachedSize(CAMERA_WIDTH, CAMERA_HEIGHT);
+		screen.assertReachedSize(SCREEN_WIDTH, SCREEN_HEIGHT);
+	}
+
+	@Test
+	@DisplayName("Screen audio before the microphone is published")
+	void tabAudioBeforeMicrophoneTest() throws Exception {
+		log.info("Participant Passthrough: screen audio before the microphone");
+		String room = uniqueRoom("tab-audio-first");
+		Publisher alice = joinPublisher("chrome", room, "alice", "vp8", true, false, false);
+		alice.addScreen(true);
+		String egressId = startParticipantRecording(room, "alice", filepath(room, "alice", "mkv"));
+		waitUntilEgressStatus(egressId, "EGRESS_ACTIVE", 20);
+		Thread.sleep(5000);
+		alice.addAudio();
+		Thread.sleep(8000);
+		// the microphone takes the default flag from the screen's audio when it arrives
+		Recording recording = stopAndGetRecording(egressId);
+		recording.assertFinalized();
+		recording.assertTracks("audio:opus", "audio:opus", "video:vp8");
+		recording.assertHealthy();
+		recording.assertAvSync(5);
+		recording.assertDefaults("screen_share", "microphone");
+		FileTrack tabAudio = recording.named("screen_share_audio");
+		FileTrack microphone = recording.named("microphone");
+		Assertions.assertTrue(tabAudio.index < microphone.index, "The screen audio is the earlier track: " + recording.streams);
+		Assertions.assertTrue(microphone.firstPacketTime() > tabAudio.firstPacketTime() + 3,
+				"The microphone starts after the screen audio: " + microphone + " / " + tabAudio);
+		tabAudio.assertMarkers(9);
+		microphone.assertMarkers(5);
+	}
+
+	@Test
+	@DisplayName("Participant with a screen share only")
+	void screenOnlyParticipantTest() throws Exception {
+		log.info("Participant Passthrough: screen share and its audio only");
+		String room = uniqueRoom("screen-only");
+		Publisher alice = joinPublisher("chrome", room, "alice", "vp8", true, false, false);
+		alice.addScreen(true);
+		String egressId = startParticipantRecording(room, "alice", filepath(room, "alice", "mkv"));
+		waitUntilEgressStatus(egressId, "EGRESS_ACTIVE", 20);
+		Thread.sleep(10000);
+		// the only tracks of their kind: both default
+		Recording recording = stopAndGetRecording(egressId);
+		recording.assertFinalized();
+		recording.assertTracks("audio:opus", "video:vp8");
+		recording.assertHealthy();
+		recording.assertStartTogether();
+		recording.assertAvSync(5);
+		recording.assertDefaults("screen_share", "screen_share_audio");
+		recording.named("screen_share").assertReachedSize(SCREEN_WIDTH, SCREEN_HEIGHT);
+	}
+
+	@Test
+	@DisplayName("Playable while recording, the camera arriving after the screen")
+	void playableWhileRecordingMultiTrackTest() throws Exception {
+		log.info("Participant Passthrough: playable while recording with the camera after the screen");
+		String room = uniqueRoom("playable-multi");
+		Publisher alice = joinPublisher("chrome", room, "alice", "vp8", true, true, false);
+		alice.addScreen();
+		String egressId = startParticipantRecording(room, "alice", filepath(room, "alice", "mkv"));
+		waitUntilEgressStatus(egressId, "EGRESS_ACTIVE", 20);
+		Thread.sleep(5000);
+		// the screen is the only video so far, and the default one
+		playInPlace(egressId);
+		Recording screenOnly = snapshotRecordingInProgress(egressId);
+		screenOnly.assertInProgress();
+		screenOnly.assertTracks("audio:opus", "video:vp8");
+		screenOnly.assertDefaults("screen_share", "microphone");
+		// the camera is published: the growing file already shows it as the default
+		alice.addVideo();
+		Thread.sleep(6000);
+		playInPlace(egressId);
+		Recording withCamera = snapshotRecordingInProgress(egressId);
+		withCamera.assertInProgress();
+		withCamera.assertTracks("audio:opus", "video:vp8", "video:vp8");
+		withCamera.assertHealthy();
+		withCamera.assertDefaults("camera", "microphone");
+		Recording recording = stopAndGetRecording(egressId);
+		recording.assertFinalized();
+		recording.assertTracks("audio:opus", "video:vp8", "video:vp8");
+		recording.assertHealthy();
+		recording.assertAvSync(5);
+		recording.assertDefaults("camera", "microphone");
+	}
+
+	// ----- Lifecycle of the non-default tracks -----
+
+	@Test
+	@DisplayName("Screen share muted and unmuted")
+	void screenMutedUnmutedTest() throws Exception {
+		log.info("Participant Passthrough: screen share muted and unmuted");
+		String room = uniqueRoom("screen-mute");
+		Publisher alice = joinPublisher("chrome", room, "alice", "vp8", true, true, true);
+		alice.addScreen();
+		String egressId = startParticipantRecording(room, "alice", filepath(room, "alice", "mkv"));
+		waitUntilEgressStatus(egressId, "EGRESS_ACTIVE", 20);
+		Thread.sleep(4000);
+		alice.muteScreen();
+		Thread.sleep(5000);
+		alice.unmuteScreen();
+		Thread.sleep(5000);
+		// a gap in the screen track only
+		Recording recording = stopAndGetRecording(egressId);
+		recording.assertFinalized();
+		recording.assertTracks("audio:opus", "video:vp8", "video:vp8");
+		recording.assertHealthy();
+		recording.assertAvSync(5);
+		recording.assertDefaults("camera", "microphone");
+		FileTrack screen = recording.named("screen_share");
+		List<double[]> gaps = screen.gaps(1);
+		Assertions.assertEquals(1, gaps.size(), "The screen track must have one gap, while it was muted: " + screen);
+		double gap = gaps.get(0)[1] - gaps.get(0)[0];
+		Assertions.assertTrue(gap > 3 && gap < 8, "The gap must last about 5 s, not " + gap + " s: " + screen);
+		Assertions.assertTrue(recording.named("camera").gaps(1).isEmpty(),
+				"The camera must go on throughout: " + recording.named("camera"));
+	}
+
+	@Test
+	@DisplayName("Camera and microphone unpublished while the screen share goes on")
+	void defaultTracksEndWhileScreenGoesOnTest() throws Exception {
+		log.info("Participant Passthrough: camera and microphone unpublished while the screen share goes on");
+		String room = uniqueRoom("defaults-end");
+		Publisher alice = joinPublisher("chrome", room, "alice", "vp8", true, true, true);
+		String egressId = startParticipantRecording(room, "alice", filepath(room, "alice", "mkv"));
+		waitUntilEgressStatus(egressId, "EGRESS_ACTIVE", 20);
+		Thread.sleep(3000);
+		alice.addScreen(true);
+		Thread.sleep(5000);
+		alice.unpublishVideo();
+		alice.unpublishAudio();
+		Thread.sleep(8000);
+		// the default tracks end (the microphone as silence) and the screen and its
+		// audio go on to the end: what players show is the known limitation
+		Recording recording = stopAndGetRecording(egressId);
+		recording.assertFinalized();
+		recording.assertTracks("audio:opus", "audio:opus", "video:vp8", "video:vp8");
+		recording.assertHealthy();
+		recording.assertAvSync(5);
+		recording.assertDefaults("camera", "microphone");
+		FileTrack camera = recording.named("camera");
+		FileTrack microphone = recording.named("microphone");
+		FileTrack screen = recording.named("screen_share");
+		FileTrack tabAudio = recording.named("screen_share_audio");
+		Assertions.assertTrue(camera.lastPacketTime() < screen.lastPacketTime() - 6,
+				"The camera must end well before the screen: " + camera + " / " + screen);
+		double micLastBeep = microphone.markers.get(microphone.markers.size() - 1);
+		double tabLastBeep = tabAudio.markers.get(tabAudio.markers.size() - 1);
+		Assertions.assertTrue(tabLastBeep > micLastBeep + 6,
+				"The screen audio must beep on after the microphone was unpublished: " + microphone + " / " + tabAudio);
+		Assertions.assertTrue(screen.lastPacketTime() > recording.duration - 1.5,
+				"The screen must run to the end of the file: " + screen + ", duration " + recording.duration);
+		Assertions.assertTrue(microphone.lastPacketTime() > recording.duration - 1.5,
+				"The default audio track must be filled to the end: " + microphone + ", duration " + recording.duration);
+	}
+
+	@Test
+	@DisplayName("Screen share with another codec than the camera")
+	void screenWithAnotherCodecTest() throws Exception {
+		log.info("Participant Passthrough: screen share with another codec than the camera");
+		String room = uniqueRoom("screen-codec");
+		Publisher alice = joinPublisher("chrome", room, "alice", "vp8", true, true, true);
+		String egressId = startParticipantRecording(room, "alice", filepath(room, "alice", "mkv"));
+		waitUntilEgressStatus(egressId, "EGRESS_ACTIVE", 20);
+		Thread.sleep(3000);
+		alice.setVideoCodec("h264");
+		alice.addScreen();
+		Thread.sleep(8000);
+		Recording recording = stopAndGetRecording(egressId);
+		recording.assertFinalized();
+		recording.assertTracks("audio:opus", "video:vp8", "video:h264");
+		recording.assertHealthy();
+		recording.assertAvSync(5);
+		recording.assertDefaults("camera", "microphone");
+		Assertions.assertEquals("vp8", recording.named("camera").codec, "The camera is VP8: " + recording.streams);
+		Assertions.assertEquals("h264", recording.named("screen_share").codec, "The screen is H.264: " + recording.streams);
+		recording.named("screen_share").assertReachedSize(SCREEN_WIDTH, SCREEN_HEIGHT);
+	}
+
+	@Test
+	@DisplayName("Camera republished with another codec during a screen share")
+	void cameraCodecChangeDuringShareTest() throws Exception {
+		log.info("Participant Passthrough: camera republished with another codec during a screen share");
+		String room = uniqueRoom("camera-codec-share");
+		Publisher alice = joinPublisher("chrome", room, "alice", "vp8", true, true, true);
+		String egressId = startParticipantRecording(room, "alice", filepath(room, "alice", "mkv"));
+		waitUntilEgressStatus(egressId, "EGRESS_ACTIVE", 20);
+		Thread.sleep(3000);
+		alice.addScreen();
+		Thread.sleep(4000);
+		alice.unpublishVideo();
+		alice.setVideoCodec("h264");
+		alice.addVideo();
+		Thread.sleep(6000);
+		// three video tracks, exactly one default: the first camera
+		Recording recording = stopAndGetRecording(egressId);
+		recording.assertFinalized();
+		recording.assertTracks("audio:opus", "video:vp8", "video:vp8", "video:h264");
+		recording.assertHealthy();
+		recording.assertAvSync(5);
+		recording.assertDefaults("camera", "microphone");
+		Assertions.assertEquals(2, recording.allNamed("camera").size(), "Two camera tracks: " + recording.streams);
+		FileTrack first = recording.named("camera", 0);
+		FileTrack second = recording.named("camera", 1);
+		Assertions.assertTrue(first.isDefault && "vp8".equals(first.codec), "The VP8 camera is the default: " + recording.streams);
+		Assertions.assertTrue(!second.isDefault && "h264".equals(second.codec),
+				"The H.264 camera is a non-default track: " + recording.streams);
+		Assertions.assertTrue(first.lastPacketTime() <= second.firstPacketTime(),
+				"The H.264 camera must follow the VP8 one: " + first + " / " + second);
+		Assertions.assertFalse(recording.named("screen_share").isDefault, "The screen is non-default: " + recording.streams);
+	}
+
+	// ----- Request modes -----
+
+	@Test
+	@DisplayName("screen_share mode with a screen share and its audio")
+	void screenShareModeWithTabAudioTest() throws Exception {
+		log.info("Participant Passthrough: screen_share mode with the screen's audio");
+		String room = uniqueRoom("screen-mode-audio");
+		Publisher alice = joinPublisher("chrome", room, "alice", "vp8", true, true, true);
+		alice.addScreen(true);
+		// the screen share and its audio, not the camera or the microphone
+		String egressId = startParticipantRecording(room, "alice", filepath(room, "alice", "mkv"), true);
+		waitUntilEgressStatus(egressId, "EGRESS_ACTIVE", 20);
+		Thread.sleep(10000);
+		Recording recording = stopAndGetRecording(egressId);
+		recording.assertFinalized();
+		recording.assertTracks("audio:opus", "video:vp8");
+		recording.assertHealthy();
+		recording.assertStartTogether();
+		recording.assertAvSync(5);
+		recording.assertDefaults("screen_share", "screen_share_audio");
+		recording.named("screen_share").assertReachedSize(SCREEN_WIDTH, SCREEN_HEIGHT);
+	}
+
+	@Test
+	@DisplayName("MediaSource audio route by identity with the microphone and the screen's audio")
+	void mediaSourceMicrophoneAndTabAudioTest() throws Exception {
+		log.info("Participant Passthrough: MediaSource with the microphone and the screen's audio");
+		String room = uniqueRoom("media-two-audios");
+		Publisher alice = joinPublisher("chrome", room, "alice", "vp8", true, true, true);
+		alice.addScreen(true);
+		JsonObject media = new JsonObject();
+		media.add("participant_video", participantVideo("alice", true));
+		media.add("audio", audioRoutes(audioRoute("participant_identity", "alice")));
+		String egressId = startMediaRecording(room, media, filepath(room, "alice", "mkv"));
+		waitUntilEgressStatus(egressId, "EGRESS_ACTIVE", 20);
+		Thread.sleep(10000);
+		// the route matches both audio tracks: the microphone is the default one,
+		// whichever reached the file first
+		Recording recording = stopAndGetRecording(egressId);
+		recording.assertFinalized();
+		recording.assertTracks("audio:opus", "audio:opus", "video:vp8");
+		recording.assertHealthy();
+		recording.assertAvSync(5);
+		recording.assertDefaults("screen_share", "microphone");
+		recording.named("screen_share_audio").assertMarkers(6);
+		recording.named("microphone").assertMarkers(6);
+	}
+
+	// ----- Robustness -----
+
+	@Test
+	@DisplayName("WebM with four tracks")
+	void webmMultiTrackTest() throws Exception {
+		log.info("Participant Passthrough: WebM with camera, microphone, screen and its audio");
+		String room = uniqueRoom("webm-multi");
+		Publisher alice = joinPublisher("chrome", room, "alice", "vp8", true, true, true);
+		alice.addScreen(true);
+		String egressId = startParticipantRecording(room, "alice", filepath(room, "alice", "webm"));
+		waitUntilEgressStatus(egressId, "EGRESS_ACTIVE", 20);
+		Thread.sleep(10000);
+		Recording recording = stopAndGetRecording(egressId);
+		recording.assertFinalized();
+		recording.assertDocType("webm");
+		recording.assertTracks("audio:opus", "audio:opus", "video:vp8", "video:vp8");
+		recording.assertHealthy();
+		recording.assertAvSync(5);
+		recording.assertDefaults("camera", "microphone");
+	}
+
+	@Test
+	@DisplayName("Packet loss on the publisher's uplink with the camera and a screen share")
+	void publisherPacketLossMultiTrackTest() throws Exception {
+		log.info("Participant Passthrough: packet loss on the publisher's uplink with two video tracks");
+		String room = uniqueRoom("loss-multi");
+		OpenViduTestappUser bridged = setupNetemBrowserUser(prepareNetemBrowsers());
+		((JavascriptExecutor) bridged.getDriver()).executeScript(syncMediaScript);
+		Publisher alice = addPublisherInstance(bridged, room, "alice", "vp8", true, true, true);
+		alice.addScreen();
+		String egressId = startParticipantRecording(room, "alice", filepath(room, "alice", "mkv"));
+		waitUntilEgressStatus(egressId, "EGRESS_ACTIVE", 20);
+		long active = System.currentTimeMillis();
+		Thread.sleep(15000);
+		double troubleFrom = secondsSince(active);
+		try {
+			NetworkConditioner.applyLossToOutboundPackets(getNetemContainerName(bridged), SFU_MEDIA_PORTS,
+					PUBLISHER_PACKET_LOSS_PERCENT, 40);
+			Thread.sleep(10000);
+		} finally {
+			NetworkConditioner.clear();
+		}
+		double troubleTo = secondsSince(active);
+		log.info("PUBLISHER_LOSS with two video tracks from {} s to {} s after the egress became active",
+				String.format(Locale.ROOT, "%.1f", troubleFrom), String.format(Locale.ROOT, "%.1f", troubleTo));
+		Thread.sleep(20000);
+		// both video tracks drop frames until a keyframe on their own: neither decodes
+		// into a corrupted picture, both come back at their size
+		Recording recording = stopAndGetRecording(egressId);
+		recording.assertFinalized();
+		recording.assertTracks("audio:opus", "video:vp8", "video:vp8");
+		recording.assertDecodesWithoutErrors();
+		recording.assertPicturesIntact();
+		recording.assertAudioContinuous();
+		recording.assertNoTinyVideoFrames();
+		recording.assertDefaults("camera", "microphone");
+		recording.named("camera").assertReachesSizeAfter(CAMERA_WIDTH, CAMERA_HEIGHT, troubleTo);
+		recording.named("screen_share").assertReachesSizeAfter(SCREEN_WIDTH, SCREEN_HEIGHT, troubleTo);
+	}
+
+	@Test
+	@DisplayName("The manifest lists the tracks of the file")
+	void manifestTracksTest() throws Exception {
+		log.info("Participant Passthrough: the manifest lists the tracks");
+		String room = uniqueRoom("manifest");
+		Publisher alice = joinPublisher("chrome", room, "alice", "vp8", true, true, true);
+		alice.addScreen(true);
+		String egressId = startParticipantRecording(room, "alice", filepath(room, "alice", "mkv"));
+		waitUntilEgressStatus(egressId, "EGRESS_ACTIVE", 20);
+		Thread.sleep(8000);
+		Recording recording = stopAndGetRecording(egressId);
+		recording.assertFinalized();
+		recording.assertTracks("audio:opus", "audio:opus", "video:vp8", "video:vp8");
+		recording.assertDefaults("camera", "microphone");
+		JsonObject manifest = getManifest(egressId);
+		Assertions.assertEquals("alice", manifest.get("publisher_identity").getAsString(), "Manifest: " + manifest);
+		JsonArray tracks = manifest.getAsJsonArray("tracks");
+		Assertions.assertNotNull(tracks, "The manifest must list the tracks: " + manifest);
+		Assertions.assertEquals(recording.streams.size(), tracks.size(), "One manifest entry per file track: " + manifest);
+		Map<String, String> codecs = Map.of("V_VP8", "vp8", "V_VP9", "vp9", "V_MPEG4/ISO/AVC", "h264", "V_AV1", "av1",
+				"A_OPUS", "opus");
+		for (int i = 0; i < tracks.size(); i++) {
+			JsonObject entry = tracks.get(i).getAsJsonObject();
+			FileTrack track = recording.streams.get(i);
+			Assertions.assertEquals(i + 1, entry.get("number").getAsInt(), "Track number: " + entry);
+			Assertions.assertEquals(track.type, entry.get("kind").getAsString(), "Track kind: " + entry + " / " + track);
+			Assertions.assertEquals(track.codec, codecs.get(entry.get("codec").getAsString()),
+					"Track codec: " + entry + " / " + track);
+			Assertions.assertEquals(track.name, entry.get("source").getAsString(), "Track source: " + entry + " / " + track);
+			Assertions.assertEquals(track.isDefault, entry.get("default").getAsBoolean(),
+					"Default flag: " + entry + " / " + track);
+			JsonArray ids = entry.getAsJsonArray("track_ids");
+			Assertions.assertTrue(ids != null && ids.size() == 1 && ids.get(0).getAsString().startsWith("TR_"),
+					"One LiveKit track id per file track: " + entry);
+		}
+	}
+
+	@Test
+	@DisplayName("Screen share next to the camera")
+	void screenShareNextToCameraTest() throws Exception {
+		log.info("Participant Passthrough: screen share next to the camera");
+		String room = uniqueRoom("screen-camera");
+		Publisher alice = joinPublisher("chrome", room, "alice", "vp8", true, true, true);
+		String egressId = startParticipantRecording(room, "alice", filepath(room, "alice", "mkv"));
+		waitUntilEgressStatus(egressId, "EGRESS_ACTIVE", 20);
+		Thread.sleep(5000);
+		alice.addScreen();
+		Thread.sleep(8000);
+		// the screen is a second video track on the same timeline; the camera and
+		// the microphone stay the default tracks, which players show
+		Recording recording = stopAndGetRecording(egressId);
+		recording.assertFinalized();
+		recording.assertTracks("audio:opus", "video:vp8", "video:vp8");
+		recording.assertHealthy();
+		recording.assertStartTogether();
+		recording.assertAvSync(5);
+		FileTrack camera = recording.named("camera");
+		FileTrack screen = recording.named("screen_share");
+		Assertions.assertTrue(camera.isDefault && !screen.isDefault && recording.named("microphone").isDefault,
+				"The camera and the microphone must be the default tracks: " + recording.streams);
+		camera.assertReachedSize(CAMERA_WIDTH, CAMERA_HEIGHT);
+		screen.assertReachedSize(SCREEN_WIDTH, SCREEN_HEIGHT);
+		camera.assertMarkers(10);
+		screen.assertMarkers(5);
+		double screenStart = screen.firstPacketTime() - camera.firstPacketTime();
+		Assertions.assertTrue(screenStart > 3 && screenStart < 8,
+				"The screen must start about 5 s after the camera, not " + screenStart + " s: " + screen);
+		Assertions.assertTrue(camera.lastPacketTime() > screen.firstPacketTime() + 5,
+				"The camera must go on while the screen is shared: " + camera + " / " + screen);
+	}
+
+	@Test
+	@DisplayName("Screen share with its audio next to the camera and the microphone")
+	void screenShareWithAudioNextToCameraTest() throws Exception {
+		log.info("Participant Passthrough: screen share with its audio next to the camera and the microphone");
+		String room = uniqueRoom("screen-audio");
+		Publisher alice = joinPublisher("chrome", room, "alice", "vp8", true, true, true);
+		String egressId = startParticipantRecording(room, "alice", filepath(room, "alice", "mkv"));
+		waitUntilEgressStatus(egressId, "EGRESS_ACTIVE", 20);
+		Thread.sleep(5000);
+		alice.addScreen(true);
+		Thread.sleep(8000);
+		// the screen and its audio are a second video and a second audio track
+		Recording recording = stopAndGetRecording(egressId);
+		recording.assertFinalized();
+		recording.assertTracks("audio:opus", "audio:opus", "video:vp8", "video:vp8");
+		recording.assertHealthy();
+		recording.assertStartTogether();
+		// every beep of both audio tracks sounds when a video shows a flash
+		recording.assertAvSync(5);
+		FileTrack microphone = recording.named("microphone");
+		FileTrack tabAudio = recording.named("screen_share_audio");
+		FileTrack screen = recording.named("screen_share");
+		Assertions.assertTrue(
+				recording.named("camera").isDefault && microphone.isDefault && !screen.isDefault && !tabAudio.isDefault,
+				"The camera and the microphone must be the default tracks: " + recording.streams);
+		screen.assertMarkers(5);
+		tabAudio.assertMarkers(5);
+		Assertions.assertTrue(Math.abs(tabAudio.firstPacketTime() - screen.firstPacketTime()) < 2,
+				"The screen and its audio must start together: " + screen + " / " + tabAudio);
+		Assertions.assertTrue(microphone.lastPacketTime() > tabAudio.firstPacketTime() + 5,
+				"The microphone must go on while the screen is shared: " + microphone + " / " + tabAudio);
+	}
+
+	@Test
+	@DisplayName("Screen share stopped and shared again")
+	void screenShareStopsAndResumesTest() throws Exception {
+		log.info("Participant Passthrough: screen share stopped and shared again");
+		String room = uniqueRoom("screen-again");
+		Publisher alice = joinPublisher("chrome", room, "alice", "vp8", true, true, true);
+		String egressId = startParticipantRecording(room, "alice", filepath(room, "alice", "mkv"));
+		waitUntilEgressStatus(egressId, "EGRESS_ACTIVE", 20);
+		Thread.sleep(3000);
+		alice.addScreen();
+		Thread.sleep(5000);
+		alice.unpublishScreen();
+		Thread.sleep(3000);
+		alice.addScreen();
+		Thread.sleep(5000);
+		// the second share continues the screen's track: still one screen track,
+		// with a gap while it was not shared
+		Recording recording = stopAndGetRecording(egressId);
+		recording.assertFinalized();
+		recording.assertTracks("audio:opus", "video:vp8", "video:vp8");
+		recording.assertHealthy();
+		recording.assertAvSync(5);
+		FileTrack camera = recording.named("camera");
+		FileTrack screen = recording.named("screen_share");
+		Assertions.assertTrue(camera.isDefault && !screen.isDefault,
+				"The camera must be the default video track: " + recording.streams);
+		Assertions.assertEquals(1, screen.gaps(1).size(),
+				"The screen track must have one gap, while the screen was not shared: " + screen);
+		screen.assertMarkers(8);
+		Assertions.assertTrue(camera.gaps(1).isEmpty(), "The camera must go on throughout: " + camera);
+	}
+
+	@Test
+	@DisplayName("Screen share while the camera is off")
+	void screenShareWhileCameraOffTest() throws Exception {
+		log.info("Participant Passthrough: screen share while the camera is off");
+		String room = uniqueRoom("screen-camera-off");
+		Publisher alice = joinPublisher("chrome", room, "alice", "vp8", true, true, true);
+		String egressId = startParticipantRecording(room, "alice", filepath(room, "alice", "mkv"));
+		waitUntilEgressStatus(egressId, "EGRESS_ACTIVE", 20);
+		Thread.sleep(4000);
+		alice.unpublishVideo();
+		Thread.sleep(2000);
+		alice.addScreen();
+		Thread.sleep(5000);
+		alice.addVideo();
+		Thread.sleep(5000);
+		// the screen does not take the camera's track while the camera is off: that
+		// track keeps a gap there, and the camera published again continues it
+		Recording recording = stopAndGetRecording(egressId);
+		recording.assertFinalized();
+		recording.assertTracks("audio:opus", "video:vp8", "video:vp8");
+		recording.assertHealthy();
+		recording.assertAvSync(5);
+		FileTrack camera = recording.named("camera");
+		FileTrack screen = recording.named("screen_share");
+		Assertions.assertTrue(camera.isDefault && !screen.isDefault,
+				"The camera must be the default video track: " + recording.streams);
+		List<double[]> gaps = camera.gaps(1);
+		Assertions.assertEquals(1, gaps.size(), "The camera track must have one gap, while the camera was off: " + camera);
+		Assertions.assertTrue(screen.firstPacketTime() > gaps.get(0)[0] && screen.firstPacketTime() < gaps.get(0)[1],
+				"The screen must start inside the camera's gap: " + screen + " / " + camera);
+		camera.assertReachedSize(CAMERA_WIDTH, CAMERA_HEIGHT);
+		screen.assertReachedSize(SCREEN_WIDTH, SCREEN_HEIGHT);
+	}
+
 	@Test
 	@DisplayName("Screen share")
 	void screenShareTest() throws Exception {
@@ -2167,6 +2877,10 @@ public class OpenViduTestAppE2eEgressProTest extends AbstractOpenViduTestappE2eT
 		int unpublished;
 		int mutes;
 		int unmutes;
+		// the <video>/<audio> element ids of the published cameras and microphones, in
+		// publication order (the testapp lists tracks by sid, which is random)
+		final List<String> cameras = new ArrayList<>();
+		final List<String> microphones = new ArrayList<>();
 
 		Publisher(OpenViduTestappUser user, int instance, String identity, int published) {
 			this.user = user;
@@ -2184,18 +2898,126 @@ public class OpenViduTestAppE2eEgressProTest extends AbstractOpenViduTestappE2eT
 		}
 
 		void addVideo() throws Exception {
+			List<String> before = localIds("video", "camera");
+			if (cameras.isEmpty()) {
+				cameras.addAll(before);
+			}
 			click(".add-video-btn");
 			waitForEvent("localTrackPublished", ++published);
+			cameras.add(newId("video", "camera", before));
+			parkMouse();
+		}
+
+		/**
+		 * Moves the mouse off the button just clicked: its tooltip stays while the
+		 * mouse is on it, and covers the controls of the track above it.
+		 */
+		private void parkMouse() {
+			new Actions(user.getDriver()).moveToElement(user.getDriver().findElement(By.tagName("body")), 0, 300)
+					.perform();
+		}
+
+		/** The element ids of the local tracks of that source, in the testapp's order. */
+		private List<String> localIds(String kind, String source) {
+			String selector = "#openvidu-instance-" + instance + " " + kind + ".local[id*='--" + source + "--']";
+			return user.getDriver().findElements(By.cssSelector(selector)).stream().map(e -> e.getAttribute("id"))
+					.collect(Collectors.toList());
+		}
+
+		private String newId(String kind, String source, List<String> before) throws InterruptedException {
+			for (int attempt = 0; attempt < 40; attempt++) {
+				for (String id : localIds(kind, source)) {
+					if (!before.contains(id)) {
+						return id;
+					}
+				}
+				Thread.sleep(250);
+			}
+			throw new AssertionError("No new " + source + " track element appeared in instance " + instance);
 		}
 
 		void addAudio() throws Exception {
+			List<String> before = localIds("audio", "microphone");
+			if (microphones.isEmpty()) {
+				microphones.addAll(before);
+			}
 			click(".add-audio-btn");
 			waitForEvent("localTrackPublished", ++published);
+			microphones.add(newId("audio", "microphone", before));
+			parkMouse();
 		}
 
 		void addScreen() throws Exception {
+			addScreen(false);
+		}
+
+		/** Shares the synthetic screen, with its audio too when asked (two tracks). */
+		void addScreen(boolean audio) throws Exception {
+			if (audio) {
+				click(".options-screen-btn");
+				Thread.sleep(300);
+				// ScreenShareCaptureOptions: custom, video and audio
+				clickXPath(user, "//a[contains(@href,'ScreenShareCaptureOptions')]/ancestor::div[1]"
+						+ "//mat-radio-button[contains(., 'Custom')]");
+				waitAndClick(user, "#screenShare-audio");
+				waitAndClick(user, "#close-dialog-btn");
+				Thread.sleep(300);
+			}
 			click(".add-screen-btn");
-			waitForEvent("localTrackPublished", ++published);
+			published += audio ? 2 : 1;
+			waitForEvent("localTrackPublished", published);
+			parkMouse();
+		}
+
+		void unpublishScreen() throws Exception {
+			click(SCREEN + " .publish-unpublish-video");
+			waitForEvent("localTrackUnpublished", ++unpublished);
+		}
+
+		void muteScreen() throws Exception {
+			click(SCREEN + " .mute-unmute-video");
+			waitForEvent("trackMuted", ++mutes);
+		}
+
+		void unmuteScreen() throws Exception {
+			click(SCREEN + " .mute-unmute-video");
+			waitForEvent("trackUnmuted", ++unmutes);
+		}
+
+		/**
+		 * Unpublishes the n-th camera still published (0-based, in publication order),
+		 * which the list then forgets.
+		 */
+		void unpublishVideo(int n) throws Exception {
+			if (cameras.isEmpty()) {
+				cameras.addAll(localIds("video", "camera"));
+			}
+			String id = cameras.remove(n);
+			click("app-video-track:has(video.local[id*='" + sidPart(id, "camera") + "']) .publish-unpublish-video");
+			waitForEvent("localTrackUnpublished", ++unpublished);
+		}
+
+		/** Unpublishes the n-th microphone still published (0-based, in publication order). */
+		void unpublishAudio(int n) throws Exception {
+			if (microphones.isEmpty()) {
+				microphones.addAll(localIds("audio", "microphone"));
+			}
+			String id = microphones.remove(n);
+			click("app-audio-track:has(audio.local[id*='" + sidPart(id, "microphone")
+					+ "']) mat-icon[aria-label='Unpublish track']");
+			waitForEvent("localTrackUnpublished", ++unpublished);
+		}
+
+		/**
+		 * The "--source--sid" part of a track element id: the id ends with the media
+		 * stream id when it differs from the sid, and that one can change.
+		 */
+		private static String sidPart(String elementId, String source) {
+			String marker = "--" + source + "--";
+			int from = elementId.indexOf(marker);
+			Assertions.assertTrue(from >= 0, "Not a " + source + " element id: " + elementId);
+			int to = elementId.indexOf("--", from + marker.length());
+			return to < 0 ? elementId.substring(from) : elementId.substring(from, to);
 		}
 
 		void unpublishVideo() throws Exception {
@@ -2292,6 +3114,10 @@ public class OpenViduTestAppE2eEgressProTest extends AbstractOpenViduTestappE2eT
 	 * Selects the video codec in the open publish options dialog, verifying the
 	 * selection (option ids are lower case, the select shows them upper case).
 	 */
+	private void clickXPath(OpenViduTestappUser user, String xpath) {
+		user.getWaiter().until(ExpectedConditions.elementToBeClickable(By.xpath(xpath))).click();
+	}
+
 	private void selectVideoCodec(OpenViduTestappUser user, String codec) throws InterruptedException {
 		String expected = codec.toUpperCase(Locale.ROOT);
 		By select = By.cssSelector("#trackPublish-videoCodec mat-select");
@@ -2582,6 +3408,19 @@ public class OpenViduTestAppE2eEgressProTest extends AbstractOpenViduTestappE2eT
 	}
 
 	/**
+	 * Downloads the manifest of a completed egress from MinIO: it sits next to the
+	 * file, named after the egress id.
+	 */
+	private JsonObject getManifest(String egressId) throws Exception {
+		String key = fileKey(getEgress(egressId));
+		String manifestKey = key.substring(0, key.lastIndexOf('/') + 1) + egressId + ".json";
+		Path local = newDownloadDir("participant-passthrough").resolve(egressId + ".json");
+		minio.downloadObject(DownloadObjectArgs.builder().bucket(MINIO_BUCKET).object(manifestKey)
+				.filename(local.toString()).build());
+		return JsonParser.parseString(new String(Files.readAllBytes(local), StandardCharsets.UTF_8)).getAsJsonObject();
+	}
+
+	/**
 	 * Where an active egress writes its file, inside the egress container.
 	 */
 	private String fileBeingRecorded(String egressId) throws IOException {
@@ -2654,6 +3493,8 @@ public class OpenViduTestAppE2eEgressProTest extends AbstractOpenViduTestappE2eT
 		String type;
 		String codec;
 		boolean isDefault;
+		// the track's name: the source of the LiveKit track it carries
+		String name = "";
 		List<Double> packets = new ArrayList<>();
 		// onsets of the white flashes (video) or of the beeps (audio)
 		List<Double> markers = new ArrayList<>();
@@ -2954,7 +3795,8 @@ public class OpenViduTestAppE2eEgressProTest extends AbstractOpenViduTestappE2eT
 		public String toString() {
 			return String.format(Locale.ROOT, "#%d %s:%s%s%s %d packets %.3f-%.3f, %d %s%s%s%s", index, type, codec,
 					"video".equals(type) ? " " + minWidth + "x" + minHeight + " to " + maxWidth + "x" + maxHeight : "",
-					isDefault ? " (default)" : "", packets.size(), firstPacketTime(), lastPacketTime(),
+					(name.isEmpty() ? "" : " \"" + name + "\"") + (isDefault ? " (default)" : ""), packets.size(),
+					firstPacketTime(), lastPacketTime(),
 					markers.size(), markerName(), "video".equals(type) ? ", " + bar.size() + " with the bar" : "",
 					tinyFrames > 0 ? ", " + tinyFrames + " tiny frames" : "",
 					brokenPictures > 0 ? ", " + brokenPictures + " broken pictures" : "");
@@ -3111,6 +3953,8 @@ public class OpenViduTestAppE2eEgressProTest extends AbstractOpenViduTestappE2eT
 				s.type = o.get("codec_type").getAsString();
 				s.codec = o.has("codec_name") ? o.get("codec_name").getAsString() : "unknown";
 				s.isDefault = o.getAsJsonObject("disposition").get("default").getAsInt() == 1;
+				JsonObject tags = o.has("tags") ? o.getAsJsonObject("tags") : null;
+				s.name = tags != null && tags.has("title") ? tags.get("title").getAsString() : "";
 				streams.add(s);
 			}
 		}
@@ -3373,6 +4217,39 @@ public class OpenViduTestAppE2eEgressProTest extends AbstractOpenViduTestappE2eT
 
 		FileTrack video(int n) {
 			return ofType("video").get(n);
+		}
+
+		/** The track named after the source of the LiveKit track it carries. */
+		FileTrack named(String name) {
+			return named(name, 0);
+		}
+
+		/** The n-th track (0-based, in track order) named after that source. */
+		FileTrack named(String name, int n) {
+			List<FileTrack> named = allNamed(name);
+			Assertions.assertTrue(named.size() > n, "No track #" + n + " named " + name + ": " + streams);
+			return named.get(n);
+		}
+
+		List<FileTrack> allNamed(String name) {
+			return streams.stream().filter(s -> name.equals(s.name)).collect(Collectors.toList());
+		}
+
+		/**
+		 * Exactly one video and one audio track are flagged default, and they are the
+		 * ones named so (null: the file has no track of that kind).
+		 */
+		void assertDefaults(String video, String audio) {
+			for (String type : new String[] { "video", "audio" }) {
+				String expected = "video".equals(type) ? video : audio;
+				List<FileTrack> defaults = ofType(type).stream().filter(s -> s.isDefault).collect(Collectors.toList());
+				if (expected == null) {
+					Assertions.assertTrue(ofType(type).isEmpty(), "No " + type + " track expected: " + streams);
+					continue;
+				}
+				Assertions.assertEquals(1, defaults.size(), "Exactly one default " + type + " track expected: " + streams);
+				Assertions.assertEquals(expected, defaults.get(0).name, "The default " + type + " track: " + streams);
+			}
 		}
 
 		FileTrack videoWithCodec(String codec) {

@@ -141,9 +141,15 @@
     return Promise.resolve(new MediaStream(tracks));
   };
   // the screen flashes with the camera: it must be in sync with the microphone too
-  navigator.mediaDevices.getDisplayMedia = function () {
+  // with audio when asked for it, as Chrome does when the user shares a tab's
+  // audio: the same beeps as the microphone
+  navigator.mediaDevices.getDisplayMedia = function (constraints) {
     resume();
-    return Promise.resolve(new MediaStream([screenVideo.clone()]));
+    var tracks = [screenVideo.clone()];
+    if (constraints && constraints.audio) {
+      tracks.push(audio.clone());
+    }
+    return Promise.resolve(new MediaStream(tracks));
   };
 
   window.__ovSyncMedia = true;
