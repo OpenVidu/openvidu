@@ -750,7 +750,7 @@ ALL_SECRETS_GENERATED="$(/usr/local/bin/store_secret.sh save ALL_SECRETS_GENERAT
 
 # Download first: sh <(curl ...) would silently run an empty script on a transient curl failure
 INSTALLER_SCRIPT="/tmp/install_ov_master_node.sh"
-curl -fsSL --retry 8 --retry-all-errors --retry-delay 5 -o "$INSTALLER_SCRIPT" "http://get.openvidu.io/pro/elastic/$OPENVIDU_VERSION/install_ov_master_node.sh"
+curl -fsSL --retry 8 --retry-all-errors --retry-delay 5 -o "$INSTALLER_SCRIPT" "https://get.openvidu.io/pro/elastic/$OPENVIDU_VERSION/install_ov_master_node.sh"
 if [ ! -s "$INSTALLER_SCRIPT" ]; then
   echo "Downloaded OpenVidu master node installer is empty or missing" >&2
   exit 1
@@ -1297,7 +1297,7 @@ fi
 
 # Download first: sh <(curl ...) would silently run an empty script on a transient curl failure
 INSTALLER_SCRIPT="/tmp/install_ov_media_node.sh"
-curl -fsSL --retry 8 --retry-all-errors --retry-delay 5 -o "$INSTALLER_SCRIPT" "http://get.openvidu.io/pro/elastic/$OPENVIDU_VERSION/install_ov_media_node.sh"
+curl -fsSL --retry 8 --retry-all-errors --retry-delay 5 -o "$INSTALLER_SCRIPT" "https://get.openvidu.io/pro/elastic/$OPENVIDU_VERSION/install_ov_media_node.sh"
 if [ ! -s "$INSTALLER_SCRIPT" ]; then
   echo "Downloaded OpenVidu media node installer is empty or missing" >&2
   exit 1

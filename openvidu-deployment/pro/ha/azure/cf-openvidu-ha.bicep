@@ -465,7 +465,7 @@ ENABLED_MODULES=$(az keyvault secret show --vault-name ${keyVaultName} --name EN
 
 # Download first: sh <(curl ...) would silently run an empty script on a transient curl failure
 INSTALLER_SCRIPT="/tmp/install_ov_master_node.sh"
-curl -fsSL --retry 8 --retry-all-errors --retry-delay 5 -o "$INSTALLER_SCRIPT" "http://get.openvidu.io/pro/ha/$OPENVIDU_VERSION/install_ov_master_node.sh"
+curl -fsSL --retry 8 --retry-all-errors --retry-delay 5 -o "$INSTALLER_SCRIPT" "https://get.openvidu.io/pro/ha/$OPENVIDU_VERSION/install_ov_master_node.sh"
 if [ ! -s "$INSTALLER_SCRIPT" ]; then
   echo "[OpenVidu] failed to download the master node installer script"
   exit 1
@@ -1354,7 +1354,7 @@ OPENVIDU_VERSION=$(az keyvault secret show --vault-name ${keyVaultName} --name O
 
 # Download first: sh <(curl ...) would silently run an empty script on a transient curl failure
 INSTALLER_SCRIPT="/tmp/install_ov_media_node.sh"
-curl -fsSL --retry 8 --retry-all-errors --retry-delay 5 -o "$INSTALLER_SCRIPT" "http://get.openvidu.io/pro/ha/$OPENVIDU_VERSION/install_ov_media_node.sh"
+curl -fsSL --retry 8 --retry-all-errors --retry-delay 5 -o "$INSTALLER_SCRIPT" "https://get.openvidu.io/pro/ha/$OPENVIDU_VERSION/install_ov_media_node.sh"
 if [ ! -s "$INSTALLER_SCRIPT" ]; then
   echo "[OpenVidu] failed to download the media node installer script"
   exit 1

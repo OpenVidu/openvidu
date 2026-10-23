@@ -309,7 +309,7 @@ ALL_SECRETS_GENERATED="$(/usr/local/bin/store_secret.sh save ALL-SECRETS-GENERAT
 
 # Download to a file first: process substitution would silently run an empty script on a transient curl failure
 INSTALLER_SCRIPT="/tmp/install_ov_master_node.sh"
-curl -fsSL --retry 8 --retry-all-errors --retry-delay 5 -o "$INSTALLER_SCRIPT" "http://get.openvidu.io/pro/elastic/$OPENVIDU_VERSION/install_ov_master_node.sh"
+curl -fsSL --retry 8 --retry-all-errors --retry-delay 5 -o "$INSTALLER_SCRIPT" "https://get.openvidu.io/pro/elastic/$OPENVIDU_VERSION/install_ov_master_node.sh"
 if [ ! -s "$INSTALLER_SCRIPT" ]; then
   echo "[OpenVidu] failed to download the master node installer script"
   exit 1
@@ -963,7 +963,7 @@ MASTER_NODE_IP=${privateIPMasterNode}
 
 # Download to a file first: process substitution would silently run an empty script on a transient curl failure
 INSTALLER_SCRIPT="/tmp/install_ov_media_node.sh"
-curl -fsSL --retry 8 --retry-all-errors --retry-delay 5 -o "$INSTALLER_SCRIPT" "http://get.openvidu.io/pro/elastic/$OPENVIDU_VERSION/install_ov_media_node.sh"
+curl -fsSL --retry 8 --retry-all-errors --retry-delay 5 -o "$INSTALLER_SCRIPT" "https://get.openvidu.io/pro/elastic/$OPENVIDU_VERSION/install_ov_media_node.sh"
 if [ ! -s "$INSTALLER_SCRIPT" ]; then
   echo "[OpenVidu] failed to download the media node installer script"
   exit 1
