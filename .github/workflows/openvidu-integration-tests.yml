@@ -20,12 +20,13 @@ jobs:
     timeout-minutes: 90
     runs-on: ubuntu-latest
     steps:
-      # Until OpenVidu/openvidu-livekit#17 is merged, the OpenVidu server image is built from its branch.
+      # Until the main images of the nightly carry OpenVidu/openvidu-livekit#17, the OpenVidu server image is built from
+      # openvidu/main.
       - name: Checkout openvidu-livekit
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           repository: OpenVidu/openvidu-livekit
-          ref: feature/analytics-v2
+          ref: openvidu/main
           path: openvidu-livekit
 
       - name: Build the OpenVidu server image
