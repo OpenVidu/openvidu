@@ -18,7 +18,7 @@ jobs:
   integration-tests:
     name: Integration tests
     timeout-minutes: 90
-    runs-on: ${{ vars.LABEL_WORKER_SELFHOSTED }}
+    runs-on: ubuntu-latest
     steps:
       # Until OpenVidu/openvidu-livekit#17 is merged, the OpenVidu server image is built from its branch.
       - name: Checkout openvidu-livekit
