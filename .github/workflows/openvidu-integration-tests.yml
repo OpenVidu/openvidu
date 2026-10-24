@@ -56,7 +56,9 @@ jobs:
         if: always()
         with:
           name: openvidu-integration-tests-report
-          path: ./openvidu/openvidu-test-integration/test-results.json
+          path: |
+            ./openvidu/openvidu-test-integration/test-results.json
+            ./openvidu/openvidu-test-integration/logs/
           retention-days: 7
       - name: Cleanup
         if: always()

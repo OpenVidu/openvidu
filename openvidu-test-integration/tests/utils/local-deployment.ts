@@ -1,6 +1,9 @@
+import { mkdirSync } from "fs";
+import { join } from "path";
 import { execCommand, sleep } from "./helper";
 
 const LOCAL_DEPLOYMENT_PATH = "../../openvidu-local-deployment/community/docker-compose.yaml";
+const LOGS_PATH = "logs";
 
 export class LocalDeployment {
     static async start() {
@@ -19,7 +22,15 @@ export class LocalDeployment {
 
     static stop() {
         console.log("Stopping local deployment...");
+        LocalDeployment.saveServerLogs();
         execCommand(`docker compose -f ${LOCAL_DEPLOYMENT_PATH} down -v`);
+    }
+
+    /** Saves the log of the OpenVidu server in logs/, named after the current test, before the deployment is removed. */
+    private static saveServerLogs() {
+        const name = (expect.getState().currentTestName ?? "deployment").replace(/[^\w-]+/g, "-");
+        mkdirSync(LOGS_PATH, { recursive: true });
+        execCommand(`docker logs openvidu > ${join(LOGS_PATH, `${name}.log`)} 2>&1 || true`);
     }
 
     static startContainer(containerName: string) {
