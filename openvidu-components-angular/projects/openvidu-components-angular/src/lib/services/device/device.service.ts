@@ -1,7 +1,8 @@
 import { computed, Injectable, OnDestroy, signal } from '@angular/core';
-import { createLocalTracks, LocalTrack, Room, Track } from 'livekit-client';
+import { createLocalTracks, CreateLocalTracksOptions, LocalTrack, Room, Track } from 'livekit-client';
 import { CameraType, CustomDevice, DeviceType } from '../../models/device.model';
 import { ILogger } from '../../models/logger.model';
+import { retryOnTransientMediaDeviceError } from '../../utils/utils';
 import { LoggerService } from '../logger/logger.service';
 import { PlatformService } from '../platform/platform.service';
 import { StorageService } from '../storage/storage.service';
@@ -207,7 +208,7 @@ export class DeviceService implements OnDestroy {
 		// Strategy 1: Try requesting both together (single prompt)
 		try {
 			this.log.d('Requesting both audio and video permissions together');
-			const tracks = await createLocalTracks({ audio: true, video: true });
+			const tracks = await this.createTracksForPermissionRequest({ audio: true, video: true });
 
 			// Check which tracks we got
 			const videoTrack = tracks.find(t => t.kind === Track.Kind.Video);
@@ -287,7 +288,7 @@ export class DeviceService implements OnDestroy {
 	 */
 	private async requestVideoPermission(): Promise<LocalTrack[]> {
 		try {
-			return await createLocalTracks({ audio: false, video: true });
+			return await this.createTracksForPermissionRequest({ audio: false, video: true });
 		} catch (error: any) {
 			this.videoState.update(state => ({
 				...state,
@@ -303,7 +304,7 @@ export class DeviceService implements OnDestroy {
 	 */
 	private async requestAudioPermission(): Promise<LocalTrack[]> {
 		try {
-			return await createLocalTracks({ audio: true, video: false });
+			return await this.createTracksForPermissionRequest({ audio: true, video: false });
 		} catch (error: any) {
 			this.audioState.update(state => ({
 				...state,
@@ -312,6 +313,14 @@ export class DeviceService implements OnDestroy {
 			}));
 			throw error;
 		}
+	}
+
+	private async createTracksForPermissionRequest(options: CreateLocalTracksOptions): Promise<LocalTrack[]> {
+		return retryOnTransientMediaDeviceError(
+			() => createLocalTracks(options),
+			(error, attempt, delayMs) =>
+				this.log.w(`Transient media device error on attempt ${attempt}, retrying in ${delayMs}ms`, error)
+		);
 	}
 
 	/**
