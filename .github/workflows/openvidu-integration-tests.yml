@@ -20,18 +20,6 @@ jobs:
     timeout-minutes: 90
     runs-on: ubuntu-latest
     steps:
-      # Until the main images of the nightly carry OpenVidu/openvidu-livekit#17, the OpenVidu server image is built from
-      # openvidu/main.
-      - name: Checkout openvidu-livekit
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-        with:
-          repository: OpenVidu/openvidu-livekit
-          ref: openvidu/main
-          path: openvidu-livekit
-
-      - name: Build the OpenVidu server image
-        run: docker build -t openvidu-server:integration openvidu-livekit
-
       - name: Configure OpenVidu Local Deployment
         uses: OpenVidu/actions/start-openvidu-local-deployment@ccd21721ffb48bdeb889526d3a0b496c451ffd48 # v1.0.24
         with:
@@ -39,7 +27,6 @@ jobs:
           # Batches every second and a reconciler run every 10 s, instead of 10 s and 60 s.
           pre_startup_commands: |
             yq e -i '.openvidu.analytics.interval = "1s" | .openvidu.analytics.reconciler.interval = "10s"' livekit.yaml
-            yq e -i '.services.openvidu.image = "openvidu-server:integration"' docker-compose.yaml
       - name: Install LiveKit CLI
         run: |
           curl -sSL https://get.livekit.io/cli | bash
