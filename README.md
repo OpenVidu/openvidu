@@ -60,6 +60,10 @@ works unchanged.
 - 💻 [Tutorials](https://github.com/OpenVidu/openvidu-tutorials)
 - 🎥 [OpenVidu Meet](https://openvidu.io/latest/meet/) — the ready-to-use video conferencing app ([source](https://github.com/OpenVidu/openvidu-meet))
 
+## One-click deploy
+
+[![Deploy on RepoCloud](https://d16t0pc4846x52.cloudfront.net/deploylobe.svg)](https://repocloud.io/details/OpenVidu/)
+
 ## Community Forum
 
 Visit [OpenVidu Community Forum](https://openvidu.discourse.group/)
