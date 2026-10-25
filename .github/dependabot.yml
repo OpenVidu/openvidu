@@ -4,3 +4,17 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+  - package-ecosystem: "npm"
+    directory: "/openvidu-dashboard"
+    schedule:
+      interval: "weekly"
+    ignore:
+      # Node.js 24 until 26 is LTS: its types follow the runtime.
+      - dependency-name: "@types/node"
+        update-types:
+          - "version-update:semver-major"
+    groups:
+      minor-and-patch:
+        update-types:
+          - "minor"
+          - "patch"
