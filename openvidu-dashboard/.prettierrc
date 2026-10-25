@@ -1,0 +1,24 @@
+{
+	"useTabs": true,
+	"tabWidth": 4,
+	"printWidth": 120,
+	"singleQuote": true,
+	"trailingComma": "none",
+	"semi": true,
+	"endOfLine": "lf",
+	"overrides": [
+		{
+			"files": ["dashboard-*/frontend/**/*.html"],
+			"options": {
+				"parser": "angular"
+			}
+		},
+		{
+			"files": ["*.yml", "*.yaml", "*.md"],
+			"options": {
+				"useTabs": false,
+				"tabWidth": 2
+			}
+		}
+	]
+}

@@ -1,0 +1,141 @@
+{
+	"bsonType": "object",
+	"required": ["_id"],
+	"oneOf": [
+		{
+			"bsonType": "object",
+			"required": ["_id", "version", "writerVersion", "updatedAt"],
+			"properties": {
+				"_id": { "bsonType": "string", "enum": ["schema"] },
+				"version": { "bsonType": ["int", "long"] },
+				"writerVersion": { "bsonType": "string" },
+				"updatedAt": { "bsonType": "date" }
+			},
+			"additionalProperties": false
+		},
+		{
+			"bsonType": "object",
+			"required": [
+				"_id",
+				"eventsMs",
+				"statsMs",
+				"tracksMs",
+				"entitiesMs",
+				"rollups5MinMs",
+				"rollupsHourlyMs",
+				"rollupsDailyMs",
+				"updatedAt"
+			],
+			"properties": {
+				"_id": { "bsonType": "string", "enum": ["retention"] },
+				"eventsMs": { "bsonType": ["long", "int"] },
+				"statsMs": { "bsonType": ["long", "int"] },
+				"tracksMs": { "bsonType": ["long", "int"] },
+				"entitiesMs": { "bsonType": ["long", "int"] },
+				"rollups5MinMs": { "bsonType": ["long", "int"] },
+				"rollupsHourlyMs": { "bsonType": ["long", "int"] },
+				"rollupsDailyMs": {
+					"bsonType": ["long", "int", "null"],
+					"description": "null keeps documents forever"
+				},
+				"updatedAt": { "bsonType": "date" }
+			},
+			"additionalProperties": false
+		},
+		{
+			"bsonType": "object",
+			"required": ["_id", "timeseries", "transactions", "serverVersion", "detectedAt"],
+			"properties": {
+				"_id": { "bsonType": "string", "enum": ["capabilities"] },
+				"timeseries": { "bsonType": "bool" },
+				"transactions": { "bsonType": "bool" },
+				"serverVersion": { "bsonType": "string" },
+				"detectedAt": { "bsonType": "date" }
+			},
+			"additionalProperties": false
+		},
+		{
+			"bsonType": "object",
+			"required": ["_id", "statsDetail", "recordedAt"],
+			"properties": {
+				"_id": { "bsonType": "string", "enum": ["config"] },
+				"statsDetail": { "bsonType": "string", "enum": ["participant", "track"] },
+				"recordedAt": { "bsonType": "date" }
+			},
+			"additionalProperties": false
+		},
+		{
+			"bsonType": "object",
+			"required": ["_id", "state", "processed", "total", "writerVersion", "fromSchemaVersion", "counts"],
+			"properties": {
+				"_id": { "bsonType": "string", "enum": ["migration"] },
+				"state": { "bsonType": "string", "enum": ["pending", "running", "completed", "failed"] },
+				"checkpoint": { "bsonType": "object" },
+				"processed": { "bsonType": ["long", "int"] },
+				"total": { "bsonType": ["long", "int"] },
+				"startedAt": { "bsonType": "date" },
+				"finishedAt": { "bsonType": "date" },
+				"error": { "bsonType": "string" },
+				"writerVersion": { "bsonType": "string" },
+				"fromSchemaVersion": { "bsonType": ["int", "long"] },
+				"counts": {
+					"bsonType": "object",
+					"required": ["events", "stats", "synthetic", "skipped"],
+					"properties": {
+						"events": { "bsonType": ["long", "int"] },
+						"stats": { "bsonType": ["long", "int"] },
+						"synthetic": { "bsonType": ["long", "int"] },
+						"skipped": { "bsonType": ["long", "int"] }
+					},
+					"additionalProperties": false
+				},
+				"nodeId": { "bsonType": "string" },
+				"legacyRetainedUntil": { "bsonType": "date" }
+			},
+			"additionalProperties": false
+		},
+		{
+			"bsonType": "object",
+			"required": ["_id", "lastRunAt", "lastRunDurationMs", "nodeId", "candidates", "closed", "partial"],
+			"properties": {
+				"_id": { "bsonType": "string", "enum": ["reconciler"] },
+				"lastRunAt": { "bsonType": "date" },
+				"lastRunDurationMs": { "bsonType": ["long", "int"] },
+				"nodeId": { "bsonType": "string" },
+				"candidates": {
+					"bsonType": "object",
+					"required": ["room", "participant", "egress", "ingressSession"],
+					"properties": {
+						"room": { "bsonType": ["int", "long"] },
+						"participant": { "bsonType": ["int", "long"] },
+						"egress": { "bsonType": ["int", "long"] },
+						"ingressSession": { "bsonType": ["int", "long"] }
+					},
+					"additionalProperties": false
+				},
+				"closed": {
+					"bsonType": "object",
+					"required": ["room", "participant", "egress", "ingressSession", "track", "subscription"],
+					"properties": {
+						"room": { "bsonType": ["int", "long"] },
+						"participant": { "bsonType": ["int", "long"] },
+						"egress": { "bsonType": ["int", "long"] },
+						"ingressSession": { "bsonType": ["int", "long"] },
+						"track": { "bsonType": ["int", "long"] },
+						"subscription": { "bsonType": ["int", "long"] }
+					},
+					"additionalProperties": false
+				},
+				"partial": { "bsonType": "bool" },
+				"lastError": { "bsonType": "string" }
+			},
+			"additionalProperties": false
+		},
+		{
+			"bsonType": "object",
+			"required": ["_id"],
+			"properties": { "_id": { "bsonType": "string", "enum": ["dashboard"] } },
+			"additionalProperties": true
+		}
+	]
+}

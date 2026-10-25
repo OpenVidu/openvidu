@@ -1,0 +1,61 @@
+<div class="chart-heading">
+	<h3 class="chart-title">{{ heading() }}</h3>
+	@if (info(); as info) {
+		<ovd-info-tip [text]="info" [subject]="heading()" />
+	}
+</div>
+@if (note()) {
+	<p class="chart-note">{{ note() }}</p>
+}
+@if (previousRange() !== null) {
+	<button matButton="tonal" type="button" class="reset" (click)="resetRange()">
+		<mat-icon svgIcon="close" />
+		Reset range
+	</button>
+}
+@if (showTable()) {
+	<div class="table-wrap" [style.max-height.px]="height()">
+		<table>
+			<caption class="ovd-visually-hidden">
+				{{
+					heading()
+				}}
+			</caption>
+			<thead>
+				<tr>
+					<th scope="col">Time ({{ tz() }})</th>
+					@for (item of series(); track item.name) {
+						<th scope="col">{{ item.name }}</th>
+					}
+				</tr>
+			</thead>
+			<tbody>
+				@for (row of table(); track row.ts) {
+					<tr>
+						<th scope="row" class="ovd-tabular">{{ row.label }}</th>
+						@for (value of row.values; track $index) {
+							<td class="ovd-tabular">{{ value }}</td>
+						}
+					</tr>
+				}
+			</tbody>
+		</table>
+	</div>
+} @else if (ready()) {
+	<div
+		class="chart"
+		role="img"
+		tabindex="0"
+		[attr.aria-label]="summary()"
+		echarts
+		[options]="chartOptions.value()"
+		[style.height.px]="height()"
+		(chartInit)="onInit($event)"
+		(chartBrushEnd)="onBrushEnd($event)"
+	></div>
+} @else {
+	<div class="chart" role="img" tabindex="0" [attr.aria-label]="summary()" [style.height.px]="height()"></div>
+}
+<button matButton type="button" class="toggle" (click)="toggleTable()">
+	{{ showTable() ? 'Show chart' : 'Show table' }}
+</button>

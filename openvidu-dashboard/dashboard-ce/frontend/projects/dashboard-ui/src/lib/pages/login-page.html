@@ -1,0 +1,55 @@
+<main id="ovd-main" tabindex="-1">
+	<div class="card">
+		<img ngSrc="assets/openvidu-logo.png" width="48" height="48" alt="" priority />
+		<h1>{{ product }}</h1>
+
+		@if (unreachable()) {
+			<div class="unreachable" role="alert">
+				<mat-icon svgIcon="cloud_off" aria-hidden="true" />
+				<span>The server is unreachable.</span>
+				<button matButton type="button" (click)="retry()">Retry</button>
+			</div>
+		}
+
+		<form novalidate (submit)="onSubmit($event)">
+			<mat-form-field>
+				<mat-label>Username</mat-label>
+				<input #username matInput [formField]="loginForm.username" autocomplete="username" />
+			</mat-form-field>
+			<mat-form-field>
+				<mat-label>Password</mat-label>
+				<input
+					matInput
+					[type]="showPassword() ? 'text' : 'password'"
+					[formField]="loginForm.password"
+					autocomplete="current-password"
+				/>
+				<button
+					matIconButton
+					matSuffix
+					type="button"
+					[attr.aria-label]="showPassword() ? 'Hide password' : 'Show password'"
+					[attr.aria-pressed]="showPassword()"
+					(click)="showPassword.set(!showPassword())"
+				>
+					<mat-icon [svgIcon]="showPassword() ? 'visibility_off' : 'visibility'" />
+				</button>
+			</mat-form-field>
+
+			<p class="message" role="alert">{{ message() ?? '' }}</p>
+
+			<button matButton="filled" type="submit" [disabled]="submitting() || retryIn() > 0">Sign in</button>
+		</form>
+	</div>
+</main>
+<footer>
+	@if (edition()) {
+		<span>{{ edition() }}</span>
+		<span aria-hidden="true">·</span>
+	}
+	@if (version()) {
+		<span>{{ version() }}</span>
+		<span aria-hidden="true">·</span>
+	}
+	<ovd-external-link [href]="documentationUrl">Documentation</ovd-external-link>
+</footer>

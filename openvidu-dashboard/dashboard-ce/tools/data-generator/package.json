@@ -1,0 +1,28 @@
+{
+	"name": "@openvidu-dashboard/data-generator",
+	"version": "3.10.0-dev",
+	"private": true,
+	"description": "Generator of analytics data that follows the data model contract, for tests and local demos",
+	"type": "module",
+	"exports": {
+		"./generator": "./src/generator.ts",
+		"./context": "./src/context.ts",
+		"./contract": "./src/contract.ts",
+		"./plan": "./src/plan.ts",
+		"./schema": "./src/schema.ts"
+	},
+	"scripts": {
+		"generate": "tsx src/generate.ts",
+		"keep-alive": "tsx src/keep-alive.ts",
+		"typecheck": "tsc --noEmit -p tsconfig.json"
+	},
+	"dependencies": {
+		"@openvidu-dashboard/typings": "workspace:*",
+		"mongodb": "catalog:"
+	},
+	"devDependencies": {
+		"@types/node": "catalog:",
+		"tsx": "catalog:",
+		"typescript": "catalog:"
+	}
+}

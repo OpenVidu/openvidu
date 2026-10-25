@@ -1,0 +1,18 @@
+[
+	{
+		"_id": "ND_alpha8Kq2Lm",
+		"firstSeenAt": { "$date": "2026-10-01T08:00:00.000Z" },
+		"lastSeenAt": { "$date": "2026-10-12T10:35:10.000Z" },
+		"serverVersion": "3.10.0",
+		"region": "eu-west",
+		"batchIntervalMs": { "$numberInt": "10000" }
+	},
+	{
+		"_id": "ND_beta3Vx9Pw",
+		"firstSeenAt": { "$date": "2026-10-05T12:00:00.000Z" },
+		"lastSeenAt": { "$date": "2026-10-12T10:35:10.000Z" },
+		"serverVersion": "3.10.0",
+		"region": "eu-west",
+		"batchIntervalMs": { "$numberInt": "10000" }
+	}
+]

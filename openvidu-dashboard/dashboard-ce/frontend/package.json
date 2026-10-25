@@ -1,0 +1,47 @@
+{
+	"name": "@openvidu-dashboard/frontend",
+	"version": "3.10.0-dev",
+	"private": true,
+	"description": "OpenVidu Dashboard Angular application (CE): the shell that composes the dashboard-ui library",
+	"scripts": {
+		"ng": "ng",
+		"icons": "node scripts/icons.mjs build",
+		"dev": "node scripts/icons.mjs build && ng serve",
+		"build": "node scripts/icons.mjs build && ng build dashboard-ui && ng build frontend --base-href \"${BASE_HREF:-/}\" && node scripts/check-bundle-size.mjs",
+		"typecheck": "ngc -p tsconfig.json --noEmit",
+		"lint": "node scripts/icons.mjs check",
+		"test": "ng test dashboard-ui --watch=false && ng test frontend --watch=false",
+		"clean": "rm -rf dist .angular projects/dashboard-ui/assets/icons.svg"
+	},
+	"dependencies": {
+		"@angular/cdk": "catalog:",
+		"@angular/common": "catalog:",
+		"@angular/compiler": "catalog:",
+		"@angular/core": "catalog:",
+		"@angular/forms": "catalog:",
+		"@angular/material": "catalog:",
+		"@angular/material-date-fns-adapter": "catalog:",
+		"@angular/platform-browser": "catalog:",
+		"@angular/router": "catalog:",
+		"@date-fns/tz": "catalog:",
+		"@fontsource-variable/inter": "catalog:",
+		"@fontsource-variable/jetbrains-mono": "catalog:",
+		"@openvidu-dashboard/typings": "workspace:*",
+		"@openvidu-dashboard/ui": "workspace:*",
+		"date-fns": "catalog:",
+		"echarts": "catalog:",
+		"ngx-echarts": "catalog:",
+		"rxjs": "catalog:",
+		"tslib": "catalog:"
+	},
+	"devDependencies": {
+		"@angular/build": "catalog:",
+		"@angular/cli": "catalog:",
+		"@angular/compiler-cli": "catalog:",
+		"@material-symbols/svg-400": "catalog:",
+		"jsdom": "catalog:",
+		"ng-packagr": "catalog:",
+		"typescript": "catalog:",
+		"vitest": "catalog:"
+	}
+}

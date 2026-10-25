@@ -1,0 +1,35 @@
+{
+	"name": "openvidu-dashboard-workspace",
+	"version": "3.10.0-dev",
+	"private": true,
+	"description": "OpenVidu Dashboard workspace (Community edition)",
+	"packageManager": "pnpm@12.11.2",
+	"engines": {
+		"node": "^24.15.0"
+	},
+	"scripts": {
+		"lint": "eslint . --max-warnings 0 && pnpm -r --if-present run lint",
+		"lint:fix": "eslint . --max-warnings 0 --fix && pnpm -r --if-present run lint",
+		"format": "prettier --write .",
+		"format:check": "prettier --check .",
+		"typecheck": "pnpm -r run typecheck",
+		"build": "pnpm -r run build",
+		"dev": "pnpm --filter @openvidu-dashboard/frontend run dev",
+		"test:unit": "pnpm -r --if-present run test",
+		"test:integration": "pnpm -r --if-present run test:integration",
+		"e2e": "pnpm --filter \"@openvidu-dashboard/e2e^...\" run build && pnpm --filter @openvidu-dashboard/e2e run e2e",
+		"spec:validate": "openspec validate --all --strict"
+	},
+	"devDependencies": {
+		"@eslint/js": "catalog:",
+		"@fission-ai/openspec": "catalog:",
+		"@types/node": "catalog:",
+		"angular-eslint": "catalog:",
+		"eslint": "catalog:",
+		"eslint-config-prettier": "catalog:",
+		"globals": "catalog:",
+		"prettier": "catalog:",
+		"typescript": "catalog:",
+		"typescript-eslint": "catalog:"
+	}
+}

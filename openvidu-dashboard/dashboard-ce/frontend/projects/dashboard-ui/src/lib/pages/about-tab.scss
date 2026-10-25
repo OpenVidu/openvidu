@@ -1,0 +1,50 @@
+:host {
+	display: block;
+	padding: 16px 0;
+}
+
+h2 {
+	margin: 24px 0 8px;
+}
+
+.version {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 12px;
+	margin: 0;
+	font: var(--mat-sys-title-medium);
+}
+
+.migration p {
+	margin: 8px 0 0;
+}
+
+.failed {
+	color: var(--mat-sys-error);
+}
+
+.muted {
+	color: var(--mat-sys-on-surface-variant);
+}
+
+.table-wrap {
+	overflow-x: auto;
+}
+
+table {
+	border-collapse: collapse;
+	min-width: 480px;
+}
+
+th,
+td {
+	padding: 6px 16px 6px 0;
+	border-bottom: 1px solid var(--mat-sys-outline-variant);
+	text-align: start;
+	white-space: nowrap;
+}
+
+.end {
+	text-align: end;
+}

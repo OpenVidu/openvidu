@@ -1,0 +1,24 @@
+:host {
+	display: block;
+}
+
+.select {
+	width: 170px;
+}
+
+.cell {
+	display: inline-flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 4px 8px;
+}
+
+.error-marker {
+	display: inline-flex;
+	color: var(--mat-sys-error);
+
+	mat-icon {
+		width: 20px;
+		height: 20px;
+	}
+}

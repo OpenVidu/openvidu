@@ -1,0 +1,462 @@
+[
+	{
+		"collection": "rooms",
+		"name": "status_createdAt_id",
+		"key": [
+			["status", 1],
+			["createdAt", -1],
+			["_id", -1]
+		],
+		"options": {}
+	},
+	{
+		"collection": "rooms",
+		"name": "createdAt_id",
+		"key": [
+			["createdAt", -1],
+			["_id", -1]
+		],
+		"options": {}
+	},
+	{
+		"collection": "rooms",
+		"name": "status_endedAt_id",
+		"key": [
+			["status", 1],
+			["endedAt", -1],
+			["_id", -1]
+		],
+		"options": {}
+	},
+	{
+		"collection": "rooms",
+		"name": "nameLower_createdAt",
+		"key": [
+			["nameLower", 1],
+			["createdAt", -1]
+		],
+		"options": {}
+	},
+	{
+		"collection": "rooms",
+		"name": "nodeId_status_createdAt_id",
+		"key": [
+			["nodeId", 1],
+			["status", 1],
+			["createdAt", -1],
+			["_id", -1]
+		],
+		"options": {}
+	},
+	{
+		"collection": "rooms",
+		"name": "status_lastEventAt_active",
+		"key": [
+			["status", 1],
+			["lastEventAt", 1]
+		],
+		"options": { "partialFilterExpression": { "status": "active" } }
+	},
+	{
+		"collection": "rooms",
+		"name": "status_createdAt_id_egress",
+		"key": [
+			["status", 1],
+			["createdAt", -1],
+			["_id", -1]
+		],
+		"options": { "partialFilterExpression": { "features.egress": true } }
+	},
+	{
+		"collection": "rooms",
+		"name": "status_createdAt_id_ingress",
+		"key": [
+			["status", 1],
+			["createdAt", -1],
+			["_id", -1]
+		],
+		"options": { "partialFilterExpression": { "features.ingress": true } }
+	},
+	{
+		"collection": "rooms",
+		"name": "status_createdAt_id_agent",
+		"key": [
+			["status", 1],
+			["createdAt", -1],
+			["_id", -1]
+		],
+		"options": { "partialFilterExpression": { "features.agent": true } }
+	},
+	{
+		"collection": "rooms",
+		"name": "status_createdAt_id_sip",
+		"key": [
+			["status", 1],
+			["createdAt", -1],
+			["_id", -1]
+		],
+		"options": { "partialFilterExpression": { "features.sip": true } }
+	},
+	{
+		"collection": "rooms",
+		"name": "expiresAt_ttl",
+		"key": [["expiresAt", 1]],
+		"options": { "expireAfterSeconds": 0 }
+	},
+	{
+		"collection": "participants",
+		"name": "roomSid_joinedAt_id",
+		"key": [
+			["roomSid", 1],
+			["joinedAt", -1],
+			["_id", -1]
+		],
+		"options": {}
+	},
+	{
+		"collection": "participants",
+		"name": "roomSid_identityLower_joinedAt",
+		"key": [
+			["roomSid", 1],
+			["identityLower", 1],
+			["joinedAt", -1]
+		],
+		"options": {}
+	},
+	{
+		"collection": "participants",
+		"name": "identityLower_joinedAt",
+		"key": [
+			["identityLower", 1],
+			["joinedAt", -1]
+		],
+		"options": {}
+	},
+	{
+		"collection": "participants",
+		"name": "status_kind",
+		"key": [
+			["status", 1],
+			["kind", 1]
+		],
+		"options": {}
+	},
+	{
+		"collection": "participants",
+		"name": "kind_status_joinedAt_id",
+		"key": [
+			["kind", 1],
+			["status", 1],
+			["joinedAt", -1],
+			["_id", -1]
+		],
+		"options": {}
+	},
+	{
+		"collection": "participants",
+		"name": "joinedAt_id",
+		"key": [
+			["joinedAt", -1],
+			["_id", -1]
+		],
+		"options": {}
+	},
+	{
+		"collection": "participants",
+		"name": "status_lastStatsAt_open",
+		"key": [
+			["status", 1],
+			["lastStatsAt", 1]
+		],
+		"options": { "partialFilterExpression": { "status": { "$in": ["active", "joining"] } } }
+	},
+	{
+		"collection": "participants",
+		"name": "expiresAt_ttl",
+		"key": [["expiresAt", 1]],
+		"options": { "expireAfterSeconds": 0 }
+	},
+	{
+		"collection": "tracks",
+		"name": "participantSid_publishedAt",
+		"key": [
+			["participantSid", 1],
+			["publishedAt", 1]
+		],
+		"options": {}
+	},
+	{
+		"collection": "tracks",
+		"name": "roomSid_publishedAt",
+		"key": [
+			["roomSid", 1],
+			["publishedAt", 1]
+		],
+		"options": {}
+	},
+	{
+		"collection": "tracks",
+		"name": "expiresAt_ttl",
+		"key": [["expiresAt", 1]],
+		"options": { "expireAfterSeconds": 0 }
+	},
+	{
+		"collection": "track_subscriptions",
+		"name": "subscriberSid_subscribedAt",
+		"key": [
+			["subscriberSid", 1],
+			["subscribedAt", 1]
+		],
+		"options": {}
+	},
+	{
+		"collection": "track_subscriptions",
+		"name": "trackSid_subscribedAt",
+		"key": [
+			["trackSid", 1],
+			["subscribedAt", 1]
+		],
+		"options": {}
+	},
+	{
+		"collection": "track_subscriptions",
+		"name": "expiresAt_ttl",
+		"key": [["expiresAt", 1]],
+		"options": { "expireAfterSeconds": 0 }
+	},
+	{
+		"collection": "egresses",
+		"name": "startedAt_id",
+		"key": [
+			["startedAt", -1],
+			["_id", -1]
+		],
+		"options": {}
+	},
+	{
+		"collection": "egresses",
+		"name": "roomSid_startedAt",
+		"key": [
+			["roomSid", 1],
+			["startedAt", -1]
+		],
+		"options": {}
+	},
+	{
+		"collection": "egresses",
+		"name": "status_startedAt",
+		"key": [
+			["status", 1],
+			["startedAt", -1]
+		],
+		"options": {}
+	},
+	{
+		"collection": "egresses",
+		"name": "roomNameLower_startedAt",
+		"key": [
+			["roomNameLower", 1],
+			["startedAt", -1]
+		],
+		"options": { "partialFilterExpression": { "roomNameLower": { "$exists": true } } }
+	},
+	{
+		"collection": "egresses",
+		"name": "expiresAt_ttl",
+		"key": [["expiresAt", 1]],
+		"options": { "expireAfterSeconds": 0 }
+	},
+	{
+		"collection": "ingresses",
+		"name": "createdAt_id",
+		"key": [
+			["createdAt", -1],
+			["_id", -1]
+		],
+		"options": {}
+	},
+	{
+		"collection": "ingresses",
+		"name": "status_createdAt",
+		"key": [
+			["status", 1],
+			["createdAt", -1]
+		],
+		"options": {}
+	},
+	{
+		"collection": "ingresses",
+		"name": "nameLower_createdAt",
+		"key": [
+			["nameLower", 1],
+			["createdAt", -1]
+		],
+		"options": {}
+	},
+	{
+		"collection": "ingresses",
+		"name": "lastSessionAt_id",
+		"key": [
+			["lastSessionAt", -1],
+			["_id", -1]
+		],
+		"options": { "partialFilterExpression": { "lastSessionAt": { "$exists": true } } }
+	},
+	{
+		"collection": "ingresses",
+		"name": "expiresAt_ttl",
+		"key": [["expiresAt", 1]],
+		"options": { "expireAfterSeconds": 0 }
+	},
+	{
+		"collection": "ingress_sessions",
+		"name": "ingressId_startedAt",
+		"key": [
+			["ingressId", 1],
+			["startedAt", -1]
+		],
+		"options": {}
+	},
+	{
+		"collection": "ingress_sessions",
+		"name": "roomSid_startedAt",
+		"key": [
+			["roomSid", 1],
+			["startedAt", -1]
+		],
+		"options": {}
+	},
+	{ "collection": "ingress_sessions", "name": "status", "key": [["status", 1]], "options": {} },
+	{
+		"collection": "ingress_sessions",
+		"name": "startedAt_id",
+		"key": [
+			["startedAt", -1],
+			["_id", -1]
+		],
+		"options": {}
+	},
+	{
+		"collection": "ingress_sessions",
+		"name": "expiresAt_ttl",
+		"key": [["expiresAt", 1]],
+		"options": { "expireAfterSeconds": 0 }
+	},
+	{
+		"collection": "events",
+		"name": "roomSid_ts",
+		"key": [
+			["roomSid", 1],
+			["ts", 1]
+		],
+		"options": {}
+	},
+	{
+		"collection": "events",
+		"name": "participantSid_ts",
+		"key": [
+			["participantSid", 1],
+			["ts", 1]
+		],
+		"options": {}
+	},
+	{
+		"collection": "events",
+		"name": "egressId_ts",
+		"key": [
+			["egressId", 1],
+			["ts", 1]
+		],
+		"options": { "partialFilterExpression": { "egressId": { "$exists": true } } }
+	},
+	{
+		"collection": "events",
+		"name": "ingressId_ts",
+		"key": [
+			["ingressId", 1],
+			["ts", 1]
+		],
+		"options": { "partialFilterExpression": { "ingressId": { "$exists": true } } }
+	},
+	{ "collection": "events", "name": "ts_ttl", "key": [["ts", 1]], "options": {}, "retentionClass": "events" },
+	{
+		"collection": "track_stats",
+		"name": "meta.participantSid_ts",
+		"key": [
+			["meta.participantSid", 1],
+			["ts", 1]
+		],
+		"options": {}
+	},
+	{
+		"collection": "track_stats",
+		"name": "meta.roomSid_ts",
+		"key": [
+			["meta.roomSid", 1],
+			["ts", 1]
+		],
+		"options": {}
+	},
+	{
+		"collection": "track_stats",
+		"name": "ts_ttl",
+		"key": [["ts", 1]],
+		"options": {},
+		"retentionClass": "stats",
+		"timeseriesFallbackOnly": true
+	},
+	{
+		"collection": "analytics_5min",
+		"name": "scope_bucket",
+		"key": [
+			["scope", 1],
+			["bucket", 1]
+		],
+		"options": { "unique": true }
+	},
+	{
+		"collection": "analytics_5min",
+		"name": "bucket_ttl",
+		"key": [["bucket", 1]],
+		"options": {},
+		"retentionClass": "rollups5Min"
+	},
+	{
+		"collection": "analytics_hourly",
+		"name": "scope_bucket",
+		"key": [
+			["scope", 1],
+			["bucket", 1]
+		],
+		"options": { "unique": true }
+	},
+	{
+		"collection": "analytics_hourly",
+		"name": "bucket_ttl",
+		"key": [["bucket", 1]],
+		"options": {},
+		"retentionClass": "rollupsHourly"
+	},
+	{
+		"collection": "analytics_daily",
+		"name": "scope_bucket",
+		"key": [
+			["scope", 1],
+			["bucket", 1]
+		],
+		"options": { "unique": true }
+	},
+	{
+		"collection": "analytics_daily",
+		"name": "bucket_ttl",
+		"key": [["bucket", 1]],
+		"options": {},
+		"retentionClass": "rollupsDaily"
+	},
+	{
+		"collection": "nodes",
+		"name": "lastSeenAt_ttl",
+		"key": [["lastSeenAt", 1]],
+		"options": { "expireAfterSeconds": 2592000 }
+	}
+]

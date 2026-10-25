@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<title>OpenVidu Dashboard</title>
+		<base href="/" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<meta name="color-scheme" content="light dark" />
+		<link rel="icon" type="image/x-icon" href="favicon.ico" />
+		<script>
+			// Applies the stored theme before the first paint; ThemeService takes over once the app starts.
+			(function () {
+				try {
+					var prefs = JSON.parse(localStorage.getItem('ovd.prefs.v1') || '{}');
+
+					if (prefs.version === 1 && (prefs.theme === 'light' || prefs.theme === 'dark')) {
+						document.documentElement.setAttribute('data-theme', prefs.theme);
+					}
+				} catch (error) {
+					// Storage blocked or unreadable: the system scheme applies.
+				}
+			})();
+		</script>
+	</head>
+	<body>
+		<ovd-root></ovd-root>
+	</body>
+</html>

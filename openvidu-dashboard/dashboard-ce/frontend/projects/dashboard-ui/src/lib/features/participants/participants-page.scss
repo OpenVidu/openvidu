@@ -1,0 +1,16 @@
+:host {
+	display: block;
+}
+
+.kind,
+.status {
+	width: 180px;
+}
+
+.cell,
+.sources {
+	display: inline-flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 4px 8px;
+}

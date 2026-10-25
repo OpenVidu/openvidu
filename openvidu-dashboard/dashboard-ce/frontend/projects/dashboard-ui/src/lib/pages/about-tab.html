@@ -1,0 +1,80 @@
+@if (unavailable()) {
+	<ovd-notice variant="error" actionLabel="Retry" (action)="retry()">Server info unavailable</ovd-notice>
+} @else if (info(); as info) {
+	<p class="version">
+		<span>OpenVidu {{ info.versions.dashboard }}</span>
+		<ovd-edition-badge />
+	</p>
+
+	@if (migration(); as migration) {
+		<section class="migration" aria-labelledby="ovd-about-migration">
+			<h2 id="ovd-about-migration">Legacy analytics migration</h2>
+			@if (running()) {
+				<mat-progress-bar mode="determinate" [value]="migrationPercent()" aria-label="Migration progress" />
+				<p class="ovd-tabular">{{ migration }} ({{ migrationPercent() }} %)</p>
+			} @else {
+				<p [class.failed]="failed()">{{ migration }}</p>
+			}
+		</section>
+	}
+
+	<h2>Retention</h2>
+	@if (retention(); as rows) {
+		<div class="table-wrap">
+			<table>
+				<caption class="ovd-visually-hidden">
+					Retention per data class
+				</caption>
+				<thead>
+					<tr>
+						<th scope="col">Data</th>
+						<th scope="col">Kept for</th>
+					</tr>
+				</thead>
+				<tbody>
+					@for (row of rows; track row.label) {
+						<tr>
+							<th scope="row">{{ row.label }}</th>
+							<td class="ovd-tabular">{{ row.value }}</td>
+						</tr>
+					}
+				</tbody>
+			</table>
+		</div>
+	} @else {
+		<p class="muted">Not reported by the server yet</p>
+	}
+
+	<h2>Storage</h2>
+	<div class="table-wrap">
+		<table>
+			<caption class="ovd-visually-hidden">
+				Storage per collection
+			</caption>
+			<thead>
+				<tr>
+					<th scope="col">Collection</th>
+					<th scope="col" class="end">Documents</th>
+					<th scope="col" class="end">Size</th>
+					<th scope="col">Oldest</th>
+				</tr>
+			</thead>
+			<tbody>
+				@for (row of storage(); track row.collection) {
+					<tr>
+						<th scope="row" class="ovd-mono">{{ row.collection }}</th>
+						<td class="end ovd-tabular">{{ row.documents }}</td>
+						<td class="end ovd-tabular">{{ row.size }}</td>
+						<td class="ovd-tabular">{{ row.oldest }}</td>
+					</tr>
+				} @empty {
+					<tr>
+						<td colspan="4">No analytics collections yet</td>
+					</tr>
+				}
+			</tbody>
+		</table>
+	</div>
+} @else {
+	<ovd-skeleton variant="rows" [count]="6" />
+}

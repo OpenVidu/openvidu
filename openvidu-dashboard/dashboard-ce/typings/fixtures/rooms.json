@@ -1,0 +1,134 @@
+[
+	{
+		"_id": "RM_aLkq3ZpD9wXy",
+		"name": "Daily-Standup",
+		"nameLower": "daily-standup",
+		"status": "closed",
+		"createdAt": { "$date": "2026-10-12T09:00:00.000Z" },
+		"endedAt": { "$date": "2026-10-12T09:45:00.000Z" },
+		"durationMs": { "$numberLong": "2700000" },
+		"endReason": "API_DELETE",
+		"closedBy": "event",
+		"nodeId": "ND_alpha8Kq2Lm",
+		"config": {
+			"maxParticipants": { "$numberInt": "20" },
+			"emptyTimeoutMs": { "$numberLong": "300000" },
+			"departureTimeoutMs": { "$numberLong": "20000" }
+		},
+		"participants": {
+			"sessions": { "$numberInt": "4" },
+			"unique": { "$numberInt": "3" },
+			"active": { "$numberInt": "0" },
+			"peakActive": { "$numberInt": "2" },
+			"aborted": { "$numberInt": "1" },
+			"byKind": {
+				"STANDARD": { "$numberInt": "4" },
+				"EGRESS": { "$numberInt": "1" },
+				"AGENT": { "$numberInt": "1" },
+				"SIP": { "$numberInt": "1" }
+			}
+		},
+		"tracks": {
+			"published": { "$numberInt": "2" },
+			"bySource": { "CAMERA": { "$numberInt": "1" }, "MICROPHONE": { "$numberInt": "1" } }
+		},
+		"egress": {
+			"total": { "$numberInt": "2" },
+			"active": { "$numberInt": "0" },
+			"byType": { "room_composite": { "$numberInt": "1" }, "track": { "$numberInt": "1" } }
+		},
+		"ingress": { "sessions": { "$numberInt": "0" }, "active": { "$numberInt": "0" } },
+		"bytes": { "up": { "$numberLong": "385000000" }, "down": { "$numberLong": "888000000" } },
+		"quality": {
+			"scoreSum": { "$numberDouble": "1267.0" },
+			"scoreCount": { "$numberInt": "320" },
+			"minScore": { "$numberDouble": "1.8" },
+			"poor": { "$numberInt": "6" },
+			"lost": { "$numberInt": "0" }
+		},
+		"features": { "egress": true, "ingress": false, "agent": true, "sip": true },
+		"lastEventAt": { "$date": "2026-10-12T09:45:00.000Z" },
+		"lastStatsAt": { "$date": "2026-10-12T09:44:30.000Z" },
+		"internal": {
+			"participantSids": [
+				"PA_aL1ce7Hd2Kq9",
+				"PA_b0bFirst4Tz1",
+				"PA_b0bSecnd8Rw3",
+				"PA_car0lAb0rt5n",
+				"PA_egRec0rder01",
+				"PA_ag3ntAssist1",
+				"PA_s1pCaller7Yx"
+			],
+			"activeParticipantSids": [],
+			"identities": ["alice", "bob", "Carol"],
+			"trackSids": ["TR_aLiceCam3Vp8", "TR_aLiceMic0pus"],
+			"egressIds": ["EG_rec0rdMp4Kq2", "EG_trackF4iled9"]
+		},
+		"schemaVersion": { "$numberInt": "1" },
+		"expiresAt": { "$date": "2027-01-10T09:45:00.000Z" }
+	},
+	{
+		"_id": "RM_bQ7tVnW2cErT",
+		"name": "Webinar-Q4",
+		"nameLower": "webinar-q4",
+		"status": "active",
+		"createdAt": { "$date": "2026-10-12T10:00:00.000Z" },
+		"nodeId": "ND_beta3Vx9Pw",
+		"config": {
+			"maxParticipants": { "$numberInt": "0" },
+			"emptyTimeoutMs": { "$numberLong": "300000" },
+			"departureTimeoutMs": { "$numberLong": "20000" }
+		},
+		"participants": {
+			"sessions": { "$numberInt": "2" },
+			"unique": { "$numberInt": "2" },
+			"active": { "$numberInt": "1" },
+			"peakActive": { "$numberInt": "1" },
+			"aborted": { "$numberInt": "0" },
+			"byKind": {
+				"STANDARD": { "$numberInt": "2" },
+				"INGRESS": { "$numberInt": "2" },
+				"EGRESS": { "$numberInt": "1" }
+			}
+		},
+		"tracks": {
+			"published": { "$numberInt": "4" },
+			"bySource": { "CAMERA": { "$numberInt": "3" }, "MICROPHONE": { "$numberInt": "1" } }
+		},
+		"egress": {
+			"total": { "$numberInt": "1" },
+			"active": { "$numberInt": "1" },
+			"byType": { "room_composite": { "$numberInt": "1" } }
+		},
+		"ingress": { "sessions": { "$numberInt": "2" }, "active": { "$numberInt": "1" } },
+		"bytes": { "up": { "$numberLong": "98800000" }, "down": { "$numberLong": "99120000" } },
+		"quality": {
+			"scoreSum": { "$numberDouble": "486.0" },
+			"scoreCount": { "$numberInt": "120" },
+			"minScore": { "$numberDouble": "3.6" },
+			"poor": { "$numberInt": "0" },
+			"lost": { "$numberInt": "0" }
+		},
+		"features": { "egress": true, "ingress": true, "agent": false, "sip": false },
+		"lastEventAt": { "$date": "2026-10-12T10:31:00.000Z" },
+		"lastStatsAt": { "$date": "2026-10-12T10:35:00.000Z" },
+		"internal": {
+			"participantSids": [
+				"PA_dav3Pub6Mn2",
+				"PA_1ngressSes01",
+				"PA_egStr3amer02",
+				"PA_1ngressSes02",
+				"PA_er1nJ0in9Qa"
+			],
+			"activeParticipantSids": ["PA_dav3Pub6Mn2"],
+			"identities": ["dave", "erin"],
+			"trackSids": ["TR_daveCamH264x", "TR_daveMic0pusx", "TR_1ngVid1H264a", "TR_1ngVid2H264b"],
+			"egressIds": ["EG_streamHls7Wz"],
+			"activeEgressIds": ["EG_streamHls7Wz"],
+			"ingressSessionIds": ["rtmp_7f3c9a1e2b4d", "rtmp_9d4e2f6a8c1b"],
+			"activeIngressSessionIds": ["rtmp_9d4e2f6a8c1b"]
+		},
+		"schemaVersion": { "$numberInt": "1" },
+		"expiresAt": null
+	}
+]

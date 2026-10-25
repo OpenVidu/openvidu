@@ -1,0 +1,43 @@
+:host {
+	display: block;
+}
+
+.node {
+	width: 200px;
+}
+
+.lock {
+	display: inline-flex;
+	margin-inline-end: 8px;
+
+	mat-icon {
+		width: 20px;
+		height: 20px;
+	}
+}
+
+.cell,
+.features {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px 8px;
+}
+
+.features {
+	flex-wrap: wrap;
+}
+
+.feature {
+	display: inline-grid;
+	place-items: center;
+	width: 22px;
+	height: 22px;
+	border: 1px solid var(--mat-sys-outline);
+	border-radius: 6px;
+	color: var(--mat-sys-on-surface-variant);
+	font: var(--mat-sys-label-medium);
+}
+
+.estimated {
+	text-decoration: underline dotted;
+}

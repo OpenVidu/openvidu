@@ -1,0 +1,5 @@
+@use '@fontsource-variable/inter/index' as inter;
+@use '@fontsource-variable/jetbrains-mono/index' as jetbrains-mono;
+@use '@openvidu-dashboard/ui/styles' as ovd;
+
+@include ovd.theme;

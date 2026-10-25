@@ -1,0 +1,116 @@
+<header>
+	<div class="row brand-row">
+		<button
+			matIconButton
+			type="button"
+			aria-label="Toggle navigation"
+			matTooltip="Navigation"
+			(click)="menu.emit()"
+		>
+			<mat-icon svgIcon="menu" />
+		</button>
+		<a class="brand" routerLink="/overview">
+			<img ngSrc="assets/openvidu-logo.png" width="28" height="28" alt="" priority />
+			<span>{{ compact() ? 'OpenVidu' : product }}</span>
+		</a>
+
+		@if (searchInline()) {
+			<ovd-global-search class="search" [class.narrow]="size() === 'medium'" />
+		}
+
+		<span class="spacer"></span>
+
+		@if (!searchInline()) {
+			<button matIconButton type="button" aria-label="Search" matTooltip="Search" (click)="searchOpen.set(true)">
+				<mat-icon svgIcon="search" />
+			</button>
+		}
+
+		@if (!handset()) {
+			@if (meta()?.rangeScoped) {
+				<ovd-date-time-range-picker [display]="pickerDisplay()" [retentionMs]="pickerRetentionMs()" />
+			} @else if (zoneChip()) {
+				<ovd-zone-chip />
+			}
+			@if (refreshable()) {
+				<ovd-refresh-control [compact]="size() !== 'xlarge'" />
+			}
+			<ovd-theme-toggle />
+			<button
+				matButton
+				type="button"
+				class="user"
+				[matMenuTriggerFor]="userMenu"
+				[attr.aria-label]="desktop() ? username() + ', user menu' : 'User menu'"
+			>
+				<mat-icon svgIcon="account_circle" />
+				@if (desktop()) {
+					<span class="user-name">{{ username() }}</span>
+				}
+			</button>
+		} @else {
+			<button
+				matIconButton
+				type="button"
+				aria-label="More actions"
+				matTooltip="More actions"
+				[matMenuTriggerFor]="overflowMenu"
+			>
+				<mat-icon svgIcon="more_vert" />
+			</button>
+		}
+	</div>
+
+	@if (handset() && (meta()?.rangeScoped || zoneChip() || refreshable())) {
+		<div class="row range-row">
+			@if (meta()?.rangeScoped) {
+				<ovd-date-time-range-picker display="minimal" [retentionMs]="pickerRetentionMs()" />
+			} @else if (zoneChip()) {
+				<ovd-zone-chip />
+			}
+			<span class="spacer"></span>
+			@if (refreshable()) {
+				<ovd-refresh-control [compact]="true" />
+			}
+		</div>
+	}
+
+	@if (searchOpen() && !searchInline()) {
+		<div class="row search-row">
+			<ovd-global-search class="search-full" (navigated)="searchOpen.set(false)" />
+			<button matIconButton type="button" aria-label="Close search" (click)="searchOpen.set(false)">
+				<mat-icon svgIcon="close" />
+			</button>
+		</div>
+	}
+</header>
+
+<mat-menu #userMenu="matMenu">
+	<div class="menu-user" role="presentation">{{ username() }}</div>
+	<mat-divider />
+	<a mat-menu-item routerLink="/settings">
+		<mat-icon svgIcon="settings" />
+		Settings
+	</a>
+	<button mat-menu-item type="button" (click)="signOut()">
+		<mat-icon svgIcon="logout" />
+		Sign out
+	</button>
+</mat-menu>
+
+<mat-menu #overflowMenu="matMenu">
+	<div class="menu-user" role="presentation">{{ username() }}</div>
+	<mat-divider />
+	<button mat-menu-item type="button" (click)="theme.cycle(); $event.stopPropagation()">
+		<mat-icon [svgIcon]="themeIcon()" />
+		Theme: {{ theme.preference() }}
+	</button>
+	<a mat-menu-item routerLink="/settings">
+		<mat-icon svgIcon="settings" />
+		Settings
+	</a>
+	<button mat-menu-item type="button" (click)="signOut()">
+		<mat-icon svgIcon="logout" />
+		Sign out
+	</button>
+</mat-menu>

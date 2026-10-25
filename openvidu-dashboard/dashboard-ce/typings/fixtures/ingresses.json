@@ -1,0 +1,41 @@
+[
+	{
+		"_id": "IN_0bsRtmpReu5e",
+		"name": "OBS Studio",
+		"nameLower": "obs studio",
+		"inputType": "rtmp",
+		"url": "rtmp://ingress.example.com/x",
+		"roomName": "Webinar-Q4",
+		"participantIdentity": "obs-studio",
+		"participantName": "OBS",
+		"reusable": true,
+		"enabled": true,
+		"enableTranscoding": true,
+		"createdAt": { "$date": "2026-10-12T09:55:00.000Z" },
+		"status": "publishing",
+		"sessions": { "$numberInt": "2" },
+		"totalDurationMs": { "$numberLong": "1190000" },
+		"lastSessionAt": { "$date": "2026-10-12T10:29:58.000Z" },
+		"internal": { "endedSessionDurations": { "rtmp_7f3c9a1e2b4d": { "$numberLong": "1190000" } } },
+		"schemaVersion": { "$numberInt": "1" },
+		"expiresAt": null
+	},
+	{
+		"_id": "IN_wh1pDeleted3",
+		"name": "Browser WHIP",
+		"nameLower": "browser whip",
+		"inputType": "whip",
+		"url": "https://ingress.example.com/w",
+		"roomName": "Webinar-Q4",
+		"participantIdentity": "whip-publisher",
+		"reusable": false,
+		"enabled": true,
+		"createdAt": { "$date": "2026-10-12T09:50:00.000Z" },
+		"deletedAt": { "$date": "2026-10-12T09:58:00.000Z" },
+		"status": "deleted",
+		"sessions": { "$numberInt": "0" },
+		"totalDurationMs": { "$numberLong": "0" },
+		"schemaVersion": { "$numberInt": "1" },
+		"expiresAt": { "$date": "2027-01-10T09:58:00.000Z" }
+	}
+]

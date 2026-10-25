@@ -1,0 +1,26 @@
+{
+	"name": "@openvidu-dashboard/ui",
+	"version": "3.10.0-dev",
+	"private": true,
+	"description": "OpenVidu Dashboard UI library: shell, pages, services and building blocks composed by the dashboard applications",
+	"peerDependencies": {
+		"@angular/cdk": "catalog:",
+		"@angular/common": "catalog:",
+		"@angular/core": "catalog:",
+		"@angular/forms": "catalog:",
+		"@angular/material": "catalog:",
+		"@angular/material-date-fns-adapter": "catalog:",
+		"@angular/platform-browser": "catalog:",
+		"@angular/router": "catalog:",
+		"@date-fns/tz": "catalog:",
+		"@openvidu-dashboard/typings": "workspace:*",
+		"date-fns": "catalog:",
+		"echarts": "catalog:",
+		"ngx-echarts": "catalog:",
+		"rxjs": "catalog:"
+	},
+	"dependencies": {
+		"tslib": "catalog:"
+	},
+	"sideEffects": false
+}

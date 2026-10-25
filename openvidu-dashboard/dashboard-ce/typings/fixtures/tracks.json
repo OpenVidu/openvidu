@@ -1,0 +1,279 @@
+[
+	{
+		"_id": "TR_aLiceCam3Vp8",
+		"roomSid": "RM_aLkq3ZpD9wXy",
+		"participantSid": "PA_aL1ce7Hd2Kq9",
+		"identity": "alice",
+		"type": "VIDEO",
+		"source": "CAMERA",
+		"mimeType": "video/VP8",
+		"name": "camera",
+		"status": "unpublished",
+		"publishedAt": { "$date": "2026-10-12T09:00:08.000Z" },
+		"unpublishedAt": { "$date": "2026-10-12T09:40:00.000Z" },
+		"durationMs": { "$numberLong": "2392000" },
+		"closedBy": "event",
+		"expiresAt": { "$date": "2026-10-19T09:40:00.000Z" },
+		"muted": false,
+		"width": { "$numberInt": "1280" },
+		"height": { "$numberInt": "720" },
+		"simulcast": true,
+		"codecs": [
+			{
+				"mimeType": "video/VP8",
+				"layers": [
+					{
+						"quality": "LOW",
+						"width": { "$numberInt": "320" },
+						"height": { "$numberInt": "180" },
+						"bitrate": { "$numberInt": "150000" }
+					},
+					{
+						"quality": "MEDIUM",
+						"width": { "$numberInt": "640" },
+						"height": { "$numberInt": "360" },
+						"bitrate": { "$numberInt": "500000" }
+					},
+					{
+						"quality": "HIGH",
+						"width": { "$numberInt": "1280" },
+						"height": { "$numberInt": "720" },
+						"bitrate": { "$numberInt": "1700000" }
+					}
+				]
+			}
+		],
+		"encryption": "NONE",
+		"subscribers": {
+			"current": { "$numberInt": "0" },
+			"total": { "$numberInt": "2" },
+			"failed": { "$numberInt": "0" }
+		},
+		"publishStats": {
+			"bytes": { "$numberLong": "365000000" },
+			"packets": { "$numberInt": "310000" },
+			"packetsLost": { "$numberInt": "120" },
+			"packetLossPct": { "$numberDouble": "0.04" },
+			"nacks": { "$numberInt": "40" },
+			"plis": { "$numberInt": "2" },
+			"firs": { "$numberInt": "0" },
+			"rttMaxMs": { "$numberInt": "85" },
+			"jitterMaxMs": { "$numberDouble": "12.5" },
+			"durationMs": { "$numberLong": "2392000" },
+			"layers": [
+				{
+					"layer": { "$numberInt": "0" },
+					"bytes": { "$numberLong": "45000000" },
+					"packets": { "$numberInt": "52000" },
+					"frames": { "$numberInt": "35880" }
+				},
+				{
+					"layer": { "$numberInt": "1" },
+					"bytes": { "$numberLong": "100000000" },
+					"packets": { "$numberInt": "98000" },
+					"frames": { "$numberInt": "71760" }
+				},
+				{
+					"layer": { "$numberInt": "2" },
+					"bytes": { "$numberLong": "220000000" },
+					"packets": { "$numberInt": "160000" },
+					"frames": { "$numberInt": "71760" }
+				}
+			]
+		},
+		"schemaVersion": { "$numberInt": "1" }
+	},
+	{
+		"_id": "TR_aLiceMic0pus",
+		"roomSid": "RM_aLkq3ZpD9wXy",
+		"participantSid": "PA_aL1ce7Hd2Kq9",
+		"identity": "alice",
+		"type": "AUDIO",
+		"source": "MICROPHONE",
+		"mimeType": "audio/opus",
+		"name": "microphone",
+		"status": "unpublished",
+		"publishedAt": { "$date": "2026-10-12T09:00:08.000Z" },
+		"unpublishedAt": { "$date": "2026-10-12T09:40:00.000Z" },
+		"durationMs": { "$numberLong": "2392000" },
+		"closedBy": "event",
+		"expiresAt": { "$date": "2026-10-19T09:40:00.000Z" },
+		"muted": false,
+		"codecs": [{ "mimeType": "audio/opus" }],
+		"encryption": "NONE",
+		"subscribers": {
+			"current": { "$numberInt": "0" },
+			"total": { "$numberInt": "0" },
+			"failed": { "$numberInt": "1" }
+		},
+		"publishStats": {
+			"bytes": { "$numberLong": "9600000" },
+			"packets": { "$numberInt": "119600" },
+			"packetsLost": { "$numberInt": "30" },
+			"packetLossPct": { "$numberDouble": "0.03" },
+			"nacks": { "$numberInt": "10" },
+			"plis": { "$numberInt": "2" },
+			"firs": { "$numberInt": "0" },
+			"rttMaxMs": { "$numberInt": "85" },
+			"jitterMaxMs": { "$numberDouble": "12.5" },
+			"durationMs": { "$numberLong": "2392000" },
+			"layers": []
+		},
+		"schemaVersion": { "$numberInt": "1" }
+	},
+	{
+		"_id": "TR_daveCamH264x",
+		"roomSid": "RM_bQ7tVnW2cErT",
+		"participantSid": "PA_dav3Pub6Mn2",
+		"identity": "dave",
+		"type": "VIDEO",
+		"source": "CAMERA",
+		"mimeType": "video/H264",
+		"name": "camera",
+		"status": "published",
+		"publishedAt": { "$date": "2026-10-12T10:00:06.000Z" },
+		"muted": false,
+		"width": { "$numberInt": "640" },
+		"height": { "$numberInt": "480" },
+		"simulcast": false,
+		"codecs": [
+			{
+				"mimeType": "video/H264",
+				"layers": [
+					{
+						"quality": "HIGH",
+						"width": { "$numberInt": "640" },
+						"height": { "$numberInt": "480" },
+						"bitrate": { "$numberInt": "800000" }
+					}
+				]
+			}
+		],
+		"encryption": "NONE",
+		"subscribers": {
+			"current": { "$numberInt": "0" },
+			"total": { "$numberInt": "0" },
+			"failed": { "$numberInt": "0" }
+		},
+		"schemaVersion": { "$numberInt": "1" },
+		"expiresAt": null
+	},
+	{
+		"_id": "TR_daveMic0pusx",
+		"roomSid": "RM_bQ7tVnW2cErT",
+		"participantSid": "PA_dav3Pub6Mn2",
+		"identity": "dave",
+		"type": "AUDIO",
+		"source": "MICROPHONE",
+		"mimeType": "audio/opus",
+		"name": "microphone",
+		"status": "published",
+		"publishedAt": { "$date": "2026-10-12T10:00:06.000Z" },
+		"muted": true,
+		"codecs": [{ "mimeType": "audio/opus" }],
+		"encryption": "NONE",
+		"subscribers": {
+			"current": { "$numberInt": "0" },
+			"total": { "$numberInt": "0" },
+			"failed": { "$numberInt": "0" }
+		},
+		"schemaVersion": { "$numberInt": "1" },
+		"expiresAt": null
+	},
+	{
+		"_id": "TR_1ngVid1H264a",
+		"roomSid": "RM_bQ7tVnW2cErT",
+		"participantSid": "PA_1ngressSes01",
+		"identity": "obs-studio",
+		"type": "VIDEO",
+		"source": "CAMERA",
+		"mimeType": "video/H264",
+		"status": "unpublished",
+		"publishedAt": { "$date": "2026-10-12T10:00:12.000Z" },
+		"unpublishedAt": { "$date": "2026-10-12T10:20:00.000Z" },
+		"durationMs": { "$numberLong": "1188000" },
+		"closedBy": "event",
+		"expiresAt": { "$date": "2026-10-19T10:20:00.000Z" },
+		"muted": false,
+		"width": { "$numberInt": "1920" },
+		"height": { "$numberInt": "1080" },
+		"simulcast": false,
+		"codecs": [
+			{
+				"mimeType": "video/H264",
+				"layers": [
+					{
+						"quality": "HIGH",
+						"width": { "$numberInt": "1920" },
+						"height": { "$numberInt": "1080" },
+						"bitrate": { "$numberInt": "4500000" }
+					}
+				]
+			}
+		],
+		"encryption": "NONE",
+		"subscribers": {
+			"current": { "$numberInt": "0" },
+			"total": { "$numberInt": "1" },
+			"failed": { "$numberInt": "0" }
+		},
+		"publishStats": {
+			"bytes": { "$numberLong": "668000000" },
+			"packets": { "$numberInt": "480000" },
+			"packetsLost": { "$numberInt": "40" },
+			"packetLossPct": { "$numberDouble": "0.01" },
+			"nacks": { "$numberInt": "13" },
+			"plis": { "$numberInt": "2" },
+			"firs": { "$numberInt": "0" },
+			"rttMaxMs": { "$numberInt": "85" },
+			"jitterMaxMs": { "$numberDouble": "12.5" },
+			"durationMs": { "$numberLong": "1188000" },
+			"layers": [
+				{
+					"layer": { "$numberInt": "0" },
+					"bytes": { "$numberLong": "668000000" },
+					"packets": { "$numberInt": "480000" },
+					"frames": { "$numberInt": "35640" }
+				}
+			]
+		},
+		"schemaVersion": { "$numberInt": "1" }
+	},
+	{
+		"_id": "TR_1ngVid2H264b",
+		"roomSid": "RM_bQ7tVnW2cErT",
+		"participantSid": "PA_1ngressSes02",
+		"identity": "obs-studio",
+		"type": "VIDEO",
+		"source": "CAMERA",
+		"mimeType": "video/H264",
+		"status": "published",
+		"publishedAt": { "$date": "2026-10-12T10:30:02.000Z" },
+		"muted": false,
+		"width": { "$numberInt": "1920" },
+		"height": { "$numberInt": "1080" },
+		"simulcast": false,
+		"codecs": [
+			{
+				"mimeType": "video/H264",
+				"layers": [
+					{
+						"quality": "HIGH",
+						"width": { "$numberInt": "1920" },
+						"height": { "$numberInt": "1080" },
+						"bitrate": { "$numberInt": "4500000" }
+					}
+				]
+			}
+		],
+		"encryption": "NONE",
+		"subscribers": {
+			"current": { "$numberInt": "1" },
+			"total": { "$numberInt": "1" },
+			"failed": { "$numberInt": "0" }
+		},
+		"internal": { "subscriberSids": ["PA_dav3Pub6Mn2"] },
+		"schemaVersion": { "$numberInt": "1" },
+		"expiresAt": null
+	}
+]

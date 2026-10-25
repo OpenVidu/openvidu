@@ -1,0 +1,196 @@
+{
+	"bsonType": "object",
+	"required": [
+		"_id",
+		"identity",
+		"identityLower",
+		"roomSid",
+		"roomName",
+		"kind",
+		"status",
+		"joinedAt",
+		"nodeId",
+		"resumes",
+		"isPublisher",
+		"tracks",
+		"bytes",
+		"quality",
+		"lastEventAt",
+		"schemaVersion",
+		"expiresAt"
+	],
+	"properties": {
+		"_id": { "bsonType": "string", "description": "Participant SID" },
+		"identity": { "bsonType": "string" },
+		"identityLower": { "bsonType": "string" },
+		"name": { "bsonType": "string" },
+		"roomSid": { "bsonType": "string" },
+		"roomName": { "bsonType": "string" },
+		"kind": {
+			"bsonType": "string",
+			"enum": ["STANDARD", "INGRESS", "EGRESS", "SIP", "AGENT", "CONNECTOR", "BRIDGE"]
+		},
+		"kindDetails": {
+			"bsonType": "array",
+			"items": {
+				"bsonType": "string",
+				"enum": [
+					"CLOUD_AGENT",
+					"FORWARDED",
+					"CONNECTOR_WHATSAPP",
+					"CONNECTOR_TWILIO",
+					"BRIDGE_RTSP",
+					"SIMULATION"
+				]
+			}
+		},
+		"status": { "bsonType": "string", "enum": ["joining", "active", "left", "aborted"] },
+		"joinedAt": { "bsonType": "date" },
+		"activeAt": { "bsonType": "date" },
+		"leftAt": { "bsonType": "date" },
+		"durationMs": { "bsonType": ["long", "int"] },
+		"disconnectReason": {
+			"bsonType": "string",
+			"enum": [
+				"UNKNOWN_REASON",
+				"CLIENT_INITIATED",
+				"DUPLICATE_IDENTITY",
+				"SERVER_SHUTDOWN",
+				"PARTICIPANT_REMOVED",
+				"ROOM_DELETED",
+				"STATE_MISMATCH",
+				"JOIN_FAILURE",
+				"MIGRATION",
+				"SIGNAL_CLOSE",
+				"ROOM_CLOSED",
+				"USER_UNAVAILABLE",
+				"USER_REJECTED",
+				"SIP_TRUNK_FAILURE",
+				"CONNECTION_TIMEOUT",
+				"MEDIA_FAILURE",
+				"AGENT_ERROR",
+				"RECONCILED"
+			]
+		},
+		"closedBy": { "bsonType": "string", "enum": ["event", "reconciler"] },
+		"connectTimeMs": { "bsonType": ["int", "long"] },
+		"connectionType": { "bsonType": "string", "enum": ["udp", "tcp", "turn"] },
+		"region": { "bsonType": "string" },
+		"nodeId": { "bsonType": "string" },
+		"resumes": { "bsonType": ["int", "long"] },
+		"client": {
+			"bsonType": "object",
+			"properties": {
+				"sdk": {
+					"bsonType": "string",
+					"enum": [
+						"UNKNOWN",
+						"JS",
+						"SWIFT",
+						"ANDROID",
+						"FLUTTER",
+						"GO",
+						"UNITY",
+						"REACT_NATIVE",
+						"RUST",
+						"PYTHON",
+						"CPP",
+						"UNITY_WEB",
+						"NODE",
+						"UNREAL",
+						"ESP32"
+					]
+				},
+				"version": { "bsonType": "string" },
+				"os": { "bsonType": "string" },
+				"osVersion": { "bsonType": "string" },
+				"browser": { "bsonType": "string" },
+				"browserVersion": { "bsonType": "string" },
+				"deviceModel": { "bsonType": "string" },
+				"network": { "bsonType": "string" },
+				"address": { "bsonType": "string", "description": "Absent with anonymize_ip" }
+			},
+			"additionalProperties": false
+		},
+		"permission": {
+			"bsonType": "object",
+			"properties": {
+				"canSubscribe": { "bsonType": "bool" },
+				"canPublish": { "bsonType": "bool" },
+				"canPublishData": { "bsonType": "bool" },
+				"canPublishSources": {
+					"bsonType": "array",
+					"items": {
+						"bsonType": "string",
+						"enum": ["UNKNOWN", "CAMERA", "MICROPHONE", "SCREEN_SHARE", "SCREEN_SHARE_AUDIO"]
+					}
+				},
+				"hidden": { "bsonType": "bool" },
+				"canUpdateMetadata": { "bsonType": "bool" },
+				"canSubscribeMetrics": { "bsonType": "bool" }
+			},
+			"additionalProperties": false
+		},
+		"isPublisher": { "bsonType": "bool" },
+		"metadata": { "bsonType": "string", "description": "Only with store_metadata" },
+		"attributes": {
+			"bsonType": "object",
+			"properties": {},
+			"additionalProperties": { "bsonType": "string" },
+			"description": "Only with store_metadata"
+		},
+		"tracks": {
+			"bsonType": "object",
+			"required": ["published", "bySource", "subscribed", "subscribeFailures"],
+			"properties": {
+				"published": { "bsonType": ["int", "long"] },
+				"bySource": {
+					"bsonType": "object",
+					"properties": {
+						"UNKNOWN": { "bsonType": ["int", "long"] },
+						"CAMERA": { "bsonType": ["int", "long"] },
+						"MICROPHONE": { "bsonType": ["int", "long"] },
+						"SCREEN_SHARE": { "bsonType": ["int", "long"] },
+						"SCREEN_SHARE_AUDIO": { "bsonType": ["int", "long"] }
+					},
+					"additionalProperties": false
+				},
+				"subscribed": { "bsonType": ["int", "long"] },
+				"subscribeFailures": { "bsonType": ["int", "long"] }
+			},
+			"additionalProperties": false
+		},
+		"bytes": {
+			"bsonType": "object",
+			"required": ["up", "down"],
+			"properties": { "up": { "bsonType": ["long", "int"] }, "down": { "bsonType": ["long", "int"] } },
+			"additionalProperties": false
+		},
+		"quality": {
+			"bsonType": "object",
+			"required": ["scoreSum", "scoreCount", "poor", "lost"],
+			"properties": {
+				"scoreSum": { "bsonType": "double" },
+				"scoreCount": { "bsonType": ["int", "long"] },
+				"minScore": { "bsonType": "double" },
+				"poor": { "bsonType": ["int", "long"] },
+				"lost": { "bsonType": ["int", "long"] },
+				"lastScore": { "bsonType": "double" },
+				"lastScoreAt": { "bsonType": "date" }
+			},
+			"additionalProperties": false
+		},
+		"lastEventAt": { "bsonType": "date" },
+		"lastStatsAt": { "bsonType": "date" },
+		"internal": { "bsonType": "object", "description": "Writer bookkeeping; never read by the dashboard" },
+		"schemaVersion": {
+			"bsonType": ["int", "long"],
+			"description": "SCHEMA_VERSION of the writer that last wrote the document"
+		},
+		"expiresAt": {
+			"bsonType": ["date", "null"],
+			"description": "closedAt + retention once closed; null while open"
+		}
+	},
+	"additionalProperties": false
+}

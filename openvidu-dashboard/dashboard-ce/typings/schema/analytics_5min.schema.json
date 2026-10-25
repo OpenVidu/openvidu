@@ -1,0 +1,53 @@
+{
+	"bsonType": "object",
+	"required": ["_id", "scope", "bucket"],
+	"properties": {
+		"_id": {
+			"bsonType": "string",
+			"pattern": "^(global|node:[^:]+):[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:00Z$"
+		},
+		"scope": { "bsonType": "string", "pattern": "^(global|node:[^:]+)$" },
+		"bucket": { "bsonType": "date", "description": "Start of the UTC bucket" },
+		"rooms": {
+			"bsonType": "object",
+			"properties": { "created": { "bsonType": ["int", "long"] }, "ended": { "bsonType": ["int", "long"] } },
+			"additionalProperties": false
+		},
+		"participants": {
+			"bsonType": "object",
+			"properties": {
+				"connected": {
+					"bsonType": ["int", "long"],
+					"description": "Distinct participants with stats in the bucket"
+				},
+				"joined": { "bsonType": ["int", "long"] },
+				"active": { "bsonType": ["int", "long"], "description": "PARTICIPANT_ACTIVE events" },
+				"left": { "bsonType": ["int", "long"] },
+				"aborted": { "bsonType": ["int", "long"] }
+			},
+			"additionalProperties": false
+		},
+		"egress": {
+			"bsonType": "object",
+			"properties": { "started": { "bsonType": ["int", "long"] }, "ended": { "bsonType": ["int", "long"] } },
+			"additionalProperties": false
+		},
+		"bytes": {
+			"bsonType": "object",
+			"properties": { "up": { "bsonType": ["long", "int"] }, "down": { "bsonType": ["long", "int"] } },
+			"additionalProperties": false
+		},
+		"quality": {
+			"bsonType": "object",
+			"properties": {
+				"scoreSum": { "bsonType": "double" },
+				"scoreCount": { "bsonType": ["int", "long"] },
+				"poor": { "bsonType": ["int", "long"] },
+				"lost": { "bsonType": ["int", "long"] }
+			},
+			"additionalProperties": false
+		},
+		"internal": { "bsonType": "object", "description": "Writer bookkeeping; never read by the dashboard" }
+	},
+	"additionalProperties": false
+}

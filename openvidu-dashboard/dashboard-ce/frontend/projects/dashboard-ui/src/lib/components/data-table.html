@@ -1,0 +1,231 @@
+<ng-template #columnsButton>
+	<button matButton type="button" [matMenuTriggerFor]="columnMenu">
+		<mat-icon svgIcon="view_column" />
+		Columns
+	</button>
+	<mat-menu #columnMenu="matMenu">
+		@for (column of hideable(); track column.key) {
+			<button
+				mat-menu-item
+				type="button"
+				role="menuitemcheckbox"
+				[attr.aria-checked]="!hiddenByUser().has(column.key)"
+				(click)="toggleColumn(column.key, hiddenByUser().has(column.key)); $event.stopPropagation()"
+			>
+				<mat-icon [svgIcon]="hiddenByUser().has(column.key) ? 'check_box_outline_blank' : 'check_box'" />
+				{{ column.header }}
+			</button>
+		}
+	</mat-menu>
+</ng-template>
+
+@if ((cards() && sortable().length > 0) || columnsInToolbar()) {
+	<div class="toolbar">
+		@if (cards() && sortable().length > 0) {
+			<mat-form-field class="sort-select" subscriptSizing="dynamic">
+				<mat-label>Sort by</mat-label>
+				<mat-select [value]="sort()" (selectionChange)="selectSort($event.value)">
+					@for (column of sortable(); track column.key) {
+						<mat-option
+							[value]="column.key"
+							[disabled]="column.sortDisabledReason !== undefined"
+							[matTooltip]="column.sortDisabledReason ?? ''"
+							[matTooltipDisabled]="column.sortDisabledReason === undefined"
+							>{{ column.header }}</mat-option
+						>
+					}
+				</mat-select>
+			</mat-form-field>
+			<button
+				matIconButton
+				type="button"
+				[attr.aria-label]="
+					order() === 'asc' ? 'Sorted ascending, sort descending' : 'Sorted descending, sort ascending'
+				"
+				[matTooltip]="order() === 'asc' ? 'Ascending' : 'Descending'"
+				[disabled]="sort() === null"
+				(click)="flipOrder()"
+			>
+				<mat-icon [svgIcon]="order() === 'asc' ? 'arrow_upward' : 'arrow_downward'" />
+			</button>
+		}
+		<span class="spacer"></span>
+		@if (columnsInToolbar()) {
+			<ng-container [ngTemplateOutlet]="columnsButton" />
+		}
+	</div>
+}
+
+@if (error() !== null) {
+	<ovd-error-banner [error]="error()" (retry)="retry.emit()" />
+}
+
+@if (cards()) {
+	<ul class="cards" [attr.aria-label]="caption()" [attr.aria-busy]="loading()">
+		@if (skeletonRows()) {
+			<li><ovd-skeleton variant="rows" [count]="pageSize()" /></li>
+		}
+		@for (row of rows(); track trackBy()(row)) {
+			<li class="card">
+				@if (cardColumns().title; as column) {
+					<div class="card-title">
+						<ng-container
+							[ngTemplateOutlet]="templates().get(column.key) ?? null"
+							[ngTemplateOutletContext]="{ $implicit: row }"
+						/>
+					</div>
+				}
+				<div class="card-line">
+					@if (cardColumns().status; as column) {
+						<ng-container
+							[ngTemplateOutlet]="templates().get(column.key) ?? null"
+							[ngTemplateOutletContext]="{ $implicit: row }"
+						/>
+					}
+					@if (cardColumns().timestamp; as column) {
+						<span class="muted">
+							<ng-container
+								[ngTemplateOutlet]="templates().get(column.key) ?? null"
+								[ngTemplateOutletContext]="{ $implicit: row }"
+							/>
+						</span>
+					}
+				</div>
+				@if (cardColumns().metrics.length > 0) {
+					<dl class="metrics">
+						@for (column of cardColumns().metrics; track column.key) {
+							<div>
+								<dt>
+									{{ column.header }}
+									@if (column.info; as info) {
+										<ovd-info-tip [text]="info" [subject]="column.header" />
+									}
+								</dt>
+								<dd>
+									<ng-container
+										[ngTemplateOutlet]="templates().get(column.key) ?? null"
+										[ngTemplateOutletContext]="{ $implicit: row }"
+									/>
+								</dd>
+							</div>
+						}
+					</dl>
+				}
+				@if (cardColumns().more.length > 0) {
+					<button
+						matButton
+						type="button"
+						class="more"
+						[attr.aria-expanded]="expanded().has(trackBy()(row))"
+						(click)="toggleMore(trackBy()(row))"
+					>
+						More
+						<mat-icon
+							[svgIcon]="expanded().has(trackBy()(row)) ? 'keyboard_arrow_up' : 'keyboard_arrow_down'"
+						/>
+					</button>
+					@if (expanded().has(trackBy()(row))) {
+						<dl class="metrics">
+							@for (column of cardColumns().more; track column.key) {
+								<div>
+									<dt>
+										{{ column.header }}
+										@if (column.info; as info) {
+											<ovd-info-tip [text]="info" [subject]="column.header" />
+										}
+									</dt>
+									<dd>
+										<ng-container
+											[ngTemplateOutlet]="templates().get(column.key) ?? null"
+											[ngTemplateOutletContext]="{ $implicit: row }"
+										/>
+									</dd>
+								</div>
+							}
+						</dl>
+					}
+				}
+			</li>
+		}
+	</ul>
+} @else {
+	<div class="scroll">
+		<table [attr.aria-busy]="loading()">
+			<caption class="ovd-visually-hidden">
+				{{
+					caption()
+				}}
+			</caption>
+			<thead>
+				<tr>
+					@for (column of visible(); track column.key) {
+						<th
+							scope="col"
+							[attr.aria-sort]="ariaSort(column)"
+							[attr.aria-label]="column.info ? column.header : null"
+							[class.end]="column.align === 'end'"
+						>
+							@if (column.sortable && column.sortDisabledReason !== undefined) {
+								<span class="sort disabled" tabindex="0" [matTooltip]="column.sortDisabledReason">
+									<button type="button" class="sort" disabled>{{ column.header }}</button>
+								</span>
+							} @else if (column.sortable) {
+								<button
+									type="button"
+									class="sort"
+									[matTooltip]="column.headerHint ?? ''"
+									[matTooltipDisabled]="!column.headerHint"
+									(click)="toggleSort(column)"
+								>
+									{{ column.header }}
+									@if (sort() === column.key) {
+										<mat-icon
+											[svgIcon]="order() === 'asc' ? 'arrow_upward' : 'arrow_downward'"
+											aria-hidden="true"
+										/>
+									}
+								</button>
+							} @else {
+								<span
+									[matTooltip]="column.headerHint ?? ''"
+									[matTooltipDisabled]="!column.headerHint"
+									>{{ column.header }}</span
+								>
+							}
+							@if (column.info; as info) {
+								<ovd-info-tip [text]="info" [subject]="column.header" />
+							}
+						</th>
+					}
+				</tr>
+			</thead>
+			<tbody>
+				@if (skeletonRows()) {
+					@for (index of skeletonIndexes(); track index) {
+						<tr class="skeleton-row" aria-hidden="true">
+							@for (column of visible(); track column.key) {
+								<td><span class="bar"></span></td>
+							}
+						</tr>
+					}
+				}
+				@for (row of rows(); track trackBy()(row)) {
+					<tr>
+						@for (column of visible(); track column.key) {
+							<td [class.end]="column.align === 'end'">
+								<ng-container
+									[ngTemplateOutlet]="templates().get(column.key) ?? null"
+									[ngTemplateOutletContext]="{ $implicit: row }"
+								/>
+							</td>
+						}
+					</tr>
+				}
+			</tbody>
+		</table>
+	</div>
+}
+
+@if (empty()) {
+	<ng-content select="[ovdTableEmpty]" />
+}

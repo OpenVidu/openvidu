@@ -1,0 +1,81 @@
+// Colour tokens of the dashboard as light/dark pairs. `$overrides` replaces Material system tokens; the custom
+// properties cover status chips and chart series, which Material does not define.
+@use 'sass:map';
+
+$brand: #0088aa;
+
+$overrides: (
+	primary: light-dark(#006b86, #5fd4fb),
+	on-primary: light-dark(#ffffff, #003544),
+	primary-container: light-dark(#bfeaff, #004d60),
+	on-primary-container: light-dark(#001f29, #bfeaff),
+	tertiary: light-dark(#00677f, #00c8f7),
+	on-tertiary: light-dark(#ffffff, #00363f),
+	tertiary-container: light-dark(#00c8f7, #00c8f7),
+	on-tertiary-container: light-dark(#001f26, #00363f),
+	surface: light-dark(#f8fafb, #0f1416),
+	background: light-dark(#f8fafb, #0f1416),
+	surface-container-lowest: light-dark(#ffffff, #0a0f11),
+	surface-container-low: light-dark(#f0f4f6, #171c1e),
+	surface-container: light-dark(#eaf0f2, #1b2124),
+	surface-container-high: light-dark(#e0e7ea, #252b2e),
+	surface-container-highest: light-dark(#d9e1e4, #30363a),
+	on-surface: light-dark(#171c1e, #dfe3e6),
+	on-background: light-dark(#171c1e, #dfe3e6),
+	on-surface-variant: light-dark(#40484c, #bfc8cc),
+	outline: light-dark(#70787c, #8a9296),
+	outline-variant: light-dark(#bfc8cc, #40484c),
+	error: light-dark(#ba1a1a, #ffb4ab),
+	on-error: light-dark(#ffffff, #690005),
+	error-container: light-dark(#ffdad6, #5c0a0a),
+	on-error-container: light-dark(#ba1a1a, #ffb4ab)
+);
+
+// Status chips: container and text per status family.
+$status: (
+	success: (
+		bg: light-dark(#c8f0cf, #0f3a18),
+		fg: light-dark(#1b6e2b, #7fd68a)
+	),
+	neutral: (
+		bg: light-dark(#e0e5e8, #30383b),
+		fg: light-dark(#40484c, #bfc8cc)
+	),
+	error: (
+		bg: light-dark(#ffdad6, #5c0a0a),
+		fg: light-dark(#ba1a1a, #ffb4ab)
+	),
+	warning: (
+		bg: light-dark(#ffe0c2, #4a2300),
+		fg: light-dark(#a04a00, #ffb77a)
+	),
+	info: (
+		bg: light-dark(#bfeaff, #004d60),
+		fg: light-dark(#005466, #bfeaff)
+	)
+);
+
+// Chart series slots; a colour follows the entity, never the rank.
+$chart: (
+	1: light-dark(#0088aa, #0088aa),
+	2: light-dark(#eb6834, #d95926),
+	3: light-dark(#1baf7a, #199e70),
+	4: light-dark(#eda100, #c98500),
+	5: light-dark(#e87ba4, #d55181),
+	6: light-dark(#2f4b7c, #3d6fd1),
+	7: light-dark(#6250d6, #9085e9),
+	8: light-dark(#e34948, #e66767)
+);
+
+@mixin custom-properties {
+	--ovd-brand: #{$brand};
+
+	@each $name, $pair in $status {
+		--ovd-status-#{$name}-bg: #{map.get($pair, bg)};
+		--ovd-status-#{$name}-fg: #{map.get($pair, fg)};
+	}
+
+	@each $slot, $value in $chart {
+		--ovd-chart-#{$slot}: #{$value};
+	}
+}

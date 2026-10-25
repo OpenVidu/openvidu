@@ -1,0 +1,17 @@
+{
+	"bsonType": "object",
+	"required": ["_id", "firstSeenAt", "lastSeenAt", "serverVersion"],
+	"properties": {
+		"_id": { "bsonType": "string", "description": "Node id" },
+		"firstSeenAt": { "bsonType": "date" },
+		"lastSeenAt": { "bsonType": "date" },
+		"serverVersion": { "bsonType": "string" },
+		"region": { "bsonType": "string" },
+		"batchIntervalMs": {
+			"bsonType": ["int", "long"],
+			"description": "Configured batch interval of the node, in milliseconds",
+			"minimum": 1000
+		}
+	},
+	"additionalProperties": false
+}

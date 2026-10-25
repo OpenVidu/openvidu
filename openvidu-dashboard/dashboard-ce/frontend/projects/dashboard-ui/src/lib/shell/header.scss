@@ -1,0 +1,85 @@
+:host {
+	display: block;
+	position: sticky;
+	top: 0;
+	z-index: 3;
+	background: var(--mat-sys-surface-container);
+	border-bottom: 1px solid var(--mat-sys-outline-variant);
+}
+
+.row {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	min-height: 56px;
+	padding: 0 8px;
+	min-width: 0;
+}
+
+.range-row,
+.search-row {
+	min-height: 48px;
+	border-top: 1px solid var(--mat-sys-outline-variant);
+}
+
+.brand {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	color: var(--mat-sys-on-surface);
+	font: var(--mat-sys-title-medium);
+	font-weight: 600;
+	text-decoration: none;
+	white-space: nowrap;
+}
+
+.search {
+	flex: 0 1 400px;
+	min-width: 160px;
+	max-width: 400px;
+	margin-inline-start: 16px;
+}
+
+.search.narrow {
+	flex-basis: 240px;
+}
+
+ovd-date-time-range-picker,
+ovd-zone-chip,
+ovd-refresh-control,
+ovd-theme-toggle,
+.user {
+	flex: none;
+}
+
+/* Hosts are inline by default and would sit their buttons on the text baseline. */
+ovd-theme-toggle {
+	display: inline-flex;
+	align-items: center;
+}
+
+.user {
+	min-width: 0;
+	padding-inline: 8px;
+}
+
+.search-full {
+	flex: 1;
+}
+
+.spacer {
+	flex: 1;
+}
+
+.user-name {
+	max-width: 160px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.menu-user {
+	padding: 8px 16px;
+	color: var(--mat-sys-on-surface-variant);
+	font: var(--mat-sys-label-large);
+}

@@ -1,0 +1,146 @@
+[
+	{
+		"ts": { "$date": "2026-10-12T10:35:00.000Z" },
+		"meta": {
+			"roomSid": "RM_bQ7tVnW2cErT",
+			"participantSid": "PA_dav3Pub6Mn2",
+			"kind": "up",
+			"nodeId": "ND_beta3Vx9Pw"
+		},
+		"score": { "$numberDouble": "4.1" },
+		"minScore": { "$numberDouble": "3.9" },
+		"medianScore": { "$numberDouble": "4.1" },
+		"bytes": { "$numberLong": "3150000" },
+		"packets": { "$numberInt": "3400" },
+		"packetsLost": { "$numberInt": "2" },
+		"rttMs": { "$numberInt": "45" },
+		"jitterMs": { "$numberDouble": "3.2" },
+		"nacks": { "$numberInt": "1" },
+		"plis": { "$numberInt": "0" },
+		"firs": { "$numberInt": "0" },
+		"frames": { "$numberInt": "900" },
+		"layers": [
+			{
+				"layer": { "$numberInt": "0" },
+				"bytes": { "$numberLong": "3000000" },
+				"packets": { "$numberInt": "2900" },
+				"frames": { "$numberInt": "900" }
+			}
+		]
+	},
+	{
+		"ts": { "$date": "2026-10-12T10:35:00.000Z" },
+		"meta": {
+			"roomSid": "RM_bQ7tVnW2cErT",
+			"participantSid": "PA_dav3Pub6Mn2",
+			"kind": "down",
+			"nodeId": "ND_beta3Vx9Pw"
+		},
+		"score": { "$numberDouble": "4.3" },
+		"minScore": { "$numberDouble": "4.3" },
+		"medianScore": { "$numberDouble": "4.3" },
+		"bytes": { "$numberLong": "16875000" },
+		"packets": { "$numberInt": "12000" },
+		"packetsLost": { "$numberInt": "0" },
+		"rttMs": { "$numberInt": "45" },
+		"jitterMs": { "$numberDouble": "2.1" },
+		"nacks": { "$numberInt": "0" },
+		"plis": { "$numberInt": "0" },
+		"firs": { "$numberInt": "0" },
+		"frames": { "$numberInt": "900" },
+		"layers": [
+			{
+				"layer": { "$numberInt": "0" },
+				"bytes": { "$numberLong": "16875000" },
+				"packets": { "$numberInt": "12000" },
+				"frames": { "$numberInt": "900" }
+			}
+		]
+	},
+	{
+		"ts": { "$date": "2026-10-12T10:35:00.000Z" },
+		"meta": {
+			"roomSid": "RM_bQ7tVnW2cErT",
+			"participantSid": "PA_dav3Pub6Mn2",
+			"kind": "up",
+			"nodeId": "ND_beta3Vx9Pw",
+			"trackSid": "TR_daveCamH264x"
+		},
+		"score": { "$numberDouble": "4.2" },
+		"minScore": { "$numberDouble": "4.0" },
+		"medianScore": { "$numberDouble": "4.2" },
+		"bytes": { "$numberLong": "3000000" },
+		"packets": { "$numberInt": "2900" },
+		"packetsLost": { "$numberInt": "2" },
+		"rttMs": { "$numberInt": "45" },
+		"jitterMs": { "$numberDouble": "3.2" },
+		"nacks": { "$numberInt": "1" },
+		"plis": { "$numberInt": "0" },
+		"firs": { "$numberInt": "0" },
+		"frames": { "$numberInt": "900" },
+		"layers": [
+			{
+				"layer": { "$numberInt": "0" },
+				"bytes": { "$numberLong": "3000000" },
+				"packets": { "$numberInt": "2900" },
+				"frames": { "$numberInt": "900" }
+			}
+		],
+		"mimeType": "video/H264"
+	},
+	{
+		"ts": { "$date": "2026-10-12T10:35:00.000Z" },
+		"meta": {
+			"roomSid": "RM_bQ7tVnW2cErT",
+			"participantSid": "PA_dav3Pub6Mn2",
+			"kind": "up",
+			"nodeId": "ND_beta3Vx9Pw",
+			"trackSid": "TR_daveMic0pusx"
+		},
+		"score": { "$numberDouble": "4.0" },
+		"minScore": { "$numberDouble": "3.9" },
+		"medianScore": { "$numberDouble": "4.0" },
+		"bytes": { "$numberLong": "150000" },
+		"packets": { "$numberInt": "500" },
+		"packetsLost": { "$numberInt": "0" },
+		"rttMs": { "$numberInt": "44" },
+		"jitterMs": { "$numberDouble": "1.1" },
+		"nacks": { "$numberInt": "0" },
+		"plis": { "$numberInt": "0" },
+		"firs": { "$numberInt": "0" },
+		"frames": { "$numberInt": "0" },
+		"layers": [],
+		"mimeType": "audio/opus"
+	},
+	{
+		"ts": { "$date": "2026-10-12T10:35:00.000Z" },
+		"meta": {
+			"roomSid": "RM_bQ7tVnW2cErT",
+			"participantSid": "PA_dav3Pub6Mn2",
+			"kind": "down",
+			"nodeId": "ND_beta3Vx9Pw",
+			"trackSid": "TR_1ngVid2H264b"
+		},
+		"score": { "$numberDouble": "4.3" },
+		"minScore": { "$numberDouble": "4.3" },
+		"medianScore": { "$numberDouble": "4.3" },
+		"bytes": { "$numberLong": "16875000" },
+		"packets": { "$numberInt": "12000" },
+		"packetsLost": { "$numberInt": "0" },
+		"rttMs": { "$numberInt": "45" },
+		"jitterMs": { "$numberDouble": "2.1" },
+		"nacks": { "$numberInt": "0" },
+		"plis": { "$numberInt": "0" },
+		"firs": { "$numberInt": "0" },
+		"frames": { "$numberInt": "900" },
+		"layers": [
+			{
+				"layer": { "$numberInt": "0" },
+				"bytes": { "$numberLong": "16875000" },
+				"packets": { "$numberInt": "12000" },
+				"frames": { "$numberInt": "900" }
+			}
+		],
+		"mimeType": "video/H264"
+	}
+]
