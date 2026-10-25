@@ -1,98 +1,86 @@
-import { Collection, Db, Document, MongoClient, WithId } from "mongodb";
-import { ActiveEntity, EntityType } from "./types";
+import { Db, Document, Filter, MongoClient } from "mongodb";
+import { Collection } from "./types";
 
 const DATABASE_URL =
     "mongodb://mongoadmin:mongoadmin@localhost:27017/?replicaSet=rs0&readPreference=primaryPreferred&directConnection=true";
 const DATABASE_NAME = "openvidu";
-const EVENTS_COLLECTION = "events";
-const ACTIVE_ENTITIES_COLLECTION = "active-entities";
 
-const entityStartEventTypesMap: Map<EntityType, string> = new Map([
-    [EntityType.ROOM, "ROOM_CREATED"],
-    [EntityType.PARTICIPANT, "PARTICIPANT_ACTIVE"]
-]);
-const entityCloseEventTypesMap: Map<EntityType, string> = new Map([
-    [EntityType.ROOM, "ROOM_ENDED"],
-    [EntityType.PARTICIPANT, "PARTICIPANT_LEFT"]
-]);
-const entityIdFieldMap: Map<EntityType, string> = new Map([
-    [EntityType.ROOM, "room.sid"],
-    [EntityType.PARTICIPANT, "participant.sid"]
-]);
-const entityNameFieldMap: Map<EntityType, string> = new Map([
-    [EntityType.ROOM, "room.name"],
-    [EntityType.PARTICIPANT, "participant.identity"]
-]);
+/** Statuses of the entities that are still open, per collection. */
+const OPEN_STATUSES: Partial<Record<Collection, string[]>> = {
+    [Collection.ROOMS]: ["active"],
+    [Collection.PARTICIPANTS]: ["active", "joining"],
+    [Collection.TRACKS]: ["published"],
+    [Collection.TRACK_SUBSCRIPTIONS]: ["requested", "subscribed"]
+};
+
+/** A document of the analytics data model, whose ids are strings. */
+export interface AnalyticsDocument extends Document {
+    _id: string;
+}
+
+/** A query on documents whose ids are strings. */
+export type Query = Filter<AnalyticsDocument>;
 
 export class MongoService {
-    private static instace: MongoService;
+    private static instance: MongoService;
     private client: MongoClient;
     private db: Db;
-    private eventsCollection: Collection;
-    private activeEntitiesCollection: Collection<ActiveEntity>;
 
     private constructor() {
-        this.client = new MongoClient(DATABASE_URL);
+        this.client = new MongoClient(DATABASE_URL, { serverSelectionTimeoutMS: 30000 });
         this.db = this.client.db(DATABASE_NAME);
-        this.eventsCollection = this.db.collection(EVENTS_COLLECTION);
-        this.activeEntitiesCollection = this.db.collection(ACTIVE_ENTITIES_COLLECTION);
     }
 
     public static getInstance(): MongoService {
-        if (!MongoService.instace) {
-            MongoService.instace = new MongoService();
+        if (!MongoService.instance) {
+            MongoService.instance = new MongoService();
         }
 
-        return MongoService.instace;
-    }
-
-    public async connect(): Promise<void> {
-        try {
-            await this.client.connect();
-        } catch (error) {
-            console.error("Error connecting to MongoDB", error);
-            throw error;
-        }
+        return MongoService.instance;
     }
 
     public async disconnect(): Promise<void> {
-        try {
-            await this.client.close();
-        } catch (error) {
-            console.error("Error disconnecting from MongoDB", error);
-            throw error;
-        }
+        await this.client.close();
     }
 
-    public async findStartEvent(entityType: EntityType, entityName: string): Promise<WithId<Document> | null> {
-        try {
-            const eventType = entityStartEventTypesMap.get(entityType)!;
-            const nameField = entityNameFieldMap.get(entityType)!;
-            return await this.eventsCollection.findOne({ type: eventType, [nameField]: entityName });
-        } catch (error) {
-            console.error("Error finding start event", error);
-            throw error;
-        }
+    public database(): Db {
+        return this.db;
     }
 
-    public async findCloseEvent(entityType: EntityType, entityId: string): Promise<WithId<Document> | null> {
-        try {
-            const eventType = entityCloseEventTypesMap.get(entityType)!;
-            const idField = entityIdFieldMap.get(entityType)!;
-            return await this.eventsCollection.findOne({ type: eventType, [idField]: entityId });
-        } catch (error) {
-            console.error("Error finding close event", error);
-            throw error;
-        }
+    public async findEntity(collection: Collection, filter: Query): Promise<AnalyticsDocument | null> {
+        return this.db.collection<AnalyticsDocument>(collection).findOne(filter);
     }
 
-    public async isActiveEntity(id: string): Promise<boolean> {
-        try {
-            const result = await this.activeEntitiesCollection.findOne({ _id: id });
-            return !!result;
-        } catch (error) {
-            console.error("Error finding active entity", error);
-            throw error;
-        }
+    public async findEntities(collection: Collection, filter: Query): Promise<AnalyticsDocument[]> {
+        return this.db
+            .collection<AnalyticsDocument>(collection)
+            .find(filter)
+            .toArray();
+    }
+
+    public async count(collection: Collection, filter: Query): Promise<number> {
+        return this.db.collection<AnalyticsDocument>(collection).countDocuments(filter);
+    }
+
+    /** Documents of the collection matching the filter that are still open. */
+    public async countOpen(collection: Collection, filter: Query): Promise<number> {
+        return this.count(collection, { ...filter, status: { $in: OPEN_STATUSES[collection] ?? [] } });
+    }
+
+    public async findEvents(filter: Query): Promise<Document[]> {
+        return this.db.collection<AnalyticsDocument>(Collection.EVENTS).find(filter).sort({ ts: 1 }).toArray();
+    }
+
+    /** The synthetic close event the reconciler inserted for an entity. */
+    public async findSyntheticEvent(entityId: string): Promise<Document | null> {
+        return this.db.collection<AnalyticsDocument>(Collection.EVENTS).findOne({ _id: `AE_SYN_${entityId}`, synthetic: true });
+    }
+
+    public async schemaMeta(id: string): Promise<Document | null> {
+        return this.db.collection<AnalyticsDocument>(Collection.SCHEMA_META).findOne({ _id: id });
+    }
+
+    public async collectionNames(): Promise<string[]> {
+        return (await this.db.listCollections({}, { nameOnly: true }).toArray()).map((info) => info.name);
     }
 }
