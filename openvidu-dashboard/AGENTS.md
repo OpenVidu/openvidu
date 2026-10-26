@@ -13,9 +13,7 @@ configuration variables and exit codes.
 2. Before adding or upgrading a library, check its latest stable version on npm (`npm view <pkg> version`) and its
    current API through Context7. Versions are pinned exactly; a dependency used by several packages goes once in the
    `catalog` of `pnpm-workspace.yaml`; install scripts stay disabled except those listed in `allowBuilds`.
-3. When something is ambiguous, infeasible or unexpected, stop and ask the owner instead of deciding. A change in
-   another repository (`openvidu-livekit`, `openvidu-deployment`, `openvidu.io`) goes to its open pull request, or to a
-   new draft pull request when none fits.
+3. When something is ambiguous, infeasible or unexpected, stop and ask the owner instead of deciding.
 4. Run `./dashboard.sh check` before reporting work as done. Suites that need Docker cannot run from a bare checkout:
    say so instead of reporting a pass.
 5. Keep the `AGENTS.md` files current in the same change as the command, path or convention they describe. Each

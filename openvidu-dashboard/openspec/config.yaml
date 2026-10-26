@@ -1,63 +1,16 @@
 schema: spec-driven
 
 context: |
-  OpenVidu Dashboard: admin web app bundled with every OpenVidu deployment.
-  It reads a MongoDB analytics database written by openvidu-livekit (Go fork of LiveKit server). The writer
-  side (event projectors, reconciler of stale entities, migration of legacy events, retention) is specified
-  here under capabilities prefixed "server-" and implemented in the openvidu-livekit repository
-  (`openvidu/analytics/`). Writer and reader share one schema contract with a version constant; both check it.
+  OpenVidu Dashboard (CE): the admin web app bundled with every OpenVidu deployment, reading the MongoDB analytics
+  database written by openvidu-livekit (`openvidu/analytics/`). The writer side is specified here under the
+  capabilities prefixed `server-` and implemented in openvidu-livekit; writer and dashboard share one schema contract
+  (`dashboard-ce/typings/contract/`) and both check its version.
 
-  Editions: CE (open source: lists, overview, global analytics) and PRO (commercial: detail and diagnostic
-  views, advanced analytics). These specs describe CE, including how it shows PRO features locked. Every requirement
-  states its edition. An edition that extends CE does it through the exports and seams of its packages; never fork CE.
+  These specs describe CE, including how it shows PRO features locked; every requirement states its edition. An edition
+  that extends CE does it through the exports and seams of its packages, never by forking them.
 
-  Stack (decided): Node 24, TypeScript 6 strict ESM, pnpm workspace with catalog; backend Express 5 +
-  Inversify + Zod, official mongodb driver (no Mongoose), jose JWT (bearer access token + httpOnly rotating
-  refresh cookie), Winston, OpenAPI 3.1 derived from Zod; frontend Angular 22 standalone/zoneless/signals +
-  Angular Material M3 (OpenVidu palette: primary #0088aa, accent #00c8f7; light and dark themes), ECharts via
-  ngx-echarts; tests Vitest, Testcontainers (MongoDB 8 replica set), Playwright; ESLint 10 flat config +
-  Prettier. Library versions are verified on npm and APIs on Context7 before use.
-
-  Data model: entity collections (rooms, participants, tracks, track_subscriptions, egresses, ingresses,
-  ingress_sessions), raw events with short retention, stats time series, hourly and daily rollups,
-  schema_meta. Idempotent writes; "active" is a document status (no side collection); no secrets stored;
-  UTC storage with caller timezone for bucketing. Every list, detail and time-series query is index-backed.
-  Modern MongoDB features (time-series collections, $dateTrunc, transactions) are used, with capability
-  detection at startup and a documented fallback for external MongoDB-compatible services (DocumentDB).
-
-  API: /api/v1, versioned, OpenAPI-documented. Cursor pagination { items, nextCursor, prevCursor, total? };
-  query params from/to (ISO 8601), tz (IANA), limit <= 100, cursor, sort, order, q, status, kind; automatic
-  bucket granularity for time series. GET /api/healthcheck stays. GET /api/v1/info reports edition,
-  versions, schema version, migration status, retention and feature flags.
-
-  UI: URL query params are the single source of truth for range, filters, sort, cursor and page size; one
-  global time range shared by all pages; page size selector; copy buttons on identifiers; navigation via
-  links, never row clicks; charts fixed to the selected range with no wheel zoom; responsive; WCAG AA;
-  English only.
-
-  Deployment compatibility to keep: env vars SERVER_PORT, ADMIN_USERNAME, ADMIN_PASSWORD, MONGO_ENABLED,
-  DATABASE_URL, DATABASE_NAME, MONGO_NODES, MONGO_PORT, MONGO_ADMIN_USERNAME, MONGO_ADMIN_PASSWORD,
-  MONGO_REPLICA_SET_NAME, DASHBOARD_CONFIG_PATH, LOG_LEVEL; new variables are prefixed DASHBOARD_
-  (DASHBOARD_JWT_SECRET, DASHBOARD_REFRESH_TOKEN_TTL, DASHBOARD_COOKIE_SECURE, DASHBOARD_TRUST_PROXY,
-  DASHBOARD_BASE_PATH, DASHBOARD_LIST_TOTAL_MAX_RANGE, DASHBOARD_ANALYTICS_CACHE_TTL) except database connection
-  settings, prefixed DATABASE_ (DATABASE_TLS_CA_FILE). HEAD / -> 2xx; SPA fallback; relative API URLs under a stripped
-  /dashboard/ prefix; image name openvidu/openvidu-dashboard, with its Dockerfile inside its package.
-
-  Product decisions: default time range is the last 24 h with presets 1h/6h/24h/7d/30d/90d/this
-  month/custom; search is case-insensitive prefix on indexed lower-case shadow fields, and an exact ID filters a
-  list to that entity (ignoring range and filters) while Enter or the global search opens its detail; agents get a live counter, kind badges and filter, and an Agents page, all in CE; API_CALL
-  events are never stored raw, only hourly counters of calls and errors by method; stats are written per participant
-  and direction by the CE server and per track by the PRO server (same document shape, configurable); retention
-  defaults are events 7 d, stats 7 d, tracks and subscriptions 7 d, entities 90 d, 5-minute rollups 7 d, hourly rollups
-  400 d, daily rollups unlimited unless configured, and client IP addresses are not stored unless the server is told to
-  (`anonymize_ip: false`); webhooks view, "watch room" and SIP views are out of scope (backlog). Packaging decisions: Aikido safe-chain runs inside the Dockerfiles;
-  containers run as uid 1000 (deployment permissions adjusted through a requested openvidu-deployment change);
-  multi-architecture images follow OpenVidu Meet (build stage on $BUILDPLATFORM, final stage per
-  platform, buildx + QEMU on the self-hosted runner as in meet-docker-release.yaml). API limit cap is 100 per page.
-
-  All artifacts in English. On ambiguity or infeasibility stop and ask the owner; never decide alone. A change in
-  another repository (openvidu-livekit, openvidu-deployment, openvidu.io) goes to its open pull request, or to a new
-  draft pull request when none fits.
+  Code layout, stack and conventions are in the `AGENTS.md` files. All artifacts in English. On ambiguity or
+  infeasibility stop and ask the owner; never decide alone.
 
 rules:
   proposal:
