@@ -1,0 +1,112 @@
+{
+	"bsonType": "object",
+	"required": [
+		"_id",
+		"type",
+		"sourceType",
+		"status",
+		"startedAt",
+		"updatedAt",
+		"request",
+		"outputs",
+		"statusHistory",
+		"retryCount",
+		"backupStorageUsed",
+		"schemaVersion",
+		"expiresAt"
+	],
+	"properties": {
+		"_id": { "bsonType": "string", "description": "Egress id" },
+		"roomSid": { "bsonType": "string", "description": "Absent for web egress" },
+		"roomName": { "bsonType": "string" },
+		"roomNameLower": {
+			"bsonType": "string",
+			"description": "Lower-cased roomName, for the room name prefix search"
+		},
+		"type": { "bsonType": "string", "enum": ["room_composite", "web", "participant", "track_composite", "track"] },
+		"sourceType": { "bsonType": "string", "enum": ["web", "sdk"] },
+		"status": {
+			"bsonType": "string",
+			"enum": ["starting", "active", "ending", "complete", "failed", "aborted", "limit_reached"]
+		},
+		"closedBy": { "bsonType": "string", "enum": ["event", "reconciler"] },
+		"startedAt": { "bsonType": "date" },
+		"updatedAt": { "bsonType": "date" },
+		"endedAt": { "bsonType": "date" },
+		"durationMs": { "bsonType": ["long", "int"] },
+		"error": { "bsonType": "string" },
+		"errorCode": { "bsonType": ["int", "long"] },
+		"request": {
+			"bsonType": "object",
+			"properties": {
+				"layout": { "bsonType": "string" },
+				"customBaseUrl": { "bsonType": "string" },
+				"url": { "bsonType": "string", "description": "Redacted" },
+				"audioOnly": { "bsonType": "bool" },
+				"videoOnly": { "bsonType": "bool" },
+				"participantIdentity": { "bsonType": "string" },
+				"screenShare": { "bsonType": "bool" },
+				"trackId": { "bsonType": "string" },
+				"audioTrackId": { "bsonType": "string" },
+				"videoTrackId": { "bsonType": "string" },
+				"preset": { "bsonType": "string" },
+				"advanced": { "bsonType": "object", "description": "Encoding options without credentials" },
+				"outputs": {
+					"bsonType": "array",
+					"items": { "bsonType": "string", "enum": ["file", "stream", "segments", "images"] }
+				}
+			},
+			"additionalProperties": false,
+			"description": "Sanitized request: no credentials, no stream keys"
+		},
+		"outputs": {
+			"bsonType": "array",
+			"items": {
+				"bsonType": "object",
+				"required": ["kind"],
+				"properties": {
+					"kind": { "bsonType": "string", "enum": ["file", "stream", "segments", "images"] },
+					"filename": { "bsonType": "string" },
+					"url": { "bsonType": "string", "description": "Redacted stream URL" },
+					"playlistName": { "bsonType": "string" },
+					"filenamePrefix": { "bsonType": "string" },
+					"location": { "bsonType": "string" },
+					"size": { "bsonType": ["long", "int"] },
+					"durationMs": { "bsonType": ["long", "int"] },
+					"status": { "bsonType": "string", "enum": ["ACTIVE", "FINISHED", "FAILED"] },
+					"error": { "bsonType": "string" },
+					"startedAt": { "bsonType": "date" },
+					"endedAt": { "bsonType": "date" }
+				},
+				"additionalProperties": false
+			}
+		},
+		"statusHistory": {
+			"bsonType": "array",
+			"items": {
+				"bsonType": "object",
+				"required": ["status", "at"],
+				"properties": {
+					"status": {
+						"bsonType": "string",
+						"enum": ["starting", "active", "ending", "complete", "failed", "aborted", "limit_reached"]
+					},
+					"at": { "bsonType": "date" }
+				},
+				"additionalProperties": false
+			},
+			"maxItems": 50
+		},
+		"retryCount": { "bsonType": ["int", "long"] },
+		"backupStorageUsed": { "bsonType": "bool" },
+		"schemaVersion": {
+			"bsonType": ["int", "long"],
+			"description": "SCHEMA_VERSION of the writer that last wrote the document"
+		},
+		"expiresAt": {
+			"bsonType": ["date", "null"],
+			"description": "closedAt + retention once closed; null while open"
+		}
+	},
+	"additionalProperties": false
+}

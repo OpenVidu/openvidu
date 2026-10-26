@@ -1,0 +1,220 @@
+name: OpenVidu Dashboard CI
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - 'openvidu-dashboard/**'
+      - '.github/workflows/openvidu-dashboard-ci.yml'
+  pull_request:
+    branches:
+      - master
+    paths:
+      - 'openvidu-dashboard/**'
+      - '.github/workflows/openvidu-dashboard-ci.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: openvidu-dashboard-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    name: Lint, format, type check and spec validation
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: openvidu-dashboard
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: openvidu-dashboard/.node-version
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+        with:
+          package_json_file: openvidu-dashboard/package.json
+          cache: true
+          cache_dependency_path: openvidu-dashboard/pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        run: ./dashboard.sh lint --skip-install
+
+      - name: Check formatting
+        run: ./dashboard.sh format-check --skip-install
+
+      - name: Type check
+        run: ./dashboard.sh typecheck --skip-install
+
+      - name: Validate OpenSpec
+        run: ./dashboard.sh spec-validate --skip-install
+
+  unit:
+    name: Unit tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: openvidu-dashboard
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: openvidu-dashboard/.node-version
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+        with:
+          package_json_file: openvidu-dashboard/package.json
+          cache: true
+          cache_dependency_path: openvidu-dashboard/pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Unit tests
+        run: ./dashboard.sh test-unit --skip-install
+
+  integration:
+    name: Integration tests (MongoDB)
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    defaults:
+      run:
+        working-directory: openvidu-dashboard
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: openvidu-dashboard/.node-version
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+        with:
+          package_json_file: openvidu-dashboard/package.json
+          cache: true
+          cache_dependency_path: openvidu-dashboard/pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # Millisecond latency budgets are noisy on shared runners: overruns become warning annotations. Query plan
+      # assertions still fail the job.
+      - name: Integration tests
+        env:
+          DASHBOARD_TEST_LATENCY_BUDGETS: report
+        run: ./dashboard.sh test-integration --skip-install
+
+  contract:
+    name: Data model contract with the writer
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: openvidu-dashboard
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # Beside the openvidu-livekit submodule, which pins the released writer instead of openvidu/main.
+      - name: Checkout openvidu-livekit
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          repository: OpenVidu/openvidu-livekit
+          ref: openvidu/main
+          path: openvidu-livekit-main
+
+      - name: Set up Go
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: openvidu-livekit-main/go.mod
+          cache-dependency-path: openvidu-livekit-main/go.sum
+
+      - name: Set up Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: openvidu-dashboard/.node-version
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+        with:
+          package_json_file: openvidu-dashboard/package.json
+          cache: true
+          cache_dependency_path: openvidu-dashboard/pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile --filter "@openvidu-dashboard/backend..."
+
+      - name: Contract check
+        run: ./dashboard.sh contract-check ../openvidu-livekit-main --skip-install
+
+  e2e:
+    name: End-to-end tests (Playwright)
+    needs: checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    defaults:
+      run:
+        working-directory: openvidu-dashboard
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: openvidu-dashboard/.node-version
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+        with:
+          package_json_file: openvidu-dashboard/package.json
+          cache: true
+          cache_dependency_path: openvidu-dashboard/pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright browsers
+        working-directory: openvidu-dashboard/dashboard-ce/e2e
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: End-to-end tests
+        run: ./dashboard.sh e2e --skip-install
+
+      - name: Upload the Playwright report
+        if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: openvidu-dashboard-playwright-report
+          path: |
+            openvidu-dashboard/dashboard-ce/e2e/playwright-report
+            openvidu-dashboard/dashboard-ce/e2e/test-results
+          retention-days: 7

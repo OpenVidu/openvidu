@@ -1,0 +1,325 @@
+<div class="page-header">
+	<h1>{{ title() }}</h1>
+	<div class="controls">
+		<mat-form-field class="select granularity-select" subscriptSizing="dynamic">
+			<mat-label>Granularity</mat-label>
+			<mat-select [value]="granularity()" (selectionChange)="setGranularity($event.value)">
+				<mat-option value="auto">{{ autoLabel() }}</mat-option>
+				@for (option of options(); track option) {
+					<mat-option [value]="option">{{ granularityLabels[option] }}</mat-option>
+				}
+			</mat-select>
+		</mat-form-field>
+		@if (perNode()) {
+			@if (scopeSelect(); as select) {
+				<ng-container *ngComponentOutlet="select" />
+			}
+		} @else {
+			<mat-form-field class="select scope-select locked" subscriptSizing="dynamic">
+				<mat-label>Scope</mat-label>
+				<mat-select value="global" disabled>
+					<mat-option value="global">All nodes</mat-option>
+				</mat-select>
+				<span
+					matSuffix
+					class="lock"
+					role="img"
+					tabindex="0"
+					[attr.aria-label]="perNodeLockHint"
+					[matTooltip]="perNodeLockHint"
+				>
+					<mat-icon svgIcon="lock" aria-hidden="true" />
+				</span>
+			</mat-form-field>
+		}
+	</div>
+</div>
+
+@if (retentionBanner(); as banner) {
+	<ovd-notice placement="page">{{ banner }}</ovd-notice>
+}
+
+<ovd-tile-row class="tiles" role="region" aria-label="Summary">
+	<ovd-kpi-tile label="Rooms created" [value]="tile(summary()?.roomsCreated)" [loading]="summary() === null" />
+	<ovd-kpi-tile
+		label="Participant sessions"
+		[info]="infoTexts.participantSessions"
+		[value]="tile(summary()?.participantSessions)"
+		[loading]="summary() === null"
+	/>
+	<ovd-kpi-tile
+		[label]="identitiesLabel()"
+		[info]="infoTexts.dailyUniqueIdentities"
+		[value]="tile(summary()?.uniqueIdentities?.value)"
+		[hint]="missingHint(summary()?.uniqueIdentities, 'Counted once a UTC day has closed')"
+		[loading]="summary() === null"
+	/>
+	<ovd-kpi-tile
+		label="Data up / down"
+		[info]="infoTexts.dataUpDown"
+		[value]="bandwidthTile()"
+		[loading]="summary() === null"
+	/>
+	<ovd-kpi-tile
+		label="Connection success"
+		[info]="infoTexts.connectionSuccess"
+		[value]="percentTile(summary()?.connectionSuccessRate)"
+		[hint]="missingHint(summary()?.connectionSuccessRate, 'No participant joined in this range')"
+		[loading]="summary() === null"
+	/>
+	<ovd-kpi-tile
+		label="Egress"
+		[value]="tile(summary()?.egressStarted)"
+		[hint]="totalHint(summary()?.egressDurationMs)"
+		[loading]="summary() === null"
+	/>
+	<ovd-kpi-tile
+		label="Ingress"
+		[value]="tile(summary()?.ingressSessions)"
+		[hint]="totalHint(summary()?.ingressDurationMs)"
+		[loading]="summary() === null"
+	/>
+</ovd-tile-row>
+
+<div class="sections">
+	@let rooms = view(['roomsCreated', 'roomsEnded']);
+	<ovd-analytics-card
+		heading="Rooms"
+		sectionId="rooms"
+		[loading]="rooms.loading"
+		[error]="rooms.error"
+		[empty]="rooms.empty"
+		[exporting]="isExporting('rooms')"
+		(exportCsv)="exportCsv('rooms', { metrics: ['roomsCreated', 'roomsEnded'] })"
+		(retry)="retry()"
+		(widen)="widenRange()"
+	>
+		<ng-template ovdCardContent>
+			<ovd-tile-row class="card-tiles">
+				<ovd-kpi-tile
+					label="Average room size"
+					[value]="avgRoomSize()"
+					[hint]="missingHint(summary()?.avgRoomSize)"
+				/>
+				<ovd-kpi-tile
+					label="Average room duration"
+					[value]="avgRoomDuration()"
+					[hint]="missingHint(summary()?.avgRoomDurationMs)"
+				/>
+			</ovd-tile-row>
+			<ovd-time-series-chart
+				heading="Rooms created and ended"
+				kind="bar"
+				[series]="charts().rooms"
+				[from]="chartRange('roomsCreated').from"
+				[to]="chartRange('roomsCreated').to"
+				[tz]="tz()"
+				[note]="note('roomsCreated')"
+			/>
+		</ng-template>
+	</ovd-analytics-card>
+
+	@let participants = view(['participantsJoined', 'participantsAborted', 'connectionSuccessRate'], ['kind']);
+	<ovd-analytics-card
+		heading="Participants"
+		sectionId="participants"
+		[loading]="participants.loading"
+		[error]="participants.error"
+		[empty]="participants.empty"
+		[exporting]="isExporting('participants')"
+		(exportCsv)="
+			exportCsv('participants', {
+				metrics: ['participantsJoined', 'participantsAborted', 'connectionSuccessRate', 'uniqueIdentities']
+			})
+		"
+		(retry)="retry()"
+		(widen)="widenRange()"
+	>
+		<ng-template ovdCardContent>
+			<div class="grid">
+				<ovd-time-series-chart
+					heading="Participant sessions"
+					[info]="infoTexts.sessionsChart"
+					[series]="charts().participants"
+					[from]="chartRange('participantsJoined').from"
+					[to]="chartRange('participantsJoined').to"
+					[tz]="tz()"
+					[note]="note('participantsJoined')"
+				/>
+				<ovd-time-series-chart
+					heading="Connection success"
+					format="percent"
+					[series]="charts().success"
+					[from]="chartRange('connectionSuccessRate').from"
+					[to]="chartRange('connectionSuccessRate').to"
+					[tz]="tz()"
+					[note]="note('connectionSuccessRate')"
+				/>
+				<ovd-breakdown-chart
+					heading="Participant kind"
+					[info]="infoTexts.participantKind"
+					[entries]="breakdowns().kind"
+				/>
+				@if (effective() === '1d') {
+					<ovd-time-series-chart
+						heading="Unique identities"
+						kind="bar"
+						note="per UTC day"
+						[series]="charts().identities"
+						[from]="chartRange('uniqueIdentities').from"
+						[to]="chartRange('uniqueIdentities').to"
+						tz="UTC"
+					/>
+				} @else {
+					<div class="identities-hint">
+						<p>Unique identities are available at daily granularity</p>
+						@if (options().includes('1d')) {
+							<button matButton="outlined" type="button" (click)="setGranularity('1d')">
+								Switch to 1 d
+							</button>
+						}
+					</div>
+				}
+			</div>
+		</ng-template>
+	</ovd-analytics-card>
+
+	@let clients = view([], ['sdk', 'os', 'browser', 'connectionType']);
+	<ovd-analytics-card
+		heading="Client breakdowns"
+		sectionId="clients"
+		[loading]="clients.loading"
+		[error]="clients.error"
+		[empty]="clients.empty"
+		[exporting]="isExporting('clients')"
+		(exportCsv)="exportCsv('clients', { dimensions: ['sdk', 'os', 'browser', 'connectionType'] })"
+		(retry)="retry()"
+		(widen)="widenRange()"
+	>
+		<ng-template ovdCardContent>
+			<div class="grid">
+				<ovd-breakdown-chart heading="SDK" [info]="infoTexts.sdk" [entries]="breakdowns().sdk" />
+				<ovd-breakdown-chart heading="OS" [entries]="breakdowns().os" />
+				<ovd-breakdown-chart heading="Browser" [entries]="breakdowns().browser" />
+				<ovd-breakdown-chart heading="Connection type" [entries]="breakdowns().connectionType" />
+			</div>
+		</ng-template>
+	</ovd-analytics-card>
+
+	@let bandwidth = view(['bytesUp', 'bytesDown']);
+	<ovd-analytics-card
+		heading="Data transferred"
+		sectionId="bandwidth"
+		[loading]="bandwidth.loading"
+		[error]="bandwidth.error"
+		[empty]="bandwidth.empty"
+		[exporting]="isExporting('bandwidth')"
+		(exportCsv)="exportCsv('bandwidth', { metrics: ['bytesUp', 'bytesDown'] })"
+		(retry)="retry()"
+		(widen)="widenRange()"
+	>
+		<ng-template ovdCardContent>
+			<ovd-tile-row class="card-tiles">
+				<ovd-kpi-tile label="Total up" [value]="bytesTile(summary()?.bytesUp, '↑')" />
+				<ovd-kpi-tile label="Total down" [value]="bytesTile(summary()?.bytesDown, '↓')" />
+			</ovd-tile-row>
+			<ovd-time-series-chart
+				heading="Data up / down"
+				kind="area"
+				format="bytes"
+				[series]="charts().bytes"
+				[from]="chartRange('bytesUp').from"
+				[to]="chartRange('bytesUp').to"
+				[tz]="tz()"
+				[note]="note('bytesUp')"
+			/>
+		</ng-template>
+	</ovd-analytics-card>
+
+	@let egress = view(['egressStarted', 'egressEnded'], ['egressType']);
+	<ovd-analytics-card
+		heading="Egress"
+		sectionId="egress"
+		[loading]="egress.loading"
+		[error]="egress.error"
+		[empty]="egress.empty"
+		[exporting]="isExporting('egress')"
+		(exportCsv)="exportCsv('egress', { metrics: ['egressStarted', 'egressEnded'] })"
+		(retry)="retry()"
+		(widen)="widenRange()"
+	>
+		<ng-template ovdCardContent>
+			<ovd-tile-row class="card-tiles">
+				<ovd-kpi-tile label="Total egress" [value]="tile(summary()?.egressStarted)" />
+				<ovd-kpi-tile label="Total duration" [value]="durationTile(summary()?.egressDurationMs)" />
+			</ovd-tile-row>
+			<div class="grid">
+				<ovd-time-series-chart
+					heading="Egress started"
+					kind="bar"
+					[series]="charts().egressStarted"
+					[from]="chartRange('egressStarted').from"
+					[to]="chartRange('egressStarted').to"
+					[tz]="tz()"
+					[note]="note('egressStarted')"
+				/>
+				<ovd-breakdown-chart heading="Egress type" [entries]="breakdowns().egressType" />
+				<ovd-time-series-chart
+					heading="Egress ended by status"
+					kind="bar"
+					stacked
+					[series]="charts().egressEnded"
+					[from]="chartRange('egressEnded').from"
+					[to]="chartRange('egressEnded').to"
+					[tz]="tz()"
+					[note]="note('egressEnded')"
+				/>
+			</div>
+		</ng-template>
+	</ovd-analytics-card>
+
+	@let ingress = view(['ingressSessions'], ['ingressInputType']);
+	<ovd-analytics-card
+		heading="Ingress"
+		sectionId="ingress"
+		[loading]="ingress.loading"
+		[error]="ingress.error"
+		[empty]="ingress.empty"
+		[exporting]="isExporting('ingress')"
+		(exportCsv)="exportCsv('ingress', { metrics: ['ingressSessions'] })"
+		(retry)="retry()"
+		(widen)="widenRange()"
+	>
+		<ng-template ovdCardContent>
+			<ovd-tile-row class="card-tiles">
+				<ovd-kpi-tile label="Total sessions" [value]="tile(summary()?.ingressSessions)" />
+				<ovd-kpi-tile label="Total duration" [value]="durationTile(summary()?.ingressDurationMs)" />
+			</ovd-tile-row>
+			<div class="grid">
+				<ovd-time-series-chart
+					heading="Ingress sessions"
+					kind="bar"
+					[series]="charts().ingress"
+					[from]="chartRange('ingressSessions').from"
+					[to]="chartRange('ingressSessions').to"
+					[tz]="tz()"
+					[note]="note('ingressSessions')"
+				/>
+				<ovd-breakdown-chart heading="Ingress input type" [entries]="breakdowns().ingressInputType" />
+			</div>
+		</ng-template>
+	</ovd-analytics-card>
+
+	@for (facts of proSlots; track facts.slot) {
+		@if (!enabled(facts)) {
+			<ovd-analytics-card
+				[heading]="facts.heading"
+				[sectionId]="facts.sectionId"
+				[feature]="facts.feature"
+				[exportable]="facts.exportable"
+			/>
+		} @else if (proComponents()[facts.slot]; as component) {
+			<ng-container *ngComponentOutlet="component" />
+		}
+	}
+</div>

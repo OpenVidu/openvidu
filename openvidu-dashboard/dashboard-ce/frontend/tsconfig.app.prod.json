@@ -1,0 +1,9 @@
+{
+	"extends": "./tsconfig.app.json",
+	"compilerOptions": {
+		"customConditions": [],
+		"paths": {
+			"@openvidu-dashboard/ui": ["./dist/dashboard-ui"]
+		}
+	}
+}

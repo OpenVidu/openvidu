@@ -1,0 +1,16 @@
+# Build context of the Dockerfile: the workspace root without what the image never needs.
+**/node_modules
+**/dist
+**/.angular
+**/coverage
+**/test-results
+**/playwright-report
+**/blob-report
+**/*.tsbuildinfo
+.git
+.claude
+openspec
+dashboard-ce/tools
+# Their manifests keep the workspace consistent with the lockfile.
+!dashboard-ce/tools/*/package.json
+PLAN.md

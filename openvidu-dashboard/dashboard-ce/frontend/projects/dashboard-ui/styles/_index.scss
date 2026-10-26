@@ -1,0 +1,145 @@
+// Dashboard theme: `@include ovd.theme;` once at the root of an application stylesheet.
+@use '@angular/material' as mat;
+@use './palettes';
+@use './tokens';
+
+$plain-family: 'Inter Variable', 'Inter', system-ui, sans-serif;
+$mono-family: 'JetBrains Mono Variable', 'JetBrains Mono', ui-monospace, monospace;
+
+@mixin theme {
+	html {
+		color-scheme: light dark;
+
+		@include mat.theme(
+			(
+				color: (
+					primary: palettes.$primary-palette,
+					tertiary: palettes.$tertiary-palette
+				),
+				typography: (
+					plain-family: $plain-family,
+					brand-family: $plain-family,
+					bold-weight: 600,
+					medium-weight: 500,
+					regular-weight: 400
+				),
+				density: 0
+			),
+			$overrides: tokens.$overrides
+		);
+		@include tokens.custom-properties;
+
+		--ovd-mono-family: #{$mono-family};
+		--ovd-focus-ring: 2px solid var(--mat-sys-primary);
+
+		// Density 0 emits no component tokens, so fine pointers opt into -1 instead of coarse ones resetting to 0.
+		@media (pointer: fine) {
+			@include mat.theme(
+				(
+					density: -1
+				)
+			);
+		}
+	}
+
+	html[data-theme='light'] {
+		color-scheme: light;
+	}
+
+	html[data-theme='dark'] {
+		color-scheme: dark;
+	}
+
+	body {
+		margin: 0;
+		background: var(--mat-sys-surface);
+		color: var(--mat-sys-on-surface);
+		font: var(--mat-sys-body-medium);
+		-webkit-font-smoothing: antialiased;
+	}
+
+	:focus-visible {
+		outline: var(--ovd-focus-ring);
+		outline-offset: 2px;
+	}
+
+	// Headings and landmarks receive focus only programmatically (route changes, skip link).
+	[tabindex='-1']:focus {
+		outline: none;
+	}
+
+	a {
+		color: var(--mat-sys-primary);
+	}
+
+	h1,
+	.ovd-page-title {
+		margin: 0;
+		font: var(--mat-sys-headline-small);
+		font-weight: 600;
+	}
+
+	// The title of a list or settings page, spaced from what follows like the Overview and Analytics headers.
+	.ovd-page-title {
+		margin-bottom: 16px;
+	}
+
+	h2,
+	.ovd-section-title {
+		margin: 0;
+		font: var(--mat-sys-title-medium);
+		font-weight: 600;
+	}
+
+	// Filters of a list or section: items align to the top, so a hint under one field only grows the bar below it.
+	.ovd-filter-bar {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: flex-start;
+		gap: 12px 16px;
+		margin-bottom: 8px;
+	}
+
+	// A control shorter than a form field (toggle group, chips) centred on the height of the fields beside it.
+	.ovd-filter-slot {
+		display: flex;
+		align-items: center;
+		min-block-size: var(--mat-form-field-container-height, 56px);
+	}
+
+	// A select panel as wide as its longest option (`panelWidth` null), capped on phones; long labels wrap.
+	.ovd-wide-select-panel {
+		max-width: calc(100vw - 32px);
+
+		.mdc-list-item__primary-text {
+			white-space: normal;
+		}
+	}
+
+	.ovd-mono {
+		font-family: var(--ovd-mono-family);
+	}
+
+	.ovd-tabular {
+		font-variant-numeric: tabular-nums;
+	}
+
+	.ovd-visually-hidden {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		overflow: hidden;
+		clip-path: inset(50%);
+		white-space: nowrap;
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		*,
+		::before,
+		::after {
+			animation-duration: 0.01ms !important;
+			animation-iteration-count: 1 !important;
+			transition-duration: 0.01ms !important;
+		}
+	}
+}

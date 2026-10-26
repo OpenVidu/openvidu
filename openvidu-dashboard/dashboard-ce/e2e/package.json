@@ -1,0 +1,26 @@
+{
+	"name": "@openvidu-dashboard/e2e",
+	"version": "3.10.0-dev",
+	"private": true,
+	"description": "End-to-end tests of the OpenVidu Dashboard (CE) with Playwright",
+	"type": "module",
+	"exports": {
+		"./fixtures": "./fixtures/index.ts",
+		"./serve": "./scripts/serve.mjs"
+	},
+	"scripts": {
+		"e2e": "node scripts/e2e.mjs",
+		"typecheck": "tsc --noEmit -p tsconfig.json"
+	},
+	"devDependencies": {
+		"@axe-core/playwright": "catalog:",
+		"@openvidu-dashboard/backend": "workspace:*",
+		"@openvidu-dashboard/frontend": "workspace:*",
+		"@openvidu-dashboard/typings": "workspace:*",
+		"@playwright/test": "catalog:",
+		"@types/node": "catalog:",
+		"mongodb": "catalog:",
+		"testcontainers": "catalog:",
+		"typescript": "catalog:"
+	}
+}

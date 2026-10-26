@@ -1,0 +1,119 @@
+<button
+	#trigger
+	matButton="outlined"
+	type="button"
+	class="trigger"
+	cdkOverlayOrigin
+	#origin="cdkOverlayOrigin"
+	aria-haspopup="dialog"
+	[attr.aria-expanded]="open()"
+	(click)="toggle()"
+>
+	<!-- The content names the button: hidden texts complete what the display shows. -->
+	<mat-icon svgIcon="calendar_month" />
+	<span class="ovd-visually-hidden">Time range: </span>
+	<span class="preset">{{ label() }}</span>
+	@if (absolute()) {
+		<span class="ovd-visually-hidden">, </span>
+		<span [class]="display() === 'full' ? 'absolute ovd-tabular' : 'ovd-visually-hidden'">{{ absolute() }}</span>
+	}
+	<span class="ovd-visually-hidden">, </span>
+	<span [class]="display() === 'minimal' ? 'ovd-visually-hidden' : 'zone'">{{ range().tz }}</span>
+</button>
+
+<ng-template
+	cdkConnectedOverlay
+	[cdkConnectedOverlayOrigin]="origin"
+	[cdkConnectedOverlayOpen]="open()"
+	[cdkConnectedOverlayPositions]="positions"
+	[cdkConnectedOverlayHasBackdrop]="true"
+	cdkConnectedOverlayBackdropClass="cdk-overlay-transparent-backdrop"
+	(backdropClick)="close()"
+	(overlayKeydown)="$event.key === 'Escape' && close()"
+	(detach)="open.set(false)"
+>
+	<div
+		class="panel mat-elevation-z3"
+		role="dialog"
+		aria-label="Time range"
+		cdkTrapFocus
+		[cdkTrapFocusAutoCapture]="true"
+	>
+		<section class="presets" aria-label="Presets">
+			@for (preset of presets; track preset) {
+				<button
+					matButton
+					type="button"
+					[attr.aria-pressed]="preset === this.preset()"
+					[class.active]="preset === this.preset()"
+					(click)="choosePreset(preset)"
+				>
+					{{ labels[preset] }}
+				</button>
+			}
+		</section>
+
+		<section class="custom" aria-label="Custom range">
+			<div class="row">
+				<mat-form-field subscriptSizing="dynamic">
+					<mat-label>From date</mat-label>
+					<input
+						matInput
+						[matDatepicker]="fromPicker"
+						[value]="fromDate()"
+						(dateChange)="fromDate.set($event.value)"
+					/>
+					<mat-datepicker-toggle matSuffix [for]="fromPicker" />
+					<mat-datepicker #fromPicker />
+				</mat-form-field>
+				<mat-form-field subscriptSizing="dynamic" class="time">
+					<mat-label>From time</mat-label>
+					<input
+						matInput
+						[matTimepicker]="fromTimePicker"
+						[value]="fromTime()"
+						(valueChange)="fromTime.set($event)"
+					/>
+					<mat-timepicker-toggle matSuffix [for]="fromTimePicker" />
+					<mat-timepicker #fromTimePicker />
+				</mat-form-field>
+			</div>
+			<div class="row">
+				<mat-form-field subscriptSizing="dynamic">
+					<mat-label>To date</mat-label>
+					<input
+						matInput
+						[matDatepicker]="toPicker"
+						[value]="toDate()"
+						(dateChange)="toDate.set($event.value)"
+					/>
+					<mat-datepicker-toggle matSuffix [for]="toPicker" />
+					<mat-datepicker #toPicker />
+				</mat-form-field>
+				<mat-form-field subscriptSizing="dynamic" class="time">
+					<mat-label>To time</mat-label>
+					<input
+						matInput
+						[matTimepicker]="toTimePicker"
+						[value]="toTime()"
+						(valueChange)="toTime.set($event)"
+					/>
+					<mat-timepicker-toggle matSuffix [for]="toTimePicker" />
+					<mat-timepicker #toTimePicker />
+				</mat-form-field>
+			</div>
+			@if (error()) {
+				<p class="error" role="alert">{{ error() }}</p>
+			}
+			@if (retentionWarning()) {
+				<p class="warning">{{ retentionWarning() }}</p>
+			}
+			<button matButton="filled" type="button" (click)="applyCustom()">Apply</button>
+		</section>
+
+		<section class="zone-row" aria-label="Time zone">
+			<ovd-zone-select [zone]="range().tz" (zoneChange)="chooseZone($event)" />
+			<mat-slide-toggle [checked]="utc()" (change)="setUtc($event.checked)">UTC</mat-slide-toggle>
+		</section>
+	</div>
+</ng-template>

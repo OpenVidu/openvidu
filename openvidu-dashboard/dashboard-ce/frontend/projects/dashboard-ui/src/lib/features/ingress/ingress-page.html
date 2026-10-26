@@ -1,0 +1,150 @@
+<h1 class="ovd-page-title">Ingress</h1>
+
+<ovd-tile-row class="tiles" role="region" aria-label="Summary">
+	<ovd-kpi-tile label="Publishing now" [value]="tile(summary()?.publishingNow)" [loading]="summary() === null" />
+	<ovd-kpi-tile
+		label="Ingress in range"
+		[value]="tile(summary()?.ingressesInRange)"
+		[hint]="inputHint(summary())"
+		[loading]="summary() === null"
+	/>
+	<ovd-kpi-tile
+		label="Sessions in range"
+		[info]="infoTexts.ingressSessions"
+		[value]="tile(summary()?.sessionsInRange)"
+		[loading]="summary() === null"
+		[approximate]="approximate()"
+	/>
+	<ovd-kpi-tile
+		label="Total duration"
+		[value]="total(summary())"
+		[loading]="summary() === null"
+		[approximate]="approximate()"
+	/>
+</ovd-tile-row>
+
+<div class="ovd-filter-bar">
+	<ovd-list-search label="Ingress name or ID" entity="ingress" />
+
+	<mat-form-field class="select input-select" subscriptSizing="dynamic">
+		<mat-label>Input</mat-label>
+		<mat-select [value]="inputType()" (selectionChange)="setInputType($event.value)">
+			<mat-option [value]="null">All</mat-option>
+			@for (type of inputTypes; track type) {
+				<mat-option [value]="type">{{ inputLabels[type] }}</mat-option>
+			}
+		</mat-select>
+	</mat-form-field>
+
+	<mat-form-field class="select status-select" subscriptSizing="dynamic">
+		<mat-label>Status</mat-label>
+		<mat-select [value]="status()" (selectionChange)="setStatus($event.value)">
+			<mat-option [value]="null">All</mat-option>
+			@for (status of statuses; track status) {
+				<mat-option [value]="status">{{ statusLabels[status] }}</mat-option>
+			}
+		</mat-select>
+	</mat-form-field>
+</div>
+
+<ovd-data-table
+	tableId="ingress"
+	caption="Ingress"
+	[columns]="columns()"
+	[rows]="rows()"
+	[trackBy]="trackIngress"
+	[sort]="sort()"
+	[order]="order()"
+	[loading]="loading()"
+	[error]="error()"
+	[pageSize]="limit()"
+	(sortChange)="setSort($event)"
+	(retry)="retry()"
+>
+	<ng-template ovdCell="ingressId" let-item>
+		<span class="cell">
+			<a class="ovd-mono" [routerLink]="['/ingress', item.ingressId]">{{ item.ingressId }}</a>
+			<ovd-copy-button [value]="item.ingressId" label="ingress ID" />
+		</span>
+	</ng-template>
+	<ng-template ovdCell="name" let-item>
+		@if (item.name) {
+			<span class="cell">
+				{{ item.name }}
+				<ovd-copy-button [value]="item.name" label="ingress name" />
+			</span>
+		} @else {
+			—
+		}
+	</ng-template>
+	<ng-template ovdCell="room" let-item>
+		<a routerLink="/rooms" [queryParams]="roomParams(item)">{{ item.roomName }}</a>
+	</ng-template>
+	<ng-template ovdCell="input" let-item><ovd-kind-badge [kind]="item.inputType" /></ng-template>
+	<ng-template ovdCell="status" let-item>
+		<span class="cell">
+			<ovd-status-badge
+				[status]="item.status"
+				domain="ingress"
+				[hint]="item.status === 'deleted' ? deletedHint(item) : undefined"
+			/>
+			@if (item.hasError) {
+				<span
+					class="error-marker"
+					role="img"
+					tabindex="0"
+					aria-label="Last session ended with an error"
+					matTooltip="Last session ended with an error"
+				>
+					<mat-icon svgIcon="error" aria-hidden="true" />
+				</span>
+			}
+			@if (!item.enabled) {
+				<ovd-status-badge status="disabled" domain="ingress" />
+			}
+		</span>
+	</ng-template>
+	<ng-template ovdCell="createdAt" let-item>
+		<time class="ovd-tabular" [attr.datetime]="item.createdAt">{{ time(item.createdAt) }}</time>
+	</ng-template>
+	<ng-template ovdCell="totalDuration" let-item>
+		@if (item.sessions === 0) {
+			—
+		} @else {
+			<ovd-duration
+				[totalMs]="item.totalDurationMs"
+				[start]="item.lastSessionAt ?? null"
+				[running]="item.status === 'publishing'"
+			/>
+		}
+	</ng-template>
+	<ng-template ovdCell="sessions" let-item>
+		<span class="ovd-tabular">{{ number(item.sessions) }}</span>
+	</ng-template>
+	<ng-template ovdCell="lastSession" let-item>
+		@if (item.lastSessionAt) {
+			<time class="ovd-tabular" [attr.datetime]="item.lastSessionAt">{{ time(item.lastSessionAt) }}</time>
+		} @else {
+			—
+		}
+	</ng-template>
+
+	@if (exactId(); as id) {
+		<ovd-empty-state ovdTableEmpty [heading]="'Ingress ' + id + ' was not found'">
+			<button matButton="outlined" type="button" ovdEmptyAction (click)="clearSearch()">Clear search</button>
+		</ovd-empty-state>
+	} @else {
+		<ovd-empty-state ovdTableEmpty heading="No ingress match" hint="Change the filters or widen the time range.">
+			<button matButton="outlined" type="button" ovdEmptyAction (click)="clearFilters()">Clear filters</button>
+			<button matButton="outlined" type="button" ovdEmptyAction (click)="widenRange()">Widen range</button>
+		</ovd-empty-state>
+	}
+</ovd-data-table>
+
+<ovd-cursor-paginator
+	[limit]="limit()"
+	[nextCursor]="page()?.nextCursor ?? null"
+	[prevCursor]="page()?.prevCursor ?? null"
+	[total]="page()?.total"
+	[rowCount]="rows().length"
+/>

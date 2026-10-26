@@ -1,0 +1,20 @@
+[
+	{
+		"_id": "global:2026-10-12T10:30:00Z",
+		"scope": "global",
+		"bucket": { "$date": "2026-10-12T10:30:00.000Z" },
+		"participants": { "connected": { "$numberInt": "3" }, "joined": { "$numberInt": "1" } },
+		"bytes": { "up": { "$numberLong": "13986950" }, "down": { "$numberLong": "12811470" } },
+		"quality": { "scoreSum": { "$numberDouble": "21.6" }, "scoreCount": { "$numberInt": "5" } },
+		"internal": { "connectedSids": ["PA_dav3Pub6Mn2", "PA_1ngressSes02", "PA_egStr3amer02"] }
+	},
+	{
+		"_id": "node:ND_beta3Vx9Pw:2026-10-12T10:30:00Z",
+		"scope": "node:ND_beta3Vx9Pw",
+		"bucket": { "$date": "2026-10-12T10:30:00.000Z" },
+		"participants": { "connected": { "$numberInt": "3" }, "joined": { "$numberInt": "1" } },
+		"bytes": { "up": { "$numberLong": "13986950" }, "down": { "$numberLong": "12811470" } },
+		"quality": { "scoreSum": { "$numberDouble": "21.6" }, "scoreCount": { "$numberInt": "5" } },
+		"internal": { "connectedSids": ["PA_dav3Pub6Mn2", "PA_1ngressSes02", "PA_egStr3amer02"] }
+	}
+]

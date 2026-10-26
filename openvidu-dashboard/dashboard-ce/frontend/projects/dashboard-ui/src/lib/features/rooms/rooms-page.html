@@ -1,0 +1,182 @@
+<h1 class="ovd-page-title">Rooms</h1>
+
+<ovd-tile-row class="tiles" role="region" aria-label="Summary">
+	<ovd-kpi-tile label="Active rooms" [value]="tile(summary()?.activeRooms)" [loading]="summary() === null" />
+	<ovd-kpi-tile
+		label="Rooms in range"
+		[value]="tile(summary()?.roomsInRange)"
+		[loading]="summary() === null"
+		[approximate]="approximate()"
+	/>
+	<ovd-kpi-tile
+		label="Participant sessions"
+		[info]="infoTexts.participantSessions"
+		[value]="tile(summary()?.participantSessions)"
+		[loading]="summary() === null"
+		[approximate]="approximate()"
+	/>
+	<ovd-kpi-tile
+		label="Active participants"
+		[value]="tile(summary()?.activeParticipants)"
+		[loading]="summary() === null"
+	/>
+</ovd-tile-row>
+
+<div class="ovd-filter-bar">
+	<div class="ovd-filter-slot">
+		<mat-button-toggle-group
+			aria-label="Status"
+			hideSingleSelectionIndicator
+			[value]="status()"
+			(change)="setStatus($event.value)"
+		>
+			<mat-button-toggle value="active">Active</mat-button-toggle>
+			<mat-button-toggle value="closed">Closed</mat-button-toggle>
+			<mat-button-toggle value="all">All</mat-button-toggle>
+		</mat-button-toggle-group>
+	</div>
+
+	<ovd-list-search label="Room name or SID" entity="room" />
+
+	@if (nodeFilter()) {
+		@if (nodeSelect(); as select) {
+			<ng-container *ngComponentOutlet="select" />
+		}
+	} @else {
+		<mat-form-field class="node" subscriptSizing="dynamic">
+			<mat-label>Node</mat-label>
+			<mat-select value="all" disabled>
+				<mat-option value="all">All nodes</mat-option>
+			</mat-select>
+			<span
+				matSuffix
+				class="lock"
+				role="img"
+				tabindex="0"
+				[attr.aria-label]="nodeLockHint"
+				[matTooltip]="nodeLockHint"
+			>
+				<mat-icon svgIcon="lock" aria-hidden="true" />
+			</span>
+		</mat-form-field>
+	}
+
+	<div class="ovd-filter-slot">
+		<mat-chip-listbox
+			aria-label="Features"
+			multiple
+			[value]="selectedFeatures()"
+			(change)="setFeatures($event.value)"
+		>
+			@for (feature of features; track feature.key) {
+				<mat-chip-option [value]="feature.key">{{ feature.label }}</mat-chip-option>
+			}
+		</mat-chip-listbox>
+	</div>
+</div>
+
+<ovd-data-table
+	tableId="rooms"
+	caption="Rooms"
+	[columns]="columns()"
+	[rows]="rows()"
+	[trackBy]="trackRoom"
+	[sort]="sort()"
+	[order]="order()"
+	[loading]="loading()"
+	[error]="error()"
+	[pageSize]="limit()"
+	(sortChange)="setSort($event)"
+	(retry)="retry()"
+>
+	<ng-template ovdCell="sid" let-room>
+		<span class="cell">
+			<a class="ovd-mono" [routerLink]="['/rooms', room.sid]">{{ room.sid }}</a>
+			<ovd-copy-button [value]="room.sid" label="room SID" />
+		</span>
+	</ng-template>
+	<ng-template ovdCell="name" let-room>
+		<span class="cell">
+			{{ room.name }}
+			<ovd-copy-button [value]="room.name" label="room name" />
+		</span>
+	</ng-template>
+	<ng-template ovdCell="status" let-room>
+		<ovd-status-badge
+			[status]="room.status"
+			domain="room"
+			[estimated]="room.closedBy === 'reconciler'"
+			[estimatedHint]="estimate"
+			[stale]="room.stale === true"
+			[hint]="staleHint(room)"
+		/>
+	</ng-template>
+	<ng-template ovdCell="createdAt" let-room>
+		<time class="ovd-tabular" [attr.datetime]="room.createdAt">{{ time(room.createdAt) }}</time>
+	</ng-template>
+	<ng-template ovdCell="endedAt" let-room>
+		@if (room.endedAt) {
+			<time
+				class="ovd-tabular"
+				[class.estimated]="room.closedBy === 'reconciler'"
+				[attr.datetime]="room.endedAt"
+				[matTooltip]="room.closedBy === 'reconciler' ? estimate : ''"
+				[matTooltipDisabled]="room.closedBy !== 'reconciler'"
+				[attr.tabindex]="room.closedBy === 'reconciler' ? 0 : null"
+				>{{ time(room.endedAt) }}</time
+			>
+		} @else {
+			<span aria-label="Not ended">—</span>
+		}
+	</ng-template>
+	<ng-template ovdCell="duration" let-room>
+		<ovd-duration
+			[start]="room.createdAt"
+			[end]="room.endedAt ?? null"
+			[storedMs]="room.durationMs ?? null"
+			[running]="room.status === 'active'"
+		/>
+	</ng-template>
+	<ng-template ovdCell="uniqueIdentities" let-room>
+		<span class="ovd-tabular">{{ number(room.participants.unique) }}</span>
+	</ng-template>
+	<ng-template ovdCell="active" let-room>
+		<span class="ovd-tabular">{{ number(room.participants.active) }}</span>
+	</ng-template>
+	<ng-template ovdCell="bytes" let-room>
+		<span class="ovd-tabular">{{ bandwidth(room) }}</span>
+	</ng-template>
+	<ng-template ovdCell="features" let-room>
+		<span class="features">
+			@for (feature of features; track feature.key) {
+				@if (room.features[feature.key]) {
+					<span class="feature" [matTooltip]="feature.label" [attr.aria-label]="feature.label">{{
+						feature.letter
+					}}</span>
+				}
+			}
+		</span>
+	</ng-template>
+	<ng-template ovdCell="node" let-room>
+		<span class="ovd-mono">{{ room.nodeId ?? '—' }}</span>
+	</ng-template>
+
+	@if (exactId(); as sid) {
+		<ovd-empty-state ovdTableEmpty [heading]="'Room ' + sid + ' was not found'">
+			<button matButton="outlined" type="button" ovdEmptyAction (click)="clearSearch()">Clear search</button>
+		</ovd-empty-state>
+	} @else {
+		<ovd-empty-state ovdTableEmpty heading="No rooms match" hint="Change the filters or widen the time range.">
+			<button matButton="outlined" type="button" ovdEmptyAction (click)="clearFilters()">Clear filters</button>
+			<button matButton="outlined" type="button" ovdEmptyAction (click)="widenRange()">Widen range</button>
+		</ovd-empty-state>
+	}
+</ovd-data-table>
+
+<ovd-cursor-paginator
+	[limit]="limit()"
+	[nextCursor]="page()?.nextCursor ?? null"
+	[prevCursor]="page()?.prevCursor ?? null"
+	[total]="page()?.total"
+	[rowCount]="rows().length"
+/>

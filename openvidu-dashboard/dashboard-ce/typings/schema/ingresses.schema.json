@@ -1,0 +1,51 @@
+{
+	"bsonType": "object",
+	"required": [
+		"_id",
+		"inputType",
+		"roomName",
+		"participantIdentity",
+		"reusable",
+		"enabled",
+		"createdAt",
+		"status",
+		"sessions",
+		"totalDurationMs",
+		"schemaVersion",
+		"expiresAt"
+	],
+	"properties": {
+		"_id": { "bsonType": "string", "description": "Ingress id" },
+		"name": { "bsonType": "string" },
+		"nameLower": { "bsonType": "string" },
+		"inputType": { "bsonType": "string", "enum": ["rtmp", "whip", "url"] },
+		"url": { "bsonType": "string", "description": "Without stream key or credentials" },
+		"roomName": { "bsonType": "string" },
+		"participantIdentity": { "bsonType": "string" },
+		"participantName": { "bsonType": "string" },
+		"participantMetadata": { "bsonType": "string", "description": "Only with store_metadata" },
+		"reusable": { "bsonType": "bool" },
+		"enabled": { "bsonType": "bool" },
+		"enableTranscoding": { "bsonType": "bool" },
+		"createdAt": { "bsonType": "date" },
+		"deletedAt": { "bsonType": "date" },
+		"status": {
+			"bsonType": "string",
+			"enum": ["inactive", "buffering", "publishing", "error", "complete", "deleted"]
+		},
+		"lastError": { "bsonType": "string" },
+		"sessions": { "bsonType": ["int", "long"] },
+		"totalDurationMs": { "bsonType": ["long", "int"] },
+		"lastSessionAt": { "bsonType": "date" },
+		"internal": { "bsonType": "object", "description": "Writer bookkeeping; never read by the dashboard" },
+		"schemaVersion": {
+			"bsonType": ["int", "long"],
+			"description": "SCHEMA_VERSION of the writer that last wrote the document"
+		},
+		"expiresAt": {
+			"bsonType": ["date", "null"],
+			"description": "closedAt + retention once closed; null while open"
+		}
+	},
+	"additionalProperties": false
+}

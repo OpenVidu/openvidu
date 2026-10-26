@@ -1,0 +1,105 @@
+[
+	{
+		"_id": "EG_rec0rdMp4Kq2",
+		"roomSid": "RM_aLkq3ZpD9wXy",
+		"roomName": "Daily-Standup",
+		"roomNameLower": "daily-standup",
+		"type": "room_composite",
+		"sourceType": "web",
+		"status": "complete",
+		"closedBy": "event",
+		"startedAt": { "$date": "2026-10-12T09:02:00.000Z" },
+		"updatedAt": { "$date": "2026-10-12T09:40:20.000Z" },
+		"endedAt": { "$date": "2026-10-12T09:40:20.000Z" },
+		"durationMs": { "$numberLong": "2300000" },
+		"request": { "layout": "speaker", "preset": "H264_720P_30", "outputs": ["file"] },
+		"outputs": [
+			{
+				"kind": "file",
+				"filename": "recordings/daily-standup-2026-10-12.mp4",
+				"location": "https://storage.example.com/recordings/daily-standup-2026-10-12.mp4",
+				"size": { "$numberLong": "512000000" },
+				"durationMs": { "$numberLong": "2294000" },
+				"startedAt": { "$date": "2026-10-12T09:02:04.000Z" },
+				"endedAt": { "$date": "2026-10-12T09:40:18.000Z" }
+			}
+		],
+		"statusHistory": [
+			{ "status": "starting", "at": { "$date": "2026-10-12T09:02:00.000Z" } },
+			{ "status": "active", "at": { "$date": "2026-10-12T09:02:04.000Z" } },
+			{ "status": "ending", "at": { "$date": "2026-10-12T09:40:06.000Z" } },
+			{ "status": "complete", "at": { "$date": "2026-10-12T09:40:20.000Z" } }
+		],
+		"retryCount": { "$numberInt": "0" },
+		"backupStorageUsed": false,
+		"schemaVersion": { "$numberInt": "1" },
+		"expiresAt": { "$date": "2027-01-10T09:40:20.000Z" }
+	},
+	{
+		"_id": "EG_trackF4iled9",
+		"roomSid": "RM_aLkq3ZpD9wXy",
+		"roomName": "Daily-Standup",
+		"roomNameLower": "daily-standup",
+		"type": "track",
+		"sourceType": "sdk",
+		"status": "failed",
+		"closedBy": "event",
+		"startedAt": { "$date": "2026-10-12T09:30:00.000Z" },
+		"updatedAt": { "$date": "2026-10-12T09:30:40.000Z" },
+		"endedAt": { "$date": "2026-10-12T09:30:40.000Z" },
+		"durationMs": { "$numberLong": "40000" },
+		"error": "upload failed: access denied",
+		"errorCode": { "$numberInt": "403" },
+		"request": { "trackId": "TR_aLiceMic0pus", "outputs": ["file"] },
+		"outputs": [
+			{
+				"kind": "file",
+				"filename": "tracks/alice-microphone.ogg",
+				"startedAt": { "$date": "2026-10-12T09:30:00.000Z" },
+				"endedAt": { "$date": "2026-10-12T09:30:40.000Z" }
+			}
+		],
+		"statusHistory": [
+			{ "status": "starting", "at": { "$date": "2026-10-12T09:30:00.000Z" } },
+			{ "status": "failed", "at": { "$date": "2026-10-12T09:30:40.000Z" } }
+		],
+		"retryCount": { "$numberInt": "1" },
+		"backupStorageUsed": false,
+		"schemaVersion": { "$numberInt": "1" },
+		"expiresAt": { "$date": "2027-01-10T09:30:40.000Z" }
+	},
+	{
+		"_id": "EG_streamHls7Wz",
+		"roomSid": "RM_bQ7tVnW2cErT",
+		"roomName": "Webinar-Q4",
+		"roomNameLower": "webinar-q4",
+		"type": "room_composite",
+		"sourceType": "web",
+		"status": "active",
+		"startedAt": { "$date": "2026-10-12T10:05:00.000Z" },
+		"updatedAt": { "$date": "2026-10-12T10:05:03.000Z" },
+		"request": { "layout": "grid", "preset": "H264_1080P_30", "outputs": ["stream", "segments"] },
+		"outputs": [
+			{
+				"kind": "stream",
+				"url": "rtmps://live.example.com/app/***",
+				"status": "ACTIVE",
+				"startedAt": { "$date": "2026-10-12T10:05:03.000Z" }
+			},
+			{
+				"kind": "segments",
+				"playlistName": "webinar-q4/playlist.m3u8",
+				"location": "https://storage.example.com/webinar-q4/playlist.m3u8",
+				"startedAt": { "$date": "2026-10-12T10:05:03.000Z" }
+			}
+		],
+		"statusHistory": [
+			{ "status": "starting", "at": { "$date": "2026-10-12T10:05:00.000Z" } },
+			{ "status": "active", "at": { "$date": "2026-10-12T10:05:03.000Z" } }
+		],
+		"retryCount": { "$numberInt": "0" },
+		"backupStorageUsed": false,
+		"schemaVersion": { "$numberInt": "1" },
+		"expiresAt": null
+	}
+]

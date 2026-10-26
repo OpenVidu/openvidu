@@ -1,0 +1,31 @@
+{
+	"extends": "../../tsconfig.base.json",
+	"compileOnSave": false,
+	"compilerOptions": {
+		"target": "ES2022",
+		"lib": ["ES2024", "DOM", "DOM.Iterable"],
+		"module": "preserve",
+		"moduleResolution": "bundler",
+		"noPropertyAccessFromIndexSignature": true,
+		"noImplicitReturns": true,
+		"experimentalDecorators": true,
+		"importHelpers": true,
+		"declaration": false,
+		"declarationMap": false,
+		"types": [],
+		"paths": {
+			"@openvidu-dashboard/ui": ["./projects/dashboard-ui/src/public-api.ts"]
+		}
+	},
+	"angularCompilerOptions": {
+		"enableI18nLegacyMessageIdFormat": false,
+		"strictInjectionParameters": true,
+		"strictInputAccessModifiers": true,
+		"strictStandalone": true,
+		"strictTemplates": true,
+		"extendedDiagnostics": {
+			"defaultCategory": "error"
+		}
+	},
+	"include": ["src/**/*.ts", "projects/*/src/**/*.ts"]
+}

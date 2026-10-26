@@ -1,0 +1,56 @@
+{
+	"bsonType": "object",
+	"required": ["_id", "type", "ts", "nodeId", "synthetic", "payload"],
+	"properties": {
+		"_id": { "bsonType": "string", "description": "LiveKit event id (AE_…); AE_SYN_… for synthetic events" },
+		"type": {
+			"bsonType": "string",
+			"enum": [
+				"ROOM_CREATED",
+				"ROOM_ENDED",
+				"PARTICIPANT_JOINED",
+				"PARTICIPANT_ACTIVE",
+				"PARTICIPANT_RESUMED",
+				"PARTICIPANT_LEFT",
+				"PARTICIPANT_CONNECTION_ABORTED",
+				"TRACK_PUBLISH_REQUESTED",
+				"TRACK_PUBLISHED",
+				"TRACK_PUBLISHED_UPDATE",
+				"TRACK_MUTED",
+				"TRACK_UNMUTED",
+				"TRACK_UNPUBLISHED",
+				"TRACK_SUBSCRIBE_REQUESTED",
+				"TRACK_SUBSCRIBED",
+				"TRACK_SUBSCRIBE_FAILED",
+				"TRACK_UNSUBSCRIBED",
+				"TRACK_MAX_SUBSCRIBED_VIDEO_QUALITY",
+				"TRACK_PUBLISH_STATS",
+				"TRACK_SUBSCRIBE_STATS",
+				"EGRESS_STARTED",
+				"EGRESS_UPDATED",
+				"EGRESS_ENDED",
+				"INGRESS_CREATED",
+				"INGRESS_STARTED",
+				"INGRESS_UPDATED",
+				"INGRESS_ENDED",
+				"INGRESS_DELETED"
+			]
+		},
+		"ts": { "bsonType": "date" },
+		"roomSid": { "bsonType": "string" },
+		"roomName": { "bsonType": "string" },
+		"participantSid": { "bsonType": "string" },
+		"identity": { "bsonType": "string" },
+		"trackSid": { "bsonType": "string" },
+		"egressId": { "bsonType": "string" },
+		"ingressId": { "bsonType": "string" },
+		"ingressSessionId": { "bsonType": "string" },
+		"nodeId": { "bsonType": "string" },
+		"synthetic": { "bsonType": "bool" },
+		"payload": {
+			"bsonType": "object",
+			"description": "Protocol event in protojson naming without lifted keys or secrets"
+		}
+	},
+	"additionalProperties": false
+}

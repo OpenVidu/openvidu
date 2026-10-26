@@ -1,0 +1,140 @@
+<h1 class="ovd-page-title">Egress</h1>
+
+<ovd-tile-row class="tiles" role="region" aria-label="Summary">
+	<ovd-kpi-tile label="Active" [value]="tile(summary()?.active)" [loading]="summary() === null" />
+	<ovd-kpi-tile
+		label="Started in range"
+		[value]="tile(summary()?.startedInRange)"
+		[hint]="typeHint(summary())"
+		[loading]="summary() === null"
+		[approximate]="approximate()"
+	/>
+	<ovd-kpi-tile
+		label="Failed in range"
+		[value]="tile(summary()?.byEndStatus?.failed ?? (summary() === null ? undefined : 0))"
+		[hint]="failedHint(summary())"
+		[loading]="summary() === null"
+		[approximate]="approximate()"
+	/>
+	<ovd-kpi-tile label="Recorded time" [value]="recorded(summary())" [loading]="summary() === null" />
+</ovd-tile-row>
+
+<div class="ovd-filter-bar">
+	<ovd-list-search label="Room name or egress ID" entity="egress" />
+
+	<mat-form-field class="select" subscriptSizing="dynamic">
+		<mat-label>Type</mat-label>
+		<mat-select multiple placeholder="All" [value]="selectedTypes()" (selectionChange)="setTypes($event.value)">
+			@for (type of types; track type) {
+				<mat-option [value]="type">{{ typeLabels[type] }}</mat-option>
+			}
+		</mat-select>
+	</mat-form-field>
+
+	<mat-form-field class="select" subscriptSizing="dynamic">
+		<mat-label>Status</mat-label>
+		<mat-select
+			multiple
+			placeholder="All"
+			[value]="selectedStatusOptions()"
+			(selectionChange)="setStatusOptions($event.value)"
+		>
+			@for (option of statusOptions; track option.key) {
+				<mat-option [value]="option.key">{{ option.label }}</mat-option>
+			}
+		</mat-select>
+	</mat-form-field>
+
+	@if (room(); as room) {
+		<div class="ovd-filter-slot"><ovd-room-chip [sid]="room" /></div>
+	}
+</div>
+
+<ovd-data-table
+	tableId="egress"
+	caption="Egress"
+	[columns]="columns()"
+	[rows]="rows()"
+	[trackBy]="trackEgress"
+	[sort]="sort()"
+	[order]="order()"
+	[loading]="loading()"
+	[error]="error()"
+	[pageSize]="limit()"
+	(sortChange)="setSort($event)"
+	(retry)="retry()"
+>
+	<ng-template ovdCell="egressId" let-item>
+		<span class="cell">
+			<a class="ovd-mono" [routerLink]="['/egress', item.egressId]">{{ item.egressId }}</a>
+			<ovd-copy-button [value]="item.egressId" label="egress ID" />
+		</span>
+	</ng-template>
+	<ng-template ovdCell="room" let-item>
+		@if (item.roomSid) {
+			<a [routerLink]="['/rooms', item.roomSid]">{{ item.roomName ?? item.roomSid }}</a>
+		} @else {
+			<span aria-label="No room">—</span>
+		}
+	</ng-template>
+	<ng-template ovdCell="type" let-item><ovd-kind-badge [kind]="item.type" /></ng-template>
+	<ng-template ovdCell="status" let-item>
+		<span class="cell">
+			<ovd-status-badge
+				[status]="item.status"
+				domain="egress"
+				[estimated]="item.closedBy === 'reconciler'"
+				[estimatedHint]="estimate"
+			/>
+			@if (errorMarker(item)) {
+				<span
+					class="error-marker"
+					role="img"
+					tabindex="0"
+					[attr.aria-label]="errorHint(item)"
+					[matTooltip]="errorHint(item)"
+				>
+					<mat-icon svgIcon="error" aria-hidden="true" />
+				</span>
+			}
+		</span>
+	</ng-template>
+	<ng-template ovdCell="startedAt" let-item>
+		<time class="ovd-tabular" [attr.datetime]="item.startedAt">{{ time(item.startedAt) }}</time>
+	</ng-template>
+	<ng-template ovdCell="endedAt" let-item>
+		@if (item.endedAt) {
+			<time class="ovd-tabular" [attr.datetime]="item.endedAt">{{ time(item.endedAt) }}</time>
+		} @else {
+			<span aria-label="Not ended">—</span>
+		}
+	</ng-template>
+	<ng-template ovdCell="duration" let-item>
+		<ovd-duration
+			[start]="item.startedAt"
+			[end]="item.endedAt ?? null"
+			[storedMs]="item.durationMs ?? null"
+			[running]="inFlight(item)"
+		/>
+	</ng-template>
+	<ng-template ovdCell="outputs" let-item><ovd-egress-outputs [outputs]="item.outputs" /></ng-template>
+
+	@if (exactId(); as id) {
+		<ovd-empty-state ovdTableEmpty [heading]="'Egress ' + id + ' was not found'">
+			<button matButton="outlined" type="button" ovdEmptyAction (click)="clearSearch()">Clear search</button>
+		</ovd-empty-state>
+	} @else {
+		<ovd-empty-state ovdTableEmpty heading="No egress match" hint="Change the filters or widen the time range.">
+			<button matButton="outlined" type="button" ovdEmptyAction (click)="clearFilters()">Clear filters</button>
+			<button matButton="outlined" type="button" ovdEmptyAction (click)="widenRange()">Widen range</button>
+		</ovd-empty-state>
+	}
+</ovd-data-table>
+
+<ovd-cursor-paginator
+	[limit]="limit()"
+	[nextCursor]="page()?.nextCursor ?? null"
+	[prevCursor]="page()?.prevCursor ?? null"
+	[total]="page()?.total"
+	[rowCount]="rows().length"
+/>

@@ -1,0 +1,168 @@
+{
+	"bsonType": "object",
+	"required": [
+		"_id",
+		"name",
+		"nameLower",
+		"status",
+		"createdAt",
+		"nodeId",
+		"participants",
+		"tracks",
+		"egress",
+		"ingress",
+		"bytes",
+		"quality",
+		"features",
+		"lastEventAt",
+		"schemaVersion",
+		"expiresAt"
+	],
+	"properties": {
+		"_id": { "bsonType": "string", "description": "Room SID" },
+		"name": { "bsonType": "string" },
+		"nameLower": { "bsonType": "string" },
+		"status": { "bsonType": "string", "enum": ["active", "closed"] },
+		"createdAt": { "bsonType": "date" },
+		"endedAt": { "bsonType": "date" },
+		"durationMs": { "bsonType": ["long", "int"] },
+		"endReason": {
+			"bsonType": "string",
+			"enum": [
+				"UNKNOWN",
+				"API_DELETE",
+				"IDLE_TIMEOUT",
+				"SERVER_SHUTDOWN",
+				"SUPERSEDED",
+				"OPEN_FAILED",
+				"RECONCILED"
+			]
+		},
+		"closedBy": { "bsonType": "string", "enum": ["event", "reconciler"] },
+		"nodeId": { "bsonType": "string" },
+		"config": {
+			"bsonType": "object",
+			"properties": {
+				"maxParticipants": { "bsonType": ["int", "long"] },
+				"emptyTimeoutMs": { "bsonType": ["long", "int"] },
+				"departureTimeoutMs": { "bsonType": ["long", "int"] },
+				"metadata": { "bsonType": "string", "description": "Only with store_metadata" }
+			},
+			"additionalProperties": false
+		},
+		"participants": {
+			"bsonType": "object",
+			"required": ["sessions", "unique", "active", "peakActive", "aborted", "byKind"],
+			"properties": {
+				"sessions": { "bsonType": ["int", "long"] },
+				"unique": { "bsonType": ["int", "long"] },
+				"active": { "bsonType": ["int", "long"], "description": "Excludes dependent kinds (EGRESS, AGENT)" },
+				"peakActive": {
+					"bsonType": ["int", "long"],
+					"description": "Excludes dependent kinds (EGRESS, AGENT)"
+				},
+				"aborted": { "bsonType": ["int", "long"] },
+				"byKind": {
+					"bsonType": "object",
+					"properties": {
+						"STANDARD": { "bsonType": ["int", "long"] },
+						"INGRESS": { "bsonType": ["int", "long"] },
+						"EGRESS": { "bsonType": ["int", "long"] },
+						"SIP": { "bsonType": ["int", "long"] },
+						"AGENT": { "bsonType": ["int", "long"] },
+						"CONNECTOR": { "bsonType": ["int", "long"] },
+						"BRIDGE": { "bsonType": ["int", "long"] }
+					},
+					"additionalProperties": false
+				}
+			},
+			"additionalProperties": false
+		},
+		"tracks": {
+			"bsonType": "object",
+			"required": ["published", "bySource"],
+			"properties": {
+				"published": { "bsonType": ["int", "long"] },
+				"bySource": {
+					"bsonType": "object",
+					"properties": {
+						"UNKNOWN": { "bsonType": ["int", "long"] },
+						"CAMERA": { "bsonType": ["int", "long"] },
+						"MICROPHONE": { "bsonType": ["int", "long"] },
+						"SCREEN_SHARE": { "bsonType": ["int", "long"] },
+						"SCREEN_SHARE_AUDIO": { "bsonType": ["int", "long"] }
+					},
+					"additionalProperties": false
+				}
+			},
+			"additionalProperties": false
+		},
+		"egress": {
+			"bsonType": "object",
+			"required": ["total", "active", "byType"],
+			"properties": {
+				"total": { "bsonType": ["int", "long"] },
+				"active": { "bsonType": ["int", "long"] },
+				"byType": {
+					"bsonType": "object",
+					"properties": {
+						"room_composite": { "bsonType": ["int", "long"] },
+						"web": { "bsonType": ["int", "long"] },
+						"participant": { "bsonType": ["int", "long"] },
+						"track_composite": { "bsonType": ["int", "long"] },
+						"track": { "bsonType": ["int", "long"] }
+					},
+					"additionalProperties": false
+				}
+			},
+			"additionalProperties": false
+		},
+		"ingress": {
+			"bsonType": "object",
+			"required": ["sessions", "active"],
+			"properties": { "sessions": { "bsonType": ["int", "long"] }, "active": { "bsonType": ["int", "long"] } },
+			"additionalProperties": false
+		},
+		"bytes": {
+			"bsonType": "object",
+			"required": ["up", "down"],
+			"properties": { "up": { "bsonType": ["long", "int"] }, "down": { "bsonType": ["long", "int"] } },
+			"additionalProperties": false
+		},
+		"quality": {
+			"bsonType": "object",
+			"required": ["scoreSum", "scoreCount", "poor", "lost"],
+			"properties": {
+				"scoreSum": { "bsonType": "double" },
+				"scoreCount": { "bsonType": ["int", "long"] },
+				"minScore": { "bsonType": "double" },
+				"poor": { "bsonType": ["int", "long"], "description": "Samples with score below 2.06" },
+				"lost": { "bsonType": ["int", "long"], "description": "Samples with score below 1.25" }
+			},
+			"additionalProperties": false
+		},
+		"features": {
+			"bsonType": "object",
+			"required": ["egress", "ingress", "agent", "sip"],
+			"properties": {
+				"egress": { "bsonType": "bool" },
+				"ingress": { "bsonType": "bool" },
+				"agent": { "bsonType": "bool" },
+				"sip": { "bsonType": "bool" }
+			},
+			"additionalProperties": false
+		},
+		"lastEventAt": { "bsonType": "date" },
+		"lastStatsAt": { "bsonType": "date" },
+		"internal": { "bsonType": "object", "description": "Writer bookkeeping; never read by the dashboard" },
+		"schemaVersion": {
+			"bsonType": ["int", "long"],
+			"description": "SCHEMA_VERSION of the writer that last wrote the document"
+		},
+		"expiresAt": {
+			"bsonType": ["date", "null"],
+			"description": "closedAt + retention once closed; null while open"
+		}
+	},
+	"additionalProperties": false
+}

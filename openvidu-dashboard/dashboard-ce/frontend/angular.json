@@ -1,0 +1,119 @@
+{
+	"$schema": "./node_modules/@angular/cli/lib/config/schema.json",
+	"version": 1,
+	"cli": {
+		"packageManager": "pnpm",
+		"analytics": false
+	},
+	"newProjectRoot": "projects",
+	"projects": {
+		"frontend": {
+			"projectType": "application",
+			"schematics": {
+				"@schematics/angular:component": {
+					"style": "scss"
+				}
+			},
+			"root": "",
+			"sourceRoot": "src",
+			"prefix": "ovd",
+			"architect": {
+				"build": {
+					"builder": "@angular/build:application",
+					"options": {
+						"browser": "src/main.ts",
+						"tsConfig": "tsconfig.app.json",
+						"inlineStyleLanguage": "scss",
+						"assets": [
+							{
+								"glob": "**/*",
+								"input": "public"
+							},
+							{
+								"glob": "**/*",
+								"input": "projects/dashboard-ui/assets",
+								"output": "assets"
+							}
+						],
+						"styles": ["src/styles.scss"]
+					},
+					"configurations": {
+						"production": {
+							"tsConfig": "tsconfig.app.prod.json",
+							"budgets": [
+								{
+									"type": "initial",
+									"maximumWarning": "1.2MB",
+									"maximumError": "1.4MB"
+								},
+								{
+									"type": "anyComponentStyle",
+									"maximumWarning": "8kB",
+									"maximumError": "16kB"
+								}
+							],
+							"outputHashing": "all",
+							"namedChunks": true
+						},
+						"development": {
+							"conditions": ["source", "module", "development"],
+							"optimization": false,
+							"extractLicenses": false,
+							"sourceMap": true
+						}
+					},
+					"defaultConfiguration": "production"
+				},
+				"serve": {
+					"builder": "@angular/build:dev-server",
+					"configurations": {
+						"production": {
+							"buildTarget": "frontend:build:production"
+						},
+						"development": {
+							"buildTarget": "frontend:build:development"
+						}
+					},
+					"defaultConfiguration": "development",
+					"options": {
+						"proxyConfig": "proxy.conf.json"
+					}
+				},
+				"test": {
+					"builder": "@angular/build:unit-test",
+					"options": {
+						"tsConfig": "tsconfig.spec.json",
+						"setupFiles": ["projects/dashboard-ui/src/testing/setup.ts"],
+						"runnerConfig": true,
+						"providersFile": "projects/dashboard-ui/src/testing/providers.ts"
+					}
+				}
+			}
+		},
+		"dashboard-ui": {
+			"projectType": "library",
+			"root": "projects/dashboard-ui",
+			"sourceRoot": "projects/dashboard-ui/src",
+			"prefix": "ovd",
+			"architect": {
+				"build": {
+					"builder": "@angular/build:ng-packagr",
+					"options": {
+						"project": "projects/dashboard-ui/ng-package.json",
+						"tsConfig": "projects/dashboard-ui/tsconfig.lib.json"
+					}
+				},
+				"test": {
+					"builder": "@angular/build:unit-test",
+					"options": {
+						"buildTarget": "frontend:build:development",
+						"tsConfig": "projects/dashboard-ui/tsconfig.spec.json",
+						"setupFiles": ["projects/dashboard-ui/src/testing/setup.ts"],
+						"runnerConfig": true,
+						"providersFile": "projects/dashboard-ui/src/testing/providers.ts"
+					}
+				}
+			}
+		}
+	}
+}

@@ -1,0 +1,55 @@
+{
+	"name": "@openvidu-dashboard/backend",
+	"version": "3.10.0-dev",
+	"private": true,
+	"description": "OpenVidu Dashboard REST API (CE)",
+	"type": "module",
+	"main": "./dist/server.js",
+	"types": "./dist/index.d.ts",
+	"exports": {
+		".": {
+			"source": "./src/index.ts",
+			"types": "./dist/index.d.ts",
+			"default": "./dist/index.js"
+		},
+		"./testing": "./test/support/index.ts",
+		"./testing/global-mongo": "./test/support/global-mongo.ts"
+	},
+	"files": [
+		"dist"
+	],
+	"scripts": {
+		"build": "tsc -p tsconfig.build.json",
+		"dev": "tsx watch --conditions=source src/server.ts",
+		"typecheck": "tsc --noEmit -p tsconfig.json",
+		"test": "vitest run --project unit",
+		"test:integration": "vitest run --project integration --project integration-plans",
+		"clean": "rm -rf dist"
+	},
+	"dependencies": {
+		"@date-fns/tz": "catalog:",
+		"@openvidu-dashboard/typings": "workspace:*",
+		"cookie-parser": "catalog:",
+		"date-fns": "catalog:",
+		"express": "catalog:",
+		"express-rate-limit": "catalog:",
+		"inversify": "catalog:",
+		"jose": "catalog:",
+		"mongodb": "catalog:",
+		"winston": "catalog:",
+		"zod": "catalog:",
+		"zod-openapi": "catalog:"
+	},
+	"devDependencies": {
+		"@openvidu-dashboard/data-generator": "workspace:*",
+		"@types/cookie-parser": "catalog:",
+		"@types/express": "catalog:",
+		"@types/node": "catalog:",
+		"@types/supertest": "catalog:",
+		"supertest": "catalog:",
+		"testcontainers": "catalog:",
+		"tsx": "catalog:",
+		"typescript": "catalog:",
+		"vitest": "catalog:"
+	}
+}

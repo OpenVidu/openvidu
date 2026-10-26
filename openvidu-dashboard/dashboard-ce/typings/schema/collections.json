@@ -1,0 +1,20 @@
+[
+	{ "name": "rooms", "schema": "rooms.schema.json", "retentionClass": "entities" },
+	{ "name": "participants", "schema": "participants.schema.json", "retentionClass": "entities" },
+	{ "name": "tracks", "schema": "tracks.schema.json", "retentionClass": "tracks" },
+	{ "name": "track_subscriptions", "schema": "track_subscriptions.schema.json", "retentionClass": "tracks" },
+	{ "name": "egresses", "schema": "egresses.schema.json", "retentionClass": "entities" },
+	{ "name": "ingresses", "schema": "ingresses.schema.json", "retentionClass": "entities" },
+	{ "name": "ingress_sessions", "schema": "ingress_sessions.schema.json", "retentionClass": "entities" },
+	{ "name": "events", "schema": "events.schema.json" },
+	{
+		"name": "track_stats",
+		"schema": "track_stats.schema.json",
+		"timeseries": { "timeField": "ts", "metaField": "meta", "granularity": "seconds", "retentionClass": "stats" }
+	},
+	{ "name": "analytics_5min", "schema": "analytics_5min.schema.json" },
+	{ "name": "analytics_hourly", "schema": "analytics_hourly.schema.json" },
+	{ "name": "analytics_daily", "schema": "analytics_daily.schema.json" },
+	{ "name": "nodes", "schema": "nodes.schema.json" },
+	{ "name": "schema_meta", "schema": "schema_meta.schema.json" }
+]

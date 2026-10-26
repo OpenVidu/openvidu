@@ -1,0 +1,127 @@
+{
+	"bsonType": "object",
+	"required": [
+		"_id",
+		"roomSid",
+		"participantSid",
+		"type",
+		"source",
+		"status",
+		"publishedAt",
+		"muted",
+		"subscribers",
+		"schemaVersion",
+		"expiresAt"
+	],
+	"properties": {
+		"_id": { "bsonType": "string", "description": "Track SID" },
+		"roomSid": { "bsonType": "string" },
+		"participantSid": { "bsonType": "string" },
+		"identity": { "bsonType": "string" },
+		"type": { "bsonType": "string", "enum": ["AUDIO", "VIDEO", "DATA"] },
+		"source": {
+			"bsonType": "string",
+			"enum": ["UNKNOWN", "CAMERA", "MICROPHONE", "SCREEN_SHARE", "SCREEN_SHARE_AUDIO"]
+		},
+		"mimeType": { "bsonType": "string" },
+		"name": { "bsonType": "string" },
+		"status": { "bsonType": "string", "enum": ["published", "unpublished"] },
+		"publishedAt": { "bsonType": "date" },
+		"unpublishedAt": { "bsonType": "date" },
+		"durationMs": { "bsonType": ["long", "int"] },
+		"closedBy": { "bsonType": "string", "enum": ["event", "reconciler"] },
+		"muted": { "bsonType": "bool" },
+		"width": { "bsonType": ["int", "long"] },
+		"height": { "bsonType": ["int", "long"] },
+		"simulcast": { "bsonType": "bool" },
+		"codecs": {
+			"bsonType": "array",
+			"items": {
+				"bsonType": "object",
+				"required": ["mimeType"],
+				"properties": {
+					"mimeType": { "bsonType": "string" },
+					"layers": {
+						"bsonType": "array",
+						"items": {
+							"bsonType": "object",
+							"required": ["quality"],
+							"properties": {
+								"quality": { "bsonType": "string", "enum": ["LOW", "MEDIUM", "HIGH", "OFF"] },
+								"width": { "bsonType": ["int", "long"] },
+								"height": { "bsonType": ["int", "long"] },
+								"bitrate": { "bsonType": ["int", "long"] }
+							},
+							"additionalProperties": false
+						}
+					}
+				},
+				"additionalProperties": false
+			}
+		},
+		"encryption": { "bsonType": "string", "enum": ["NONE", "GCM", "CUSTOM"] },
+		"subscribers": {
+			"bsonType": "object",
+			"required": ["current", "total", "failed"],
+			"properties": {
+				"current": { "bsonType": ["int", "long"] },
+				"total": { "bsonType": ["int", "long"] },
+				"failed": { "bsonType": ["int", "long"] }
+			},
+			"additionalProperties": false
+		},
+		"publishStats": {
+			"bsonType": "object",
+			"required": [
+				"bytes",
+				"packets",
+				"packetsLost",
+				"packetLossPct",
+				"nacks",
+				"plis",
+				"firs",
+				"rttMaxMs",
+				"jitterMaxMs",
+				"durationMs",
+				"layers"
+			],
+			"properties": {
+				"bytes": { "bsonType": ["long", "int"] },
+				"packets": { "bsonType": ["int", "long"] },
+				"packetsLost": { "bsonType": ["int", "long"] },
+				"packetLossPct": { "bsonType": "double" },
+				"nacks": { "bsonType": ["int", "long"] },
+				"plis": { "bsonType": ["int", "long"] },
+				"firs": { "bsonType": ["int", "long"] },
+				"rttMaxMs": { "bsonType": ["int", "long"] },
+				"jitterMaxMs": { "bsonType": "double" },
+				"durationMs": { "bsonType": ["long", "int"] },
+				"layers": {
+					"bsonType": "array",
+					"items": {
+						"bsonType": "object",
+						"required": ["layer", "bytes", "packets", "frames"],
+						"properties": {
+							"layer": { "bsonType": ["int", "long"] },
+							"bytes": { "bsonType": ["long", "int"] },
+							"packets": { "bsonType": ["int", "long"] },
+							"frames": { "bsonType": ["int", "long"] }
+						},
+						"additionalProperties": false
+					}
+				}
+			},
+			"additionalProperties": false
+		},
+		"internal": { "bsonType": "object", "description": "Writer bookkeeping; never read by the dashboard" },
+		"schemaVersion": {
+			"bsonType": ["int", "long"],
+			"description": "SCHEMA_VERSION of the writer that last wrote the document"
+		},
+		"expiresAt": {
+			"bsonType": ["date", "null"],
+			"description": "closedAt + retention once closed; null while open"
+		}
+	},
+	"additionalProperties": false
+}

@@ -1,0 +1,39 @@
+{
+	"name": "@openvidu-dashboard/typings",
+	"version": "3.10.0-dev",
+	"private": true,
+	"description": "Contracts shared by the OpenVidu Dashboard backend and frontend",
+	"type": "module",
+	"main": "./dist/index.js",
+	"types": "./dist/index.d.ts",
+	"exports": {
+		".": {
+			"source": "./src/index.ts",
+			"types": "./dist/index.d.ts",
+			"default": "./dist/index.js"
+		},
+		"./schema/*": "./schema/*",
+		"./fixtures/*": "./fixtures/*"
+	},
+	"files": [
+		"dist",
+		"schema",
+		"fixtures/*.json"
+	],
+	"scripts": {
+		"build": "tsc -p tsconfig.build.json",
+		"typecheck": "tsc --noEmit -p tsconfig.json",
+		"test": "vitest run",
+		"contract": "tsx contract/generate.ts",
+		"clean": "rm -rf dist"
+	},
+	"devDependencies": {
+		"@types/node": "catalog:",
+		"ajv": "catalog:",
+		"bson": "catalog:",
+		"prettier": "catalog:",
+		"tsx": "catalog:",
+		"typescript": "catalog:",
+		"vitest": "catalog:"
+	}
+}

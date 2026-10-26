@@ -1,0 +1,68 @@
+:host {
+	position: relative;
+	display: block;
+	min-width: 0;
+}
+
+/* The info tip sits beside the title, not inside it, so the title keeps its own accessible name. */
+.chart-heading {
+	display: flex;
+	align-items: center;
+	margin: 0 0 4px;
+
+	.chart-title {
+		margin: 0;
+	}
+}
+
+.chart-title {
+	margin: 0 0 4px;
+	color: var(--mat-sys-on-surface);
+	font: var(--mat-sys-title-small);
+}
+
+.chart-note {
+	margin: -2px 0 4px;
+	color: var(--mat-sys-on-surface-variant);
+	font: var(--mat-sys-body-small);
+}
+
+.chart {
+	width: 100%;
+	border-radius: 8px;
+}
+
+.reset {
+	position: absolute;
+	top: 0;
+	right: 0;
+	z-index: 1;
+}
+
+.toggle {
+	margin-top: 4px;
+}
+
+.table-wrap {
+	overflow: auto;
+}
+
+table {
+	width: 100%;
+	border-collapse: collapse;
+	font: var(--mat-sys-body-small);
+}
+
+th,
+td {
+	padding: 4px 8px;
+	border-bottom: 1px solid var(--mat-sys-outline-variant);
+	text-align: start;
+	white-space: nowrap;
+}
+
+thead th {
+	position: sticky;
+	top: 0;
+	background: var(--mat-sys-surface-container);
+}

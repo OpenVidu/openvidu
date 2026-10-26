@@ -1,0 +1,838 @@
+[
+	{
+		"_id": "AE_rmCreated0001",
+		"type": "ROOM_CREATED",
+		"ts": { "$date": "2026-10-12T09:00:00.000Z" },
+		"roomSid": "RM_aLkq3ZpD9wXy",
+		"roomName": "Daily-Standup",
+		"nodeId": "ND_alpha8Kq2Lm",
+		"synthetic": false,
+		"payload": {
+			"room": {
+				"sid": "RM_aLkq3ZpD9wXy",
+				"name": "Daily-Standup",
+				"empty_timeout": { "$numberInt": "300" },
+				"departure_timeout": { "$numberInt": "20" },
+				"max_participants": { "$numberInt": "20" },
+				"creation_time": { "$numberLong": "1791795600" },
+				"creation_time_ms": { "$numberLong": "1791795600000" },
+				"enabled_codecs": [{ "mime": "audio/opus" }, { "mime": "video/VP8" }, { "mime": "video/H264" }]
+			}
+		}
+	},
+	{
+		"_id": "AE_paJoined00001",
+		"type": "PARTICIPANT_JOINED",
+		"ts": { "$date": "2026-10-12T09:00:05.000Z" },
+		"roomSid": "RM_aLkq3ZpD9wXy",
+		"roomName": "Daily-Standup",
+		"nodeId": "ND_alpha8Kq2Lm",
+		"synthetic": false,
+		"participantSid": "PA_aL1ce7Hd2Kq9",
+		"identity": "alice",
+		"payload": {
+			"room": { "sid": "RM_aLkq3ZpD9wXy", "name": "Daily-Standup" },
+			"participant": {
+				"sid": "PA_aL1ce7Hd2Kq9",
+				"identity": "alice",
+				"name": "Alice",
+				"joined_at": { "$numberLong": "1791795605" },
+				"joined_at_ms": { "$numberLong": "1791795605000" },
+				"permission": { "can_subscribe": true, "can_publish": true, "can_publish_data": true },
+				"region": "eu-west"
+			},
+			"client_info": {
+				"sdk": "JS",
+				"version": "2.15.7",
+				"protocol": { "$numberInt": "16" },
+				"os": "Windows",
+				"os_version": "11",
+				"browser": "Chrome",
+				"browser_version": "130.0.0.0",
+				"address": "203.0.113.10",
+				"network": "wifi"
+			},
+			"client_meta": { "region": "eu-west", "node": "ND_alpha8Kq2Lm" }
+		}
+	},
+	{
+		"_id": "AE_paActive00001",
+		"type": "PARTICIPANT_ACTIVE",
+		"ts": { "$date": "2026-10-12T09:00:06.200Z" },
+		"roomSid": "RM_aLkq3ZpD9wXy",
+		"roomName": "Daily-Standup",
+		"nodeId": "ND_alpha8Kq2Lm",
+		"synthetic": false,
+		"participantSid": "PA_aL1ce7Hd2Kq9",
+		"identity": "alice",
+		"payload": {
+			"room": { "sid": "RM_aLkq3ZpD9wXy", "name": "Daily-Standup" },
+			"participant": {
+				"sid": "PA_aL1ce7Hd2Kq9",
+				"identity": "alice",
+				"name": "Alice",
+				"joined_at": { "$numberLong": "1791795605" },
+				"joined_at_ms": { "$numberLong": "1791795605000" },
+				"permission": { "can_subscribe": true, "can_publish": true, "can_publish_data": true },
+				"region": "eu-west",
+				"state": "ACTIVE"
+			},
+			"client_meta": { "client_connect_time": { "$numberInt": "1200" }, "connection_type": "udp" }
+		}
+	},
+	{
+		"_id": "AE_trPubReq00001",
+		"type": "TRACK_PUBLISH_REQUESTED",
+		"ts": { "$date": "2026-10-12T09:00:07.000Z" },
+		"roomSid": "RM_aLkq3ZpD9wXy",
+		"roomName": "Daily-Standup",
+		"nodeId": "ND_alpha8Kq2Lm",
+		"synthetic": false,
+		"participantSid": "PA_aL1ce7Hd2Kq9",
+		"identity": "alice",
+		"trackSid": "TR_aLiceCam3Vp8",
+		"payload": {
+			"room": { "sid": "RM_aLkq3ZpD9wXy", "name": "Daily-Standup" },
+			"participant": { "sid": "PA_aL1ce7Hd2Kq9", "identity": "alice" },
+			"track": {
+				"sid": "TR_aLiceCam3Vp8",
+				"type": "VIDEO",
+				"name": "camera",
+				"width": { "$numberInt": "1280" },
+				"height": { "$numberInt": "720" },
+				"simulcast": true,
+				"source": "CAMERA"
+			}
+		}
+	},
+	{
+		"_id": "AE_trPublish0001",
+		"type": "TRACK_PUBLISHED",
+		"ts": { "$date": "2026-10-12T09:00:08.000Z" },
+		"roomSid": "RM_aLkq3ZpD9wXy",
+		"roomName": "Daily-Standup",
+		"nodeId": "ND_alpha8Kq2Lm",
+		"synthetic": false,
+		"participantSid": "PA_aL1ce7Hd2Kq9",
+		"identity": "alice",
+		"trackSid": "TR_aLiceCam3Vp8",
+		"payload": {
+			"room": { "sid": "RM_aLkq3ZpD9wXy", "name": "Daily-Standup" },
+			"participant": { "sid": "PA_aL1ce7Hd2Kq9", "identity": "alice" },
+			"track": {
+				"sid": "TR_aLiceCam3Vp8",
+				"type": "VIDEO",
+				"name": "camera",
+				"width": { "$numberInt": "1280" },
+				"height": { "$numberInt": "720" },
+				"simulcast": true,
+				"source": "CAMERA",
+				"mime_type": "video/VP8",
+				"layers": [
+					{
+						"width": { "$numberInt": "320" },
+						"height": { "$numberInt": "180" },
+						"bitrate": { "$numberInt": "150000" }
+					},
+					{
+						"quality": "MEDIUM",
+						"width": { "$numberInt": "640" },
+						"height": { "$numberInt": "360" },
+						"bitrate": { "$numberInt": "500000" }
+					},
+					{
+						"quality": "HIGH",
+						"width": { "$numberInt": "1280" },
+						"height": { "$numberInt": "720" },
+						"bitrate": { "$numberInt": "1700000" }
+					}
+				],
+				"codecs": [
+					{
+						"mime_type": "video/VP8",
+						"mid": "1",
+						"cid": "camera-vp8",
+						"layers": [
+							{
+								"width": { "$numberInt": "320" },
+								"height": { "$numberInt": "180" },
+								"bitrate": { "$numberInt": "150000" }
+							},
+							{
+								"quality": "MEDIUM",
+								"width": { "$numberInt": "640" },
+								"height": { "$numberInt": "360" },
+								"bitrate": { "$numberInt": "500000" }
+							},
+							{
+								"quality": "HIGH",
+								"width": { "$numberInt": "1280" },
+								"height": { "$numberInt": "720" },
+								"bitrate": { "$numberInt": "1700000" }
+							}
+						]
+					}
+				],
+				"stream": "camera"
+			}
+		}
+	},
+	{
+		"_id": "AE_trSubscribe01",
+		"type": "TRACK_SUBSCRIBED",
+		"ts": { "$date": "2026-10-12T09:01:05.000Z" },
+		"roomSid": "RM_aLkq3ZpD9wXy",
+		"roomName": "Daily-Standup",
+		"nodeId": "ND_alpha8Kq2Lm",
+		"synthetic": false,
+		"participantSid": "PA_b0bFirst4Tz1",
+		"identity": "bob",
+		"trackSid": "TR_aLiceCam3Vp8",
+		"payload": {
+			"room": { "sid": "RM_aLkq3ZpD9wXy", "name": "Daily-Standup" },
+			"participant": { "sid": "PA_b0bFirst4Tz1" },
+			"track": {
+				"sid": "TR_aLiceCam3Vp8",
+				"type": "VIDEO",
+				"name": "camera",
+				"width": { "$numberInt": "1280" },
+				"height": { "$numberInt": "720" },
+				"simulcast": true,
+				"source": "CAMERA",
+				"mime_type": "video/VP8",
+				"layers": [
+					{
+						"width": { "$numberInt": "320" },
+						"height": { "$numberInt": "180" },
+						"bitrate": { "$numberInt": "150000" }
+					},
+					{
+						"quality": "MEDIUM",
+						"width": { "$numberInt": "640" },
+						"height": { "$numberInt": "360" },
+						"bitrate": { "$numberInt": "500000" }
+					},
+					{
+						"quality": "HIGH",
+						"width": { "$numberInt": "1280" },
+						"height": { "$numberInt": "720" },
+						"bitrate": { "$numberInt": "1700000" }
+					}
+				],
+				"codecs": [
+					{
+						"mime_type": "video/VP8",
+						"mid": "1",
+						"cid": "camera-vp8",
+						"layers": [
+							{
+								"width": { "$numberInt": "320" },
+								"height": { "$numberInt": "180" },
+								"bitrate": { "$numberInt": "150000" }
+							},
+							{
+								"quality": "MEDIUM",
+								"width": { "$numberInt": "640" },
+								"height": { "$numberInt": "360" },
+								"bitrate": { "$numberInt": "500000" }
+							},
+							{
+								"quality": "HIGH",
+								"width": { "$numberInt": "1280" },
+								"height": { "$numberInt": "720" },
+								"bitrate": { "$numberInt": "1700000" }
+							}
+						]
+					}
+				],
+				"stream": "camera"
+			},
+			"publisher": { "sid": "PA_aL1ce7Hd2Kq9", "identity": "alice" }
+		}
+	},
+	{
+		"_id": "AE_egStarted0001",
+		"type": "EGRESS_STARTED",
+		"ts": { "$date": "2026-10-12T09:02:00.000Z" },
+		"roomSid": "RM_aLkq3ZpD9wXy",
+		"roomName": "Daily-Standup",
+		"nodeId": "ND_alpha8Kq2Lm",
+		"synthetic": false,
+		"egressId": "EG_rec0rdMp4Kq2",
+		"payload": {
+			"egress": {
+				"egress_id": "EG_rec0rdMp4Kq2",
+				"room_id": "RM_aLkq3ZpD9wXy",
+				"room_name": "Daily-Standup",
+				"started_at": { "$numberLong": "1791795720000000000" },
+				"request": {
+					"room_composite": {
+						"room_name": "Daily-Standup",
+						"layout": "speaker",
+						"options": { "preset": "H264_720P_30" },
+						"file_outputs": [{ "file_type": "MP4", "filepath": "recordings/daily-standup-2026-10-12.mp4" }]
+					}
+				},
+				"updated_at": { "$numberLong": "1791795720000000000" }
+			}
+		}
+	},
+	{
+		"_id": "AE_egUpdated0001",
+		"type": "EGRESS_UPDATED",
+		"ts": { "$date": "2026-10-12T09:02:04.000Z" },
+		"roomSid": "RM_aLkq3ZpD9wXy",
+		"roomName": "Daily-Standup",
+		"nodeId": "ND_alpha8Kq2Lm",
+		"synthetic": false,
+		"egressId": "EG_rec0rdMp4Kq2",
+		"payload": {
+			"egress": {
+				"egress_id": "EG_rec0rdMp4Kq2",
+				"room_id": "RM_aLkq3ZpD9wXy",
+				"room_name": "Daily-Standup",
+				"started_at": { "$numberLong": "1791795720000000000" },
+				"request": {
+					"room_composite": {
+						"room_name": "Daily-Standup",
+						"layout": "speaker",
+						"options": { "preset": "H264_720P_30" },
+						"file_outputs": [{ "file_type": "MP4", "filepath": "recordings/daily-standup-2026-10-12.mp4" }]
+					}
+				},
+				"status": "EGRESS_ACTIVE",
+				"updated_at": { "$numberLong": "1791795724000000000" }
+			}
+		}
+	},
+	{
+		"_id": "AE_paAborted0001",
+		"type": "PARTICIPANT_CONNECTION_ABORTED",
+		"ts": { "$date": "2026-10-12T09:05:20.000Z" },
+		"roomSid": "RM_aLkq3ZpD9wXy",
+		"roomName": "Daily-Standup",
+		"nodeId": "ND_alpha8Kq2Lm",
+		"synthetic": false,
+		"participantSid": "PA_car0lAb0rt5n",
+		"identity": "Carol",
+		"payload": {
+			"room": { "sid": "RM_aLkq3ZpD9wXy", "name": "Daily-Standup" },
+			"participant": {
+				"sid": "PA_car0lAb0rt5n",
+				"identity": "Carol",
+				"joined_at": { "$numberLong": "1791795900" },
+				"joined_at_ms": { "$numberLong": "1791795900000" },
+				"permission": { "can_subscribe": true, "can_publish": true, "can_publish_data": true },
+				"region": "eu-west",
+				"state": "DISCONNECTED",
+				"disconnect_reason": "CONNECTION_TIMEOUT"
+			}
+		}
+	},
+	{
+		"_id": "AE_trUnsubscr001",
+		"type": "TRACK_UNSUBSCRIBED",
+		"ts": { "$date": "2026-10-12T09:10:00.000Z" },
+		"roomSid": "RM_aLkq3ZpD9wXy",
+		"roomName": "Daily-Standup",
+		"nodeId": "ND_alpha8Kq2Lm",
+		"synthetic": false,
+		"participantSid": "PA_b0bFirst4Tz1",
+		"identity": "bob",
+		"trackSid": "TR_aLiceCam3Vp8",
+		"payload": {
+			"room": { "sid": "RM_aLkq3ZpD9wXy", "name": "Daily-Standup" },
+			"participant": { "sid": "PA_b0bFirst4Tz1" },
+			"track": { "sid": "TR_aLiceCam3Vp8", "type": "VIDEO" }
+		}
+	},
+	{
+		"_id": "AE_trSubStats001",
+		"type": "TRACK_SUBSCRIBE_STATS",
+		"ts": { "$date": "2026-10-12T09:10:00.000Z" },
+		"roomSid": "RM_aLkq3ZpD9wXy",
+		"roomName": "Daily-Standup",
+		"nodeId": "ND_alpha8Kq2Lm",
+		"synthetic": false,
+		"participantSid": "PA_b0bFirst4Tz1",
+		"identity": "bob",
+		"trackSid": "TR_aLiceCam3Vp8",
+		"payload": {
+			"room": { "sid": "RM_aLkq3ZpD9wXy", "name": "Daily-Standup" },
+			"mime": "video/VP8",
+			"rtp_stats": {
+				"start_time": { "$date": "2026-10-12T09:01:05.000Z" },
+				"end_time": { "$date": "2026-10-12T09:10:00.000Z" },
+				"duration": { "$numberDouble": "535.0" },
+				"packets": { "$numberInt": "95000" },
+				"packet_rate": { "$numberDouble": "177.57" },
+				"bytes": { "$numberLong": "110000000" },
+				"bitrate": { "$numberDouble": "1644859.81" },
+				"packets_lost": { "$numberInt": "60" },
+				"packet_loss_rate": { "$numberDouble": "0.112" },
+				"packet_loss_percentage": { "$numberDouble": "0.06" },
+				"frames": { "$numberInt": "16050" },
+				"jitter_current": { "$numberDouble": "4200.0" },
+				"jitter_max": { "$numberDouble": "12500.0" },
+				"nacks": { "$numberInt": "20" },
+				"plis": { "$numberInt": "2" },
+				"rtt_current": { "$numberInt": "40" },
+				"rtt_max": { "$numberInt": "85" }
+			}
+		}
+	},
+	{
+		"_id": "AE_trSubFail0001",
+		"type": "TRACK_SUBSCRIBE_FAILED",
+		"ts": { "$date": "2026-10-12T09:10:06.000Z" },
+		"roomSid": "RM_aLkq3ZpD9wXy",
+		"roomName": "Daily-Standup",
+		"nodeId": "ND_alpha8Kq2Lm",
+		"synthetic": false,
+		"participantSid": "PA_b0bSecnd8Rw3",
+		"identity": "bob",
+		"trackSid": "TR_aLiceMic0pus",
+		"payload": {
+			"room": { "sid": "RM_aLkq3ZpD9wXy", "name": "Daily-Standup" },
+			"participant": { "sid": "PA_b0bSecnd8Rw3" },
+			"track": { "sid": "TR_aLiceMic0pus" },
+			"error": "could not find published track"
+		}
+	},
+	{
+		"_id": "AE_trUnmuted0001",
+		"type": "TRACK_UNMUTED",
+		"ts": { "$date": "2026-10-12T09:13:00.000Z" },
+		"roomSid": "RM_aLkq3ZpD9wXy",
+		"roomName": "Daily-Standup",
+		"nodeId": "ND_alpha8Kq2Lm",
+		"synthetic": false,
+		"participantSid": "PA_aL1ce7Hd2Kq9",
+		"identity": "alice",
+		"trackSid": "TR_aLiceMic0pus",
+		"payload": {
+			"room": { "sid": "RM_aLkq3ZpD9wXy", "name": "Daily-Standup" },
+			"participant": { "sid": "PA_aL1ce7Hd2Kq9" },
+			"track": {
+				"sid": "TR_aLiceMic0pus",
+				"name": "microphone",
+				"source": "MICROPHONE",
+				"mime_type": "audio/opus"
+			}
+		}
+	},
+	{
+		"_id": "AE_trUnpublish01",
+		"type": "TRACK_UNPUBLISHED",
+		"ts": { "$date": "2026-10-12T09:40:00.000Z" },
+		"roomSid": "RM_aLkq3ZpD9wXy",
+		"roomName": "Daily-Standup",
+		"nodeId": "ND_alpha8Kq2Lm",
+		"synthetic": false,
+		"participantSid": "PA_aL1ce7Hd2Kq9",
+		"identity": "alice",
+		"trackSid": "TR_aLiceCam3Vp8",
+		"payload": {
+			"room": { "sid": "RM_aLkq3ZpD9wXy", "name": "Daily-Standup" },
+			"participant": { "sid": "PA_aL1ce7Hd2Kq9" },
+			"track": {
+				"sid": "TR_aLiceCam3Vp8",
+				"type": "VIDEO",
+				"name": "camera",
+				"width": { "$numberInt": "1280" },
+				"height": { "$numberInt": "720" },
+				"simulcast": true,
+				"source": "CAMERA",
+				"mime_type": "video/VP8",
+				"layers": [
+					{
+						"width": { "$numberInt": "320" },
+						"height": { "$numberInt": "180" },
+						"bitrate": { "$numberInt": "150000" }
+					},
+					{
+						"quality": "MEDIUM",
+						"width": { "$numberInt": "640" },
+						"height": { "$numberInt": "360" },
+						"bitrate": { "$numberInt": "500000" }
+					},
+					{
+						"quality": "HIGH",
+						"width": { "$numberInt": "1280" },
+						"height": { "$numberInt": "720" },
+						"bitrate": { "$numberInt": "1700000" }
+					}
+				],
+				"codecs": [
+					{
+						"mime_type": "video/VP8",
+						"mid": "1",
+						"cid": "camera-vp8",
+						"layers": [
+							{
+								"width": { "$numberInt": "320" },
+								"height": { "$numberInt": "180" },
+								"bitrate": { "$numberInt": "150000" }
+							},
+							{
+								"quality": "MEDIUM",
+								"width": { "$numberInt": "640" },
+								"height": { "$numberInt": "360" },
+								"bitrate": { "$numberInt": "500000" }
+							},
+							{
+								"quality": "HIGH",
+								"width": { "$numberInt": "1280" },
+								"height": { "$numberInt": "720" },
+								"bitrate": { "$numberInt": "1700000" }
+							}
+						]
+					}
+				],
+				"stream": "camera"
+			}
+		}
+	},
+	{
+		"_id": "AE_trPubStats001",
+		"type": "TRACK_PUBLISH_STATS",
+		"ts": { "$date": "2026-10-12T09:40:00.000Z" },
+		"roomSid": "RM_aLkq3ZpD9wXy",
+		"roomName": "Daily-Standup",
+		"nodeId": "ND_alpha8Kq2Lm",
+		"synthetic": false,
+		"participantSid": "PA_aL1ce7Hd2Kq9",
+		"identity": "alice",
+		"trackSid": "TR_aLiceCam3Vp8",
+		"payload": {
+			"room": { "sid": "RM_aLkq3ZpD9wXy", "name": "Daily-Standup" },
+			"mime": "video/VP8",
+			"video_layer": { "$numberInt": "2" },
+			"rtp_stats": {
+				"start_time": { "$date": "2026-10-12T09:00:08.000Z" },
+				"end_time": { "$date": "2026-10-12T09:40:00.000Z" },
+				"duration": { "$numberDouble": "2392.0" },
+				"packets": { "$numberInt": "160000" },
+				"packet_rate": { "$numberDouble": "66.89" },
+				"bytes": { "$numberLong": "220000000" },
+				"bitrate": { "$numberDouble": "735785.95" },
+				"packets_lost": { "$numberInt": "50" },
+				"packet_loss_rate": { "$numberDouble": "0.021" },
+				"packet_loss_percentage": { "$numberDouble": "0.03" },
+				"frames": { "$numberInt": "71760" },
+				"jitter_current": { "$numberDouble": "4200.0" },
+				"jitter_max": { "$numberDouble": "12500.0" },
+				"nacks": { "$numberInt": "17" },
+				"plis": { "$numberInt": "2" },
+				"rtt_current": { "$numberInt": "40" },
+				"rtt_max": { "$numberInt": "85" }
+			}
+		}
+	},
+	{
+		"_id": "AE_paLeft0000001",
+		"type": "PARTICIPANT_LEFT",
+		"ts": { "$date": "2026-10-12T09:40:00.000Z" },
+		"roomSid": "RM_aLkq3ZpD9wXy",
+		"roomName": "Daily-Standup",
+		"nodeId": "ND_alpha8Kq2Lm",
+		"synthetic": false,
+		"participantSid": "PA_aL1ce7Hd2Kq9",
+		"identity": "alice",
+		"payload": {
+			"room": { "sid": "RM_aLkq3ZpD9wXy", "name": "Daily-Standup" },
+			"participant": {
+				"sid": "PA_aL1ce7Hd2Kq9",
+				"identity": "alice",
+				"name": "Alice",
+				"joined_at": { "$numberLong": "1791795605" },
+				"joined_at_ms": { "$numberLong": "1791795605000" },
+				"permission": { "can_subscribe": true, "can_publish": true, "can_publish_data": true },
+				"region": "eu-west",
+				"state": "DISCONNECTED",
+				"is_publisher": true,
+				"disconnect_reason": "CLIENT_INITIATED"
+			}
+		}
+	},
+	{
+		"_id": "AE_SYN_PA_ag3ntAssist1",
+		"type": "PARTICIPANT_LEFT",
+		"ts": { "$date": "2026-10-12T09:44:30.000Z" },
+		"roomSid": "RM_aLkq3ZpD9wXy",
+		"roomName": "Daily-Standup",
+		"nodeId": "ND_alpha8Kq2Lm",
+		"synthetic": true,
+		"participantSid": "PA_ag3ntAssist1",
+		"identity": "agent-assistant",
+		"payload": {
+			"room": { "sid": "RM_aLkq3ZpD9wXy", "name": "Daily-Standup" },
+			"participant": {
+				"sid": "PA_ag3ntAssist1",
+				"identity": "agent-assistant",
+				"disconnect_reason": "RECONCILED"
+			},
+			"reconciler": { "reason": "absent-live" }
+		}
+	},
+	{
+		"_id": "AE_egEnded000001",
+		"type": "EGRESS_ENDED",
+		"ts": { "$date": "2026-10-12T09:40:20.000Z" },
+		"roomSid": "RM_aLkq3ZpD9wXy",
+		"roomName": "Daily-Standup",
+		"nodeId": "ND_alpha8Kq2Lm",
+		"synthetic": false,
+		"egressId": "EG_rec0rdMp4Kq2",
+		"payload": {
+			"egress": {
+				"egress_id": "EG_rec0rdMp4Kq2",
+				"room_id": "RM_aLkq3ZpD9wXy",
+				"room_name": "Daily-Standup",
+				"started_at": { "$numberLong": "1791795720000000000" },
+				"request": {
+					"room_composite": {
+						"room_name": "Daily-Standup",
+						"layout": "speaker",
+						"options": { "preset": "H264_720P_30" },
+						"file_outputs": [{ "file_type": "MP4", "filepath": "recordings/daily-standup-2026-10-12.mp4" }]
+					}
+				},
+				"status": "EGRESS_COMPLETE",
+				"ended_at": { "$numberLong": "1791798020000000000" },
+				"updated_at": { "$numberLong": "1791798020000000000" },
+				"file_results": [
+					{
+						"filename": "recordings/daily-standup-2026-10-12.mp4",
+						"started_at": { "$numberLong": "1791795724000000000" },
+						"ended_at": { "$numberLong": "1791798018000000000" },
+						"duration": { "$numberLong": "2294000000000" },
+						"size": { "$numberLong": "512000000" },
+						"location": "https://storage.example.com/recordings/daily-standup-2026-10-12.mp4"
+					}
+				]
+			}
+		}
+	},
+	{
+		"_id": "AE_rmEnded000001",
+		"type": "ROOM_ENDED",
+		"ts": { "$date": "2026-10-12T09:45:00.000Z" },
+		"roomSid": "RM_aLkq3ZpD9wXy",
+		"roomName": "Daily-Standup",
+		"nodeId": "ND_alpha8Kq2Lm",
+		"synthetic": false,
+		"payload": {
+			"room": {
+				"sid": "RM_aLkq3ZpD9wXy",
+				"name": "Daily-Standup",
+				"empty_timeout": { "$numberInt": "300" },
+				"departure_timeout": { "$numberInt": "20" },
+				"max_participants": { "$numberInt": "20" },
+				"creation_time": { "$numberLong": "1791795600" },
+				"creation_time_ms": { "$numberLong": "1791795600000" },
+				"enabled_codecs": [{ "mime": "audio/opus" }, { "mime": "video/VP8" }, { "mime": "video/H264" }]
+			},
+			"room_end_reason": "ROOM_END_API_DELETE"
+		}
+	},
+	{
+		"_id": "AE_inCreated0001",
+		"type": "INGRESS_CREATED",
+		"ts": { "$date": "2026-10-12T09:55:00.000Z" },
+		"roomName": "Webinar-Q4",
+		"ingressId": "IN_0bsRtmpReu5e",
+		"nodeId": "ND_beta3Vx9Pw",
+		"synthetic": false,
+		"payload": {
+			"ingress": {
+				"ingress_id": "IN_0bsRtmpReu5e",
+				"name": "OBS Studio",
+				"url": "rtmp://ingress.example.com/x",
+				"room_name": "Webinar-Q4",
+				"participant_identity": "obs-studio",
+				"participant_name": "OBS",
+				"reusable": true,
+				"enabled": true,
+				"enable_transcoding": true,
+				"state": {}
+			}
+		}
+	},
+	{
+		"_id": "AE_inDeleted0001",
+		"type": "INGRESS_DELETED",
+		"ts": { "$date": "2026-10-12T09:58:00.000Z" },
+		"roomName": "Webinar-Q4",
+		"ingressId": "IN_wh1pDeleted3",
+		"nodeId": "ND_beta3Vx9Pw",
+		"synthetic": false,
+		"payload": {
+			"ingress": {
+				"ingress_id": "IN_wh1pDeleted3",
+				"name": "Browser WHIP",
+				"url": "https://ingress.example.com/w",
+				"input_type": "WHIP_INPUT",
+				"room_name": "Webinar-Q4",
+				"participant_identity": "whip-publisher",
+				"enabled": true,
+				"state": {}
+			}
+		}
+	},
+	{
+		"_id": "AE_trMuted000001",
+		"type": "TRACK_MUTED",
+		"ts": { "$date": "2026-10-12T10:10:00.000Z" },
+		"roomSid": "RM_bQ7tVnW2cErT",
+		"roomName": "Webinar-Q4",
+		"nodeId": "ND_beta3Vx9Pw",
+		"synthetic": false,
+		"participantSid": "PA_dav3Pub6Mn2",
+		"identity": "dave",
+		"trackSid": "TR_daveMic0pusx",
+		"payload": {
+			"room": { "sid": "RM_bQ7tVnW2cErT", "name": "Webinar-Q4" },
+			"participant": { "sid": "PA_dav3Pub6Mn2" },
+			"track": {
+				"sid": "TR_daveMic0pusx",
+				"name": "microphone",
+				"muted": true,
+				"source": "MICROPHONE",
+				"mime_type": "audio/opus"
+			}
+		}
+	},
+	{
+		"_id": "AE_paResumed0001",
+		"type": "PARTICIPANT_RESUMED",
+		"ts": { "$date": "2026-10-12T10:15:00.000Z" },
+		"roomSid": "RM_bQ7tVnW2cErT",
+		"roomName": "Webinar-Q4",
+		"nodeId": "ND_beta3Vx9Pw",
+		"synthetic": false,
+		"participantSid": "PA_dav3Pub6Mn2",
+		"identity": "dave",
+		"payload": {
+			"room": { "sid": "RM_bQ7tVnW2cErT", "name": "Webinar-Q4" },
+			"participant": {
+				"sid": "PA_dav3Pub6Mn2",
+				"identity": "dave",
+				"name": "Dave",
+				"joined_at": { "$numberLong": "1791799203" },
+				"joined_at_ms": { "$numberLong": "1791799203000" },
+				"permission": { "can_subscribe": true, "can_publish": true, "can_publish_data": true },
+				"region": "eu-west",
+				"state": "ACTIVE",
+				"is_publisher": true
+			},
+			"client_meta": { "node": "ND_beta3Vx9Pw", "reconnect_reason": "RR_SIGNAL_DISCONNECTED" }
+		}
+	},
+	{
+		"_id": "AE_inEnded000001",
+		"type": "INGRESS_ENDED",
+		"ts": { "$date": "2026-10-12T10:20:00.000Z" },
+		"roomSid": "RM_bQ7tVnW2cErT",
+		"roomName": "Webinar-Q4",
+		"nodeId": "ND_beta3Vx9Pw",
+		"synthetic": false,
+		"ingressId": "IN_0bsRtmpReu5e",
+		"ingressSessionId": "rtmp_7f3c9a1e2b4d",
+		"payload": {
+			"ingress": {
+				"ingress_id": "IN_0bsRtmpReu5e",
+				"name": "OBS Studio",
+				"url": "rtmp://ingress.example.com/x",
+				"room_name": "Webinar-Q4",
+				"participant_identity": "obs-studio",
+				"participant_name": "OBS",
+				"reusable": true,
+				"enabled": true,
+				"enable_transcoding": true,
+				"state": {
+					"room_id": "RM_bQ7tVnW2cErT",
+					"started_at": { "$numberLong": "1791799210000000000" },
+					"ended_at": { "$numberLong": "1791800400000000000" },
+					"updated_at": { "$numberLong": "1791800400000000000" },
+					"resource_id": "rtmp_7f3c9a1e2b4d"
+				}
+			}
+		}
+	},
+	{
+		"_id": "AE_inUpdated0001",
+		"type": "INGRESS_UPDATED",
+		"ts": { "$date": "2026-10-12T10:29:58.000Z" },
+		"roomSid": "RM_bQ7tVnW2cErT",
+		"roomName": "Webinar-Q4",
+		"nodeId": "ND_beta3Vx9Pw",
+		"synthetic": false,
+		"ingressId": "IN_0bsRtmpReu5e",
+		"ingressSessionId": "rtmp_9d4e2f6a8c1b",
+		"payload": {
+			"ingress": {
+				"ingress_id": "IN_0bsRtmpReu5e",
+				"name": "OBS Studio",
+				"url": "rtmp://ingress.example.com/x",
+				"room_name": "Webinar-Q4",
+				"participant_identity": "obs-studio",
+				"participant_name": "OBS",
+				"reusable": true,
+				"enabled": true,
+				"enable_transcoding": true,
+				"state": {
+					"status": "ENDPOINT_BUFFERING",
+					"room_id": "RM_bQ7tVnW2cErT",
+					"started_at": { "$numberLong": "1791800998000000000" },
+					"updated_at": { "$numberLong": "1791800998000000000" },
+					"resource_id": "rtmp_9d4e2f6a8c1b"
+				}
+			}
+		}
+	},
+	{
+		"_id": "AE_inStarted0001",
+		"type": "INGRESS_STARTED",
+		"ts": { "$date": "2026-10-12T10:30:00.000Z" },
+		"roomSid": "RM_bQ7tVnW2cErT",
+		"roomName": "Webinar-Q4",
+		"nodeId": "ND_beta3Vx9Pw",
+		"synthetic": false,
+		"ingressId": "IN_0bsRtmpReu5e",
+		"ingressSessionId": "rtmp_9d4e2f6a8c1b",
+		"payload": {
+			"ingress": {
+				"ingress_id": "IN_0bsRtmpReu5e",
+				"name": "OBS Studio",
+				"url": "rtmp://ingress.example.com/x",
+				"room_name": "Webinar-Q4",
+				"participant_identity": "obs-studio",
+				"participant_name": "OBS",
+				"reusable": true,
+				"enabled": true,
+				"enable_transcoding": true,
+				"state": {
+					"status": "ENDPOINT_PUBLISHING",
+					"video": {
+						"mime_type": "video/h264",
+						"average_bitrate": { "$numberInt": "4200000" },
+						"width": { "$numberInt": "1920" },
+						"height": { "$numberInt": "1080" },
+						"framerate": { "$numberDouble": "30.0" }
+					},
+					"audio": {
+						"mime_type": "audio/opus",
+						"average_bitrate": { "$numberInt": "128000" },
+						"channels": { "$numberInt": "2" },
+						"sample_rate": { "$numberInt": "48000" }
+					},
+					"room_id": "RM_bQ7tVnW2cErT",
+					"started_at": { "$numberLong": "1791800998000000000" },
+					"updated_at": { "$numberLong": "1791801000000000000" },
+					"resource_id": "rtmp_9d4e2f6a8c1b"
+				}
+			}
+		}
+	}
+]

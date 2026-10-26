@@ -1,0 +1,25 @@
+<a class="skip-link" [href]="'#' + mainId" (click)="skip($event)">Skip to content</a>
+<ovd-header (menu)="toggleNavigation()" />
+<ovd-banner-slot><ng-content select="[ovdBanner]" /></ovd-banner-slot>
+
+<!-- Autosize follows the desktop rail toggle; Medium keeps the content margin so its expanded rail overlays the page. -->
+<mat-sidenav-container class="container" [autosize]="desktop()">
+	<mat-sidenav
+		class="sidenav"
+		[class.rail]="layout().rail"
+		[class.overlay]="size() === 'medium' && expanded()"
+		[mode]="layout().mode"
+		[opened]="layout().opened"
+		(closedStart)="collapse()"
+		(keydown.escape)="collapse()"
+	>
+		<ovd-navigation-list [rail]="layout().rail" (navigated)="collapse()" />
+	</mat-sidenav>
+
+	<mat-sidenav-content class="page">
+		<main [id]="mainId" tabindex="-1">
+			<ovd-breadcrumbs />
+			<router-outlet />
+		</main>
+	</mat-sidenav-content>
+</mat-sidenav-container>

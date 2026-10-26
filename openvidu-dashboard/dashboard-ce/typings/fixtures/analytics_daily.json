@@ -1,0 +1,166 @@
+[
+	{
+		"_id": "global:2026-10-12T00:00:00Z",
+		"scope": "global",
+		"bucket": { "$date": "2026-10-12T00:00:00.000Z" },
+		"rooms": {
+			"created": { "$numberInt": "2" },
+			"ended": { "$numberInt": "1" },
+			"endedByReason": { "API_DELETE": { "$numberInt": "1" } },
+			"durationMsSum": { "$numberLong": "2700000" },
+			"participantsSum": { "$numberInt": "4" }
+		},
+		"participants": {
+			"joined": { "$numberInt": "6" },
+			"active": { "$numberInt": "4" },
+			"aborted": { "$numberInt": "1" },
+			"left": { "$numberInt": "3" },
+			"byKind": {
+				"STANDARD": { "$numberInt": "6" },
+				"INGRESS": { "$numberInt": "2" },
+				"EGRESS": { "$numberInt": "2" },
+				"SIP": { "$numberInt": "1" },
+				"AGENT": { "$numberInt": "1" }
+			},
+			"bySdk": { "JS": { "$numberInt": "5" }, "ANDROID": { "$numberInt": "1" } },
+			"byOs": {
+				"windows": { "$numberInt": "1" },
+				"macos": { "$numberInt": "3" },
+				"linux": { "$numberInt": "1" },
+				"android": { "$numberInt": "1" }
+			},
+			"byBrowser": {
+				"chrome": { "$numberInt": "2" },
+				"safari": { "$numberInt": "2" },
+				"firefox": { "$numberInt": "1" },
+				"other": { "$numberInt": "1" }
+			},
+			"byConnectionType": {
+				"udp": { "$numberInt": "2" },
+				"tcp": { "$numberInt": "1" },
+				"turn": { "$numberInt": "1" }
+			},
+			"disconnectReasons": {
+				"CLIENT_INITIATED": { "$numberInt": "1" },
+				"DUPLICATE_IDENTITY": { "$numberInt": "1" },
+				"ROOM_DELETED": { "$numberInt": "1" },
+				"CONNECTION_TIMEOUT": { "$numberInt": "1" }
+			},
+			"connectTimeSumMs": { "$numberLong": "4600" },
+			"connectTimeCount": { "$numberInt": "4" },
+			"minutes": { "$numberDouble": "83.88333333333333" }
+		},
+		"tracks": {
+			"published": { "$numberInt": "6" },
+			"subscribed": { "$numberInt": "4" },
+			"subscribeFailed": { "$numberInt": "1" }
+		},
+		"egress": {
+			"started": { "$numberInt": "3" },
+			"byType": { "room_composite": { "$numberInt": "2" }, "track": { "$numberInt": "1" } },
+			"endedByStatus": { "complete": { "$numberInt": "1" }, "failed": { "$numberInt": "1" } },
+			"durationMs": { "$numberLong": "2340000" }
+		},
+		"ingress": {
+			"sessionsStarted": { "$numberInt": "2" },
+			"sessionsEnded": { "$numberInt": "1" },
+			"byInputType": { "rtmp": { "$numberInt": "2" } },
+			"durationMs": { "$numberLong": "1190000" }
+		},
+		"bytes": { "up": { "$numberLong": "483800000" }, "down": { "$numberLong": "987120000" } },
+		"quality": {
+			"scoreSum": { "$numberDouble": "1753.0" },
+			"scoreCount": { "$numberInt": "440" },
+			"poor": { "$numberInt": "6" }
+		},
+		"apiCalls": {
+			"total": { "$numberInt": "9" },
+			"byMethod": {
+				"RoomService_CreateRoom": { "$numberInt": "1" },
+				"RoomService_DeleteRoom": { "$numberInt": "1" },
+				"RoomService_ListParticipants": { "$numberInt": "2" },
+				"Egress_StartRoomCompositeEgress": { "$numberInt": "2" },
+				"Egress_StartTrackEgress": { "$numberInt": "1" },
+				"Ingress_CreateIngress": { "$numberInt": "2" }
+			}
+		},
+		"apiErrors": {
+			"total": { "$numberInt": "1" },
+			"byMethod": { "RoomService_ListParticipants": { "$numberInt": "1" } }
+		},
+		"uniqueIdentities": { "$numberInt": "5" }
+	},
+	{
+		"_id": "node:ND_alpha8Kq2Lm:2026-10-12T00:00:00Z",
+		"scope": "node:ND_alpha8Kq2Lm",
+		"bucket": { "$date": "2026-10-12T00:00:00.000Z" },
+		"rooms": {
+			"created": { "$numberInt": "1" },
+			"ended": { "$numberInt": "1" },
+			"endedByReason": { "API_DELETE": { "$numberInt": "1" } },
+			"durationMsSum": { "$numberLong": "2700000" },
+			"participantsSum": { "$numberInt": "4" }
+		},
+		"participants": {
+			"joined": { "$numberInt": "4" },
+			"active": { "$numberInt": "3" },
+			"aborted": { "$numberInt": "1" },
+			"left": { "$numberInt": "3" },
+			"byKind": {
+				"STANDARD": { "$numberInt": "4" },
+				"EGRESS": { "$numberInt": "1" },
+				"AGENT": { "$numberInt": "1" },
+				"SIP": { "$numberInt": "1" }
+			},
+			"bySdk": { "JS": { "$numberInt": "4" } },
+			"byOs": {
+				"windows": { "$numberInt": "1" },
+				"macos": { "$numberInt": "2" },
+				"linux": { "$numberInt": "1" }
+			},
+			"byBrowser": { "chrome": { "$numberInt": "2" }, "safari": { "$numberInt": "2" } },
+			"byConnectionType": { "udp": { "$numberInt": "2" }, "tcp": { "$numberInt": "1" } },
+			"disconnectReasons": {
+				"CLIENT_INITIATED": { "$numberInt": "1" },
+				"DUPLICATE_IDENTITY": { "$numberInt": "1" },
+				"ROOM_DELETED": { "$numberInt": "1" },
+				"CONNECTION_TIMEOUT": { "$numberInt": "1" }
+			},
+			"connectTimeSumMs": { "$numberLong": "3700" },
+			"connectTimeCount": { "$numberInt": "3" },
+			"minutes": { "$numberDouble": "83.88333333333333" }
+		},
+		"tracks": {
+			"published": { "$numberInt": "2" },
+			"subscribed": { "$numberInt": "2" },
+			"subscribeFailed": { "$numberInt": "1" }
+		},
+		"egress": {
+			"started": { "$numberInt": "2" },
+			"byType": { "room_composite": { "$numberInt": "1" }, "track": { "$numberInt": "1" } },
+			"endedByStatus": { "complete": { "$numberInt": "1" }, "failed": { "$numberInt": "1" } },
+			"durationMs": { "$numberLong": "2340000" }
+		},
+		"bytes": { "up": { "$numberLong": "385000000" }, "down": { "$numberLong": "888000000" } },
+		"quality": {
+			"scoreSum": { "$numberDouble": "1267.0" },
+			"scoreCount": { "$numberInt": "320" },
+			"poor": { "$numberInt": "6" }
+		},
+		"apiCalls": {
+			"total": { "$numberInt": "6" },
+			"byMethod": {
+				"RoomService_CreateRoom": { "$numberInt": "1" },
+				"RoomService_DeleteRoom": { "$numberInt": "1" },
+				"RoomService_ListParticipants": { "$numberInt": "2" },
+				"Egress_StartRoomCompositeEgress": { "$numberInt": "1" },
+				"Egress_StartTrackEgress": { "$numberInt": "1" }
+			}
+		},
+		"apiErrors": {
+			"total": { "$numberInt": "1" },
+			"byMethod": { "RoomService_ListParticipants": { "$numberInt": "1" } }
+		},
+		"uniqueIdentities": { "$numberInt": "3" }
+	}
+]

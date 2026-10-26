@@ -1,0 +1,57 @@
+[
+	{
+		"_id": "rtmp_7f3c9a1e2b4d",
+		"ingressId": "IN_0bsRtmpReu5e",
+		"ingressName": "OBS Studio",
+		"inputType": "rtmp",
+		"roomSid": "RM_bQ7tVnW2cErT",
+		"roomName": "Webinar-Q4",
+		"participantIdentity": "obs-studio",
+		"status": "inactive",
+		"closedBy": "event",
+		"startedAt": { "$date": "2026-10-12T10:00:10.000Z" },
+		"endedAt": { "$date": "2026-10-12T10:20:00.000Z" },
+		"durationMs": { "$numberLong": "1190000" },
+		"video": {
+			"mimeType": "video/h264",
+			"averageBitrate": { "$numberInt": "4500000" },
+			"width": { "$numberInt": "1920" },
+			"height": { "$numberInt": "1080" },
+			"framerate": { "$numberDouble": "30.0" }
+		},
+		"audio": {
+			"mimeType": "audio/opus",
+			"averageBitrate": { "$numberInt": "128000" },
+			"channels": { "$numberInt": "2" },
+			"sampleRate": { "$numberInt": "48000" }
+		},
+		"schemaVersion": { "$numberInt": "1" },
+		"expiresAt": { "$date": "2027-01-10T10:20:00.000Z" }
+	},
+	{
+		"_id": "rtmp_9d4e2f6a8c1b",
+		"ingressId": "IN_0bsRtmpReu5e",
+		"ingressName": "OBS Studio",
+		"inputType": "rtmp",
+		"roomSid": "RM_bQ7tVnW2cErT",
+		"roomName": "Webinar-Q4",
+		"participantIdentity": "obs-studio",
+		"status": "publishing",
+		"startedAt": { "$date": "2026-10-12T10:29:58.000Z" },
+		"video": {
+			"mimeType": "video/h264",
+			"averageBitrate": { "$numberInt": "4200000" },
+			"width": { "$numberInt": "1920" },
+			"height": { "$numberInt": "1080" },
+			"framerate": { "$numberDouble": "30.0" }
+		},
+		"audio": {
+			"mimeType": "audio/opus",
+			"averageBitrate": { "$numberInt": "128000" },
+			"channels": { "$numberInt": "2" },
+			"sampleRate": { "$numberInt": "48000" }
+		},
+		"schemaVersion": { "$numberInt": "1" },
+		"expiresAt": null
+	}
+]

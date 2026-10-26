@@ -1,0 +1,206 @@
+<div class="page-header">
+	<h1>Overview</h1>
+	@if (snapshot() !== null) {
+		<ovd-live-chip [tz]="tz()" />
+	}
+</div>
+
+@if (error()) {
+	<ovd-error-banner variant="page" [error]="error()" (retry)="retry()" />
+}
+
+<ovd-tile-row class="tiles" role="region" aria-label="Live">
+	<ovd-kpi-tile
+		label="Active rooms"
+		link="/rooms"
+		[queryParams]="{ status: 'active' }"
+		[value]="tile(live()?.rooms)"
+		[loading]="loading()"
+	/>
+	<ovd-kpi-tile
+		label="Participants"
+		link="/participants"
+		[queryParams]="{ status: 'active' }"
+		[info]="info.liveParticipants"
+		[value]="tile(live()?.participants)"
+		[loading]="loading()"
+	/>
+	<ovd-kpi-tile
+		label="Publishers"
+		link="/participants"
+		[queryParams]="{ status: 'active', publisher: 'true' }"
+		[info]="info.livePublishers"
+		[value]="tile(live()?.publishers)"
+		[loading]="loading()"
+	/>
+	<ovd-kpi-tile
+		label="Egress"
+		link="/egress"
+		[queryParams]="{ status: 'active' }"
+		[value]="tile(live()?.egresses)"
+		[loading]="loading()"
+	/>
+	<ovd-kpi-tile
+		label="Ingress"
+		link="/ingress"
+		[queryParams]="{ status: 'publishing' }"
+		[value]="tile(live()?.ingressSessions)"
+		[loading]="loading()"
+	/>
+	<ovd-kpi-tile
+		label="Agents"
+		link="/agents"
+		[queryParams]="{ status: 'active' }"
+		[info]="info.liveAgents"
+		[value]="tile(live()?.participantsByKind?.AGENT)"
+		[loading]="loading()"
+	/>
+</ovd-tile-row>
+
+@if (staleHint(); as hint) {
+	<ovd-notice class="stale-notice" variant="warning">
+		<span>{{ hint }}</span>
+		<a routerLink="/rooms" [queryParams]="{ status: 'active' }">View active rooms</a>
+	</ovd-notice>
+}
+
+<div class="cards">
+	<ovd-section-card [heading]="todayTitle()" sectionId="today">
+		<ovd-tile-row class="today-tiles">
+			@for (
+				item of [
+					{ label: 'Rooms', value: today()?.rooms, info: undefined },
+					{ label: 'Participants', value: today()?.participantSessions, info: info.todayParticipants },
+					{ label: 'Minutes', value: today()?.participantMinutes, info: info.todayMinutes },
+					{ label: 'Egress', value: today()?.egresses, info: undefined },
+					{ label: 'Ingress', value: today()?.ingressSessions, info: undefined }
+				];
+				track item.label
+			) {
+				<ovd-kpi-tile
+					[label]="item.label"
+					[info]="item.info"
+					[value]="todayTile(item.value)"
+					[loading]="loading()"
+					[approximate]="today()?.approximate === true"
+					[approximateText]="approximateText"
+				/>
+			}
+		</ovd-tile-row>
+		@if (todayEmpty()) {
+			<p class="muted">No rooms today yet</p>
+		}
+	</ovd-section-card>
+
+	<ovd-section-card heading="Data pipeline" sectionId="status" [info]="info.dataPipeline">
+		@if (status(); as status) {
+			<ul class="status">
+				<li class="line">
+					@if (writerFresh()) {
+						<mat-icon svgIcon="check_circle" class="ok" aria-hidden="true" />
+					} @else {
+						<mat-icon svgIcon="warning" class="warn" aria-hidden="true" />
+					}
+					<span>{{ writerLine(status.writer) }}</span>
+				</li>
+				<li class="line">
+					@if (status.writer.aliveNodes < status.writer.nodes || status.writer.nodes === 0) {
+						<mat-icon svgIcon="warning" class="warn" aria-hidden="true" />
+					} @else {
+						<mat-icon svgIcon="check_circle" class="ok" aria-hidden="true" />
+					}
+					<span>{{ nodesLine(status.writer) }}</span>
+				</li>
+				@if (migrationProgress(); as progress) {
+					<li class="progress">
+						<span>Migrating legacy analytics</span>
+						<mat-progress-bar
+							mode="determinate"
+							[value]="progress.percent"
+							aria-label="Migration progress"
+						/>
+						<span class="ovd-tabular">{{ progress.label }} ({{ progress.percent }} %)</span>
+					</li>
+				}
+			</ul>
+			<a routerLink="/settings" [queryParams]="{ tab: 'about' }">Storage and retention</a>
+		} @else {
+			<ovd-skeleton variant="text" [count]="2" />
+		}
+	</ovd-section-card>
+
+	<ovd-section-card heading="Recent rooms" sectionId="recent-rooms">
+		<div ovdSectionActions class="links">
+			@if ((live()?.rooms ?? 0) > 0) {
+				<a routerLink="/rooms" [queryParams]="{ status: 'active' }">View active rooms</a>
+			}
+			@if ((overview()?.recentRooms?.length ?? 0) > 0) {
+				<a routerLink="/rooms">View all rooms</a>
+			}
+		</div>
+		@if (emptyDeployment()) {
+			<ovd-empty-state
+				icon="schedule"
+				heading="Waiting for the first events"
+				hint="The OpenVidu server writes analytics as soon as a room is created."
+			/>
+		} @else {
+			<ovd-data-table
+				tableId="overview-recent-rooms"
+				caption="Recent rooms"
+				[columns]="recentColumns()"
+				[rows]="overview()?.recentRooms ?? []"
+				[trackBy]="trackRoom"
+				[loading]="loading()"
+				[pageSize]="10"
+			>
+				<ng-template ovdCell="sid" let-room>
+					<span class="name">
+						<a class="ovd-mono" [routerLink]="['/rooms', room.sid]">{{ room.sid }}</a>
+						<ovd-copy-button [value]="room.sid" label="room SID" />
+					</span>
+				</ng-template>
+				<ng-template ovdCell="name" let-room>
+					<span class="name">
+						{{ room.name }}
+						<ovd-copy-button [value]="room.name" label="room name" />
+					</span>
+				</ng-template>
+				<ng-template ovdCell="createdAt" let-room>
+					<time class="ovd-tabular" [attr.datetime]="room.createdAt">{{ time(room.createdAt) }}</time>
+				</ng-template>
+				<ng-template ovdCell="uniqueIdentities" let-room>
+					<span class="ovd-tabular">{{ number(room.participants.unique) }}</span>
+				</ng-template>
+				<ng-template ovdCell="duration" let-room>
+					<ovd-duration
+						[start]="room.createdAt"
+						[end]="room.endedAt ?? null"
+						[storedMs]="room.durationMs ?? null"
+						[running]="room.status === 'active'"
+					/>
+				</ng-template>
+				<ng-template ovdCell="status" let-room>
+					<ovd-status-badge
+						[status]="room.status"
+						domain="room"
+						[estimated]="room.closedBy === 'reconciler'"
+						[estimatedHint]="estimate"
+						[stale]="room.stale === true"
+						[hint]="roomStaleHint(room)"
+					/>
+				</ng-template>
+			</ovd-data-table>
+		}
+	</ovd-section-card>
+
+	<ovd-section-card heading="By node" sectionId="nodes" [info]="perNode() ? info.byNode : undefined">
+		<ovd-feature-gate feature="per-node-breakdown">
+			<ng-template ovdFeatureContent>
+				@if (nodesCard; as card) {
+					<ng-container *ngComponentOutlet="card; inputs: { overview: overview() }" />
+				}
+			</ng-template>
+		</ovd-feature-gate>
+	</ovd-section-card>
+</div>

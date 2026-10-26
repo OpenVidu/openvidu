@@ -1,0 +1,239 @@
+{
+	"bsonType": "object",
+	"required": ["_id", "scope", "bucket"],
+	"properties": {
+		"_id": {
+			"bsonType": "string",
+			"pattern": "^(global|node:[^:]+):[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:00Z$"
+		},
+		"scope": { "bsonType": "string", "pattern": "^(global|node:[^:]+)$" },
+		"bucket": { "bsonType": "date", "description": "Start of the UTC bucket" },
+		"rooms": {
+			"bsonType": "object",
+			"properties": {
+				"created": { "bsonType": ["int", "long"] },
+				"ended": { "bsonType": ["int", "long"] },
+				"endedByReason": {
+					"bsonType": "object",
+					"properties": {
+						"UNKNOWN": { "bsonType": ["int", "long"] },
+						"API_DELETE": { "bsonType": ["int", "long"] },
+						"IDLE_TIMEOUT": { "bsonType": ["int", "long"] },
+						"SERVER_SHUTDOWN": { "bsonType": ["int", "long"] },
+						"SUPERSEDED": { "bsonType": ["int", "long"] },
+						"OPEN_FAILED": { "bsonType": ["int", "long"] },
+						"RECONCILED": { "bsonType": ["int", "long"] }
+					},
+					"additionalProperties": false
+				},
+				"durationMsSum": { "bsonType": ["long", "int"] },
+				"participantsSum": { "bsonType": ["int", "long"] }
+			},
+			"additionalProperties": false
+		},
+		"participants": {
+			"bsonType": "object",
+			"properties": {
+				"joined": { "bsonType": ["int", "long"] },
+				"active": { "bsonType": ["int", "long"], "description": "PARTICIPANT_ACTIVE events" },
+				"aborted": { "bsonType": ["int", "long"] },
+				"left": { "bsonType": ["int", "long"] },
+				"byKind": {
+					"bsonType": "object",
+					"properties": {
+						"STANDARD": { "bsonType": ["int", "long"] },
+						"INGRESS": { "bsonType": ["int", "long"] },
+						"EGRESS": { "bsonType": ["int", "long"] },
+						"SIP": { "bsonType": ["int", "long"] },
+						"AGENT": { "bsonType": ["int", "long"] },
+						"CONNECTOR": { "bsonType": ["int", "long"] },
+						"BRIDGE": { "bsonType": ["int", "long"] }
+					},
+					"additionalProperties": false
+				},
+				"bySdk": {
+					"bsonType": "object",
+					"properties": {
+						"UNKNOWN": { "bsonType": ["int", "long"] },
+						"JS": { "bsonType": ["int", "long"] },
+						"SWIFT": { "bsonType": ["int", "long"] },
+						"ANDROID": { "bsonType": ["int", "long"] },
+						"FLUTTER": { "bsonType": ["int", "long"] },
+						"GO": { "bsonType": ["int", "long"] },
+						"UNITY": { "bsonType": ["int", "long"] },
+						"REACT_NATIVE": { "bsonType": ["int", "long"] },
+						"RUST": { "bsonType": ["int", "long"] },
+						"PYTHON": { "bsonType": ["int", "long"] },
+						"CPP": { "bsonType": ["int", "long"] },
+						"UNITY_WEB": { "bsonType": ["int", "long"] },
+						"NODE": { "bsonType": ["int", "long"] },
+						"UNREAL": { "bsonType": ["int", "long"] },
+						"ESP32": { "bsonType": ["int", "long"] }
+					},
+					"additionalProperties": false
+				},
+				"byOs": {
+					"bsonType": "object",
+					"properties": {
+						"windows": { "bsonType": ["int", "long"] },
+						"macos": { "bsonType": ["int", "long"] },
+						"linux": { "bsonType": ["int", "long"] },
+						"android": { "bsonType": ["int", "long"] },
+						"ios": { "bsonType": ["int", "long"] },
+						"other": { "bsonType": ["int", "long"] }
+					},
+					"additionalProperties": false
+				},
+				"byBrowser": {
+					"bsonType": "object",
+					"properties": {
+						"chrome": { "bsonType": ["int", "long"] },
+						"firefox": { "bsonType": ["int", "long"] },
+						"safari": { "bsonType": ["int", "long"] },
+						"edge": { "bsonType": ["int", "long"] },
+						"other": { "bsonType": ["int", "long"] }
+					},
+					"additionalProperties": false
+				},
+				"byConnectionType": {
+					"bsonType": "object",
+					"properties": {
+						"udp": { "bsonType": ["int", "long"] },
+						"tcp": { "bsonType": ["int", "long"] },
+						"turn": { "bsonType": ["int", "long"] },
+						"other": { "bsonType": ["int", "long"] }
+					},
+					"additionalProperties": false
+				},
+				"disconnectReasons": {
+					"bsonType": "object",
+					"properties": {
+						"UNKNOWN_REASON": { "bsonType": ["int", "long"] },
+						"CLIENT_INITIATED": { "bsonType": ["int", "long"] },
+						"DUPLICATE_IDENTITY": { "bsonType": ["int", "long"] },
+						"SERVER_SHUTDOWN": { "bsonType": ["int", "long"] },
+						"PARTICIPANT_REMOVED": { "bsonType": ["int", "long"] },
+						"ROOM_DELETED": { "bsonType": ["int", "long"] },
+						"STATE_MISMATCH": { "bsonType": ["int", "long"] },
+						"JOIN_FAILURE": { "bsonType": ["int", "long"] },
+						"MIGRATION": { "bsonType": ["int", "long"] },
+						"SIGNAL_CLOSE": { "bsonType": ["int", "long"] },
+						"ROOM_CLOSED": { "bsonType": ["int", "long"] },
+						"USER_UNAVAILABLE": { "bsonType": ["int", "long"] },
+						"USER_REJECTED": { "bsonType": ["int", "long"] },
+						"SIP_TRUNK_FAILURE": { "bsonType": ["int", "long"] },
+						"CONNECTION_TIMEOUT": { "bsonType": ["int", "long"] },
+						"MEDIA_FAILURE": { "bsonType": ["int", "long"] },
+						"AGENT_ERROR": { "bsonType": ["int", "long"] },
+						"RECONCILED": { "bsonType": ["int", "long"] }
+					},
+					"additionalProperties": false
+				},
+				"connectTimeSumMs": { "bsonType": ["long", "int"] },
+				"connectTimeCount": { "bsonType": ["int", "long"] },
+				"minutes": { "bsonType": "double" }
+			},
+			"additionalProperties": false
+		},
+		"tracks": {
+			"bsonType": "object",
+			"properties": {
+				"published": { "bsonType": ["int", "long"] },
+				"subscribed": { "bsonType": ["int", "long"] },
+				"subscribeFailed": { "bsonType": ["int", "long"] }
+			},
+			"additionalProperties": false
+		},
+		"egress": {
+			"bsonType": "object",
+			"properties": {
+				"started": { "bsonType": ["int", "long"] },
+				"byType": {
+					"bsonType": "object",
+					"properties": {
+						"room_composite": { "bsonType": ["int", "long"] },
+						"web": { "bsonType": ["int", "long"] },
+						"participant": { "bsonType": ["int", "long"] },
+						"track_composite": { "bsonType": ["int", "long"] },
+						"track": { "bsonType": ["int", "long"] }
+					},
+					"additionalProperties": false
+				},
+				"endedByStatus": {
+					"bsonType": "object",
+					"properties": {
+						"starting": { "bsonType": ["int", "long"] },
+						"active": { "bsonType": ["int", "long"] },
+						"ending": { "bsonType": ["int", "long"] },
+						"complete": { "bsonType": ["int", "long"] },
+						"failed": { "bsonType": ["int", "long"] },
+						"aborted": { "bsonType": ["int", "long"] },
+						"limit_reached": { "bsonType": ["int", "long"] }
+					},
+					"additionalProperties": false
+				},
+				"durationMs": { "bsonType": ["long", "int"] }
+			},
+			"additionalProperties": false
+		},
+		"ingress": {
+			"bsonType": "object",
+			"properties": {
+				"sessionsStarted": { "bsonType": ["int", "long"] },
+				"sessionsEnded": { "bsonType": ["int", "long"] },
+				"byInputType": {
+					"bsonType": "object",
+					"properties": {
+						"rtmp": { "bsonType": ["int", "long"] },
+						"whip": { "bsonType": ["int", "long"] },
+						"url": { "bsonType": ["int", "long"] }
+					},
+					"additionalProperties": false,
+					"description": "Sessions started by input type"
+				},
+				"durationMs": { "bsonType": ["long", "int"] }
+			},
+			"additionalProperties": false
+		},
+		"bytes": {
+			"bsonType": "object",
+			"properties": { "up": { "bsonType": ["long", "int"] }, "down": { "bsonType": ["long", "int"] } },
+			"additionalProperties": false
+		},
+		"quality": {
+			"bsonType": "object",
+			"properties": {
+				"scoreSum": { "bsonType": "double" },
+				"scoreCount": { "bsonType": ["int", "long"] },
+				"poor": { "bsonType": ["int", "long"] },
+				"lost": { "bsonType": ["int", "long"] }
+			},
+			"additionalProperties": false
+		},
+		"apiCalls": {
+			"bsonType": "object",
+			"properties": {
+				"total": { "bsonType": ["int", "long"] },
+				"byMethod": {
+					"bsonType": "object",
+					"patternProperties": { "^[A-Za-z0-9]+_[A-Za-z0-9]+$": { "bsonType": ["int", "long"] } },
+					"additionalProperties": false
+				}
+			},
+			"additionalProperties": false
+		},
+		"apiErrors": {
+			"bsonType": "object",
+			"properties": {
+				"total": { "bsonType": ["int", "long"] },
+				"byMethod": {
+					"bsonType": "object",
+					"patternProperties": { "^[A-Za-z0-9]+_[A-Za-z0-9]+$": { "bsonType": ["int", "long"] } },
+					"additionalProperties": false
+				}
+			},
+			"additionalProperties": false
+		}
+	},
+	"additionalProperties": false
+}

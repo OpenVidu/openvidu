@@ -1,0 +1,71 @@
+[
+	{
+		"_id": "schema",
+		"version": { "$numberInt": "1" },
+		"writerVersion": "3.10.0",
+		"updatedAt": { "$date": "2026-10-12T08:00:00.000Z" }
+	},
+	{
+		"_id": "retention",
+		"eventsMs": { "$numberLong": "604800000" },
+		"statsMs": { "$numberLong": "604800000" },
+		"tracksMs": { "$numberLong": "604800000" },
+		"entitiesMs": { "$numberLong": "7776000000" },
+		"rollups5MinMs": { "$numberLong": "604800000" },
+		"rollupsHourlyMs": { "$numberLong": "34560000000" },
+		"rollupsDailyMs": null,
+		"updatedAt": { "$date": "2026-10-12T08:00:00.000Z" }
+	},
+	{
+		"_id": "capabilities",
+		"timeseries": true,
+		"transactions": true,
+		"serverVersion": "8.0.29",
+		"detectedAt": { "$date": "2026-10-12T08:00:00.000Z" }
+	},
+	{ "_id": "config", "statsDetail": "participant", "recordedAt": { "$date": "2026-10-12T08:00:00.000Z" } },
+	{
+		"_id": "migration",
+		"state": "completed",
+		"checkpoint": {
+			"phase": "cleanup",
+			"events": { "$numberLong": "1791791990" },
+			"stats": { "$numberLong": "1791791995" }
+		},
+		"processed": { "$numberLong": "125000" },
+		"total": { "$numberLong": "125000" },
+		"startedAt": { "$date": "2026-10-12T08:00:05.000Z" },
+		"finishedAt": { "$date": "2026-10-12T08:20:00.000Z" },
+		"writerVersion": "3.10.0",
+		"fromSchemaVersion": { "$numberInt": "0" },
+		"counts": {
+			"events": { "$numberLong": "98000" },
+			"stats": { "$numberLong": "26800" },
+			"synthetic": { "$numberLong": "120" },
+			"skipped": { "$numberLong": "80" }
+		},
+		"nodeId": "ND_alpha8Kq2Lm",
+		"legacyRetainedUntil": { "$date": "2026-11-13T08:00:00.000Z" }
+	},
+	{
+		"_id": "reconciler",
+		"lastRunAt": { "$date": "2026-10-12T10:35:20.000Z" },
+		"lastRunDurationMs": { "$numberLong": "38" },
+		"nodeId": "ND_alpha8Kq2Lm",
+		"candidates": {
+			"room": { "$numberInt": "0" },
+			"participant": { "$numberInt": "2" },
+			"egress": { "$numberInt": "0" },
+			"ingressSession": { "$numberInt": "0" }
+		},
+		"closed": {
+			"room": { "$numberInt": "0" },
+			"participant": { "$numberInt": "1" },
+			"track": { "$numberInt": "0" },
+			"subscription": { "$numberInt": "0" },
+			"egress": { "$numberInt": "0" },
+			"ingressSession": { "$numberInt": "0" }
+		},
+		"partial": false
+	}
+]

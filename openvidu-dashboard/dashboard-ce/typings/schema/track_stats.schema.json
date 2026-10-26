@@ -1,0 +1,64 @@
+{
+	"bsonType": "object",
+	"required": [
+		"ts",
+		"meta",
+		"score",
+		"minScore",
+		"medianScore",
+		"bytes",
+		"packets",
+		"packetsLost",
+		"rttMs",
+		"jitterMs",
+		"nacks",
+		"plis",
+		"firs",
+		"frames",
+		"layers"
+	],
+	"properties": {
+		"_id": { "bsonType": "objectId" },
+		"ts": { "bsonType": "date" },
+		"meta": {
+			"bsonType": "object",
+			"required": ["roomSid", "participantSid", "kind", "nodeId"],
+			"properties": {
+				"roomSid": { "bsonType": "string" },
+				"participantSid": { "bsonType": "string" },
+				"trackSid": { "bsonType": "string", "description": "Track stats detail only" },
+				"kind": { "bsonType": "string", "enum": ["up", "down"] },
+				"nodeId": { "bsonType": "string" }
+			},
+			"additionalProperties": false
+		},
+		"score": { "bsonType": "double" },
+		"minScore": { "bsonType": "double" },
+		"medianScore": { "bsonType": "double" },
+		"bytes": { "bsonType": ["long", "int"] },
+		"packets": { "bsonType": ["int", "long"] },
+		"packetsLost": { "bsonType": ["int", "long"] },
+		"rttMs": { "bsonType": ["int", "long"] },
+		"jitterMs": { "bsonType": "double" },
+		"nacks": { "bsonType": ["int", "long"] },
+		"plis": { "bsonType": ["int", "long"] },
+		"firs": { "bsonType": ["int", "long"] },
+		"frames": { "bsonType": ["int", "long"] },
+		"layers": {
+			"bsonType": "array",
+			"items": {
+				"bsonType": "object",
+				"required": ["layer", "bytes", "packets", "frames"],
+				"properties": {
+					"layer": { "bsonType": ["int", "long"] },
+					"bytes": { "bsonType": ["long", "int"] },
+					"packets": { "bsonType": ["int", "long"] },
+					"frames": { "bsonType": ["int", "long"] }
+				},
+				"additionalProperties": false
+			}
+		},
+		"mimeType": { "bsonType": "string", "description": "Track stats detail only" }
+	},
+	"additionalProperties": false
+}
