@@ -6,9 +6,11 @@ Behaviour is specified in `openspec/specs/*-api`, `api-conventions`, `auth`, `st
 ## Structure
 
 - `src/lifecycle/startup.ts`: `startDashboard(options)` reads the configuration, connects to MongoDB, applies the
-  writer schema gate, builds the container, calls `configure` and the startup hooks, then listens. `TOKENS`
-  (`src/di/tokens.ts`) are bound with `toResolvedValue` factories, without decorators, so esbuild and Vitest need no
-  metadata. Exit codes go through `Shutdown.run(code)`.
+  writer schema gate, builds the container, calls `configure` and the startup hooks, then listens. Exit codes go
+  through `Shutdown.run(code)`.
+- `src/di/container.ts`: `buildContainer()` binds the CE services and extension tokens and registers the CE routes.
+  `TOKENS` (`src/di/tokens.ts`) are bound with `toResolvedValue` factories, without decorators, so esbuild and Vitest
+  need no metadata.
 - Routes are declared once in the `RouteRegistry` (`src/api/route-registry.ts`): method, path under `/api/v1`, edition,
   `feature` of a PRO route, security (`public`, `bearer`, `optional-bearer`), Zod schemas of params, query, body and
   responses, and the handler. It drives validation, authentication and the OpenAPI document (only when `NODE_ENV` is

@@ -1,55 +1,25 @@
 import type { Server } from 'node:http';
 
-import { Container } from 'inversify';
+import { type Container } from 'inversify';
 import { type Db, MongoClient } from 'mongodb';
 
-import {
-	type Edition,
-	type FeatureKey,
-	type InfoLicense,
-	type InfoSchema,
-	WriterSchemaStatus
-} from '@openvidu-dashboard/typings';
+import { type Edition, type InfoSchema, WriterSchemaStatus } from '@openvidu-dashboard/typings';
 
+import { docsRouter, openApiDocument } from '../api/openapi.js';
+import { type RouteRegistry } from '../api/route-registry.js';
+import { type AuthService } from '../auth/auth-service.js';
+import { bearerAuthenticator } from '../auth/bearer.js';
+import { type SessionRepository } from '../auth/session-repository.js';
+import { provisionSigningKey } from '../auth/signing-key.js';
 import { loadConfigFile } from '../config/config-file.js';
 import { type DashboardConfig, parseConfig } from '../config/variables.js';
+import { buildContainer } from '../di/container.js';
 import { TOKENS } from '../di/tokens.js';
-import { AnalyticsCache } from '../analytics/analytics-cache.js';
-import { type AnalyticsCatalogue, CE_ANALYTICS_CATALOGUE } from '../analytics/analytics-catalogue.js';
-import { AnalyticsFeatureGate } from '../analytics/analytics-gate.js';
-import { registerAnalyticsRoutes } from '../analytics/analytics-routes.js';
-import { AnalyticsService } from '../analytics/analytics-service.js';
-import { docsRouter, openApiDocument } from '../api/openapi.js';
-import { registerProbes } from '../api/probes.js';
-import { rankedSortLimits } from '../api/ranked-limits.js';
-import { RouteRegistry } from '../api/route-registry.js';
-import { registerAuthRoutes } from '../auth/auth-routes.js';
-import { AuthService } from '../auth/auth-service.js';
-import { bearerAuthenticator } from '../auth/bearer.js';
-import { SessionRepository } from '../auth/session-repository.js';
-import { provisionSigningKey } from '../auth/signing-key.js';
-import { registerEgressRoutes } from '../egress/egress-routes.js';
-import { EgressService } from '../egress/egress-service.js';
 import { createHttpApp } from '../http/app.js';
 import { resolveBasePath } from '../http/base-path.js';
-import { InfoService } from '../info/info-service.js';
-import { registerIngressRoutes } from '../ingress/ingress-routes.js';
-import { IngressService } from '../ingress/ingress-service.js';
-import { registerInfoRoute } from '../info/info-routes.js';
 import { createLogger, type Logger } from '../logging/logger.js';
 import { mongoClientOptions, resolveMongoUrl } from '../mongo/mongo-client.js';
-import { registerOverviewRoutes } from '../overview/overview-routes.js';
-import { type OverviewExtension, OverviewService } from '../overview/overview-service.js';
-import { registerParticipantsRoutes } from '../participants/participants-routes.js';
-import { ParticipantsService } from '../participants/participants-service.js';
-import { registerRoomsRoutes } from '../rooms/rooms-routes.js';
-import { RoomsService } from '../rooms/rooms-service.js';
 import { olderSchemaMessage, readSchemaStatus } from '../schema/schema-status.js';
-import { StatsModeReader } from '../stats/stats-mode.js';
-import { registerStatusRoutes } from '../status/status-routes.js';
-import { WriterFreshness } from '../status/freshness.js';
-import { StatusService } from '../status/status-service.js';
-import { registerTracksRoutes } from '../tracks/tracks-routes.js';
 import { type Exit, Shutdown } from './shutdown.js';
 
 /** Process exit codes of the dashboard; an extending edition's startup hooks may exit with codes of their own. */
@@ -203,7 +173,16 @@ export async function startDashboard(options: DashboardOptions): Promise<Running
 
 	logSchema(logger, schema);
 
-	const container = buildContainer(options, config, logger, client, db, shutdown);
+	const container = buildContainer({
+		edition: options.edition,
+		version: options.version,
+		docsEnabled: docsEnabled(env),
+		config,
+		logger,
+		client,
+		db,
+		shutdown
+	});
 
 	try {
 		options.configure?.(container);
@@ -295,190 +274,4 @@ function logSchema(logger: Logger, schema: InfoSchema): void {
 	} else if (schema.status === WriterSchemaStatus.UNINITIALIZED) {
 		logger.info('The OpenVidu server has not initialized the analytics database yet');
 	}
-}
-
-function buildContainer(
-	options: DashboardOptions,
-	config: DashboardConfig,
-	logger: Logger,
-	client: MongoClient,
-	db: Db,
-	shutdown: Shutdown
-): Container {
-	const env = options.env ?? process.env;
-	const container = new Container();
-
-	container.bind(TOKENS.Config).toConstantValue(config);
-	container.bind(TOKENS.Logger).toConstantValue(logger);
-	container.bind(TOKENS.MongoClient).toConstantValue(client);
-	container.bind(TOKENS.Database).toConstantValue(db);
-	container.bind(TOKENS.Shutdown).toConstantValue(shutdown);
-	container.bind<() => Date>(TOKENS.Clock).toConstantValue(() => new Date());
-	container.bind<FeatureKey[]>(TOKENS.Features).toConstantValue([]);
-	container.bind<() => InfoLicense | undefined>(TOKENS.LicenseInfo).toConstantValue(() => undefined);
-	container.bind(TOKENS.RouteRegistry).toConstantValue(new RouteRegistry(options.edition));
-	container.bind<AnalyticsCatalogue>(TOKENS.AnalyticsCatalogue).toConstantValue(CE_ANALYTICS_CATALOGUE);
-	container
-		.bind(TOKENS.SessionRepository)
-		.toResolvedValue((database: Db) => new SessionRepository(database), [TOKENS.Database])
-		.inSingletonScope();
-	container
-		.bind(TOKENS.StatsModeReader)
-		.toResolvedValue(
-			(database: Db, clock: () => Date) => new StatsModeReader(database, clock),
-			[TOKENS.Database, TOKENS.Clock]
-		)
-		.inSingletonScope();
-	container
-		.bind(TOKENS.InfoService)
-		.toResolvedValue(
-			(database: Db, statsMode: StatsModeReader) =>
-				new InfoService(database, {
-					edition: options.edition,
-					version: options.version,
-					features: () => container.get<FeatureKey[]>(TOKENS.Features),
-					limits: rankedSortLimits(config.lists.totalMaxRangeMs),
-					license: () => container.get<() => InfoLicense | undefined>(TOKENS.LicenseInfo)(),
-					openapiDocsEnabled: docsEnabled(env),
-					statsMode
-				}),
-			[TOKENS.Database, TOKENS.StatsModeReader]
-		)
-		.inSingletonScope();
-	container
-		.bind(TOKENS.AuthService)
-		.toResolvedValue(
-			(key: Uint8Array, sessions: SessionRepository, clock: () => Date) =>
-				new AuthService({
-					username: config.admin.username,
-					password: config.admin.password,
-					edition: options.edition,
-					key,
-					refreshTokenTtlSeconds: config.session.refreshTokenTtlSeconds,
-					sessions,
-					logger,
-					now: clock
-				}),
-			[TOKENS.SigningKey, TOKENS.SessionRepository, TOKENS.Clock]
-		)
-		.inSingletonScope();
-
-	container
-		.bind(TOKENS.WriterFreshness)
-		.toResolvedValue(
-			(database: Db, clock: () => Date) => new WriterFreshness(database, clock),
-			[TOKENS.Database, TOKENS.Clock]
-		)
-		.inSingletonScope();
-
-	container
-		.bind(TOKENS.RoomsService)
-		.toResolvedValue(
-			(database: Db, clock: () => Date, freshness: WriterFreshness) =>
-				new RoomsService(database, {
-					totalMaxRangeMs: config.lists.totalMaxRangeMs,
-					freshness,
-					now: clock
-				}),
-			[TOKENS.Database, TOKENS.Clock, TOKENS.WriterFreshness]
-		)
-		.inSingletonScope();
-
-	container
-		.bind(TOKENS.ParticipantsService)
-		.toResolvedValue(
-			(database: Db, clock: () => Date, freshness: WriterFreshness) =>
-				new ParticipantsService(database, {
-					totalMaxRangeMs: config.lists.totalMaxRangeMs,
-					freshness,
-					now: clock
-				}),
-			[TOKENS.Database, TOKENS.Clock, TOKENS.WriterFreshness]
-		)
-		.inSingletonScope();
-
-	container
-		.bind(TOKENS.EgressService)
-		.toResolvedValue(
-			(database: Db, clock: () => Date) =>
-				new EgressService(database, { totalMaxRangeMs: config.lists.totalMaxRangeMs, now: clock }),
-			[TOKENS.Database, TOKENS.Clock]
-		)
-		.inSingletonScope();
-
-	container
-		.bind(TOKENS.IngressService)
-		.toResolvedValue(
-			(database: Db, clock: () => Date) =>
-				new IngressService(database, { totalMaxRangeMs: config.lists.totalMaxRangeMs, now: clock }),
-			[TOKENS.Database, TOKENS.Clock]
-		)
-		.inSingletonScope();
-
-	container
-		.bind(TOKENS.AnalyticsFeatureGate)
-		.toResolvedValue(() => new AnalyticsFeatureGate(() => container.get<FeatureKey[]>(TOKENS.Features)))
-		.inSingletonScope();
-
-	container
-		.bind(TOKENS.AnalyticsService)
-		.toResolvedValue(
-			(database: Db, clock: () => Date, gate: AnalyticsFeatureGate, catalogue: AnalyticsCatalogue) =>
-				new AnalyticsService(database, {
-					now: clock,
-					gate,
-					catalogue,
-					cache: new AnalyticsCache(config.analytics.cacheTtlSeconds * 1000, clock)
-				}),
-			[TOKENS.Database, TOKENS.Clock, TOKENS.AnalyticsFeatureGate, TOKENS.AnalyticsCatalogue]
-		)
-		.inSingletonScope();
-
-	container.bind<OverviewExtension>(TOKENS.OverviewExtension).toConstantValue(() => ({}));
-	container
-		.bind(TOKENS.OverviewService)
-		.toResolvedValue(
-			(database: Db, clock: () => Date, extension: OverviewExtension) =>
-				new OverviewService(database, { now: clock, extension }),
-			[TOKENS.Database, TOKENS.Clock, TOKENS.OverviewExtension]
-		)
-		.inSingletonScope();
-	container
-		.bind(TOKENS.StatusService)
-		.toResolvedValue(
-			(database: Db, clock: () => Date, info: InfoService) => new StatusService(database, { info, now: clock }),
-			[TOKENS.Database, TOKENS.Clock, TOKENS.InfoService]
-		)
-		.inSingletonScope();
-
-	logger.info(
-		config.analytics.cacheTtlSeconds > 0
-			? `Analytics cache: completed buckets kept for ${String(config.analytics.cacheTtlSeconds)} s`
-			: 'Analytics cache disabled (DASHBOARD_ANALYTICS_CACHE_TTL=0)'
-	);
-
-	const registry = container.get<RouteRegistry>(TOKENS.RouteRegistry);
-	const now = () => container.get<() => Date>(TOKENS.Clock)();
-
-	registerProbes(registry, options.version, db);
-	registerAuthRoutes(
-		registry,
-		() => container.get<AuthService>(TOKENS.AuthService),
-		() => ({
-			basePath: container.get<string>(TOKENS.BasePath),
-			ttlSeconds: config.session.refreshTokenTtlSeconds,
-			secure: config.session.cookieSecure
-		})
-	);
-	registerInfoRoute(registry, () => container.get<InfoService>(TOKENS.InfoService));
-	registerRoomsRoutes(registry, () => container.get<RoomsService>(TOKENS.RoomsService), now);
-	registerParticipantsRoutes(registry, () => container.get<ParticipantsService>(TOKENS.ParticipantsService), now);
-	registerTracksRoutes(registry);
-	registerEgressRoutes(registry, () => container.get<EgressService>(TOKENS.EgressService), now);
-	registerIngressRoutes(registry, () => container.get<IngressService>(TOKENS.IngressService), now);
-	registerAnalyticsRoutes(registry, () => container.get<AnalyticsService>(TOKENS.AnalyticsService), now);
-	registerOverviewRoutes(registry, () => container.get<OverviewService>(TOKENS.OverviewService));
-	registerStatusRoutes(registry, () => container.get<StatusService>(TOKENS.StatusService));
-
-	return container;
 }
