@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.DoubleSummaryStatistics;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Locale;
@@ -902,23 +903,35 @@ public class OpenViduTestAppE2eEgressProTest extends AbstractOpenViduTestappE2eT
 		alice.addVideo();
 		Thread.sleep(7000);
 
-		// a track of one codec cannot continue as another: the file gets a second
-		// video track
-		Recording recording = stopAndGetRecording(egressId);
-		recording.assertFinalized();
-		recording.assertTracks("audio:opus", "video:" + first, "video:" + second);
-		recording.assertHealthy();
-		recording.assertStartTogether();
-		recording.assertAvSync(8);
-		FileTrack before = recording.videoWithCodec(first);
-		FileTrack after = recording.videoWithCodec(second);
-		Assertions.assertTrue(before.lastPacketTime() <= after.firstPacketTime(),
-				"The " + second + " track must follow the " + first + " track: " + before + " / " + after);
+		// a track of one codec cannot continue as another: the new camera goes to the
+		// other file, in the container its codec needs, and the camera file keeps
+		// the first one
+		Recordings recordings = stopAndGetRecordings(egressId);
+		recordings.assertFiles("camera", "other");
+		Recording camera = recordings.camera();
+		camera.assertFinalized();
+		camera.assertTracks("audio:opus", "video:" + first);
+		camera.assertHealthy();
+		camera.assertStartTogether();
+		camera.assertAvSync(3);
+		camera.assertDefaults("camera", "microphone");
+		camera.assertContainer("webm");
+		FileTrack before = camera.named("camera");
 		before.assertMarkers(3);
+		Assertions.assertTrue(before.lastPacketTime() > 3 && before.lastPacketTime() < 8,
+				"The " + first + " camera ends when it is unpublished, about 5 s in: " + before);
+		Assertions.assertTrue(camera.named("microphone").lastPacketTime() > camera.duration - 1.5,
+				"The microphone goes on to the end of the camera file: " + camera.named("microphone"));
+		Recording other = recordings.other();
+		other.assertFinalized();
+		other.assertTracks("video:" + second);
+		other.assertHealthy();
+		other.assertDefaults("camera", null);
+		other.assertContainer("h264".equals(second) ? "matroska" : "webm");
+		FileTrack after = other.named("camera");
 		after.assertMarkers(4);
 		after.assertReachedSize(CAMERA_WIDTH, CAMERA_HEIGHT);
-		Assertions.assertEquals(1, recording.ofType("video").stream().filter(s -> s.isDefault).count(),
-				"Exactly one video track must be the default one: " + recording.streams);
+		recordings.assertStartsAfter("other", "camera", 5, 3);
 	}
 
 	@Test
@@ -1390,7 +1403,15 @@ public class OpenViduTestAppE2eEgressProTest extends AbstractOpenViduTestappE2eT
 	// Screen share
 	// ------------------------------------------------------------------------
 
-	// ----- Several tracks of a kind: simultaneous tracks of the same source -----
+	// ----- The files of a participant: camera, screen and other -----
+	//
+	// A whole-participant recording is up to three files, each playable on its
+	// own: the camera file (the request's path: the first camera and the first
+	// microphone), the screen file ("-screen": the first screen share and its
+	// audio) and the other file ("-other": every other track). A track published
+	// again continues its file when it has the same codec; a second track of a
+	// kind while the first is published, or one with another codec, goes to the
+	// other file.
 
 	@Test
 	@DisplayName("Two cameras at once")
@@ -1403,27 +1424,32 @@ public class OpenViduTestAppE2eEgressProTest extends AbstractOpenViduTestappE2eT
 		Thread.sleep(4000);
 		alice.addVideo();
 		Thread.sleep(8000);
-		// the second camera is a track of its own, non-default: players keep showing the first
-		Recording recording = stopAndGetRecording(egressId);
-		recording.assertFinalized();
-		recording.assertTracks("audio:opus", "video:vp8", "video:vp8");
-		recording.assertHealthy();
-		recording.assertStartTogether();
-		recording.assertAvSync(5);
-		Assertions.assertEquals(2, recording.allNamed("camera").size(), "Two camera tracks: " + recording.streams);
-		recording.assertDefaults("camera", "microphone");
-		FileTrack first = recording.named("camera", 0);
-		FileTrack second = recording.named("camera", 1);
-		Assertions.assertTrue(first.isDefault && !second.isDefault, "The first camera is the default: " + recording.streams);
+		// the second camera, published while the first is, goes to the other file
+		Recordings recordings = stopAndGetRecordings(egressId);
+		recordings.assertFiles("camera", "other");
+		Recording camera = recordings.camera();
+		camera.assertFinalized();
+		camera.assertTracks("audio:opus", "video:vp8");
+		camera.assertHealthy();
+		camera.assertStartTogether();
+		camera.assertAvSync(5);
+		camera.assertDefaults("camera", "microphone");
+		FileTrack first = camera.named("camera");
 		first.assertReachedSize(CAMERA_WIDTH, CAMERA_HEIGHT);
-		second.assertReachedSize(CAMERA_WIDTH, CAMERA_HEIGHT);
 		first.assertMarkers(9);
+		first.assertNoGaps();
+		Recording other = recordings.other();
+		other.assertFinalized();
+		other.assertTracks("video:vp8");
+		other.assertHealthy();
+		other.assertDefaults("camera", null);
+		FileTrack second = other.named("camera");
+		second.assertReachedSize(CAMERA_WIDTH, CAMERA_HEIGHT);
 		second.assertMarkers(5);
-		double secondStart = second.firstPacketTime() - first.firstPacketTime();
-		Assertions.assertTrue(secondStart > 2 && secondStart < 7,
-				"The second camera must start about 4 s after the first, not " + secondStart + " s: " + second);
-		Assertions.assertTrue(first.lastPacketTime() > second.firstPacketTime() + 5,
-				"The first camera must go on next to the second: " + first + " / " + second);
+		Assertions.assertTrue(other.duration > 5 && other.duration < camera.duration - 2,
+				"The other file holds the second camera, published about 4 s into the recording: " + other.duration
+						+ " s of " + camera.duration + " s");
+		recordings.assertStartsAfter("other", "camera", 5, 3);
 	}
 
 	@Test
@@ -1437,27 +1463,28 @@ public class OpenViduTestAppE2eEgressProTest extends AbstractOpenViduTestappE2eT
 		Thread.sleep(4000);
 		alice.addAudio();
 		Thread.sleep(8000);
-		// the second microphone is a track of its own, non-default; both carry the beeps
-		Recording recording = stopAndGetRecording(egressId);
-		recording.assertFinalized();
-		recording.assertTracks("audio:opus", "audio:opus", "video:vp8");
-		recording.assertHealthy();
-		recording.assertStartTogether();
-		recording.assertAvSync(5);
-		recording.assertDefaults("camera", "microphone");
-		FileTrack first = recording.named("microphone", 0);
-		FileTrack second = recording.named("microphone", 1);
-		Assertions.assertTrue(first.isDefault && !second.isDefault,
-				"The first microphone is the default: " + recording.streams);
-		first.assertMarkers(9);
-		second.assertMarkers(5);
-		double secondStart = second.firstPacketTime() - first.firstPacketTime();
-		Assertions.assertTrue(secondStart > 2 && secondStart < 7,
-				"The second microphone must start about 4 s after the first, not " + secondStart + " s: " + second);
+		// the second microphone goes to the other file; both carry the beeps
+		Recordings recordings = stopAndGetRecordings(egressId);
+		recordings.assertFiles("camera", "other");
+		Recording camera = recordings.camera();
+		camera.assertFinalized();
+		camera.assertTracks("audio:opus", "video:vp8");
+		camera.assertHealthy();
+		camera.assertStartTogether();
+		camera.assertAvSync(5);
+		camera.assertDefaults("camera", "microphone");
+		camera.named("microphone").assertMarkers(9);
+		Recording other = recordings.other();
+		other.assertFinalized();
+		other.assertTracks("audio:opus");
+		other.assertHealthy();
+		other.assertDefaults(null, "microphone");
+		other.named("microphone").assertMarkers(5);
+		recordings.assertStartsAfter("other", "camera", 5, 3);
 	}
 
 	@Test
-	@DisplayName("First camera unpublished, the second stays non-default, a third continues the first")
+	@DisplayName("First camera unpublished, the second stays in the other file, a third continues the first")
 	void firstCameraUnpublishedSecondStaysTest() throws Exception {
 		log.info("Participant Passthrough: first camera unpublished while a second one goes on");
 		String room = uniqueRoom("first-camera-off");
@@ -1471,29 +1498,39 @@ public class OpenViduTestAppE2eEgressProTest extends AbstractOpenViduTestappE2eT
 		Thread.sleep(4000);
 		alice.addVideo();
 		Thread.sleep(5000);
-		// the default track ends with the first camera and continues with the third;
-		// the second camera stays in its own, non-default track throughout
-		Recording recording = stopAndGetRecording(egressId);
-		recording.assertFinalized();
-		recording.assertTracks("audio:opus", "video:vp8", "video:vp8");
-		recording.assertHealthy();
-		recording.assertAvSync(5);
-		recording.assertDefaults("camera", "microphone");
-		FileTrack first = recording.named("camera", 0);
-		FileTrack second = recording.named("camera", 1);
-		Assertions.assertTrue(first.isDefault && !second.isDefault, "The first camera is the default: " + recording.streams);
+		// the camera file's video ends with the first camera and continues with the
+		// third; the second camera stays in the other file throughout
+		Recordings recordings = stopAndGetRecordings(egressId);
+		recordings.assertFiles("camera", "other");
+		Recording camera = recordings.camera();
+		camera.assertFinalized();
+		camera.assertTracks("audio:opus", "video:vp8");
+		camera.assertHealthy();
+		camera.assertAvSync(5);
+		camera.assertDefaults("camera", "microphone");
+		FileTrack first = camera.named("camera");
 		List<double[]> gaps = first.gaps(1);
 		Assertions.assertEquals(1, gaps.size(),
-				"The default track must have one gap, between the first camera and the third: " + first);
+				"The camera file's video must have one gap, between the first camera and the third: " + first);
 		double gap = gaps.get(0)[1] - gaps.get(0)[0];
 		Assertions.assertTrue(gap > 2 && gap < 7, "The gap must last about 4 s, not " + gap + " s: " + first);
+		Assertions.assertTrue(first.lastPacketTime() > camera.duration - 1.5,
+				"The third camera must continue the camera file's video to the end: " + first + ", duration "
+						+ camera.duration);
+		Recording other = recordings.other();
+		other.assertFinalized();
+		other.assertTracks("video:vp8");
+		other.assertHealthy();
+		FileTrack second = other.named("camera");
 		Assertions.assertTrue(second.gaps(1).isEmpty(), "The second camera must go on throughout: " + second);
-		Assertions.assertTrue(first.lastPacketTime() > second.firstPacketTime() + 6,
-				"The third camera must continue the default track to the end: " + first + " / " + second);
+		Assertions.assertTrue(other.duration > 10, "The second camera lasts to the end: " + other.duration + " s");
+		JsonObject manifest = getManifest(egressId);
+		Assertions.assertEquals(2, manifestTrack(manifest, "camera", "video").getAsJsonArray("track_ids").size(),
+				"Two LiveKit tracks wrote the camera file's video: " + manifest);
 	}
 
 	@Test
-	@DisplayName("First microphone unpublished, the second stays non-default")
+	@DisplayName("First microphone unpublished, the second stays in the other file")
 	void firstMicrophoneUnpublishedTest() throws Exception {
 		log.info("Participant Passthrough: first microphone unpublished while a second one goes on");
 		String room = uniqueRoom("first-mic-off");
@@ -1505,24 +1542,30 @@ public class OpenViduTestAppE2eEgressProTest extends AbstractOpenViduTestappE2eT
 		Thread.sleep(4000);
 		alice.unpublishAudio(0);
 		Thread.sleep(6000);
-		// the default audio track is silence from then on; the second microphone keeps
-		// its beeps in its own, non-default track
-		Recording recording = stopAndGetRecording(egressId);
-		recording.assertFinalized();
-		recording.assertTracks("audio:opus", "audio:opus", "video:vp8");
-		recording.assertHealthy();
-		recording.assertAvSync(5);
-		recording.assertDefaults("camera", "microphone");
-		FileTrack first = recording.named("microphone", 0);
-		FileTrack second = recording.named("microphone", 1);
-		Assertions.assertTrue(first.isDefault && !second.isDefault,
-				"The first microphone is the default: " + recording.streams);
+		// the camera file's audio is silence from then on; the second microphone
+		// keeps its beeps in the other file
+		Recordings recordings = stopAndGetRecordings(egressId);
+		recordings.assertFiles("camera", "other");
+		Recording camera = recordings.camera();
+		camera.assertFinalized();
+		camera.assertTracks("audio:opus", "video:vp8");
+		camera.assertHealthy();
+		camera.assertAvSync(5);
+		camera.assertDefaults("camera", "microphone");
+		FileTrack first = camera.named("microphone");
 		double firstLastBeep = first.markers.get(first.markers.size() - 1);
-		double secondLastBeep = second.markers.get(second.markers.size() - 1);
-		Assertions.assertTrue(secondLastBeep > firstLastBeep + 4,
-				"The second microphone must beep on after the first was unpublished: " + first + " / " + second);
-		Assertions.assertTrue(first.lastPacketTime() > second.lastPacketTime() - 1,
-				"The default audio track must be filled to the end: " + first + " / " + second);
+		Assertions.assertTrue(firstLastBeep > 5 && firstLastBeep < 9,
+				"The first microphone beeps until it is unpublished, about 7 s in: " + first);
+		Assertions.assertTrue(first.lastPacketTime() > camera.duration - 1.5,
+				"The camera file's audio must be filled to the end: " + first + ", duration " + camera.duration);
+		Recording other = recordings.other();
+		other.assertFinalized();
+		other.assertTracks("audio:opus");
+		other.assertHealthy();
+		FileTrack second = other.named("microphone");
+		second.assertMarkers(6);
+		Assertions.assertTrue(second.markers.get(second.markers.size() - 1) > other.duration - 2,
+				"The second microphone must beep on to the end: " + second + ", duration " + other.duration);
 	}
 
 	@Test
@@ -1536,20 +1579,30 @@ public class OpenViduTestAppE2eEgressProTest extends AbstractOpenViduTestappE2eT
 		String egressId = startParticipantRecording(room, "alice", filepath(room, "alice", "mkv"));
 		waitUntilEgressStatus(egressId, "EGRESS_ACTIVE", 20);
 		Thread.sleep(10000);
-		// the four tracks are subscribed at start and start together
-		Recording recording = stopAndGetRecording(egressId);
-		recording.assertFinalized();
-		recording.assertTracks("audio:opus", "audio:opus", "video:vp8", "video:vp8");
-		recording.assertHealthy();
-		recording.assertAvSync(5);
-		recording.assertDefaults("camera", "microphone");
-		double firstStart = recording.streams.stream().mapToDouble(FileTrack::firstPacketTime).min().getAsDouble();
-		double lastStart = recording.streams.stream().mapToDouble(FileTrack::firstPacketTime).max().getAsDouble();
-		Assertions.assertTrue(lastStart - firstStart < 3.5,
-				"The four tracks must start together, not " + (lastStart - firstStart) + " s apart: " + recording.streams);
-		for (FileTrack track : recording.streams) {
+		// the four tracks are subscribed at start: two files that start together
+		Recordings recordings = stopAndGetRecordings(egressId);
+		recordings.assertFiles("camera", "screen");
+		Recording camera = recordings.camera();
+		camera.assertFinalized();
+		camera.assertTracks("audio:opus", "video:vp8");
+		camera.assertHealthy();
+		camera.assertStartTogether();
+		camera.assertAvSync(5);
+		camera.assertDefaults("camera", "microphone");
+		Recording screen = recordings.screen();
+		screen.assertFinalized();
+		screen.assertTracks("audio:opus", "video:vp8");
+		screen.assertHealthy();
+		screen.assertStartTogether();
+		screen.assertAvSync(5);
+		screen.assertDefaults("screen_share", "screen_share_audio");
+		for (FileTrack track : camera.streams) {
 			track.assertMarkers(6);
 		}
+		for (FileTrack track : screen.streams) {
+			track.assertMarkers(6);
+		}
+		recordings.assertStartsAfter("screen", "camera", 0, 3.5);
 	}
 
 	@Test
@@ -1565,23 +1618,25 @@ public class OpenViduTestAppE2eEgressProTest extends AbstractOpenViduTestappE2eT
 		String egressId = startParticipantRecording(room, "alice", filepath(room, "alice", "mkv"));
 		waitUntilEgressStatus(egressId, "EGRESS_ACTIVE", 20);
 		Thread.sleep(12000);
-		Recording recording = stopAndGetRecording(egressId);
-		recording.assertFinalized();
-		recording.assertTracks("audio:opus", "audio:opus", "audio:opus", "video:vp8", "video:vp8", "video:vp8");
-		recording.assertHealthy();
-		recording.assertAvSync(5);
-		recording.assertDefaults("camera", "microphone");
-		Assertions.assertEquals(2, recording.allNamed("camera").size(), "Two camera tracks: " + recording.streams);
-		Assertions.assertEquals(2, recording.allNamed("microphone").size(), "Two microphone tracks: " + recording.streams);
-		Assertions.assertTrue(recording.named("camera", 0).isDefault && recording.named("microphone", 0).isDefault,
-				"The first camera and the first microphone are the defaults: " + recording.streams);
-		recording.named("screen_share").assertReachedSize(SCREEN_WIDTH, SCREEN_HEIGHT);
-		for (FileTrack track : recording.streams) {
-			track.assertMarkers(6);
+		// three files of two tracks each
+		Recordings recordings = stopAndGetRecordings(egressId);
+		recordings.assertFiles("camera", "screen", "other");
+		recordings.camera().assertDefaults("camera", "microphone");
+		recordings.screen().assertDefaults("screen_share", "screen_share_audio");
+		recordings.other().assertDefaults("camera", "microphone");
+		recordings.screen().named("screen_share").assertReachedSize(SCREEN_WIDTH, SCREEN_HEIGHT);
+		for (Recording file : recordings.files.values()) {
+			file.assertFinalized();
+			file.assertTracks("audio:opus", "video:vp8");
+			file.assertHealthy();
+			file.assertAvSync(5);
+			for (FileTrack track : file.streams) {
+				track.assertMarkers(6);
+			}
 		}
 	}
 
-	// ----- Order of arrival versus the default flag -----
+	// ----- Order of arrival -----
 
 	@Test
 	@DisplayName("Screen shared before the camera is published")
@@ -1595,20 +1650,27 @@ public class OpenViduTestAppE2eEgressProTest extends AbstractOpenViduTestappE2eT
 		Thread.sleep(5000);
 		alice.addVideo();
 		Thread.sleep(8000);
-		// the camera takes the default flag from the screen when it arrives
-		Recording recording = stopAndGetRecording(egressId);
-		recording.assertFinalized();
-		recording.assertTracks("audio:opus", "video:vp8", "video:vp8");
-		recording.assertHealthy();
-		recording.assertAvSync(5);
-		recording.assertDefaults("camera", "microphone");
-		FileTrack screen = recording.named("screen_share");
-		FileTrack camera = recording.named("camera");
-		Assertions.assertTrue(screen.index < camera.index, "The screen is the earlier track: " + recording.streams);
-		Assertions.assertTrue(camera.firstPacketTime() > screen.firstPacketTime() + 3,
-				"The camera starts after the screen: " + camera + " / " + screen);
-		camera.assertReachedSize(CAMERA_WIDTH, CAMERA_HEIGHT);
-		screen.assertReachedSize(SCREEN_WIDTH, SCREEN_HEIGHT);
+		// the camera joins the microphone in the camera file 5 s in, whatever the
+		// screen file did before
+		Recordings recordings = stopAndGetRecordings(egressId);
+		recordings.assertFiles("camera", "screen");
+		Recording camera = recordings.camera();
+		camera.assertFinalized();
+		camera.assertTracks("audio:opus", "video:vp8");
+		camera.assertHealthy();
+		camera.assertAvSync(5);
+		camera.assertDefaults("camera", "microphone");
+		FileTrack cameraTrack = camera.named("camera");
+		Assertions.assertTrue(cameraTrack.firstPacketTime() > camera.named("microphone").firstPacketTime() + 3,
+				"The camera starts after the microphone: " + cameraTrack + " / " + camera.named("microphone"));
+		cameraTrack.assertReachedSize(CAMERA_WIDTH, CAMERA_HEIGHT);
+		Recording screen = recordings.screen();
+		screen.assertFinalized();
+		screen.assertTracks("video:vp8");
+		screen.assertHealthy();
+		screen.assertDefaults("screen_share", null);
+		screen.named("screen_share").assertReachedSize(SCREEN_WIDTH, SCREEN_HEIGHT);
+		screen.named("screen_share").assertMarkers(10);
 	}
 
 	@Test
@@ -1623,20 +1685,25 @@ public class OpenViduTestAppE2eEgressProTest extends AbstractOpenViduTestappE2eT
 		Thread.sleep(5000);
 		alice.addAudio();
 		Thread.sleep(8000);
-		// the microphone takes the default flag from the screen's audio when it arrives
-		Recording recording = stopAndGetRecording(egressId);
-		recording.assertFinalized();
-		recording.assertTracks("audio:opus", "audio:opus", "video:vp8");
-		recording.assertHealthy();
-		recording.assertAvSync(5);
-		recording.assertDefaults("screen_share", "microphone");
-		FileTrack tabAudio = recording.named("screen_share_audio");
-		FileTrack microphone = recording.named("microphone");
-		Assertions.assertTrue(tabAudio.index < microphone.index, "The screen audio is the earlier track: " + recording.streams);
-		Assertions.assertTrue(microphone.firstPacketTime() > tabAudio.firstPacketTime() + 3,
-				"The microphone starts after the screen audio: " + microphone + " / " + tabAudio);
-		tabAudio.assertMarkers(9);
-		microphone.assertMarkers(5);
+		// the microphone opens the camera file 5 s in; the screen's audio is the
+		// screen file's audio from the start
+		Recordings recordings = stopAndGetRecordings(egressId);
+		recordings.assertFiles("camera", "screen");
+		Recording camera = recordings.camera();
+		camera.assertFinalized();
+		camera.assertTracks("audio:opus");
+		camera.assertHealthy();
+		camera.assertDefaults(null, "microphone");
+		camera.named("microphone").assertMarkers(5);
+		Recording screen = recordings.screen();
+		screen.assertFinalized();
+		screen.assertTracks("audio:opus", "video:vp8");
+		screen.assertHealthy();
+		screen.assertStartTogether();
+		screen.assertAvSync(5);
+		screen.assertDefaults("screen_share", "screen_share_audio");
+		screen.named("screen_share_audio").assertMarkers(9);
+		recordings.assertStartsAfter("camera", "screen", 5, 2.5);
 	}
 
 	@Test
@@ -1649,15 +1716,17 @@ public class OpenViduTestAppE2eEgressProTest extends AbstractOpenViduTestappE2eT
 		String egressId = startParticipantRecording(room, "alice", filepath(room, "alice", "mkv"));
 		waitUntilEgressStatus(egressId, "EGRESS_ACTIVE", 20);
 		Thread.sleep(10000);
-		// the only tracks of their kind: both default
-		Recording recording = stopAndGetRecording(egressId);
-		recording.assertFinalized();
-		recording.assertTracks("audio:opus", "video:vp8");
-		recording.assertHealthy();
-		recording.assertStartTogether();
-		recording.assertAvSync(5);
-		recording.assertDefaults("screen_share", "screen_share_audio");
-		recording.named("screen_share").assertReachedSize(SCREEN_WIDTH, SCREEN_HEIGHT);
+		// no camera file: a file without tracks cannot be played
+		Recordings recordings = stopAndGetRecordings(egressId);
+		recordings.assertFiles("screen");
+		Recording screen = recordings.screen();
+		screen.assertFinalized();
+		screen.assertTracks("audio:opus", "video:vp8");
+		screen.assertHealthy();
+		screen.assertStartTogether();
+		screen.assertAvSync(5);
+		screen.assertDefaults("screen_share", "screen_share_audio");
+		screen.named("screen_share").assertReachedSize(SCREEN_WIDTH, SCREEN_HEIGHT);
 	}
 
 	@Test
@@ -1670,30 +1739,39 @@ public class OpenViduTestAppE2eEgressProTest extends AbstractOpenViduTestappE2eT
 		String egressId = startParticipantRecording(room, "alice", filepath(room, "alice", "mkv"));
 		waitUntilEgressStatus(egressId, "EGRESS_ACTIVE", 20);
 		Thread.sleep(5000);
-		// the screen is the only video so far, and the default one
-		playInPlace(egressId);
-		Recording screenOnly = snapshotRecordingInProgress(egressId);
+		// the screen file, and the camera file with the microphone alone so far
+		playInPlace(egressId, "screen");
+		Recording screenOnly = snapshotRecordingInProgress(egressId, "screen");
 		screenOnly.assertInProgress();
-		screenOnly.assertTracks("audio:opus", "video:vp8");
-		screenOnly.assertDefaults("screen_share", "microphone");
-		// the camera is published: the growing file already shows it as the default
+		screenOnly.assertTracks("video:vp8");
+		screenOnly.assertDefaults("screen_share", null);
+		playInPlace(egressId, "camera");
+		Recording audioOnly = snapshotRecordingInProgress(egressId, "camera");
+		audioOnly.assertInProgress();
+		audioOnly.assertTracks("audio:opus");
+		// the camera is published: the growing camera file already shows it
 		alice.addVideo();
 		Thread.sleep(6000);
-		playInPlace(egressId);
-		Recording withCamera = snapshotRecordingInProgress(egressId);
+		playInPlace(egressId, "camera");
+		Recording withCamera = snapshotRecordingInProgress(egressId, "camera");
 		withCamera.assertInProgress();
-		withCamera.assertTracks("audio:opus", "video:vp8", "video:vp8");
+		withCamera.assertTracks("audio:opus", "video:vp8");
 		withCamera.assertHealthy();
 		withCamera.assertDefaults("camera", "microphone");
-		Recording recording = stopAndGetRecording(egressId);
-		recording.assertFinalized();
-		recording.assertTracks("audio:opus", "video:vp8", "video:vp8");
-		recording.assertHealthy();
-		recording.assertAvSync(5);
-		recording.assertDefaults("camera", "microphone");
+		Recordings recordings = stopAndGetRecordings(egressId);
+		recordings.assertFiles("camera", "screen");
+		Recording camera = recordings.camera();
+		camera.assertFinalized();
+		camera.assertTracks("audio:opus", "video:vp8");
+		camera.assertHealthy();
+		camera.assertAvSync(5);
+		camera.assertDefaults("camera", "microphone");
+		recordings.screen().assertFinalized();
+		recordings.screen().assertTracks("video:vp8");
+		recordings.screen().assertHealthy();
 	}
 
-	// ----- Lifecycle of the non-default tracks -----
+	// ----- Lifecycle of the screen file -----
 
 	@Test
 	@DisplayName("Screen share muted and unmuted")
@@ -1709,20 +1787,26 @@ public class OpenViduTestAppE2eEgressProTest extends AbstractOpenViduTestappE2eT
 		Thread.sleep(5000);
 		alice.unmuteScreen();
 		Thread.sleep(5000);
-		// a gap in the screen track only
-		Recording recording = stopAndGetRecording(egressId);
-		recording.assertFinalized();
-		recording.assertTracks("audio:opus", "video:vp8", "video:vp8");
-		recording.assertHealthy();
-		recording.assertAvSync(5);
-		recording.assertDefaults("camera", "microphone");
-		FileTrack screen = recording.named("screen_share");
-		List<double[]> gaps = screen.gaps(1);
-		Assertions.assertEquals(1, gaps.size(), "The screen track must have one gap, while it was muted: " + screen);
+		// a gap in the screen file only
+		Recordings recordings = stopAndGetRecordings(egressId);
+		recordings.assertFiles("camera", "screen");
+		Recording camera = recordings.camera();
+		camera.assertFinalized();
+		camera.assertTracks("audio:opus", "video:vp8");
+		camera.assertHealthy();
+		camera.assertAvSync(5);
+		camera.assertDefaults("camera", "microphone");
+		Assertions.assertTrue(camera.named("camera").gaps(1).isEmpty(),
+				"The camera must go on throughout: " + camera.named("camera"));
+		Recording screen = recordings.screen();
+		screen.assertFinalized();
+		screen.assertTracks("video:vp8");
+		screen.assertHealthy();
+		FileTrack screenTrack = screen.named("screen_share");
+		List<double[]> gaps = screenTrack.gaps(1);
+		Assertions.assertEquals(1, gaps.size(), "The screen track must have one gap, while it was muted: " + screenTrack);
 		double gap = gaps.get(0)[1] - gaps.get(0)[0];
-		Assertions.assertTrue(gap > 3 && gap < 8, "The gap must last about 5 s, not " + gap + " s: " + screen);
-		Assertions.assertTrue(recording.named("camera").gaps(1).isEmpty(),
-				"The camera must go on throughout: " + recording.named("camera"));
+		Assertions.assertTrue(gap > 3 && gap < 8, "The gap must last about 5 s, not " + gap + " s: " + screenTrack);
 	}
 
 	@Test
@@ -1739,28 +1823,38 @@ public class OpenViduTestAppE2eEgressProTest extends AbstractOpenViduTestappE2eT
 		alice.unpublishVideo();
 		alice.unpublishAudio();
 		Thread.sleep(8000);
-		// the default tracks end (the microphone as silence) and the screen and its
-		// audio go on to the end: what players show is the known limitation
-		Recording recording = stopAndGetRecording(egressId);
-		recording.assertFinalized();
-		recording.assertTracks("audio:opus", "audio:opus", "video:vp8", "video:vp8");
-		recording.assertHealthy();
-		recording.assertAvSync(5);
-		recording.assertDefaults("camera", "microphone");
-		FileTrack camera = recording.named("camera");
-		FileTrack microphone = recording.named("microphone");
-		FileTrack screen = recording.named("screen_share");
-		FileTrack tabAudio = recording.named("screen_share_audio");
-		Assertions.assertTrue(camera.lastPacketTime() < screen.lastPacketTime() - 6,
-				"The camera must end well before the screen: " + camera + " / " + screen);
+		// the camera file ends early (its audio as silence to the file's end), the
+		// screen file goes on to the end of the recording
+		Recordings recordings = stopAndGetRecordings(egressId);
+		recordings.assertFiles("camera", "screen");
+		Recording camera = recordings.camera();
+		camera.assertFinalized();
+		camera.assertTracks("audio:opus", "video:vp8");
+		camera.assertHealthy();
+		camera.assertAvSync(5);
+		camera.assertDefaults("camera", "microphone");
+		FileTrack cameraTrack = camera.named("camera");
+		FileTrack microphone = camera.named("microphone");
+		Assertions.assertTrue(cameraTrack.lastPacketTime() > 6 && cameraTrack.lastPacketTime() < 11,
+				"The camera must end when it is unpublished, about 8 s in: " + cameraTrack);
 		double micLastBeep = microphone.markers.get(microphone.markers.size() - 1);
-		double tabLastBeep = tabAudio.markers.get(tabAudio.markers.size() - 1);
-		Assertions.assertTrue(tabLastBeep > micLastBeep + 6,
-				"The screen audio must beep on after the microphone was unpublished: " + microphone + " / " + tabAudio);
-		Assertions.assertTrue(screen.lastPacketTime() > recording.duration - 1.5,
-				"The screen must run to the end of the file: " + screen + ", duration " + recording.duration);
-		Assertions.assertTrue(microphone.lastPacketTime() > recording.duration - 1.5,
-				"The default audio track must be filled to the end: " + microphone + ", duration " + recording.duration);
+		Assertions.assertTrue(micLastBeep > 6 && micLastBeep < 11,
+				"The microphone must beep until it is unpublished, about 8 s in: " + microphone);
+		Assertions.assertTrue(microphone.lastPacketTime() > camera.duration - 1.5,
+				"The camera file's audio must be filled to the end: " + microphone + ", duration " + camera.duration);
+		Recording screen = recordings.screen();
+		screen.assertFinalized();
+		screen.assertTracks("audio:opus", "video:vp8");
+		screen.assertHealthy();
+		screen.assertAvSync(5);
+		screen.assertDefaults("screen_share", "screen_share_audio");
+		FileTrack screenTrack = screen.named("screen_share");
+		FileTrack tabAudio = screen.named("screen_share_audio");
+		Assertions.assertTrue(screen.duration > 11, "The screen file lasts the 13 s the screen was shared: " + screen.duration);
+		Assertions.assertTrue(screenTrack.lastPacketTime() > screen.duration - 1.5,
+				"The screen must run to the end of its file: " + screenTrack + ", duration " + screen.duration);
+		Assertions.assertTrue(tabAudio.markers.get(tabAudio.markers.size() - 1) > screen.duration - 2,
+				"The screen audio must beep on to the end: " + tabAudio + ", duration " + screen.duration);
 	}
 
 	@Test
@@ -1775,15 +1869,22 @@ public class OpenViduTestAppE2eEgressProTest extends AbstractOpenViduTestappE2eT
 		alice.setVideoCodec("h264");
 		alice.addScreen();
 		Thread.sleep(8000);
-		Recording recording = stopAndGetRecording(egressId);
-		recording.assertFinalized();
-		recording.assertTracks("audio:opus", "video:vp8", "video:h264");
-		recording.assertHealthy();
-		recording.assertAvSync(5);
-		recording.assertDefaults("camera", "microphone");
-		Assertions.assertEquals("vp8", recording.named("camera").codec, "The camera is VP8: " + recording.streams);
-		Assertions.assertEquals("h264", recording.named("screen_share").codec, "The screen is H.264: " + recording.streams);
-		recording.named("screen_share").assertReachedSize(SCREEN_WIDTH, SCREEN_HEIGHT);
+		// each file has the container its codecs need: the camera file stays WebM
+		Recordings recordings = stopAndGetRecordings(egressId);
+		recordings.assertFiles("camera", "screen");
+		Recording camera = recordings.camera();
+		camera.assertFinalized();
+		camera.assertTracks("audio:opus", "video:vp8");
+		camera.assertHealthy();
+		camera.assertAvSync(5);
+		camera.assertDefaults("camera", "microphone");
+		camera.assertContainer("webm");
+		Recording screen = recordings.screen();
+		screen.assertFinalized();
+		screen.assertTracks("video:h264");
+		screen.assertHealthy();
+		screen.assertContainer("matroska");
+		screen.named("screen_share").assertReachedSize(SCREEN_WIDTH, SCREEN_HEIGHT);
 	}
 
 	@Test
@@ -1801,22 +1902,66 @@ public class OpenViduTestAppE2eEgressProTest extends AbstractOpenViduTestappE2eT
 		alice.setVideoCodec("h264");
 		alice.addVideo();
 		Thread.sleep(6000);
-		// three video tracks, exactly one default: the first camera
-		Recording recording = stopAndGetRecording(egressId);
-		recording.assertFinalized();
-		recording.assertTracks("audio:opus", "video:vp8", "video:vp8", "video:h264");
-		recording.assertHealthy();
-		recording.assertAvSync(5);
-		recording.assertDefaults("camera", "microphone");
-		Assertions.assertEquals(2, recording.allNamed("camera").size(), "Two camera tracks: " + recording.streams);
-		FileTrack first = recording.named("camera", 0);
-		FileTrack second = recording.named("camera", 1);
-		Assertions.assertTrue(first.isDefault && "vp8".equals(first.codec), "The VP8 camera is the default: " + recording.streams);
-		Assertions.assertTrue(!second.isDefault && "h264".equals(second.codec),
-				"The H.264 camera is a non-default track: " + recording.streams);
-		Assertions.assertTrue(first.lastPacketTime() <= second.firstPacketTime(),
-				"The H.264 camera must follow the VP8 one: " + first + " / " + second);
-		Assertions.assertFalse(recording.named("screen_share").isDefault, "The screen is non-default: " + recording.streams);
+		// the H.264 camera cannot continue the VP8 one: it goes to the other file,
+		// which is Matroska; the camera file ends its video at the unpublish
+		Recordings recordings = stopAndGetRecordings(egressId);
+		recordings.assertFiles("camera", "screen", "other");
+		Recording camera = recordings.camera();
+		camera.assertFinalized();
+		camera.assertTracks("audio:opus", "video:vp8");
+		camera.assertHealthy();
+		camera.assertAvSync(5);
+		camera.assertDefaults("camera", "microphone");
+		camera.assertContainer("webm");
+		FileTrack first = camera.named("camera");
+		Assertions.assertTrue(first.lastPacketTime() > 5 && first.lastPacketTime() < 10,
+				"The VP8 camera ends when it is unpublished, about 7 s in: " + first);
+		Recording screen = recordings.screen();
+		screen.assertFinalized();
+		screen.assertTracks("video:vp8");
+		screen.assertHealthy();
+		screen.assertContainer("webm");
+		Recording other = recordings.other();
+		other.assertFinalized();
+		other.assertTracks("video:h264");
+		other.assertHealthy();
+		other.assertContainer("matroska");
+		FileTrack second = other.named("camera");
+		second.assertReachedSize(CAMERA_WIDTH, CAMERA_HEIGHT);
+		second.assertMarkers(4);
+		// the H.264 camera is published about 9 s in: after the screen share and codec dialogs
+		recordings.assertStartsAfter("other", "camera", 9, 4);
+	}
+
+	@Test
+	@DisplayName("Camera unpublished and published again at once continues the camera file")
+	void quickRepublishContinuesTheCameraFileTest() throws Exception {
+		log.info("Participant Passthrough: camera unpublished and published again at once");
+		String room = uniqueRoom("quick-republish");
+		Publisher alice = joinPublisher("chrome", room, "alice", "vp8", true, true, true);
+		String egressId = startParticipantRecording(room, "alice", filepath(room, "alice", "mkv"));
+		waitUntilEgressStatus(egressId, "EGRESS_ACTIVE", 20);
+		Thread.sleep(4000);
+		alice.unpublishVideo();
+		alice.addVideo();
+		Thread.sleep(6000);
+		// the new camera continues the camera file's video: no other file, whatever
+		// the egress was still draining of the old one
+		Recordings recordings = stopAndGetRecordings(egressId);
+		recordings.assertFiles("camera");
+		Recording camera = recordings.camera();
+		camera.assertFinalized();
+		camera.assertTracks("audio:opus", "video:vp8");
+		camera.assertHealthy();
+		camera.assertStartTogether();
+		camera.assertAvSync(5);
+		camera.assertDefaults("camera", "microphone");
+		FileTrack cameraTrack = camera.named("camera");
+		Assertions.assertTrue(cameraTrack.lastPacketTime() > camera.duration - 1.5,
+				"The camera must run to the end: " + cameraTrack + ", duration " + camera.duration);
+		JsonObject manifest = getManifest(egressId);
+		Assertions.assertEquals(2, manifestTrack(manifest, "camera", "video").getAsJsonArray("track_ids").size(),
+				"Two LiveKit tracks wrote the camera file's video: " + manifest);
 	}
 
 	// ----- Request modes -----
@@ -1879,13 +2024,17 @@ public class OpenViduTestAppE2eEgressProTest extends AbstractOpenViduTestappE2eT
 		String egressId = startParticipantRecording(room, "alice", filepath(room, "alice", "webm"));
 		waitUntilEgressStatus(egressId, "EGRESS_ACTIVE", 20);
 		Thread.sleep(10000);
-		Recording recording = stopAndGetRecording(egressId);
-		recording.assertFinalized();
-		recording.assertDocType("webm");
-		recording.assertTracks("audio:opus", "audio:opus", "video:vp8", "video:vp8");
-		recording.assertHealthy();
-		recording.assertAvSync(5);
-		recording.assertDefaults("camera", "microphone");
+		Recordings recordings = stopAndGetRecordings(egressId);
+		recordings.assertFiles("camera", "screen");
+		recordings.camera().assertDefaults("camera", "microphone");
+		recordings.screen().assertDefaults("screen_share", "screen_share_audio");
+		for (Recording file : recordings.files.values()) {
+			file.assertFinalized();
+			file.assertContainer("webm");
+			file.assertTracks("audio:opus", "video:vp8");
+			file.assertHealthy();
+			file.assertAvSync(5);
+		}
 	}
 
 	@Test
@@ -1915,53 +2064,96 @@ public class OpenViduTestAppE2eEgressProTest extends AbstractOpenViduTestappE2eT
 		Thread.sleep(20000);
 		// both video tracks drop frames until a keyframe on their own: neither decodes
 		// into a corrupted picture, both come back at their size
-		Recording recording = stopAndGetRecording(egressId);
-		recording.assertFinalized();
-		recording.assertTracks("audio:opus", "video:vp8", "video:vp8");
-		recording.assertDecodesWithoutErrors();
-		recording.assertPicturesIntact();
-		recording.assertAudioContinuous();
-		recording.assertNoTinyVideoFrames();
-		recording.assertDefaults("camera", "microphone");
-		recording.named("camera").assertReachesSizeAfter(CAMERA_WIDTH, CAMERA_HEIGHT, troubleTo);
-		recording.named("screen_share").assertReachesSizeAfter(SCREEN_WIDTH, SCREEN_HEIGHT, troubleTo);
+		Recordings recordings = stopAndGetRecordings(egressId);
+		recordings.assertFiles("camera", "screen");
+		Recording camera = recordings.camera();
+		camera.assertFinalized();
+		camera.assertTracks("audio:opus", "video:vp8");
+		camera.assertDecodesWithoutErrors();
+		camera.assertPicturesIntact();
+		camera.assertAudioContinuous();
+		camera.assertNoTinyVideoFrames();
+		camera.assertDefaults("camera", "microphone");
+		camera.named("camera").assertReachesSizeAfter(CAMERA_WIDTH, CAMERA_HEIGHT, troubleTo);
+		Recording screen = recordings.screen();
+		screen.assertFinalized();
+		screen.assertTracks("video:vp8");
+		screen.assertDecodesWithoutErrors();
+		screen.assertPicturesIntact();
+		screen.assertNoTinyVideoFrames();
+		screen.named("screen_share").assertReachesSizeAfter(SCREEN_WIDTH, SCREEN_HEIGHT, troubleTo);
 	}
 
 	@Test
-	@DisplayName("The manifest lists the tracks of the file")
+	@DisplayName("The manifest lists the tracks of every file")
 	void manifestTracksTest() throws Exception {
 		log.info("Participant Passthrough: the manifest lists the tracks");
 		String room = uniqueRoom("manifest");
 		Publisher alice = joinPublisher("chrome", room, "alice", "vp8", true, true, true);
-		alice.addScreen(true);
 		String egressId = startParticipantRecording(room, "alice", filepath(room, "alice", "mkv"));
 		waitUntilEgressStatus(egressId, "EGRESS_ACTIVE", 20);
-		Thread.sleep(8000);
-		Recording recording = stopAndGetRecording(egressId);
-		recording.assertFinalized();
-		recording.assertTracks("audio:opus", "audio:opus", "video:vp8", "video:vp8");
-		recording.assertDefaults("camera", "microphone");
+		Thread.sleep(3000);
+		alice.addScreen(true);
+		Thread.sleep(6000);
+		Recordings recordings = stopAndGetRecordings(egressId);
+		recordings.assertFiles("camera", "screen");
+		recordings.camera().assertFinalized();
+		recordings.screen().assertFinalized();
 		JsonObject manifest = getManifest(egressId);
 		Assertions.assertEquals("alice", manifest.get("publisher_identity").getAsString(), "Manifest: " + manifest);
+		JsonArray files = manifest.getAsJsonArray("files");
+		Assertions.assertEquals(recordings.keys, files.asList().stream()
+				.map(f -> f.getAsJsonObject().get("filename").getAsString()).collect(Collectors.toList()),
+				"The manifest lists the files: " + manifest);
 		JsonArray tracks = manifest.getAsJsonArray("tracks");
 		Assertions.assertNotNull(tracks, "The manifest must list the tracks: " + manifest);
-		Assertions.assertEquals(recording.streams.size(), tracks.size(), "One manifest entry per file track: " + manifest);
 		Map<String, String> codecs = Map.of("V_VP8", "vp8", "V_VP9", "vp9", "V_MPEG4/ISO/AVC", "h264", "V_AV1", "av1",
 				"A_OPUS", "opus");
-		for (int i = 0; i < tracks.size(); i++) {
-			JsonObject entry = tracks.get(i).getAsJsonObject();
-			FileTrack track = recording.streams.get(i);
-			Assertions.assertEquals(i + 1, entry.get("number").getAsInt(), "Track number: " + entry);
-			Assertions.assertEquals(track.type, entry.get("kind").getAsString(), "Track kind: " + entry + " / " + track);
-			Assertions.assertEquals(track.codec, codecs.get(entry.get("codec").getAsString()),
-					"Track codec: " + entry + " / " + track);
-			Assertions.assertEquals(track.name, entry.get("source").getAsString(), "Track source: " + entry + " / " + track);
-			Assertions.assertEquals(track.isDefault, entry.get("default").getAsBoolean(),
-					"Default flag: " + entry + " / " + track);
-			JsonArray ids = entry.getAsJsonArray("track_ids");
-			Assertions.assertTrue(ids != null && ids.size() == 1 && ids.get(0).getAsString().startsWith("TR_"),
-					"One LiveKit track id per file track: " + entry);
+		int entries = 0;
+		long cameraFirstFrameAt = 0;
+		for (String group : recordings.files.keySet()) {
+			Recording file = recordings.file(group);
+			List<JsonObject> ofFile = tracks.asList().stream().map(JsonElement::getAsJsonObject)
+					.filter(e -> group.equals(e.get("group").getAsString())).collect(Collectors.toList());
+			Assertions.assertEquals(file.streams.size(), ofFile.size(), "One manifest entry per track of the " + group
+					+ " file: " + manifest);
+			for (int i = 0; i < ofFile.size(); i++) {
+				JsonObject entry = ofFile.get(i);
+				FileTrack track = file.streams.get(i);
+				entries++;
+				Assertions.assertEquals(recordings.keys.get(new ArrayList<>(recordings.files.keySet()).indexOf(group)),
+						entry.get("file").getAsString(), "The file of the track: " + entry);
+				Assertions.assertEquals(i + 1, entry.get("number").getAsInt(), "Track number: " + entry);
+				Assertions.assertEquals(track.type, entry.get("kind").getAsString(), "Track kind: " + entry + " / " + track);
+				Assertions.assertEquals(track.codec, codecs.get(entry.get("codec").getAsString()),
+						"Track codec: " + entry + " / " + track);
+				Assertions.assertEquals(track.name, entry.get("source").getAsString(),
+						"Track source: " + entry + " / " + track);
+				Assertions.assertEquals(track.isDefault, entry.get("default").getAsBoolean(),
+						"Default flag: " + entry + " / " + track);
+				JsonArray ids = entry.getAsJsonArray("track_ids");
+				Assertions.assertTrue(ids != null && ids.size() == 1 && ids.get(0).getAsString().startsWith("TR_"),
+						"One LiveKit track id per file track: " + entry);
+				// where the track starts and ends in its file, as the file says
+				double start = entry.get("start_ms").getAsLong() / 1000.0;
+				double end = entry.get("end_ms").getAsLong() / 1000.0;
+				Assertions.assertEquals(track.firstPacketTime(), start, 0.1, "start_ms of " + entry + " / " + track);
+				Assertions.assertEquals(track.lastPacketTime(), end, 0.1, "end_ms of " + entry + " / " + track);
+				// and on the wall clock: the screen file starts about 3 s after the camera file
+				long firstFrameAt = entry.get("first_frame_at").getAsLong();
+				Assertions.assertTrue(firstFrameAt > 0 && entry.get("last_frame_at").getAsLong() > firstFrameAt,
+						"Wall-clock instants of " + entry);
+				if ("camera".equals(group) && i == 0) {
+					cameraFirstFrameAt = firstFrameAt - entry.get("start_ms").getAsLong() * 1_000_000L;
+				} else if ("screen".equals(group)) {
+					double offset = (firstFrameAt - entry.get("start_ms").getAsLong() * 1_000_000L - cameraFirstFrameAt)
+							/ 1e9;
+					Assertions.assertTrue(offset > 1.5 && offset < 5.5,
+							"The screen file starts about 3 s after the camera file, not " + offset + " s: " + entry);
+				}
+			}
 		}
+		Assertions.assertEquals(tracks.size(), entries, "Every manifest entry belongs to a file: " + manifest);
 	}
 
 	@Test
@@ -1975,27 +2167,30 @@ public class OpenViduTestAppE2eEgressProTest extends AbstractOpenViduTestappE2eT
 		Thread.sleep(5000);
 		alice.addScreen();
 		Thread.sleep(8000);
-		// the screen is a second video track on the same timeline; the camera and
-		// the microphone stay the default tracks, which players show
-		Recording recording = stopAndGetRecording(egressId);
-		recording.assertFinalized();
-		recording.assertTracks("audio:opus", "video:vp8", "video:vp8");
-		recording.assertHealthy();
-		recording.assertStartTogether();
-		recording.assertAvSync(5);
-		FileTrack camera = recording.named("camera");
-		FileTrack screen = recording.named("screen_share");
-		Assertions.assertTrue(camera.isDefault && !screen.isDefault && recording.named("microphone").isDefault,
-				"The camera and the microphone must be the default tracks: " + recording.streams);
-		camera.assertReachedSize(CAMERA_WIDTH, CAMERA_HEIGHT);
-		screen.assertReachedSize(SCREEN_WIDTH, SCREEN_HEIGHT);
-		camera.assertMarkers(10);
-		screen.assertMarkers(5);
-		double screenStart = screen.firstPacketTime() - camera.firstPacketTime();
-		Assertions.assertTrue(screenStart > 3 && screenStart < 8,
-				"The screen must start about 5 s after the camera, not " + screenStart + " s: " + screen);
-		Assertions.assertTrue(camera.lastPacketTime() > screen.firstPacketTime() + 5,
-				"The camera must go on while the screen is shared: " + camera + " / " + screen);
+		// the screen opens the screen file 5 s in; the camera file goes on
+		Recordings recordings = stopAndGetRecordings(egressId);
+		recordings.assertFiles("camera", "screen");
+		Recording camera = recordings.camera();
+		camera.assertFinalized();
+		camera.assertTracks("audio:opus", "video:vp8");
+		camera.assertHealthy();
+		camera.assertStartTogether();
+		camera.assertAvSync(5);
+		camera.assertDefaults("camera", "microphone");
+		FileTrack cameraTrack = camera.named("camera");
+		cameraTrack.assertReachedSize(CAMERA_WIDTH, CAMERA_HEIGHT);
+		cameraTrack.assertMarkers(10);
+		Assertions.assertTrue(cameraTrack.lastPacketTime() > camera.duration - 1.5,
+				"The camera must go on while the screen is shared: " + cameraTrack + ", duration " + camera.duration);
+		Recording screen = recordings.screen();
+		screen.assertFinalized();
+		screen.assertTracks("video:vp8");
+		screen.assertHealthy();
+		screen.assertDefaults("screen_share", null);
+		FileTrack screenTrack = screen.named("screen_share");
+		screenTrack.assertReachedSize(SCREEN_WIDTH, SCREEN_HEIGHT);
+		screenTrack.assertMarkers(5);
+		recordings.assertStartsAfter("screen", "camera", 5, 2.5);
 	}
 
 	@Test
@@ -2009,26 +2204,29 @@ public class OpenViduTestAppE2eEgressProTest extends AbstractOpenViduTestappE2eT
 		Thread.sleep(5000);
 		alice.addScreen(true);
 		Thread.sleep(8000);
-		// the screen and its audio are a second video and a second audio track
-		Recording recording = stopAndGetRecording(egressId);
-		recording.assertFinalized();
-		recording.assertTracks("audio:opus", "audio:opus", "video:vp8", "video:vp8");
-		recording.assertHealthy();
-		recording.assertStartTogether();
-		// every beep of both audio tracks sounds when a video shows a flash
-		recording.assertAvSync(5);
-		FileTrack microphone = recording.named("microphone");
-		FileTrack tabAudio = recording.named("screen_share_audio");
-		FileTrack screen = recording.named("screen_share");
-		Assertions.assertTrue(
-				recording.named("camera").isDefault && microphone.isDefault && !screen.isDefault && !tabAudio.isDefault,
-				"The camera and the microphone must be the default tracks: " + recording.streams);
-		screen.assertMarkers(5);
-		tabAudio.assertMarkers(5);
-		Assertions.assertTrue(Math.abs(tabAudio.firstPacketTime() - screen.firstPacketTime()) < 2,
-				"The screen and its audio must start together: " + screen + " / " + tabAudio);
-		Assertions.assertTrue(microphone.lastPacketTime() > tabAudio.firstPacketTime() + 5,
-				"The microphone must go on while the screen is shared: " + microphone + " / " + tabAudio);
+		// the screen and its audio are the screen file's two tracks
+		Recordings recordings = stopAndGetRecordings(egressId);
+		recordings.assertFiles("camera", "screen");
+		Recording camera = recordings.camera();
+		camera.assertFinalized();
+		camera.assertTracks("audio:opus", "video:vp8");
+		camera.assertHealthy();
+		camera.assertStartTogether();
+		camera.assertAvSync(5);
+		camera.assertDefaults("camera", "microphone");
+		Assertions.assertTrue(camera.named("microphone").lastPacketTime() > camera.duration - 1.5,
+				"The microphone must go on while the screen is shared: " + camera.named("microphone"));
+		Recording screen = recordings.screen();
+		screen.assertFinalized();
+		screen.assertTracks("audio:opus", "video:vp8");
+		screen.assertHealthy();
+		screen.assertStartTogether();
+		// every beep of the screen's audio sounds when the screen shows a flash
+		screen.assertAvSync(4);
+		screen.assertDefaults("screen_share", "screen_share_audio");
+		screen.named("screen_share").assertMarkers(5);
+		screen.named("screen_share_audio").assertMarkers(5);
+		recordings.assertStartsAfter("screen", "camera", 5, 2.5);
 	}
 
 	@Test
@@ -2046,21 +2244,28 @@ public class OpenViduTestAppE2eEgressProTest extends AbstractOpenViduTestappE2eT
 		Thread.sleep(3000);
 		alice.addScreen();
 		Thread.sleep(5000);
-		// the second share continues the screen's track: still one screen track,
+		// the second share continues the screen file's video: one screen track,
 		// with a gap while it was not shared
-		Recording recording = stopAndGetRecording(egressId);
-		recording.assertFinalized();
-		recording.assertTracks("audio:opus", "video:vp8", "video:vp8");
-		recording.assertHealthy();
-		recording.assertAvSync(5);
-		FileTrack camera = recording.named("camera");
-		FileTrack screen = recording.named("screen_share");
-		Assertions.assertTrue(camera.isDefault && !screen.isDefault,
-				"The camera must be the default video track: " + recording.streams);
-		Assertions.assertEquals(1, screen.gaps(1).size(),
-				"The screen track must have one gap, while the screen was not shared: " + screen);
-		screen.assertMarkers(8);
-		Assertions.assertTrue(camera.gaps(1).isEmpty(), "The camera must go on throughout: " + camera);
+		Recordings recordings = stopAndGetRecordings(egressId);
+		recordings.assertFiles("camera", "screen");
+		Recording camera = recordings.camera();
+		camera.assertFinalized();
+		camera.assertTracks("audio:opus", "video:vp8");
+		camera.assertHealthy();
+		camera.assertAvSync(5);
+		Assertions.assertTrue(camera.named("camera").gaps(1).isEmpty(),
+				"The camera must go on throughout: " + camera.named("camera"));
+		Recording screen = recordings.screen();
+		screen.assertFinalized();
+		screen.assertTracks("video:vp8");
+		screen.assertHealthy();
+		FileTrack screenTrack = screen.named("screen_share");
+		Assertions.assertEquals(1, screenTrack.gaps(1).size(),
+				"The screen track must have one gap, while the screen was not shared: " + screenTrack);
+		screenTrack.assertMarkers(8);
+		JsonObject manifest = getManifest(egressId);
+		Assertions.assertEquals(2, manifestTrack(manifest, "screen", "video").getAsJsonArray("track_ids").size(),
+				"Two LiveKit tracks wrote the screen file's video: " + manifest);
 	}
 
 	@Test
@@ -2078,23 +2283,30 @@ public class OpenViduTestAppE2eEgressProTest extends AbstractOpenViduTestappE2eT
 		Thread.sleep(5000);
 		alice.addVideo();
 		Thread.sleep(5000);
-		// the screen does not take the camera's track while the camera is off: that
-		// track keeps a gap there, and the camera published again continues it
-		Recording recording = stopAndGetRecording(egressId);
-		recording.assertFinalized();
-		recording.assertTracks("audio:opus", "video:vp8", "video:vp8");
-		recording.assertHealthy();
-		recording.assertAvSync(5);
-		FileTrack camera = recording.named("camera");
-		FileTrack screen = recording.named("screen_share");
-		Assertions.assertTrue(camera.isDefault && !screen.isDefault,
-				"The camera must be the default video track: " + recording.streams);
-		List<double[]> gaps = camera.gaps(1);
-		Assertions.assertEquals(1, gaps.size(), "The camera track must have one gap, while the camera was off: " + camera);
-		Assertions.assertTrue(screen.firstPacketTime() > gaps.get(0)[0] && screen.firstPacketTime() < gaps.get(0)[1],
-				"The screen must start inside the camera's gap: " + screen + " / " + camera);
-		camera.assertReachedSize(CAMERA_WIDTH, CAMERA_HEIGHT);
-		screen.assertReachedSize(SCREEN_WIDTH, SCREEN_HEIGHT);
+		// the screen does not take the camera's place while the camera is off: the
+		// camera file's video keeps a gap there, and the camera published again
+		// continues it
+		Recordings recordings = stopAndGetRecordings(egressId);
+		recordings.assertFiles("camera", "screen");
+		Recording camera = recordings.camera();
+		camera.assertFinalized();
+		camera.assertTracks("audio:opus", "video:vp8");
+		camera.assertHealthy();
+		camera.assertAvSync(5);
+		camera.assertDefaults("camera", "microphone");
+		FileTrack cameraTrack = camera.named("camera");
+		List<double[]> gaps = cameraTrack.gaps(1);
+		Assertions.assertEquals(1, gaps.size(),
+				"The camera track must have one gap, while the camera was off: " + cameraTrack);
+		double gap = gaps.get(0)[1] - gaps.get(0)[0];
+		Assertions.assertTrue(gap > 5 && gap < 10, "The gap must last about 7 s, not " + gap + " s: " + cameraTrack);
+		cameraTrack.assertReachedSize(CAMERA_WIDTH, CAMERA_HEIGHT);
+		Recording screen = recordings.screen();
+		screen.assertFinalized();
+		screen.assertTracks("video:vp8");
+		screen.assertHealthy();
+		screen.named("screen_share").assertReachedSize(SCREEN_WIDTH, SCREEN_HEIGHT);
+		recordings.assertStartsAfter("screen", "camera", 6, 2.5);
 	}
 
 	@Test
@@ -2393,7 +2605,9 @@ public class OpenViduTestAppE2eEgressProTest extends AbstractOpenViduTestappE2eT
 		Thread.sleep(10000);
 
 		Recording recording = stopAndGetRecording(egressId);
-		recording.assertDocType("webm".equals(extension) ? "webm" : "matroska");
+		// the container is not the request's choice: WebM, which browsers play,
+		// unless a codec has no place in it (H.264); the requested extension is replaced
+		recording.assertContainer("h264".equals(codec) ? "matroska" : "webm");
 		recording.assertFinalized();
 		recording.assertTracks("audio:opus", "video:" + codec);
 		recording.assertHealthy();
@@ -3381,35 +3595,69 @@ public class OpenViduTestAppE2eEgressProTest extends AbstractOpenViduTestappE2eT
 		return Integer.parseInt(m.group(1));
 	}
 
+	/**
+	 * Stops the egress and downloads its file: a recording with a single file (the
+	 * camera file, or the requested file of a request for chosen tracks).
+	 */
 	private Recording stopAndGetRecording(String egressId) throws Exception {
 		stopEgress(egressId);
 		return getRecording(waitUntilEgressStatus(egressId, "EGRESS_COMPLETE", 30));
 	}
 
-	private static String fileKey(JsonObject egressInfo) {
+	/** Stops the egress and downloads every file of it. */
+	private Recordings stopAndGetRecordings(String egressId) throws Exception {
+		stopEgress(egressId);
+		return getRecordings(waitUntilEgressStatus(egressId, "EGRESS_COMPLETE", 30));
+	}
+
+	/** The storage keys of the files of an egress, the camera file first. */
+	private static List<String> fileKeys(JsonObject egressInfo) {
 		JsonArray files = egressInfo.getAsJsonArray("file_results");
 		if (files != null && !files.isEmpty()) {
-			Assertions.assertEquals(1, files.size(), "One file expected: " + egressInfo);
-			return files.get(0).getAsJsonObject().get("filename").getAsString();
+			return files.asList().stream().map(f -> f.getAsJsonObject().get("filename").getAsString())
+					.collect(Collectors.toList());
 		}
 		Assertions.assertTrue(egressInfo.has("file"), "The egress has no file: " + egressInfo);
-		return egressInfo.getAsJsonObject("file").get("filename").getAsString();
+		return List.of(egressInfo.getAsJsonObject("file").get("filename").getAsString());
+	}
+
+	/** The storage key of the first file of an egress: the camera file. */
+	private static String fileKey(JsonObject egressInfo) {
+		return fileKeys(egressInfo).get(0);
 	}
 
 	/**
-	 * Downloads the uploaded file of a completed egress from MinIO.
+	 * Downloads the only file of a completed egress from MinIO: the test expects
+	 * no screen or other file.
 	 */
 	private Recording getRecording(JsonObject egressInfo) throws Exception {
-		String key = fileKey(egressInfo);
-		Path local = newDownloadDir("participant-passthrough").resolve(Paths.get(key).getFileName());
-		minio.downloadObject(DownloadObjectArgs.builder().bucket(MINIO_BUCKET).object(key)
-				.filename(local.toString()).build());
-		return Recording.analyze(local);
+		Recordings recordings = getRecordings(egressInfo);
+		recordings.assertFiles("camera");
+		return recordings.camera();
+	}
+
+	/**
+	 * Downloads every file of a completed egress from MinIO, and its manifest.
+	 */
+	private Recordings getRecordings(JsonObject egressInfo) throws Exception {
+		Recordings recordings = new Recordings();
+		Path dir = newDownloadDir("participant-passthrough");
+		for (String key : fileKeys(egressInfo)) {
+			Path local = dir.resolve(Paths.get(key).getFileName());
+			minio.downloadObject(DownloadObjectArgs.builder().bucket(MINIO_BUCKET).object(key)
+					.filename(local.toString()).build());
+			String group = Recordings.groupOf(key);
+			Assertions.assertFalse(recordings.files.containsKey(group), "Two " + group + " files: " + egressInfo);
+			recordings.keys.add(key);
+			recordings.files.put(group, Recording.analyze(local));
+		}
+		recordings.manifest = getManifest(egressInfo.get("egress_id").getAsString());
+		return recordings;
 	}
 
 	/**
 	 * Downloads the manifest of a completed egress from MinIO: it sits next to the
-	 * file, named after the egress id.
+	 * files, named after the egress id.
 	 */
 	private JsonObject getManifest(String egressId) throws Exception {
 		String key = fileKey(getEgress(egressId));
@@ -3420,19 +3668,53 @@ public class OpenViduTestAppE2eEgressProTest extends AbstractOpenViduTestappE2eT
 		return JsonParser.parseString(new String(Files.readAllBytes(local), StandardCharsets.UTF_8)).getAsJsonObject();
 	}
 
-	/**
-	 * Where an active egress writes its file, inside the egress container.
-	 */
-	private String fileBeingRecorded(String egressId) throws IOException {
-		String name = Paths.get(fileKey(getEgress(egressId))).getFileName().toString();
-		return EGRESS_TMP_DIR + "/" + egressId + "/" + name;
+	/** The first manifest track of a file and kind. */
+	private static JsonObject manifestTrack(JsonObject manifest, String group, String kind) {
+		JsonArray tracks = manifest.getAsJsonArray("tracks");
+		Assertions.assertNotNull(tracks, "The manifest must list the tracks: " + manifest);
+		for (JsonElement e : tracks) {
+			JsonObject track = e.getAsJsonObject();
+			if (group.equals(track.get("group").getAsString()) && kind.equals(track.get("kind").getAsString())) {
+				return track;
+			}
+		}
+		Assertions.fail("No " + kind + " track of the " + group + " file in the manifest: " + manifest);
+		return null;
 	}
 
 	/**
-	 * Copies the file an active egress is writing, from the egress container.
+	 * Where an active egress writes the file of a group, inside the egress
+	 * container: the camera file is the one the egress reports while active, the
+	 * others are next to it.
+	 */
+	private String fileBeingRecorded(String egressId, String group) throws Exception {
+		String name = Paths.get(fileKey(getEgress(egressId))).getFileName().toString();
+		String dir = EGRESS_TMP_DIR + "/" + egressId;
+		if ("camera".equals(group)) {
+			return dir + "/" + name;
+		}
+		String base = name.substring(0, name.lastIndexOf('.')) + "-" + group + ".";
+		Exec ls = Exec.run(30, "docker", "exec", EGRESS_CONTAINER, "ls", dir);
+		for (String entry : ls.stdout.split("\\s+")) {
+			if (entry.startsWith(base)) {
+				return dir + "/" + entry;
+			}
+		}
+		Assertions.fail("No " + group + " file being recorded in " + dir + ": " + ls.stdout + ls.stderr);
+		return null;
+	}
+
+	/**
+	 * Copies the camera file an active egress is writing, from the egress
+	 * container.
 	 */
 	private Recording snapshotRecordingInProgress(String egressId) throws Exception {
-		String remote = fileBeingRecorded(egressId);
+		return snapshotRecordingInProgress(egressId, "camera");
+	}
+
+	/** Copies the file of a group an active egress is writing. */
+	private Recording snapshotRecordingInProgress(String egressId, String group) throws Exception {
+		String remote = fileBeingRecorded(egressId, group);
 		Path local = newDownloadDir("participant-passthrough-live").resolve(Paths.get(remote).getFileName());
 		Exec copy = Exec.run(60, "docker", "cp", EGRESS_CONTAINER + ":" + remote, local.toString());
 		Assertions.assertEquals(0, copy.exitCode, "Could not copy the file being recorded: " + copy.stderr);
@@ -3440,11 +3722,16 @@ public class OpenViduTestAppE2eEgressProTest extends AbstractOpenViduTestappE2eT
 	}
 
 	/**
-	 * Plays (demuxes and decodes every track of) the file an active egress is
-	 * writing, in place, with GStreamer inside the egress container.
+	 * Plays (demuxes and decodes every track of) the camera file an active egress
+	 * is writing, in place, with GStreamer inside the egress container.
 	 */
 	private void playInPlace(String egressId) throws Exception {
-		String remote = fileBeingRecorded(egressId);
+		playInPlace(egressId, "camera");
+	}
+
+	/** Plays the file of a group an active egress is writing, in place. */
+	private void playInPlace(String egressId, String group) throws Exception {
+		String remote = fileBeingRecorded(egressId, group);
 		Exec play = Exec.run(120, "docker", "exec", EGRESS_CONTAINER, "gst-launch-1.0", "-q", "playbin",
 				"uri=file://" + remote, "video-sink=fakesink", "audio-sink=fakesink");
 		log.info("Played {} while recording: exit {} {}", remote, play.exitCode, play.stderr.trim());
@@ -3800,6 +4087,86 @@ public class OpenViduTestAppE2eEgressProTest extends AbstractOpenViduTestappE2eT
 					markers.size(), markerName(), "video".equals(type) ? ", " + bar.size() + " with the bar" : "",
 					tinyFrames > 0 ? ", " + tinyFrames + " tiny frames" : "",
 					brokenPictures > 0 ? ", " + brokenPictures + " broken pictures" : "");
+		}
+	}
+
+	/**
+	 * The files of a Participant Passthrough egress, by group: the camera file
+	 * (the requested path), the screen file ("-screen") and the other file
+	 * ("-other"), in that order, with the manifest.
+	 */
+	private static class Recordings {
+		final List<String> keys = new ArrayList<>();
+		final Map<String, Recording> files = new LinkedHashMap<>();
+		JsonObject manifest;
+
+		/** The group of a file, from its name. */
+		static String groupOf(String key) {
+			String name = key.substring(key.lastIndexOf('/') + 1);
+			String base = name.substring(0, name.lastIndexOf('.'));
+			return base.endsWith("-screen") ? "screen" : base.endsWith("-other") ? "other" : "camera";
+		}
+
+		Recording file(String group) {
+			Recording r = files.get(group);
+			Assertions.assertNotNull(r, "No " + group + " file among " + keys);
+			return r;
+		}
+
+		Recording camera() {
+			return file("camera");
+		}
+
+		Recording screen() {
+			return file("screen");
+		}
+
+		Recording other() {
+			return file("other");
+		}
+
+		/**
+		 * Exactly these files, in this order, named after the requested path with the
+		 * extension of their container.
+		 */
+		void assertFiles(String... groups) {
+			Assertions.assertEquals(List.of(groups), new ArrayList<>(files.keySet()), "Files of the egress: " + keys);
+			String base = null;
+			for (String key : keys) {
+				String name = key.substring(0, key.lastIndexOf('.'));
+				String group = groupOf(key);
+				String fileBase = "camera".equals(group) ? name : name.substring(0, name.length() - group.length() - 1);
+				if (base == null) {
+					base = fileBase;
+				}
+				Assertions.assertEquals(base, fileBase, "Every file is named after the requested path: " + keys);
+				files.get(group).assertContainer(files.get(group).docType);
+			}
+		}
+
+		/** The wall-clock instant (unix ns) of a file's time 0, from the manifest. */
+		long fileStart(String group) {
+			long start = Long.MAX_VALUE;
+			for (JsonElement e : manifest.getAsJsonArray("tracks")) {
+				JsonObject track = e.getAsJsonObject();
+				if (group.equals(track.get("group").getAsString()) && track.has("first_frame_at")) {
+					start = Math.min(start,
+							track.get("first_frame_at").getAsLong() - track.get("start_ms").getAsLong() * 1_000_000L);
+				}
+			}
+			Assertions.assertTrue(start < Long.MAX_VALUE, "No track of the " + group + " file in the manifest: " + manifest);
+			return start;
+		}
+
+		/**
+		 * The file of a group starts about seconds after the file of another group,
+		 * within tolerance, on the wall clock the manifest gives.
+		 */
+		void assertStartsAfter(String group, String reference, double seconds, double tolerance) {
+			double offset = (fileStart(group) - fileStart(reference)) / 1e9;
+			Assertions.assertTrue(Math.abs(offset - seconds) <= tolerance, String.format(Locale.ROOT,
+					"The %s file must start %.1f s (±%.1f) after the %s file, not %.2f s: %s", group, seconds, tolerance,
+					reference, offset, manifest));
 		}
 	}
 
@@ -4302,6 +4669,14 @@ public class OpenViduTestAppE2eEgressProTest extends AbstractOpenViduTestappE2eT
 		}
 
 		// ----- assertions -----
+
+		/** The doc type of the file, and the extension that goes with it. */
+		void assertContainer(String docType) {
+			assertDocType(docType);
+			String extension = "webm".equals(docType) ? ".webm" : ".mkv";
+			Assertions.assertTrue(file.getFileName().toString().endsWith(extension),
+					"A " + docType + " file must be named " + extension + ": " + file.getFileName());
+		}
 
 		void assertDocType(String expected) {
 			Assertions.assertEquals(expected, docType, "EBML DocType of " + file.getFileName());
