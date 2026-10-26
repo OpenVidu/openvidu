@@ -3,6 +3,10 @@
 # extend these packages: the backend and frontend development servers in one session, stopped together. The caller
 # runs from the root of its workspace.
 
+# pnpm --dir takes the nearest pnpm-workspace.yaml as the workspace and installs it before running, which for the
+# packages of a nested checkout (an extending workspace's ce/) would build a second node_modules there.
+export NPM_CONFIG_WORKSPACE_DIR="$PWD"
+
 # The frontend development servers proxy /api to port 5000 (proxy.conf.json); another backend gets its own proxy file.
 DEFAULT_BACKEND_PORT=5000
 WORK_DIR="$(mktemp -d)"
