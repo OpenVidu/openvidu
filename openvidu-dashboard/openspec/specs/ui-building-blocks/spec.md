@@ -451,6 +451,28 @@ filters and the Columns button of its table.
 - **WHEN** it renders
 - **THEN** its Export CSV button is in the section header, after the title
 
+### Requirement: Copy button
+
+Edition: CE. The copy button SHALL copy the value it belongs to and toast "Copied"; without a clipboard API (insecure
+context) it SHALL select the value and toast "Press Ctrl+C". It is labelled by the type of identifier it copies, as
+"Copy room SID", "Copy room name", "Copy egress ID" or "Copy identity", and a value already shown as a link, title or
+breadcrumb gets the copy button alone, so the value appears once.
+
+#### Scenario: Copy in a secure context
+- **GIVEN** the copy button of `RM_ab12cd` inside a table row
+- **WHEN** the user clicks it
+- **THEN** the clipboard holds `RM_ab12cd`, a toast says "Copied" and no row link is followed
+
+#### Scenario: Copy over plain HTTP
+- **GIVEN** the clipboard API is unavailable
+- **WHEN** the user clicks a copy button
+- **THEN** the value is selected and the toast reads "Press Ctrl+C"
+
+#### Scenario: Linked SID
+- **GIVEN** the SID cell of room `RM_ab12cd`, which links to its detail
+- **WHEN** it renders
+- **THEN** it shows the link `RM_ab12cd` followed by a copy button labelled "Copy room SID", and the SID is not repeated
+
 ### Requirement: Toast
 Edition: CE. Toasts SHALL be Material snackbars shown for 3 s in a polite live region, one at a time.
 
