@@ -16,7 +16,7 @@ reads two ways: Participant sessions, Unique identities, Services, Data up / dow
 - **WHEN** the user opens the info tip of a "Participant sessions" or "Unique identities" label on any page
 - **THEN** Participant sessions reads "Each time someone joins a room starts a participant session; leaving and joining again starts another. Only regular participants count: egress, ingress and agents are services." and Unique identities reads "Distinct participant identities among those sessions: someone who joined three times counts once."
 
-#### Scenario: Services and quality
+#### Scenario: Services
 
 - **WHEN** the user opens the info tip of a "Services" label
 - **THEN** it reads "Egress, ingress, agent and other non-user sessions. They join rooms as participants but are not

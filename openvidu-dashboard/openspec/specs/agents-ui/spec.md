@@ -44,14 +44,13 @@ shows only that session ignoring the range and every filter, and Enter opens it 
 ### Requirement: Agents table
 Edition: CE. The table SHALL show, in order, SID (participant detail link with copy button), Identity (copy button),
 Name, Room (link to the room detail), Status (stale cue), Joined, Left, Duration (live), Published (source icons) and
-Node (hidden by default), with no Kind or SDK column and times formatted as on the other lists with the time-zone
-header hint; Joined (the default), Left and Duration are sortable; the cursor paginator and the shared skeleton, error
-and empty states apply.
+Node (hidden by default), with times formatted as on the other lists and the time-zone header hint; Joined (the
+default), Left and Duration are sortable; the cursor paginator and the shared skeleton, error and empty states apply.
 
 #### Scenario: Agent row
 - **GIVEN** an active agent `agent-1` (session `PA_z9`, name "Support bot") in `demo-room` on node `node-a` publishing a microphone
 - **WHEN** the row renders
-- **THEN** the cells read, in order, `PA_z9` once, linking to `/participants/PA_z9` with its copy button, `agent-1` with its copy button, "Support bot", `demo-room` linking to `/rooms/RM_abc`, "active", the join time, "—", a duration counting up live and the microphone source icon, no SDK or Kind cell is shown and the Node column is hidden until chosen in the Columns menu
+- **THEN** the cells read, in order, `PA_z9` once, linking to `/participants/PA_z9` with its copy button, `agent-1` with its copy button, "Support bot", `demo-room` linking to `/rooms/RM_abc`, "active", the join time, "—", a duration counting up live and the microphone source icon, and the Node column is hidden until chosen in the Columns menu
 
 #### Scenario: Detail links in CE
 - **GIVEN** the CE dashboard with `features: []`
@@ -75,9 +74,9 @@ and empty states apply.
 
 
 ### Requirement: Live agents counter tile
-Edition: CE. The page header SHALL show a KPI tile "Agents now" with the number of active agent sessions
-across all rooms, read from the overview live counters and refreshed at the auto-refresh interval, keeping
-the last value while refreshing.
+Edition: CE. Above the filters, the page SHALL show a KPI tile "Agents now" with the number of active agent sessions
+across all rooms, read from the overview live counters and refreshed at the auto-refresh interval, keeping the last
+value while refreshing.
 
 #### Scenario: Counter refresh
 - **GIVEN** the tile shows 3
@@ -100,7 +99,7 @@ collected, with a link to the Participants page filtered by `kind=AGENT`.
 
 
 ### Requirement: Agent sessions tile
-Edition: CE. Next to "Agents now", the page header SHALL show a KPI tile "Agent sessions in range" with the agent
+Edition: CE. Next to "Agents now", the page SHALL show a KPI tile "Agent sessions in range" with the agent
 sessions joined in the global range, read from the participants summary (`sessions.byKind.AGENT`, "≈" and the rollup
 tooltip when approximate) and refreshed with the page.
 

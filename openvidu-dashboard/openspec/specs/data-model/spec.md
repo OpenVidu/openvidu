@@ -28,11 +28,6 @@ version with the one it supports and refuse to serve data when the writer is old
 - **WHEN** the dashboard starts
 - **THEN** it serves data and `GET /api/v1/info` reports the mismatch as a warning
 
-#### Scenario: Contract change before the version ships
-- **GIVEN** schema version 1, not yet shipped in a release
-- **WHEN** the contract gains `nodes.batchIntervalMs`, `egresses.roomNameLower` and the indexes `roomNameLower_startedAt` and `lastSessionAt_id`
-- **THEN** `SCHEMA_VERSION` stays 1 on both sides and the writer records `version: 1` in `schema_meta`
-
 ### Requirement: Writer metadata documents
 Edition: CE and PRO. Besides `schema`, `schema_meta` SHALL hold `retention`, `capabilities` and `config`, which the
 writer replaces at every initialization, `migration` (`server-legacy-migration`) and `reconciler`
@@ -87,7 +82,7 @@ fields, with the field list of the shared contract (`dashboard-ce/typings/src/da
 
 #### Scenario: Fields of a room document
 - **WHEN** a room document is read
-- **THEN** it has `name`, `nameLower`, `status` (`active` | `closed`), `createdAt`, `endedAt`, `durationMs`, `endReason`, `closedBy`, `nodeId`, `config` (max participants, empty and departure timeouts, metadata when allowed), `participants { sessions, unique, active, peakActive, aborted, byKind }`, `tracks`, `egress` (by type), `ingress`, `bytes { up, down }`, `quality { scoreSum, scoreCount, minScore }`, `features { egress, ingress, agent, sip }`, `lastEventAt`, `lastStatsAt`, `schemaVersion`, `expiresAt`
+- **THEN** it has `name`, `nameLower`, `status` (`active` | `closed`), `createdAt`, `endedAt`, `durationMs`, `endReason`, `closedBy`, `nodeId`, `config` (max participants, empty and departure timeouts, metadata when allowed), `participants { sessions, unique, active, peakActive, aborted, byKind }`, `tracks`, `egress` (by type), `ingress`, `bytes { up, down }`, `quality { scoreSum, scoreCount, minScore, poor, lost }`, `features { egress, ingress, agent, sip }`, `lastEventAt`, `lastStatsAt`, `schemaVersion`, `expiresAt`
 
 #### Scenario: Room lifecycle
 - **GIVEN** `ROOM_CREATED`, three `PARTICIPANT_JOINED`/`ACTIVE`, one `PARTICIPANT_LEFT`, `ROOM_ENDED (API_DELETE)`
@@ -111,7 +106,7 @@ traffic, quality and retention fields, with the field list of the shared contrac
 
 #### Scenario: Fields of a participant document
 - **WHEN** a participant document is read
-- **THEN** it has `identity`, `identityLower`, `name`, `roomSid`, `roomName`, `kind`, `kindDetails`, `status` (`joining` | `active` | `left` | `aborted`), `joinedAt`, `activeAt`, `leftAt`, `durationMs`, `disconnectReason`, `closedBy`, `connectTimeMs`, `connectionType`, `region`, `nodeId`, `resumes`, `client { sdk, version, os, osVersion, browser, browserVersion, deviceModel, network, address }`, `permission`, `isPublisher`, `tracks { published, bySource, subscribed, subscribeFailures }`, `bytes`, `quality`, `schemaVersion`, `expiresAt`
+- **THEN** it has `identity`, `identityLower`, `name`, `roomSid`, `roomName`, `kind`, `kindDetails`, `status` (`joining` | `active` | `left` | `aborted`), `joinedAt`, `activeAt`, `leftAt`, `durationMs`, `disconnectReason`, `closedBy`, `connectTimeMs`, `connectionType`, `region`, `nodeId`, `resumes`, `client { sdk, version, os, osVersion, browser, browserVersion, deviceModel, network, address }`, `permission`, `isPublisher`, `metadata` and `attributes` (when allowed), `tracks { published, bySource, subscribed, subscribeFailures }`, `bytes`, `quality`, `lastEventAt`, `lastStatsAt`, `schemaVersion`, `expiresAt`
 
 #### Scenario: Connection aborted
 - **GIVEN** `PARTICIPANT_JOINED` followed by `PARTICIPANT_CONNECTION_ABORTED`
@@ -135,7 +130,7 @@ describe one (track, subscriber) pair (references, lifecycle, error, final subsc
 
 #### Scenario: Fields of track and subscription documents
 - **WHEN** a track and a subscription document are read
-- **THEN** the track has `roomSid`, `participantSid`, `identity`, `type`, `source`, `mimeType`, `name`, `status` (`published` | `unpublished`), `publishedAt`, `unpublishedAt`, `durationMs`, `muted`, `width`, `height`, `simulcast`, `codecs[]`, `subscribers { current, total, failed }`, `publishStats`; and the subscription has `trackSid`, `roomSid`, `subscriberSid`, `subscriberIdentity`, `publisherSid`, `publisherIdentity`, `source`, `status` (`requested` | `subscribed` | `unsubscribed` | `failed`), `error`, `subscribedAt`, `unsubscribedAt`, `durationMs`, `subscribeStats`
+- **THEN** the track has `roomSid`, `participantSid`, `identity`, `type`, `source`, `mimeType`, `name`, `status` (`published` | `unpublished`), `publishedAt`, `unpublishedAt`, `durationMs`, `closedBy`, `muted`, `width`, `height`, `simulcast`, `codecs[]`, `encryption`, `subscribers { current, total, failed }`, `publishStats`; and the subscription has `trackSid`, `roomSid`, `subscriberSid`, `subscriberIdentity`, `publisherSid`, `publisherIdentity`, `source`, `status` (`requested` | `subscribed` | `unsubscribed` | `failed`), `error`, `subscribedAt`, `unsubscribedAt`, `durationMs`, `closedBy`, `subscribeStats`
 
 #### Scenario: Track closed by participant leave
 - **GIVEN** a published track whose `TRACK_UNPUBLISHED` was never emitted
@@ -228,11 +223,11 @@ types.
 ### Requirement: Track statistics time series
 Edition: CE and PRO. `track_stats` SHALL hold one document per 30-second flush per participant and
 direction (`participant` mode) or per track and direction (`track` mode), with normalized units, and
-signal/data pseudo-tracks SHALL be folded into participant byte totals instead of being stored as tracks.
+signal/data pseudo-tracks SHALL only add to the participant byte totals, without `track_stats` documents.
 
 #### Scenario: Fields of a stats document
 - **WHEN** a stats document is read
-- **THEN** it has `ts`, `meta { roomSid, participantSid, trackSid (track mode only), kind (`up` | `down`), nodeId }`, `score`, `minScore`, `medianScore`, `bytes`, `packets`, `packetsLost`, `rttMs`, `jitterMs`, `nacks`, `plis`, `firs`, `frames`, `layers[] { layer, bytes, packets, frames }`, `mimeType`
+- **THEN** it has `ts`, `meta { roomSid, participantSid, trackSid (track mode only), kind (`up` | `down`), nodeId }`, `score`, `minScore`, `medianScore`, `bytes`, `packets`, `packetsLost`, `rttMs`, `jitterMs`, `nacks`, `plis`, `firs`, `frames`, `layers[] { layer, bytes, packets, frames }`, `mimeType` (track mode only)
 
 #### Scenario: Participant mode merges tracks
 - **GIVEN** `participant` mode and one flush with camera and microphone upstream stats of the same participant
@@ -246,13 +241,14 @@ signal/data pseudo-tracks SHALL be folded into participant byte totals instead o
 
 ### Requirement: Rollups
 Edition: CE and PRO. `analytics_5min`, `analytics_hourly` and `analytics_daily` SHALL hold one document per
-scope (`global` and `node:<nodeId>`) and bucket with pre-aggregated counters, so that analytics over long
-ranges never read entity or stats documents. Map keys SHALL be normalized enum names, never user input. Every
-participant counter SHALL count STANDARD sessions only, except `participants.byKind`, which counts every kind.
+scope (`global` and `node:<nodeId>`) and bucket with pre-aggregated counters, so that long ranges never read
+entity or stats documents. Map keys SHALL be enum names or a fixed vocabulary, never user input. Every
+participant counter SHALL count STANDARD sessions only, except `participants.byKind` and the 5-minute
+`participants.connected` (participants with stats), which count every kind.
 
 #### Scenario: Fields of the rollup documents
 - **WHEN** hourly or daily rollup documents are read
-- **THEN** they have counters for rooms (created, ended, by end reason, `durationMsSum`, `participantsSum`), participants (joined, active, aborted, left, by kind, SDK, OS, browser, connection type, disconnect reason, connect time, minutes), tracks, egress (started, by type, by end status, duration), ingress sessions (started, ended, started by input type, duration), bytes, quality (score sum/count, poor, lost), API calls by method and errors by method, and daily documents also `uniqueIdentities` (set by the server's reconciler once the UTC day has closed); 5-minute documents have bytes, quality, the active-participants gauge, the `PARTICIPANT_ACTIVE` count and the lifecycle counters (rooms created/ended, participants joined/left/aborted, egress started/ended)
+- **THEN** they have counters for rooms (created, ended, by end reason, `durationMsSum`, `participantsSum`), participants (joined, active, aborted, left, by kind, SDK, OS, browser, connection type, disconnect reason, connect time, minutes), tracks, egress (started, by type, by end status, duration), ingress sessions (started, ended, started by input type, duration), bytes, quality (score sum/count, poor, lost), API calls and API errors (total and by method), and daily documents also `uniqueIdentities` (set by the server's reconciler once the UTC day has closed); 5-minute documents have bytes, quality, `participants.connected` (distinct participants with stats), the `PARTICIPANT_ACTIVE` count and the lifecycle counters (rooms created/ended, participants joined/left/aborted, egress started/ended)
 
 #### Scenario: Five-minute bandwidth
 - **GIVEN** stats flushed between 10:00 and 10:05 UTC
@@ -291,7 +287,7 @@ heartbeat so decommissioned nodes disappear. A document without `batchIntervalMs
 - **THEN** its document has `lastSeenAt` within the last batch interval and `batchIntervalMs: 10000`
 
 #### Scenario: Node document without the interval
-- **GIVEN** a `nodes` document without `batchIntervalMs`, written to a development database before the field existed
+- **GIVEN** a `nodes` document without `batchIntervalMs`
 - **WHEN** the dashboard derives that node's freshness windows
 - **THEN** it uses a 10 000 ms interval
 
@@ -334,7 +330,7 @@ and the rollups expire by TTL indexes.
 #### Scenario: Active entity never expires
 - **GIVEN** a room active for longer than the entities retention
 - **WHEN** the TTL monitor runs
-- **THEN** the room document still exists
+- **THEN** the room document exists
 
 #### Scenario: Retention change applies to existing data
 - **GIVEN** a deployment that changes `retention.events` from 7 d to 30 d
@@ -344,7 +340,8 @@ and the rollups expire by TTL indexes.
 ### Requirement: Secrets and personal data
 Edition: CE and PRO. No document SHALL contain `turn_password`, storage credentials, stream keys, signing
 keys, tokens or SIP credentials. Client IP addresses SHALL be stored only when `anonymize_ip` is `false`, and
-participant metadata, attributes and room metadata SHALL be stored only when `store_metadata` is enabled.
+participant metadata, attributes, room metadata and ingress participant metadata SHALL be stored only when
+`store_metadata` is enabled.
 
 #### Scenario: Anonymized IP
 - **GIVEN** the default configuration
@@ -403,7 +400,7 @@ range on `startedAt`. An egress document without `roomNameLower` is not matched 
 - **THEN** `roomNameLower_startedAt` exists with the key `{ roomNameLower: 1, startedAt: -1 }` and the partial filter `{ roomNameLower: { $exists: true } }`
 
 #### Scenario: Document without the search field
-- **GIVEN** an egress document of room `demo-room` without `roomNameLower`, written to a development database before the field existed
+- **GIVEN** an egress document of room `demo-room` without `roomNameLower`
 - **WHEN** the egress list is searched by the room name `demo`
 - **THEN** that egress is not returned, and egresses of the same room that carry `roomNameLower` are
 

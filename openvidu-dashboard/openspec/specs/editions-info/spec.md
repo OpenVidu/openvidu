@@ -118,9 +118,8 @@ subset.
 
 Edition: CE. `features` SHALL be an array of `FeatureKey` identifiers from a shared enumeration (`room-detail`,
 `participant-detail`, `egress-detail`, `ingress-detail`, `analytics-quality`, `analytics-diagnostics`,
-`analytics-top-rooms`, `track-detail`, `per-node-breakdown`, `license-info`), empty on CE; new PRO features are added to
-it by the change that introduces them, and it contains neither `analytics-failures`, `analytics-ingress` nor
-`agents-page`.
+`analytics-top-rooms`, `track-detail`, `per-node-breakdown`, `license-info`), empty on CE; every PRO feature has its
+identifier in it.
 
 #### Scenario: CE feature list
 
@@ -135,8 +134,7 @@ it by the change that introduces them, and it contains neither `analytics-failur
 
 ### Requirement: CE performs no license check
 
-Edition: CE. The CE dashboard SHALL ignore every `OPENVIDU_PRO_*` variable, SHALL make no licensing request
-and SHALL NOT depend on the private licensing package.
+Edition: CE. The CE dashboard SHALL ignore every `OPENVIDU_PRO_*` variable and SHALL make no licensing request.
 
 #### Scenario: CE with an invalid license variable
 
@@ -185,9 +183,9 @@ identifier, after authentication, so that a direct API call never falls through 
 ### Requirement: UI locks from features
 
 Edition: CE. The UI SHALL decide the locked state of PRO routes and sections from the `features` of the
-authenticated `GET /api/v1/info`, reloaded after every login, against the `requiredFeature` declared in route and
-section metadata; the locked presentation SHALL be rendered without calling the PRO endpoint and SHALL never
-depend on receiving a `403`. Lock visuals and the handling of a stray `403` belong to the UI shell.
+authenticated `GET /api/v1/info`, reloaded after every login, against the `feature` declared in the page metadata of
+a route and on each gated section; the locked presentation SHALL be rendered without calling the PRO endpoint and
+SHALL never depend on receiving a `403`. Lock visuals and the handling of a stray `403` belong to the UI shell.
 
 #### Scenario: Locked route on CE
 

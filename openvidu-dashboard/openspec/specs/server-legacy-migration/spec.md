@@ -1,31 +1,31 @@
 # server-legacy-migration Specification
 
 ## Purpose
-Conversion of the legacy analytics collections (`events`, `stats`, `active_entities`, `last_alive`) into
-the v2 read model by the OpenVidu server, so that an upgraded deployment keeps its history, closes the
-entities the legacy writer left open and exposes the progress to the dashboard.
+Conversion of the legacy analytics collections (`events`, `stats`, `active_entities`, `last_alive`), written by
+OpenVidu 3.9 and earlier, into the analytics model by the OpenVidu server, so that an upgraded deployment keeps its
+history, closes the entities the legacy writer left open and exposes the progress to the dashboard.
 
 ## Requirements
 
 ### Requirement: Migration trigger at writer startup
-Edition: CE and PRO. After renaming a legacy `events` collection and initializing the v2 collections, a writer
+Edition: CE and PRO. After renaming a legacy `events` collection and initializing the analytics collections, a writer
 that finds no `schema_meta` `_id: "migration"` document and a legacy collection (`legacy_events`, `stats`,
 `active_entities` or `last_alive`) SHALL write `_id: "migration"` with `state: "pending"` and start the migration in
 the background; every later start resumes a migration that is not `completed`. Without legacy collections no
 migration document SHALL be written.
 
 #### Scenario: Legacy deployment upgraded
-- **GIVEN** a database written by the legacy writer and no `schema_meta` `_id: "schema"` document
-- **WHEN** the new writer starts
-- **THEN** `legacy_events` holds the legacy documents with their indexes, the v2 collections exist, the live write path accepts events immediately and `schema_meta` `_id: "migration"` has `state: "pending"`, `total`, `writerVersion` and `fromSchemaVersion: 0`
+- **GIVEN** a database written by OpenVidu 3.9 or earlier and no `schema_meta` `_id: "schema"` document
+- **WHEN** the writer starts
+- **THEN** `legacy_events` holds the legacy documents with their indexes, the analytics collections exist, the live write path accepts events immediately and `schema_meta` `_id: "migration"` has `state: "pending"`, `total`, `writerVersion` and `fromSchemaVersion: 0`
 
 #### Scenario: Fresh deployment
 - **GIVEN** an empty database
 - **WHEN** the writer starts
 - **THEN** no `migration` document exists and nothing is renamed
 
-#### Scenario: Legacy collection next to a v2 schema
-- **GIVEN** a `schema_meta` `_id: "schema"` document written by a v2 writer, no `migration` document and a legacy `last_alive` collection
+#### Scenario: Legacy collection next to an analytics schema
+- **GIVEN** a `schema_meta` `_id: "schema"` document written by the analytics writer, no `migration` document and a legacy `last_alive` collection
 - **WHEN** the writer starts
 - **THEN** `schema_meta` `_id: "migration"` is written with `state: "pending"`, whatever the recorded schema version
 
@@ -58,8 +58,9 @@ access to the writer.
 
 ### Requirement: Single runner across nodes
 Edition: CE and PRO. The migration SHALL run on at most one node at a time, elected with the Redis lock
-`analytics-migration-lock` (TTL 60 s, refreshed after every batch; a process-local lock in a deployment without Redis); a node that cannot
-obtain the lock SHALL serve the live path and retry the lock every minute, so it takes over when the runner dies.
+`analytics-migration-lock` (TTL 60 s, refreshed after every batch; a process-local lock in a deployment without
+Redis); a node that cannot obtain the lock SHALL serve the live path and retry the lock every minute, so it takes over
+when the runner dies.
 
 #### Scenario: Two nodes start together
 - **GIVEN** a pending migration and two writer nodes starting at the same time
@@ -72,10 +73,10 @@ obtain the lock SHALL serve the live path and retry the lock every minute, so it
 - **THEN** node B obtains the lock at its next attempt, without a restart, and resumes from the stored checkpoint
 
 ### Requirement: Replay order and batching
-Edition: CE and PRO. Legacy events SHALL be replayed in `timestamp.seconds` then `timestamp.nanos`
-order and stats in `time_stamp.seconds` order, in batches of at most `batch_size` documents extended
-so that a batch never splits a second, read through a streaming cursor that holds one batch in memory,
-with a pause after each batch so the throughput does not exceed `rate` documents per second.
+Edition: CE and PRO. Legacy events SHALL be replayed in `timestamp.seconds` then `timestamp.nanos` order and stats in
+`time_stamp.seconds` order, in batches of `batch_size` documents (fewer at the end) extended until the second of their
+last document is complete, so that a batch never splits a second, read through a streaming cursor that holds one batch
+in memory, with a pause after each batch so the throughput does not exceed `rate` documents per second.
 
 #### Scenario: Throttle respected
 - **GIVEN** `rate: 1000` and 10 000 legacy events
@@ -179,15 +180,15 @@ wrote a heartbeat (legacy nodes), which the replay closes later.
 - **THEN** one `rooms` document exists with `status: "closed"`, `closedBy: "event"`, `participants.sessions: 1` and `participants.active: 0`
 
 #### Scenario: Live reconciler during the replay
-- **GIVEN** a running migration, a replayed legacy participant still open and a participant of a crashed v2 node
+- **GIVEN** a running migration, an open replayed legacy participant and a participant of a crashed node that wrote heartbeats
 - **WHEN** the live reconciler runs
-- **THEN** it closes the participant of the crashed v2 node and leaves the legacy participant to the replay
+- **THEN** it closes the participant of the crashed node and leaves the legacy participant to the replay
 
 ### Requirement: Checkpoint and resume
 Edition: CE and PRO. The checkpoint (`phase` and the last fully applied second of each collection) SHALL
 be persisted after every batch; a restart, a lost lock or a failure SHALL leave a checkpoint from which
-the next run resumes without reapplying any document. A non-transient error, or a transient one still failing
-at the fifth attempt, SHALL set `state: "failed"` with a clear `error`, and the next writer start SHALL retry from
+the next run resumes without reapplying any document. A non-transient error, or a transient one that persists
+through five attempts, SHALL set `state: "failed"` with a clear `error`, and the next writer start SHALL retry from
 the checkpoint.
 
 #### Scenario: Killed mid-run
@@ -197,7 +198,7 @@ the checkpoint.
 
 #### Scenario: Database error
 - **GIVEN** a MongoDB outage during a batch
-- **WHEN** the batch still fails at its fifth attempt, the attempts spaced 1, 2, 4 and 8 s
+- **WHEN** the batch fails five attempts in a row, spaced 1, 2, 4 and 8 s
 - **THEN** `state` is `failed`, `error` names the failure and the checkpoint, and the next writer start retries from the checkpoint
 
 #### Scenario: Transient error with progress
@@ -232,11 +233,12 @@ the migration `completed`; `legacy_events` and `stats` SHALL never be deleted by
 
 ### Requirement: Legacy data kept for rollback
 Edition: CE and PRO. The migration SHALL only read `legacy_events` and `stats`, never changing their documents or
-indexes, so that the previous server version can be restored on the legacy data that has not expired by its TTL.
+indexes, so that a legacy server (OpenVidu 3.9 or earlier) can be restored on the legacy data that has not expired
+by its TTL.
 
 #### Scenario: Rollback after the migration
 - **GIVEN** a completed migration
-- **WHEN** the operator stops the server, drops the v2 collections, renames `legacy_events` back to `events` and starts the previous version
+- **WHEN** the operator stops the server, drops the analytics collections, renames `legacy_events` back to `events` and starts the legacy server
 - **THEN** `events` and `stats` hold every legacy document whose `openvidu_expire_at` has not passed, with their original indexes
 
 ### Requirement: Observability
@@ -252,7 +254,7 @@ one line per state transition.
 - **THEN** `openvidu_analytics_migration_state` is 2 and `openvidu_analytics_migration_processed_total` grows with the replay
 
 ### Requirement: Migration invariants
-Edition: CE and PRO. After completion the v2 collections SHALL satisfy: one `rooms` document per distinct
+Edition: CE and PRO. After completion the analytics collections SHALL satisfy: one `rooms` document per distinct
 legacy `room.sid`, one `participants` document per distinct legacy `participant_id`, one `egresses`
 document per `egress_id`, one `ingress_sessions` document per `ingress.state.resource_id`, no secret
 field copied, and durations of event-closed entities within 1 s of the legacy start/end difference.

@@ -43,7 +43,7 @@ tie-breaker) or by the ranked `leftAt` and `duration`, with `order` `desc` (defa
 
 ### Requirement: Identity prefix search
 Edition: CE. The `q` parameter of the participants and agents lists SHALL match the case-insensitive prefix of the
-participant identity when it holds at least two characters after trimming and does not start with `PA_`;
+participant identity when it holds at least two characters after trimming and does not match `^PA_[A-Za-z0-9]+$`;
 a one-character `q` SHALL be rejected with `400`; `q` combines with every other filter of the list.
 
 #### Scenario: Prefix match
@@ -66,8 +66,9 @@ a one-character `q` SHALL be rejected with `400`; `q` combines with every other 
 - **THEN** only the `assistant-1` agent session is returned
 
 ### Requirement: Exact SID lookup through the list
-Edition: CE. When `q` starts with `PA_` the participants and agents lists SHALL return the session with that exact SID
-as its only item, ignoring the time range and the other filters, and an empty list when no session has that SID.
+Edition: CE. When `q` matches `^PA_[A-Za-z0-9]+$` the participants and agents lists SHALL return the session with that
+exact SID as its only item, ignoring the time range, the other filters and the sort, and an empty list when no session
+has that SID.
 
 #### Scenario: SID outside the range
 - **GIVEN** session `PA_x1y2` joined 10 days ago
@@ -172,7 +173,7 @@ and sessions per kind joined in the range. Range counts follow the exact-or-appr
 #### Scenario: Long range
 - **GIVEN** the default `DASHBOARD_LIST_TOTAL_MAX_RANGE` of 7 days
 - **WHEN** the client requests the summary with `from=now-30d&to=now`
-- **THEN** `sessions.participants` is the sum of `participants.joined` and `sessions.byKind` the sums of `participants.byKind` of the global hourly rollups whose bucket starts inside the range, and `approximate` is `true`
+- **THEN** `sessions.byKind` holds the sums of `participants.byKind` of the global hourly rollups whose bucket starts inside the range, `sessions.participants` its `STANDARD` value, and `approximate` is `true`
 
 #### Scenario: Index-backed
 - **GIVEN** a database generated at scenario M

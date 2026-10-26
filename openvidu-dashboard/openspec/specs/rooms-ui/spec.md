@@ -31,8 +31,8 @@ the start time; invalid values fall back silently; any change of filter, search,
 ### Requirement: Summary tiles
 
 Edition: CE. The Rooms page SHALL show four KPI tiles from the summary endpoint above the filters: Active rooms, Rooms
-in range, Participant sessions in range and Active participants; approximate values carry a tooltip saying the range
-exceeds the exact-count limit, and the tiles keep their last value while refreshing.
+in range, Participant sessions and Active participants; approximate values carry a tooltip saying the range exceeds the
+exact-count limit, and the tiles keep their last value while refreshing.
 
 #### Scenario: Tiles after load
 
@@ -51,8 +51,8 @@ exceeds the exact-count limit, and the tiles keep their last value while refresh
 
 Edition: CE. The Rooms page SHALL offer a status segment (Active, Closed, All), the shared list search box labelled
 "Room name or SID" for a room name prefix or an `RM_` SID, and a multi-select of feature chips (Egress, Ingress, Agent);
-an exact SID shows only that room ignoring the range and every filter, Enter on it opens the room keeping the range,
-and no "Showing room …" line is shown. SIP is not offered as a feature chip nor shown as a room feature.
+an exact SID shows only that room ignoring the range and every filter, and Enter on it opens the room keeping the
+range. SIP is not offered as a feature chip nor shown as a room feature.
 
 #### Scenario: Short search text
 
@@ -64,8 +64,8 @@ and no "Showing room …" line is shown. SIP is not offered as a feature chip no
 
 - **GIVEN** the user typed `RM_ab12cd`, the room exists and the status filter is Active
 - **WHEN** the result arrives
-- **THEN** the table shows that one room regardless of range and status, the box shows the hint "Exact ID: range and
-  filters ignored · Enter opens it", and no "Showing room RM_ab12cd" line is shown
+- **THEN** the table shows that one room regardless of range and status, and the box shows the hint "Exact ID: range
+  and filters ignored · Enter opens it"
 
 #### Scenario: Enter on an exact SID
 
@@ -105,7 +105,7 @@ Active, Data up / down, Features (badges E, I, A) and Node (hidden by default); 
 
 - **GIVEN** `status=all` and the default 24 h range
 - **WHEN** the user activates the Ended header
-- **THEN** the URL gets `sort=endedAt&order=desc` without `cursor`, the list still holds the rooms started in the range,
+- **THEN** the URL gets `sort=endedAt&order=desc` without `cursor`, the list holds the rooms started in the range,
   and the active rooms, which have no end yet, come first
 
 #### Scenario: Sort by unique identities
@@ -119,7 +119,8 @@ Active, Data up / down, Features (badges E, I, A) and Node (hidden by default); 
 
 - **GIVEN** a room with `closedBy: "reconciler"`
 - **WHEN** the row renders
-- **THEN** the status badge has the dotted outline and the Ended cell carries the "estimated" tooltip
+- **THEN** the status badge has the dotted outline and the Ended cell carries the tooltip "Closed by the reconciler:
+  the end time is estimated"
 
 ### Requirement: Rooms pagination
 
@@ -197,11 +198,10 @@ previous rows when a load fails.
 
 ### Requirement: Room detail route and CE lock
 
-Edition: CE. `/rooms/:sid` SHALL be registered in CE with `requiredFeature: "room-detail"`, read `tz`, `types`,
-`participant`, `order`, `cursor` and `limit` from the URL, and in CE render the breadcrumbs, a title (room name, or SID)
-with its copy button and the status badge, filled from the list cache or else from `GET /api/v1/rooms?q=<sid>`, and the
-full-page lock over a silhouette of three tiles and a block, with no other header row, no refresh control and no PRO
-request.
+Edition: CE. `/rooms/:roomSid` SHALL be registered in CE as a timed route that is not range-scoped and declares the
+feature `room-detail`, and in CE render the breadcrumbs, a title (room name, or SID) with its copy button and the
+status badge, filled from the list cache or else from `GET /api/v1/rooms?q=<sid>`, and the full-page lock over a
+silhouette of three tiles and a block, with no other header row, no refresh control and no PRO request.
 
 #### Scenario: Locked from the list
 

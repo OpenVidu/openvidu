@@ -31,7 +31,7 @@ is not part of its link.
 #### Scenario: Tile values and links
 - **GIVEN** CE, and `live` with `rooms: 12`, `participants: 85`, `publishers: 54`, `participantsByKind` `{ EGRESS: 3, AGENT: 2 }`, `egresses: 3` and `ingressSessions: 1`
 - **WHEN** the tiles render
-- **THEN** they read 12, 85, 54, 3, 1 and 2, no Services tile is shown, and they link to `/rooms?status=active`, `/participants?status=active`, `/participants?status=active&publisher=true`, `/egress?status=active`, `/ingress?status=publishing` and `/agents?status=active`
+- **THEN** they read 12, 85, 54, 3, 1 and 2, and they link to `/rooms?status=active`, `/participants?status=active`, `/participants?status=active&publisher=true`, `/egress?status=active`, `/ingress?status=publishing` and `/agents?status=active`
 
 #### Scenario: Refresh keeps values
 - **GIVEN** the tiles showing the last response
@@ -57,7 +57,7 @@ responses the state does not change.
 #### Scenario: Long interval
 - **GIVEN** the auto-refresh at 5 min and status responses every 30 s whose writer batch is 5 s old
 - **WHEN** four minutes pass after the last overview response
-- **THEN** the chip still reads "LIVE" and no banner says that no data was received
+- **THEN** the chip reads "LIVE" and no banner says that no data was received
 
 #### Scenario: Auto-refresh off
 - **GIVEN** the auto-refresh set to Off and a fresh writer
@@ -132,8 +132,8 @@ and a "View all rooms" link while there are recent rooms.
 ### Requirement: Stale entities hint
 Edition: CE. When two consecutive overview responses, a `304` included, have
 `live.stale.rooms + live.stale.participants > 0`, the page SHALL show the shared warning notice under the tiles naming
-both counts and stating that they have had no stats for over `live.stale.olderThanMs` and may be closed by the server
-reconciler, with a link to `/rooms?status=active`; the notice SHALL disappear with the first response whose counts add
+both counts and stating that they have had no stats for over `live.stale.olderThanMs` (in seconds) and may be stale,
+with a link to `/rooms?status=active`; the notice SHALL disappear with the first response whose counts add
 up to `0`.
 
 #### Scenario: Hint shown
@@ -159,14 +159,14 @@ up to `0`.
 ### Requirement: Server status card
 Edition: CE. A "Data pipeline" card SHALL show, from the last server status, the writer line ("Last batch at
 hh:mm:ss" with a check icon when the batch is fresh, as for the live chip, a warning icon otherwise, "Last batch:
-never" when no node was seen), "N of M nodes reporting" (warning icon when N < M), the migration progress bar only
-while it runs, and a "Storage and retention" link to `/settings?tab=about`; it shows a skeleton until the first status
-and updates with the status poll.
+never" when no batch was ever seen), "N of M nodes reporting" (warning icon when N < M), the migration progress bar
+only while it runs, and a "Storage and retention" link to `/settings?tab=about`; it shows a skeleton until the first
+status and updates with the status poll.
 
 #### Scenario: Healthy card
 - **GIVEN** a status with the writer batch 4 s before `generatedAt` at 12:31:05, `nodes: 2`, `aliveNodes: 2` and migration `completed`
 - **WHEN** the card renders
-- **THEN** it reads "Data pipeline", "Last batch at 12:31:05" with the check icon and "2 of 2 nodes reporting", and shows neither the migration, a version, the schema nor the retention
+- **THEN** it reads "Data pipeline", "Last batch at 12:31:05" with the check icon and "2 of 2 nodes reporting", and shows no migration progress
 
 #### Scenario: Migration running
 - **GIVEN** a status with `migration` `{ state: "running", progress: { processed: 400000, total: 1200000 } }`
@@ -197,7 +197,7 @@ visible.
 #### Scenario: Empty database
 - **GIVEN** a fresh deployment with no room ever created
 - **WHEN** the page renders
-- **THEN** the empty state reads "Waiting for the first events", every tile reads 0, the status card shows "Last batch: never" and no error banner is shown
+- **THEN** the empty state reads "Waiting for the first events", every tile reads 0, the status card shows "Last batch: never" and "no node has reported yet" with warning icons, and no error banner is shown
 
 ### Requirement: Overview refresh policy
 Edition: CE. The page SHALL follow the shared auto-refresh policy with the live-view default of 10 s, send

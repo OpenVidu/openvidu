@@ -147,8 +147,8 @@ returns at most one item.
 
 ### Requirement: Time range on start time
 
-Edition: CE. The egresses list SHALL apply `from`/`to` to `startedAt` for every sort key and order, so that an egress
-that started before `from` and is still active is not listed unless found by `room` within range or by exact id.
+Edition: CE. The egresses list SHALL apply `from`/`to` to `startedAt` for every sort key, order and filter, so that an
+egress that started before `from` is not listed, even while it is active, unless it is looked up by exact id.
 
 #### Scenario: Long-running egress outside the range
 
@@ -188,7 +188,8 @@ and hour-aligned sums of the hourly rollups with `approximate: true` beyond it.
 ### Requirement: Index-backed egress queries
 
 Edition: CE and PRO. Every query of this capability SHALL run on an index of the shared contract
-(`dashboard-ce/typings/contract/indexes.ts`): no winning plan contains a `COLLSCAN`, and `totalDocsExamined` is bounded
+(`dashboard-ce/typings/contract/indexes.ts`), or on `_id` for the hourly rollups the long-range summary reads: no
+winning plan contains a `COLLSCAN`, and `totalDocsExamined` is bounded
 by the page size plus the documented residual filters for the index-ordered pages and by the egresses started in the
 range for the ranked sorts.
 

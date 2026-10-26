@@ -43,7 +43,7 @@ while the effective granularity is below `1h` and read "Hourly" in its subtitle.
 
 - **GIVEN** `from=now-7d&to=now&granularity=1d`
 - **WHEN** the user opens the selector
-- **THEN** "1 d" is selected and the auto option still reads "auto (1 h)"
+- **THEN** "1 d" is selected and the auto option reads "auto (1 h)"
 
 #### Scenario: Hourly-only chart on the default range
 
@@ -76,8 +76,7 @@ while the effective granularity is below `1h` and read "Hourly" in its subtitle.
 Edition: CE. The tile row SHALL show, in this order, Rooms created, Participant sessions, Unique identities (labelled
 "sum of N UTC days"), Data up / down (up and down on two lines, each with its arrow), Connection success, Egress
 (count and total duration) and Ingress (sessions and total duration) from the summary endpoint with the shared
-formatters, show "n/a" with a hint for a value the summary omits and keep the last value while refreshing; the API
-error rate is not shown.
+formatters, show "n/a" with a hint for a value the summary omits and keep the last value while refreshing.
 
 #### Scenario: Tiles from the summary
 
@@ -91,7 +90,7 @@ error rate is not shown.
 
 - **WHEN** the tile row renders
 - **THEN** the labels read Rooms created, Participant sessions, Unique identities, Data up / down, Connection
-  success, Egress and Ingress, and no tile reads "API error rate" or "Bandwidth"
+  success, Egress and Ingress
 
 #### Scenario: Missing average
 
@@ -185,8 +184,8 @@ as tiles.
 
 Edition: CE. The Egress section SHALL show the tiles Total egress and Total duration (the summary's `egressStarted` and
 `egressDurationMs`), `egressStarted` as the bar chart "Egress started" beside the "Egress type" donut, and the
-`egressEnded.<status>` series as the stacked bar chart "Egress ended by status"; it has no Egress duration chart, and
-each chart requested at `1h` while the effective granularity is finer reads the "Hourly" note under its title.
+`egressEnded.<status>` series as the stacked bar chart "Egress ended by status"; each chart requested at `1h` while
+the effective granularity is finer reads the "Hourly" note under its title.
 
 #### Scenario: Ended by status
 
@@ -199,7 +198,7 @@ each chart requested at `1h` while the effective granularity is finer reads the 
 
 - **GIVEN** a summary with `egressStarted: 120` and `egressDurationMs: 36000000`
 - **WHEN** the section renders
-- **THEN** the tiles read Total egress "120" and Total duration "10 h 00 m", and no chart is titled "Egress duration"
+- **THEN** the tiles read Total egress "120" and Total duration "10 h 00 m"
 
 #### Scenario: Status colours
 
@@ -208,18 +207,16 @@ each chart requested at `1h` while the effective granularity is finer reads the 
 
 ### Requirement: PRO strip and locked cards
 
-Edition: CE. Right after the CE sections, with no divider or label of their own, the page SHALL render the cards
-Quality, Diagnostics and Top rooms; when the matching feature is disabled each card SHALL render the compact in-card
-lock, sized to its message rather than to the real card, without any request. There is no per-node card: per-node
-analytics is the header's scope selector.
+Edition: CE. Right after the Ingress section, in the same column of cards as the CE sections, the page SHALL render
+the cards Quality, Diagnostics and Top rooms; when the matching feature is disabled each card SHALL render the compact
+in-card lock, sized to its message rather than to the real card, without any request.
 
 #### Scenario: Strip in CE
 
 - **GIVEN** the UI loaded `features: []`
 - **WHEN** the Analytics page renders
-- **THEN** the three PRO cards show the compact lock with their feature title, each only as tall as its message, no
-  "PRO" divider separates them from the CE sections, and no request to `/analytics/top`, `/analytics/scopes` or a PRO
-  metric is sent
+- **THEN** the three PRO cards follow the Ingress section and show the compact lock with their feature title, each
+  only as tall as its message, and no request to `/analytics/top`, `/analytics/scopes` or a PRO metric is sent
 
 ### Requirement: Diagnostics section
 
@@ -230,8 +227,7 @@ available in OpenVidu PRO".
 
 - **GIVEN** the UI loaded `features: []`
 - **WHEN** the card renders
-- **THEN** its heading reads "Diagnostics", the lock reads "Diagnostics is available in OpenVidu PRO", and the page
-  shows no card or lock named "Failures"
+- **THEN** its heading reads "Diagnostics" and the lock reads "Diagnostics is available in OpenVidu PRO"
 
 ### Requirement: Ingress section
 
@@ -272,9 +268,9 @@ with a lock icon whose tooltip says per-node analytics is available in OpenVidu 
 
 ### Requirement: CSV export per section
 
-Edition: CE. Every section card SHALL have an "Export CSV" action that downloads the CSV of the card's series or
-breakdowns with the current URL parameters through the shared HTTP service, saves it under the server file name and
-is disabled on locked cards.
+Edition: CE. Every section card except Top rooms SHALL have an "Export CSV" action in its header that downloads the CSV
+of the card's series or breakdowns with the current URL parameters through the shared HTTP service, saves it under the
+server file name and is disabled on locked cards.
 
 #### Scenario: Bandwidth export
 

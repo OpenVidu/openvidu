@@ -43,7 +43,7 @@ definition facts, lifecycle and the aggregate session counters. `schemaVersion`,
 #### Scenario: Fields of an item
 
 - **WHEN** an item is read
-- **THEN** it has `ingressId`, `name`, `inputType` (`rtmp` | `whip` | `url`), `roomName`, `participantIdentity`,
+- **THEN** it has `ingressId`, `name?`, `inputType` (`rtmp` | `whip` | `url`), `roomName`, `participantIdentity`,
   `status` (`inactive` | `buffering` | `publishing` | `error` | `complete` | `deleted`), `enabled`, `reusable`,
   `createdAt`, `deletedAt?`, `sessions`, `totalDurationMs`, `lastSessionAt?` and `hasError`, and no `url`,
   `streamKey`, `participantName`, `schemaVersion` or `expiresAt`
@@ -218,7 +218,8 @@ boundaries.
 ### Requirement: Index-backed ingress queries
 
 Edition: CE and PRO. Every query of this capability SHALL run on an index of the shared contract
-(`dashboard-ce/typings/contract/indexes.ts`): no winning plan contains a `COLLSCAN`, and `totalDocsExamined` is bounded
+(`dashboard-ce/typings/contract/indexes.ts`), or on `_id` for the hourly rollups the long-range summary reads: no
+winning plan contains a `COLLSCAN`, and `totalDocsExamined` is bounded
 by the page size plus the documented residual filters, and for the list by the ingresses of the three branches of the
 activity range.
 

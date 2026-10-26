@@ -2,7 +2,7 @@
 
 ## Purpose
 The `openvidu.analytics` configuration surface of the OpenVidu server: keys, defaults per edition,
-validation, the mapping of the legacy `expiration` key and the environment variable forms.
+validation, the mapping of the deprecated `expiration` and `fixer_interval` keys and the environment variable forms.
 
 ## Requirements
 
@@ -47,8 +47,8 @@ SHALL default to `participant` and the PRO server to `track`; an explicit value 
 - **WHEN** stats are written
 - **THEN** `track_stats` documents are per participant and direction
 
-### Requirement: Legacy expiration key
-Edition: CE and PRO. The deprecated `expiration` key SHALL still be accepted: when it is set and neither
+### Requirement: Deprecated expiration key
+Edition: CE and PRO. The deprecated `expiration` key SHALL be accepted: when it is set and neither
 `retention.events` nor `retention.stats` is set, both take its value and a deprecation warning names them; when
 either of them is set, `expiration` is ignored for both and the warning says so.
 
@@ -63,7 +63,7 @@ either of them is set, `expiration` is ignored for both and the warning says so.
 - **THEN** `retention.events` is `1d`, `retention.stats` keeps its default `7d` and a warning states that `expiration` is ignored
 
 ### Requirement: Deprecated fixer_interval key
-Edition: CE and PRO. The deprecated `fixer_interval` key SHALL still set the reconciler period when
+Edition: CE and PRO. The deprecated `fixer_interval` key SHALL set the reconciler period when
 `reconciler.interval` is absent, with a deprecation warning naming `reconciler.interval`; when both are set,
 `reconciler.interval` SHALL win and the warning SHALL say that `fixer_interval` is ignored.
 
@@ -149,7 +149,7 @@ bare integer of nanoseconds, or a whole number of days followed by `d` and optio
 - **WHEN** the server starts
 - **THEN** closed tracks and subscriptions are kept for 36 hours
 
-#### Scenario: Hours still accepted
+#### Scenario: Go duration in hours
 - **GIVEN** `retention.events: 168h`
 - **WHEN** the server starts
 - **THEN** raw events are kept for 7 days

@@ -165,11 +165,11 @@ raw value when the dashboard has no label for it.
 
 ### Requirement: KPI tile
 
-CE. The KPI tile SHALL show label, value with tabular figures, optional unit, delta and hint, keep the last value
-while refreshing, show a skeleton only on first load and highlight a changed value for 600 ms unless reduced
-motion is requested or the previous change was less than 5 s earlier. A bandwidth tile shows upload and download
-on two lines, each with its arrow. An approximate value is prefixed with a focusable "≈" that carries the
-approximation tooltip; the tile itself carries no tooltip.
+Edition: CE. The KPI tile SHALL show label, value with tabular figures, optional unit, delta and hint, keep the last
+value while refreshing, show a skeleton only on first load and highlight a changed value for 600 ms unless reduced
+motion is requested or the value changed less than 5 s before. A bandwidth tile shows upload and download on two lines
+with their arrows. An approximate value is prefixed with a focusable "≈" that carries the approximation tooltip; the
+tile itself carries no tooltip.
 
 #### Scenario: Refresh keeps the value
 - **GIVEN** a tile showing 87
@@ -187,7 +187,7 @@ approximation tooltip; the tile itself carries no tooltip.
 - **THEN** the approximation tooltip shows, and hovering the rest of the tile shows nothing
 
 ### Requirement: Time-series chart fixed to the range
-CE. The time-series chart SHALL render the given series between `from` and `to` in the given timezone with
+Edition: CE. The time-series chart SHALL render the given series between `from` and `to` in the given timezone with
 granularity buckets; the x-axis never extends beyond the range, wheel and drag scroll the page, and no zoom
 component is enabled. It uses a shared tooltip keyed by x across the charts of a page, 2 px lines, one y-axis
 per chart, and formats bytes, bitrates, durations and percentages with the shared formatters.
@@ -200,7 +200,7 @@ per chart, and formats bytes, bitrates, durations and percentages with the share
 #### Scenario: Sparse data
 - **GIVEN** buckets exist only for half of the range
 - **WHEN** the chart renders
-- **THEN** the x-axis still spans `from` to `to` and missing buckets show gaps, not a shortened axis
+- **THEN** the x-axis spans `from` to `to` and missing buckets show gaps, not a shortened axis
 
 ### Requirement: Chart markers
 Edition: CE. The chart SHALL draw event markers (join/leave, egress start/end, aborted) as dashed vertical lines,
@@ -220,18 +220,19 @@ text on the chart.
 
 ### Requirement: Chart palette and quality bands
 
-CE. Series colours SHALL follow the entity, never the rank, from eight palette slots with light and dark values that
-are pairwise distinguishable; known values (participant kinds, egress statuses and types, ingress input types,
+Edition: CE. Series colours SHALL follow the entity, never the rank, from eight palette slots with light and dark values
+that are pairwise distinguishable; known values (participant kinds, egress statuses and types, ingress input types,
 directions) have fixed distinct slots, and two other entities of one chart never share a slot.
 
 #### Scenario: Palette values
 - **WHEN** series and quality bands render in light and dark themes
-- **THEN** the slots and bands use the theme tokens, the bands are tinted 12 % with Excellent `#0ca30c`, Good `#0088aa`/`#0f93b8`, Poor `#eda100`/`#c98500` and Lost `#d03b3b`, and the palette check finds every pair of slots distinguishable in both themes
+- **THEN** the series take the colours of the slot tokens `--ovd-chart-1` to `--ovd-chart-8` for the applied theme,
+  each slot with a light and a dark value, and each quality band is drawn in its own colour tinted at 12 % opacity
 
 #### Scenario: Same entity, same colour
-- **GIVEN** the SDK breakdown and the SDK time series on one page
+- **GIVEN** the Participant kind breakdown of two ranges, with `EGRESS` first in one and second in the other
 - **WHEN** both render
-- **THEN** `js` is teal in both and `swift` is orange in both
+- **THEN** `EGRESS` has the same colour in both
 
 #### Scenario: Egress statuses
 - **GIVEN** egresses ended as complete, aborted, limit reached and failed in one chart
@@ -239,7 +240,7 @@ directions) have fixed distinct slots, and two other entities of one chart never
 - **THEN** the four segments have four distinguishable colours and failed is red
 
 ### Requirement: Chart accessibility
-CE. Each chart SHALL expose `role="img"` with a generated summary (range, series, min/max/last), be focusable,
+Edition: CE. Each chart SHALL expose `role="img"` with a generated summary (range, series, min/max/last), be focusable,
 offer a data table toggle, and show direct labels on breakdowns whose light slots fall below 3:1.
 
 #### Scenario: Screen reader summary
@@ -248,7 +249,7 @@ offer a data table toggle, and show direct labels on breakdowns whose light slot
 - **THEN** the summary names the range, the two series and their min, max and last values, and the table toggle is the next focus stop
 
 ### Requirement: Breakdown chart
-CE. The breakdown chart SHALL render a donut or horizontal bar with a legend, direct labels, a fixed colour per
+Edition: CE. The breakdown chart SHALL render a donut or horizontal bar with a legend, direct labels, a fixed colour per
 entity and a toggle to a table of the same data; more than eight entries fold into "Other" (outline grey).
 
 #### Scenario: Nine SDKs
@@ -257,11 +258,11 @@ entity and a toggle to a table of the same data; more than eight entries fold in
 - **THEN** eight slices are shown plus "Other", and the table toggle lists all nine
 
 ### Requirement: Date-time range picker
-CE. The picker SHALL offer presets 1 h, 6 h, 24 h, 7 d, 30 d, 90 d, this month and custom, explicit `from`/`to`
+Edition: CE. The picker SHALL offer presets 1 h, 6 h, 24 h, 7 d, 30 d, 90 d, this month and custom, explicit `from`/`to`
 to the minute, a timezone select with a UTC toggle, and show the active zone. It validates `from < to`, warns while
 the start, that of the applied range until the custom start is edited, predates the retention of the page's data
-at the same instant, and writes the parameters as described by the shell. Its zone controls change the session zone
-only, never the stored default zone.
+at the same instant, and writes the parameters by the shell's URL rules. Its zone controls change only the session
+zone, never the stored default.
 
 #### Scenario: Custom range
 - **GIVEN** the user picks custom with `2026-10-01 00:00` to `2026-10-02 00:00`
@@ -276,7 +277,7 @@ only, never the stored default zone.
 #### Scenario: Zone picked on a list
 - **GIVEN** the stored default zone is the browser zone Europe/Madrid
 - **WHEN** the user selects Asia/Tokyo in the picker of the rooms list
-- **THEN** the URL has `tz=Asia/Tokyo`, every page opened afterwards in the session uses Asia/Tokyo, and Settings still
+- **THEN** the URL has `tz=Asia/Tokyo`, every page opened afterwards in the session uses Asia/Tokyo, and Settings
   shows "Browser (Europe/Madrid)" as the default
 
 #### Scenario: Applied range older than the retention
@@ -343,8 +344,8 @@ region and reserves its width, so the controls never move when it appears or cha
 - **WHEN** the refresh control renders
 - **THEN** it shows just the refresh button and the update time
 
-#### Scenario: Page that cannot auto-refresh now
-- **GIVEN** a page that cannot auto-refresh now
+#### Scenario: Page that cannot auto-refresh
+- **GIVEN** a page whose refresh scheduler is paused with a reason
 - **WHEN** the refresh control renders
 - **THEN** the interval select or menu button stays visible but disabled, with the page's reason as its tooltip
 
@@ -391,7 +392,7 @@ shows only on the Overview.
 - **THEN** no live chip is shown, since the status badge already says active
 
 ### Requirement: Breadcrumbs component
-CE. The breadcrumbs component SHALL render items (label, optional link, optional copy value) as a `nav` with an
+Edition: CE. The breadcrumbs component SHALL render items (label, optional link, optional copy value) as a `nav` with an
 ordered list, append the current range parameters to links, and render the last item as text followed by a copy
 button.
 
@@ -451,7 +452,7 @@ filters and the Columns button of its table.
 - **THEN** its Export CSV button is in the section header, after the title
 
 ### Requirement: Toast
-CE. Toasts SHALL be Material snackbars shown for 3 s in a polite live region, one at a time.
+Edition: CE. Toasts SHALL be Material snackbars shown for 3 s in a polite live region, one at a time.
 
 #### Scenario: Copy toast
 - **GIVEN** a copy action
@@ -462,8 +463,8 @@ CE. Toasts SHALL be Material snackbars shown for 3 s in a polite live region, on
 
 Edition: CE. Shared formatters SHALL render numbers with `Intl.NumberFormat('en')`, percentages with one decimal and a
 space before the sign ("96.4 %", donut labels included), bytes in decimal units with three significant digits and
-durations as `850 ms`, `42 s`, `12 m 05 s`, `1 h 02 m`, `3 d 4 h`; timestamps SHALL read as the timestamp format scenario
-states.
+durations as `850 ms`, `42 s`, `12 m 05 s`, `1 h 02 m`, `3 d 4 h`; timestamps SHALL read as the timestamp format
+scenario states.
 
 #### Scenario: Bytes and duration
 - **GIVEN** 12345678 bytes and 3725000 ms
@@ -482,7 +483,7 @@ states.
   when `tz=UTC`
 
 ### Requirement: External links
-CE. Links to documentation and PRO pages SHALL open in a new tab with `rel="noopener"` and a trailing
+Edition: CE. Links to documentation and PRO pages SHALL open in a new tab with `rel="noopener"` and a trailing
 `open_in_new` icon.
 
 #### Scenario: Documentation link
@@ -503,9 +504,9 @@ time-series chart names its bucket (such as "Hourly") and the time zone of its a
 - **THEN** a note naming "Hourly" and Europe/Madrid reads under the title, not above it
 
 ### Requirement: Track source icon
-CE. Track sources SHALL render as icons with a tooltip and an accessible label (Camera `videocam`, Microphone `mic`,
-Screen share `screen_share`, Screen share audio `volume_up`, Unknown `help`) wherever a source is shown in a table or
-a list of sources.
+Edition: CE. Track sources SHALL render as icons with a tooltip and an accessible label (Camera `videocam`, Microphone
+`mic`, Screen share `screen_share`, Screen share audio `volume_up`, Unknown `help`) wherever a source is shown in a
+table or a list of sources.
 
 #### Scenario: Published sources
 - **GIVEN** a participant publishing camera and microphone
@@ -514,7 +515,7 @@ a list of sources.
 
 ### Requirement: Paused live chip
 
-CE. While the page's auto-refresh is off, the live chip SHALL read "paused" with a `pause` icon and the tooltip
+Edition: CE. While the page's auto-refresh is off, the live chip SHALL read "paused" with a `pause` icon and the tooltip
 "Auto-refresh is off · data from hh:mm:ss" (the page's last update); "stale" takes precedence, and choosing an interval
 again turns it back to "LIVE".
 
@@ -557,9 +558,9 @@ the tiles wrapping at the minimum width until measured, so no tile renders narro
 - **THEN** no tile is narrower than 150 px and the row does not jump to another layout after the first frame
 
 ### Requirement: Retention length wording
-CE. Every UI text that names a retention SHALL state it in the largest of days, hours, minutes and seconds that divides
-it exactly, as "7 days", "1 day", "36 hours" or "90 minutes", or as "7-day", "36-hour" before a noun, and never round
-it; a retention without limit SHALL read "Kept forever" where a value is shown.
+Edition: CE. Every UI text that names a retention SHALL state it in the largest of days, hours, minutes and seconds that
+divides it exactly, as "7 days", "1 day", "36 hours" or "90 minutes", or as "7-day", "36-hour" before a noun, and never
+round it; a retention without limit SHALL read "Kept forever" where a value is shown.
 
 #### Scenario: Whole days
 - **GIVEN** an hourly rollup retention of 400 days and a range starting 500 days ago
@@ -582,8 +583,8 @@ it; a retention without limit SHALL read "Kept forever" where a value is shown.
 - **THEN** it reads "90 minutes", or "90-minute" before a noun
 
 ### Requirement: No native title tooltips
-CE. Cards, sections and charts SHALL NOT expose their title as a native `title` attribute, so hovering any part of
-them, links included, shows only the tooltips the page defines.
+Edition: CE. Cards, sections and charts SHALL NOT expose their title as a native `title` attribute, so hovering any part
+of them, links included, shows only the tooltips the page defines.
 
 #### Scenario: Link inside a card
 - **GIVEN** the Recent rooms card of the Overview
@@ -805,7 +806,7 @@ entity facts take one from their definition; the label then carries no hover tex
 #### Scenario: Sortable column header
 - **GIVEN** a sortable column header with an info tip
 - **WHEN** the user activates the info icon
-- **THEN** the tooltip shows and the sort does not change; activating the header label still sorts
+- **THEN** the tooltip shows and the sort does not change; activating the header label sorts
 
 #### Scenario: Tile that links to a list
 - **GIVEN** an Overview live tile that opens a filtered list and has an info tip

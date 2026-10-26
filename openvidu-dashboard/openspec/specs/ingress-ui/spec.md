@@ -42,7 +42,7 @@ wider than the ranked-sort limit, which falls back to `createdAt`.
 #### Scenario: Defaults
 
 - **WHEN** `/ingress` opens without query parameters
-- **THEN** it uses `status=all`, every input type, `sort=createdAt`, `order=desc`, the global range and the stored page
+- **THEN** it uses every status and input type, `sort=createdAt`, `order=desc`, the global range and the stored page
   size
 
 #### Scenario: Any state change drops the cursor
@@ -63,7 +63,7 @@ carry a tooltip saying the numbers are hour-aligned; tiles keep their value whil
   sessionsInRange: 12, totalDurationMs: 21600000, approximate: true }`
 - **WHEN** the tiles render
 - **THEN** they read "Publishing now 2", "Ingress in range 5" with hint "RTMP 3 · WHIP 2 · URL 0", "Sessions in
-  range 12" and "Total duration 6 h 00 m", the last two with the approximate tooltip, and no tile reads "Ingresses"
+  range 12" and "Total duration 6 h 00 m", the last two with the approximate tooltip
 
 #### Scenario: Failed list keeps the tiles
 
@@ -96,8 +96,8 @@ bound to `status`; both write the URL on change and show their current value fro
 ### Requirement: Ingress search
 
 Edition: CE. The Ingress page SHALL offer the shared list search box labelled "Ingress name or ID" for an ingress name
-prefix or an `IN_` ID, which writes `q` after a 300 ms debounce, shows the hint "Type at least 2 characters" instead
-of searching on one character, shows the hint "Exact ID: range and filters ignored · Enter opens it" on an exact
+prefix or an `IN_` ID, which writes `q` after a 300 ms debounce, shows the hint "Type at least 2 characters" and
+writes nothing on one character, shows the hint "Exact ID: range and filters ignored · Enter opens it" on an exact
 `IN_` ID, and opens that ingress with the current range when Enter is pressed on it.
 
 #### Scenario: Prefix search
@@ -249,10 +249,10 @@ with retry and request id while keeping the previous rows when a load fails.
 
 ### Requirement: Ingress detail route and CE lock
 
-Edition: CE. `/ingress/:ingressId` SHALL be registered in CE with `requiredFeature: "ingress-detail"`, read `tz`,
-`order`, `cursor`, `limit` and `types` from the URL, and in CE render the full-page lock over a dimmed silhouette of
-three tiles and one block, under the breadcrumbs and a header holding only the title (the name, or the ID without one)
-with its copy button and the status badge; the header has no refresh control and no PRO endpoint is called.
+Edition: CE. `/ingress/:ingressId` SHALL be registered in CE as a timed route that is not range-scoped and declares the
+feature `ingress-detail`, and in CE render the full-page lock over a dimmed silhouette of three tiles and one block,
+under the breadcrumbs and a header holding only the title (the name, or the ID without one) with its copy button and
+the status badge; the header has no refresh control and no PRO endpoint is called.
 
 #### Scenario: Locked from the list
 
@@ -340,4 +340,4 @@ sort by <column>"; Created SHALL stay sortable for any range.
 - **GIVEN** `from=now-30d&to=now` and the default limit
 - **WHEN** the user hovers or focuses the Sessions header
 - **THEN** the header is disabled and its tooltip reads "Narrow the range to <n> to sort by Sessions", with <n>
-  naming the 7-day limit, while the Created header still toggles the order
+  naming the 7-day limit, while the Created header toggles the order

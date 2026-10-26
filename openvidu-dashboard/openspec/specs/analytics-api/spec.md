@@ -80,8 +80,8 @@ Edition: CE. The CE metrics SHALL be the eighteen of the "CE metrics" scenario; 
 Edition: CE. Analytics series SHALL accept `granularity` `auto`, `5m`, `15m`, `1h`, `6h` and `1d`, reject `1m`,
 read `analytics_5min` for `5m` and `15m`, `analytics_hourly` for `1h` and `6h` and `analytics_daily` for `1d`, and
 SHALL never read entity or stats collections. Sub-hour values SHALL require a range of at most 24 h whose `from` is
-inside the 5-minute rollup retention. `auto` SHALL resolve to `5m` (≤ 24 h), `1h` (≤ 7 d), `6h` (≤ 90 d), otherwise
-`1d`.
+inside the 5-minute rollup retention. `auto` SHALL resolve to `5m` (≤ 24 h inside that retention), `1h` (≤ 7 d), `6h`
+(≤ 90 d), otherwise `1d`.
 
 #### Scenario: Automatic resolution by range
 
@@ -233,7 +233,7 @@ without ingress activity.
 #### Scenario: Summary values
 
 - **GIVEN** hourly documents in range summing to `rooms.created: 120`, `rooms.ended: 110`, `participants.joined:
-  900`, `participants.active: 880`, `apiCalls.total: 5000`, `apiErrors: 50`
+  900`, `participants.active: 880`, `apiCalls.total: 5000`, `apiErrors.total: 50`
 - **WHEN** the summary is requested
 - **THEN** the body has `roomsCreated: 120`, `roomsEnded: 110`, `participantSessions: 900`,
   `connectionSuccessRate: 97.8`, `apiCalls: 5000` and `apiErrorRate: 1.0`

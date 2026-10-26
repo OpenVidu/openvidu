@@ -8,8 +8,8 @@ LiveKit's live state, so the dashboard never shows entities that no longer exist
 ## Requirements
 
 ### Requirement: Participant candidate detection
-Edition: CE and PRO servers. The reconciler SHALL treat a participant session as a candidate when its
-status is `active` and `lastStatsAt` is older than 3 × stats interval (90 s), or when it has no stats at
+Edition: CE and PRO servers. The reconciler SHALL treat a participant session as a candidate when it is
+open (`joining` or `active`) and `lastStatsAt` is older than 3 × stats interval (90 s), or when it has no stats at
 all and `activeAt` (or `joinedAt` when the session never became active) is older than the same period.
 
 #### Scenario: Stats stopped
@@ -28,13 +28,14 @@ all and `activeAt` (or `joinedAt` when the session never became active) is older
 - **THEN** the participant is not a candidate
 
 ### Requirement: Room candidate detection
-Edition: CE and PRO servers. The reconciler SHALL treat as a candidate an `active` room that received no stats for
-3 × stats interval and either has no open participant session of a kind that keeps a room open (every kind but EGRESS
-and AGENT, which LiveKit treats as dependent) and a `lastEventAt` older than its empty timeout plus 2 × reconciler
-interval, or is hosted by a dead node and received no event for 3 × stats interval, whatever its open sessions.
+Edition: CE and PRO servers. The reconciler SHALL treat as a candidate an `active` room that received no stats for 3 ×
+stats interval and either has no open participant session of a kind that keeps a room open (every kind but EGRESS and
+AGENT, which LiveKit treats as dependent) and a `lastEventAt` older than its empty timeout (default 300 s) plus 2 ×
+reconciler interval, or is hosted by a dead node and received no event for 3 × stats interval, whatever its open
+sessions.
 
 #### Scenario: Empty room past its timeout
-- **GIVEN** an `active` room with empty timeout 300 s, no active STANDARD participants and `lastEventAt` 7 minutes old
+- **GIVEN** an `active` room with empty timeout 300 s, no active STANDARD participants and `lastEventAt` more than 7 minutes old
 - **WHEN** a reconciler run starts
 - **THEN** the room is a candidate
 
@@ -49,7 +50,7 @@ interval, or is hosted by a dead node and received no event for 3 × stats inter
 - **THEN** the room is a candidate
 
 #### Scenario: Room of a dead node
-- **GIVEN** an `active` room on a dead node, created 2 minutes ago with empty timeout 300 s, whose last stats flush and last event are 100 s old and whose only STANDARD participant is still `active`
+- **GIVEN** an `active` room on a dead node, created 2 minutes ago with empty timeout 300 s, whose last stats flush and last event are 100 s old and whose only STANDARD participant is `active`
 - **WHEN** a reconciler run starts
 - **THEN** the room is a candidate
 
@@ -59,10 +60,10 @@ interval, or is hosted by a dead node and received no event for 3 × stats inter
 - **THEN** the room is not a candidate
 
 ### Requirement: Egress and ingress session candidate detection
-Edition: CE and PRO servers. The reconciler SHALL treat an egress or an ingress session as a candidate
-only when it is still active, its room is `closed` in the store for longer than 2 × LiveKit cleanup
-interval, and the room's node is dead; egress and ingress of active rooms or alive nodes are never
-candidates.
+Edition: CE and PRO servers. The reconciler SHALL treat an egress or an ingress session as a candidate only when it
+has not ended (egress `starting`, `active` or `ending`; ingress session `buffering` or `publishing`), its room is
+`closed` in the store for longer than 2 × LiveKit cleanup interval, and the room's node is dead; egress and ingress of
+active rooms or alive nodes are never candidates.
 
 #### Scenario: Egress of a closed room on a dead node
 - **GIVEN** an `active` egress whose room is `closed` since 7 minutes with `nodeId` of a dead node
@@ -88,7 +89,7 @@ not list it with its SID, or when its last signal is older than 2 × LiveKit cle
 #### Scenario: Node stopped writing batches
 - **GIVEN** a candidate participant whose node has `lastSeenAt` 45 s old and is absent from LiveKit's node registry
 - **WHEN** the candidate is checked
-- **THEN** it is confirmed with reason `node-dead` even if the live listing still contains it
+- **THEN** it is confirmed with reason `node-dead` even if the live listing contains it
 
 #### Scenario: Node alive by registry
 - **GIVEN** a candidate participant whose node has `lastSeenAt` 45 s old but LiveKit's node registry reports it available
@@ -118,7 +119,7 @@ not list it with its SID, or when its last signal is older than 2 × LiveKit cle
 #### Scenario: Untrusted listing
 - **GIVEN** a candidate room of a dead node whose last signal is 2 minutes old and a live listing that returns an error
 - **WHEN** the run executes
-- **THEN** the room stays `active` and the participant sessions of the dead node are still closed
+- **THEN** the room stays `active` and the participant sessions of the dead node are closed
 
 ### Requirement: Confirmation by live state when the node is alive
 Edition: CE and PRO servers. When a candidate's node is alive, the reconciler SHALL confirm it only if the
@@ -133,7 +134,7 @@ two consecutive runs; a candidate present in the listing SHALL be kept and logge
 #### Scenario: Absent once
 - **GIVEN** a candidate participant whose node is alive and which was absent from the live listing for the first time in this run
 - **WHEN** the run ends
-- **THEN** the participant is still `active`
+- **THEN** the participant stays `active`
 
 #### Scenario: Present in live state
 - **GIVEN** a candidate participant whose node is alive and which is listed in the live state
@@ -142,8 +143,8 @@ two consecutive runs; a candidate present in the listing SHALL be kept and logge
 
 ### Requirement: Untrusted live listing
 Edition: CE and PRO servers. A live listing SHALL be untrusted and confirm nothing when reading it fails,
-or when it lists no room while the store has active rooms on alive nodes (the state right after a Redis
-restart). Observations from an untrusted listing SHALL not count towards consecutive absences.
+or when it lists no room while active rooms of alive nodes received stats within the last 3 × stats interval (the
+state right after a Redis restart). Observations from an untrusted listing SHALL not count towards consecutive absences.
 
 #### Scenario: Redis error
 - **GIVEN** candidates whose nodes are alive and a live listing that returns an error
@@ -151,13 +152,14 @@ restart). Observations from an untrusted listing SHALL not count towards consecu
 - **THEN** no entity is closed, `openvidu_analytics_reconciler_runs_total{result="live-state-error"}` increases and the next run starts the absence count from zero
 
 #### Scenario: Empty listing after a Redis restart
-- **GIVEN** a Redis restart that wiped the room state while the store has active rooms on alive nodes
+- **GIVEN** a Redis restart that wiped the room state while active rooms of alive nodes keep receiving stats
 - **WHEN** the next run executes
-- **THEN** the listing is treated as untrusted and no entity is closed
+- **THEN** the listing is treated as untrusted, no entity is closed and `openvidu_analytics_reconciler_runs_total{result="live-state-untrusted"}` increases
 
 ### Requirement: Fresh stats veto
-Edition: CE and PRO servers. The reconciler SHALL never close an entity whose `lastStatsAt` is within the
-last stats interval at closure time, re-reading the document immediately before closing it.
+Edition: CE and PRO servers. The reconciler SHALL never close a room or participant session whose `lastStatsAt` is
+within the last stats interval at closure time: each closure is a conditional update that applies only while the
+entity keeps the status the run read and has no such stats flush (and, for a room, no event since the run read it).
 
 #### Scenario: Stats arrive between detection and closure
 - **GIVEN** a confirmed candidate participant
@@ -170,7 +172,7 @@ last stats interval at closure time, re-reading the document immediately before 
 - **THEN** none of them is closed
 
 ### Requirement: Participant closure cascade
-Edition: CE and PRO servers. Closing a participant session SHALL set its tracks still `published` to
+Edition: CE and PRO servers. Closing a participant session SHALL set its `published` tracks to
 `unpublished` and the open subscriptions to those tracks, and the participant's own open subscriptions, to
 `unsubscribed`, all with the participant's end time and `closedBy: "reconciler"`.
 
@@ -185,7 +187,7 @@ Edition: CE and PRO servers. Closing a participant session SHALL set its tracks 
 - **THEN** its status is `aborted` with `disconnectReason: "RECONCILED"`
 
 ### Requirement: Room closure cascade
-Edition: CE and PRO servers. Closing a room SHALL close its participant sessions still open (`active` or
+Edition: CE and PRO servers. Closing a room SHALL close its open participant sessions (`active` or
 `joining`) with the room's end time, applying the participant cascade to each of them.
 
 #### Scenario: Room with a stale dependent participant
@@ -216,9 +218,10 @@ a later run.
 
 ### Requirement: Closure fields
 Edition: CE and PRO servers. A closure SHALL set the terminal status, `closedBy: "reconciler"`, `endReason`
-or `disconnectReason` `RECONCILED`, the end time `max(lastStatsAt, lastEventAt)` of the closed entity
-(cascaded entities inherit it), `durationMs`, and `expiresAt` from the retention of its class (`retention.tracks`
-for tracks and subscriptions, `retention.entities` otherwise).
+or `disconnectReason` `RECONCILED`, the end time (`max(lastStatsAt, lastEventAt)` for rooms and participant sessions,
+inherited by cascaded entities; for egress and ingress sessions, as in their store fallback), `durationMs`, and
+`expiresAt` from the retention of its class (`retention.tracks` for tracks and subscriptions, `retention.entities`
+otherwise).
 
 #### Scenario: End time from the last signal
 - **GIVEN** a confirmed participant with `lastStatsAt` 10:00:30 and `lastEventAt` 10:00:05
@@ -236,9 +239,10 @@ for tracks and subscriptions, `retention.entities` otherwise).
 - **THEN** the track has `expiresAt = unpublishedAt + 168h` and the participant `expiresAt = leftAt + retention.entities`
 
 ### Requirement: Synthetic raw event per closure
-Edition: CE and PRO servers. Every closure, including cascaded ones, SHALL insert exactly one raw event of
-the matching close type with `synthetic: true`, `_id` prefixed `AE_SYN_` and derived from the entity id,
-the entity's lifted references and the closure reason in its payload.
+Edition: CE and PRO servers. Every closure of a room, participant session, egress or ingress session, including the
+participant sessions a room closure cascades to, SHALL insert exactly one raw event of the matching close type with
+`synthetic: true`, `_id` prefixed `AE_SYN_` and derived from the entity id, the entity's lifted references and the
+closure reason in its payload.
 
 #### Scenario: Participant closure event
 - **GIVEN** a participant closed by the reconciler
@@ -285,7 +289,7 @@ and `error`; the store reconciler SHALL close only candidate egress and ingress 
 #### Scenario: Store fallback for an ingress session
 - **GIVEN** a candidate ingress session
 - **WHEN** the reconciler closes it
-- **THEN** it has `status: "error"`, `closedBy: "reconciler"` and its ingress document reflects the ended session
+- **THEN** it has `status: "error"`, `error: "ingress lost (reconciled)"`, `closedBy: "reconciler"`, `endedAt = max(room.endedAt, session.startedAt)` and its ingress document reflects the ended session
 
 ### Requirement: Leader-only periodic runs
 Edition: CE and PRO servers. Runs SHALL execute on one node at a time, chosen by a Redis lock
@@ -305,12 +309,12 @@ in a Redis restart SHALL be re-acquired without manual intervention.
 ### Requirement: Reconciler switch
 Edition: CE and PRO servers. With `openvidu.analytics.reconciler.enabled: false` (default `true`) a node SHALL skip
 the periodic and startup runs and SHALL log at startup that entities whose end event is lost stay open; the legacy
-migration still runs its own post-replay reconciliation.
+migration runs its own post-replay reconciliation whatever this setting.
 
 #### Scenario: Reconciler disabled
-- **GIVEN** `reconciler.enabled: false` and a participant of a crashed node still `active` in the store
+- **GIVEN** `reconciler.enabled: false` and a participant of a crashed node `active` in the store
 - **WHEN** 5 minutes pass
-- **THEN** the participant is still `active`, `schema_meta` has no new `reconciler` run, no daily `uniqueIdentities` is set and the startup log says that lost entities stay open
+- **THEN** the participant stays `active`, `schema_meta` has no new `reconciler` run, no daily `uniqueIdentities` is set and the startup log says that lost entities stay open
 
 ### Requirement: Daily unique identities
 Edition: CE and PRO servers. After its closures, within its time budget, each run SHALL set `uniqueIdentities` on
@@ -341,8 +345,8 @@ closes the sessions of its previous incarnation without waiting a full interval.
 ### Requirement: Idempotent and bounded runs
 Edition: CE and PRO servers. A run SHALL be idempotent, SHALL close at most
 `openvidu.analytics.reconciler.max_closures_per_run` entities (default 500) within the lock's time budget, and when
-the limit or the budget is reached SHALL record the run as partial and continue after 5 s instead of waiting a full
-interval.
+the limit or the budget is reached SHALL record the run as partial and run a follow-up 5 s later, without waiting
+for the next interval.
 
 #### Scenario: Run repeated
 - **GIVEN** a run that closed 10 entities
@@ -357,8 +361,9 @@ interval.
 ### Requirement: Metrics
 Edition: CE and PRO servers. The node SHALL expose `openvidu_analytics_reconciler_runs_total{result}`,
 `openvidu_analytics_reconciler_closed_total{entity}`, `openvidu_analytics_reconciler_candidates{entity}` and
-`openvidu_analytics_reconciler_run_duration_seconds` on its Prometheus endpoint, with `entity` in room,
-participant, track, subscription, egress, ingress_session.
+`openvidu_analytics_reconciler_run_duration_seconds` on its Prometheus endpoint, with `result` in ok, partial,
+live-state-error, live-state-untrusted, error, and `entity` in room, participant, track, subscription, egress,
+ingress_session (no track or subscription candidates).
 
 #### Scenario: After a closure
 - **GIVEN** a run that closed one participant with one track and two subscriptions
@@ -376,9 +381,10 @@ Edition: CE and PRO servers. Every run SHALL upsert `schema_meta` (`_id: "reconc
 - **THEN** the `reconciler` document has the counts of that run and `lastRunAt` within the last `reconciler.interval`
 
 ### Requirement: Structured closure logs
-Edition: CE and PRO servers. Every closure SHALL emit one structured log line with the entity type and
-id, room, node, reason (`node-dead`, `absent-live`, `cascade`, `room-closed-node-dead`), `lastStatsAt`,
-`lastEventAt` and the end time written; kept candidates SHALL be logged at debug level.
+Edition: CE and PRO servers. Every closure of a room, participant session, egress or ingress session SHALL emit one
+info log line with the entity type and id, room, node, reason (`node-dead`, `absent-live`, `cascade`,
+`room-closed-node-dead`, `legacy-fixer`), `lastStatsAt` and `lastEventAt` when known and the end time written; kept
+rooms SHALL be logged at debug level and kept participant sessions that LiveKit lists in one warning per run.
 
 #### Scenario: Closure log
 - **GIVEN** a participant closed with reason `node-dead`

@@ -105,7 +105,7 @@ algorithm and expiry on every protected request and SHALL NOT keep a revocation 
 ### Requirement: Protected routes
 
 Edition: CE. Every `/api/v1` route SHALL require `Authorization: Bearer <accessToken>` except the auth endpoints
-`login`, `refresh` and `logout`, `health`, `ready`, the public subset of `info` and the development-only docs;
+`login`, `refresh` and `logout`, `health`, `ready`, the public subset of `info` and the OpenAPI docs routes;
 `GET /api/healthcheck` and the SPA assets SHALL also be public. A missing, malformed, invalid or expired token SHALL
 answer `401` `UNAUTHORIZED` with `details.reason` `missing`, `invalid` or `expired` and `WWW-Authenticate: Bearer`.
 
@@ -207,7 +207,7 @@ expired or belongs to a revoked family.
 - **GIVEN** a live refresh token
 - **WHEN** the client posts to refresh with it
 - **THEN** the response is `200` with a new access token and a different refresh cookie, and the presented token is
-  no longer live
+  marked as rotated
 
 #### Scenario: No cookie
 
@@ -231,8 +231,8 @@ family id.
 
 - **GIVEN** a refresh token rotated 5 minutes ago
 - **WHEN** it is presented again
-- **THEN** the response is `401`, the cookie is cleared, every token of the family is revoked and the successor token
-  issued 5 minutes ago no longer works
+- **THEN** the response is `401`, the cookie is cleared, every token of the family is revoked and a refresh with the
+  successor token issued 5 minutes ago answers `401`
 
 #### Scenario: Two tabs refreshing at once
 

@@ -79,19 +79,13 @@ and the removable chip "Publishers" while `publisher=true`. SIP, CONNECTOR and B
 ### Requirement: Participants table
 Edition: CE. The table SHALL show, in order, the columns SID (link to the detail with a copy button), Identity (copy
 button), Name, Room (link to the room detail), Kind (kind badge), Status (status badge with the stale cue), Joined,
-Left, Duration (live), Published (source icons) and Node (hidden by default), with no Client or Connection column; the
-sortable headers are Joined (`joinedAt`, the default), Left (`leftAt`) and Duration (`duration`); links never trigger
-on row click.
+Left, Duration (live), Published (source icons) and Node (hidden by default); the sortable headers are Joined
+(`joinedAt`, the default), Left (`leftAt`) and Duration (`duration`); links never trigger on row click.
 
 #### Scenario: Row rendering
 - **GIVEN** an active STANDARD session `PA_x1y2` of `alice` in `demo-room` publishing a camera and a microphone
 - **WHEN** the row renders
 - **THEN** the cells read, in order, `PA_x1y2` once, linking to `/participants/PA_x1y2` with its copy button, `alice` with its copy button, the name, `demo-room` linking to `/rooms/RM_abc`, the Standard kind badge, "active", the join time, "—", a duration counting up live and the camera and microphone source icons
-
-#### Scenario: Client unknown
-- **GIVEN** a session without `client` and without `connectionType`
-- **WHEN** the row renders
-- **THEN** the row renders like any other, since the table has no Client or Connection column
 
 #### Scenario: Sort toggles order
 - **GIVEN** the default `joinedAt` descending

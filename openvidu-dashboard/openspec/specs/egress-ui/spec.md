@@ -42,7 +42,7 @@ the ranked-sort limit, which falls back to `startedAt`.
 #### Scenario: Defaults
 
 - **WHEN** `/egress` opens without query parameters
-- **THEN** it uses `status=all`, `sort=startedAt`, `order=desc`, the global range and the stored page size
+- **THEN** it uses every status and type, `sort=startedAt`, `order=desc`, the global range and the stored page size
 
 #### Scenario: Any state change drops the cursor
 
@@ -63,7 +63,7 @@ last value while refreshing.
 - **GIVEN** the summary answers `{ active: 3, startedInRange: 120, byType: { track: 20, room_composite: 100 },
   byEndStatus: { complete: 110, failed: 7, aborted: 2 }, totalDurationMs: 36000000, approximate: false }`
 - **WHEN** the page renders
-- **THEN** the tiles read 3, 120 with hint "Room composite 100 · Track 20", 7 with hint "aborted 2", and "10 h 00 m"
+- **THEN** the tiles read 3, 120 with hint "Room composite 100 · Track 20", 7 with hint "Aborted 2", and "10 h 00 m"
 
 #### Scenario: Stable hint order
 
@@ -74,10 +74,10 @@ last value while refreshing.
 ### Requirement: Status, type, room and search filters
 
 Edition: CE. The Egress page SHALL offer, in this order, the shared list search box labelled "Room name or egress ID"
-(a room-name prefix or an exact egress ID, with the shared hints, clear button and debounce), a type select (All plus
-the five types with their labels), a status select (All, Active, Complete, Failed, Aborted, Limit reached; Active
-writes `starting,active,ending`) and, when `room` is set, the shared room chip; filters are written to the URL on
-change.
+(a room-name prefix or an exact egress ID), a multi-select type filter (the five types with their labels), a
+multi-select status filter (Active, Complete, Failed, Aborted, Limit reached; Active writes `starting,active,ending`),
+both reading "All" with nothing selected, and, when `room` is set, the shared room chip; filters are written to the URL
+on change.
 
 #### Scenario: Filter order
 
@@ -228,10 +228,10 @@ with retry and the request id.
 
 ### Requirement: Egress detail route and CE lock
 
-Edition: CE. `/egress/:egressId` SHALL be registered in CE with `requiredFeature: "egress-detail"`, read `tz`, `order`,
-`cursor` and `limit` from the URL, and in CE render the full-page lock over a dimmed silhouette of three tiles and one
-block, under the breadcrumbs and a header holding only the title (the egress ID) with its copy button and the status
-badge with its estimated cue; the header shows no refresh control and no PRO endpoint is called.
+Edition: CE. `/egress/:egressId` SHALL be registered in CE as a timed route that is not range-scoped and declares the
+feature `egress-detail`, and in CE render the full-page lock over a dimmed silhouette of three tiles and one block,
+under the breadcrumbs and a header holding only the title (the egress ID) with its copy button and the status badge
+with its estimated cue; the header shows no refresh control and no PRO endpoint is called.
 
 #### Scenario: Locked from the list
 
@@ -306,7 +306,7 @@ Started SHALL stay sortable for any range.
 - **GIVEN** `from=now-30d&to=now` and the default limit
 - **WHEN** the user hovers or focuses the Duration header
 - **THEN** the header is disabled and its tooltip reads "Narrow the range to <n> to sort by Duration", with <n>
-  naming the 7-day limit, while the Started header still toggles the order
+  naming the 7-day limit, while the Started header toggles the order
 
 #### Scenario: Range narrowed back
 
@@ -317,15 +317,14 @@ Started SHALL stay sortable for any range.
 ### Requirement: Egress room-name search
 
 Edition: CE. A search text of at least two characters that is not an egress ID SHALL list, through `q`, the egresses
-of the range whose room name starts with that text, case-insensitively, with no limit on the number of matching rooms
-and no hint about one.
+of the range whose room name starts with that text, case-insensitively, with no limit on the number of matching
+rooms.
 
 #### Scenario: Prefix matching many rooms
 
 - **GIVEN** 150 rooms whose name starts with `load-`, each with an egress started in the range
 - **WHEN** the user types `LOAD-`
-- **THEN** after the debounce the URL has `q=LOAD-`, the paginator walks through the egresses of all 150 rooms, and no
-  hint about the newest matching rooms is shown
+- **THEN** after the debounce the URL has `q=LOAD-` and the paginator walks through the egresses of all 150 rooms
 
 #### Scenario: Prefix only
 

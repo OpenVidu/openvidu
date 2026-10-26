@@ -39,15 +39,15 @@ and SHALL use a Node 24 base image pinned to an exact version tag.
 
 ### Requirement: CE runtime is a plain Node image without private dependencies
 
-CE edition. The CE image SHALL run the built backend (which serves the SPA) on an official Node 24 image with only
-production dependencies and no private package; npm, npx and corepack SHALL be absent from the runtime image.
+Edition: CE. The CE image SHALL run the built backend (which serves the SPA) on an official Node 24 image with only
+production dependencies and no private package; npm, npx, corepack and yarn SHALL be absent from the runtime image.
 
 #### Scenario: CE build needs no private access
 - **GIVEN** no build secret and no credentials for private repositories
 - **WHEN** the CE image is built
 - **THEN** the build succeeds
 
-#### Scenario: CE image carries no licensing package
+#### Scenario: CE image carries no private package
 
 - **WHEN** the CE image filesystem is searched for packages of private repositories
 - **THEN** nothing is found
@@ -75,17 +75,17 @@ Edition: CE. The image SHALL declare `EXPOSE 5000` and a `HEALTHCHECK` that requ
 
 ### Requirement: Multi-architecture images
 
-Edition: CE. The Dockerfile SHALL build for `linux/amd64` and `linux/arm64` the way OpenVidu Meet does: the
-platform-independent build stage runs once on `$BUILDPLATFORM` and only the final stage runs per target
-platform (buildx with QEMU on the self-hosted runner, no native arm64 runner).
+Edition: CE. The Dockerfile SHALL build for `linux/amd64` and `linux/arm64`: the platform-independent SPA build stage
+runs once on `$BUILDPLATFORM` and the other stages run per target platform (buildx with QEMU, no native arm64
+runner).
 
 #### Scenario: Multi-platform build
 - **WHEN** the image is built with `--platform linux/amd64,linux/arm64`
 - **THEN** the resulting manifest list contains both platforms and each variant starts on its architecture
 
 ### Requirement: No timezone database in the images
-Edition: CE. The image SHALL NOT install `tzdata`; timestamps are stored and logged in UTC and time zone
-conversion for bucketing uses the data bundled with Node.
+Edition: CE. The runtime image SHALL NOT contain `tzdata` (it is purged from the Node base image); timestamps are
+stored and logged in UTC and time zone conversion for bucketing uses the data bundled with Node.
 
 #### Scenario: Time zone conversion without tzdata
 - **GIVEN** a container with `TZ` unset and no `/usr/share/zoneinfo`
@@ -103,9 +103,8 @@ directly.
 
 ### Requirement: Image names and build wrapper
 
-Edition: CE. The image SHALL keep the name `openvidu/openvidu-dashboard`. `./dashboard.sh build-image ce` SHALL build
-it honouring
-`IMAGE_TAG` (default `dev`) and `BASE_HREF` (default `/`).
+Edition: CE. The image SHALL be named `openvidu/openvidu-dashboard`. `./dashboard.sh build-image ce` SHALL build it
+honouring `IMAGE_TAG` (default `dev`) and `BASE_HREF` (default `/`).
 
 #### Scenario: Wrapper builds CE
 - **WHEN** `./dashboard.sh build-image ce` runs
@@ -122,8 +121,8 @@ Edition: CE. The uncompressed `linux/amd64` CE image SHALL NOT exceed 300 MB; th
 
 ### Requirement: Supply-chain verification inside the image build
 Edition: CE. The Dockerfile SHALL install Aikido safe-chain in the build stage and run `npm safe-chain-verify`
-(with `SAFE_CHAIN_MINIMUM_PACKAGE_AGE_HOURS=0`, as the previous images did) before installing dependencies, so the
-verification runs wherever the image is built.
+(with `SAFE_CHAIN_MINIMUM_PACKAGE_AGE_HOURS=0`, so only packages flagged as malicious fail the build) before installing
+dependencies, so the verification runs wherever the image is built.
 
 #### Scenario: Build with a flagged package
 - **GIVEN** a lockfile that resolves a package flagged as malicious by safe-chain

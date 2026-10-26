@@ -60,7 +60,8 @@ test.
 
 ### Requirement: Integration test job with a real MongoDB
 Edition: CE. A job SHALL run `./dashboard.sh test-integration`, which starts a MongoDB 8 replica set with
-Testcontainers. The job SHALL fail, not skip, when Docker is unavailable on the runner.
+Testcontainers. The job SHALL fail, not skip, when Docker is unavailable on the runner. Latency budget overruns are
+reported as warnings (`DASHBOARD_TEST_LATENCY_BUDGETS=report`), while query plan assertions fail the job.
 
 #### Scenario: Docker available
 - **GIVEN** a runner with a working Docker daemon
@@ -74,8 +75,9 @@ Testcontainers. The job SHALL fail, not skip, when Docker is unavailable on the 
 
 ### Requirement: End-to-end job
 
-Edition: CE. A job SHALL run `./dashboard.sh e2e`: build the application, seed a MongoDB with fixtures, run the
-Playwright suites against it, and upload the Playwright reports and test results as one artifact on failure.
+Edition: CE. A job SHALL run `./dashboard.sh e2e`: build the application, run the Playwright suite against a mocked API
+and the real-backend suite against the backend on a MongoDB seeded with fixtures, and upload the Playwright reports and
+test results as one artifact on failure.
 
 #### Scenario: Report on failure
 - **GIVEN** a failing Playwright test
@@ -97,8 +99,8 @@ rejects a fixture or the schema versions differ.
 ### Requirement: Dependency update automation
 
 Edition: CE. Dependabot SHALL watch the npm ecosystem of `/openvidu-dashboard` weekly, grouping minor and patch
-updates and ignoring `@types/node` major updates while the dashboard runs on Node.js 24, in addition to the existing
-`github-actions` entry.
+updates and ignoring `@types/node` major updates while the dashboard runs on Node.js 24, next to the weekly
+`github-actions` entry of the repository.
 
 #### Scenario: Weekly update
 - **WHEN** a dependency in the workspace catalog has a new patch version

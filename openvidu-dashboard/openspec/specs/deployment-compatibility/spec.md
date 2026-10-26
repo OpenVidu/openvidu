@@ -90,8 +90,7 @@ that MongoDB is disabled and exit with code 0 before connecting to anything; uns
 
 ### Requirement: TLS certificate authority for external MongoDB
 Both editions. When `DATABASE_TLS_CA_FILE` is set, the dashboard SHALL connect with TLS and trust the PEM
-bundle at that path (for services such as Amazon DocumentDB). The variable keeps the `DATABASE_` prefix for
-consistency with `DATABASE_URL` and `DATABASE_NAME`; it is the one new variable not prefixed `DASHBOARD_`.
+bundle at that path (for services such as Amazon DocumentDB).
 
 #### Scenario: Private CA accepted
 - **GIVEN** a MongoDB server presenting a certificate signed by a private CA and `DATABASE_TLS_CA_FILE`
@@ -151,13 +150,13 @@ and exit with code 1.
 - **WHEN** an analytics request is repeated
 - **THEN** each request aggregates from MongoDB and returns the same body as with the cache enabled
 
-### Requirement: Naming rule for new variables
-Both editions. Every configuration variable introduced by the rebuild SHALL be prefixed `DASHBOARD_`, except
+### Requirement: Naming rule for dashboard variables
+Both editions. Every configuration variable that OpenVidu 3.9 does not read SHALL be prefixed `DASHBOARD_`, except
 database connection variables, which SHALL be prefixed `DATABASE_`.
 
 #### Scenario: Configuration schema audit
 - **WHEN** the set of variable names read by the configuration is listed
-- **THEN** every name is in the legacy list, starts with `DASHBOARD_` or starts with `DATABASE_`
+- **THEN** every name is read by OpenVidu 3.9, starts with `DASHBOARD_` or starts with `DATABASE_`
 
 ### Requirement: HTTP contract owned by the API conventions
 Both editions. The health endpoint (`GET /api/healthcheck`), `HEAD /`, the SPA fallback (including the unstripped
@@ -173,8 +172,8 @@ capability; this capability adds no second definition.
 ### Requirement: Startup order
 
 Edition: CE. Startup SHALL proceed in this order: load configuration, ping MongoDB, check the writer schema version,
-listen. A failure at any step SHALL exit without listening and log its cause; the exit code is 1 for configuration and
-MongoDB failures.
+provision the signing key and the session indexes, listen. A failure at any step SHALL exit without listening and log
+its cause; the exit code is 3 for a writer schema older than the dashboard's minimum and 1 for any other failure.
 
 #### Scenario: MongoDB unreachable
 

@@ -218,7 +218,8 @@ and are hour-aligned sums of the hourly rollups with `approximate: true` beyond 
 ### Requirement: Index-backed room queries
 
 Edition: CE. Every query of this capability SHALL run on an index of the shared contract
-(`dashboard-ce/typings/contract/indexes.ts`): no winning plan contains a `COLLSCAN`, and `totalDocsExamined` is bounded
+(`dashboard-ce/typings/contract/indexes.ts`), or on `_id` for the hourly rollups the long-range summary reads: no
+winning plan contains a `COLLSCAN`, and `totalDocsExamined` is bounded
 by the page size plus the documented residual filters for the index-ordered pages and by the rooms created in the range
 for the ranked sorts.
 

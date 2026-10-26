@@ -1,8 +1,8 @@
 # overview-api Specification
 
 ## Purpose
-The overview endpoint: one cheap, index-backed response with the live counters, today's totals, recent rooms,
-stale hints and writer health that the Overview page and the live counter tiles poll.
+The overview endpoint: one cheap, index-backed response with the live counters, today's totals, recent rooms and
+stale hints that the Overview page and the live counter tiles poll.
 
 ## Requirements
 
@@ -14,7 +14,7 @@ Edition: CE. `GET /api/v1/overview` SHALL require a bearer token, accept only `t
 #### Scenario: Default response
 - **GIVEN** a deployment with a running writer
 - **WHEN** the client requests `GET /api/v1/overview` with a valid token
-- **THEN** the response is `200` with `generatedAt` within one second of the server clock and the keys `live`, `today` and `recentRooms`, no `health` key, and no `nodes` key on CE
+- **THEN** the response is `200` with `generatedAt` within one second of the server clock and the keys `live`, `today` and `recentRooms`, and no `nodes` key on CE
 
 #### Scenario: Unknown timezone
 - **WHEN** the client requests `GET /api/v1/overview?tz=Mars/Olympus`
@@ -132,7 +132,7 @@ Edition: CE. The response SHALL carry a weak `ETag` derived from the body withou
 
 ### Requirement: Index-backed overview
 
-Edition: CE. Every overview query SHALL use an existing index (`rooms { status, createdAt }`,
+Edition: CE. Every overview query SHALL use an index of the shared contract (`rooms { status, createdAt }`,
 `participants { status, kind }`, `egresses { status, startedAt }`, `ingress_sessions { status }`,
 `analytics_hourly { scope, bucket }`), examining at most each collection's active documents plus 20 rooms; `nodes`,
 bounded by the node count, is read whole for the stale window's batch interval; `schema_meta` is not read.

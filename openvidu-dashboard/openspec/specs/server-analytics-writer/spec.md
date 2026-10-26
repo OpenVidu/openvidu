@@ -1,7 +1,7 @@
 # server-analytics-writer Specification
 
 ## Purpose
-How the OpenVidu server turns LiveKit analytics events and stats into the v2 analytics model of the
+How the OpenVidu server turns LiveKit analytics events and stats into the analytics model of the
 `data-model` capability: codec, projections, stats modes, batching and idempotency, database
 initialization, shutdown and observability of the write path.
 
@@ -23,10 +23,10 @@ single member that is set and no entry for unset fields.
 - **THEN** `payload.track` contains `sid` and no other key
 
 ### Requirement: Pure projection into write models
-Edition: CE and PRO. Each event SHALL be projected by a pure function of the event, the configuration and
-the batch clock into write models (collection, filter, update) with no database read, and the write
-models SHALL be idempotent and commutative so that replayed or reordered events converge on the same
-contract fields.
+Edition: CE and PRO. Each event SHALL be projected into write models (collection, filter, update) by a pure function
+of the event, the configuration and the references the batch resolves beforehand from its cache or with one query per
+kind (identities, published tracks, entities the reconciler closed), with no database read of its own, and the write
+models SHALL be idempotent and commutative so that replayed or reordered events converge on the same contract fields.
 
 #### Scenario: Every emitted type is projected
 - **GIVEN** the recorded fixture set containing every event type the server emits
@@ -92,8 +92,9 @@ nanoseconds and microseconds; `rttMs` stays in milliseconds, `jitterMs` is deriv
 
 ### Requirement: Secrets allow-list
 Edition: CE and PRO. Projectors SHALL copy only fields named in an explicit allow-list into any document,
-including raw payloads; every other field, present or future, SHALL be dropped. Egress stream, web and
-webhook URLs SHALL be stored with userinfo, query string and the last path segment redacted.
+including raw payloads; every other field, present or future, SHALL be dropped. Egress stream, web and websocket
+URLs SHALL be stored without userinfo, query string and fragment and with their last path segment replaced by `***`;
+the ingress URL SHALL be stored without userinfo, query string and fragment.
 
 #### Scenario: Fully populated messages
 - **GIVEN** an `AnalyticsEvent` of every type with every string field set to a unique sentinel, including `room.turn_password`, egress storage credentials, webhook signing keys, egress tokens, `ingress.stream_key`, `ingress.url`, SIP credentials and `api_call` request bodies
@@ -106,9 +107,10 @@ webhook URLs SHALL be stored with userinfo, query string and the last path segme
 - **THEN** the stored output URL is `rtmps://live.example.com/app/***`
 
 ### Requirement: Personal data flags
-Edition: CE and PRO. `anonymize_ip` SHALL remove `client_info.address` from every document, and
-`store_metadata` SHALL gate room metadata, participant metadata and attributes and ingress participant
-metadata; IP addresses and metadata are dropped by default, also from the documents of the legacy migration.
+Edition: CE and PRO. `anonymize_ip` SHALL remove the client IP addresses (`client_info.address` and
+`client_meta.client_addr`) from every document, and `store_metadata` SHALL gate room metadata, participant metadata
+and attributes and ingress participant metadata; IP addresses and metadata are dropped by default, also from the
+documents of the legacy migration.
 
 #### Scenario: Anonymized IP
 - **GIVEN** the default configuration
@@ -132,7 +134,7 @@ metadata; IP addresses and metadata are dropped by default, also from the docume
 
 ### Requirement: Stored raw event types
 Edition: CE and PRO. A raw `events` document SHALL be inserted only for types in the configured stored
-set, while every type is still projected; the default set excludes `API_CALL`, `TRACK_PUBLISHED_UPDATE`,
+set, while every type is projected; the default set excludes `API_CALL`, `TRACK_PUBLISHED_UPDATE`,
 `TRACK_MAX_SUBSCRIBED_VIDEO_QUALITY` and `TRACK_SUBSCRIBE_REQUESTED`; `API_CALL` is never stored raw;
 `INGRESS_UPDATED` is stored only when `ingress.state.status` changed.
 
@@ -149,7 +151,7 @@ set, while every type is still projected; the default set excludes `API_CALL`, `
 #### Scenario: Configured stored set
 - **GIVEN** `events.store_types` set to `[ROOM_CREATED, ROOM_ENDED, API_CALL]`
 - **WHEN** a `ROOM_CREATED`, a `PARTICIPANT_JOINED` and an `API_CALL` are processed
-- **THEN** only the `ROOM_CREATED` raw event exists and the participant document is still written
+- **THEN** only the `ROOM_CREATED` raw event exists and the participant document is written
 
 ### Requirement: API call events
 Edition: CE and PRO. The server SHALL emit an `API_CALL` analytics event with its node id for every Twirp API
@@ -189,13 +191,14 @@ SHALL be updated.
 ### Requirement: Stats deltas into entities and rollups
 Edition: CE and PRO. Each stats batch SHALL add its byte totals and quality samples (score sum, sample
 count, minimum score, poor and lost counts) to the participant, the room and the `global` and
-`node:<nodeId>` documents of `analytics_5min` and `analytics_hourly` of the flush bucket, and SHALL set
-`lastStatsAt` on the participant and the room to the latest flush time.
+`node:<nodeId>` documents of `analytics_5min`, `analytics_hourly` and `analytics_daily` of the flush bucket, SHALL
+add every participant with stats to the 5-minute `participants.connected` count, and SHALL set `lastStatsAt` on the
+participant and the room to the latest flush time.
 
 #### Scenario: Bucket attribution
 - **GIVEN** a flush stamped 10:04:59 UTC with 1 000 upstream bytes
 - **WHEN** it is stored
-- **THEN** `analytics_5min` `global:…T10:00:00Z` and `analytics_hourly` `global:…T10:00:00Z` grow `bytes.up` by 1 000, and so do the `node:<nodeId>` documents
+- **THEN** `analytics_5min` `global:…T10:00:00Z`, `analytics_hourly` `global:…T10:00:00Z` and `analytics_daily` `global:…T00:00:00Z` grow `bytes.up` by 1 000, and so do the `node:<nodeId>` documents
 
 #### Scenario: Quality bands
 - **GIVEN** samples with scores 4.3, 1.5 and 1.0
@@ -209,9 +212,10 @@ count, minimum score, poor and lost counts) to the participant, the room and the
 
 ### Requirement: Rollup counters from events
 Edition: CE and PRO. Each projected event SHALL increment the hourly and daily counters of its UTC bucket
-in both scopes exactly once: increments are applied only for events whose raw insert succeeded, or whose
-rollup step has not yet succeeded in an in-process retry, so retried and replayed batches never double
-count. Map keys SHALL be enum names or a fixed vocabulary, never user input.
+in both scopes, and its 5-minute lifecycle counters, once: an event stored raw counts only when its raw insert
+succeeds, so an event already stored by a previous process never counts again; an event not stored raw counts when
+it is projected; an in-process retry never reapplies a rollup step that succeeded. Map keys SHALL be enum names or a
+fixed vocabulary, never user input.
 
 #### Scenario: Batch retried after a transient error
 - **GIVEN** a batch whose raw inserts succeeded and whose rollup step failed with a network error
@@ -236,7 +240,7 @@ collection and insert raw events and stats with unordered inserts, without any c
 #### Scenario: Two nodes write concurrently
 - **GIVEN** two nodes with batches due at the same time
 - **WHEN** both flush
-- **THEN** both batches are written without waiting for each other and no lock key exists in Redis
+- **THEN** both batches are written without waiting for each other and neither of them takes a lock in Redis
 
 #### Scenario: Same document twice in a batch
 - **GIVEN** a `PARTICIPANT_JOINED`, `PARTICIPANT_ACTIVE` and `PARTICIPANT_LEFT` of one session in one batch
@@ -306,7 +310,7 @@ the same time SHALL all complete it.
 #### Scenario: Empty database
 - **GIVEN** an empty database
 - **WHEN** the server starts
-- **THEN** every collection of the contract exists with its validator and indexes, `track_stats` is a time-series collection and `schema_meta` has `schema`, `retention` and `capabilities` documents
+- **THEN** every collection of the contract exists with its validator and indexes, `track_stats` is a time-series collection and `schema_meta` has `schema`, `retention`, `capabilities` and `config` documents
 
 #### Scenario: Time-series unsupported
 - **GIVEN** a server that rejects time-series collection creation
@@ -349,13 +353,13 @@ the same time SHALL all complete it.
 - **THEN** every node completes initialization and the legacy documents end up once in `legacy_events`
 
 ### Requirement: Legacy events collection at first start
-Edition: CE and PRO. Before initializing, the writer SHALL rename an `events` collection written by the
-previous writer (one holding a document without `ts` while `schema_meta` has no `schema` document) to
+Edition: CE and PRO. Before initializing, the writer SHALL rename a legacy `events` collection, written by
+OpenVidu 3.9 or earlier (one holding a document without `ts` while `schema_meta` has no `schema` document), to
 `legacy_events`, keeping its documents for the legacy migration, and SHALL never overwrite an existing
 `legacy_events` collection.
 
 #### Scenario: Legacy events collection
-- **GIVEN** an `events` collection whose documents have the previous writer's shape and no `schema_meta.schema`
+- **GIVEN** an `events` collection whose documents have the legacy shape and no `schema_meta.schema`
 - **WHEN** the server starts
 - **THEN** that collection is renamed to `legacy_events` with its documents, a new `events` collection with the contract's validator is created, and a later restart renames nothing
 
@@ -402,7 +406,7 @@ one line per cause per interval; log lines SHALL never contain event payloads or
 #### Scenario: Outage logging
 - **GIVEN** a database unavailable for one minute with the default interval
 - **WHEN** the logs are read
-- **THEN** there are at most six warn lines for the outage, each with the retry count and queue depths, and none contains a payload or the connection string credentials
+- **THEN** there are at most six warn lines for the outage, each with the error and the queue depths, and none contains a payload or the connection string credentials
 
 ### Requirement: Contract conformance
 Edition: CE and PRO. The writer SHALL vendor the `data-model` contract (JSON Schemas, index definitions,
@@ -420,22 +424,23 @@ version.
 - **WHEN** the test suite runs
 - **THEN** the contract test fails naming both versions
 
-### Requirement: Legacy write path removed
-Edition: CE and PRO. The writer SHALL NOT write the legacy `stats`, `active_entities` and `last_alive`
-collections, SHALL NOT run the active-entities fixer or acquire the legacy Redis write lock, and SHALL
-NOT include a Redis sink.
+### Requirement: Writer collections and Redis keys
+Edition: CE and PRO. The writer SHALL write only the collections of the `data-model` contract, never the legacy
+`stats`, `active_entities` or `last_alive` collections, and its only analytics keys in Redis SHALL be the locks of
+the reconciler (`analytics-reconciler-lock`) and of the legacy migration (`analytics-migration-lock`); events and
+stats SHALL NOT be published to Redis.
 
 #### Scenario: Collections after a run
 - **GIVEN** a server started against an empty database
 - **WHEN** it has processed traffic for several minutes
-- **THEN** no `stats`, `active_entities` or `last_alive` collection exists and Redis holds no `analytics-db-operations-lock` or `active-entities-lock` key (the reconciler's own `analytics-reconciler-lock` is the only analytics lock)
+- **THEN** no `stats`, `active_entities` or `last_alive` collection exists and `analytics-reconciler-lock` is the only analytics key in Redis
 
 ### Requirement: Standard participant counters
 Edition: CE and PRO servers. The writer SHALL count only STANDARD sessions in the room participant counters
 (`sessions`, `unique`, `active`, `peakActive`, `aborted`), in every rollup participant counter (joined, active, left,
 aborted, minutes, connect time, SDK, OS, browser, connection type, disconnect reasons), in `rooms.participantsSum` and
-in the daily `uniqueIdentities`; `participants.byKind` SHALL count the sessions of every kind. Which kinds keep a room
-open SHALL not change.
+in the daily `uniqueIdentities`; `participants.byKind` SHALL count the sessions of every kind. Room liveness SHALL
+NOT depend on these counters.
 
 #### Scenario: Egress participant joins
 - **GIVEN** an active room with one active STANDARD participant

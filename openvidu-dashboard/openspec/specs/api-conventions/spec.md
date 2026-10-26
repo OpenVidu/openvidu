@@ -10,7 +10,8 @@ health probes, so that each resource endpoint only specifies what is particular 
 ### Requirement: Base path and resource naming
 
 Edition: CE. Every dashboard API route SHALL live under `/api/v1`, use lower-case plural nouns for resources
-(`rooms`, `participants`, `tracks`, `egresses`, `ingresses`, `analytics`, `overview`, `auth`, `info`), nest
+(`rooms`, `participants`, `agents`, `tracks`, `egresses`, `ingresses`, `analytics`, `overview`, `status`, `auth`,
+`info`), nest
 sub-resources at most one level under the parent identifier, and answer every unknown `/api` path with a JSON
 `404` instead of the SPA fallback.
 
@@ -153,8 +154,8 @@ for a ranked sort) with `_id` as tie-breaker, and reject with `400` a malformed 
 #### Scenario: Cursor content
 
 - **WHEN** a list endpoint issues a cursor
-- **THEN** it is a base64url string encoding the sort key and `_id` of the boundary item plus the direction, and for a
-  ranked sort the `asOf` time of its first page
+- **THEN** it is a base64url string encoding the sort value and `_id` of the boundary item, the `sort` and `order` it
+  was issued for and the direction, plus the `asOf` time of its first page for a ranked sort
 
 ### Requirement: Optional total count
 
@@ -196,11 +197,11 @@ absent, and SHALL reject any other value with `400`.
 
 ### Requirement: Search and enum filters
 
-Edition: CE. List endpoints SHALL accept `q` (trimmed, 1 to 100 characters) as a case-insensitive prefix match
+Edition: CE. List endpoints SHALL accept `q` (trimmed, 2 to 100 characters) as a case-insensitive prefix match
 over the searchable fields the resource spec declares, except a `q` that matches the list's entity ID pattern, which
-follows the exact-ID search; `status` as one of the resource's status values and `kind` as a comma-separated list of
-the resource's kind values; empty `q` SHALL be ignored and an unknown `status` or `kind` value SHALL be rejected with
-`400`.
+follows the exact-ID search whatever its length; `status` and `kind` take the resource's values, as a single value or
+a comma-separated list as the resource spec declares; empty `q` SHALL be ignored and an unknown `status` or `kind`
+value SHALL be rejected with `400`.
 
 #### Scenario: Prefix search is case-insensitive
 
@@ -235,7 +236,8 @@ Edition: CE. Every list endpoint SHALL respond `200` with `{ items, nextCursor, 
 Edition: CE. Every time-series endpoint SHALL respond `200` with
 `{ granularity, from, to, series: [{ name, points: [[ts, value]] }] }` where `from`/`to` are the resolved
 range in UTC, `granularity` is the applied bucket size, `ts` is the bucket start as an ISO 8601 UTC string and
-every series is dense over the range (a bucket without data holds `0` for counters and `null` for averages).
+every series is dense over the range (a bucket without data holds `0` for counters and `null` for averages; a UTC day
+whose `uniqueIdentities` the reconciler has not computed yet holds `null`).
 
 #### Scenario: Dense series
 
@@ -305,8 +307,8 @@ request SHALL include that id.
 
 Edition: CE. The API SHALL expose an OpenAPI 3.1 document generated from the same schemas that validate
 requests and responses, covering every `/api/v1` route the edition implements, at `GET /api/v1/docs/openapi.json` with a
-browsable page at `GET /api/v1/docs`; both SHALL be served only in development mode and answer `404` in
-production.
+browsable page at `GET /api/v1/docs`; both SHALL be served only when `NODE_ENV` is not `production` and answer `404`
+otherwise.
 
 #### Scenario: Development mode
 
@@ -347,7 +349,7 @@ keeps working for at least one minor release.
 ### Requirement: Legacy health check
 
 Edition: CE. `GET /api/healthcheck` SHALL answer `200` `{ status: 'ok' }` without authentication and without
-touching MongoDB, so existing container health checks and installers keep working.
+touching MongoDB, as the image health check and the health checks of the OpenVidu 3.9 deployments expect.
 
 #### Scenario: MongoDB down
 
@@ -513,6 +515,7 @@ answer `400` with code `SORT_RANGE_TOO_WIDE`; an exact-ID search ignores the sor
 - **THEN** the response is `400` with code `SORT_RANGE_TOO_WIDE`
 
 #### Scenario: Exact ID with a ranked sort
+
 - **WHEN** the client sends `GET /api/v1/rooms?q=RM_abc&sort=duration&from=now-30d&to=now`
 - **THEN** the response is `200` with the room `RM_abc` as the only item
 
