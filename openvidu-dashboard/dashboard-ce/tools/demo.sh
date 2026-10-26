@@ -22,7 +22,7 @@ source dashboard-ce/tools/demo-lib.sh
 
 require_free_ports "$DEFAULT_BACKEND_PORT" "$FRONTEND_PORT"
 prepare_data
-start_backend @openvidu-dashboard/backend "$DEFAULT_BACKEND_PORT"
+start_backend dashboard-ce/backend "$DEFAULT_BACKEND_PORT"
 wait_for "http://127.0.0.1:$DEFAULT_BACKEND_PORT/api/healthcheck"
 echo "OpenVidu Dashboard ce demo: http://localhost:$FRONTEND_PORT (admin / admin)"
-start_frontend @openvidu-dashboard/frontend "$FRONTEND_PORT" "$DEFAULT_BACKEND_PORT"
+start_frontend dashboard-ce/frontend "$FRONTEND_PORT" "$DEFAULT_BACKEND_PORT"

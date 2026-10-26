@@ -45,6 +45,10 @@ Behaviour is specified in `openspec/specs/*-api`, `api-conventions`, `auth`, `st
   `entityIdKind()` from typings.
 - Configuration variables are new `DASHBOARD_*`, or `DATABASE_*` for database connection settings; legacy names keep
   their 3.9 meaning (`src/config/variables.ts`, unit-tested). The README lists them all.
+- `scripts/dev.ts` (exported as `@openvidu-dashboard/backend/dev`) serves `./dashboard.sh dev`: `loadDevEnv()` (the
+  environment, then `.env`, then `dev.env`; `scripts/dev-preload.ts` for `tsx watch --import`) and
+  `checkDevConfig()` (`scripts/dev-check.ts`). `dev.env` holds the openvidu-local-deployment defaults; never give
+  `src/` defaults for required variables, since a deployment must fail when they are missing.
 
 ## Rules
 

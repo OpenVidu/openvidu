@@ -49,7 +49,8 @@ sources through the `source` export condition, so type checking, linting and tes
 
 Everything runs through `./dashboard.sh` (what CI calls; `help` lists every command, any accepts `--skip-install`):
 `check` (lint, format check, typecheck, spec validation, unit tests), `test-integration` (Docker), `e2e`,
-`contract-check <openvidu-livekit>`, `build-image ce`, `smoke-image ce`, and `demo ce`: a local demo on generated data
+`contract-check <openvidu-livekit>`, `build-image ce`, `smoke-image ce`, `dev` (backend and frontend development
+servers against openvidu-local-deployment; README "Development") and `demo ce`: a local demo on generated data
 (http://localhost:4200, `admin` / `admin`; MongoDB container `openvidu-dashboard-demo-mongo` on port 27018;
 `DASHBOARD_DEMO_KEEP_DATA=true` reuses the data of a running container).
 

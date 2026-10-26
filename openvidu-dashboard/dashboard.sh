@@ -35,7 +35,9 @@ Commands:
   format-check   Prettier --check
   typecheck      tsc --noEmit in every package that defines it
   build          Build every package in dependency order
-  dev            Frontend dev server on http://localhost:4200, proxying /api to the backend on port 5000
+  dev            Backend and frontend dev servers against openvidu-local-deployment: http://localhost:4200, backend
+                 on port 5000 (DASHBOARD_DEV_PORT, DASHBOARD_DEV_BACKEND_PORT); defaults in
+                 dashboard-ce/backend/dev.env, overridden by dashboard-ce/backend/.env and the environment
   demo [ce]      Local demo on generated data: MongoDB (a container, or DASHBOARD_DEMO_MONGO_URI), 30 days of data
                  kept live, backend and frontend dev servers on http://localhost:4200 (admin / admin)
   test           Unit tests (Vitest) of every package that defines them (same as test-unit)
@@ -141,7 +143,11 @@ case "$COMMAND" in
 	format-check) run format:check ;;
 	typecheck) run typecheck ;;
 	build) run build ;;
-	dev) run dev ;;
+	dev)
+		require_pnpm
+		ensure_installed
+		dashboard-ce/tools/dev.sh
+		;;
 	demo)
 		require_ce
 		require_pnpm

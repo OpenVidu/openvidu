@@ -13,14 +13,15 @@
 			"default": "./dist/index.js"
 		},
 		"./testing": "./test/support/index.ts",
-		"./testing/global-mongo": "./test/support/global-mongo.ts"
+		"./testing/global-mongo": "./test/support/global-mongo.ts",
+		"./dev": "./scripts/dev.ts"
 	},
 	"files": [
 		"dist"
 	],
 	"scripts": {
 		"build": "tsc -p tsconfig.build.json",
-		"dev": "tsx watch --conditions=source src/server.ts",
+		"dev": "tsx watch --conditions=source --import ./scripts/dev-preload.ts src/server.ts",
 		"typecheck": "tsc --noEmit -p tsconfig.json",
 		"test": "vitest run --project unit",
 		"test:integration": "vitest run --project integration --project integration-plans",

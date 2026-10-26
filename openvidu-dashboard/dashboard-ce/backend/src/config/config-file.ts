@@ -14,10 +14,11 @@ export type ConfigFileResult =
 export function loadConfigFile(env: NodeJS.ProcessEnv): ConfigFileResult {
 	const path = env.DASHBOARD_CONFIG_PATH?.trim();
 
-	if (!path) {
-		return { kind: 'none' };
-	}
+	return path ? applyEnvFile(path, env) : { kind: 'none' };
+}
 
+/** Loads the `KEY=value` lines of `path` into `env`; variables already set in `env` keep their value. */
+export function applyEnvFile(path: string, env: NodeJS.ProcessEnv): Exclude<ConfigFileResult, { kind: 'none' }> {
 	if (!existsSync(path)) {
 		return { kind: 'missing', path };
 	}

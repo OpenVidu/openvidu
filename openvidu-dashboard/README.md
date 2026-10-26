@@ -36,7 +36,7 @@ All tasks run through `./dashboard.sh`:
 ```bash
 ./dashboard.sh install            # install dependencies
 ./dashboard.sh check              # lint + format check + type check + spec validation + unit tests
-./dashboard.sh dev                # frontend dev server, proxying /api to a backend on port 5000
+./dashboard.sh dev                # backend and frontend dev servers against openvidu-local-deployment
 ./dashboard.sh demo ce            # local demo on generated data: http://localhost:4200, admin / admin
 ./dashboard.sh test-integration   # integration tests against MongoDB (Docker required)
 ./dashboard.sh e2e                # build the application and run the Playwright tests
@@ -45,6 +45,23 @@ All tasks run through `./dashboard.sh`:
 ./dashboard.sh contract-check ../openvidu-livekit   # data model contract check against the writer
 ./dashboard.sh help               # list every command
 ```
+
+## Development
+
+`./dashboard.sh dev` runs the backend and frontend development servers against the MongoDB of an
+[openvidu-local-deployment](https://github.com/OpenVidu/openvidu-local-deployment) running on this machine, both
+reloading on changes: http://localhost:4200, `admin` / `admin`. Ctrl+C stops both. Without a deployment,
+`./dashboard.sh demo ce` runs the same servers on generated data instead.
+
+- Before starting, it checks the configuration and that MongoDB answers, and says what to do when it does not.
+- The backend reads `dashboard-ce/backend/dev.env`, the defaults for the local deployment. A git-ignored
+  `dashboard-ce/backend/.env` overrides them, and the environment overrides both, for example
+  `DATABASE_URL` for another MongoDB or `LOG_LEVEL=debug`. The deployment's replica set advertises its member
+  as `mongo:27017`, which only Docker resolves, so a URL from the host needs `directConnection=true`.
+- `DASHBOARD_DEV_PORT` (default 4200) and `DASHBOARD_DEV_BACKEND_PORT` (default 5000) move the servers, for
+  example off port 5000 where macOS runs AirPlay.
+- The deployment needs a 3.10 OpenVidu server: data appears once it writes the analytics database, and an
+  older writer schema stops the check.
 
 ## Container image
 

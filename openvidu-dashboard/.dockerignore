@@ -14,3 +14,7 @@ dashboard-ce/tools
 # Their manifests keep the workspace consistent with the lockfile.
 !dashboard-ce/tools/*/package.json
 PLAN.md
+# Development settings, personal ones included, never reach the image.
+**/.env
+**/.env.*
+**/dev.env
