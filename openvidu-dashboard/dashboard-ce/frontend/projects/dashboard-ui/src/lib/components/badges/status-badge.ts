@@ -45,7 +45,7 @@ export const STATUS_STYLES: Readonly<Record<StatusDomain, Readonly<Record<string
 		limit_reached: WARNING
 	},
 	ingress: {
-		inactive: INFO,
+		inactive: NEUTRAL,
 		buffering: INFO,
 		publishing: SUCCESS,
 		error: ERROR,
