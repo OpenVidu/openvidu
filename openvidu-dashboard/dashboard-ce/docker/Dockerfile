@@ -4,8 +4,9 @@ ARG NODE_VERSION=24.22.1
 ARG DEBIAN_RELEASE=trixie
 ARG SAFE_CHAIN_VERSION=1.5.25
 
-# Workspace manifests and the lockfile, shared by the install stages.
-FROM node:${NODE_VERSION}-${DEBIAN_RELEASE}-slim AS base
+# Workspace manifests and the lockfile, shared by the install stages. They run on the build platform, so no package is
+# installed, nor checked by safe-chain, under emulation; a --platform on a FROM that names a stage would be ignored.
+FROM --platform=$BUILDPLATFORM node:${NODE_VERSION}-${DEBIAN_RELEASE}-slim AS base
 ARG SAFE_CHAIN_VERSION
 RUN apt-get update \
 	&& apt-get install -y --no-install-recommends ca-certificates curl \
@@ -24,14 +25,15 @@ COPY dashboard-ce/frontend/projects/dashboard-ui/package.json dashboard-ce/front
 COPY dashboard-ce/e2e/package.json dashboard-ce/e2e/
 COPY dashboard-ce/tools/data-generator/package.json dashboard-ce/tools/data-generator/
 
-# The SPA does not depend on the architecture: built once, on the build platform.
-FROM --platform=$BUILDPLATFORM base AS frontend
+# The SPA does not depend on the architecture: built once.
+FROM base AS frontend
 ARG BASE_HREF=/
 RUN pnpm install --frozen-lockfile --filter "@openvidu-dashboard/frontend..."
 COPY dashboard-ce/typings dashboard-ce/typings
 COPY dashboard-ce/frontend dashboard-ce/frontend
 RUN BASE_HREF="${BASE_HREF}" pnpm --filter "@openvidu-dashboard/frontend..." run build
 
+# Nor do the backend and its production dependencies, JavaScript only.
 FROM base AS backend
 RUN pnpm install --frozen-lockfile --filter "@openvidu-dashboard/backend..."
 COPY dashboard-ce/typings dashboard-ce/typings
