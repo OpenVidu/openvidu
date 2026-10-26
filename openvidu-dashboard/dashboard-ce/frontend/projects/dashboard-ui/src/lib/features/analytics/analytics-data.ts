@@ -16,8 +16,8 @@ import {
 	type FeatureKey
 } from '@openvidu-dashboard/typings';
 
-import { HttpService } from '../../core/http.js';
-import type { RangeParams } from '../../core/query-state.js';
+import { HttpService } from '../../core/http/http.js';
+import type { RangeParams } from '../../core/state/query-state.js';
 import { apiRange } from '../rooms/rooms-data.js';
 import { hourlyGranularity } from './analytics-granularity.js';
 import type { AnalyticsProCard } from './analytics-seams.js';

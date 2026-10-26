@@ -1,4 +1,4 @@
-import type { ScreenSize } from '../core/breakpoints.js';
+import type { ScreenSize } from '../core/ui/breakpoints.js';
 
 export interface SidenavLayout {
 	mode: 'side' | 'over';

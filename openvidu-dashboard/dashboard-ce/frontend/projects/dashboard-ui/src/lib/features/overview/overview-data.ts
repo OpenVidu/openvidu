@@ -1,10 +1,10 @@
 import { effect, inject, InjectionToken, Service, signal, type Type, untracked } from '@angular/core';
 import type { OverviewResponse } from '@openvidu-dashboard/typings';
 
-import { HttpService } from '../../core/http.js';
-import { LiveCountersService } from '../../core/live-counters.js';
-import { QueryStateService } from '../../core/query-state.js';
-import { injectRefreshScheduler, type RefreshScheduler } from '../../core/refresh.js';
+import { HttpService } from '../../core/http/http.js';
+import { LiveCountersService } from '../../core/refresh/live-counters.js';
+import { injectRefreshScheduler, type RefreshScheduler } from '../../core/refresh/refresh.js';
+import { QueryStateService } from '../../core/state/query-state.js';
 
 /** The last overview body and when the browser received and last confirmed it. */
 export interface OverviewSnapshot {

@@ -9,8 +9,8 @@ import type {
 	SortOrder
 } from '@openvidu-dashboard/typings';
 
-import { HttpService, type QueryValue } from '../../core/http.js';
-import type { RangeParams } from '../../core/query-state.js';
+import { HttpService, type QueryValue } from '../../core/http/http.js';
+import type { RangeParams } from '../../core/state/query-state.js';
 import { apiRange } from '../rooms/rooms-data.js';
 
 export interface ParticipantsListRequest {

@@ -2,9 +2,13 @@
 
 Angular 22 standalone, zoneless and signals: OnPush is the default (do not set it), `inject()` instead of constructor
 injection, `@Service()` for root services, Signal Forms for forms. All UI lives in the library
-`projects/dashboard-ui` (`src/lib/`: `core/` services, `shell/`, `components/` building blocks, `charts/`, `format/`,
-`features/<resource>/` data services, helpers and pages, `routes.ts`); its README describes composition and the
-extension points. Behaviour is specified in `openspec/specs/ui-*` and the `*-ui` specs.
+`projects/dashboard-ui` (`src/lib/`: `core/` services by concern (`auth/`, `http/`, `state/`, `refresh/`,
+`preferences/`, `ui/`), `shell/`, `components/` building blocks, `charts/`, `format/`, `routing/`, `features/<area>/`
+pages with their data services and helpers, `routes.ts`); its README describes composition and the extension points.
+Behaviour is specified in `openspec/specs/ui-*` and the `*-ui` specs.
+
+A component with a template or style file has a folder of its own, named after it; small components that belong
+together (badges, feedback, locks, search, tiles, zone) share a folder and its spec.
 
 ## Routes and pages
 

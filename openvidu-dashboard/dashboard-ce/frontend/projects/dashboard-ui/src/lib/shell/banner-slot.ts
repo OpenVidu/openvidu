@@ -3,9 +3,9 @@ import { MatButton, MatIconButton } from '@angular/material/button';
 import { MatIcon } from '@angular/material/icon';
 import { MatProgressBar } from '@angular/material/progress-bar';
 
-import { ConnectivityService } from '../core/connectivity.js';
+import { ConnectivityService } from '../core/http/connectivity.js';
 import { InfoService } from '../core/info.js';
-import { ServerStatusService } from '../core/server-status.js';
+import { ServerStatusService } from '../core/refresh/server-status.js';
 import { formatNumber } from '../format/formatters.js';
 
 /**

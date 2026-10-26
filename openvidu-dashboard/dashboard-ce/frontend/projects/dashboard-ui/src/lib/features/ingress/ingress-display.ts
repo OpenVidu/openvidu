@@ -1,6 +1,6 @@
 import { type IngressListItem, isEntityId } from '@openvidu-dashboard/typings';
 
-import type { EntityPreview } from '../../core/entity-preview.js';
+import type { EntityPreview } from '../../core/state/entity-preview.js';
 
 export function isIngressId(value: string): boolean {
 	return isEntityId('ingress', value);

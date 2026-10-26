@@ -14,11 +14,11 @@ import { MatButton } from '@angular/material/button';
 import { MatIcon } from '@angular/material/icon';
 import type { FeatureKey } from '@openvidu-dashboard/typings';
 
-import { EmptyState } from '../../components/empty-state.js';
-import { ErrorBanner } from '../../components/error-banner.js';
-import { ProLockOverlay } from '../../components/pro-lock-overlay.js';
-import { SectionCard } from '../../components/section-card.js';
-import { Skeleton } from '../../components/skeleton.js';
+import { EmptyState } from '../../components/feedback/empty-state.js';
+import { ErrorBanner } from '../../components/feedback/error-banner.js';
+import { Skeleton } from '../../components/feedback/skeleton.js';
+import { ProLockOverlay } from '../../components/lock/pro-lock-overlay.js';
+import { SectionCard } from '../../components/tiles/section-card.js';
 import { FeatureService } from '../../core/info.js';
 
 /** Content of an analytics card, instantiated only once it has data: `<ng-template ovdCardContent>`. */

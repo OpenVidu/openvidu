@@ -9,9 +9,9 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { infoResponse, settle } from '../../../testing/fixtures.js';
 import { routeElement } from '../../../testing/harness.js';
-import { LIST_SEARCH_DEBOUNCE_MS } from '../../components/list-search.js';
-import { EntityPreviewService } from '../../core/entity-preview.js';
+import { LIST_SEARCH_DEBOUNCE_MS } from '../../components/search/list-search.js';
 import { InfoService } from '../../core/info.js';
+import { EntityPreviewService } from '../../core/state/entity-preview.js';
 import { ParticipantLockedPage } from './participant-locked-page.js';
 import { ParticipantsPage } from './participants-page.js';
 

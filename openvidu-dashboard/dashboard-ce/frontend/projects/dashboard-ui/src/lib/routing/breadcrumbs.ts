@@ -1,8 +1,8 @@
 import { computed, inject, Service, signal } from '@angular/core';
 import type { ActivatedRouteSnapshot, Params } from '@angular/router';
 
-import { ListStateService } from '../core/list-state.js';
-import { ownData, RouteStateService } from '../core/route-state.js';
+import { ListStateService } from '../core/state/list-state.js';
+import { ownData, RouteStateService } from '../core/state/route-state.js';
 
 export interface BreadcrumbItem {
 	label: string;

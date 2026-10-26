@@ -9,9 +9,9 @@ import { describe, expect, it } from 'vitest';
 
 import { infoResponse, settle } from '../../../testing/fixtures.js';
 import { routeElement } from '../../../testing/harness.js';
-import { LIST_SEARCH_DEBOUNCE_MS } from '../../components/list-search.js';
-import { EntityPreviewService } from '../../core/entity-preview.js';
+import { LIST_SEARCH_DEBOUNCE_MS } from '../../components/search/list-search.js';
 import { InfoService } from '../../core/info.js';
+import { EntityPreviewService } from '../../core/state/entity-preview.js';
 import { EgressLockedPage } from './egress-locked-page.js';
 import { EgressPage } from './egress-page.js';
 

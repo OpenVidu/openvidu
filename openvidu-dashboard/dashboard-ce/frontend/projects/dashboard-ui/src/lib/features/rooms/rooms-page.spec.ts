@@ -9,11 +9,11 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { infoResponse, settle } from '../../../testing/fixtures.js';
 import { routeElement } from '../../../testing/harness.js';
-import { RangePickerService } from '../../components/date-time-range-picker.js';
-import { LIST_SEARCH_DEBOUNCE_MS } from '../../components/list-search.js';
-import { EntityPreviewService } from '../../core/entity-preview.js';
+import { RangePickerService } from '../../components/date-time-range-picker/date-time-range-picker.js';
+import { LIST_SEARCH_DEBOUNCE_MS } from '../../components/search/list-search.js';
 import { InfoService } from '../../core/info.js';
-import { PreferencesService } from '../../core/preferences.js';
+import { PreferencesService } from '../../core/preferences/preferences.js';
+import { EntityPreviewService } from '../../core/state/entity-preview.js';
 import { RoomLockedPage } from './room-locked-page.js';
 import { ROOMS_NODE_FILTER } from './rooms-data.js';
 import { RoomsPage } from './rooms-page.js';

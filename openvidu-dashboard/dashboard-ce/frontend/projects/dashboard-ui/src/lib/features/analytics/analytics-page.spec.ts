@@ -17,9 +17,9 @@ import {
 	seriesRequests
 } from '../../../testing/analytics.js';
 import { settle } from '../../../testing/fixtures.js';
-import { PreferencesService } from '../../core/preferences.js';
-import { RefreshRegistry } from '../../core/refresh.js';
-import { ToastService } from '../../core/toast.js';
+import { PreferencesService } from '../../core/preferences/preferences.js';
+import { RefreshRegistry } from '../../core/refresh/refresh.js';
+import { ToastService } from '../../core/ui/toast.js';
 import { analyticsPlan } from './analytics-data.js';
 import { autoGranularity, granularityOptions } from './analytics-granularity.js';
 import { dimensionLabel } from './analytics-page.js';

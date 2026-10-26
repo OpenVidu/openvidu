@@ -23,7 +23,7 @@ import {
 	timeSeriesOption
 } from './chart-options.js';
 import { bindChartOptions } from './echarts-provider.js';
-import { TimeSeriesChart } from './time-series-chart.js';
+import { TimeSeriesChart } from './time-series-chart/time-series-chart.js';
 
 const COLORS: ChartColors = {
 	slots: ['#0088aa', '#eb6834', '#1baf7a', '#eda100', '#e87ba4', '#2f4b7c', '#6250d6', '#e34948'],

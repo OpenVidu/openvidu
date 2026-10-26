@@ -25,21 +25,21 @@ import {
 import { BreakdownChart } from '../../charts/breakdown-chart.js';
 import { seriesNote } from '../../charts/chart-note.js';
 import type { BreakdownEntry, ChartSeries } from '../../charts/chart-options.js';
-import { TimeSeriesChart } from '../../charts/time-series-chart.js';
-import { RangePickerService } from '../../components/date-time-range-picker.js';
-import { errorMessage } from '../../components/error-banner.js';
-import { KpiTile } from '../../components/kpi-tile.js';
-import { Notice } from '../../components/notice.js';
-import { TileRow } from '../../components/tile-row.js';
-import { toApiRequestError } from '../../core/api-error.js';
+import { TimeSeriesChart } from '../../charts/time-series-chart/time-series-chart.js';
+import { RangePickerService } from '../../components/date-time-range-picker/date-time-range-picker.js';
+import { errorMessage } from '../../components/feedback/error-banner.js';
+import { Notice } from '../../components/feedback/notice.js';
+import { KpiTile } from '../../components/tiles/kpi-tile.js';
+import { TileRow } from '../../components/tiles/tile-row.js';
+import { toApiRequestError } from '../../core/http/api-error.js';
 import { InfoService } from '../../core/info.js';
-import { injectListLoader } from '../../core/list-loader.js';
-import { ListStateService } from '../../core/list-state.js';
-import { QueryStateService } from '../../core/query-state.js';
-import { resolveRange } from '../../core/relative-time.js';
-import { ToastService } from '../../core/toast.js';
-import { INFO_TEXTS } from '../../format/info-texts.js';
+import { injectListLoader } from '../../core/refresh/list-loader.js';
+import { ListStateService } from '../../core/state/list-state.js';
+import { QueryStateService } from '../../core/state/query-state.js';
+import { resolveRange } from '../../core/state/relative-time.js';
+import { ToastService } from '../../core/ui/toast.js';
 import { formatBytes, formatDuration, formatNumber, formatPercent } from '../../format/formatters.js';
+import { INFO_TEXTS } from '../../format/info-texts.js';
 import {
 	CONNECTION_TYPE_LABELS,
 	EGRESS_TYPE_LABELS,

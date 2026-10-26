@@ -11,10 +11,10 @@ import { MatIconRegistry } from '@angular/material/icon';
 import { DomSanitizer, Title } from '@angular/platform-browser';
 import { type RouterStateSnapshot, TitleStrategy } from '@angular/router';
 
-import { authInterceptor, AuthService } from './auth.js';
-import { connectivityInterceptor } from './connectivity.js';
+import { authInterceptor, AuthService } from './auth/auth.js';
+import { connectivityInterceptor } from './http/connectivity.js';
 import { InfoService, proFeatureInterceptor } from './info.js';
-import { ThemeService } from './theme.js';
+import { ThemeService } from './preferences/theme.js';
 
 export const PRODUCT_NAME = 'OpenVidu Dashboard';
 /** Icon sprite built by `scripts/icons.mjs`, relative to the document base. */

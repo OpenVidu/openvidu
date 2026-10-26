@@ -2,9 +2,9 @@ import { inject } from '@angular/core';
 import { Router, type UrlSegment } from '@angular/router';
 import type { NavigationMeta } from '@openvidu-dashboard/typings';
 
-import { authGuard, AuthService, loginGuard } from './core/auth.js';
+import { authGuard, AuthService, loginGuard } from './core/auth/auth.js';
 import type { DashboardRoute } from './routing/compose-routes.js';
-import { DashboardShell } from './shell/dashboard-shell.js';
+import { DashboardShell } from './shell/dashboard-shell/dashboard-shell.js';
 
 function navigation(meta: NavigationMeta): { navigation: NavigationMeta } {
 	return { navigation: meta };
@@ -36,7 +36,7 @@ export const DASHBOARD_ROUTES: DashboardRoute[] = [
 		path: 'login',
 		title: 'Sign in',
 		canActivate: [loginGuard],
-		loadComponent: () => import('./pages/login-page.js').then((module) => module.LoginPage)
+		loadComponent: () => import('./features/login/login-page.js').then((module) => module.LoginPage)
 	},
 	{
 		path: '',
@@ -226,7 +226,8 @@ export const DASHBOARD_ROUTES: DashboardRoute[] = [
 			{
 				path: 'settings',
 				title: 'Settings',
-				loadComponent: () => import('./pages/settings-page.js').then((module) => module.SettingsPage),
+				loadComponent: () =>
+					import('./features/settings/settings-page.js').then((module) => module.SettingsPage),
 				data: navigation({
 					label: 'Settings',
 					icon: 'settings',

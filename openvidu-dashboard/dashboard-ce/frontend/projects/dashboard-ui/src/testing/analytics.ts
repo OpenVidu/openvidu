@@ -8,7 +8,7 @@ import type { AnalyticsSummary, InfoRetention } from '@openvidu-dashboard/typing
 import { NGX_ECHARTS_CONFIG } from 'ngx-echarts';
 
 import { BreakdownChart } from '../lib/charts/breakdown-chart.js';
-import { TimeSeriesChart } from '../lib/charts/time-series-chart.js';
+import { TimeSeriesChart } from '../lib/charts/time-series-chart/time-series-chart.js';
 import { InfoService } from '../lib/core/info.js';
 import { AnalyticsPage } from '../lib/features/analytics/analytics-page.js';
 import { infoResponse, settle } from './fixtures.js';

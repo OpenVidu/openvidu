@@ -2,9 +2,9 @@ import { Component, inject } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { RoomSort, RoomStatusFilter } from '@openvidu-dashboard/typings';
 
-import { EntityPreviewService } from '../../core/entity-preview.js';
-import { ListStateService } from '../../core/list-state.js';
-import { LockedPage } from '../../pages/locked-page.js';
+import { LockedPage } from '../../components/lock/locked-page.js';
+import { EntityPreviewService } from '../../core/state/entity-preview.js';
+import { ListStateService } from '../../core/state/list-state.js';
 import { isRoomSid, roomPreview } from './room-display.js';
 import { RoomsDataService } from './rooms-data.js';
 

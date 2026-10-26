@@ -2,11 +2,11 @@ import { Component, computed, DOCUMENT, inject, input, signal } from '@angular/c
 import { MatButton } from '@angular/material/button';
 import { NgxEchartsDirective } from 'ngx-echarts';
 
-import { ChartColorsService } from './chart-colors.js';
+import { InfoTip } from '../components/info-tip/info-tip.js';
 import { formatPercent } from '../format/formatters.js';
+import { ChartColorsService } from './chart-colors.js';
 import { type BreakdownEntry, breakdownOption, formatValue, type ValueFormat } from './chart-options.js';
 import { bindChartOptions, injectEchartsReady, provideLazyEcharts } from './echarts-provider.js';
-import { InfoTip } from '../components/info-tip.js';
 
 /** A donut or horizontal bar with direct labels and a fixed colour per entity; more than eight fold into "Other". */
 @Component({

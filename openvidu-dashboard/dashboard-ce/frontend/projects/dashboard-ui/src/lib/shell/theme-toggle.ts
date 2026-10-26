@@ -4,7 +4,7 @@ import { MatIcon } from '@angular/material/icon';
 import { MatTooltip } from '@angular/material/tooltip';
 import type { ThemePreference } from '@openvidu-dashboard/typings';
 
-import { ThemeService } from '../core/theme.js';
+import { ThemeService } from '../core/preferences/theme.js';
 
 export const THEME_ICONS: Readonly<Record<ThemePreference, string>> = {
 	system: 'brightness_auto',

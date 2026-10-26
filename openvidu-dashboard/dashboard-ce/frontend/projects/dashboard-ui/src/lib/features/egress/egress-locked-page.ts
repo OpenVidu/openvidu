@@ -1,9 +1,9 @@
 import { Component, inject } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 
-import { EntityPreviewService } from '../../core/entity-preview.js';
-import { ListStateService } from '../../core/list-state.js';
-import { LockedPage } from '../../pages/locked-page.js';
+import { LockedPage } from '../../components/lock/locked-page.js';
+import { EntityPreviewService } from '../../core/state/entity-preview.js';
+import { ListStateService } from '../../core/state/list-state.js';
 import { EgressDataService } from './egress-data.js';
 import { egressPreview, isEgressId } from './egress-display.js';
 

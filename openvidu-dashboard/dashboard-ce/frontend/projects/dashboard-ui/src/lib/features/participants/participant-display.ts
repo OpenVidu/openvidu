@@ -8,8 +8,8 @@ import {
 	VISIBLE_PARTICIPANT_KINDS
 } from '@openvidu-dashboard/typings';
 
-import { SOURCE_LABELS } from '../../components/source-icon.js';
-import type { EntityPreview } from '../../core/entity-preview.js';
+import { SOURCE_LABELS } from '../../components/badges/source-icon.js';
+import type { EntityPreview } from '../../core/state/entity-preview.js';
 import { PARTICIPANT_KIND_LABELS } from '../../format/labels.js';
 
 export function isParticipantSid(value: string): boolean {

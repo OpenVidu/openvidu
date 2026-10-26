@@ -3,7 +3,7 @@ import { MatIcon } from '@angular/material/icon';
 import { MatTooltip } from '@angular/material/tooltip';
 import { RouterLink } from '@angular/router';
 
-import { ExternalLink } from '../components/external-link.js';
+import { ExternalLink } from '../components/external-link/external-link.js';
 import { InfoService } from '../core/info.js';
 import { EXTERNAL_LINKS } from '../core/links.js';
 import { EditionBadge } from './edition-badge.js';

@@ -1,6 +1,6 @@
 import { computed, DOCUMENT, inject, Service, type Signal } from '@angular/core';
 
-import { ThemeService } from '../core/theme.js';
+import { ThemeService } from '../core/preferences/theme.js';
 
 export const CHART_SLOTS = 8;
 

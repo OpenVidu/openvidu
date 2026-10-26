@@ -1,6 +1,6 @@
 import { type EgressListItem, type EgressOutputKind, type EgressStatus, isEntityId } from '@openvidu-dashboard/typings';
 
-import type { EntityPreview } from '../../core/entity-preview.js';
+import type { EntityPreview } from '../../core/state/entity-preview.js';
 
 /** Icon of each output kind. */
 export const EGRESS_OUTPUT_ICONS: Readonly<Record<EgressOutputKind, string>> = {

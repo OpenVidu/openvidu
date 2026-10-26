@@ -4,8 +4,8 @@ import { provideRouter } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 import { beforeEach, describe, expect, it } from 'vitest';
 
-import { EntityPreviewService } from '../core/entity-preview.js';
-import { ListStateService } from '../core/list-state.js';
+import { EntityPreviewService } from '../core/state/entity-preview.js';
+import { ListStateService } from '../core/state/list-state.js';
 import { BreadcrumbService } from './breadcrumbs.js';
 import { composeRoutes } from './compose-routes.js';
 

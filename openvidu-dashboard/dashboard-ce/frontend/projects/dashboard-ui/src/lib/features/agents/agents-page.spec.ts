@@ -10,7 +10,7 @@ import { describe, expect, it } from 'vitest';
 import { infoResponse, settle } from '../../../testing/fixtures.js';
 import { routeElement } from '../../../testing/harness.js';
 import { InfoService } from '../../core/info.js';
-import { LiveCountersService } from '../../core/live-counters.js';
+import { LiveCountersService } from '../../core/refresh/live-counters.js';
 import { AgentsPage } from './agents-page.js';
 
 @Component({ selector: 'ovd-blank', template: '' })

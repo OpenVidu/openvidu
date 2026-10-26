@@ -5,7 +5,7 @@ import { type IsActiveMatchOptions, Router, RouterLink, RouterLinkActive } from 
 import type { NavigationMeta } from '@openvidu-dashboard/typings';
 
 import { FeatureService } from '../core/info.js';
-import { ListStateService } from '../core/list-state.js';
+import { ListStateService } from '../core/state/list-state.js';
 import { navigationEntries } from '../routing/compose-routes.js';
 import { SidenavFooter } from './sidenav-footer.js';
 

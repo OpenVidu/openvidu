@@ -1,6 +1,6 @@
 import { type ByteTotals, isEntityId, type RoomFeature, type RoomListItem } from '@openvidu-dashboard/typings';
 
-import type { EntityPreview } from '../../core/entity-preview.js';
+import type { EntityPreview } from '../../core/state/entity-preview.js';
 import { formatBytes } from '../../format/formatters.js';
 
 /** Feature flags in display order, with the letter of their badge; SIP is not offered while OpenVidu does not use it. */

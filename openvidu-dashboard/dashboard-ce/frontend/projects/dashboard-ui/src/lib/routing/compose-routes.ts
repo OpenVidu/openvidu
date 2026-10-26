@@ -1,7 +1,7 @@
 import type { Route, Routes } from '@angular/router';
 import type { NavigationMeta } from '@openvidu-dashboard/typings';
 
-import type { DashboardRouteData } from '../core/route-state.js';
+import type { DashboardRouteData } from '../core/state/route-state.js';
 
 /** A route of the dashboard whose `data` follows `DashboardRouteData`. */
 export type DashboardRoute = Omit<Route, 'data' | 'children'> & {

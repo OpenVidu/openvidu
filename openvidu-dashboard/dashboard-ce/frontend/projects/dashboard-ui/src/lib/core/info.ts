@@ -3,9 +3,9 @@ import { computed, inject, Service, type Signal, signal } from '@angular/core';
 import type { FeatureKey, InfoPublicResponse, InfoResponse } from '@openvidu-dashboard/typings';
 import { catchError, throwError } from 'rxjs';
 
-import { type ApiRequestError, toApiRequestError } from './api-error.js';
-import { AuthService } from './auth.js';
-import { API_BASE, HttpService } from './http.js';
+import { AuthService } from './auth/auth.js';
+import { type ApiRequestError, toApiRequestError } from './http/api-error.js';
+import { API_BASE, HttpService } from './http/http.js';
 
 function isFullInfo(info: InfoResponse | InfoPublicResponse): info is InfoResponse {
 	return 'features' in info;

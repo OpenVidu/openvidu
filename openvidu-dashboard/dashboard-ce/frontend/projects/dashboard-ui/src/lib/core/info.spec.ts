@@ -5,7 +5,7 @@ import { provideRouter } from '@angular/router';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { infoResponse } from '../../testing/fixtures.js';
-import { HttpService } from './http.js';
+import { HttpService } from './http/http.js';
 import { FeatureService, InfoService, proFeatureInterceptor } from './info.js';
 
 describe('InfoService', () => {

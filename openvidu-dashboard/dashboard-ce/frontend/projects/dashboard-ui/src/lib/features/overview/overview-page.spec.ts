@@ -10,9 +10,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { infoResponse, settle } from '../../../testing/fixtures.js';
 import { routeElement } from '../../../testing/harness.js';
 import { InfoService } from '../../core/info.js';
-import { LiveCountersService } from '../../core/live-counters.js';
-import { PreferencesService } from '../../core/preferences.js';
-import { ServerStatusService } from '../../core/server-status.js';
+import { PreferencesService } from '../../core/preferences/preferences.js';
+import { LiveCountersService } from '../../core/refresh/live-counters.js';
+import { ServerStatusService } from '../../core/refresh/server-status.js';
 import { OverviewPage } from './overview-page.js';
 
 @Component({ selector: 'ovd-blank', template: '' })

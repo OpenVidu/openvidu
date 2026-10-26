@@ -9,9 +9,9 @@ import type {
 	SortOrder
 } from '@openvidu-dashboard/typings';
 
-import { HttpService, type QueryValue } from '../../core/http.js';
-import type { RangeParams } from '../../core/query-state.js';
-import { resolveRange } from '../../core/relative-time.js';
+import { HttpService, type QueryValue } from '../../core/http/http.js';
+import type { RangeParams } from '../../core/state/query-state.js';
+import { resolveRange } from '../../core/state/relative-time.js';
 
 /** Loads the Node select of the Rooms filter bar, shown with `per-node-breakdown`; CE renders the locked select. */
 export const ROOMS_NODE_FILTER = new InjectionToken<(() => Promise<Type<unknown>>) | null>('ROOMS_NODE_FILTER', {
