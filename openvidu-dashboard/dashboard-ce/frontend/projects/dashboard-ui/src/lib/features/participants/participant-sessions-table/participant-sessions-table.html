@@ -1,0 +1,89 @@
+<ovd-data-table
+	[tableId]="tableId()"
+	[caption]="caption()"
+	[columns]="columns()"
+	[rows]="rows()"
+	[trackBy]="trackSession"
+	[sort]="sort()"
+	[order]="order()"
+	[loading]="loading()"
+	[error]="error()"
+	[pageSize]="pageSize()"
+	(sortChange)="sortChange.emit($event)"
+	(retry)="retry.emit()"
+>
+	<ng-template ovdCell="sid" let-item>
+		<span class="cell">
+			<a class="ovd-mono" [routerLink]="['/participants', item.sid]">{{ item.sid }}</a>
+			<ovd-copy-button [value]="item.sid" label="participant SID" />
+		</span>
+	</ng-template>
+	<ng-template ovdCell="identity" let-item>
+		<span class="cell">
+			{{ item.identity }}
+			<ovd-copy-button [value]="item.identity" label="identity" />
+		</span>
+	</ng-template>
+	<ng-template ovdCell="name" let-item>{{ item.name ?? '—' }}</ng-template>
+	<ng-template ovdCell="room" let-item>
+		<a [routerLink]="['/rooms', item.roomSid]">{{ item.roomName }}</a>
+	</ng-template>
+	<ng-template ovdCell="kind" let-item><ovd-kind-badge [kind]="item.kind" /></ng-template>
+	<ng-template ovdCell="status" let-item>
+		<ovd-status-badge
+			[status]="item.status"
+			domain="participant"
+			[stale]="item.stale === true"
+			[hint]="staleHint(item)"
+		/>
+	</ng-template>
+	<ng-template ovdCell="joinedAt" let-item>
+		<time class="ovd-tabular" [attr.datetime]="item.joinedAt">{{ time()(item.joinedAt) }}</time>
+	</ng-template>
+	<ng-template ovdCell="leftAt" let-item>
+		@if (item.leftAt) {
+			<time class="ovd-tabular" [attr.datetime]="item.leftAt">{{ time()(item.leftAt) }}</time>
+		} @else {
+			<span aria-label="Not left">—</span>
+		}
+	</ng-template>
+	<ng-template ovdCell="duration" let-item>
+		<ovd-duration
+			[start]="item.joinedAt"
+			[end]="item.leftAt ?? null"
+			[storedMs]="item.durationMs ?? null"
+			[running]="item.leftAt === undefined"
+		/>
+	</ng-template>
+	<ng-template ovdCell="published" let-item>
+		@if (item.publishedSources.length > 0) {
+			<span class="sources">
+				@for (source of item.publishedSources; track source) {
+					<ovd-source-icon [source]="source" />
+				}
+			</span>
+		} @else {
+			—
+		}
+	</ng-template>
+	<ng-template ovdCell="node" let-item>
+		<span class="ovd-mono">{{ item.nodeId ?? '—' }}</span>
+	</ng-template>
+
+	@if (exactId(); as sid) {
+		<ovd-empty-state ovdTableEmpty [heading]="'Participant ' + sid + ' was not found'">
+			<button matButton="outlined" type="button" ovdEmptyAction (click)="clearSearch.emit()">Clear search</button>
+		</ovd-empty-state>
+	} @else {
+		<ovd-empty-state
+			ovdTableEmpty
+			[heading]="'No ' + noun() + ' match'"
+			hint="Change the filters or widen the time range."
+		>
+			<button matButton="outlined" type="button" ovdEmptyAction (click)="clearFilters.emit()">
+				Clear filters
+			</button>
+			<button matButton="outlined" type="button" ovdEmptyAction (click)="widenRange.emit()">Widen range</button>
+		</ovd-empty-state>
+	}
+</ovd-data-table>

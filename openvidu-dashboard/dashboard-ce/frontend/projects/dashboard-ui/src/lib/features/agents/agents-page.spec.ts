@@ -153,7 +153,9 @@ describe('AgentsPage', () => {
 			'Change the filters or widen the time range.'
 		);
 
-		(harness.routeDebugElement?.componentInstance as { setStatus(value: string): void }).setStatus('active');
+		(
+			harness.routeDebugElement?.componentInstance as { sessions: { setStatus(value: string): void } }
+		).sessions.setStatus('active');
 		await harness.fixture.whenStable();
 
 		const url = TestBed.inject(Router).url;

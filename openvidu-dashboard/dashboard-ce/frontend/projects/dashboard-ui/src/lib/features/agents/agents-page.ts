@@ -1,52 +1,29 @@
 import { Component, computed, effect, inject, signal, untracked } from '@angular/core';
-import { MatButton } from '@angular/material/button';
 import { MatFormField, MatLabel } from '@angular/material/form-field';
 import { MatOption, MatSelect } from '@angular/material/select';
 import { RouterLink } from '@angular/router';
-import {
-	type ListResponse,
-	type ParticipantListItem,
-	type ParticipantsSummary,
-	ParticipantSort,
-	ParticipantStatus
-} from '@openvidu-dashboard/typings';
+import { type ListResponse, type ParticipantListItem, type ParticipantsSummary } from '@openvidu-dashboard/typings';
 import { RoomChip } from '../../components/badges/room-chip.js';
-import { SourceIcon } from '../../components/badges/source-icon.js';
-import { StatusBadge } from '../../components/badges/status-badge.js';
-import { CopyButton } from '../../components/copy-button/copy-button.js';
 import { CursorPaginator } from '../../components/data-table/cursor-paginator.js';
-import { DataTable, type SortChange, TableCell, type TableColumn } from '../../components/data-table/data-table.js';
-import { RangePickerService } from '../../components/date-time-range-picker/date-time-range-picker.js';
-import { Duration } from '../../components/duration/duration.js';
-import { EmptyState } from '../../components/feedback/empty-state.js';
 import { Notice } from '../../components/feedback/notice.js';
-import { exactListId, ListSearch, listSearchQuery } from '../../components/search/list-search.js';
+import { ListSearch } from '../../components/search/list-search.js';
 import { KpiTile } from '../../components/tiles/kpi-tile.js';
 import { TileRow } from '../../components/tiles/tile-row.js';
 import { StorageService } from '../../core/preferences/storage.js';
 import { injectListLoader } from '../../core/refresh/list-loader.js';
 import { LiveCountersService } from '../../core/refresh/live-counters.js';
-import { EntityPreviewService } from '../../core/state/entity-preview.js';
 import { ListStateService } from '../../core/state/list-state.js';
 import { QueryStateService } from '../../core/state/query-state.js';
-import { injectRankedSortLimits, rankedSortReasons } from '../../core/state/ranked-sort.js';
-import { resolveRange } from '../../core/state/relative-time.js';
-import { formatNumber, formatTimestamp } from '../../format/formatters.js';
+import { formatNumber } from '../../format/formatters.js';
 import { injectLiveCounters } from '../overview/overview-data.js';
-import { participantPreview } from '../participants/participant-display.js';
+import {
+	injectParticipantSessions,
+	PARTICIPANT_STATUS_LABELS,
+	PARTICIPANT_STATUSES
+} from '../participants/participant-sessions.js';
+import { ParticipantSessionsTable } from '../participants/participant-sessions-table/participant-sessions-table.js';
 import { type AgentsListRequest, ParticipantsDataService } from '../participants/participants-data.js';
-import { isRoomSid } from '../rooms/room-display.js';
 
-const STATUSES = Object.values(ParticipantStatus);
-const SORTS = Object.values(ParticipantSort);
-const STATUS_LABELS: Readonly<Record<ParticipantStatus, string>> = {
-	joining: 'Joining',
-	active: 'Active',
-	left: 'Left',
-	aborted: 'Aborted'
-};
-/** Sorts ranked in memory over the range, with their column names. */
-const RANKED_SORTS: Readonly<Partial<Record<ParticipantSort, string>>> = { leftAt: 'Left', duration: 'Duration' };
 const NOTICE_KEY = 'ovd.agents-notice-dismissed';
 
 interface AgentsData {
@@ -58,24 +35,17 @@ interface AgentsData {
 @Component({
 	selector: 'ovd-agents-page',
 	imports: [
-		CopyButton,
 		CursorPaginator,
-		DataTable,
-		Duration,
-		EmptyState,
 		KpiTile,
 		ListSearch,
-		MatButton,
 		MatFormField,
 		MatLabel,
 		MatOption,
 		MatSelect,
 		Notice,
+		ParticipantSessionsTable,
 		RoomChip,
 		RouterLink,
-		SourceIcon,
-		StatusBadge,
-		TableCell,
 		TileRow
 	],
 	templateUrl: './agents-page.html',
@@ -85,58 +55,23 @@ export class AgentsPage {
 	private readonly data = inject(ParticipantsDataService);
 	private readonly query = inject(QueryStateService);
 	private readonly listState = inject(ListStateService);
-	private readonly previews = inject(EntityPreviewService);
-	private readonly rangePicker = inject(RangePickerService);
 	private readonly storage = inject(StorageService);
-	private readonly limits = injectRankedSortLimits();
 
-	protected readonly statuses = STATUSES;
-	protected readonly statusLabels = STATUS_LABELS;
-	protected readonly tz = this.query.tz;
+	protected readonly statuses = PARTICIPANT_STATUSES;
+	protected readonly statusLabels = PARTICIPANT_STATUS_LABELS;
 	protected readonly limit = this.query.limit;
+	protected readonly sessions = injectParticipantSessions({ kindColumn: false });
 	protected readonly activeAgents = inject(LiveCountersService).activeAgents;
 	protected readonly noticeOpen = signal(this.storage.get(NOTICE_KEY) !== 'true');
 	protected readonly participantsLink = computed(() => this.listState.withRange({ kind: 'AGENT' }));
 
-	protected readonly q = computed(() => listSearchQuery(this.query.q(), 'participant'));
-	protected readonly exactId = computed(() => exactListId(this.q(), 'participant'));
-	protected readonly status = computed(() => {
-		const value = this.query.value('status');
-
-		return STATUSES.includes(value as ParticipantStatus) ? (value as ParticipantStatus) : null;
-	});
-	protected readonly room = computed(() => {
-		const value = this.query.value('room');
-
-		return value !== null && isRoomSid(value) ? value : null;
-	});
-	private readonly rangeMs = computed(() => {
-		const resolved = resolveRange(this.listState.range(), new Date());
-
-		return resolved === undefined ? Number.POSITIVE_INFINITY : resolved.to.getTime() - resolved.from.getTime();
-	});
-	/** The ranked sorts apply up to the participants limit, or with any range inside one room. */
-	private readonly sortReasons = computed(() =>
-		rankedSortReasons(
-			RANKED_SORTS,
-			this.rangeMs(),
-			this.room() === null ? this.limits()?.participantRankedSortMaxRangeMs : undefined
-		)
-	);
-	private readonly urlSort = computed(() => this.query.oneOf('sort', SORTS, ParticipantSort.JOINED_AT));
-	/** The URL's sort, or Joined descending when the range is too wide for it. */
-	protected readonly sort = computed<ParticipantSort>(() =>
-		this.sortReasons()[this.urlSort()] === undefined ? this.urlSort() : ParticipantSort.JOINED_AT
-	);
-	protected readonly order = computed(() => (this.sort() === this.urlSort() ? this.query.order() : 'desc'));
-
 	private readonly request = computed<AgentsListRequest>(() => ({
 		range: this.listState.range(),
-		q: this.q(),
-		status: this.status(),
-		room: this.room(),
-		sort: this.sort(),
-		order: this.order(),
+		q: this.sessions.q(),
+		status: this.sessions.status(),
+		room: this.sessions.room(),
+		sort: this.sessions.sort(),
+		order: this.sessions.order(),
 		cursor: this.query.cursor(),
 		limit: this.limit()
 	}));
@@ -152,14 +87,7 @@ export class AgentsPage {
 				this.data.summary(request.range).catch(() => null)
 			]);
 
-			for (const item of page.items) {
-				this.previews.set('participant', item.sid, participantPreview(item));
-
-				if (this.previews.get('room', item.roomSid) === undefined) {
-					this.previews.set('room', item.roomSid, { name: item.roomName });
-				}
-			}
-
+			this.sessions.remember(page.items);
 			this.lastSummary = summary ?? this.lastSummary;
 
 			return { page, summary: this.lastSummary };
@@ -181,45 +109,6 @@ export class AgentsPage {
 	});
 	protected readonly approximate = computed(() => this.summary()?.approximate === true);
 	protected readonly rows = computed(() => this.page()?.items ?? []);
-	protected readonly columns = computed<TableColumn[]>(() => {
-		const reasons = this.sortReasons();
-		const ranked = (sort: ParticipantSort) => ({
-			sortable: true,
-			...(reasons[sort] === undefined ? {} : { sortDisabledReason: reasons[sort] })
-		});
-
-		return [
-			{ key: 'sid', header: 'SID', hideable: false, card: 'title' },
-			{ key: 'identity', header: 'Identity' },
-			{ key: 'name', header: 'Name' },
-			{ key: 'room', header: 'Room', card: 'metric' },
-			{ key: 'status', header: 'Status', hideable: false, card: 'status' },
-			{
-				key: ParticipantSort.JOINED_AT,
-				header: 'Joined',
-				sortable: true,
-				hideable: false,
-				card: 'timestamp',
-				headerHint: this.tz()
-			},
-			{
-				key: ParticipantSort.LEFT_AT,
-				header: 'Left',
-				headerHint: this.tz(),
-				...ranked('leftAt')
-			},
-			{
-				key: ParticipantSort.DURATION,
-				header: 'Duration',
-				align: 'end',
-				card: 'metric',
-				...ranked('duration')
-			},
-			{ key: 'published', header: 'Published', card: 'metric' },
-			{ key: 'node', header: 'Node', defaultHidden: true }
-		];
-	});
-	protected readonly trackAgent = (item: ParticipantListItem): string => item.sid;
 
 	constructor() {
 		injectLiveCounters();
@@ -246,34 +135,13 @@ export class AgentsPage {
 		return count === null ? null : formatNumber(count);
 	}
 
-	/** Dates as on the other lists: the time alone inside the current day of a range up to 24 h. */
-	protected time(value: string): string {
-		return formatTimestamp(value, { tz: this.tz(), now: new Date(), rangeMs: this.rangeMs() });
-	}
-
-	protected setStatus(status: ParticipantStatus | null): void {
-		void this.query.navigate({ status });
-	}
-
-	protected setSort(change: SortChange): void {
-		void this.query.navigate({ sort: change.key, order: change.order });
-	}
-
 	protected clearFilters(): void {
 		void this.query.navigate({ q: null, status: null, room: null });
-	}
-
-	protected clearSearch(): void {
-		void this.query.navigate({ q: null });
 	}
 
 	protected dismissNotice(): void {
 		this.noticeOpen.set(false);
 		this.storage.set(NOTICE_KEY, 'true');
-	}
-
-	protected widenRange(): void {
-		this.rangePicker.open();
 	}
 
 	protected retry(): void {

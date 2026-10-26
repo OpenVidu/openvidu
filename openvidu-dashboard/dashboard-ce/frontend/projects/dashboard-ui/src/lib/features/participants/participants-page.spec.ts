@@ -270,12 +270,9 @@ describe('ParticipantsPage', () => {
 
 	it('drops the cursor on a filter change and toggles the joined order', async () => {
 		const { harness, http } = await open('/participants?cursor=abc');
-		const page$ = harness.routeDebugElement?.componentInstance as {
-			setStatus(value: string): void;
-			setSort(change: { key: string; order: 'asc' | 'desc' }): void;
-		};
+		const page$ = harness.routeDebugElement?.componentInstance as { sessions: { setStatus(value: string): void } };
 
-		page$.setStatus('active');
+		page$.sessions.setStatus('active');
 		await harness.fixture.whenStable();
 		expect(query().get('status')).toBe('active');
 		expect(query().has('cursor')).toBe(false);
