@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { isTimeExpression, isTimeZone, resolveRange, resolveTime } from './relative-time.js';
+import { isTimeExpression, isTimeZone, rangeSpanMs, resolveRange, resolveTime } from './relative-time.js';
 
 const NOW = new Date('2026-10-13T12:40:00.000Z');
 
@@ -64,5 +64,10 @@ describe('relative time', () => {
 		});
 		expect(resolveRange({ from: 'now', to: 'now-1h', tz: 'UTC' }, NOW)).toBeUndefined();
 		expect(resolveRange({ from: 'bogus', to: 'now', tz: 'UTC' }, NOW)).toBeUndefined();
+	});
+
+	it('spans a resolved range and is infinite otherwise', () => {
+		expect(rangeSpanMs({ from: 'now-24h', to: 'now', tz: 'UTC' }, NOW)).toBe(86_400_000);
+		expect(rangeSpanMs({ from: 'bogus', to: 'now', tz: 'UTC' }, NOW)).toBe(Number.POSITIVE_INFINITY);
 	});
 });

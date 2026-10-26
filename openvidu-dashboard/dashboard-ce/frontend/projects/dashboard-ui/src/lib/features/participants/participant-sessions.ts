@@ -7,8 +7,8 @@ import { exactListId, listSearchQuery } from '../../components/search/list-searc
 import { EntityPreviewService } from '../../core/state/entity-preview.js';
 import { ListStateService } from '../../core/state/list-state.js';
 import { QueryStateService } from '../../core/state/query-state.js';
-import { injectRankedSortLimits, rankedSortReasons } from '../../core/state/ranked-sort.js';
-import { resolveRange } from '../../core/state/relative-time.js';
+import { injectRankedSort } from '../../core/state/ranked-sort.js';
+import { rangeSpanMs } from '../../core/state/relative-time.js';
 import { formatTimestamp } from '../../format/formatters.js';
 import { isRoomSid } from '../rooms/room-display.js';
 import { participantPreview } from './participant-display.js';
@@ -34,7 +34,6 @@ export function injectParticipantSessions(options: { kindColumn: boolean }) {
 	const listState = inject(ListStateService);
 	const previews = inject(EntityPreviewService);
 	const rangePicker = inject(RangePickerService);
-	const limits = injectRankedSortLimits();
 
 	const q = computed(() => listSearchQuery(query.q(), 'participant'));
 	const room = computed(() => {
@@ -42,24 +41,15 @@ export function injectParticipantSessions(options: { kindColumn: boolean }) {
 
 		return value !== null && isRoomSid(value) ? value : null;
 	});
-	const rangeMs = computed(() => {
-		const resolved = resolveRange(listState.range(), new Date());
-
-		return resolved === undefined ? Number.POSITIVE_INFINITY : resolved.to.getTime() - resolved.from.getTime();
+	const rangeMs = computed(() => rangeSpanMs(listState.range(), new Date()));
+	const ranked = injectRankedSort({
+		sorts: SORTS,
+		fallback: ParticipantSort.JOINED_AT,
+		ranked: RANKED_SORTS,
+		rangeMs,
+		// The ranked sorts apply up to the participants limit, or with any range inside one room.
+		limitMs: (limits) => (room() === null ? limits?.participantRankedSortMaxRangeMs : undefined)
 	});
-	/** The ranked sorts apply up to the participants limit, or with any range inside one room. */
-	const sortReasons = computed(() =>
-		rankedSortReasons(
-			RANKED_SORTS,
-			rangeMs(),
-			room() === null ? limits()?.participantRankedSortMaxRangeMs : undefined
-		)
-	);
-	const urlSort = computed(() => query.oneOf('sort', SORTS, ParticipantSort.JOINED_AT));
-	/** The URL's sort, or Joined descending when the range is too wide for it. */
-	const sort = computed<ParticipantSort>(() =>
-		sortReasons()[urlSort()] === undefined ? urlSort() : ParticipantSort.JOINED_AT
-	);
 
 	return {
 		q,
@@ -70,42 +60,34 @@ export function injectParticipantSessions(options: { kindColumn: boolean }) {
 			return PARTICIPANT_STATUSES.includes(value as ParticipantStatus) ? (value as ParticipantStatus) : null;
 		}),
 		room,
-		sort,
-		order: computed(() => (sort() === urlSort() ? query.order() : 'desc')),
-		columns: computed<TableColumn[]>(() => {
-			const reasons = sortReasons();
-			const ranked = (key: ParticipantSort) => ({
+		sort: ranked.sort,
+		order: ranked.order,
+		columns: computed<TableColumn[]>(() => [
+			{ key: 'sid', header: 'SID', hideable: false, card: 'title' },
+			{ key: 'identity', header: 'Identity' },
+			{ key: 'name', header: 'Name' },
+			{ key: 'room', header: 'Room', card: 'metric' },
+			...(options.kindColumn ? [{ key: 'kind', header: 'Kind' }] : []),
+			{ key: 'status', header: 'Status', hideable: false, card: 'status' },
+			{
+				key: ParticipantSort.JOINED_AT,
+				header: 'Joined',
 				sortable: true,
-				...(reasons[key] === undefined ? {} : { sortDisabledReason: reasons[key] })
-			});
-
-			return [
-				{ key: 'sid', header: 'SID', hideable: false, card: 'title' },
-				{ key: 'identity', header: 'Identity' },
-				{ key: 'name', header: 'Name' },
-				{ key: 'room', header: 'Room', card: 'metric' },
-				...(options.kindColumn ? [{ key: 'kind', header: 'Kind' }] : []),
-				{ key: 'status', header: 'Status', hideable: false, card: 'status' },
-				{
-					key: ParticipantSort.JOINED_AT,
-					header: 'Joined',
-					sortable: true,
-					hideable: false,
-					card: 'timestamp',
-					headerHint: query.tz()
-				},
-				{ key: ParticipantSort.LEFT_AT, header: 'Left', headerHint: query.tz(), ...ranked('leftAt') },
-				{
-					key: ParticipantSort.DURATION,
-					header: 'Duration',
-					align: 'end',
-					card: 'metric',
-					...ranked('duration')
-				},
-				{ key: 'published', header: 'Published', card: 'metric' },
-				{ key: 'node', header: 'Node', defaultHidden: true }
-			];
-		}),
+				hideable: false,
+				card: 'timestamp',
+				headerHint: query.tz()
+			},
+			{ key: ParticipantSort.LEFT_AT, header: 'Left', headerHint: query.tz(), ...ranked.column('leftAt') },
+			{
+				key: ParticipantSort.DURATION,
+				header: 'Duration',
+				align: 'end',
+				card: 'metric',
+				...ranked.column('duration')
+			},
+			{ key: 'published', header: 'Published', card: 'metric' },
+			{ key: 'node', header: 'Node', defaultHidden: true }
+		]),
 		/** Dates as on the other lists: the time alone inside the current day of a range up to 24 h. */
 		time: (value: string): string =>
 			formatTimestamp(value, { tz: query.tz(), now: new Date(), rangeMs: rangeMs() }),

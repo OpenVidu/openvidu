@@ -32,8 +32,8 @@ import { injectTicker } from '../../core/refresh/ticker.js';
 import { EntityPreviewService } from '../../core/state/entity-preview.js';
 import { ListStateService } from '../../core/state/list-state.js';
 import { QueryStateService } from '../../core/state/query-state.js';
-import { injectRankedSortLimits, rankedSortReasons } from '../../core/state/ranked-sort.js';
-import { resolveRange } from '../../core/state/relative-time.js';
+import { injectRankedSort } from '../../core/state/ranked-sort.js';
+import { rangeSpanMs } from '../../core/state/relative-time.js';
 import { formatDuration, formatNumber, formatTimestamp } from '../../format/formatters.js';
 import { EGRESS_STATUS_LABELS, EGRESS_TYPE_LABELS, RECONCILER_ESTIMATE } from '../../format/labels.js';
 import { isRoomSid } from '../rooms/room-display.js';
@@ -96,7 +96,6 @@ export class EgressPage {
 	private readonly listState = inject(ListStateService);
 	private readonly previews = inject(EntityPreviewService);
 	private readonly rangePicker = inject(RangePickerService);
-	private readonly limits = injectRankedSortLimits();
 	/** Last summary received, kept on the tiles when a summary request fails. */
 	private lastSummary: EgressSummary | null = null;
 
@@ -124,20 +123,15 @@ export class EgressPage {
 
 		return value !== null && isRoomSid(value) ? value : null;
 	});
-	private readonly rangeMs = computed(() => {
-		const resolved = resolveRange(this.listState.range(), new Date());
-
-		return resolved === undefined ? Number.POSITIVE_INFINITY : resolved.to.getTime() - resolved.from.getTime();
+	private readonly rangeMs = computed(() => rangeSpanMs(this.listState.range(), new Date()));
+	private readonly rankedSort = injectRankedSort({
+		sorts: SORTS,
+		fallback: EgressSort.STARTED_AT,
+		ranked: RANKED_SORTS,
+		rangeMs: this.rangeMs
 	});
-	private readonly sortReasons = computed(() =>
-		rankedSortReasons(RANKED_SORTS, this.rangeMs(), this.limits()?.rankedSortMaxRangeMs)
-	);
-	private readonly urlSort = computed(() => this.query.oneOf('sort', SORTS, EgressSort.STARTED_AT));
-	/** The URL's sort, or Started descending when the range is too wide for it. */
-	protected readonly sort = computed<EgressSort>(() =>
-		this.sortReasons()[this.urlSort()] === undefined ? this.urlSort() : EgressSort.STARTED_AT
-	);
-	protected readonly order = computed(() => (this.sort() === this.urlSort() ? this.query.order() : 'desc'));
+	protected readonly sort = this.rankedSort.sort;
+	protected readonly order = this.rankedSort.order;
 
 	private readonly request = computed<EgressListRequest>(() => ({
 		range: this.listState.range(),
@@ -175,31 +169,23 @@ export class EgressPage {
 	protected readonly rows = computed(() => this.page()?.items ?? []);
 	protected readonly summary = computed(() => this.loader.data()?.summary ?? null);
 
-	protected readonly columns = computed<TableColumn[]>(() => {
-		const reasons = this.sortReasons();
-		const ranked = (sort: EgressSort) => ({
+	protected readonly columns = computed<TableColumn[]>(() => [
+		{ key: 'egressId', header: 'Egress ID', hideable: false, card: 'title' },
+		{ key: 'room', header: 'Room', card: 'metric' },
+		{ key: 'type', header: 'Type' },
+		{ key: 'status', header: 'Status', hideable: false, card: 'status' },
+		{
+			key: EgressSort.STARTED_AT,
+			header: 'Started',
 			sortable: true,
-			...(reasons[sort] === undefined ? {} : { sortDisabledReason: reasons[sort] })
-		});
-
-		return [
-			{ key: 'egressId', header: 'Egress ID', hideable: false, card: 'title' },
-			{ key: 'room', header: 'Room', card: 'metric' },
-			{ key: 'type', header: 'Type' },
-			{ key: 'status', header: 'Status', hideable: false, card: 'status' },
-			{
-				key: EgressSort.STARTED_AT,
-				header: 'Started',
-				sortable: true,
-				hideable: false,
-				card: 'timestamp',
-				headerHint: this.tz()
-			},
-			{ key: EgressSort.ENDED_AT, header: 'Ended', headerHint: this.tz(), ...ranked('endedAt') },
-			{ key: EgressSort.DURATION, header: 'Duration', align: 'end', ...ranked('duration') },
-			{ key: 'outputs', header: 'Outputs', card: 'metric' }
-		];
-	});
+			hideable: false,
+			card: 'timestamp',
+			headerHint: this.tz()
+		},
+		{ key: EgressSort.ENDED_AT, header: 'Ended', headerHint: this.tz(), ...this.rankedSort.column('endedAt') },
+		{ key: EgressSort.DURATION, header: 'Duration', align: 'end', ...this.rankedSort.column('duration') },
+		{ key: 'outputs', header: 'Outputs', card: 'metric' }
+	]);
 
 	protected readonly trackEgress = (item: EgressListItem): string => item.egressId;
 

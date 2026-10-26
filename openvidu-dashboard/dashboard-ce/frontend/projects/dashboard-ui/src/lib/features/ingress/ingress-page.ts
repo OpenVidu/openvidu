@@ -29,8 +29,8 @@ import { injectListLoader } from '../../core/refresh/list-loader.js';
 import { EntityPreviewService } from '../../core/state/entity-preview.js';
 import { ListStateService } from '../../core/state/list-state.js';
 import { QueryStateService } from '../../core/state/query-state.js';
-import { injectRankedSortLimits, rankedSortReasons } from '../../core/state/ranked-sort.js';
-import { resolveRange } from '../../core/state/relative-time.js';
+import { injectRankedSort } from '../../core/state/ranked-sort.js';
+import { rangeSpanMs } from '../../core/state/relative-time.js';
 import { formatDuration, formatNumber, formatTimestamp } from '../../format/formatters.js';
 import { INFO_TEXTS } from '../../format/info-texts.js';
 import { INGRESS_INPUT_LABELS, INGRESS_STATUS_LABELS } from '../../format/labels.js';
@@ -90,7 +90,6 @@ export class IngressPage {
 	private readonly listState = inject(ListStateService);
 	private readonly previews = inject(EntityPreviewService);
 	private readonly rangePicker = inject(RangePickerService);
-	private readonly limits = injectRankedSortLimits();
 	/** Last summary received, kept on the tiles when a summary request fails. */
 	private lastSummary: IngressSummary | null = null;
 
@@ -113,20 +112,15 @@ export class IngressPage {
 	});
 	protected readonly q = computed(() => listSearchQuery(this.query.q(), 'ingress'));
 	protected readonly exactId = computed(() => exactListId(this.q(), 'ingress'));
-	private readonly rangeMs = computed(() => {
-		const resolved = resolveRange(this.listState.range(), new Date());
-
-		return resolved === undefined ? Number.POSITIVE_INFINITY : resolved.to.getTime() - resolved.from.getTime();
+	private readonly rangeMs = computed(() => rangeSpanMs(this.listState.range(), new Date()));
+	private readonly rankedSort = injectRankedSort({
+		sorts: SORTS,
+		fallback: IngressSort.CREATED_AT,
+		ranked: METRIC_SORTS,
+		rangeMs: this.rangeMs
 	});
-	private readonly sortReasons = computed(() =>
-		rankedSortReasons(METRIC_SORTS, this.rangeMs(), this.limits()?.rankedSortMaxRangeMs)
-	);
-	private readonly urlSort = computed(() => this.query.oneOf('sort', SORTS, IngressSort.CREATED_AT));
-	/** The URL's sort, or Created descending when the range is too wide for it. */
-	protected readonly sort = computed<IngressSort>(() =>
-		this.sortReasons()[this.urlSort()] === undefined ? this.urlSort() : IngressSort.CREATED_AT
-	);
-	protected readonly order = computed(() => (this.sort() === this.urlSort() ? this.query.order() : 'desc'));
+	protected readonly sort = this.rankedSort.sort;
+	protected readonly order = this.rankedSort.order;
 
 	private readonly request = computed<IngressListRequest>(() => ({
 		range: this.listState.range(),
@@ -163,42 +157,40 @@ export class IngressPage {
 	protected readonly rows = computed(() => this.page()?.items ?? []);
 	protected readonly summary = computed(() => this.loader.data()?.summary ?? null);
 
-	protected readonly columns = computed<TableColumn[]>(() => {
-		const reasons = this.sortReasons();
-		const metric = (sort: IngressSort) => ({
+	protected readonly columns = computed<TableColumn[]>(() => [
+		{ key: 'ingressId', header: 'Ingress ID', hideable: false, card: 'title' },
+		{ key: 'name', header: 'Name' },
+		{ key: 'room', header: 'Room', card: 'metric' },
+		{ key: 'input', header: 'Input' },
+		{ key: 'status', header: 'Status', hideable: false, card: 'status' },
+		{
+			key: IngressSort.CREATED_AT,
+			header: 'Created',
 			sortable: true,
-			...(reasons[sort] === undefined ? {} : { sortDisabledReason: reasons[sort] })
-		});
-
-		return [
-			{ key: 'ingressId', header: 'Ingress ID', hideable: false, card: 'title' },
-			{ key: 'name', header: 'Name' },
-			{ key: 'room', header: 'Room', card: 'metric' },
-			{ key: 'input', header: 'Input' },
-			{ key: 'status', header: 'Status', hideable: false, card: 'status' },
-			{
-				key: IngressSort.CREATED_AT,
-				header: 'Created',
-				sortable: true,
-				hideable: false,
-				card: 'timestamp',
-				headerHint: this.tz()
-			},
-			{
-				key: IngressSort.TOTAL_DURATION,
-				header: 'Total duration',
-				align: 'end',
-				...metric('totalDuration')
-			},
-			{ key: IngressSort.SESSIONS, header: 'Sessions', align: 'end', card: 'metric', ...metric('sessions') },
-			{
-				key: IngressSort.LAST_SESSION,
-				header: 'Last session',
-				headerHint: this.tz(),
-				...metric('lastSession')
-			}
-		];
-	});
+			hideable: false,
+			card: 'timestamp',
+			headerHint: this.tz()
+		},
+		{
+			key: IngressSort.TOTAL_DURATION,
+			header: 'Total duration',
+			align: 'end',
+			...this.rankedSort.column('totalDuration')
+		},
+		{
+			key: IngressSort.SESSIONS,
+			header: 'Sessions',
+			align: 'end',
+			card: 'metric',
+			...this.rankedSort.column('sessions')
+		},
+		{
+			key: IngressSort.LAST_SESSION,
+			header: 'Last session',
+			headerHint: this.tz(),
+			...this.rankedSort.column('lastSession')
+		}
+	]);
 
 	protected readonly trackIngress = (item: IngressListItem): string => item.ingressId;
 

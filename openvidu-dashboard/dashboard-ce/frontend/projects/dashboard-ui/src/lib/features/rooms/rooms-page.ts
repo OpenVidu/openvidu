@@ -32,8 +32,8 @@ import { injectTicker } from '../../core/refresh/ticker.js';
 import { EntityPreviewService } from '../../core/state/entity-preview.js';
 import { ListStateService } from '../../core/state/list-state.js';
 import { QueryStateService } from '../../core/state/query-state.js';
-import { injectRankedSortLimits, rankedSortReasons } from '../../core/state/ranked-sort.js';
-import { resolveRange } from '../../core/state/relative-time.js';
+import { injectRankedSort } from '../../core/state/ranked-sort.js';
+import { rangeSpanMs } from '../../core/state/relative-time.js';
 import { formatNumber, formatTimestamp } from '../../format/formatters.js';
 import { INFO_TEXTS } from '../../format/info-texts.js';
 import { RECONCILER_ESTIMATE } from '../../format/labels.js';
@@ -95,7 +95,6 @@ export class RoomsPage {
 	private readonly listState = inject(ListStateService);
 	private readonly previews = inject(EntityPreviewService);
 	private readonly rangePicker = inject(RangePickerService);
-	private readonly limits = injectRankedSortLimits();
 
 	protected readonly features = ROOM_FEATURES;
 	protected readonly estimate = RECONCILER_ESTIMATE;
@@ -113,29 +112,21 @@ export class RoomsPage {
 	protected readonly exactId = computed(() => exactListId(this.q(), 'room'));
 	protected readonly selectedFeatures = computed(() => this.query.csv('features', FEATURE_KEYS));
 	protected readonly nodeId = computed(() => (this.nodeFilter() ? this.query.value('nodeId') : null));
-	private readonly rangeMs = computed(() => {
-		const resolved = resolveRange(this.listState.range(), this.now());
-
-		return resolved === undefined ? Number.POSITIVE_INFINITY : resolved.to.getTime() - resolved.from.getTime();
-	});
+	private readonly rangeMs = computed(() => rangeSpanMs(this.listState.range(), this.now()));
 	/** Range span when the range last changed, so the ticker never re-renders the headers. */
 	private readonly requestRangeMs = computed(() => {
 		this.listState.range();
 
 		return untracked(this.rangeMs);
 	});
-	private readonly sortReasons = computed(() =>
-		rankedSortReasons(RANKED_SORTS, this.requestRangeMs(), this.limits()?.rankedSortMaxRangeMs)
-	);
-	/** The URL's sort, or Started descending when the range is too wide for it. */
-	protected readonly sort = computed<RoomSort>(() => {
-		const sort = this.query.oneOf('sort', SORTS, RoomSort.CREATED_AT);
-
-		return this.sortReasons()[sort] === undefined ? sort : RoomSort.CREATED_AT;
+	private readonly rankedSort = injectRankedSort({
+		sorts: SORTS,
+		fallback: RoomSort.CREATED_AT,
+		ranked: RANKED_SORTS,
+		rangeMs: this.requestRangeMs
 	});
-	protected readonly order = computed(() =>
-		this.sort() === this.query.oneOf('sort', SORTS, RoomSort.CREATED_AT) ? this.query.order() : 'desc'
-	);
+	protected readonly sort = this.rankedSort.sort;
+	protected readonly order = this.rankedSort.order;
 
 	private readonly request = computed<RoomsListRequest>(() => ({
 		range: this.listState.range(),
@@ -176,54 +167,46 @@ export class RoomsPage {
 	protected readonly page = computed(() => this.loader.data()?.rooms ?? null);
 	protected readonly summary = computed(() => this.loader.data()?.summary ?? null);
 
-	protected readonly columns = computed<TableColumn[]>(() => {
-		const reasons = this.sortReasons();
-		const ranked = (sort: RoomSort) => ({
+	protected readonly columns = computed<TableColumn[]>(() => [
+		{ key: 'sid', header: 'SID', hideable: false, card: 'title' },
+		{ key: 'name', header: 'Name' },
+		{ key: 'status', header: 'Status', hideable: false, card: 'status' },
+		{
+			key: RoomSort.CREATED_AT,
+			header: 'Started',
 			sortable: true,
-			...(reasons[sort] === undefined ? {} : { sortDisabledReason: reasons[sort] })
-		});
-
-		return [
-			{ key: 'sid', header: 'SID', hideable: false, card: 'title' },
-			{ key: 'name', header: 'Name' },
-			{ key: 'status', header: 'Status', hideable: false, card: 'status' },
-			{
-				key: RoomSort.CREATED_AT,
-				header: 'Started',
-				sortable: true,
-				hideable: false,
-				card: 'timestamp',
-				headerHint: this.tz()
-			},
-			{ key: RoomSort.ENDED_AT, header: 'Ended', headerHint: this.tz(), ...ranked('endedAt') },
-			{
-				key: RoomSort.DURATION,
-				header: 'Duration',
-				align: 'end',
-				card: 'metric',
-				...ranked('duration')
-			},
-			{
-				key: RoomSort.UNIQUE_IDENTITIES,
-				header: 'Unique identities',
-				align: 'end',
-				card: 'metric',
-				info: INFO_TEXTS.uniqueIdentities,
-				...ranked('uniqueIdentities')
-			},
-			{
-				key: RoomSort.ACTIVE,
-				header: 'Active',
-				align: 'end',
-				card: 'metric',
-				info: INFO_TEXTS.activeParticipants,
-				...ranked('active')
-			},
-			{ key: 'bytes', header: 'Data up / down', align: 'end' },
-			{ key: 'features', header: 'Features', info: INFO_TEXTS.roomFeatures },
-			{ key: 'node', header: 'Node', defaultHidden: true }
-		];
-	});
+			hideable: false,
+			card: 'timestamp',
+			headerHint: this.tz()
+		},
+		{ key: RoomSort.ENDED_AT, header: 'Ended', headerHint: this.tz(), ...this.rankedSort.column('endedAt') },
+		{
+			key: RoomSort.DURATION,
+			header: 'Duration',
+			align: 'end',
+			card: 'metric',
+			...this.rankedSort.column('duration')
+		},
+		{
+			key: RoomSort.UNIQUE_IDENTITIES,
+			header: 'Unique identities',
+			align: 'end',
+			card: 'metric',
+			info: INFO_TEXTS.uniqueIdentities,
+			...this.rankedSort.column('uniqueIdentities')
+		},
+		{
+			key: RoomSort.ACTIVE,
+			header: 'Active',
+			align: 'end',
+			card: 'metric',
+			info: INFO_TEXTS.activeParticipants,
+			...this.rankedSort.column('active')
+		},
+		{ key: 'bytes', header: 'Data up / down', align: 'end' },
+		{ key: 'features', header: 'Features', info: INFO_TEXTS.roomFeatures },
+		{ key: 'node', header: 'Node', defaultHidden: true }
+	]);
 
 	protected readonly trackRoom = (room: RoomListItem): string => room.sid;
 

@@ -69,3 +69,10 @@ export function resolveRange(range: { from: string; to: string; tz: string }, no
 
 	return from !== undefined && to !== undefined && from < to ? { from, to } : undefined;
 }
+
+/** Span of a range at `now` in milliseconds; infinite when the range does not resolve. */
+export function rangeSpanMs(range: { from: string; to: string; tz: string }, now: Date): number {
+	const resolved = resolveRange(range, now);
+
+	return resolved === undefined ? Number.POSITIVE_INFINITY : resolved.to.getTime() - resolved.from.getTime();
+}
