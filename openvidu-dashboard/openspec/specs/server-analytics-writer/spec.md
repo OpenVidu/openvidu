@@ -92,9 +92,9 @@ nanoseconds and microseconds; `rttMs` stays in milliseconds, `jitterMs` is deriv
 
 ### Requirement: Secrets allow-list
 Edition: CE and PRO. Projectors SHALL copy only fields named in an explicit allow-list into any document,
-including raw payloads; every other field, present or future, SHALL be dropped. Egress stream, web and websocket
-URLs SHALL be stored without userinfo, query string and fragment and with their last path segment replaced by `***`;
-the ingress URL SHALL be stored without userinfo, query string and fragment.
+including raw payloads; every other field, present or future, SHALL be dropped. Egress stream, web, websocket and
+custom base URLs SHALL be stored without userinfo, query string and fragment and with their last path segment replaced
+by `***`; the ingress URL SHALL be stored without userinfo, query string and fragment.
 
 #### Scenario: Fully populated messages
 - **GIVEN** an `AnalyticsEvent` of every type with every string field set to a unique sentinel, including `room.turn_password`, egress storage credentials, webhook signing keys, egress tokens, `ingress.stream_key`, `ingress.url`, SIP credentials and `api_call` request bodies
@@ -105,6 +105,11 @@ the ingress URL SHALL be stored without userinfo, query string and fragment.
 - **GIVEN** an egress with stream URL `rtmps://user:pw@live.example.com/app/live_123?token=abc`
 - **WHEN** it is projected
 - **THEN** the stored output URL is `rtmps://live.example.com/app/***`
+
+#### Scenario: Custom base URL redacted
+- **GIVEN** a room composite egress, and a unified egress with a template source, both with custom base URL `https://layouts.example.com/app/index.html?token=abc`
+- **WHEN** their `EGRESS_STARTED` events are stored
+- **THEN** each raw payload holds `custom_base_url: "https://layouts.example.com/app/***"`
 
 ### Requirement: Personal data flags
 Edition: CE and PRO. `anonymize_ip` SHALL remove the client IP addresses (`client_info.address` and
