@@ -238,8 +238,9 @@ describe.skipIf(mongoUri === '')(`rooms query plan at scenario ${scenario}`, () 
 
 		it('summary counts', async () => {
 			const range = { $gte: new Date(now.getTime() - DAY), $lt: now };
-			// Any index with the right prefix serves a count; the planner may prefer the smaller partial one.
-			const counts: [string, Document, string[]][] = [
+			// Any index with the right prefix serves a count; the planner may prefer the smaller partial one, which reads
+			// every active session and checks the kind after the fetch, so the documents it may examine bound the count.
+			const counts: [string, Document, string[], Document?][] = [
 				[
 					Collection.ROOMS,
 					{ status: RoomStatus.ACTIVE },
@@ -248,17 +249,18 @@ describe.skipIf(mongoUri === '')(`rooms query plan at scenario ${scenario}`, () 
 				[
 					Collection.PARTICIPANTS,
 					{ status: ParticipantStatus.ACTIVE, kind: ParticipantKind.STANDARD },
-					['status_kind', 'status_lastStatsAt_open', 'kind_status_joinedAt_id']
+					['status_kind', 'status_lastStatsAt_open', 'kind_status_joinedAt_id'],
+					{ status: ParticipantStatus.ACTIVE }
 				],
 				[Collection.ROOMS, { createdAt: range }, ['createdAt_id']],
 				[Collection.PARTICIPANTS, { ...STANDARD_SESSIONS, joinedAt: range }, ['kind_status_joinedAt_id']]
 			];
 
-			for (const [collection, match, allowed] of counts) {
+			for (const [collection, match, allowed, examined = match] of counts) {
 				const plan = await expectIndexBacked(
 					db,
 					{ collection, pipeline: [{ $match: match }, { $count: 'n' }] },
-					{ maxDocsExamined: await matched(collection, match)() }
+					{ maxDocsExamined: await matched(collection, examined)() }
 				);
 
 				expect(plan.collscan).toBe(false);
