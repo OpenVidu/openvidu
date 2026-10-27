@@ -14,7 +14,9 @@ export function errorBody(code: ErrorCode, message: string, details?: Record<str
 
 /** JSON 404 for `/api` paths no route answered, so the SPA fallback never serves them. */
 export const apiNotFound: RequestHandler = (req, res) => {
-	res.status(404).json(errorBody('NOT_FOUND', `No API route for ${req.method} ${req.path}`));
+	res.status(404).json(
+		errorBody('NOT_FOUND', `No API route for ${req.method} ${req.originalUrl.split('?')[0] ?? ''}`)
+	);
 };
 
 interface BodyParserError {

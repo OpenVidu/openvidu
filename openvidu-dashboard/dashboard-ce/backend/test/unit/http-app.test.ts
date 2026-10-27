@@ -57,7 +57,10 @@ describe('HTTP contract', () => {
 		const response = await request(app).get(path);
 		expect(response.status).toBe(404);
 		expect(response.headers['content-type']).toContain('application/json');
-		expect((response.body as { error: { code: string } }).error.code).toBe('NOT_FOUND');
+		expect((response.body as { error: { code: string; message: string } }).error).toEqual({
+			code: 'NOT_FOUND',
+			message: `No API route for GET ${path}`
+		});
 	});
 
 	it('hides unexpected errors behind INTERNAL_ERROR', async () => {
