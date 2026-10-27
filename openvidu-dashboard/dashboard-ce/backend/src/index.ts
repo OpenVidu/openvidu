@@ -11,7 +11,7 @@ export {
 	type StartupContext,
 	type StartupHook
 } from './lifecycle/startup.js';
-export { openApiDocument } from './api/openapi.js';
+export { type OpenApiLicense, type OpenApiOptions, openApiDocument } from './api/openapi.js';
 export {
 	type AuthContext,
 	type HttpMethod,

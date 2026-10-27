@@ -7,6 +7,7 @@ import type { ApiError as ApiErrorBody } from '@openvidu-dashboard/typings';
 import * as z from 'zod';
 
 import { docsRouter, openApiDocument } from '../../src/api/openapi.js';
+import { csvParam, limitParam } from '../../src/api/query.js';
 import { type Authenticator, type RouteDefinition, RouteRegistry } from '../../src/api/route-registry.js';
 import { ApiError } from '../../src/http/api-error.js';
 import { createHttpApp } from '../../src/http/app.js';
@@ -32,12 +33,14 @@ const authenticate: Authenticator = (req, required) => {
 function registry(edition: 'ce' | 'pro') {
 	const routes = new RouteRegistry(edition);
 
+	routes.tag('Rooms', 'Room sessions');
 	routes.register({
 		method: 'get',
 		path: '/rooms',
 		edition: 'ce',
+		operationId: 'listRooms',
 		summary: 'List rooms',
-		tags: ['rooms'],
+		tags: ['Rooms'],
 		security: 'bearer',
 		request: { query: z.object({ limit: z.coerce.number().int().max(100).default(25) }) },
 		responses: { 200: { description: 'Rooms', schema: z.object({ limit: z.number() }) } },
@@ -48,8 +51,9 @@ function registry(edition: 'ce' | 'pro') {
 		path: '/rooms/{sid}',
 		edition: 'pro',
 		feature: 'room-detail',
+		operationId: 'getRoom',
 		summary: 'Room detail',
-		tags: ['rooms'],
+		tags: ['Rooms'],
 		security: 'bearer',
 		request: { params: z.object({ sid: z.string() }) },
 		responses: { 200: { description: 'Room' } }
@@ -62,8 +66,9 @@ const SUMMARY: RouteDefinition = {
 	method: 'get',
 	path: '/rooms/summary',
 	edition: 'ce',
+	operationId: 'getRoomsSummary',
 	summary: 'Rooms summary',
-	tags: ['rooms'],
+	tags: ['Rooms'],
 	security: 'bearer',
 	responses: { 200: { description: 'Summary' } },
 	handler: () => ({ summary: true })
@@ -74,8 +79,9 @@ const ROOM_DETAIL: RouteDefinition = {
 	path: '/rooms/{sid}',
 	edition: 'pro',
 	feature: 'room-detail',
+	operationId: 'getRoom',
 	summary: 'Room detail',
-	tags: ['rooms'],
+	tags: ['Rooms'],
 	security: 'bearer',
 	responses: { 200: { description: 'Room' } }
 };
@@ -84,9 +90,15 @@ const ROOM_DETAIL: RouteDefinition = {
 function locked(edition: 'ce' | 'pro') {
 	const routes = new RouteRegistry(edition);
 
+	routes.tag('Rooms', 'Room sessions');
 	routes.register(SUMMARY);
 	routes.lock({ method: 'get', path: '/rooms/{sid}', feature: 'room-detail' });
-	routes.register({ ...SUMMARY, path: '/rooms/{sid}/events', handler: () => ({ events: [] }) });
+	routes.register({
+		...SUMMARY,
+		path: '/rooms/{sid}/events',
+		operationId: 'listRoomEvents',
+		handler: () => ({ events: [] })
+	});
 
 	return routes;
 }
@@ -97,7 +109,7 @@ function app(routes: RouteRegistry, docs: boolean) {
 		appRoot: '/nonexistent',
 		trustProxy: false,
 		apiRouter: routes.router(authenticate),
-		...(docs ? { docsRouter: docsRouter(() => openApiDocument(routes, '3.10.0')) } : {})
+		...(docs ? { docsRouter: docsRouter(() => openApiDocument(routes, { version: '3.10.0' })) } : {})
 	});
 }
 
@@ -138,6 +150,7 @@ describe('route registry', () => {
 				method: 'get',
 				path: '/rooms',
 				edition: 'ce',
+				operationId: 'listRoomsAgain',
 				summary: '',
 				tags: [],
 				security: 'public',
@@ -149,6 +162,7 @@ describe('route registry', () => {
 				method: 'get',
 				path: '/participants/{sid}',
 				edition: 'pro',
+				operationId: 'getParticipant',
 				summary: '',
 				tags: [],
 				security: 'bearer',
@@ -244,7 +258,7 @@ describe('route registry', () => {
 			(await request(app(routes, false)).get('/api/v1/rooms/summary').set('Authorization', 'Bearer good')).body
 		).toEqual({ summary: 'extended' });
 		expect(() => {
-			routes.replace({ ...SUMMARY, path: '/rooms/unknown' });
+			routes.replace({ ...SUMMARY, path: '/rooms/unknown', operationId: 'getUnknown' });
 		}).toThrow('not registered');
 		expect(() => {
 			routes.replace(ROOM_DETAIL);
@@ -262,3 +276,151 @@ describe('route registry', () => {
 		}
 	});
 });
+
+describe('OpenAPI document', () => {
+	interface Operation {
+		operationId: string;
+		tags: string[];
+		security: Record<string, string[]>[];
+		parameters?: {
+			name: string;
+			in: string;
+			description?: string;
+			style?: string;
+			explode?: boolean;
+			schema: { type?: string; items?: { enum?: string[] } };
+		}[];
+		responses: Record<string, { content?: Record<string, { schema: { $ref?: string } }>; headers?: object }>;
+	}
+	interface Document {
+		info: { description: string; license: { name: string; identifier?: string } };
+		servers: { url: string }[];
+		tags: { name: string; description: string }[];
+		paths: Record<string, Record<string, Operation>>;
+		components: { securitySchemes: Record<string, { in?: string; name?: string }> };
+	}
+
+	function documentOf(routes: RouteRegistry, options: Partial<Parameters<typeof openApiDocument>[1]> = {}): Document {
+		return openApiDocument(routes, { version: '3.10.0', ...options }) as unknown as Document;
+	}
+
+	it('refuses an undeclared tag and a repeated operationId', () => {
+		const routes = registry('ce');
+
+		expect(() => {
+			routes.register({ ...SUMMARY, tags: ['Unknown'] });
+		}).toThrow('undeclared tag Unknown');
+		expect(() => {
+			routes.register({ ...SUMMARY, operationId: 'listRooms' });
+		}).toThrow('reuses the operationId listRooms');
+		expect(() => {
+			routes.tag('Rooms', 'Another description');
+		}).toThrow('already declared');
+	});
+
+	it('carries the conventions, the license, the base path and the used tags', () => {
+		const routes = registry('pro');
+
+		routes.tag('Unused', 'No operation uses it');
+
+		const document = documentOf(routes, { basePath: '/dashboard/' });
+
+		expect(document.servers).toEqual([{ url: '/dashboard' }]);
+		expect(document.info.license).toEqual({ name: 'Apache 2.0', identifier: 'Apache-2.0' });
+		expect(document.info.description).toContain('If-None-Match');
+		expect(document.tags).toEqual([{ name: 'Rooms', description: 'Room sessions' }]);
+		expect(documentOf(routes).servers).toEqual([{ url: '/' }]);
+		expect(documentOf(routes, { license: { name: 'Commercial' } }).info.license).toEqual({ name: 'Commercial' });
+	});
+
+	it('declares the errors each operation can answer, with the ApiError body', () => {
+		const routes = registry('pro');
+
+		routes.register({
+			...SUMMARY,
+			responses: {
+				200: { description: 'Summary' },
+				403: { description: 'Locked on CE', edition: 'ce' },
+				429: { description: 'Too many requests' }
+			}
+		});
+
+		const document = documentOf(routes);
+		const list = document.paths['/api/v1/rooms']?.get;
+		const detail = document.paths['/api/v1/rooms/{sid}']?.get;
+		const summary = document.paths['/api/v1/rooms/summary']?.get;
+
+		expect(list?.operationId).toBe('listRooms');
+		expect(Object.keys(list?.responses ?? {})).toEqual(['200', '400', '401']);
+		expect(Object.keys(detail?.responses ?? {})).toEqual(['200', '400', '401']);
+		expect(Object.keys(summary?.responses ?? {})).toEqual(['200', '401', '429']);
+		expect(summary?.responses['429']?.content?.['application/json']?.schema.$ref).toBe(
+			'#/components/schemas/ApiError'
+		);
+		expect(
+			Object.keys(documentOf(routesWithCeError('ce')).paths['/api/v1/rooms/summary']?.get?.responses ?? {})
+		).toContain('403');
+	});
+
+	it('declares If-None-Match on conditional operations and the refresh cookie of the auth routes', () => {
+		const routes = registry('ce');
+
+		routes.register({
+			...SUMMARY,
+			security: 'public',
+			refreshCookie: 'optional',
+			responses: { 200: { description: 'Summary' }, 304: { description: 'Unchanged' } }
+		});
+
+		const document = documentOf(routes);
+		const summary = document.paths['/api/v1/rooms/summary']?.get;
+
+		expect(summary?.parameters?.map((parameter) => `${parameter.in}:${parameter.name}`)).toEqual([
+			'header:If-None-Match'
+		]);
+		expect(summary?.security).toEqual([{}, { refreshCookie: [] }]);
+		expect(document.components.securitySchemes.refreshCookie).toMatchObject({
+			in: 'cookie',
+			name: 'ov_dashboard_refresh'
+		});
+	});
+
+	it('describes every parameter and renders comma-separated lists as arrays', () => {
+		const routes = new RouteRegistry('ce');
+
+		routes.tag('Rooms', 'Room sessions');
+		routes.register({
+			...SUMMARY,
+			request: {
+				query: z.object({
+					kind: csvParam(['STANDARD', 'AGENT']).optional().meta({ description: 'Kinds to keep' }),
+					limit: limitParam
+				})
+			}
+		});
+
+		const parameters = documentOf(routes).paths['/api/v1/rooms/summary']?.get?.parameters ?? [];
+
+		expect(parameters.find((parameter) => parameter.name === 'kind')).toMatchObject({
+			description: 'Kinds to keep',
+			style: 'form',
+			explode: false,
+			schema: { type: 'array', items: { enum: ['STANDARD', 'AGENT'] } }
+		});
+		expect(parameters.find((parameter) => parameter.name === 'limit')?.description).toBe(
+			'Page size, from 1 to 100'
+		);
+	});
+});
+
+/** A registry whose summary declares an error only CE answers. */
+function routesWithCeError(edition: 'ce' | 'pro') {
+	const routes = registry(edition);
+
+	routes.register({
+		...SUMMARY,
+		responses: { 200: { description: 'Summary' }, 403: { description: 'Locked on CE', edition: 'ce' } }
+	});
+
+	return routes;
+}

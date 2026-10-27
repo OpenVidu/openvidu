@@ -34,7 +34,7 @@ export const ingressSummary = z
 	.object({
 		publishingNow: count,
 		ingressesInRange: count,
-		byInputType: z.record(inputType, count),
+		byInputType: z.object({ rtmp: count, whip: count, url: count }),
 		sessionsInRange: count,
 		totalDurationMs: z.number(),
 		approximate: z.boolean()

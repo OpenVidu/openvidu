@@ -16,9 +16,12 @@ export function registerParticipantsRoutes(
 	participants: () => ParticipantsService,
 	now: () => Date
 ): void {
+	registry.tag('Participants', 'Participant sessions of every kind');
+	registry.tag('Agents', 'Sessions of AI agents');
 	registry.register({
 		method: 'get',
 		path: '/participants',
+		operationId: 'listParticipants',
 		edition: 'ce',
 		summary: 'Search participant sessions',
 		tags: TAGS,
@@ -30,6 +33,7 @@ export function registerParticipantsRoutes(
 	registry.register({
 		method: 'get',
 		path: '/participants/summary',
+		operationId: 'getParticipantsSummary',
 		edition: 'ce',
 		summary: 'Participant and service counts of a range',
 		tags: TAGS,
@@ -41,6 +45,7 @@ export function registerParticipantsRoutes(
 	registry.register({
 		method: 'get',
 		path: '/agents',
+		operationId: 'listAgents',
 		edition: 'ce',
 		summary: 'List agent sessions',
 		tags: ['Agents'],

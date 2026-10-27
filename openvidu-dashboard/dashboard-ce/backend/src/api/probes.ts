@@ -32,12 +32,14 @@ export async function readiness(db: Db): Promise<{ ready: boolean; checks: Ready
 
 /** `GET /health` (liveness, no MongoDB) and `GET /ready` (readiness). */
 export function registerProbes(registry: RouteRegistry, version: string, db: Db): void {
+	registry.tag('Probes', 'Liveness and readiness of the dashboard, for orchestrators and load balancers');
 	registry.register({
 		method: 'get',
 		path: '/health',
+		operationId: 'getHealth',
 		edition: 'ce',
 		summary: 'Liveness: the process answers; MongoDB is not checked',
-		tags: ['probes'],
+		tags: ['Probes'],
 		security: 'public',
 		responses: { 200: { description: 'Alive', schema: healthSchema } },
 		handler: () => ({ status: 'ok', version })
@@ -45,9 +47,10 @@ export function registerProbes(registry: RouteRegistry, version: string, db: Db)
 	registry.register({
 		method: 'get',
 		path: '/ready',
+		operationId: 'getReadiness',
 		edition: 'ce',
 		summary: 'Readiness: MongoDB answers and the writer schema is supported',
-		tags: ['probes'],
+		tags: ['Probes'],
 		security: 'public',
 		responses: {
 			200: { description: 'Ready', schema: readySchema },

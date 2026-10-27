@@ -113,10 +113,9 @@ describe.skipIf(mongoUri === '')('status API', () => {
 	});
 
 	it('documents the route', () => {
-		const document = openApiDocument(
-			ce.dashboard.running.container.get<RouteRegistry>(TOKENS.RouteRegistry),
-			'test'
-		);
+		const document = openApiDocument(ce.dashboard.running.container.get<RouteRegistry>(TOKENS.RouteRegistry), {
+			version: 'test'
+		});
 
 		expect(Object.keys(document.paths ?? {})).toContain('/api/v1/status');
 		expect(Object.keys(document.components?.schemas ?? {})).toContain('StatusResponse');

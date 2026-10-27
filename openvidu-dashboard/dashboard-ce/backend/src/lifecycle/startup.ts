@@ -5,7 +5,7 @@ import { type Db, MongoClient } from 'mongodb';
 
 import { type Edition, type InfoSchema, WriterSchemaStatus } from '@openvidu-dashboard/typings';
 
-import { docsRouter, openApiDocument } from '../api/openapi.js';
+import { docsRouter, type OpenApiLicense, openApiDocument } from '../api/openapi.js';
 import { type RouteRegistry } from '../api/route-registry.js';
 import { type AuthService } from '../auth/auth-service.js';
 import { bearerAuthenticator } from '../auth/bearer.js';
@@ -53,6 +53,8 @@ export interface DashboardOptions {
 	exit?: Exit;
 	/** Installs SIGTERM and SIGINT handlers (default true). */
 	handleSignals?: boolean;
+	/** License of the API in the OpenAPI document; default Apache 2.0. */
+	apiLicense?: OpenApiLicense;
 }
 
 export interface RunningDashboard {
@@ -217,7 +219,17 @@ export async function startDashboard(options: DashboardOptions): Promise<Running
 		appRoot: options.appRoot,
 		trustProxy: config.http.trustProxy,
 		apiRouter: registry.router(bearerAuthenticator(() => container.get<AuthService>(TOKENS.AuthService))),
-		...(docsEnabled(env) ? { docsRouter: docsRouter(() => openApiDocument(registry, options.version)) } : {})
+		...(docsEnabled(env)
+			? {
+					docsRouter: docsRouter(() =>
+						openApiDocument(registry, {
+							version: options.version,
+							basePath: container.get<string>(TOKENS.BasePath),
+							...(options.apiLicense ? { license: options.apiLicense } : {})
+						})
+					)
+				}
+			: {})
 	});
 
 	return new Promise((resolve) => {

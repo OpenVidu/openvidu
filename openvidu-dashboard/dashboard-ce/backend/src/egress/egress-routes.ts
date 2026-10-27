@@ -12,9 +12,11 @@ const TAGS = ['Egress'];
  * `now` is read per request.
  */
 export function registerEgressRoutes(registry: RouteRegistry, egress: () => EgressService, now: () => Date): void {
+	registry.tag('Egress', 'Recordings and streams');
 	registry.register({
 		method: 'get',
 		path: '/egresses',
+		operationId: 'listEgresses',
 		edition: 'ce',
 		summary: 'Egresses started in a range',
 		tags: TAGS,
@@ -27,6 +29,7 @@ export function registerEgressRoutes(registry: RouteRegistry, egress: () => Egre
 	registry.register({
 		method: 'get',
 		path: '/egresses/summary',
+		operationId: 'getEgressesSummary',
 		edition: 'ce',
 		summary: 'Egress counts of a range',
 		tags: TAGS,

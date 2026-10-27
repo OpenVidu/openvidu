@@ -72,12 +72,14 @@ const infoResponse = z
 
 /** `GET /info`: public subset without `Authorization`, full document with a valid bearer token. */
 export function registerInfoRoute(registry: RouteRegistry, info: () => InfoService): void {
+	registry.tag('Info', 'Edition, versions, writer schema, retention, storage, features and limits');
 	registry.register({
 		method: 'get',
 		path: '/info',
+		operationId: 'getInfo',
 		edition: 'ce',
 		summary: 'Edition, versions, writer schema, migration, retention, storage and features',
-		tags: ['info'],
+		tags: ['Info'],
 		security: 'optional-bearer',
 		responses: { 200: { description: 'Info document', schema: infoResponse } },
 		handler: ({ req }) => (req.auth === undefined ? info().publicInfo() : info().fullInfo())

@@ -17,7 +17,7 @@ import {
 import type { AnalyticsService } from './analytics-service.js';
 
 const TAGS = ['Analytics'];
-const LOCKED_ITEM = { description: 'PRO metric, dimension or node scope on CE' };
+const LOCKED_ITEM = { description: 'PRO metric, dimension or node scope on CE', edition: 'ce' } as const;
 
 /**
  * Analytics routes: series, breakdowns, summary and CSV export, with the PRO metrics, dimensions and scopes rejected on
@@ -28,12 +28,14 @@ export function registerAnalyticsRoutes(
 	analytics: () => AnalyticsService,
 	now: () => Date
 ): void {
+	registry.tag('Analytics', 'Usage series, breakdowns and KPIs aggregated from the rollups');
 	const ce = { edition: 'ce', tags: TAGS, security: 'bearer' } as const;
 
 	registry.register({
 		...ce,
 		method: 'get',
 		path: '/analytics/series',
+		operationId: 'getAnalyticsSeries',
 		summary: 'Usage series from the rollups',
 		request: { query: analyticsSeriesQuery(now) },
 		responses: {
@@ -46,6 +48,7 @@ export function registerAnalyticsRoutes(
 		...ce,
 		method: 'get',
 		path: '/analytics/breakdowns',
+		operationId: 'getAnalyticsBreakdowns',
 		summary: 'Counts per key of each dimension',
 		request: { query: analyticsBreakdownsQuery(now) },
 		responses: {
@@ -58,6 +61,7 @@ export function registerAnalyticsRoutes(
 		...ce,
 		method: 'get',
 		path: '/analytics/summary',
+		operationId: 'getAnalyticsSummary',
 		summary: 'KPI values of a range',
 		request: { query: analyticsSummaryQuery(now) },
 		responses: { 200: { description: 'The KPI values', schema: analyticsSummaryResponse }, 403: LOCKED_ITEM },
@@ -67,6 +71,7 @@ export function registerAnalyticsRoutes(
 		...ce,
 		method: 'get',
 		path: '/analytics/export.csv',
+		operationId: 'exportAnalyticsCsv',
 		summary: 'Series or breakdowns as CSV',
 		request: { query: analyticsExportQuery(now) },
 		responses: {

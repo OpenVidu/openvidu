@@ -27,9 +27,11 @@ export const statusResponse = z
 
 /** `GET /status`: what every page polls to follow the server, whatever its auto-refresh. */
 export function registerStatusRoutes(registry: RouteRegistry, status: () => StatusService): void {
+	registry.tag('Status', 'Writer schema status, legacy migration progress and writer health');
 	registry.register({
 		method: 'get',
 		path: '/status',
+		operationId: 'getStatus',
 		edition: 'ce',
 		summary: 'Writer schema status, migration progress and writer health',
 		tags: ['Status'],

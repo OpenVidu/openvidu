@@ -21,7 +21,8 @@ const granularityParam = z
 				? 'the finest analytics granularity is 5m'
 				: `must be one of ${GRANULARITIES.join(', ')}`
 	})
-	.default('auto');
+	.default('auto')
+	.meta({ description: 'Bucket size; auto picks one from the length of the range' });
 
 // A transformed schema keeps no examples in its input JSON Schema, so these go on the parameter.
 const scopeParam = z
@@ -29,17 +30,28 @@ const scopeParam = z
 	.regex(ANALYTICS_SCOPE_PATTERN, { error: 'must be global or node:<id>' })
 	.transform((value) => value as AnalyticsScope)
 	.default('global')
-	.meta({ description: '`global` or `node:<id>` (PRO)', param: { example: 'global' } });
+	.meta({
+		description: 'Data of every node (`global`) or of one node (`node:<id>`, PRO)',
+		param: { example: 'global' }
+	});
 
 const metricsParam = csvParam(enumValues(AnalyticsMetric), { strict: true }).meta({
-	description: 'Comma-separated metrics, each at most once',
-	param: { example: 'roomsCreated,bytesUp' }
+	description: 'Metrics to compute, each at most once',
+	param: { example: ['roomsCreated', 'bytesUp'] }
 });
 
 const dimensionsParam = csvParam(enumValues(AnalyticsDimension), { strict: true }).meta({
-	description: 'Comma-separated dimensions, each at most once',
-	param: { example: 'sdk,os' }
+	description: 'Dimensions to break down, each at most once',
+	param: { example: ['sdk', 'os'] }
 });
+
+/** A comma-separated list that the series or breakdowns schema validates, rendered as an array of `values`. */
+function exportList(values: readonly string[], description: string) {
+	return z
+		.string()
+		.optional()
+		.meta({ description, override: { type: 'array', items: { type: 'string', enum: [...values] } } });
+}
 
 export function analyticsSeriesQuery(now: () => Date) {
 	return rangedQuery(now, { metrics: metricsParam, granularity: granularityParam, scope: scopeParam });
@@ -69,14 +81,22 @@ export function analyticsExportQuery(now: () => Date) {
 
 	return z
 		.object({
-			kind: z.enum(['series', 'breakdowns'], { error: 'must be series or breakdowns' }),
-			metrics: z.string().optional().meta({ description: 'Metrics of `kind=series`' }),
-			dimensions: z.string().optional().meta({ description: 'Dimensions of `kind=breakdowns`' }),
-			granularity: z.string().optional().meta({ description: 'Granularity of `kind=series`' }),
-			scope: z.string().optional(),
-			from: z.string().optional(),
-			to: z.string().optional(),
-			tz: z.string().optional()
+			kind: z
+				.enum(['series', 'breakdowns'], { error: 'must be series or breakdowns' })
+				.meta({ description: 'Export the series or the breakdowns' }),
+			metrics: exportList(enumValues(AnalyticsMetric), 'Metrics of `kind=series`, as in the series endpoint'),
+			dimensions: exportList(
+				enumValues(AnalyticsDimension),
+				'Dimensions of `kind=breakdowns`, as in the breakdowns endpoint'
+			),
+			granularity: z
+				.string()
+				.optional()
+				.meta({ description: 'Bucket size of `kind=series`', override: { enum: [...GRANULARITIES] } }),
+			scope: z.string().optional().meta({ description: 'Scope, as in the series and breakdowns endpoints' }),
+			from: z.string().optional().meta({ description: 'Start of the range, as in the series endpoint' }),
+			to: z.string().optional().meta({ description: 'End of the range, as in the series endpoint' }),
+			tz: z.string().optional().meta({ description: 'IANA time zone, as in the series endpoint' })
 		})
 		.transform((value, context): AnalyticsExportParams => {
 			const { kind, ...rest } = value;

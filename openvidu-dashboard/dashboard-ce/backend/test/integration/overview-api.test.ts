@@ -264,10 +264,9 @@ describe.skipIf(mongoUri === '')('overview API', () => {
 	});
 
 	it('documents the overview without nodes', () => {
-		const document = openApiDocument(
-			ce.dashboard.running.container.get<RouteRegistry>(TOKENS.RouteRegistry),
-			'test'
-		);
+		const document = openApiDocument(ce.dashboard.running.container.get<RouteRegistry>(TOKENS.RouteRegistry), {
+			version: 'test'
+		});
 		const schema = document.components?.schemas?.OverviewResponse as { properties?: object } | undefined;
 
 		expect(Object.keys(schema?.properties ?? {})).not.toContain('nodes');

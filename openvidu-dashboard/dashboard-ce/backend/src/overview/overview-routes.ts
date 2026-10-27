@@ -14,6 +14,7 @@ export function overviewRoute(
 	return {
 		method: 'get',
 		path: '/overview',
+		operationId: 'getOverview',
 		edition: 'ce',
 		summary: 'Live counters, today and recent rooms',
 		tags: ['Overview'],
@@ -47,5 +48,6 @@ export function overviewRoute(
 }
 
 export function registerOverviewRoutes(registry: RouteRegistry, overview: () => OverviewService): void {
+	registry.tag('Overview', "Live counters, today's totals and the most recent rooms");
 	registry.register(overviewRoute(overview, overviewResponse));
 }

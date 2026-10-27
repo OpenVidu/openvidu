@@ -14,18 +14,30 @@ export const tzParam = z
 	.default('UTC')
 	.meta({ description: 'IANA time zone for relative snapping and buckets', examples: ['Europe/Madrid'] });
 
-const timeExpression = z
+const TIME_EXPRESSION = 'an ISO 8601 instant with an offset, now, now-<n>m|h|d, now/d or now/M';
+const fromExpression = z
 	.string()
-	.meta({ description: 'ISO 8601 with offset, now, now-<n>m|h|d, now/d or now/M', examples: ['now-24h'] });
+	.meta({ description: `Start of the range: ${TIME_EXPRESSION}`, examples: ['now-24h'] });
+const toExpression = z.string().meta({ description: `End of the range: ${TIME_EXPRESSION}`, examples: ['now'] });
 
 export const limitParam = z.coerce
 	.number({ error: 'must be an integer between 1 and 100' })
 	.int({ error: 'must be an integer between 1 and 100' })
 	.min(1, { error: 'must be an integer between 1 and 100' })
 	.max(100, { error: 'must be an integer between 1 and 100' })
-	.default(25);
+	.default(25)
+	.meta({ description: 'Page size, from 1 to 100' });
 
-export const orderParam = z.enum([SortOrder.ASC, SortOrder.DESC], { error: 'must be asc or desc' });
+export const orderParam = z
+	.enum([SortOrder.ASC, SortOrder.DESC], { error: 'must be asc or desc' })
+	.meta({ description: 'Sort direction' });
+
+/** Opaque keyset cursor of a previous page. */
+export const cursorParam = z
+	.string()
+	.min(1)
+	.optional()
+	.meta({ description: 'nextCursor or prevCursor of a previous page, sent with the same filters and sort' });
 
 /** Trimmed search text; empty means no search. */
 export const qParam = z
@@ -46,41 +58,44 @@ export function csvParam<const T extends readonly [string, ...string[]]>(
 	const allowed = new Set<string>(values);
 	const isAllowed = (item: string): item is T[number] => allowed.has(item);
 
-	return z.string().transform((value, context) => {
-		const items = value
-			.split(',')
-			.map((item) => item.trim())
-			.filter((item) => item !== '');
+	return z
+		.string()
+		.meta({ override: { type: 'array', items: { type: 'string', enum: [...values] } } })
+		.transform((value, context) => {
+			const items = value
+				.split(',')
+				.map((item) => item.trim())
+				.filter((item) => item !== '');
 
-		if (!items.every(isAllowed)) {
-			const unknown = items.find((item) => !isAllowed(item)) ?? '';
+			if (!items.every(isAllowed)) {
+				const unknown = items.find((item) => !isAllowed(item)) ?? '';
 
-			context.addIssue({
-				code: 'custom',
-				message: options.strict
-					? `${unknown} is not one of ${values.join(', ')}`
-					: `must be a comma-separated list of ${values.join(', ')}`
-			});
+				context.addIssue({
+					code: 'custom',
+					message: options.strict
+						? `${unknown} is not one of ${values.join(', ')}`
+						: `must be a comma-separated list of ${values.join(', ')}`
+				});
 
-			return z.NEVER;
-		}
+				return z.NEVER;
+			}
 
-		if (options.strict && items.length === 0) {
-			context.addIssue({ code: 'custom', message: 'must list at least one value' });
+			if (options.strict && items.length === 0) {
+				context.addIssue({ code: 'custom', message: 'must list at least one value' });
 
-			return z.NEVER;
-		}
+				return z.NEVER;
+			}
 
-		const repeated = items.find((item, index) => items.indexOf(item) !== index);
+			const repeated = items.find((item, index) => items.indexOf(item) !== index);
 
-		if (options.strict && repeated !== undefined) {
-			context.addIssue({ code: 'custom', message: `lists ${repeated} more than once` });
+			if (options.strict && repeated !== undefined) {
+				context.addIssue({ code: 'custom', message: `lists ${repeated} more than once` });
 
-			return z.NEVER;
-		}
+				return z.NEVER;
+			}
 
-		return items;
-	});
+			return items;
+		});
 }
 
 export interface ResolvedRange {
@@ -89,7 +104,7 @@ export interface ResolvedRange {
 	tz: string;
 }
 
-const rangeShape = { from: timeExpression.default(DEFAULT_FROM), to: timeExpression.default(DEFAULT_TO), tz: tzParam };
+const rangeShape = { from: fromExpression.default(DEFAULT_FROM), to: toExpression.default(DEFAULT_TO), tz: tzParam };
 
 /** Resolves `from` and `to` at `instant`, adding an issue per invalid bound; `from` must be strictly before `to`. */
 function resolveBounds(
@@ -155,7 +170,7 @@ export function timeRangeQuery(now: () => Date) {
  * `now()` when given.
  */
 export function optionalRangeQuery<S extends z.core.$ZodLooseShape>(now: () => Date, shape: S) {
-	const input = z.object({ from: timeExpression.optional(), to: timeExpression.optional(), tz: tzParam, ...shape });
+	const input = z.object({ from: fromExpression.optional(), to: toExpression.optional(), tz: tzParam, ...shape });
 
 	type Output = Omit<z.output<typeof input>, 'from' | 'to'> & { from?: Date; to?: Date; tz: string };
 

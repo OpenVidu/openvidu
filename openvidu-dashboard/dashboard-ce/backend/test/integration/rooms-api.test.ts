@@ -306,7 +306,7 @@ describe.skipIf(mongoUri === '')('rooms API', () => {
 
 		it('documents the list and the summary, and none of the locked routes', () => {
 			const registry = ce.dashboard.running.container.get<RouteRegistry>(TOKENS.RouteRegistry);
-			const paths = Object.keys(openApiDocument(registry, 'test').paths ?? {});
+			const paths = Object.keys(openApiDocument(registry, { version: 'test' }).paths ?? {});
 
 			expect(paths).toEqual(expect.arrayContaining(['/api/v1/rooms', '/api/v1/rooms/summary']));
 			expect(paths.filter((path) => path.startsWith('/api/v1/rooms/{sid}'))).toEqual([]);

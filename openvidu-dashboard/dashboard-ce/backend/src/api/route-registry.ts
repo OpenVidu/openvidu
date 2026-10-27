@@ -44,6 +44,8 @@ export interface RouteResponse {
 	/** Media type of `schema`; default `application/json`. */
 	contentType?: string;
 	headers?: z.ZodObject;
+	/** The only edition that answers it; the other editions leave it out of their OpenAPI document. */
+	edition?: Edition;
 }
 
 export interface RouteDefinition<P = unknown, Q = unknown, B = unknown> {
@@ -54,9 +56,14 @@ export interface RouteDefinition<P = unknown, Q = unknown, B = unknown> {
 	edition: Edition;
 	/** Feature of a PRO route, reported in `details.feature`. */
 	feature?: FeatureKey;
+	/** Unique across the registry, camelCase and verb first, e.g. `listRooms`. */
+	operationId: string;
 	summary: string;
+	/** Tags declared with `RouteRegistry.tag()`. */
 	tags: string[];
 	security: RouteSecurity;
+	/** The refresh cookie the route reads, for the OpenAPI document; authentication ignores it. */
+	refreshCookie?: 'required' | 'optional';
 	request?: { params?: z.ZodType<P>; query?: z.ZodType<Q>; body?: z.ZodType<B> };
 	responses: Record<number, RouteResponse>;
 	/** Middlewares that run before authentication, such as a rate limiter. */
@@ -93,8 +100,25 @@ function expressPath(path: string): string {
 export class RouteRegistry {
 	private readonly routes = new Map<string, RouteDefinition>();
 	private readonly locks = new Set<string>();
+	private readonly tagDescriptions = new Map<string, string>();
 
-	constructor(private readonly edition: Edition) {}
+	constructor(readonly edition: Edition) {}
+
+	/** Declares a tag of the OpenAPI document; routes may only use declared tags. */
+	tag(name: string, description: string): void {
+		const current = this.tagDescriptions.get(name);
+
+		if (current !== undefined && current !== description) {
+			throw new Error(`Tag ${name} is already declared with another description`);
+		}
+
+		this.tagDescriptions.set(name, description);
+	}
+
+	/** The declared tags, in declaration order. */
+	tags(): { name: string; description: string }[] {
+		return [...this.tagDescriptions].map(([name, description]) => ({ name, description }));
+	}
 
 	register<P, Q, B>(route: RouteDefinition<P, Q, B>): void {
 		const key = routeKey(route.method, route.path);
@@ -112,6 +136,7 @@ export class RouteRegistry {
 			throw new Error(`PRO route ${key} needs a feature`);
 		}
 
+		this.checkDocumentation(key, route as RouteDefinition);
 		// Setting an existing key keeps its position, so a lock is replaced where it was registered.
 		this.locks.delete(key);
 		this.routes.set(key, route as RouteDefinition);
@@ -129,6 +154,7 @@ export class RouteRegistry {
 		this.routes.set(key, {
 			...lock,
 			edition: 'pro',
+			operationId: '',
 			summary: '',
 			tags: [],
 			security: 'bearer',
@@ -144,6 +170,7 @@ export class RouteRegistry {
 			throw new Error(`Route ${key} is not registered`);
 		}
 
+		this.checkDocumentation(key, route as RouteDefinition);
 		this.routes.set(key, route as RouteDefinition);
 	}
 
@@ -160,6 +187,20 @@ export class RouteRegistry {
 	/** True when the running edition answers the route with `PRO_FEATURE`. */
 	isLocked(route: RouteDefinition): boolean {
 		return route.edition === 'pro' && this.edition === 'ce';
+	}
+
+	private checkDocumentation(key: string, route: RouteDefinition): void {
+		const undeclared = route.tags.find((tag) => !this.tagDescriptions.has(tag));
+
+		if (undeclared !== undefined) {
+			throw new Error(`Route ${key} uses the undeclared tag ${undeclared}`);
+		}
+
+		for (const [other, existing] of this.routes) {
+			if (other !== key && !this.locks.has(other) && existing.operationId === route.operationId) {
+				throw new Error(`Route ${key} reuses the operationId ${route.operationId} of ${other}`);
+			}
+		}
 	}
 
 	router(authenticate: Authenticator): Router {

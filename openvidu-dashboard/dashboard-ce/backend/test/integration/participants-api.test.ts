@@ -313,7 +313,7 @@ describe.skipIf(mongoUri === '')('participants API', () => {
 
 		it('documents the lists and the summary, and none of the locked routes', () => {
 			const registry = ce.dashboard.running.container.get<RouteRegistry>(TOKENS.RouteRegistry);
-			const paths = Object.keys(openApiDocument(registry, 'test').paths ?? {});
+			const paths = Object.keys(openApiDocument(registry, { version: 'test' }).paths ?? {});
 
 			expect(paths).toEqual(
 				expect.arrayContaining(['/api/v1/participants', '/api/v1/participants/summary', '/api/v1/agents'])

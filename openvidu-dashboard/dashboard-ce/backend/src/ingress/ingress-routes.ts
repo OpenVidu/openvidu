@@ -12,9 +12,11 @@ const TAGS = ['Ingress'];
  * its events). `now` is read per request.
  */
 export function registerIngressRoutes(registry: RouteRegistry, ingress: () => IngressService, now: () => Date): void {
+	registry.tag('Ingress', 'Ingresses and their publishing sessions');
 	registry.register({
 		method: 'get',
 		path: '/ingresses',
+		operationId: 'listIngresses',
 		edition: 'ce',
 		summary: 'Ingresses created in a range',
 		tags: TAGS,
@@ -27,6 +29,7 @@ export function registerIngressRoutes(registry: RouteRegistry, ingress: () => In
 	registry.register({
 		method: 'get',
 		path: '/ingresses/summary',
+		operationId: 'getIngressesSummary',
 		edition: 'ce',
 		summary: 'Ingress counts of a range',
 		tags: TAGS,

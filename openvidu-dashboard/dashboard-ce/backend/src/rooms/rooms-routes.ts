@@ -12,9 +12,11 @@ const TAGS = ['Rooms'];
  * and series). `now` is read per request.
  */
 export function registerRoomsRoutes(registry: RouteRegistry, rooms: () => RoomsService, now: () => Date): void {
+	registry.tag('Rooms', 'Room sessions');
 	registry.register({
 		method: 'get',
 		path: '/rooms',
+		operationId: 'listRooms',
 		edition: 'ce',
 		summary: 'List room sessions',
 		tags: TAGS,
@@ -27,6 +29,7 @@ export function registerRoomsRoutes(registry: RouteRegistry, rooms: () => RoomsS
 	registry.register({
 		method: 'get',
 		path: '/rooms/summary',
+		operationId: 'getRoomsSummary',
 		edition: 'ce',
 		summary: 'Room and participant counts of a range',
 		tags: TAGS,

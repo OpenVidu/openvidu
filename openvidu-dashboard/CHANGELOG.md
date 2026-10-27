@@ -76,6 +76,8 @@ queried) and `Deployment` (running the service). One line per observable change,
 - Overview API: `GET /api/v1/overview` with live counters, today's totals and recent rooms.
 - Status API: `GET /api/v1/status` with the schema status, migration progress, writer health and the writer's batch
   interval, from which the writer, node and stale-data windows widen for slow batches.
+- API reference outside production: an OpenAPI 3.1 document at `/api/v1/docs/openapi.json` and a browsable page at
+  `/api/v1/docs`, with operation IDs, described parameters and every error response.
 
 #### Deployment
 

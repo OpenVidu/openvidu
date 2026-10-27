@@ -279,7 +279,7 @@ describe.skipIf(mongoUri === '')('analytics API', () => {
 
 		it('documents the CE analytics routes, and none of the locked ones', () => {
 			const registry = ce.dashboard.running.container.get<RouteRegistry>(TOKENS.RouteRegistry);
-			const paths = Object.keys(openApiDocument(registry, 'test').paths ?? {});
+			const paths = Object.keys(openApiDocument(registry, { version: 'test' }).paths ?? {});
 
 			expect(paths).toEqual(
 				expect.arrayContaining([

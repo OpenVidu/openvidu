@@ -12,9 +12,15 @@ Behaviour is specified in `openspec/specs/*-api`, `api-conventions`, `auth`, `st
   `TOKENS` (`src/di/tokens.ts`) are bound with `toResolvedValue` factories, without decorators, so esbuild and Vitest
   need no metadata.
 - Routes are declared once in the `RouteRegistry` (`src/api/route-registry.ts`): method, path under `/api/v1`, edition,
-  `feature` of a PRO route, security (`public`, `bearer`, `optional-bearer`), Zod schemas of params, query, body and
-  responses, and the handler. It drives validation, authentication and the OpenAPI document (only when `NODE_ENV` is
-  not `production`).
+  `feature` of a PRO route, a unique `operationId` (camelCase, verb first: `listRooms`, `getRoomsSummary`), tags
+  declared first with `registry.tag(name, description)`, security (`public`, `bearer`, `optional-bearer`, plus
+  `refreshCookie` for the auth routes), Zod schemas of params, query, body and responses, and the handler. It drives
+  validation, authentication and the OpenAPI document (`src/api/openapi.ts`, only when `NODE_ENV` is not `production`).
+- OpenAPI rules, enforced by `test/integration/openapi-document.test.ts` through `documentationIssues()`
+  (`test/support/openapi-checks.ts`): every parameter has a description (`.meta({ description })`; the generator lifts
+  one set before `.default()` or `.optional()`), comma-separated lists use `csvParam()` or an array `override`, errors
+  without a schema get `ApiError`, `400` and `401` are added from the input and the security, and a response only one
+  edition answers carries `edition`.
 - PRO routes are only locks here: `registry.lock({ method, path, feature })` answers `403 PRO_FEATURE` after
   authentication and stays out of the OpenAPI document. An edition that extends CE registers the full definition in the
   lock's place (mount order kept) and swaps a CE route for its extension with `registry.replace()`; a `pro` startup
