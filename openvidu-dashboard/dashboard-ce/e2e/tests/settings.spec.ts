@@ -45,7 +45,6 @@ test('About shows the version, the retention and the storage, and no finished mi
 	await expect(page.getByRole('row', { name: 'Daily rollups Kept forever' })).toBeVisible();
 	await expect(page.getByRole('row', { name: /rooms 1,203/ })).toBeVisible();
 	await expect(page.getByRole('link', { name: /OpenAPI/ })).toHaveCount(0);
-	await expect(about).not.toContainText('License');
 });
 
 test.describe('incompatible writer', () => {
@@ -112,14 +111,11 @@ test.describe('info unavailable', () => {
 });
 
 test.describe('PRO', () => {
-	test.use({
-		apiOptions: { edition: 'pro', info: { license: { validUntil: '2027-01-01', maskedKey: '****-ABCD' } } }
-	});
+	test.use({ apiOptions: { edition: 'pro' } });
 
-	test('shows the PRO badge and no license section', async ({ page }) => {
+	test('shows the PRO badge', async ({ page }) => {
 		await page.goto('/settings?tab=about');
 
 		await expect(page.locator('ovd-about-tab ovd-edition-badge')).toHaveText('PRO');
-		await expect(page.getByText('****-ABCD')).toHaveCount(0);
 	});
 });

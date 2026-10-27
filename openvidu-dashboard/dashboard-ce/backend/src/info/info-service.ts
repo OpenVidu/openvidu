@@ -5,7 +5,6 @@ import {
 	DEFAULT_RETENTION_MS,
 	type Edition,
 	type FeatureKey,
-	type InfoLicense,
 	type InfoLimits,
 	type InfoMigration,
 	type InfoPublicResponse,
@@ -38,8 +37,6 @@ export interface InfoServiceOptions {
 	version: string;
 	features: () => FeatureKey[];
 	limits: InfoLimits;
-	/** The license of a PRO deployment. */
-	license?: () => InfoLicense | undefined;
 	openapiDocsEnabled: boolean;
 	/** Refreshed with the `config` document of every full read. */
 	statsMode?: StatsModeReader;
@@ -67,7 +64,6 @@ export class InfoService {
 		const schema = byId.get('schema') as SchemaMetaSchema | undefined;
 		const capabilities = byId.get('capabilities') as SchemaMetaCapabilities | undefined;
 		const build = await this.db.command({ buildInfo: 1 });
-		const license = this.options.license?.();
 
 		return {
 			edition: this.options.edition,
@@ -80,7 +76,6 @@ export class InfoService {
 			storage: await this.storageInfo(),
 			features: this.options.features(),
 			limits: this.options.limits,
-			...(license === undefined ? {} : { license }),
 			openapiDocsEnabled: this.options.openapiDocsEnabled
 		};
 	}

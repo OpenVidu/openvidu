@@ -154,7 +154,6 @@ describe('SettingsPage', () => {
 		expect(tables[0]?.querySelector('tbody tr')?.textContent).toContain('Events');
 		expect(tables[1]?.querySelector('tbody tr')?.textContent).toContain('1,203');
 		expect(tables[1]?.querySelector('tbody tr')?.textContent).toContain('12.3 MB');
-		expect(about?.textContent).not.toContain('License');
 		expect(about?.textContent).not.toContain('Links');
 		expect(about?.querySelector('ovd-external-link')).toBeNull();
 	});

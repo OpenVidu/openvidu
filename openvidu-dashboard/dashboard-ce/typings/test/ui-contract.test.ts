@@ -2,7 +2,6 @@ import { describe, expect, expectTypeOf, it } from 'vitest';
 
 import {
 	DEFAULT_PREFERENCES,
-	type InfoLicense,
 	type InfoMigration,
 	type InfoResponse,
 	type InfoRetention,
@@ -49,7 +48,6 @@ describe('UI contract', () => {
 		expectTypeOf<InfoResponse['retention']>().toEqualTypeOf<InfoRetention | undefined>();
 		expectTypeOf<InfoResponse['storage']>().toEqualTypeOf<Record<string, InfoStorageEntry>>();
 		expectTypeOf<InfoResponse['database']['version']>().toBeString();
-		expectTypeOf<InfoResponse['license']>().toEqualTypeOf<InfoLicense | undefined>();
 		expectTypeOf<InfoResponse['openapiDocsEnabled']>().toBeBoolean();
 		expectTypeOf<InfoResponse['features']>().not.toBeAny();
 	});

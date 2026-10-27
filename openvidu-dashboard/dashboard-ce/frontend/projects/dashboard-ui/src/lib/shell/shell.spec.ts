@@ -322,7 +322,7 @@ describe('DashboardShell', () => {
 	it('keeps the short edition badge and a documentation icon in the rail', async () => {
 		size.set('medium');
 
-		const harness = await shell('/settings', ['license-info']);
+		const harness = await shell('/settings', ['per-node-breakdown']);
 		const footer = (harness.fixture.nativeElement as HTMLElement).querySelector(
 			'ovd-navigation-list ovd-sidenav-footer'
 		);

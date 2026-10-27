@@ -63,14 +63,6 @@ export interface InfoStorageEntry {
 	oldest?: string;
 }
 
-/** License of a PRO deployment; CE never reports one. */
-export interface InfoLicense {
-	/** Last valid day, when the licensing service reports one. */
-	validUntil?: string;
-	/** The license key with every character but the last four masked. */
-	maskedKey: string;
-}
-
 /** Widest resolved ranges on which the lists accept a ranked (metric) sort. */
 export interface InfoLimits {
 	/** Rooms, egresses and ingresses: `DASHBOARD_LIST_TOTAL_MAX_RANGE`. */
@@ -96,6 +88,5 @@ export interface InfoResponse {
 	storage: Record<string, InfoStorageEntry>;
 	features: FeatureKey[];
 	limits: InfoLimits;
-	license?: InfoLicense;
 	openapiDocsEnabled: boolean;
 }

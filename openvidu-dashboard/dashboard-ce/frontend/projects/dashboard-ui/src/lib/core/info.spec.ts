@@ -73,7 +73,7 @@ describe('InfoService', () => {
 
 		expect(features.enabled('room-detail')).toBe(true);
 		expect(features.enabledSignal('participant-detail')()).toBe(true);
-		expect(features.enabled('license-info')).toBe(false);
+		expect(features.enabled('per-node-breakdown')).toBe(false);
 	});
 
 	it('re-reads the info document when a request answers 403 PRO_FEATURE', async () => {

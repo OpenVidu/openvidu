@@ -1,7 +1,7 @@
 import { Container } from 'inversify';
 import { type Db, type MongoClient } from 'mongodb';
 
-import { type Edition, type FeatureKey, type InfoLicense } from '@openvidu-dashboard/typings';
+import { type Edition, type FeatureKey } from '@openvidu-dashboard/typings';
 
 import { AnalyticsCache } from '../analytics/analytics-cache.js';
 import { type AnalyticsCatalogue, CE_ANALYTICS_CATALOGUE } from '../analytics/analytics-catalogue.js';
@@ -63,7 +63,6 @@ export function buildContainer(inputs: ContainerInputs): Container {
 	container.bind(TOKENS.Shutdown).toConstantValue(shutdown);
 	container.bind<() => Date>(TOKENS.Clock).toConstantValue(() => new Date());
 	container.bind<FeatureKey[]>(TOKENS.Features).toConstantValue([]);
-	container.bind<() => InfoLicense | undefined>(TOKENS.LicenseInfo).toConstantValue(() => undefined);
 	container.bind(TOKENS.RouteRegistry).toConstantValue(new RouteRegistry(edition));
 	container.bind<AnalyticsCatalogue>(TOKENS.AnalyticsCatalogue).toConstantValue(CE_ANALYTICS_CATALOGUE);
 	container
@@ -86,7 +85,6 @@ export function buildContainer(inputs: ContainerInputs): Container {
 					version: version,
 					features: () => container.get<FeatureKey[]>(TOKENS.Features),
 					limits: rankedSortLimits(config.lists.totalMaxRangeMs),
-					license: () => container.get<() => InfoLicense | undefined>(TOKENS.LicenseInfo)(),
 					openapiDocsEnabled: inputs.docsEnabled,
 					statsMode
 				}),

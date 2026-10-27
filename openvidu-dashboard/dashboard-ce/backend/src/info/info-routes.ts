@@ -62,7 +62,6 @@ const infoResponse = z
 				.int()
 				.meta({ description: 'Participants and agents without a room filter' })
 		}),
-		license: z.object({ validUntil: z.iso.date().optional(), maskedKey: z.string() }).optional(),
 		openapiDocsEnabled: z.boolean()
 	})
 	.meta({

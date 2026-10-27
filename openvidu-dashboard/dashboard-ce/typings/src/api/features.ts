@@ -8,7 +8,6 @@ export const FeatureKey = {
 	ANALYTICS_DIAGNOSTICS: 'analytics-diagnostics',
 	ANALYTICS_TOP_ROOMS: 'analytics-top-rooms',
 	TRACK_DETAIL: 'track-detail',
-	PER_NODE_BREAKDOWN: 'per-node-breakdown',
-	LICENSE_INFO: 'license-info'
+	PER_NODE_BREAKDOWN: 'per-node-breakdown'
 } as const;
 export type FeatureKey = (typeof FeatureKey)[keyof typeof FeatureKey];

@@ -42,9 +42,5 @@ export const FEATURE_COPY: Readonly<Record<FeatureKey, FeatureCopy>> = {
 	'per-node-breakdown': {
 		title: 'Per-node breakdown',
 		description: 'Rooms, participants and egress per OpenVidu node.'
-	},
-	'license-info': {
-		title: 'License',
-		description: 'Validity and key of the OpenVidu PRO license.'
 	}
 };

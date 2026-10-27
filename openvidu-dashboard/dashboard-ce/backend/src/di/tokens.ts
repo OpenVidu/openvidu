@@ -10,8 +10,6 @@ export const TOKENS = {
 	RouteRegistry: Symbol.for('openvidu-dashboard.RouteRegistry'),
 	/** `FeatureKey[]` reported by info; empty on CE. */
 	Features: Symbol.for('openvidu-dashboard.Features'),
-	/** `() => InfoLicense | undefined` reported by info; nothing on CE. */
-	LicenseInfo: Symbol.for('openvidu-dashboard.LicenseInfo'),
 	InfoService: Symbol.for('openvidu-dashboard.InfoService'),
 	SessionRepository: Symbol.for('openvidu-dashboard.SessionRepository'),
 	AuthService: Symbol.for('openvidu-dashboard.AuthService'),
