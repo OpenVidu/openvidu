@@ -18,6 +18,7 @@ import {
 	unixNs,
 	unixSeconds
 } from './scenario.js';
+import { recordingRequest } from './egress-ingress.js';
 
 /**
  * One stored raw event of every type of the default `events.store_types`. Payloads follow protojson naming, nest the set
@@ -99,15 +100,6 @@ function rtpStats(start: Date, end: Date, packets: number, bytes: number, lost: 
 		rtt_max: i32(85)
 	};
 }
-
-const recordingRequest = {
-	room_composite: {
-		room_name: CLOSED_ROOM.name,
-		layout: 'speaker',
-		options: { preset: 'H264_720P_30' },
-		file_outputs: [{ file_type: 'MP4', filepath: 'recordings/daily-standup-2026-10-12.mp4' }]
-	}
-};
 
 const recordingEgress = {
 	egress_id: EG.recording,

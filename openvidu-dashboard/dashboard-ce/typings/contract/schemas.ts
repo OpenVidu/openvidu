@@ -280,6 +280,9 @@ const egresses = obj({
 			{ description: 'Sanitized request: no credentials, no stream keys' }
 		)
 	),
+	rawRequest: anyObject(
+		'Request in raw event payload encoding: the set member of the request oneof, allow-listed fields'
+	),
 	outputs: req(
 		arr(
 			obj({

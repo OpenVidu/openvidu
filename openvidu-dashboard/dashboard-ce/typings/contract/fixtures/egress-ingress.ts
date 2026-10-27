@@ -13,6 +13,16 @@ import {
 	schemaVersion
 } from './scenario.js';
 
+/** The request of the recording, as its document and its raw events store it. */
+export const recordingRequest = {
+	room_composite: {
+		room_name: CLOSED_ROOM.name,
+		layout: 'speaker',
+		options: { preset: 'H264_720P_30' },
+		file_outputs: [{ file_type: 'MP4', filepath: 'recordings/daily-standup-2026-10-12.mp4' }]
+	}
+};
+
 const recordingStart = at('09:02:00');
 const recordingEnd = at('09:40:20');
 const failedStart = at('09:30:00');
@@ -33,6 +43,7 @@ export const egresses: EgressDocument[] = [
 		endedAt: recordingEnd,
 		durationMs: between(recordingStart, recordingEnd),
 		request: { layout: 'speaker', preset: 'H264_720P_30', outputs: ['file'] },
+		rawRequest: recordingRequest,
 		outputs: [
 			{
 				kind: 'file',
@@ -71,6 +82,13 @@ export const egresses: EgressDocument[] = [
 		error: 'upload failed: access denied',
 		errorCode: 403,
 		request: { trackId: 'TR_aLiceMic0pus', outputs: ['file'] },
+		rawRequest: {
+			track: {
+				room_name: CLOSED_ROOM.name,
+				track_id: 'TR_aLiceMic0pus',
+				output: { file: { filepath: 'tracks/alice-microphone.ogg' } }
+			}
+		},
 		outputs: [
 			{ kind: 'file', filename: 'tracks/alice-microphone.ogg', startedAt: failedStart, endedAt: failedEnd }
 		],
@@ -94,6 +112,15 @@ export const egresses: EgressDocument[] = [
 		startedAt: at('10:05:00'),
 		updatedAt: at('10:05:03'),
 		request: { layout: 'grid', preset: 'H264_1080P_30', outputs: ['stream', 'segments'] },
+		rawRequest: {
+			room_composite: {
+				room_name: ACTIVE_ROOM.name,
+				layout: 'grid',
+				options: { preset: 'H264_1080P_30' },
+				stream_outputs: [{ protocol: 'RTMP', urls: ['rtmps://live.example.com/app/***'] }],
+				segment_outputs: [{ playlist_name: 'webinar-q4/playlist.m3u8' }]
+			}
+		},
 		outputs: [
 			{ kind: 'stream', url: 'rtmps://live.example.com/app/***', status: 'ACTIVE', startedAt: at('10:05:03') },
 			{

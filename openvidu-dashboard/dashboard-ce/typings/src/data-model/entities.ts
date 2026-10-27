@@ -318,6 +318,12 @@ export interface EgressDocument extends EntityBase {
 	error?: string;
 	errorCode?: number;
 	request: EgressRequestSummary;
+	/**
+	 * The request as raw event payloads store `egress.request`: the set member of the request oneof under its protocol
+	 * name (`room_composite`, `web`, `participant`, `track_composite`, `track`, `egress`, `replay`), allow-listed fields
+	 * only.
+	 */
+	rawRequest?: Record<string, unknown>;
 	outputs: EgressOutput[];
 	/** Status transitions in order; at most 50 entries. */
 	statusHistory: EgressStatusChange[];

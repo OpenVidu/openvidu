@@ -13,6 +13,14 @@
 		"endedAt": { "$date": "2026-10-12T09:40:20.000Z" },
 		"durationMs": { "$numberLong": "2300000" },
 		"request": { "layout": "speaker", "preset": "H264_720P_30", "outputs": ["file"] },
+		"rawRequest": {
+			"room_composite": {
+				"room_name": "Daily-Standup",
+				"layout": "speaker",
+				"options": { "preset": "H264_720P_30" },
+				"file_outputs": [{ "file_type": "MP4", "filepath": "recordings/daily-standup-2026-10-12.mp4" }]
+			}
+		},
 		"outputs": [
 			{
 				"kind": "file",
@@ -51,6 +59,13 @@
 		"error": "upload failed: access denied",
 		"errorCode": { "$numberInt": "403" },
 		"request": { "trackId": "TR_aLiceMic0pus", "outputs": ["file"] },
+		"rawRequest": {
+			"track": {
+				"room_name": "Daily-Standup",
+				"track_id": "TR_aLiceMic0pus",
+				"output": { "file": { "filepath": "tracks/alice-microphone.ogg" } }
+			}
+		},
 		"outputs": [
 			{
 				"kind": "file",
@@ -79,6 +94,15 @@
 		"startedAt": { "$date": "2026-10-12T10:05:00.000Z" },
 		"updatedAt": { "$date": "2026-10-12T10:05:03.000Z" },
 		"request": { "layout": "grid", "preset": "H264_1080P_30", "outputs": ["stream", "segments"] },
+		"rawRequest": {
+			"room_composite": {
+				"room_name": "Webinar-Q4",
+				"layout": "grid",
+				"options": { "preset": "H264_1080P_30" },
+				"stream_outputs": [{ "protocol": "RTMP", "urls": ["rtmps://live.example.com/app/***"] }],
+				"segment_outputs": [{ "playlist_name": "webinar-q4/playlist.m3u8" }]
+			}
+		},
 		"outputs": [
 			{
 				"kind": "stream",

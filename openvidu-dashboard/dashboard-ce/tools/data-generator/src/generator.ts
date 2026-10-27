@@ -2,6 +2,7 @@ import { type Db, type Document, MongoBulkWriteError } from 'mongodb';
 import {
 	deriveEvents,
 	deriveStats,
+	egressRawRequest,
 	BASE_ROLLUPS,
 	type DeriveWindows,
 	type RollupOptions,
@@ -253,7 +254,7 @@ export async function generate(db: Db, options: GenerateOptions): Promise<Genera
 		}
 
 		for (const doc of bundle.egresses) {
-			writer.add(COLLECTIONS.egresses, doc);
+			writer.add(COLLECTIONS.egresses, { ...doc, rawRequest: egressRawRequest(doc) });
 		}
 
 		for (const doc of bundle.ingresses) {

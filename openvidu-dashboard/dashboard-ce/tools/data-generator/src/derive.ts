@@ -397,8 +397,11 @@ function egressStatus(status: EgressDoc['status']): Record<string, string> {
 	return enumField('status', `EGRESS_${status.toUpperCase()}`);
 }
 
-/** The request of an egress as the writer stores it: the set member of the oneof under its name. */
-function egressRequest(e: EgressDoc): Record<string, unknown> {
+/**
+ * The request of an egress as the writer stores it in `rawRequest` and in its events: the set member of the oneof under
+ * its name.
+ */
+export function egressRawRequest(e: EgressDoc): Record<string, unknown> {
 	const r = e.request as Partial<
 		Record<'participantIdentity' | 'trackId' | 'videoTrackId' | 'audioTrackId', string>
 	> & {
@@ -452,7 +455,7 @@ function egressInfo(e: EgressDoc): Record<string, unknown> {
 		room_name: e.roomName,
 		...(e.sourceType === 'sdk' ? { source_type: 'EGRESS_SOURCE_TYPE_SDK' } : {}),
 		started_at: unixNs(e.startedAt),
-		request: egressRequest(e)
+		request: egressRawRequest(e)
 	};
 }
 
