@@ -2,7 +2,7 @@
 
 ## 1. Tests
 
-- [ ] 1.1 Make the forced media node stop case of the end-to-end reconciler tests expect the reconciler to close the
+- [x] 1.1 Make the forced media node stop case of the end-to-end reconciler tests expect the reconciler to close the
       sessions of the node. Verify by running it on the deployment playground.
 
 ## 2. Docs and CHANGELOG
