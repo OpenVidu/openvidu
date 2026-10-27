@@ -10,9 +10,9 @@ them from the same contract.
 ### Requirement: Info endpoint
 
 Edition: CE. With a valid bearer token `GET /api/v1/info` SHALL answer `200` with the keys `edition`, `versions`,
-`schema`, `migration`, `retention?`, `database`, `storage`, `features`, `limits`, `license?` and `openapiDocsEnabled`,
-where `schema.status` is the writer schema gate's `ok`, `newer`, `older` or `uninitialized` and `openapiDocsEnabled`
-tells whether the docs routes are served.
+`schema`, `migration`, `retention?`, `database`, `storage`, `features`, `limits` and `openapiDocsEnabled`, where
+`schema.status` is the writer schema gate's `ok`, `newer`, `older` or `uninitialized` and `openapiDocsEnabled` tells
+whether the docs routes are served.
 
 #### Scenario: CE with a running writer
 
@@ -39,23 +39,16 @@ tells whether the docs routes are served.
   holds `state`, `progress?` and `error?`, and `limits` holds `rankedSortMaxRangeMs` and
   `participantRankedSortMaxRangeMs`
 
-### Requirement: Migration outcome and license in info
+### Requirement: Migration outcome in info
 
 Edition: CE. `migration.progress` SHALL carry `processed`, `total`, `startedAt?` and `finishedAt?`, and `migration.error`
-SHALL carry the reason of a `failed` migration. `license` (`validUntil?`, `maskedKey`) SHALL be reported only by a
-licensed PRO deployment; CE never reports it.
+SHALL carry the reason of a `failed` migration.
 
 #### Scenario: Failed migration
 
 - **GIVEN** the writer's migration document has `state: 'failed'`, `finishedAt` and `error: 'legacy event without a room'`
 - **WHEN** the client requests `GET /api/v1/info` with a valid token
 - **THEN** `migration` has `state: "failed"`, `progress.finishedAt` and `error: "legacy event without a room"`
-
-#### Scenario: No license on CE
-
-- **GIVEN** the CE dashboard
-- **WHEN** the client requests `GET /api/v1/info` with a valid token
-- **THEN** the response has no `license` property
 
 ### Requirement: Info fields recorded by the writer
 
@@ -118,8 +111,7 @@ subset.
 
 Edition: CE. `features` SHALL be an array of `FeatureKey` identifiers from a shared enumeration (`room-detail`,
 `participant-detail`, `egress-detail`, `ingress-detail`, `analytics-quality`, `analytics-diagnostics`,
-`analytics-top-rooms`, `track-detail`, `per-node-breakdown`, `license-info`), empty on CE; every PRO feature has its
-identifier in it.
+`analytics-top-rooms`, `track-detail`, `per-node-breakdown`), empty on CE; every PRO feature has its identifier in it.
 
 #### Scenario: CE feature list
 
