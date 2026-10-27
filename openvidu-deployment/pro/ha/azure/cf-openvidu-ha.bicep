@@ -50,7 +50,7 @@ param initialMeetApiKey string = ''
 param masterNodeInstanceType string = 'Standard_B4s'
 
 @description('Size of the disk in GB')
-param masterNodesDiskSize int = 100
+param masterNodesDiskSize int = 200
 
 @description('Specifies the VM size for your OpenVidu Media Nodes. You can use any valid Azure VM size (e.g., Standard_B4s, Standard_D4s_v5, Standard_E4ps_v5). See https://learn.microsoft.com/en-us/azure/virtual-machines/sizes for available sizes.')
 param mediaNodeInstanceType string = 'Standard_B4s'
@@ -1353,7 +1353,6 @@ MASTER_NODE_3_PRIVATE_IP=$(az keyvault secret show --vault-name ${keyVaultName} 
 MASTER_NODE_4_PRIVATE_IP=$(az keyvault secret show --vault-name ${keyVaultName} --name MASTER-NODE-4-PRIVATE-IP --query value -o tsv)
 MASTER_NODE_PRIVATE_IP_LIST="$MASTER_NODE_1_PRIVATE_IP,$MASTER_NODE_2_PRIVATE_IP,$MASTER_NODE_3_PRIVATE_IP,$MASTER_NODE_4_PRIVATE_IP"
 REDIS_PASSWORD=$(az keyvault secret show --vault-name ${keyVaultName} --name REDIS-PASSWORD --query value -o tsv)
-ENABLED_MODULES=$(az keyvault secret show --vault-name ${keyVaultName} --name ENABLED-MODULES --query value -o tsv)
 OPENVIDU_VERSION=$(az keyvault secret show --vault-name ${keyVaultName} --name OPENVIDU-VERSION --query value -o tsv)
 
 # Download first: sh <(curl ...) would silently run an empty script on a transient curl failure
@@ -1376,7 +1375,6 @@ COMMON_ARGS=(
 "--node-role='media-node'"
 "--master-node-private-ip-list=$MASTER_NODE_PRIVATE_IP_LIST"
 "--private-ip=$PRIVATE_IP"
-"--enabled-modules='$ENABLED_MODULES'"
 "--redis-password=$REDIS_PASSWORD"
 )
 

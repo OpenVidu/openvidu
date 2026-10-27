@@ -893,7 +893,7 @@ resource openviduMasterNode 'Microsoft.Compute/virtualMachines@2023-09-01' = {
         managedDisk: {
           storageAccountType: masterNodeVMSettings.osDiskType
         }
-        diskSizeGB: 100
+        diskSizeGB: 200
       }
       imageReference: masterNodeVMSettings.ubuntuOSVersion
     }
@@ -959,11 +959,10 @@ set -e
 DOMAIN=$(az keyvault secret show --vault-name ${keyVaultName} --name DOMAIN-NAME --query value -o tsv)
 OPENVIDU_PRO_LICENSE=$(az keyvault secret show --vault-name ${keyVaultName} --name OPENVIDU-PRO-LICENSE --query value -o tsv)
 REDIS_PASSWORD=$(az keyvault secret show --vault-name ${keyVaultName} --name REDIS-PASSWORD --query value -o tsv)
-ENABLED_MODULES=$(az keyvault secret show --vault-name ${keyVaultName} --name ENABLED-MODULES --query value -o tsv)
 OPENVIDU_VERSION="$(az keyvault secret show --vault-name ${keyVaultName} --name OPENVIDU-VERSION --query value -o tsv)"
 
 # Get Master Node private IP
-MASTER_NODE_IP=${privateIPMasterNode}
+MASTER_NODE_PRIVATE_IP=${privateIPMasterNode}
 
 # Download to a file first: process substitution would silently run an empty script on a transient curl failure
 INSTALLER_SCRIPT="/tmp/install_ov_media_node.sh"
@@ -983,9 +982,8 @@ COMMON_ARGS=(
   "--environment=azure"
   "--deployment-type=elastic"
   "--node-role='media-node'"
-  "--master-node-private-ip=$MASTER_NODE_IP"
+  "--master-node-private-ip=$MASTER_NODE_PRIVATE_IP"
   "--private-ip=$PRIVATE_IP"
-  "--enabled-modules='$ENABLED_MODULES'"
   "--redis-password=$REDIS_PASSWORD"
 )
 # Construct the final command with all arguments
@@ -1849,19 +1847,6 @@ resource openviduMasterNodeNSG 'Microsoft.Network/networkSecurityGroups@2023-11-
           destinationPortRange: '1935'
           access: 'Allow'
           priority: 130
-          direction: 'Inbound'
-        }
-      }
-      {
-        name: 'MinIO'
-        properties: {
-          protocol: 'Tcp'
-          sourceAddressPrefix: '*'
-          sourcePortRange: '*'
-          destinationAddressPrefix: '*'
-          destinationPortRange: '9000'
-          access: 'Allow'
-          priority: 140
           direction: 'Inbound'
         }
       }

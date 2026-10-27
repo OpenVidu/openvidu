@@ -747,7 +747,7 @@ resource openviduServer 'Microsoft.Compute/virtualMachines@2023-09-01' = {
         managedDisk: {
           storageAccountType: openviduVMSettings.osDiskType
         }
-        diskSizeGB: 100
+        diskSizeGB: 200
       }
       imageReference: openviduVMSettings.ubuntuOSVersion
     }
@@ -952,19 +952,6 @@ resource webServerSecurityGroup 'Microsoft.Network/networkSecurityGroups@2023-11
           destinationPortRange: '7885'
           access: 'Allow'
           priority: 160
-          direction: 'Inbound'
-        }
-      }
-      {
-        name: 'MinIO'
-        properties: {
-          protocol: 'Tcp'
-          sourceAddressPrefix: '*'
-          sourcePortRange: '*'
-          destinationAddressPrefix: '*'
-          destinationPortRange: '9000'
-          access: 'Allow'
-          priority: 170
           direction: 'Inbound'
         }
       }

@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.46.1.21595",
-      "templateHash": "18422024254131943403"
+      "templateHash": "17066739396447275453"
     }
   },
   "parameters": {
@@ -280,7 +280,7 @@
             "managedDisk": {
               "storageAccountType": "[variables('openviduVMSettings').osDiskType]"
             },
-            "diskSizeGB": 100
+            "diskSizeGB": 200
           },
           "imageReference": "[variables('openviduVMSettings').ubuntuOSVersion]"
         },
@@ -487,19 +487,6 @@
               "destinationPortRange": "7885",
               "access": "Allow",
               "priority": 160,
-              "direction": "Inbound"
-            }
-          },
-          {
-            "name": "MinIO",
-            "properties": {
-              "protocol": "Tcp",
-              "sourceAddressPrefix": "*",
-              "sourcePortRange": "*",
-              "destinationAddressPrefix": "*",
-              "destinationPortRange": "9000",
-              "access": "Allow",
-              "priority": 170,
               "direction": "Inbound"
             }
           },

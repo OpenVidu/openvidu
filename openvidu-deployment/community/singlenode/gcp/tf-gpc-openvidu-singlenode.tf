@@ -89,7 +89,7 @@ locals {
   is_arm_instance = startswith(var.instanceType, "c4a-") || startswith(var.instanceType, "t2a-") || startswith(var.instanceType, "n4a-") || startswith(var.instanceType, "a4x-")
   yq_arch         = local.is_arm_instance ? "arm64" : "amd64"
 
-  ubuntu_image = local.is_arm_instance ? "ubuntu-os-cloud/ubuntu-2404-noble-arm64-v20241219" : "ubuntu-os-cloud/ubuntu-2404-noble-amd64-v20241219"
+  ubuntu_image = local.is_arm_instance ? "ubuntu-os-cloud/ubuntu-2404-lts-arm64" : "ubuntu-os-cloud/ubuntu-2404-lts-amd64"
 
   # C4A (Axion) does not support pd-standard boot disks — it requires Hyperdisk.
   # Mirror the pro/elastic template's logic so ARM singlenode deploys succeed.
@@ -107,9 +107,15 @@ resource "google_compute_instance" "openvidu_server" {
   boot_disk {
     initialize_params {
       image = local.ubuntu_image
-      size  = 100
+      size  = 200
       type  = local.is_c4a_instance ? "hyperdisk-balanced" : "pd-standard"
     }
+  }
+
+  # The image family moves to each new Ubuntu 24.04 build and the disk size can change between
+  # releases: both apply to new deployments only, so a re-apply never recreates this VM.
+  lifecycle {
+    ignore_changes = [boot_disk[0].initialize_params[0].image, boot_disk[0].initialize_params[0].size]
   }
 
   network_interface {

@@ -74,6 +74,40 @@ in the [openvidu-oracle](https://github.com/OpenVidu/openvidu-oracle) and
 - With autoscaling, an unhealthy Media Node is tagged so the autoscaler deletes it and creates a new one. With
   a fixed number of Media Nodes, the Droplet is rebuilt in place.
 
+### Improved
+
+#### All clouds
+
+- The single node and the Master Nodes get a 200 GB disk by default on every cloud where the template sets
+  its size. Azure and Google Cloud raise it from 100 GB (single node, Elastic Master Node and High
+  Availability Master Nodes), as do the High Availability Master Nodes on AWS and the Elastic and High
+  Availability Master Nodes on Oracle Cloud. Oracle Cloud single node, which used the size of the image
+  (about 47 GB), now sets 200 GB. AWS single node and Elastic Master Node already had 200 GB, and on
+  DigitalOcean the disk comes with the Droplet size. On Google Cloud and Oracle Cloud single node and the
+  Google Cloud Elastic Master Node, an existing deployment keeps its disk when the template is applied again.
+  Where the size is a parameter, set it to 100 when you apply the new template to an existing deployment
+  (`masterNodesDiskSize` on Google Cloud, `masterNodeDiskSize` on Oracle Cloud): Google Cloud recreates a
+  Master Node whose disk size changes.
+- Parameter names are the same on every Terraform and Bicep template. The old names still work and take
+  precedence when set, but they are deprecated and will be removed in a future release:
+  - Google Cloud and Oracle Cloud single node: `RTCEngine` is now `rtcEngine`, as in their Elastic and High
+    Availability templates and on Azure and DigitalOcean.
+  - Google Cloud and DigitalOcean High Availability: `masterNodesInstanceType` is now
+    `masterNodeInstanceType`, as in every Elastic template and in Azure High Availability.
+
+#### Google Cloud
+
+- Every machine boots the latest Ubuntu 24.04 image (the `ubuntu-2404-lts` image family), as on the other
+  clouds. Before, the templates were pinned to an image from December 2024. An existing single node or Master
+  Node is not recreated when a newer image is published. The Media Nodes move to the image family once: the
+  first time the new template is applied to an existing Elastic or High Availability deployment, its Media
+  Nodes are replaced.
+
+#### Oracle Cloud
+
+- Single node defaults to 2 OCPUs and 8 GB of memory, the size of its own Elastic Master Node and of the
+  4 vCPU and 8 GB machines of AWS and DigitalOcean. Before, it had 4 OCPUs with only 4 GB of memory.
+
 ### Fixed
 
 #### All clouds
@@ -104,3 +138,17 @@ in the [openvidu-oracle](https://github.com/OpenVidu/openvidu-oracle) and
 
   A redeploy still cannot set the fixed, minimum or maximum number of Media Nodes below the Media Nodes
   running (`UnsupportedCapacity`); the administration documentation describes how to remove them first.
+- Single node and Elastic: the network security group still allowed port 9000 (MinIO) from the Internet.
+  MinIO does not run in Azure deployments, which store recordings and application data in Azure Blob Storage,
+  and the other clouds have kept this port closed since 3.9.0. The rule is removed.
+
+#### Google Cloud
+
+- Single node: the documentation names the media engine variable `rtcEngine`, but the template declared
+  `RTCEngine`, so a value set as documented was not applied. Both names work now.
+
+#### DigitalOcean
+
+- Elastic and High Availability: the OpenVidu v2 compatibility module (`v2compatibility`) was not enabled by
+  default, unlike on every other cloud and on DigitalOcean's Professional single node. It is now enabled by
+  default.

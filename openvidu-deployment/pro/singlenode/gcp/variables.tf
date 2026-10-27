@@ -103,13 +103,23 @@ variable "openviduLicense" {
   sensitive   = true
 }
 
-variable "RTCEngine" {
+variable "rtcEngine" {
   description = "RTCEngine media engine to use. Allowed values are 'pion' and 'mediasoup'."
   type        = string
   default     = "mediasoup"
   validation {
-    condition     = contains(["pion", "mediasoup"], var.RTCEngine)
-    error_message = "RTCEngine must be one of: pion, mediasoup"
+    condition     = contains(["pion", "mediasoup"], var.rtcEngine)
+    error_message = "rtcEngine must be one of: pion, mediasoup"
+  }
+}
+
+variable "RTCEngine" {
+  description = "Deprecated: use rtcEngine, the name every other Terraform template uses. Still honored: a non-empty value takes precedence over rtcEngine. It will be removed in a future release."
+  type        = string
+  default     = ""
+  validation {
+    condition     = contains(["", "pion", "mediasoup"], var.RTCEngine)
+    error_message = "RTCEngine must be empty or one of: pion, mediasoup"
   }
 }
 

@@ -1066,7 +1066,7 @@ Parameters:
   MasterNodesDiskSize:
     Description: Size of the disk in GB
     Type: Number
-    Default: 100
+    Default: 200
     MinValue: 50
     ConstraintDescription: The disk size must be at least 50 GB
 

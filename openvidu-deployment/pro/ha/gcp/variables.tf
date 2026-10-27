@@ -85,16 +85,22 @@ variable "initialMeetApiKey" {
   }
 }
 
-variable "masterNodesInstanceType" {
+variable "masterNodeInstanceType" {
   description = "Specifies the GCE machine type for your OpenVidu Master Node"
   type        = string
   default     = "e2-standard-4"
 }
 
+variable "masterNodesInstanceType" {
+  description = "Deprecated: replaced by masterNodeInstanceType. Kept for backward compatibility; if set to a non-empty value it still takes precedence over masterNodeInstanceType."
+  type        = string
+  default     = ""
+}
+
 variable "masterNodesDiskSize" {
   description = "Size of the disk in GB for master nodes"
   type        = number
-  default     = 100
+  default     = 200
   validation {
     condition     = var.masterNodesDiskSize >= 70
     error_message = "masterNodesDiskSize must be at least 70 GB."

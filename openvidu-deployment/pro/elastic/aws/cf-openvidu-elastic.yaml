@@ -2134,7 +2134,7 @@ Resources:
                 fi
 
                 # Get Master Node private IP
-                MASTER_NODE_IP=${OpenViduMasterNode.PrivateIp}
+                MASTER_NODE_PRIVATE_IP=${OpenViduMasterNode.PrivateIp}
 
                 # Download first: sh <(curl ...) would silently run an empty script on a transient curl failure
                 INSTALLER_SCRIPT="/tmp/install_ov_media_node.sh"
@@ -2152,7 +2152,7 @@ Resources:
                   "--environment=aws"
                   "--deployment-type=elastic"
                   "--node-role='media-node'"
-                  "--master-node-private-ip=$MASTER_NODE_IP"
+                  "--master-node-private-ip=$MASTER_NODE_PRIVATE_IP"
                   "--private-ip=$PRIVATE_IP"
                   "--redis-password=$REDIS_PASSWORD"
                 )
@@ -2547,10 +2547,10 @@ Resources:
             /usr/local/bin/install.sh || ov_media_bootstrap_failed "install.sh failed"
 
             # Wait for the master node to be healthy before starting (bounded: up to 1800s at 5s)
-            MASTER_NODE_IP=${OpenViduMasterNode.PrivateIp}
+            MASTER_NODE_PRIVATE_IP=${OpenViduMasterNode.PrivateIp}
             MASTER_HEALTHY=false
             for i in $(seq 1 360); do
-              if curl -sf "http://$MASTER_NODE_IP:7880/health/caddy" >/dev/null 2>&1; then
+              if curl -sf "http://$MASTER_NODE_PRIVATE_IP:7880/health/caddy" >/dev/null 2>&1; then
                 MASTER_HEALTHY=true
                 break
               fi

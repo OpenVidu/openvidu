@@ -144,7 +144,7 @@ locals {
   is_arm_instance = startswith(var.masterNodeInstanceType, "c4a-") || startswith(var.masterNodeInstanceType, "t2a-") || startswith(var.masterNodeInstanceType, "n4a-") || startswith(var.masterNodeInstanceType, "a4x-")
   yq_arch         = local.is_arm_instance ? "arm64" : "amd64"
 
-  ubuntu_image    = local.is_arm_instance ? "ubuntu-os-cloud/ubuntu-2404-noble-arm64-v20241219" : "ubuntu-os-cloud/ubuntu-2404-noble-amd64-v20241219"
+  ubuntu_image    = local.is_arm_instance ? "ubuntu-os-cloud/ubuntu-2404-lts-arm64" : "ubuntu-os-cloud/ubuntu-2404-lts-amd64"
   is_c4a_instance = startswith(var.masterNodeInstanceType, "c4a-")
 
 }
@@ -159,9 +159,18 @@ resource "google_compute_instance" "openvidu_master_node" {
   boot_disk {
     initialize_params {
       image = local.ubuntu_image
-      size  = 100
+      size  = 200
       type  = local.is_c4a_instance ? "hyperdisk-balanced" : "pd-standard"
     }
+  }
+
+  # Keep existing Master Nodes when a newer Ubuntu 24.04 image is published or when the
+  # default boot disk size changes, so a re-apply never recreates a running Master Node.
+  lifecycle {
+    ignore_changes = [
+      boot_disk[0].initialize_params[0].image,
+      boot_disk[0].initialize_params[0].size,
+    ]
   }
 
   network_interface {
@@ -207,7 +216,7 @@ resource "google_compute_instance" "openvidu_master_node" {
 locals {
   is_arm_instance_media = startswith(var.mediaNodeInstanceType, "c4a-") || startswith(var.mediaNodeInstanceType, "t2a-") || startswith(var.mediaNodeInstanceType, "n4a-") || startswith(var.mediaNodeInstanceType, "a4x-")
 
-  ubuntu_image_media    = local.is_arm_instance_media ? "ubuntu-os-cloud/ubuntu-2404-noble-arm64-v20241219" : "ubuntu-os-cloud/ubuntu-2404-noble-amd64-v20241219"
+  ubuntu_image_media    = local.is_arm_instance_media ? "ubuntu-os-cloud/ubuntu-2404-lts-arm64" : "ubuntu-os-cloud/ubuntu-2404-lts-amd64"
   is_c4a_instance_media = startswith(var.mediaNodeInstanceType, "c4a-")
 }
 

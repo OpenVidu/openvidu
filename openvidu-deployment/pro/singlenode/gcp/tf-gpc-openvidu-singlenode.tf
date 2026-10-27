@@ -84,9 +84,14 @@ resource "google_compute_address" "public_ip_address" {
   region = var.region
 }
 
+# rtcEngine replaced RTCEngine; the deprecated name still wins when it is set.
+locals {
+  rtc_engine = var.RTCEngine != "" ? var.RTCEngine : var.rtcEngine
+}
+
 #Check if ARM
 locals {
-  ubuntu_image = local.is_arm_instance ? "ubuntu-os-cloud/ubuntu-2404-noble-arm64-v20241219" : "ubuntu-os-cloud/ubuntu-2404-noble-amd64-v20241219"
+  ubuntu_image = local.is_arm_instance ? "ubuntu-os-cloud/ubuntu-2404-lts-arm64" : "ubuntu-os-cloud/ubuntu-2404-lts-amd64"
 }
 
 # Compute instance for OpenVidu
@@ -100,9 +105,15 @@ resource "google_compute_instance" "openvidu_server" {
   boot_disk {
     initialize_params {
       image = local.ubuntu_image
-      size  = 100
+      size  = 200
       type  = "pd-standard"
     }
+  }
+
+  # The image family moves to each new Ubuntu 24.04 build and the disk size can change between
+  # releases: both apply to new deployments only, so a re-apply never recreates this VM.
+  lifecycle {
+    ignore_changes = [boot_disk[0].initialize_params[0].image, boot_disk[0].initialize_params[0].size]
   }
 
   network_interface {
@@ -197,7 +208,7 @@ if [[ "${var.initialMeetApiKey}" != '' ]]; then
 fi
 
 OPENVIDU_PRO_LICENSE="$(/usr/local/bin/store_secret.sh save OPENVIDU_PRO_LICENSE ${var.openviduLicense})"
-OPENVIDU_RTC_ENGINE="$(/usr/local/bin/store_secret.sh save OPENVIDU_RTC_ENGINE ${var.RTCEngine})"
+OPENVIDU_RTC_ENGINE="$(/usr/local/bin/store_secret.sh save OPENVIDU_RTC_ENGINE ${local.rtc_engine})"
 
 # Store usernames and generate random passwords
 REDIS_PASSWORD="$(/usr/local/bin/store_secret.sh generate REDIS_PASSWORD)"
