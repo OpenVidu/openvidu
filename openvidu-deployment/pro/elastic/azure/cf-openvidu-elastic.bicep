@@ -1440,7 +1440,9 @@ resource openviduScaleSetMediaNode 'Microsoft.Compute/virtualMachineScaleSets@20
   sku: {
     name: mediaNodeInstanceType
     tier: 'Standard'
-    capacity: initialNumberOfMediaNodes
+    // No capacity: the template never writes the number of Media Nodes, so a redeploy can
+    // never fail on the scale-in-protected Media Nodes. The autoscale profile's default
+    // seeds the size at creation and its minimum/maximum keep it.
   }
   properties: {
     overprovision: true
@@ -1596,13 +1598,16 @@ param automationAccountName string = ''
 
 var isEmptyAutomationAccountName = automationAccountName == ''
 
+@description('Do not set it. Azure Automation returns the URI of a webhook only when it creates it, and the scale-in action group needs that URI on every deployment, so every deployment creates the scale-in webhook under a new name: from this value (a new one each time it is not given) and the name of the deployment (a new one on every redeploy from the portal).')
+param scaleInWebhookNameSeed string = utcNow()
+
 module webhookModule '../../shared/webhookdeployment.json' = {
   params: {
     automationAccountName: isEmptyAutomationAccountName
       ? uniqueString(resourceGroup().id, openviduMasterNode.id)
       : automationAccountName
     runbookName: 'scaleInRunbook'
-    webhookName: 'webhookForScaleIn'
+    webhookName: 'webhookForScaleIn-${uniqueString(deployment().name, scaleInWebhookNameSeed)}'
     WebhookExpiryTime: '2035-03-30T00:00:00Z'
     _artifactsLocation: 'https://raw.githubusercontent.com/OpenVidu/openvidu/refs/heads/master/openvidu-deployment/pro/shared/scaleInRunbook.ps1'
   }
@@ -1724,18 +1729,26 @@ resource vnet_OV 'Microsoft.Network/virtualNetworks@2023-11-01' = {
           }
         }
       }
+      {
+        name: 'firstSubnetForMasterNodes'
+        properties: {
+          addressPrefix: networkSettings.subnetAddressPrefixMaster1
+          privateEndpointNetworkPolicies: 'Disabled'
+          privateLinkServiceNetworkPolicies: 'Enabled'
+        }
+      }
     ]
   }
 }
 
-resource subnetMasterNode 'Microsoft.Network/virtualNetworks/subnets@2023-11-01' = {
+// Every subnet is declared INSIDE the virtual network. A redeploy PUTs the virtual network with
+// the subnets the template lists, so a subnet declared as a separate child resource was missing
+// from that list and ARM tried to delete it while the Master Node used it
+// (InUseSubnetCannotBeDeleted): no Elastic/HA deployment could be redeployed. The symbolic names
+// below are `existing` references, so the rest of the template uses them as before.
+resource subnetMasterNode 'Microsoft.Network/virtualNetworks/subnets@2023-11-01' existing = {
   parent: vnet_OV
   name: 'firstSubnetForMasterNodes'
-  properties: {
-    addressPrefix: networkSettings.subnetAddressPrefixMaster1
-    privateEndpointNetworkPolicies: 'Disabled'
-    privateLinkServiceNetworkPolicies: 'Enabled'
-  }
 }
 
 resource netInterfaceMasterNode 'Microsoft.Network/networkInterfaces@2023-11-01' = {

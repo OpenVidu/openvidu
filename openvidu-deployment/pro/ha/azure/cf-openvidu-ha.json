@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.46.1.21595",
-      "templateHash": "4153702520103052048"
+      "templateHash": "4663408180279198376"
     }
   },
   "parameters": {
@@ -161,6 +161,13 @@
       "defaultValue": "",
       "metadata": {
         "description": "Automation Account Name to create a runbook inside it for scale in"
+      }
+    },
+    "scaleInWebhookNameSeed": {
+      "type": "string",
+      "defaultValue": "[utcNow()]",
+      "metadata": {
+        "description": "Do not set it. Azure Automation returns the URI of a webhook only when it creates it, and the scale-in action group needs that URI on every deployment, so every deployment creates the scale-in webhook under a new name: from this value (a new one each time it is not given) and the name of the deployment (a new one on every redeploy from the portal)."
       }
     },
     "storageAccountName": {
@@ -548,8 +555,7 @@
       },
       "sku": {
         "name": "[parameters('mediaNodeInstanceType')]",
-        "tier": "Standard",
-        "capacity": "[parameters('initialNumberOfMediaNodes')]"
+        "tier": "Standard"
       },
       "properties": {
         "overprovision": true,
@@ -976,46 +982,34 @@
                 "id": "[resourceId('Microsoft.Network/networkSecurityGroups', format('{0}-mediaNodeNSG', parameters('stackName')))]"
               }
             }
+          },
+          {
+            "name": "firstSubnetForMasterNodes",
+            "properties": {
+              "addressPrefix": "[variables('networkSettings').subnetAddressPrefixMaster1]",
+              "privateEndpointNetworkPolicies": "Disabled",
+              "privateLinkServiceNetworkPolicies": "Enabled",
+              "natGateway": {
+                "id": "[resourceId('Microsoft.Network/natGateways', format('{0}-natGateway', parameters('stackName')))]"
+              }
+            }
+          },
+          {
+            "name": "secondSubnetForMasterNodes",
+            "properties": {
+              "addressPrefix": "[variables('networkSettings').subnetAddressPrefixMaster2]",
+              "privateEndpointNetworkPolicies": "Disabled",
+              "privateLinkServiceNetworkPolicies": "Enabled",
+              "natGateway": {
+                "id": "[resourceId('Microsoft.Network/natGateways', format('{0}-natGateway', parameters('stackName')))]"
+              }
+            }
           }
         ]
       },
       "dependsOn": [
+        "[resourceId('Microsoft.Network/natGateways', format('{0}-natGateway', parameters('stackName')))]",
         "[resourceId('Microsoft.Network/networkSecurityGroups', format('{0}-mediaNodeNSG', parameters('stackName')))]"
-      ]
-    },
-    {
-      "type": "Microsoft.Network/virtualNetworks/subnets",
-      "apiVersion": "2023-11-01",
-      "name": "[format('{0}/{1}', variables('networkSettings').vNetName, 'firstSubnetForMasterNodes')]",
-      "properties": {
-        "addressPrefix": "[variables('networkSettings').subnetAddressPrefixMaster1]",
-        "privateEndpointNetworkPolicies": "Disabled",
-        "privateLinkServiceNetworkPolicies": "Enabled",
-        "natGateway": {
-          "id": "[resourceId('Microsoft.Network/natGateways', format('{0}-natGateway', parameters('stackName')))]"
-        }
-      },
-      "dependsOn": [
-        "[resourceId('Microsoft.Network/natGateways', format('{0}-natGateway', parameters('stackName')))]",
-        "[resourceId('Microsoft.Network/virtualNetworks', variables('networkSettings').vNetName)]"
-      ]
-    },
-    {
-      "type": "Microsoft.Network/virtualNetworks/subnets",
-      "apiVersion": "2023-11-01",
-      "name": "[format('{0}/{1}', variables('networkSettings').vNetName, 'secondSubnetForMasterNodes')]",
-      "properties": {
-        "addressPrefix": "[variables('networkSettings').subnetAddressPrefixMaster2]",
-        "privateEndpointNetworkPolicies": "Disabled",
-        "privateLinkServiceNetworkPolicies": "Enabled",
-        "natGateway": {
-          "id": "[resourceId('Microsoft.Network/natGateways', format('{0}-natGateway', parameters('stackName')))]"
-        }
-      },
-      "dependsOn": [
-        "[resourceId('Microsoft.Network/natGateways', format('{0}-natGateway', parameters('stackName')))]",
-        "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('networkSettings').vNetName, 'firstSubnetForMasterNodes')]",
-        "[resourceId('Microsoft.Network/virtualNetworks', variables('networkSettings').vNetName)]"
       ]
     },
     {
@@ -1053,7 +1047,7 @@
         "[resourceId('Microsoft.Network/loadBalancers', variables('lbName'))]",
         "[resourceId('Microsoft.Network/applicationSecurityGroups', format('{0}-masterNodeASG', parameters('stackName')))]",
         "[resourceId('Microsoft.Network/networkSecurityGroups', format('{0}-masterNodeNSG', parameters('stackName')))]",
-        "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('networkSettings').vNetName, 'firstSubnetForMasterNodes')]"
+        "[resourceId('Microsoft.Network/virtualNetworks', variables('networkSettings').vNetName)]"
       ]
     },
     {
@@ -1091,7 +1085,7 @@
         "[resourceId('Microsoft.Network/loadBalancers', variables('lbName'))]",
         "[resourceId('Microsoft.Network/applicationSecurityGroups', format('{0}-masterNodeASG', parameters('stackName')))]",
         "[resourceId('Microsoft.Network/networkSecurityGroups', format('{0}-masterNodeNSG', parameters('stackName')))]",
-        "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('networkSettings').vNetName, 'secondSubnetForMasterNodes')]"
+        "[resourceId('Microsoft.Network/virtualNetworks', variables('networkSettings').vNetName)]"
       ]
     },
     {
@@ -1129,7 +1123,7 @@
         "[resourceId('Microsoft.Network/loadBalancers', variables('lbName'))]",
         "[resourceId('Microsoft.Network/applicationSecurityGroups', format('{0}-masterNodeASG', parameters('stackName')))]",
         "[resourceId('Microsoft.Network/networkSecurityGroups', format('{0}-masterNodeNSG', parameters('stackName')))]",
-        "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('networkSettings').vNetName, 'firstSubnetForMasterNodes')]"
+        "[resourceId('Microsoft.Network/virtualNetworks', variables('networkSettings').vNetName)]"
       ]
     },
     {
@@ -1167,7 +1161,7 @@
         "[resourceId('Microsoft.Network/loadBalancers', variables('lbName'))]",
         "[resourceId('Microsoft.Network/applicationSecurityGroups', format('{0}-masterNodeASG', parameters('stackName')))]",
         "[resourceId('Microsoft.Network/networkSecurityGroups', format('{0}-masterNodeNSG', parameters('stackName')))]",
-        "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('networkSettings').vNetName, 'secondSubnetForMasterNodes')]"
+        "[resourceId('Microsoft.Network/virtualNetworks', variables('networkSettings').vNetName)]"
       ]
     },
     {
@@ -2154,7 +2148,7 @@
             "value": "scaleInRunbook"
           },
           "webhookName": {
-            "value": "webhookForScaleIn"
+            "value": "[format('webhookForScaleIn-{0}', uniqueString(deployment().name, parameters('scaleInWebhookNameSeed')))]"
           },
           "WebhookExpiryTime": {
             "value": "2035-03-30T00:00:00Z"

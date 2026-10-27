@@ -77,3 +77,18 @@ in the [openvidu-oracle](https://github.com/OpenVidu/openvidu-oracle) and
   domain could be derived from a temporary public IP, or the instance could start without Internet access and
   fail its installation. The Elastic IP is now known in advance, and the instance waits up to 10 minutes for
   it before installing anything.
+
+#### Azure
+
+- Elastic and High Availability: redeploying the template always failed, so no parameter could be changed
+  after the first deployment:
+  - `InUseSubnetCannotBeDeleted`: the Master Nodes' subnets were declared outside the virtual network, so a
+    redeploy tried to delete them while the Master Nodes used them. Every subnet is now declared inside the
+    virtual network.
+  - `'Service Uri' must not be empty`: Azure Automation returns the URI of a webhook only when it creates it,
+    so the scale-in action group lost it on every redeploy. Every deployment now creates the scale-in webhook
+    under a new name. The webhooks of earlier deployments stay unused in the Automation account until they
+    expire.
+
+  A redeploy still cannot set the minimum or maximum number of Media Nodes below the Media Nodes
+  running (`UnsupportedCapacity`); the administration documentation describes how to remove them first.
