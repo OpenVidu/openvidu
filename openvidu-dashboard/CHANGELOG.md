@@ -17,6 +17,8 @@ queried) and `Deployment` (running the service). One line per observable change,
   instead of `3000`.
 - The image runs as uid 1000: mounted configuration and certificate authority files must be readable by that user.
 - Client IP addresses are no longer stored by default; set `openvidu.analytics.anonymize_ip: false` to store them.
+- The analytics data and the dashboard require MongoDB: on Amazon DocumentDB the server starts with analytics disabled
+  and logs why.
 
 ### Breaking changes
 
@@ -86,8 +88,7 @@ queried) and `Deployment` (running the service). One line per observable change,
 - Analytics durations accept days (`7d`, `1d12h`), and the server refuses to start on a retention above the MongoDB TTL
   limit, an entity retention under 2 days or a daily rollup retention shorter than the hourly one, naming the key.
 - The server logs a warning when a full analytics queue drops entries, at most once per queue and batch interval.
-- `DATABASE_TLS_CA_FILE` trusts a private certificate authority for external MongoDB services such as Amazon
-  DocumentDB.
+- `DATABASE_TLS_CA_FILE` trusts a private certificate authority for external MongoDB services.
 - The dashboard refuses to start (exit code 3) against an OpenVidu server whose analytics schema is older than it
   supports, and reports a newer or uninitialized schema in `GET /api/v1/info`.
 - The image declares a Docker `HEALTHCHECK`, through the `healthcheck` argument of the backend entry.
