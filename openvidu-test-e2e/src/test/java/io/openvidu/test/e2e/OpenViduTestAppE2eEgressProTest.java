@@ -1988,6 +1988,7 @@ public class OpenViduTestAppE2eEgressProTest extends AbstractOpenViduTestappE2eT
 		recording.assertAvSync(5);
 		recording.assertDefaults("screen_share", "screen_share_audio");
 		recording.named("screen_share").assertReachedSize(SCREEN_WIDTH, SCREEN_HEIGHT);
+		assertChosenTracksManifest(egressId, 2);
 	}
 
 	@Test
@@ -2013,6 +2014,7 @@ public class OpenViduTestAppE2eEgressProTest extends AbstractOpenViduTestappE2eT
 		recording.assertDefaults("screen_share", "microphone");
 		recording.named("screen_share_audio").assertMarkers(6);
 		recording.named("microphone").assertMarkers(6);
+		assertChosenTracksManifest(egressId, 3);
 	}
 
 	@Test
@@ -2368,6 +2370,7 @@ public class OpenViduTestAppE2eEgressProTest extends AbstractOpenViduTestappE2eT
 		recording.assertHealthy();
 		recording.video(0).assertMarkers(6);
 		recording.video(0).assertReachedSize(SCREEN_WIDTH, SCREEN_HEIGHT);
+		assertChosenTracksManifest(egressId, 1);
 	}
 
 	// ------------------------------------------------------------------------
@@ -3705,6 +3708,26 @@ public class OpenViduTestAppE2eEgressProTest extends AbstractOpenViduTestappE2eT
 		minio.downloadObject(DownloadObjectArgs.builder().bucket(MINIO_BUCKET).object(manifestKey)
 				.filename(local.toString()).build());
 		return JsonParser.parseString(new String(Files.readAllBytes(local), StandardCharsets.UTF_8)).getAsJsonObject();
+	}
+
+	/**
+	 * The manifest of a request for chosen tracks (screen_share, a MediaSource):
+	 * every track is in the requested file, and its group says what the track is
+	 * (a screen share is "screen"), not which file the request put it in.
+	 */
+	private void assertChosenTracksManifest(String egressId, int tracks) throws Exception {
+		JsonObject manifest = getManifest(egressId);
+		String key = fileKey(getEgress(egressId));
+		JsonArray entries = manifest.getAsJsonArray("tracks");
+		Assertions.assertEquals(tracks, entries.size(), "Manifest tracks: " + manifest);
+		for (JsonElement entry : entries) {
+			JsonObject track = entry.getAsJsonObject();
+			String source = track.get("source").getAsString();
+			Assertions.assertEquals(key, track.get("file").getAsString(),
+					"Every track is in the requested file: " + manifest);
+			Assertions.assertEquals(source.startsWith("screen_share") ? "screen" : "camera",
+					track.get("group").getAsString(), "The group of the " + source + " track: " + manifest);
+		}
 	}
 
 	/** The first manifest track of a file and kind. */
