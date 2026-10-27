@@ -57,7 +57,16 @@ export {
 } from './api/cursor.js';
 export { compareIds, compareValues, indexOrderedPage, type Page } from './api/keyset.js';
 export { iso } from './api/mapping.js';
-export { csvParam, limitParam, optionalRangeQuery, orderParam, qParam, rangedQuery, tzParam } from './api/query.js';
+export {
+	csvParam,
+	cursorParam,
+	limitParam,
+	optionalRangeQuery,
+	orderParam,
+	qParam,
+	rangedQuery,
+	tzParam
+} from './api/query.js';
 export { ROLLUP_INDEX } from './analytics/analytics-repository.js';
 export { isoDate, listResponse, staleField } from './api/responses.js';
 export { prefixRegex } from './api/search.js';
