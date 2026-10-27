@@ -107,13 +107,6 @@ grep -q "analytics database initialized" "$WORK/server.log" || {
 	cat "$WORK/server.log" >&2
 	fail "the OpenVidu server did not initialize the analytics database"
 }
-# LiveKit's Start marks the server running 100 ms after it starts serving, and a SIGTERM before that is ignored until a
-# second one: stop it only once it answers HTTP and that window has passed.
-for _ in $(seq 1 30); do
-	curl -sf -o /dev/null "http://127.0.0.1:$SERVER_HTTP_PORT/" && break
-	sleep 1
-done
-sleep 1
 # Bounded, so that a server that does not stop on SIGTERM fails here with its log instead of at the job timeout.
 kill "$SERVER_PID"
 for _ in $(seq 1 20); do
