@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.46.1.21595",
-      "templateHash": "4663408180279198376"
+      "templateHash": "1734713128178491421"
     }
   },
   "parameters": {
@@ -124,28 +124,36 @@
       "type": "int",
       "defaultValue": 1,
       "metadata": {
-        "description": "Number of initial media nodes to deploy"
+        "description": "Number of initial media nodes to deploy. Ignored when fixedNumberOfMediaNodes > 0"
       }
     },
     "minNumberOfMediaNodes": {
       "type": "int",
       "defaultValue": 1,
       "metadata": {
-        "description": "Minimum number of media nodes to deploy"
+        "description": "Minimum number of media nodes to deploy. Ignored when fixedNumberOfMediaNodes > 0"
       }
     },
     "maxNumberOfMediaNodes": {
       "type": "int",
       "defaultValue": 5,
       "metadata": {
-        "description": "Maximum number of media nodes to deploy"
+        "description": "Maximum number of media nodes to deploy. Ignored when fixedNumberOfMediaNodes > 0"
       }
     },
     "scaleTargetCPU": {
       "type": "int",
       "defaultValue": 50,
       "metadata": {
-        "description": "Target CPU percentage to scale up or down"
+        "description": "Target CPU percentage to scale up or down. Ignored when fixedNumberOfMediaNodes > 0"
+      }
+    },
+    "fixedNumberOfMediaNodes": {
+      "type": "int",
+      "defaultValue": 0,
+      "minValue": 0,
+      "metadata": {
+        "description": "If > 0, keeps this fixed number of media nodes: autoscaling is pinned to it (minimum = maximum = this number) and initialNumberOfMediaNodes, minNumberOfMediaNodes, maxNumberOfMediaNodes and scaleTargetCPU are ignored. When it is lowered, the extra media nodes are drained gracefully, one at a time, by the scale-in runbook. If 0 (default), the deployment is elastic and autoscaling is enabled"
       }
     },
     "additionalInstallFlags": {
@@ -639,9 +647,9 @@
           {
             "name": "openvidu-medianode-autoscale",
             "capacity": {
-              "minimum": "[string(parameters('minNumberOfMediaNodes'))]",
-              "maximum": "[string(parameters('maxNumberOfMediaNodes'))]",
-              "default": "[string(parameters('initialNumberOfMediaNodes'))]"
+              "minimum": "[string(if(greater(parameters('fixedNumberOfMediaNodes'), 0), parameters('fixedNumberOfMediaNodes'), parameters('minNumberOfMediaNodes')))]",
+              "maximum": "[string(if(greater(parameters('fixedNumberOfMediaNodes'), 0), parameters('fixedNumberOfMediaNodes'), parameters('maxNumberOfMediaNodes')))]",
+              "default": "[string(if(greater(parameters('fixedNumberOfMediaNodes'), 0), parameters('fixedNumberOfMediaNodes'), parameters('initialNumberOfMediaNodes')))]"
             },
             "rules": [
               {

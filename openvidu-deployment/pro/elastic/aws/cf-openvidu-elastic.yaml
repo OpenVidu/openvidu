@@ -1020,22 +1020,28 @@ Parameters:
   InitialNumberOfMediaNodes:
     Type: Number
     Default: 1
-    Description: Number of initial media nodes to deploy
+    Description: Number of initial media nodes to deploy. Ignored when FixedNumberOfMediaNodes > 0
 
   MinNumberOfMediaNodes:
     Type: Number
     Default: 1
-    Description: Minimum number of media nodes to deploy
+    Description: Minimum number of media nodes to deploy. Ignored when FixedNumberOfMediaNodes > 0
 
   MaxNumberOfMediaNodes:
     Type: Number
     Default: 5
-    Description: Maximum number of media nodes to deploy
+    Description: Maximum number of media nodes to deploy. Ignored when FixedNumberOfMediaNodes > 0
 
   ScaleTargetCPU:
     Type: Number
     Default: 50
-    Description: Target CPU percentage to scale up or down
+    Description: Target CPU percentage to scale up or down. Ignored when FixedNumberOfMediaNodes > 0
+
+  FixedNumberOfMediaNodes:
+    Type: Number
+    Default: 0
+    MinValue: 0
+    Description: If > 0, deploys a fixed number of media nodes with no autoscaling (InitialNumberOfMediaNodes, MinNumberOfMediaNodes, MaxNumberOfMediaNodes and ScaleTargetCPU are ignored). If 0 (default), the deployment is elastic and autoscaling is enabled
 
   S3AppDataBucketName:
     Type: String
@@ -1090,6 +1096,7 @@ Metadata:
       - Label:
           default: Media Nodes Autoscaling Group configuration
         Parameters:
+          - FixedNumberOfMediaNodes
           - InitialNumberOfMediaNodes
           - MinNumberOfMediaNodes
           - MaxNumberOfMediaNodes
@@ -1112,6 +1119,8 @@ Conditions:
     PublicElasticIPPresent: !Not [ !Equals [!Ref PublicElasticIP, ""] ]
     PublicElasticIPAbsent: !Equals [!Ref PublicElasticIP, ""]
     CreateRecordingsBucket: !Equals [!Ref S3AppDataBucketName, ""]
+    FixedNumberOfMediaNodesEnabled: !Not [ !Equals [!Ref FixedNumberOfMediaNodes, 0] ]
+    AutoscalingEnabled: !Equals [!Ref FixedNumberOfMediaNodes, 0]
     IsMasterGraviton: !Or
       - !Equals [ !Select [ 0, !Split ['.', !Ref MasterNodeInstanceType ]], 't4g']
       - !Equals [ !Select [ 0, !Split ['.', !Ref MasterNodeInstanceType ]], 'c6g']
@@ -2576,9 +2585,9 @@ Resources:
       LaunchTemplate:
         LaunchTemplateId: !Ref OpenViduMediaNodeLaunchTemplate
         Version: !GetAtt OpenViduMediaNodeLaunchTemplate.DefaultVersionNumber
-      MinSize: !Ref MinNumberOfMediaNodes
-      MaxSize: !Ref MaxNumberOfMediaNodes
-      DesiredCapacity: !Ref InitialNumberOfMediaNodes
+      MinSize: !If [FixedNumberOfMediaNodesEnabled, !Ref FixedNumberOfMediaNodes, !Ref MinNumberOfMediaNodes]
+      MaxSize: !If [FixedNumberOfMediaNodesEnabled, !Ref FixedNumberOfMediaNodes, !Ref MaxNumberOfMediaNodes]
+      DesiredCapacity: !If [FixedNumberOfMediaNodesEnabled, !Ref FixedNumberOfMediaNodes, !Ref InitialNumberOfMediaNodes]
       VPCZoneIdentifier: !Ref OpenViduMediaNodeSubnets
       Tags:
         - Key: Name
@@ -2741,6 +2750,7 @@ Resources:
 
   OpenViduMediaNodeASGScalingPolicy:
     Type: AWS::AutoScaling::ScalingPolicy
+    Condition: AutoscalingEnabled
     Properties:
       AutoScalingGroupName: !Ref OpenViduMediaNodeASG
       PolicyType: TargetTrackingScaling

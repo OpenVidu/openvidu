@@ -98,27 +98,37 @@ variable "mediaNodeInstanceType" {
 }
 
 variable "initialNumberOfMediaNodes" {
-  description = "Number of initial media nodes to deploy"
+  description = "Number of initial media nodes to deploy. Ignored when fixedNumberOfMediaNodes > 0"
   type        = number
   default     = 1
 }
 
 variable "minNumberOfMediaNodes" {
-  description = "Minimum number of media nodes to deploy"
+  description = "Minimum number of media nodes to deploy. Ignored when fixedNumberOfMediaNodes > 0"
   type        = number
   default     = 1
 }
 
 variable "maxNumberOfMediaNodes" {
-  description = "Maximum number of media nodes to deploy"
+  description = "Maximum number of media nodes to deploy. Ignored when fixedNumberOfMediaNodes > 0"
   type        = number
   default     = 5
 }
 
 variable "scaleTargetCPU" {
-  description = "Target CPU percentage to scale up or down"
+  description = "Target CPU percentage to scale up or down. Ignored when fixedNumberOfMediaNodes > 0"
   type        = number
   default     = 50
+}
+
+variable "fixedNumberOfMediaNodes" {
+  description = "If > 0, deploys a fixed number of media nodes with no autoscaling (initialNumberOfMediaNodes, minNumberOfMediaNodes, maxNumberOfMediaNodes and scaleTargetCPU are ignored). If 0 (default), the deployment is elastic and autoscaling is enabled"
+  type        = number
+  default     = 0
+  validation {
+    condition     = var.fixedNumberOfMediaNodes >= 0 && floor(var.fixedNumberOfMediaNodes) == var.fixedNumberOfMediaNodes
+    error_message = "fixedNumberOfMediaNodes must be a whole number >= 0."
+  }
 }
 
 variable "bucketName" {

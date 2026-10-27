@@ -280,7 +280,7 @@ resource "google_compute_region_instance_group_manager" "media_node_group" {
   name               = lower("${var.stackName}-media-node-group")
   base_instance_name = lower("${var.stackName}-media-node")
   region             = var.region
-  target_size        = var.initialNumberOfMediaNodes
+  target_size        = var.fixedNumberOfMediaNodes > 0 ? var.fixedNumberOfMediaNodes : var.initialNumberOfMediaNodes
 
   version {
     instance_template = google_compute_instance_template.media_node_template.self_link_unique
@@ -298,11 +298,19 @@ resource "google_compute_region_instance_group_manager" "media_node_group" {
     initial_delay_sec = 3600
   }
 
+  # Terraform sets the size at creation only. Afterwards the autoscaler (scale out) and the
+  # scale-in function (scale in, and the fixedNumberOfMediaNodes reconcile) own it.
+  lifecycle {
+    ignore_changes = [target_size]
+  }
+
   depends_on = [google_compute_instance.openvidu_master_node]
 }
 
 # Autoscaler for Media Nodes
+# Not created with a fixed number of Media Nodes: the scale-in function keeps the MIG at that size.
 resource "google_compute_region_autoscaler" "media_node_autoscaler" {
+  count  = var.fixedNumberOfMediaNodes > 0 ? 0 : 1
   name   = lower("${var.stackName}-media-node-autoscaler")
   region = var.region
   target = google_compute_region_instance_group_manager.media_node_group.self_link
@@ -364,6 +372,8 @@ def scalein_function(request):
   """
   Cloud Function to handle scale-in operations for media node instances.
   Abandons oldest instances when autoscaler recommends fewer instances.
+  With a fixed number of Media Nodes (no autoscaler), keeps the MIG at that number:
+  abandons the extra instances or resizes the MIG up.
   """
   print("Starting scale-in function")  # Also use print for Cloud Run logs
   logger.info("Starting scale-in function")
@@ -380,6 +390,13 @@ def scalein_function(request):
     mig_name = f"{stack_name.lower()}-media-node-group"
     autoscaler_name = f"{stack_name.lower()}-media-node-autoscaler"
     
+    # Fixed number of Media Nodes: there is no autoscaler, keep the MIG at that number
+    fixed_number = _get_fixed_number_of_media_nodes()
+    if fixed_number > 0:
+      return _reconcile_fixed_size(
+        clients, project_id, region, mig_name, fixed_number
+      )
+
     print(f"Checking MIG: {mig_name} and autoscaler: {autoscaler_name}")
     logger.info(f"Checking MIG: {mig_name} and autoscaler: {autoscaler_name}")
     
@@ -450,6 +467,14 @@ def _parse_and_validate_request(request) -> Tuple[str, str, str]:
   return project_id, region, stack_name
 
 
+def _get_fixed_number_of_media_nodes() -> int:
+  """Get the fixed number of Media Nodes (0 means autoscaling)."""
+  fixed_number = int(os.environ.get('FIXED_NUMBER_OF_MEDIA_NODES', '0'))
+  if fixed_number < 0:
+    raise ValueError(f"FIXED_NUMBER_OF_MEDIA_NODES must be >= 0, got {fixed_number}")
+  return fixed_number
+
+
 def _initialize_gcp_clients() -> Dict:
   """Initialize all required GCP clients."""
   print("Initializing GCP clients...")
@@ -491,6 +516,80 @@ def _get_scaling_info(clients: Dict, project_id: str, region: str,
     error_msg = f"Failed to get scaling information: {str(e)}"
     print(error_msg)
     raise Exception(error_msg)
+
+
+def _get_current_size(clients: Dict, project_id: str, region: str,
+           mig_name: str) -> int:
+  """Get current MIG size (fixed number of Media Nodes, no autoscaler)."""
+  print(f"Getting current size for MIG: {mig_name}")
+  try:
+    mig_request = compute_v1.GetRegionInstanceGroupManagerRequest(
+      project=project_id,
+      region=region,
+      instance_group_manager=mig_name
+    )
+    mig = clients['mig'].get(request=mig_request)
+    current_size = mig.target_size
+
+    print(f"Retrieved current size: {current_size}")
+    return current_size
+
+  except Exception as e:
+    error_msg = f"Failed to get current size: {str(e)}"
+    print(error_msg)
+    raise Exception(error_msg)
+
+
+def _reconcile_fixed_size(clients: Dict, project_id: str, region: str,
+           mig_name: str, fixed_number: int) -> Dict:
+  """Keep the MIG at the fixed number of Media Nodes."""
+  current_size = _get_current_size(clients, project_id, region, mig_name)
+
+  print(f"Current size: {current_size}, Fixed number of Media Nodes: {fixed_number}")
+  logger.info(f"Current size: {current_size}, Fixed number of Media Nodes: {fixed_number}")
+
+  if current_size == fixed_number:
+    message = "No scale-in or scale-out operation needed"
+    print(message)
+    logger.info(message)
+    return {
+      "message": message,
+      "current_size": current_size,
+      "fixed_number": fixed_number
+    }
+
+  if current_size < fixed_number:
+    # Fewer Media Nodes than the fixed number: resize the MIG up
+    print(f"Scale-out needed: resizing MIG from {current_size} to {fixed_number} instances")
+
+    operation = _resize_mig(clients['mig'], project_id, region, mig_name, fixed_number)
+
+    success_message = f"Successfully resized MIG from {current_size} to {fixed_number} instances"
+    print(success_message)
+    logger.info(success_message)
+
+    return {
+      "message": success_message,
+      "operation_name": operation.name
+    }
+
+  # More Media Nodes than the fixed number: abandon the extra ones so they drain gracefully
+  instances_to_abandon = current_size - fixed_number
+  print(f"Scale-in needed: abandoning {instances_to_abandon} instances")
+
+  result = _perform_scalein(
+    clients, project_id, region, mig_name, instances_to_abandon
+  )
+
+  success_message = f"Successfully abandoned {result['abandoned_count']} instances"
+  print(success_message)
+  logger.info(success_message)
+
+  return {
+    "message": success_message,
+    "abandoned_instances": result['abandoned_instances'],
+    "operation_name": result['operation_name']
+  }
 
 
 def _perform_scalein(clients: Dict, project_id: str, region: str, 
@@ -582,6 +681,21 @@ def _abandon_instances(mig_client, project_id: str, region: str,
   operation = mig_client.abandon_instances(request=abandon_request)
   print(f"Abandon operation initiated: {operation.name}")
   return operation
+
+def _resize_mig(mig_client, project_id: str, region: str,
+       mig_name: str, size: int):
+  """Resize the MIG to the given number of instances."""
+  print(f"Resizing MIG to {size} instances")
+  resize_request = compute_v1.ResizeRegionInstanceGroupManagerRequest(
+    project=project_id,
+    region=region,
+    instance_group_manager=mig_name,
+    size=size
+  )
+
+  operation = mig_client.resize(request=resize_request)
+  print(f"Resize operation initiated: {operation.name}")
+  return operation
 EOF
 
   function_requirements = <<EOF
@@ -593,7 +707,9 @@ EOF
 }
 
 resource "google_storage_bucket_object" "function_source" {
-  name   = "function-source.zip"
+  # The code's hash in the name: a template update that changes the function also changes
+  # the object, so the function is rebuilt. With a constant name it kept running the old code.
+  name   = "function-source-${data.archive_file.function_source.output_md5}.zip"
   bucket = local.isEmpty ? google_storage_bucket.bucket[0].name : var.bucketName
   source = data.archive_file.function_source.output_path
 
@@ -621,9 +737,10 @@ resource "google_cloudfunctions2_function" "scalein_function" {
     available_memory   = "512M"
     timeout_seconds    = 300
     environment_variables = {
-      PROJECT_ID = var.projectId
-      REGION     = var.region
-      STACK_NAME = var.stackName
+      PROJECT_ID                  = var.projectId
+      REGION                      = var.region
+      STACK_NAME                  = var.stackName
+      FIXED_NUMBER_OF_MEDIA_NODES = tostring(var.fixedNumberOfMediaNodes)
     }
     service_account_email = google_service_account.service_account.email
   }
@@ -1758,4 +1875,11 @@ CHECK_ABANDONED_EOF
   echo "*/1 * * * * /usr/local/bin/check_abandoned.sh > /var/log/openvidu-abandoned-check.log 2>&1" | crontab -
 fi
 EOF
+}
+
+# fixedNumberOfMediaNodes gave the autoscaler a count. A deployment created before keeps
+# it under its old address, so a re-apply moves it instead of destroying and recreating it.
+moved {
+  from = google_compute_region_autoscaler.media_node_autoscaler
+  to   = google_compute_region_autoscaler.media_node_autoscaler[0]
 }

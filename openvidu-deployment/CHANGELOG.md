@@ -35,6 +35,18 @@ in the [openvidu-oracle](https://github.com/OpenVidu/openvidu-oracle) and
   - `journalctl -u openvidu-media-health` on a Media Node shows what it is doing, and
     `sudo touch /etc/openvidu/media-health.disabled` pauses it (for example during manual maintenance);
     deleting the file resumes it.
+- Elastic and High Availability deployments on AWS, Azure and Google Cloud can run a fixed number of Media
+  Nodes, as DigitalOcean and Oracle Cloud already could, with the same parameter: `FixedNumberOfMediaNodes`
+  on AWS, `fixedNumberOfMediaNodes` on the other clouds. With a value greater than 0 the deployment runs
+  exactly that many Media Nodes with no autoscaling, and the initial, minimum, maximum and target CPU
+  parameters are ignored. The default, 0, keeps autoscaling. An unhealthy Media Node is still replaced.
+  Changing the number, or switching between the two modes, is a redeploy of the template with the new value.
+  Raising the number adds Media Nodes. On AWS and Google Cloud, lowering it drains the Media Nodes it removes
+  gracefully, as in a scale-in: each one stops accepting new Rooms and is removed when its ongoing Rooms,
+  recordings and ingests end. Azure does not accept a number below the Media Nodes running, because they
+  protect themselves from scale-in: drain the extra ones first (manual scale, then
+  `/usr/local/bin/stop_media_node.sh` on each, which removes itself the same graceful way) and then redeploy.
+  The administration documentation of each cloud describes the steps.
 
 #### AWS
 
@@ -90,5 +102,5 @@ in the [openvidu-oracle](https://github.com/OpenVidu/openvidu-oracle) and
     under a new name. The webhooks of earlier deployments stay unused in the Automation account until they
     expire.
 
-  A redeploy still cannot set the minimum or maximum number of Media Nodes below the Media Nodes
+  A redeploy still cannot set the fixed, minimum or maximum number of Media Nodes below the Media Nodes
   running (`UnsupportedCapacity`); the administration documentation describes how to remove them first.

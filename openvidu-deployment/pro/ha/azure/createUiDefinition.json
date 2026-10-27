@@ -367,6 +367,22 @@
                     "label": "Media Nodes Sacle Set configuration",
                     "elements": [
                         {
+                            "name": "fixedNumberOfMediaNodes",
+                            "type": "Microsoft.Common.TextBox",
+                            "label": "Fixed Number Of Media Nodes",
+                            "subLabel": "If > 0, deploys a fixed number of media nodes with no autoscaling (the Initial/Min/Max/Scale Target CPU values are ignored). If 0 (default), the deployment is elastic and autoscaling is enabled",
+                            "defaultValue": "0",
+                            "toolTip": "",
+                            "constraints": {
+                                "required": false,
+                                "regex": "^[0-9]+$",
+                                "validationMessage": "Must be an integer greater than or equal to 0",
+                                "validations": []
+                            },
+                            "infoMessages": [],
+                            "visible": true
+                        },
+                        {
                             "name": "initialNumberOfMediaNodes",
                             "type": "Microsoft.Common.TextBox",
                             "label": "Initial Number Of Media Nodes",
@@ -546,6 +562,7 @@
                 "mediaNodeInstanceType": "[steps('parameters INSTANCE').mediaNodeInstanceType]",
                 "adminUsername": "[steps('parameters INSTANCE').adminUsername]",
                 "adminSshKey": "[steps('parameters INSTANCE').adminSshKey]",
+                "fixedNumberOfMediaNodes": "[steps('parameters SCALING').fixedNumberOfMediaNodes]",
                 "initialNumberOfMediaNodes": "[steps('parameters SCALING').initialNumberOfMediaNodes]",
                 "minNumberOfMediaNodes": "[steps('parameters SCALING').minNumberOfMediaNodes]",
                 "maxNumberOfMediaNodes": "[steps('parameters SCALING').maxNumberOfMediaNodes]",

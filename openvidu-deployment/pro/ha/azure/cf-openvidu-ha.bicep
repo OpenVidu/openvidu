@@ -62,17 +62,21 @@ param adminUsername string
 @secure()
 param adminSshKey object
 
-@description('Number of initial media nodes to deploy')
+@description('Number of initial media nodes to deploy. Ignored when fixedNumberOfMediaNodes > 0')
 param initialNumberOfMediaNodes int = 1
 
-@description('Minimum number of media nodes to deploy')
+@description('Minimum number of media nodes to deploy. Ignored when fixedNumberOfMediaNodes > 0')
 param minNumberOfMediaNodes int = 1
 
-@description('Maximum number of media nodes to deploy')
+@description('Maximum number of media nodes to deploy. Ignored when fixedNumberOfMediaNodes > 0')
 param maxNumberOfMediaNodes int = 5
 
-@description('Target CPU percentage to scale up or down')
+@description('Target CPU percentage to scale up or down. Ignored when fixedNumberOfMediaNodes > 0')
 param scaleTargetCPU int = 50
+
+@description('If > 0, keeps this fixed number of media nodes: autoscaling is pinned to it (minimum = maximum = this number) and initialNumberOfMediaNodes, minNumberOfMediaNodes, maxNumberOfMediaNodes and scaleTargetCPU are ignored. When it is lowered, the extra media nodes are drained gracefully, one at a time, by the scale-in runbook. If 0 (default), the deployment is elastic and autoscaling is enabled')
+@minValue(0)
+param fixedNumberOfMediaNodes int = 0
 
 param additionalInstallFlags string = ''
 
@@ -1906,6 +1910,15 @@ resource openviduScaleSetMediaNode 'Microsoft.Compute/virtualMachineScaleSets@20
   }
 }
 
+// Always deployed and always enabled, so a redeploy switches modes both ways (an incremental
+// ARM deployment never deletes a resource the template stops declaring). With a fixed number
+// of Media Nodes autoscaling is pinned to it, not disabled: minimum = maximum = default, so
+// the CPU rules are inert. Azure refuses a minimum or a maximum below the Media Nodes that are
+// running, because they protect themselves from scale-in: a redeploy can raise the fixed
+// number (or minNumberOfMediaNodes) but not lower it below the Media Nodes running. To lower
+// it, switch the scale set to manual scale, drain the extra Media Nodes with
+// /usr/local/bin/stop_media_node.sh (each one removes itself once its Rooms end), and then
+// redeploy.
 resource openviduAutoScaleSettingsMediaNode 'Microsoft.Insights/autoscaleSettings@2022-10-01' = {
   name: '${stackName}-autoscaleSettings'
   location: resourceGroup().location
@@ -1914,9 +1927,9 @@ resource openviduAutoScaleSettingsMediaNode 'Microsoft.Insights/autoscaleSetting
       {
         name: 'openvidu-medianode-autoscale'
         capacity: {
-          minimum: string(minNumberOfMediaNodes)
-          maximum: string(maxNumberOfMediaNodes)
-          default: string(initialNumberOfMediaNodes)
+          minimum: string(fixedNumberOfMediaNodes > 0 ? fixedNumberOfMediaNodes : minNumberOfMediaNodes)
+          maximum: string(fixedNumberOfMediaNodes > 0 ? fixedNumberOfMediaNodes : maxNumberOfMediaNodes)
+          default: string(fixedNumberOfMediaNodes > 0 ? fixedNumberOfMediaNodes : initialNumberOfMediaNodes)
         }
         rules: [
           {
