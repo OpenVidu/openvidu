@@ -2015,6 +2015,49 @@ public class OpenViduTestAppE2eEgressProTest extends AbstractOpenViduTestappE2eT
 		recording.named("microphone").assertMarkers(6);
 	}
 
+	@Test
+	@DisplayName("Template variables in the filepath")
+	void filepathTemplateTest() throws Exception {
+		log.info("Participant Passthrough: filepath with template variables");
+		String room = uniqueRoom("template");
+		Publisher alice = joinPublisher("chrome", room, "alice", "vp8", true, true, true);
+		// the room, the participant and the start time in the directory and the name,
+		// with an extension that is not the file's: it is replaced
+		String egressId = startParticipantRecording(room, "alice",
+				"passthrough/{room_name}/{publisher_identity}-{room_id}-{time}.mp4");
+		waitUntilEgressStatus(egressId, "EGRESS_ACTIVE", 20);
+		Thread.sleep(3000);
+		alice.addScreen();
+		Thread.sleep(5000);
+		Recordings recordings = stopAndGetRecordings(egressId);
+		recordings.assertFiles("camera", "screen");
+		recordings.camera().assertFinalized();
+		recordings.camera().assertTracks("audio:opus", "video:vp8");
+		recordings.screen().assertFinalized();
+		recordings.screen().assertTracks("video:vp8");
+
+		String roomId = getEgress(egressId).get("room_id").getAsString();
+		String cameraKey = recordings.keys.get(0);
+		String screenKey = recordings.keys.get(1);
+		Assertions.assertTrue(
+				Pattern.matches("passthrough/" + Pattern.quote(room) + "/alice-" + Pattern.quote(roomId)
+						+ "-\\d{4}-\\d{2}-\\d{2}T\\d{6}\\.webm", cameraKey),
+				"Every variable must be expanded in the camera file, with the container's extension: " + cameraKey);
+		Assertions.assertEquals(cameraKey.replaceAll("\\.webm$", "-screen.webm"), screenKey,
+				"The screen file is named after the expanded camera file");
+		// the manifest names the files as they were stored
+		for (JsonElement file : recordings.manifest.getAsJsonArray("files")) {
+			String filename = file.getAsJsonObject().get("filename").getAsString();
+			Assertions.assertTrue(recordings.keys.contains(filename),
+					"The manifest lists " + filename + ", not among " + recordings.keys);
+		}
+		for (JsonElement track : recordings.manifest.getAsJsonArray("tracks")) {
+			String filename = track.getAsJsonObject().get("file").getAsString();
+			Assertions.assertTrue(recordings.keys.contains(filename),
+					"A manifest track is in " + filename + ", not among " + recordings.keys);
+		}
+	}
+
 	// ----- Robustness -----
 
 	@Test
