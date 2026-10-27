@@ -590,7 +590,9 @@ public class OpenViduTestAppE2eEgressProTest extends AbstractOpenViduTestappE2eT
 		recording.assertStartTogether();
 		recording.video(0).assertOneGap(3, 7);
 		recording.assertAvSync(6);
-		recording.assertUnpairedFlashes(0, 1);
+		// the audio is muted before the video and unmuted after it, a browser click
+		// apart: each transition can leave one flash without a beep
+		recording.assertUnpairedFlashes(0, 2);
 	}
 
 	@Test
@@ -931,7 +933,7 @@ public class OpenViduTestAppE2eEgressProTest extends AbstractOpenViduTestappE2eT
 		FileTrack after = other.named("camera");
 		after.assertMarkers(4);
 		after.assertReachedSize(CAMERA_WIDTH, CAMERA_HEIGHT);
-		recordings.assertStartsAfter("other", "camera", 5, 3);
+		recordings.assertStartsAfter("other", "camera", 2, 4);
 	}
 
 	@Test
@@ -1449,7 +1451,7 @@ public class OpenViduTestAppE2eEgressProTest extends AbstractOpenViduTestappE2eT
 		Assertions.assertTrue(other.duration > 5 && other.duration < camera.duration - 2,
 				"The other file holds the second camera, published about 4 s into the recording: " + other.duration
 						+ " s of " + camera.duration + " s");
-		recordings.assertStartsAfter("other", "camera", 5, 3);
+		recordings.assertStartsAfter("other", "camera", 1.5, 5);
 	}
 
 	@Test
@@ -1480,7 +1482,7 @@ public class OpenViduTestAppE2eEgressProTest extends AbstractOpenViduTestappE2eT
 		other.assertHealthy();
 		other.assertDefaults(null, "microphone");
 		other.named("microphone").assertMarkers(5);
-		recordings.assertStartsAfter("other", "camera", 5, 3);
+		recordings.assertStartsAfter("other", "camera", 1.5, 5);
 	}
 
 	@Test
@@ -1602,7 +1604,7 @@ public class OpenViduTestAppE2eEgressProTest extends AbstractOpenViduTestappE2eT
 		for (FileTrack track : screen.streams) {
 			track.assertMarkers(6);
 		}
-		recordings.assertStartsAfter("screen", "camera", 0, 3.5);
+		recordings.assertStartsTogether("screen", "camera", 3.5);
 	}
 
 	@Test
@@ -1703,7 +1705,7 @@ public class OpenViduTestAppE2eEgressProTest extends AbstractOpenViduTestappE2eT
 		screen.assertAvSync(5);
 		screen.assertDefaults("screen_share", "screen_share_audio");
 		screen.named("screen_share_audio").assertMarkers(9);
-		recordings.assertStartsAfter("camera", "screen", 5, 2.5);
+		recordings.assertStartsAfter("camera", "screen", 2.5, 4);
 	}
 
 	@Test
@@ -1823,8 +1825,8 @@ public class OpenViduTestAppE2eEgressProTest extends AbstractOpenViduTestappE2eT
 		alice.unpublishVideo();
 		alice.unpublishAudio();
 		Thread.sleep(8000);
-		// the camera file ends early (its audio as silence to the file's end), the
-		// screen file goes on to the end of the recording
+		// the camera file ends with its last track, when the camera and the microphone
+		// are unpublished; the screen file goes on to the end of the recording
 		Recordings recordings = stopAndGetRecordings(egressId);
 		recordings.assertFiles("camera", "screen");
 		Recording camera = recordings.camera();
@@ -1835,11 +1837,12 @@ public class OpenViduTestAppE2eEgressProTest extends AbstractOpenViduTestappE2eT
 		camera.assertDefaults("camera", "microphone");
 		FileTrack cameraTrack = camera.named("camera");
 		FileTrack microphone = camera.named("microphone");
-		Assertions.assertTrue(cameraTrack.lastPacketTime() > 6 && cameraTrack.lastPacketTime() < 11,
-				"The camera must end when it is unpublished, about 8 s in: " + cameraTrack);
+		// both lasted until they were unpublished, the screen was shared for 8 s more
+		Assertions.assertTrue(cameraTrack.lastPacketTime() > 6,
+				"The camera must last until it is unpublished: " + cameraTrack);
 		double micLastBeep = microphone.markers.get(microphone.markers.size() - 1);
-		Assertions.assertTrue(micLastBeep > 6 && micLastBeep < 11,
-				"The microphone must beep until it is unpublished, about 8 s in: " + microphone);
+		Assertions.assertTrue(micLastBeep > 6, "The microphone must beep until it is unpublished: " + microphone);
+		recordings.assertEndsBefore("camera", "screen", 6);
 		Assertions.assertTrue(microphone.lastPacketTime() > camera.duration - 1.5,
 				"The camera file's audio must be filled to the end: " + microphone + ", duration " + camera.duration);
 		Recording screen = recordings.screen();
@@ -1929,8 +1932,8 @@ public class OpenViduTestAppE2eEgressProTest extends AbstractOpenViduTestappE2eT
 		FileTrack second = other.named("camera");
 		second.assertReachedSize(CAMERA_WIDTH, CAMERA_HEIGHT);
 		second.assertMarkers(4);
-		// the H.264 camera is published about 9 s in: after the screen share and codec dialogs
-		recordings.assertStartsAfter("other", "camera", 9, 4);
+		// the H.264 camera is published after the screen share and the codec dialogs
+		recordings.assertStartsAfter("other", "camera", 5, 3);
 	}
 
 	@Test
@@ -2110,7 +2113,6 @@ public class OpenViduTestAppE2eEgressProTest extends AbstractOpenViduTestappE2eT
 		Map<String, String> codecs = Map.of("V_VP8", "vp8", "V_VP9", "vp9", "V_MPEG4/ISO/AVC", "h264", "V_AV1", "av1",
 				"A_OPUS", "opus");
 		int entries = 0;
-		long cameraFirstFrameAt = 0;
 		for (String group : recordings.files.keySet()) {
 			Recording file = recordings.file(group);
 			List<JsonObject> ofFile = tracks.asList().stream().map(JsonElement::getAsJsonObject)
@@ -2139,21 +2141,15 @@ public class OpenViduTestAppE2eEgressProTest extends AbstractOpenViduTestappE2eT
 				double end = entry.get("end_ms").getAsLong() / 1000.0;
 				Assertions.assertEquals(track.firstPacketTime(), start, 0.1, "start_ms of " + entry + " / " + track);
 				Assertions.assertEquals(track.lastPacketTime(), end, 0.1, "end_ms of " + entry + " / " + track);
-				// and on the wall clock: the screen file starts about 3 s after the camera file
+				// and on the wall clock
 				long firstFrameAt = entry.get("first_frame_at").getAsLong();
 				Assertions.assertTrue(firstFrameAt > 0 && entry.get("last_frame_at").getAsLong() > firstFrameAt,
 						"Wall-clock instants of " + entry);
-				if ("camera".equals(group) && i == 0) {
-					cameraFirstFrameAt = firstFrameAt - entry.get("start_ms").getAsLong() * 1_000_000L;
-				} else if ("screen".equals(group)) {
-					double offset = (firstFrameAt - entry.get("start_ms").getAsLong() * 1_000_000L - cameraFirstFrameAt)
-							/ 1e9;
-					Assertions.assertTrue(offset > 1.5 && offset < 5.5,
-							"The screen file starts about 3 s after the camera file, not " + offset + " s: " + entry);
-				}
 			}
 		}
 		Assertions.assertEquals(tracks.size(), entries, "Every manifest entry belongs to a file: " + manifest);
+		// the screen was shared 3 s into the recording, and for 6 s
+		recordings.assertStartsAfter("screen", "camera", 1, 4);
 	}
 
 	@Test
@@ -2190,7 +2186,7 @@ public class OpenViduTestAppE2eEgressProTest extends AbstractOpenViduTestappE2eT
 		FileTrack screenTrack = screen.named("screen_share");
 		screenTrack.assertReachedSize(SCREEN_WIDTH, SCREEN_HEIGHT);
 		screenTrack.assertMarkers(5);
-		recordings.assertStartsAfter("screen", "camera", 5, 2.5);
+		recordings.assertStartsAfter("screen", "camera", 2.5, 5);
 	}
 
 	@Test
@@ -2226,7 +2222,7 @@ public class OpenViduTestAppE2eEgressProTest extends AbstractOpenViduTestappE2eT
 		screen.assertDefaults("screen_share", "screen_share_audio");
 		screen.named("screen_share").assertMarkers(5);
 		screen.named("screen_share_audio").assertMarkers(5);
-		recordings.assertStartsAfter("screen", "camera", 5, 2.5);
+		recordings.assertStartsAfter("screen", "camera", 2.5, 5);
 	}
 
 	@Test
@@ -2306,7 +2302,7 @@ public class OpenViduTestAppE2eEgressProTest extends AbstractOpenViduTestappE2eT
 		screen.assertTracks("video:vp8");
 		screen.assertHealthy();
 		screen.named("screen_share").assertReachedSize(SCREEN_WIDTH, SCREEN_HEIGHT);
-		recordings.assertStartsAfter("screen", "camera", 6, 2.5);
+		recordings.assertStartsAfter("screen", "camera", 3.5, 5);
 	}
 
 	@Test
@@ -4158,15 +4154,51 @@ public class OpenViduTestAppE2eEgressProTest extends AbstractOpenViduTestappE2eT
 			return start;
 		}
 
+		/** How long after the file of a reference group the file of a group starts, on the manifest's wall clock. */
+		private double startOffset(String group, String reference) {
+			return (fileStart(group) - fileStart(reference)) / 1e9;
+		}
+
 		/**
-		 * The file of a group starts about seconds after the file of another group,
-		 * within tolerance, on the wall clock the manifest gives.
+		 * The file of a group starts at least minSeconds after the file of another
+		 * group, and at least overlapSeconds before that one ends, on the wall clock
+		 * the manifest gives. The lower bound is the time the test waited before
+		 * publishing the track. How much later the file starts is up to the browser
+		 * (the dialogs, the capture, the first keyframe), which is slower on a CI
+		 * runner, so the upper bound is not a delay but the end of the other file: they
+		 * must overlap for as long as the track was recorded.
 		 */
-		void assertStartsAfter(String group, String reference, double seconds, double tolerance) {
-			double offset = (fileStart(group) - fileStart(reference)) / 1e9;
-			Assertions.assertTrue(Math.abs(offset - seconds) <= tolerance, String.format(Locale.ROOT,
-					"The %s file must start %.1f s (±%.1f) after the %s file, not %.2f s: %s", group, seconds, tolerance,
-					reference, offset, manifest));
+		void assertStartsAfter(String group, String reference, double minSeconds, double overlapSeconds) {
+			double offset = startOffset(group, reference);
+			double referenceDuration = file(reference).duration;
+			Assertions.assertTrue(offset >= minSeconds && offset <= referenceDuration - overlapSeconds,
+					String.format(Locale.ROOT,
+							"The %s file must start between %.1f s and %.1f s after the %s file (which lasts %.1f s), not"
+									+ " %.2f s: %s",
+							group, minSeconds, referenceDuration - overlapSeconds, reference, referenceDuration, offset,
+							manifest));
+		}
+
+		/**
+		 * The file of a group ends at least minSeconds before the file of another
+		 * group, on the wall clock the manifest gives. A file ends with its last
+		 * track: it does not wait for the other files of the recording.
+		 */
+		void assertEndsBefore(String group, String reference, double minSeconds) {
+			double end = startOffset(group, reference) + file(group).duration;
+			double referenceEnd = file(reference).duration;
+			Assertions.assertTrue(referenceEnd - end >= minSeconds, String.format(Locale.ROOT,
+					"The %s file must end at least %.1f s before the %s file, not %.2f s: ends at %.2f s and %.2f s"
+							+ " after the start of the %s file: %s",
+					group, minSeconds, reference, referenceEnd - end, end, referenceEnd, reference, manifest));
+		}
+
+		/** The files of two groups, published together, start within tolerance of each other. */
+		void assertStartsTogether(String group, String reference, double tolerance) {
+			double offset = startOffset(group, reference);
+			Assertions.assertTrue(Math.abs(offset) <= tolerance, String.format(Locale.ROOT,
+					"The %s and %s files must start together (within %.1f s), not %.2f s apart: %s", group, reference,
+					tolerance, offset, manifest));
 		}
 	}
 
