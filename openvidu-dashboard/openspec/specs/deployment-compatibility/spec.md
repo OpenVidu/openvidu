@@ -90,7 +90,7 @@ that MongoDB is disabled and exit with code 0 before connecting to anything; uns
 
 ### Requirement: TLS certificate authority for external MongoDB
 Both editions. When `DATABASE_TLS_CA_FILE` is set, the dashboard SHALL connect with TLS and trust the PEM
-bundle at that path (for services such as Amazon DocumentDB).
+bundle at that path (for MongoDB services whose certificates a private CA signs).
 
 #### Scenario: Private CA accepted
 - **GIVEN** a MongoDB server presenting a certificate signed by a private CA and `DATABASE_TLS_CA_FILE`
