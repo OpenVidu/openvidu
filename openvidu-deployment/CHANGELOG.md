@@ -138,6 +138,9 @@ in the [openvidu-oracle](https://github.com/OpenVidu/openvidu-oracle) and
 
   A redeploy still cannot set the fixed, minimum or maximum number of Media Nodes below the Media Nodes
   running (`UnsupportedCapacity`); the administration documentation describes how to remove them first.
+- Professional single node, Elastic and High Availability: the network security group rule for WebRTC over
+  TCP opened only ports 50000 and 60000 instead of the range between them. It now opens 50000-60000, as the
+  rule for UDP does.
 - Single node and Elastic: the network security group still allowed port 9000 (MinIO) from the Internet.
   MinIO does not run in Azure deployments, which store recordings and application data in Azure Blob Storage,
   and the other clouds have kept this port closed since 3.9.0. The rule is removed.
