@@ -155,3 +155,8 @@ in the [openvidu-oracle](https://github.com/OpenVidu/openvidu-oracle) and
 - Elastic and High Availability: the OpenVidu v2 compatibility module (`v2compatibility`) was not enabled by
   default, unlike on every other cloud and on DigitalOcean's Professional single node. It is now enabled by
   default.
+- Elastic and High Availability: changing `fixedNumberOfMediaNodes` replaced every fixed Media Node, the ones
+  that stay included, and cut their Rooms, because the Media Nodes' user data carried the number. It now
+  carries only whether the number is fixed, so raising or lowering it creates or removes only the extra
+  Media Nodes. A deployment with more than one fixed Media Node has them replaced once, the first time this
+  version of the template is applied.
