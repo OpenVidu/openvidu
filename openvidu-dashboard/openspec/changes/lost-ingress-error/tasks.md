@@ -8,7 +8,7 @@
 
 ## 2. Tests
 
-- [ ] 2.1 Run the lost ingress case of the end-to-end reconciler tests on the deployment playground. Verify that it
+- [x] 2.1 Run the lost ingress case of the end-to-end reconciler tests on the deployment playground. Verify that it
       passes.
 
 ## 3. Docs and CHANGELOG
