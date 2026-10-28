@@ -281,6 +281,11 @@ and `error`; the store reconciler SHALL close only candidate egress and ingress 
 - **WHEN** the server-side reconciler emits `EGRESS_ENDED` with status FAILED and error "egress lost"
 - **THEN** the egress document has `status: "failed"`, `error` from the event and `closedBy: "event"`
 
+#### Scenario: Ingress lost after the room is gone
+- **GIVEN** a publishing ingress session whose ingress service died and whose room was deleted
+- **WHEN** the server-side reconciler resets its state to `ENDPOINT_INACTIVE` with error "ingress lost" and emits `INGRESS_ENDED`
+- **THEN** the ingress session has `status: "error"`, `error: "ingress lost"` and `closedBy: "event"`, and the ingress is `inactive`, ready for another session
+
 #### Scenario: Store fallback for an egress
 - **GIVEN** a candidate egress (room closed for more than 2 × cleanup interval, node dead)
 - **WHEN** the reconciler closes it
