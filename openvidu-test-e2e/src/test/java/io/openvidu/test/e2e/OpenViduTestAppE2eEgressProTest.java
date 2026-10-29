@@ -182,10 +182,17 @@ public class OpenViduTestAppE2eEgressProTest extends AbstractOpenViduTestappE2eT
 	// milliseconds, the sync engine keeps rebuilding its audio estimate and the
 	// offset wobbles some 15 ms. A track the trouble left misplaced is off by far
 	// more (4.6 s, before the sync engine was set to keep capture times)
-	// TODO: this will be fixed when upgrading mediasoup to 3.27.0 or later: its
-	// sender reports carry microseconds (PR #1918), so the sync engine should stop
-	// rebuilding its audio estimate every 10-30 s, and the wobble with it (needs a
-	// mediasoup-go that speaks the 3.27 worker protocol)
+	// Checked with mediasoup 3.32.0 (sender reports in microseconds since 3.27.0,
+	// PR #1918): the rebuilds remain, every 10-30 s on the audio track (19
+	// rebuilds and 111 rejected reports over the 4 outage/jitter/congestion tests,
+	// against 24 and 144 with 3.26.0, and 8 and 55 with LiveKit's SFU, which
+	// rebuilds every 30-40 s). The reports are not quantized any more, but
+	// the capture instant the worker maps them to is the median of a 7-sample
+	// window of the publisher's own sender reports (RemoteClockOffsetEstimator),
+	// which steps by their arrival jitter every ~1 s, and the sync engine rejects
+	// any report over 3 sigma (0.1 ms floor) off its fit. Not fixable by a
+	// mediasoup release: it would take a smoother offset in the worker or a more
+	// tolerant estimator in server-sdk-go. So the median stays.
 	private static final double HEALED_AV_TOLERANCE_MS = 70;
 	// Packets lost from the SFU to the egress: more than NACKs recover, so frames are
 	// lost for good
@@ -214,11 +221,11 @@ public class OpenViduTestAppE2eEgressProTest extends AbstractOpenViduTestappE2eT
 	// track is on its arrival times when the client sends what it queued, which
 	// places that burst late, and the error, up to 0.5 s with mediasoup, is then
 	// absorbed at 5 ms/s
-	// TODO: this will be fixed when upgrading mediasoup to 3.27.0 or later: its
-	// sender reports carry microseconds (PR #1918), so the sync engine should seldom
-	// be rebuilding an estimate as an outage begins, and this can come down to what
-	// LiveKit's SFU needs (a 205 ms correction, absorbed in 41 s; needs a
-	// mediasoup-go that speaks the 3.27 worker protocol)
+	// Checked with mediasoup 3.32.0: the sync engine still rebuilds an estimate
+	// every 10-30 s on mediasoup (see HEALED_AV_TOLERANCE_MS), so an outage still
+	// has a fair chance of starting during one and the wait stays. Could come down
+	// to what LiveKit's SFU needs (a 205 ms correction, absorbed in 41 s) only once
+	// the rebuilds are gone.
 	private static final int OUTAGE_RECOVERY_S = 100;
 	// A poor uplink from the moment the participant joins, as a weak mobile
 	// connection has: some loss, jitter and little bandwidth at once, for
