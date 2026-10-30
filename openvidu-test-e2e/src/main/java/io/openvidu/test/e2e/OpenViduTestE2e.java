@@ -3,6 +3,8 @@ package io.openvidu.test.e2e;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.ServerSocket;
@@ -13,6 +15,8 @@ import java.net.UnknownHostException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.nio.file.StandardOpenOption;
 import java.time.Duration;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
@@ -63,6 +67,7 @@ import io.openvidu.test.browsers.utils.Ffmpeg;
 import livekit.LivekitIngress.IngressInfo;
 import livekit.LivekitModels.Room;
 import okhttp3.OkHttpClient;
+import okhttp3.Request;
 import retrofit2.Response;
 
 public class OpenViduTestE2e {
@@ -157,6 +162,16 @@ public class OpenViduTestE2e {
 	// Resolved once per JVM, so that after the first success a later DNS outage
 	// cannot stop a bridged browser from being pinned.
 	private static final Map<String, String> resolvedHostAddresses = new ConcurrentHashMap<>();
+
+	// Media of the RTSP and SRT ingress tests. Each file is downloaded once per test
+	// execution, the first time a test needs it, into a temporary directory that is
+	// deleted when the JVM exits, and ffmpeg reads it from there: streaming it from S3
+	// during the test made any network problem break the stream (e.g. ffmpeg timing
+	// out connecting to S3 and the test failing on the RTSP server never starting).
+	private static final String INGRESS_MEDIA_URL = "https://s3.eu-west-1.amazonaws.com/public.openvidu.io/";
+	private static final int INGRESS_MEDIA_DOWNLOAD_ATTEMPTS = 6;
+	private static Path ingressMediaDir;
+	private static final Map<String, Path> ingressMediaFiles = new ConcurrentHashMap<>();
 
 	protected static RoomServiceClient LK;
 	protected static IngressServiceClient LK_INGRESS;
@@ -377,7 +392,7 @@ public class OpenViduTestE2e {
 		containers.add(rtspServerContainer);
 
 		final String RTSP_PATH = "live";
-		String fileUrl = getFileUrl(videoCodec != null, audioCodec != null, true);
+		String mediaFile = getMediaFile(videoCodec != null, audioCodec != null, true);
 		String codecs = getCodecs(videoCodec, audioCodec);
 		String rtspServerIp = "host.docker.internal";
 
@@ -386,7 +401,7 @@ public class OpenViduTestE2e {
 		// many times faster than realtime on fast runners: mediamtx discards most
 		// frames and, when ffmpeg finishes early and exits, terminates the reader
 		// session, killing the ingress mid-test.
-		String ffmpegCommand = "ffmpeg -re -i " + fileUrl + " " + codecs + " "
+		String ffmpegCommand = "ffmpeg -re -i " + mediaFile + " " + codecs + " "
 				+ " -async 50 -strict -2 -f rtsp -rtsp_transport tcp rtsp://" + rtspServerIp + ":" + rtspPort + "/"
 				+ RTSP_PATH;
 
@@ -395,6 +410,7 @@ public class OpenViduTestE2e {
 
 		GenericContainer<?> ffmpegPublishContainer = new GenericContainer<>(DockerImageName.parse(RTSP_SERVER_IMAGE))
 				.withCreateContainerCmdModifier(cmd -> cmd.withName("ffmpeg-" + Math.random() * 100000))
+				.withFileSystemBind(ingressMediaDir.toString(), "/media", BindMode.READ_ONLY)
 				.withEnv("MTX_PATHS_RTSP_RUNONINIT", ffmpegCommand)
 				.withExtraHost("host.docker.internal", "host-gateway")
 				.waitingFor(Wait.forLogMessage(".*Press \\[q\\] to stop.*", 1));
@@ -434,11 +450,11 @@ public class OpenViduTestE2e {
 			unusedRtspPort = socket.getLocalPort();
 		}
 
-		String fileUrl = getFileUrl(videoCodec != null, audioCodec != null, true);
+		String mediaFile = getMediaFile(videoCodec != null, audioCodec != null, true);
 		String codecs = getCodecs(videoCodec, audioCodec);
 
 		// -re: see startRtspServer.
-		String ffmpegCommand = "ffmpeg -re -i " + fileUrl + " " + codecs + " -strict -2 -f mpegts srt://"
+		String ffmpegCommand = "ffmpeg -re -i " + mediaFile + " " + codecs + " -strict -2 -f mpegts srt://"
 				+ hostGatewayIp
 				+ ":" + srtPort + "?mode=listener";
 
@@ -452,8 +468,9 @@ public class OpenViduTestE2e {
 						Map.entry("MTX_RTSP", "yes"), Map.entry("MTX_WEBRTC", "no"), Map.entry("MTX_SRT", "no"),
 						Map.entry("MTX_RTMP", "no"), Map.entry("MTX_MOQ", "no"), Map.entry("MTX_API", "no"),
 						Map.entry("MTX_PATHS_RTSP_RUNONINIT", ffmpegCommand)))
+				.withFileSystemBind(ingressMediaDir.toString(), "/media", BindMode.READ_ONLY)
 				.withNetworkMode("host")
-				.waitingFor(Wait.forLogMessage(".*" + fileUrl + ".+", 1));
+				.waitingFor(Wait.forLogMessage(".*" + Pattern.quote(mediaFile) + ".+", 1));
 
 		srtServerContainer.start();
 		containers.add(srtServerContainer);
@@ -692,24 +709,112 @@ public class OpenViduTestE2e {
 		return " " + codecs + " ";
 	}
 
-	private String getFileUrl(boolean withVideo, boolean withAudio, boolean lossless) throws Exception {
-		String fileUrl;
+	/**
+	 * @return the path of the media file inside a container that binds
+	 *         ingressMediaDir to /media
+	 */
+	private String getMediaFile(boolean withVideo, boolean withAudio, boolean lossless) throws Exception {
+		String fileName;
 		if (withAudio && withVideo) {
-			fileUrl = lossless
-					? "https://s3.eu-west-1.amazonaws.com/public.openvidu.io/bbb_sunflower_640x360_30fps_normal_fastdecode.mkv"
-					: "https://s3.eu-west-1.amazonaws.com/public.openvidu.io/bbb_sunflower_1080p_60fps_normal.mp4";
+			fileName = lossless ? "bbb_sunflower_640x360_30fps_normal_fastdecode.mkv"
+					: "bbb_sunflower_1080p_60fps_normal.mp4";
 		} else if (!withAudio && withVideo) {
-			fileUrl = lossless
-					? "https://s3.eu-west-1.amazonaws.com/public.openvidu.io/bbb_sunflower_640x360_30fps_normal_noaudio_fastdecode.mkv"
-					: "https://s3.eu-west-1.amazonaws.com/public.openvidu.io/bbb_sunflower_1080p_60fps_normal_noaudio.mp4";
+			fileName = lossless ? "bbb_sunflower_640x360_30fps_normal_noaudio_fastdecode.mkv"
+					: "bbb_sunflower_1080p_60fps_normal_noaudio.mp4";
 		} else if (withAudio) {
-			fileUrl = lossless
-					? "https://s3.eu-west-1.amazonaws.com/public.openvidu.io/bbb_sunflower_1080p_60fps_normal_onlyaudio_fastdecode.flac"
-					: "https://s3.eu-west-1.amazonaws.com/public.openvidu.io/bbb_sunflower_1080p_60fps_normal_onlyaudio.mp3";
+			fileName = lossless ? "bbb_sunflower_1080p_60fps_normal_onlyaudio_fastdecode.flac"
+					: "bbb_sunflower_1080p_60fps_normal_onlyaudio.mp3";
 		} else {
 			throw new Exception("Must have audio or video");
 		}
-		return fileUrl;
+		downloadIngressMedia(fileName);
+		return "/media/" + fileName;
+	}
+
+	/**
+	 * Downloads an ingress media file into ingressMediaDir, once per test execution.
+	 */
+	private static synchronized Path downloadIngressMedia(String fileName) throws Exception {
+		Path file = ingressMediaFiles.get(fileName);
+		if (file != null) {
+			return file;
+		}
+		if (ingressMediaDir == null) {
+			Path dir = Files.createTempDirectory("ingress-media");
+			Runtime.getRuntime().addShutdownHook(new Thread(() -> FileUtils.deleteQuietly(dir.toFile())));
+			ingressMediaDir = dir;
+		}
+		file = ingressMediaDir.resolve(fileName);
+		downloadFile(INGRESS_MEDIA_URL + fileName, file, INGRESS_MEDIA_DOWNLOAD_ATTEMPTS);
+		ingressMediaFiles.put(fileName, file);
+		return file;
+	}
+
+	/**
+	 * Downloads url into file. A failed attempt is retried with an increasing delay,
+	 * resuming from the bytes already received (HTTP Range), and a connection that
+	 * stops sending data for 60 s counts as failed. The file only gets its final name
+	 * once its size matches the one announced by the server.
+	 */
+	private static void downloadFile(String url, Path file, int attempts) throws Exception {
+		Path part = file.resolveSibling(file.getFileName() + ".part");
+		OkHttpClient client = new OkHttpClient.Builder().connectTimeout(Duration.ofSeconds(20))
+				.readTimeout(Duration.ofSeconds(60)).build();
+		log.info("Downloading {} into {}", url, file.getParent());
+		long start = System.currentTimeMillis();
+		for (int attempt = 1;; attempt++) {
+			try {
+				long received = Files.exists(part) ? Files.size(part) : 0;
+				Request.Builder request = new Request.Builder().url(url);
+				if (received > 0) {
+					request.header("Range", "bytes=" + received + "-");
+				}
+				try (okhttp3.Response response = client.newCall(request.build()).execute()) {
+					long total;
+					boolean append;
+					if (response.code() == 206) {
+						// "bytes <first>-<last>/<total>"
+						String range = response.header("Content-Range", "");
+						if (!range.startsWith("bytes " + received + "-")) {
+							Files.deleteIfExists(part);
+							throw new IOException("unexpected Content-Range '" + range + "' resuming from byte " + received);
+						}
+						total = Long.parseLong(range.substring(range.indexOf('/') + 1));
+						append = true;
+					} else if (response.code() == 200) {
+						total = response.body().contentLength();
+						append = false;
+					} else {
+						throw new IOException("HTTP " + response.code());
+					}
+					try (InputStream in = response.body().byteStream();
+							OutputStream out = Files.newOutputStream(part, StandardOpenOption.CREATE,
+									StandardOpenOption.WRITE,
+									append ? StandardOpenOption.APPEND : StandardOpenOption.TRUNCATE_EXISTING)) {
+						in.transferTo(out);
+					}
+					long size = Files.size(part);
+					if (total >= 0 && size != total) {
+						throw new IOException("received " + size + " of " + total + " bytes");
+					}
+				}
+				Files.move(part, file, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+				long seconds = Math.max(1, (System.currentTimeMillis() - start) / 1000);
+				log.info("Downloaded {} ({} MB) in {} s, {} attempt(s)", url, Files.size(file) / 1048576, seconds,
+						attempt);
+				return;
+			} catch (IOException e) {
+				long received = Files.exists(part) ? Files.size(part) : 0;
+				if (attempt == attempts) {
+					throw new IOException("Could not download " + url + " after " + attempt + " attempts ("
+							+ received / 1048576 + " MB received)", e);
+				}
+				long delaySeconds = Math.min(5L << (attempt - 1), 60);
+				log.warn("Download of {} failed (attempt {}/{}, {} MB received so far): {}. Retrying in {} s", url,
+						attempt, attempts, received / 1048576, e.toString(), delaySeconds);
+				Thread.sleep(delaySeconds * 1000);
+			}
+		}
 	}
 
 	protected static void setUpLiveKitClient() throws NoSuchAlgorithmException {
