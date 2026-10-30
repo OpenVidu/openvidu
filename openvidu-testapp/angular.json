@@ -27,6 +27,7 @@
               "src/assets"
             ],
             "styles": [
+              "src/fonts.css",
               "src/openvidu-theme.scss",
               "src/styles.css"
             ],
@@ -93,6 +94,7 @@
               "src/assets"
             ],
             "styles": [
+              "src/fonts.css",
               "src/openvidu-theme.scss",
               "src/styles.css"
             ],
