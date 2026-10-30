@@ -180,6 +180,11 @@ public class OpenViduTestAppE2eServerSdkTest extends AbstractOpenViduTestappE2eT
 		log.info("{} SDK {} {}-layer publisher to Chrome and Firefox early and late subscribers", sdk, codec,
 				layers);
 
+		// Before the room exists: the first test of an SDK would otherwise spend the
+		// image pull and the build (minutes for rust) inside the room, which OpenVidu
+		// in evaluation mode closes after 5 minutes
+		this.prepareServerSdkPublisher(sdk);
+
 		OpenViduTestappUser chrome = setupBrowserAndConnectToOpenViduTestapp("chrome");
 		OpenViduTestappUser firefox = setupBrowserAndConnectToOpenViduTestapp("firefox");
 

@@ -26,6 +26,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
@@ -44,6 +45,7 @@ import org.testcontainers.DockerClientFactory;
 import org.testcontainers.containers.BindMode;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.Network;
+import org.testcontainers.containers.startupcheck.OneShotStartupCheckStrategy;
 import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.containers.wait.strategy.WaitStrategy;
 import org.testcontainers.utility.DockerImageName;
@@ -520,6 +522,108 @@ public class OpenViduTestE2e {
 	}
 
 	/**
+	 * How the publisher program of a server SDK is built and run: its runtime
+	 * image, the command that installs its toolchain and dependencies and compiles
+	 * it into the /cache volume, the command that runs it (which still does both,
+	 * from the cache), how many minutes each may take and the environment of both.
+	 */
+	private record SdkPublisher(String image, String prepareCommand, String runCommand, int timeoutMinutes,
+			Map<String, String> env) {
+	}
+
+	private static SdkPublisher sdkPublisher(String sdk) {
+		Map<String, String> env = new HashMap<>();
+		switch (sdk) {
+			case "go":
+				env.put("GOMODCACHE", "/cache/gomod");
+				env.put("GOCACHE", "/cache/gobuild");
+				return new SdkPublisher("golang:1.27", "go build -o /dev/null .", "go run .", 5, env);
+			case "node":
+				env.put("npm_config_cache", "/cache/npm");
+				String npmInstall = "npm install --no-audit --no-fund --loglevel=error";
+				return new SdkPublisher("node:24", npmInstall, npmInstall + " && node main.mjs", 5, env);
+			case "python":
+				env.put("PIP_CACHE_DIR", "/cache/pip");
+				String pipInstall = "pip install -q -r requirements.txt";
+				return new SdkPublisher("python:3.14", pipInstall, pipInstall + " && python main.py", 5, env);
+			case "rust":
+				// webrtc-sys links a prebuilt libwebrtc that requires clang++ >= 21
+				// (apt.llvm.org); the first build compiles the whole livekit crate
+				// graph
+				String clang = "apt-get update -qq >/dev/null && apt-get install -y -qq lsb-release gnupg >/dev/null"
+						+ " && wget -qO /tmp/llvm.sh https://apt.llvm.org/llvm.sh && bash /tmp/llvm.sh 21 >/dev/null 2>&1";
+				env.put("CARGO_HOME", "/cache/cargo");
+				env.put("CARGO_TARGET_DIR", "/cache/cargo-target");
+				env.put("CC", "clang-21");
+				env.put("CXX", "clang++-21");
+				return new SdkPublisher("rust:1", clang + " && cargo build --release --locked",
+						clang + " && cargo run --release --locked", 30, env);
+			case "dotnet":
+				env.put("NUGET_PACKAGES", "/cache/nuget");
+				env.put("DOTNET_CLI_TELEMETRY_OPTOUT", "1");
+				return new SdkPublisher("mcr.microsoft.com/dotnet/sdk:10.0", "dotnet build -c Release",
+						"dotnet run -c Release", 10, env);
+			default:
+				throw new IllegalArgumentException("Unknown server SDK publisher: " + sdk);
+		}
+	}
+
+	/**
+	 * A container of the given SDK's image that mounts its publisher program
+	 * read-only at /app and the SDK's cache volume at /cache, copies the program to
+	 * /work and runs the command there. Its output is logged as [&lt;sdk&gt;-&lt;role&gt;].
+	 */
+	private GenericContainer<?> sdkPublisherContainer(String sdk, String role, String image, Map<String, String> env,
+			String command) {
+		String programDir = Paths.get("src/test/resources/" + sdk + "-publisher").toAbsolutePath().toString();
+		String cacheVolume = sdkCacheVolume(sdk);
+		return new GenericContainer<>(DockerImageName.parse(image))
+				.withCreateContainerCmdModifier(
+						cmd -> cmd.withName(sdk + "-" + role + "-" + (int) (Math.random() * 100000)))
+				// Not withFileSystemBind: it resolves its first argument as a host path
+				.withCreateContainerCmdModifier(cmd -> {
+					List<Mount> mounts = new ArrayList<>();
+					if (cmd.getHostConfig().getMounts() != null) {
+						mounts.addAll(cmd.getHostConfig().getMounts());
+					}
+					mounts.add(new Mount().withType(MountType.VOLUME).withSource(cacheVolume).withTarget("/cache"));
+					cmd.getHostConfig().withMounts(mounts);
+				})
+				.withNetworkMode("host").withFileSystemBind(programDir, "/app", BindMode.READ_ONLY).withEnv(env)
+				.withCommand("sh", "-c", "mkdir -p /work && cp -r /app/. /work && cd /work && " + command)
+				.withLogConsumer(frame -> log.info("[{}-{}] {}", sdk, role, frame.getUtf8String().stripTrailing()));
+	}
+
+	// Server SDKs whose publisher program is already prepared in this JVM
+	private static final Set<String> PREPARED_SDK_PUBLISHERS = ConcurrentHashMap.newKeySet();
+
+	/**
+	 * Pulls the image of the given SDK's publisher program and runs its prepare
+	 * command (toolchain, dependencies and compilation into the SDK's cache volume),
+	 * once per JVM. Call it before creating the room the publisher will join: the
+	 * first preparation of an SDK takes minutes (rust: image pull, clang install and
+	 * the build of the whole livekit crate graph), and OpenVidu in evaluation mode
+	 * closes every room after 5 minutes. Fails if the command does not exit with 0.
+	 */
+	public void prepareServerSdkPublisher(String sdk) {
+		synchronized (PREPARED_SDK_PUBLISHERS) {
+			if (PREPARED_SDK_PUBLISHERS.contains(sdk)) {
+				return;
+			}
+			SdkPublisher publisher = sdkPublisher(sdk);
+			long start = System.currentTimeMillis();
+			try (GenericContainer<?> container = sdkPublisherContainer(sdk, "prepare", publisher.image(),
+					publisher.env(), publisher.prepareCommand())
+					.withStartupCheckStrategy(new OneShotStartupCheckStrategy()
+							.withTimeout(Duration.ofMinutes(publisher.timeoutMinutes())))) {
+				container.start();
+			}
+			log.info("{} SDK publisher prepared in {} s", sdk, (System.currentTimeMillis() - start) / 1000);
+			PREPARED_SDK_PUBLISHERS.add(sdk);
+		}
+	}
+
+	/**
 	 * Starts a LiveKit server RTC SDK participant (a minimal program at
 	 * src/test/resources/&lt;sdk&gt;-publisher) in a plain runtime container
 	 * that joins the given room and publishes a single video track with the
@@ -531,58 +635,17 @@ public class OpenViduTestE2e {
 	 * test JVM (see {@link #sdkCacheVolume}): nothing of a previous run or of
 	 * another job on the same machine reaches the program, while the publishers
 	 * of one SDK still share their downloads (and the rust build, which takes up
-	 * to 30 minutes from cold) within the run. Returns once the program logs
-	 * TRACK_PUBLISHED. The container is stopped automatically on test dispose.
+	 * to 30 minutes from cold) within the run. Run
+	 * {@link #prepareServerSdkPublisher} before creating the room, so that the
+	 * room does not wait for that. Returns once the program logs TRACK_PUBLISHED.
+	 * The container is stopped automatically on test dispose.
 	 */
 	public void startServerSdkPublisher(String sdk, String roomName, String codec, int layers) throws Exception {
 		if (layers < 1 || layers > 3) {
 			throw new IllegalArgumentException("Unsupported number of video layers: " + layers);
 		}
-		final String image;
-		final String runCommand;
-		int startupTimeoutMinutes = 5;
-		Map<String, String> env = new HashMap<>();
-		switch (sdk) {
-			case "go":
-				image = "golang:1.27";
-				runCommand = "go run .";
-				env.put("GOMODCACHE", "/cache/gomod");
-				env.put("GOCACHE", "/cache/gobuild");
-				break;
-			case "node":
-				image = "node:24";
-				runCommand = "npm install --no-audit --no-fund --loglevel=error && node main.mjs";
-				env.put("npm_config_cache", "/cache/npm");
-				break;
-			case "python":
-				image = "python:3.14";
-				runCommand = "pip install -q -r requirements.txt && python main.py";
-				env.put("PIP_CACHE_DIR", "/cache/pip");
-				break;
-			case "rust":
-				image = "rust:1";
-				// webrtc-sys links a prebuilt libwebrtc that requires clang++ >= 21
-				// (apt.llvm.org); the first run then compiles the whole livekit
-				// crate graph
-				runCommand = "apt-get update -qq >/dev/null && apt-get install -y -qq lsb-release gnupg >/dev/null"
-						+ " && wget -qO /tmp/llvm.sh https://apt.llvm.org/llvm.sh && bash /tmp/llvm.sh 21 >/dev/null 2>&1"
-						+ " && cargo run --release --locked";
-				env.put("CARGO_HOME", "/cache/cargo");
-				env.put("CARGO_TARGET_DIR", "/cache/cargo-target");
-				env.put("CC", "clang-21");
-				env.put("CXX", "clang++-21");
-				startupTimeoutMinutes = 30;
-				break;
-			case "dotnet":
-				image = "mcr.microsoft.com/dotnet/sdk:10.0";
-				runCommand = "dotnet run -c Release";
-				env.put("NUGET_PACKAGES", "/cache/nuget");
-				env.put("DOTNET_CLI_TELEMETRY_OPTOUT", "1");
-				startupTimeoutMinutes = 10;
-				break;
-			default:
-				throw new IllegalArgumentException("Unknown server SDK publisher: " + sdk);
-		}
+		SdkPublisher publisher = sdkPublisher(sdk);
+		Map<String, String> env = new HashMap<>(publisher.env());
 		// Publishers receive a ready-made token: it keeps the programs shorter
 		// (no per-SDK token dependency) and works with any api secret length
 		AccessToken accessToken = new AccessToken(LIVEKIT_API_KEY, LIVEKIT_API_SECRET);
@@ -593,27 +656,10 @@ public class OpenViduTestE2e {
 		env.put("VIDEO_CODEC", codec);
 		env.put("VIDEO_LAYERS", String.valueOf(layers));
 
-		String programDir = Paths.get("src/test/resources/" + sdk + "-publisher").toAbsolutePath().toString();
-		String cacheVolume = sdkCacheVolume(sdk);
-
-		GenericContainer<?> publisherContainer = new GenericContainer<>(DockerImageName.parse(image))
-				.withCreateContainerCmdModifier(
-						cmd -> cmd.withName(sdk + "-publisher-" + (int) (Math.random() * 100000)))
-				// Not withFileSystemBind: it resolves its first argument as a host path
-				.withCreateContainerCmdModifier(cmd -> {
-					List<Mount> mounts = new ArrayList<>();
-					if (cmd.getHostConfig().getMounts() != null) {
-						mounts.addAll(cmd.getHostConfig().getMounts());
-					}
-					mounts.add(new Mount().withType(MountType.VOLUME).withSource(cacheVolume).withTarget("/cache"));
-					cmd.getHostConfig().withMounts(mounts);
-				})
-				.withNetworkMode("host").withFileSystemBind(programDir, "/app", BindMode.READ_ONLY).withEnv(env)
-				.withCommand("sh", "-c", "mkdir -p /work && cp -r /app/. /work && cd /work && " + runCommand)
-				.withLogConsumer(
-						frame -> log.info("[{}-publisher] {}", sdk, frame.getUtf8String().stripTrailing()))
+		GenericContainer<?> publisherContainer = sdkPublisherContainer(sdk, "publisher", publisher.image(), env,
+				publisher.runCommand())
 				.waitingFor(Wait.forLogMessage("^.*TRACK_PUBLISHED.*$", 1)
-						.withStartupTimeout(Duration.ofMinutes(startupTimeoutMinutes)));
+						.withStartupTimeout(Duration.ofMinutes(publisher.timeoutMinutes())));
 
 		if ("go".equals(sdk)) {
 			// The Go SDK sends pre-encoded media: loop a real (decodable) 5s
