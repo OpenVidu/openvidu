@@ -26,9 +26,9 @@ catalog:
   '@eslint/js': 10.0.1
   '@fontsource-variable/inter': 5.3.0
   '@fontsource-variable/jetbrains-mono': 5.3.0
-  '@material-symbols/svg-400': 0.48.1
+  '@material-symbols/svg-400': 0.48.2
   '@playwright/test': 1.64.1
-  '@fission-ai/openspec': 1.14.3
+  '@fission-ai/openspec': 1.15.0
   '@types/cookie-parser': 1.4.10
   '@types/express': 5.0.6
   '@types/node': 24.19.2
@@ -57,7 +57,7 @@ catalog:
   tslib: 2.8.1
   tsx: 4.23.15
   typescript: 6.0.3
-  typescript-eslint: 8.72.0
+  typescript-eslint: 8.72.1
   vitest: 5.0.5
   winston: 3.19.0
   zod: 4.6.7
