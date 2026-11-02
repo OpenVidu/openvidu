@@ -9,7 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Livekit.Rtc.Dotnet" Version="0.1.4" />
+    <PackageReference Include="Livekit.Rtc.Dotnet" Version="0.1.6" />
   </ItemGroup>
 
 </Project>

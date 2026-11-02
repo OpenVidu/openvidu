@@ -541,11 +541,11 @@ public class OpenViduTestE2e {
 			case "node":
 				env.put("npm_config_cache", "/cache/npm");
 				String npmInstall = "npm install --no-audit --no-fund --loglevel=error";
-				return new SdkPublisher("node:24", npmInstall, npmInstall + " && node main.mjs", 5, env);
+				return new SdkPublisher("node:26", npmInstall, npmInstall + " && node main.mjs", 5, env);
 			case "python":
 				env.put("PIP_CACHE_DIR", "/cache/pip");
 				String pipInstall = "pip install -q -r requirements.txt";
-				return new SdkPublisher("python:3.14", pipInstall, pipInstall + " && python main.py", 5, env);
+				return new SdkPublisher("python:3.15", pipInstall, pipInstall + " && python main.py", 5, env);
 			case "rust":
 				// webrtc-sys links a prebuilt libwebrtc that requires clang++ >= 21
 				// (apt.llvm.org); the first build compiles the whole livekit crate
