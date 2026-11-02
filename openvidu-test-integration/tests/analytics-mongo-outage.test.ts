@@ -34,10 +34,13 @@ describe("OpenVidu analytics during a MongoDB outage", () => {
 
         LocalDeployment.stopContainer("mongo");
         pids = [Livekit.joinParticipantToRoom(identity, roomName)];
-        await sleep(20);
+        await waitFor(async () => Livekit.isParticipantInRoom(identity, roomName), 60, "the session to join");
+        await sleep(5);
         killProcess(pids[0]);
         pids = [];
-        await sleep(20);
+        await waitFor(async () => !Livekit.isParticipantInRoom(identity, roomName), 60, "the session to leave");
+        // A few batch ticks of the writer fail while MongoDB is still down, so the leave event is retried.
+        await sleep(5);
         LocalDeployment.startContainer("mongo");
 
         await waitFor(

@@ -1,3 +1,4 @@
+import { execSync } from "child_process";
 import { execCommandInBackground } from "./helper";
 
 const LIVEKIT_URL = "ws://localhost:7880";
@@ -29,5 +30,17 @@ export class Livekit {
             throw new Error("Error joining participant to room");
         }
         return pid;
+    }
+
+    /** Whether LiveKit lists a participant with this identity in the room; false when the room does not exist. */
+    static isParticipantInRoom(participantIdentity: string, roomName: string): boolean {
+        const args = ["--url", LIVEKIT_URL, "--api-key", LIVEKIT_API_KEY, "--api-secret", LIVEKIT_API_SECRET];
+        try {
+            return execSync(`${LK_CLI} room participants list ${args.join(" ")} ${roomName}`, { stdio: "pipe" })
+                .toString()
+                .includes(participantIdentity);
+        } catch {
+            return false;
+        }
     }
 }

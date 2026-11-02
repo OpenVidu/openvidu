@@ -67,6 +67,11 @@ export class MongoService {
         return this.count(collection, { ...filter, status: { $in: OPEN_STATUSES[collection] ?? [] } });
     }
 
+    /** Inserts a document as the writer would have left it, for the cases that need a state no failure can produce. */
+    public async insertEntity(collection: Collection, doc: AnalyticsDocument): Promise<void> {
+        await this.db.collection<AnalyticsDocument>(collection).insertOne(doc);
+    }
+
     public async findEvents(filter: Query): Promise<Document[]> {
         return this.db.collection<AnalyticsDocument>(Collection.EVENTS).find(filter).sort({ ts: 1 }).toArray();
     }
