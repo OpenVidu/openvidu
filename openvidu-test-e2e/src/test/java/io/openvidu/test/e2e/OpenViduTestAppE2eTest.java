@@ -3226,7 +3226,9 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 	// bandwidth (nothing can host the probes), and its estimate must survive the
 	// pause so that the video comes back on its top layer. The three tests below
 	// drive the ways a connection gets there: the publisher mutes the camera, the
-	// subscriber disables the video, and the camera is unpublished
+	// subscriber disables the video, and the camera is unpublished. The first two
+	// check that no probe reaches the subscriber during the pause. The last two
+	// check that the first frames after it are already the top layer
 
 	// The top simulcast layer of the fake camera
 	private static final int CAMERA_TOP_LAYER_WIDTH = 640;
@@ -3313,6 +3315,33 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 				"The video left its top layer after resuming");
 	}
 
+	/**
+	 * With the video just resumed by its publisher: it must reach its top layer
+	 * within maxMillis. The first frames may come from a lower layer even with the
+	 * estimate kept: the publisher restarts every simulcast layer at once, and when
+	 * the top one arrives last the server only moves the subscriber up at its next
+	 * layer decision, about a second later.
+	 */
+	private void assertVideoResumesAndReachesTopLayer(OpenViduTestappUser user, WebElement subscriberVideo,
+			long framesDecodedBefore, long maxMillis) throws Exception {
+		this.waitUntilAux(user, subscriberVideo,
+				() -> this.getLayerCounter(this.getSubscriberVideoLayer(user, subscriberVideo),
+						"framesDecoded") > framesDecodedBefore,
+				"Timeout waiting for the video to resume");
+		final long resumedAt = System.currentTimeMillis();
+		JsonObject layer = new JsonObject();
+		while (System.currentTimeMillis() - resumedAt < maxMillis) {
+			layer = this.getSubscriberVideoLayer(user, subscriberVideo);
+			if (this.getLayerCounter(layer, "frameWidth") == CAMERA_TOP_LAYER_WIDTH) {
+				break;
+			}
+			Thread.sleep(250);
+		}
+		Assertions.assertEquals(CAMERA_TOP_LAYER_WIDTH, this.getLayerCounter(layer, "frameWidth"),
+				"The video did not reach its top layer within " + maxMillis + " ms of resuming. "
+						+ describeSubscriberVideoLayer(layer));
+	}
+
 	@Test
 	@DisplayName("Camera mute keeps the subscriber bandwidth estimate")
 	void cameraMuteKeepsSubscriberBweTest() throws Exception {
@@ -3329,11 +3358,14 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 		long framesDecodedPaused = assertOnlyAudioWhilePaused(user, subscriberVideo);
 
-		// The publisher unmutes
+		// The publisher unmutes. Its simulcast layers restart together, so the first
+		// frames may come from a lower one (see assertVideoResumesAndReachesTopLayer).
+		// Whether the estimate survived is checked by the subscriber-side pauses below,
+		// where every layer keeps flowing
 		user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 .mute-unmute-video")).sendKeys(Keys.ENTER);
 		user.getEventManager().waitUntilEventReaches("trackUnmuted", "RoomEvent", 1);
 
-		assertVideoResumesOnTopLayer(user, subscriberVideo, framesDecodedPaused);
+		assertVideoResumesAndReachesTopLayer(user, subscriberVideo, framesDecodedPaused, 5000);
 
 		gracefullyLeaveParticipants(user, 2);
 	}
