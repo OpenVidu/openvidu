@@ -1233,12 +1233,16 @@ public class AbstractOpenViduTestappE2eTest extends OpenViduTestE2e {
 		// Decode every frame: no errors, the picture moves (Chrome's fake camera changes
 		// on every frame) and reaches the published size. VP9 goes through libvpx, the
 		// decoder of browsers and GStreamer: FFmpeg's own shows only the base layer of a
-		// VP9 SVC superframe. AV1 goes through dav1d: FFmpeg's own needs hardware
+		// VP9 SVC superframe. AV1 goes through dav1d: FFmpeg's own needs hardware. It
+		// decodes one frame at a time, as WebRTC receivers do: with frame threading, a
+		// temporal unit of an SVC track recorded below the top spatial layer of its
+		// sequence header sometimes outputs no picture, since Matroska has no temporal
+		// delimiters to close the unit (4 T2 frames of the S1 part of an L3T3 track)
 		List<String> command = new ArrayList<>(List.of("ffmpeg", "-nostdin", "-loglevel", "level+info"));
 		if ("vp9".equals(codec)) {
 			command.addAll(List.of("-c:v", "libvpx-vp9"));
 		} else if ("av1".equals(codec)) {
-			command.addAll(List.of("-c:v", "libdav1d"));
+			command.addAll(List.of("-c:v", "libdav1d", "-max_frame_delay", "1"));
 		}
 		command.addAll(List.of("-i", file.toString(), "-map", "0:v", "-vf", "showinfo", "-fps_mode", "passthrough",
 				"-enc_time_base", "demux", "-f", "null", "-"));
