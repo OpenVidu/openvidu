@@ -24,7 +24,8 @@ export const ROOM_LIST_PROJECTION: Readonly<Document> = {
 	ingress: 1,
 	bytes: 1,
 	features: 1,
-	lastStatsAt: 1
+	lastStatsAt: 1,
+	mediaStats: 1
 };
 
 /**

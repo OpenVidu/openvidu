@@ -188,6 +188,22 @@ describe.skipIf(mongoUri === '')('rooms API', () => {
 			expect(sids(await json(ce, '/rooms?q=rm_node&nodeId=node-a'))).toEqual(['RM_nodeA']);
 		});
 
+		it('carries the media statistics mark of the rooms whose node reports none, sorted or ranked', async () => {
+			await reseed(ce.dashboard.db, {
+				rooms: [
+					activeRoom({ _id: 'RM_marked', createdAt: minutesAgo(5), mediaStats: false }),
+					activeRoom({ _id: 'RM_plain', createdAt: minutesAgo(4) })
+				]
+			});
+
+			for (const path of ['/rooms', '/rooms?sort=active']) {
+				const items = (await json<ListResponse<RoomListItem>>(ce, path)).items;
+
+				expect(items.find((item) => item.sid === 'RM_marked')?.mediaStats).toBe(false);
+				expect(items.find((item) => item.sid === 'RM_plain')).not.toHaveProperty('mediaStats');
+			}
+		});
+
 		it('omits total beyond the exact-count range', async () => {
 			await reseed(ce.dashboard.db, { rooms: [closedRoom({ _id: 'RM_one', createdAt: minutesAgo(10) })] });
 
