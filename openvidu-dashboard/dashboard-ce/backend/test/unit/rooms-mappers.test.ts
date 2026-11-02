@@ -43,6 +43,15 @@ describe('room mappers', () => {
 		expect(item).not.toHaveProperty('closedBy');
 	});
 
+	it('carries the media statistics mark of a room only when its node reports none', () => {
+		const item = toRoomListItem({ ...active, mediaStats: false });
+
+		expect(roomListItem.strict().parse(item)).toEqual(item);
+		expect(item.mediaStats).toBe(false);
+		expect(item.bytes).toEqual({ up: active.bytes.up, down: active.bytes.down });
+		expect(toRoomListItem(active)).not.toHaveProperty('mediaStats');
+	});
+
 	it('maps egresses to their documented schema', () => {
 		for (const doc of loadFixture<EgressDocument>('egresses')) {
 			const item = toEgressListItem(doc);

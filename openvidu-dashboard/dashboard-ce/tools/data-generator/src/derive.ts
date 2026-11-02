@@ -508,6 +508,10 @@ function ingressInfo(i: IngressDoc): Record<string, unknown> {
 }
 
 export function deriveStats(rng: Rng, bundle: RoomBundle, windows: DeriveWindows, emit: (doc: StatsDoc) => void): void {
+	if (bundle.room.mediaStats === false) {
+		return;
+	}
+
 	const tracksById = new Map(bundle.tracks.map((t) => [t._id, t]));
 	const tracksByParticipant = groupBy(bundle.tracks, (t) => t.participantSid);
 	const subsBySubscriber = groupBy(
@@ -920,7 +924,8 @@ export class Rollups {
 		const end = p.leftAt?.getTime() ?? windows.now;
 		const total = Math.max(1, end - start);
 		const meanScore = bundle.meanScores.get(p._id) ?? 4;
-		const directions = (p.tracks.published > 0 ? 1 : 0) + (p.tracks.subscribed > 0 ? 1 : 0);
+		const directions =
+			p.mediaStats === false ? 0 : (p.tracks.published > 0 ? 1 : 0) + (p.tracks.subscribed > 0 ? 1 : 0);
 		const spread = (slot: number, size: number, apply: (share: number, flushes: number) => void) => {
 			const overlap = Math.min(end, slot + size) - Math.max(start, slot);
 

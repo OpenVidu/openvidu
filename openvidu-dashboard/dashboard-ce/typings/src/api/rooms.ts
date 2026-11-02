@@ -49,6 +49,8 @@ export interface RoomListItem {
 	lastStatsAt?: string;
 	/** `true` for an active entity whose last stats flush is older than the stale window; absent otherwise. */
 	stale?: true;
+	/** `false` when the room's node does not report media statistics: `bytes` then measures nothing. */
+	mediaStats?: false;
 }
 
 /** Numbers above the rooms table. */

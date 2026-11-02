@@ -153,3 +153,24 @@ test('the locked room detail fills its header from the list endpoint without PRO
 	await expect(page.getByRole('link', { name: 'Back to rooms' })).toBeVisible();
 	expect(api.calls().filter((call) => call.startsWith('GET rooms/'))).toEqual([]);
 });
+
+test.describe('a room whose server reports no media statistics', () => {
+	test.use({
+		apiOptions: { rooms: [roomItem({ mediaStats: false, bytes: { up: 0, down: 0 } })], roomSummary: ROOM_SUMMARY }
+	});
+
+	test('reads a dash with its explanation under Data up / down', async ({ page }) => {
+		await page.goto('/rooms');
+
+		const cell = table(page)
+			.getByRole('row', { name: /demo-room/ })
+			.getByLabel("Not reported: this room's server does not report media statistics");
+
+		await expect(cell).toHaveText('—');
+		await cell.hover();
+		await expect(page.locator('.mat-mdc-tooltip')).toHaveText(
+			"Not reported: this room's server does not report media statistics"
+		);
+		await expect(table(page)).not.toContainText('0 B');
+	});
+});

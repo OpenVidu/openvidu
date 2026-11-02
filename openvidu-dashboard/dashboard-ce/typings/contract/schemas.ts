@@ -58,6 +58,9 @@ const entityBase = {
 };
 
 const internal = anyObject('Writer bookkeeping; never read by the dashboard');
+const mediaStatsMark = bool(
+	'Only false: the node that created the entity does not report media statistics; absent otherwise'
+);
 
 const closedBy = oneOfValues(ClosedBy);
 
@@ -121,6 +124,7 @@ const rooms = obj({
 	features: req(obj({ egress: req(bool()), ingress: req(bool()), agent: req(bool()), sip: req(bool()) })),
 	lastEventAt: req(date()),
 	lastStatsAt: date(),
+	mediaStats: mediaStatsMark,
 	internal,
 	...entityBase
 });
@@ -191,6 +195,7 @@ const participants = obj({
 	),
 	lastEventAt: req(date()),
 	lastStatsAt: date(),
+	mediaStats: mediaStatsMark,
 	internal,
 	...entityBase
 });
@@ -479,7 +484,10 @@ const nodes = obj({
 	lastSeenAt: req(date()),
 	serverVersion: req(str()),
 	region: str(),
-	batchIntervalMs: { ...int('Configured batch interval of the node, in milliseconds'), minimum: 1000 }
+	batchIntervalMs: { ...int('Configured batch interval of the node, in milliseconds'), minimum: 1000 },
+	mediaStats: bool(
+		'Whether the node reports media statistics; absent on documents written before it existed (read as true)'
+	)
 });
 
 const metaId = (id: string): BsonSchema => ({ bsonType: 'string', enum: [id] });

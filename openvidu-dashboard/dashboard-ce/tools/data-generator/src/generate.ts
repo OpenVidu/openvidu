@@ -43,7 +43,8 @@ async function main(): Promise<void> {
 		'node-rollups': { type: 'boolean' },
 		'room-sums': { type: 'boolean' },
 		'active-window': { type: 'string' },
-		'min-active-rooms': { type: 'string' }
+		'min-active-rooms': { type: 'string' },
+		'nodes-without-media-stats': { type: 'string' }
 	});
 	const uri = requireString(values, 'uri');
 	const dbName = requireString(values, 'db');
@@ -82,6 +83,7 @@ async function main(): Promise<void> {
 			...(values['min-active-rooms'] === undefined
 				? {}
 				: { minActiveRooms: intOption(values, 'min-active-rooms', 0) }),
+			nodesWithoutMediaStats: intOption(values, 'nodes-without-media-stats', 0),
 			log: (line) => {
 				console.log(line);
 			}

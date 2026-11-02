@@ -171,3 +171,36 @@ test.describe('a failed request', () => {
 		await expect(card(page, 'Rooms').getByRole('button', { name: 'Export CSV' })).toBeEnabled();
 	});
 });
+
+test.describe('a range whose servers report no media statistics', () => {
+	test.use({ apiOptions: { analyticsSummary: { mediaStats: 'none' } } });
+
+	test('the Data up / down tile and the Bandwidth section say so', async ({ page }) => {
+		await page.goto('/analytics?from=now-7d&to=now&tz=UTC');
+
+		await expect(page.getByRole('region', { name: 'Summary' })).toContainText(
+			'Not reported by the servers of this range'
+		);
+		await expect(card(page, 'Data transferred')).toContainText(
+			'The servers of this range do not report media statistics'
+		);
+		await expect(card(page, 'Data transferred').locator('ovd-time-series-chart')).toHaveCount(0);
+		await expectNoViolations(page);
+	});
+});
+
+test.describe('a range where only some servers report media statistics', () => {
+	test.use({ apiOptions: { analyticsSummary: { mediaStats: 'partial' } } });
+
+	test('the Data up / down tile and the Bandwidth chart carry the note', async ({ page }) => {
+		await page.goto('/analytics?from=now-7d&to=now&tz=UTC');
+
+		await expect(page.getByRole('region', { name: 'Summary' })).toContainText(
+			'Only from the servers that report media statistics'
+		);
+		await expect(card(page, 'Data transferred')).toContainText(
+			'Only from the servers that report media statistics'
+		);
+		await expect(card(page, 'Data transferred').locator('ovd-time-series-chart')).toHaveCount(1);
+	});
+});

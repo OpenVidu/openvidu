@@ -25,7 +25,7 @@ import {
 	analyticsSeriesQuery,
 	analyticsSummaryQuery
 } from '../../src/analytics/analytics-schemas.js';
-import { AnalyticsService } from '../../src/analytics/analytics-service.js';
+import { AnalyticsService, mediaStatsCoverage } from '../../src/analytics/analytics-service.js';
 import { ApiError } from '../../src/http/api-error.js';
 
 const MINUTE = 60_000;
@@ -46,8 +46,11 @@ interface Read {
 	to: Date;
 }
 
-/** A database holding rollup documents per collection; `schema_meta` is empty, so the retention is the default. */
-function fakeDb(collections: Record<string, Doc[]>, reads: Read[] = []): Db {
+/**
+ * A database holding rollup documents per collection and the `mediaStats` of the nodes; `schema_meta` is empty, so the
+ * retention is the default.
+ */
+function fakeDb(collections: Record<string, Doc[]>, reads: Read[] = [], nodes: (boolean | undefined)[] = []): Db {
 	return {
 		collection: (name: string) => ({
 			find: (filter: { scope: string; bucket: { $gte: Date; $lt: Date } }) => ({
@@ -66,7 +69,8 @@ function fakeDb(collections: Record<string, Doc[]>, reads: Read[] = []): Db {
 
 					// `for await` reads an array as well as the driver's cursor.
 					return rows;
-				}
+				},
+				toArray: () => Promise.resolve(name === 'nodes' ? nodes.map((mediaStats) => ({ mediaStats })) : [])
 			}),
 			findOne: () => Promise.resolve(null)
 		})
@@ -515,6 +519,22 @@ describe('analytics summary and breakdowns', () => {
 			avgRoomDurationMs: 360_000,
 			uniqueIdentities: { value: 310, basis: 'utcDays', days: 3 }
 		});
+	});
+
+	it('reports the media statistics coverage of the nodes seen in the range', async () => {
+		const summary = await service(fakeDb({}, [], [false, false])).summary(summaryQuery.parse({}));
+
+		expect(analyticsSummaryResponse.parse(summary)).toEqual(summary);
+		expect(summary).toMatchObject({ mediaStats: 'none', bytesUp: 0, bytesDown: 0 });
+		expect(await service(fakeDb({}, [], [true])).summary(summaryQuery.parse({}))).not.toHaveProperty('mediaStats');
+	});
+
+	it('folds the media statistics marks of the nodes into a coverage', () => {
+		expect(mediaStatsCoverage([])).toBeUndefined();
+		expect(mediaStatsCoverage([true, undefined])).toBeUndefined();
+		expect(mediaStatsCoverage([false])).toBe('none');
+		expect(mediaStatsCoverage([false, true])).toBe('partial');
+		expect(mediaStatsCoverage([false, undefined])).toBe('partial');
 	});
 
 	it('omits the averages written without the room sums', async () => {

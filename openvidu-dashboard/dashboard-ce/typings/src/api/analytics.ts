@@ -236,7 +236,12 @@ export interface AnalyticsSummary {
 	apiCalls: number;
 	/** Percentage, one decimal. */
 	apiErrorRate?: number;
+	/** Present when some (`partial`) or all (`none`) of the nodes seen in the range do not report media statistics. */
+	mediaStats?: AnalyticsMediaStatsCoverage;
 }
+
+/** How much of a range's media statistics (bytes, quality) its nodes report; absent means all of it. */
+export type AnalyticsMediaStatsCoverage = 'partial' | 'none';
 
 export type AnalyticsExportKind = 'series' | 'breakdowns';
 

@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto';
 
 import { test as base, type Page, type Route } from '@playwright/test';
 import {
+	type AnalyticsSummary,
 	type EgressListItem,
 	type EgressSummary,
 	FeatureKey,
@@ -65,6 +66,8 @@ export interface ApiOptions {
 	analytics?: AnalyticsFixtures;
 	/** Analytics paths (`breakdowns`, `export.csv`…) that answer `500` with a request id. */
 	analyticsFail?: string[];
+	/** Fields merged into the body of `GET analytics/summary`, e.g. `mediaStats`. */
+	analyticsSummary?: Partial<AnalyticsSummary>;
 	/**
 	 * Body of `GET overview`, built per request (an active deployment by default); its ETag is the body without
 	 * `generatedAt`, so an unchanged body answers `304` to `If-None-Match`.
@@ -316,7 +319,13 @@ export class MockApi {
 				await route.fulfill({ json: analyticsBreakdowns(params, this.options.analytics) });
 				break;
 			case 'summary':
-				await route.fulfill({ json: { ...ANALYTICS_SUMMARY, scope: params.get('scope') ?? 'global' } });
+				await route.fulfill({
+					json: {
+						...ANALYTICS_SUMMARY,
+						...this.options.analyticsSummary,
+						scope: params.get('scope') ?? 'global'
+					}
+				});
 				break;
 			case 'export.csv': {
 				const csv = analyticsCsv(params);

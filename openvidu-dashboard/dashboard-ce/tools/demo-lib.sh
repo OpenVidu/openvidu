@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # Shared parts of the local demos, sourced by dashboard-ce/tools/demo.sh and by the demos of workspaces that extend
 # these packages: a MongoDB replica set (a container, or DASHBOARD_DEMO_MONGO_URI), 30 days of generated data kept live,
-# and the backend and frontend development servers of dev-lib.sh. The caller sets DATABASE and STATS_MODE and runs
-# from the root of its workspace.
+# and the backend and frontend development servers of dev-lib.sh. The caller sets DATABASE and STATS_MODE, and
+# optionally the array GENERATOR_ARGS of extra data generator options, and runs from the root of its workspace.
 #   DASHBOARD_DEMO_MONGO_URI    MongoDB to use instead of the container
 #   DASHBOARD_DEMO_MONGO_PORT   host port of the container (default 27018)
 #   DASHBOARD_DEMO_KEEP_DATA    true reuses the demo database instead of generating it again
@@ -54,7 +54,7 @@ prepare_data() {
 		echo "Generating $DATABASE (scenario S, 30 days, $STATS_MODE stats)"
 		pnpm --silent --dir "$TOOLS_DIR/data-generator" run generate --uri "$MONGO_URI" --db "$DATABASE" \
 			--scenario S --days 30 --stats-mode "$STATS_MODE" --drop --five-minute-rollups --node-rollups --room-sums \
-			--active-window 60 --min-active-rooms 10 | tail -2
+			--active-window 60 --min-active-rooms 10 ${GENERATOR_ARGS[@]+"${GENERATOR_ARGS[@]}"} | tail -2
 	fi
 
 	pnpm --silent --dir "$TOOLS_DIR/data-generator" run keep-alive --uri "$MONGO_URI" --db "$DATABASE" &

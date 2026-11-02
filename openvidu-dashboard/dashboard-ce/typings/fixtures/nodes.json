@@ -5,7 +5,8 @@
 		"lastSeenAt": { "$date": "2026-10-12T10:35:10.000Z" },
 		"serverVersion": "3.10.0",
 		"region": "eu-west",
-		"batchIntervalMs": { "$numberInt": "10000" }
+		"batchIntervalMs": { "$numberInt": "10000" },
+		"mediaStats": true
 	},
 	{
 		"_id": "ND_beta3Vx9Pw",
@@ -13,6 +14,7 @@
 		"lastSeenAt": { "$date": "2026-10-12T10:35:10.000Z" },
 		"serverVersion": "3.10.0",
 		"region": "eu-west",
-		"batchIntervalMs": { "$numberInt": "10000" }
+		"batchIntervalMs": { "$numberInt": "10000" },
+		"mediaStats": true
 	}
 ]

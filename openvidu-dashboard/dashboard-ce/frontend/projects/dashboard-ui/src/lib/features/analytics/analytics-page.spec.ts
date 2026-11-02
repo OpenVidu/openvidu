@@ -334,6 +334,38 @@ describe('AnalyticsPage', () => {
 		expect(size).toContain('Not provided by this server version');
 	});
 
+	it('says the data is not reported when no server of the range reports media statistics', async () => {
+		const { element } = await open('/analytics?from=now-7d&to=now&tz=UTC', [], {
+			summary: { ...SUMMARY, mediaStats: 'none' }
+		});
+		const tile = [...element.querySelectorAll('.tiles ovd-kpi-tile')].map(text)[3];
+		const bandwidth = card(element, 'Data transferred');
+
+		expect(tile).toContain('—');
+		expect(tile).toContain('Not reported by the servers of this range');
+		expect(tile).not.toContain('TB');
+		expect(text(bandwidth?.querySelector('.media-stats-notice'))).toBe(
+			'The servers of this range do not report media statistics'
+		);
+		expect(bandwidth?.querySelector('ovd-time-series-chart')).toBeNull();
+		expect(bandwidth?.querySelectorAll('ovd-kpi-tile')).toHaveLength(0);
+	});
+
+	it('notes that the data covers only some servers when the others report no media statistics', async () => {
+		const { element } = await open('/analytics?from=now-7d&to=now&tz=UTC', [], {
+			summary: { ...SUMMARY, mediaStats: 'partial' }
+		});
+		const tile = [...element.querySelectorAll('.tiles ovd-kpi-tile')].map(text)[3];
+		const bandwidth = card(element, 'Data transferred');
+
+		expect(tile).toContain('↑ 1.2 TB');
+		expect(tile).toContain('Only from the servers that report media statistics');
+		expect(text(bandwidth?.querySelector('.media-stats-notice'))).toBe(
+			'Only from the servers that report media statistics'
+		);
+		expect(bandwidth?.querySelector('ovd-time-series-chart')).not.toBeNull();
+	});
+
 	it('hides unique identities below a day and shows them per UTC day at one day', async () => {
 		const weekly = await open('/analytics?from=now-7d&to=now&tz=UTC');
 

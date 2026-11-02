@@ -2,6 +2,7 @@ import { InjectionToken, type Signal, type Type } from '@angular/core';
 import type {
 	AnalyticsBreakdown,
 	AnalyticsDimension,
+	AnalyticsMediaStatsCoverage,
 	AnalyticsMetric,
 	AnalyticsMetricInfo,
 	AnalyticsScope,
@@ -85,6 +86,8 @@ export abstract class AnalyticsPageContext {
 	abstract readonly tz: Signal<string>;
 	/** Refreshes of the page, from 1: a card with requests of its own reloads when it changes. */
 	abstract readonly refreshes: Signal<number>;
+	/** How much of the range's media statistics its servers report, from the summary; undefined when all of it. */
+	abstract readonly mediaStats: Signal<AnalyticsMediaStatsCoverage | undefined>;
 	/** The series of `metrics` from the combined series requests. */
 	abstract chart(metrics: readonly AnalyticsMetric[]): ChartSeries[];
 	/** Axis range of the series of `metric`. */

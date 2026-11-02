@@ -56,6 +56,8 @@ export interface RoomDoc {
 	features: { egress: boolean; ingress: boolean; agent: boolean; sip: boolean };
 	lastEventAt: Date;
 	lastStatsAt: Date | null;
+	/** Only `false`, on the rooms of a node without media statistics. */
+	mediaStats?: false;
 	schemaVersion: number;
 	expiresAt: Date | null;
 }
@@ -102,6 +104,8 @@ export interface ParticipantDoc {
 		subscribed: number;
 		subscribeFailures: number;
 	};
+	/** Only `false`, on the sessions of a node without media statistics. */
+	mediaStats?: false;
 	bytes: { up: Long; down: Long };
 	quality: {
 		scoreSum: number;
@@ -284,6 +288,8 @@ export interface GeneratorContext {
 	retentionEntitiesMs: number;
 	/** Retention of tracks and subscriptions (`retention.tracks`). */
 	retentionTracksMs: number;
+	/** Nodes that report no media statistics: their sessions carry no bytes, quality or `track_stats`. */
+	withoutMediaStats: ReadonlySet<string>;
 }
 
 export interface RoomPlan {
@@ -578,7 +584,10 @@ export function generateRoom(ctx: GeneratorContext, plan: RoomPlan): RoomBundle 
 	}
 
 	const lastEventAt = Math.max(endedAt ?? 0, ...sessions.map((s) => s.leftAt ?? s.doc.joinedAt.getTime()));
-	const lastStatsAt = scoreCount > 0 ? Math.min(now, Math.max(...sessions.map((s) => s.leftAt ?? now))) : null;
+	const withoutMediaStats = ctx.withoutMediaStats.has(nodeId);
+	// Signal statistics keep flowing on a node without media statistics.
+	const flushed = scoreCount > 0 || (withoutMediaStats && sessions.some((s) => s.doc.status !== 'aborted'));
+	const lastStatsAt = flushed ? Math.min(now, Math.max(...sessions.map((s) => s.leftAt ?? now))) : null;
 	const room: RoomDoc = {
 		_id: roomSid,
 		name,
@@ -613,6 +622,7 @@ export function generateRoom(ctx: GeneratorContext, plan: RoomPlan): RoomBundle 
 		features: { egress: hasEgress, ingress: hasIngress, agent: hasAgent, sip: hasSip },
 		lastEventAt: new Date(lastEventAt),
 		lastStatsAt: lastStatsAt === null ? null : new Date(lastStatsAt),
+		...(withoutMediaStats ? { mediaStats: false as const } : {}),
 		schemaVersion: SCHEMA_VERSION,
 		expiresAt: expiresAt(ctx, endedAt)
 	};
@@ -935,7 +945,10 @@ function publishTracks(
 			codecs: [{ mimeType, layers }],
 			encryption: 'NONE',
 			subscribers: { current: 0, total: 0, failed: 0 },
-			publishStats: unpublishedAt === null ? null : rtpStats(rng, bitrate, durationMs, layers.length),
+			publishStats:
+				unpublishedAt === null || ctx.withoutMediaStats.has(session.doc.nodeId)
+					? null
+					: rtpStats(rng, bitrate, durationMs, layers.length),
 			schemaVersion: SCHEMA_VERSION,
 			expiresAt: tracksExpiresAt(ctx, unpublishedAt)
 		};
@@ -1074,7 +1087,7 @@ function buildSubscriptions(ctx: GeneratorContext, roomSid: string, sessions: Se
 					durationMs: failed ? null : durationMs,
 					maxVideoQuality,
 					subscribeStats:
-						failed || durationMs === null
+						failed || durationMs === null || ctx.withoutMediaStats.has(publisher.doc.nodeId)
 							? null
 							: withoutLayers(rtpStats(rng, bitrate, durationMs, video ? 1 : 0)),
 					schemaVersion: SCHEMA_VERSION,
@@ -1101,6 +1114,23 @@ function finalizeSessions(ctx: GeneratorContext, sessions: Session[]): void {
 	const { rng, now } = ctx;
 
 	for (const s of sessions) {
+		if (ctx.withoutMediaStats.has(s.doc.nodeId)) {
+			s.upBytes = 0;
+			s.downBytes = 0;
+			s.doc.mediaStats = false;
+			s.doc.bytes = { up: int64(0), down: int64(0) };
+			s.doc.quality = {
+				scoreSum: 0,
+				scoreCount: 0,
+				minScore: null,
+				poor: 0,
+				lost: 0,
+				lastScore: null,
+				lastScoreAt: null
+			};
+			continue;
+		}
+
 		if (s.doc.status === 'aborted') {
 			continue;
 		}

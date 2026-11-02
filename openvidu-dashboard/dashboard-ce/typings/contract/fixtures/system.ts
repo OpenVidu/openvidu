@@ -8,7 +8,8 @@ export const nodes: NodeDocument[] = [
 		lastSeenAt: at('10:35:10'),
 		serverVersion: SERVER_VERSION,
 		region: REGION,
-		batchIntervalMs: 10_000
+		batchIntervalMs: 10_000,
+		mediaStats: true
 	},
 	{
 		_id: NODE_BETA,
@@ -16,7 +17,8 @@ export const nodes: NodeDocument[] = [
 		lastSeenAt: at('10:35:10'),
 		serverVersion: SERVER_VERSION,
 		region: REGION,
-		batchIntervalMs: 10_000
+		batchIntervalMs: 10_000,
+		mediaStats: true
 	}
 ];
 

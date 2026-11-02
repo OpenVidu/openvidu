@@ -70,7 +70,11 @@ export const analyticsSummaryResponse = z
 		ingressSessions: count.meta({ description: 'Ingress sessions started in the range' }),
 		ingressDurationMs: count.meta({ description: 'Duration of the ingress sessions ended in the range' }),
 		apiCalls: count,
-		apiErrorRate: z.number().optional()
+		apiErrorRate: z.number().optional(),
+		mediaStats: z.enum(['partial', 'none']).optional().meta({
+			description:
+				'Present when some (partial) or all (none) of the nodes seen in the range do not report media statistics: bytes cover only the others'
+		})
 	})
 	.meta({ id: 'AnalyticsSummary', description: 'A value the stored documents cannot derive is absent' });
 

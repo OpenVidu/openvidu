@@ -26,25 +26,26 @@ pnpm generate --uri "$MONGO_URI" --db ov_data_m --scenario M --days 7 --drop
 pnpm generate --uri "$MONGO_URI" --db ov_data_l --scenario L --days 1 --drop --stats-mode track
 ```
 
-| Option                              | Default       | Meaning                                                                                                                |
-| ----------------------------------- | ------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| `--uri`, `--db`                     | required      | Connection string and target database                                                                                  |
-| `--scenario S\|M\|L`                | required      | Rooms per day, sessions per day and average room size (table below)                                                    |
-| `--days <n>`                        | required      | Days of history ending now                                                                                             |
-| `--stats-mode participant\|track`   | `participant` | One `track_stats` document per participant and direction, or per track                                                 |
-| `--seed <n>`                        | `1`           | Seed of the pseudo-random generator (mulberry32); same seed, same data                                                 |
-| `--retention-events-days <n>`       | `7`           | Only raw events inside this window are written (TTL index on `ts`)                                                     |
-| `--retention-stats-days <n>`        | `7`           | Only stats inside this window are written (`expireAfterSeconds`)                                                       |
-| `--retention-tracks-days <n>`       | `7`           | `expiresAt` of tracks and subscriptions; expired ones are not written                                                  |
-| `--retention-entities-days <n>`     | `90`          | `expiresAt = closedAt + retention` on closed entities                                                                  |
-| `--retention-rollups-5min-days <n>` | `7`           | Only 5-minute rollups inside this window are written (TTL index on `bucket`)                                           |
-| `--drop`                            | off           | Drop the database first                                                                                                |
-| `--plain-stats`                     | off           | Force the plain-collection fallback for `track_stats`                                                                  |
-| `--five-minute-rollups`             | off           | Write `analytics_5min` inside the 5-minute rollup window                                                               |
-| `--node-rollups`                    | off           | Write the `node:<nodeId>` scope beside `global` in every rollup                                                        |
-| `--room-sums`                       | off           | Write `rooms.participantsSum` and `rooms.durationMsSum` at room end                                                    |
-| `--active-window <minutes>`         | off           | Rooms created in the last minutes stay active (two of three); without it, the most recent 10 % of the rooms are active |
-| `--min-active-rooms <n>`            | 0             | With `--active-window`: rooms added to the window when the hour of day leaves fewer than `n` active rooms              |
+| Option                              | Default       | Meaning                                                                                                                   |
+| ----------------------------------- | ------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| `--uri`, `--db`                     | required      | Connection string and target database                                                                                     |
+| `--scenario S\|M\|L`                | required      | Rooms per day, sessions per day and average room size (table below)                                                       |
+| `--days <n>`                        | required      | Days of history ending now                                                                                                |
+| `--stats-mode participant\|track`   | `participant` | One `track_stats` document per participant and direction, or per track                                                    |
+| `--seed <n>`                        | `1`           | Seed of the pseudo-random generator (mulberry32); same seed, same data                                                    |
+| `--retention-events-days <n>`       | `7`           | Only raw events inside this window are written (TTL index on `ts`)                                                        |
+| `--retention-stats-days <n>`        | `7`           | Only stats inside this window are written (`expireAfterSeconds`)                                                          |
+| `--retention-tracks-days <n>`       | `7`           | `expiresAt` of tracks and subscriptions; expired ones are not written                                                     |
+| `--retention-entities-days <n>`     | `90`          | `expiresAt = closedAt + retention` on closed entities                                                                     |
+| `--retention-rollups-5min-days <n>` | `7`           | Only 5-minute rollups inside this window are written (TTL index on `bucket`)                                              |
+| `--drop`                            | off           | Drop the database first                                                                                                   |
+| `--plain-stats`                     | off           | Force the plain-collection fallback for `track_stats`                                                                     |
+| `--five-minute-rollups`             | off           | Write `analytics_5min` inside the 5-minute rollup window                                                                  |
+| `--node-rollups`                    | off           | Write the `node:<nodeId>` scope beside `global` in every rollup                                                           |
+| `--room-sums`                       | off           | Write `rooms.participantsSum` and `rooms.durationMsSum` at room end                                                       |
+| `--active-window <minutes>`         | off           | Rooms created in the last minutes stay active (two of three); without it, the most recent 10 % of the rooms are active    |
+| `--min-active-rooms <n>`            | 0             | With `--active-window`: rooms added to the window when the hour of day leaves fewer than `n` active rooms                 |
+| `--nodes-without-media-stats <n>`   | 0             | The last `n` of the three nodes report no media statistics: `mediaStats: false`, no media `track_stats`, bytes or quality |
 
 | Scenario | Rooms per day | Sessions per day | Average room size |
 | -------- | ------------- | ---------------- | ----------------- |

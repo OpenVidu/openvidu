@@ -144,7 +144,17 @@
 		<span class="ovd-tabular">{{ number(room.participants.active) }}</span>
 	</ng-template>
 	<ng-template ovdCell="bytes" let-room>
-		<span class="ovd-tabular">{{ bandwidth(room) }}</span>
+		@if (room.mediaStats === false) {
+			<span
+				class="ovd-tabular"
+				tabindex="0"
+				[matTooltip]="mediaStatsNotReported"
+				[attr.aria-label]="mediaStatsNotReported"
+				>—</span
+			>
+		} @else {
+			<span class="ovd-tabular">{{ bandwidth(room) }}</span>
+		}
 	</ng-template>
 	<ng-template ovdCell="features" let-room>
 		<span class="features">

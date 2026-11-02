@@ -199,6 +199,48 @@ describe.skipIf(mongoUri === '')('data generator', () => {
 			await db.dropDatabase();
 		}
 	});
+
+	it('generates a node without media statistics on request', async () => {
+		const db = client.db('dashboard_test_generator_media_stats');
+		await db.dropDatabase();
+
+		try {
+			await generate(db, {
+				scenario: 'S',
+				days: 1,
+				statsMode: 'track',
+				seed: 7,
+				retentionDays: { events: 7, stats: 7, tracks: 7, entities: 90 },
+				timeseries: true,
+				rollups: { fiveMinute: true, nodes: true, roomSums: true },
+				nodesWithoutMediaStats: 1
+			});
+
+			const nodes = await db.collection<{ _id: string; mediaStats: boolean }>('nodes').find().toArray();
+			const unmarked = nodes.filter((node) => !node.mediaStats).map((node) => node._id);
+
+			expect(nodes.filter((node) => node.mediaStats)).toHaveLength(nodes.length - 1);
+			expect(unmarked).toHaveLength(1);
+
+			const rooms = db.collection<{ mediaStats?: boolean; quality: { scoreCount: number } }>('rooms');
+			const marked = await rooms.find({ nodeId: unmarked[0] }).toArray();
+
+			expect(marked.length).toBeGreaterThan(0);
+			expect(marked.every((room) => room.mediaStats === false && room.quality.scoreCount === 0)).toBe(true);
+			expect(await rooms.countDocuments({ nodeId: unmarked[0], 'bytes.up': { $ne: 0 } })).toBe(0);
+			expect(await rooms.countDocuments({ nodeId: { $ne: unmarked[0] }, mediaStats: { $exists: true } })).toBe(0);
+			expect(
+				await db.collection('participants').countDocuments({ nodeId: unmarked[0], mediaStats: { $ne: false } })
+			).toBe(0);
+			expect(await db.collection('track_stats').countDocuments({ 'meta.nodeId': unmarked[0] })).toBe(0);
+			expect(await db.collection('track_stats').countDocuments({})).toBeGreaterThan(0);
+			expect(
+				await db.collection('rooms').countDocuments({ $nor: [{ $jsonSchema: CONTRACT_SCHEMAS.rooms }] })
+			).toBe(0);
+		} finally {
+			await db.dropDatabase();
+		}
+	});
 });
 
 /** Every key of a payload at any depth; BSON values such as `Long` are leaves. */

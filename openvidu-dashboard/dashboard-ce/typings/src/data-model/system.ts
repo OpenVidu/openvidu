@@ -9,6 +9,8 @@ export interface NodeDocument {
 	region?: string;
 	/** Configured batch interval of the node; absent on documents written before it existed (read as 10 s). */
 	batchIntervalMs?: number;
+	/** Whether the node reports media statistics; absent on documents written before it existed (read as true). */
+	mediaStats?: boolean;
 }
 
 /** `schema_meta` `_id: "schema"`: contract version implemented by the writer. */

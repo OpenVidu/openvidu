@@ -36,7 +36,7 @@ import { injectRankedSort } from '../../core/state/ranked-sort.js';
 import { rangeSpanMs } from '../../core/state/relative-time.js';
 import { formatNumber, formatTimestamp } from '../../format/formatters.js';
 import { INFO_TEXTS } from '../../format/info-texts.js';
-import { RECONCILER_ESTIMATE } from '../../format/labels.js';
+import { RECONCILER_ESTIMATE, ROOM_MEDIA_STATS_NOT_REPORTED } from '../../format/labels.js';
 import { formatBandwidth, ROOM_FEATURES, roomPreview } from './room-display.js';
 import { ROOMS_NODE_FILTER, RoomsDataService, type RoomsListRequest } from './rooms-data.js';
 
@@ -98,6 +98,7 @@ export class RoomsPage {
 
 	protected readonly features = ROOM_FEATURES;
 	protected readonly estimate = RECONCILER_ESTIMATE;
+	protected readonly mediaStatsNotReported = ROOM_MEDIA_STATS_NOT_REPORTED;
 	protected readonly now = injectTicker();
 	protected readonly tz = this.query.tz;
 	protected readonly limit = this.query.limit;

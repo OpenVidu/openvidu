@@ -95,6 +95,8 @@ export interface RoomDocument extends EntityBase {
 	features: RoomFeatures;
 	lastEventAt: Date;
 	lastStatsAt?: Date;
+	/** `false` when the node that created it does not report media statistics; absent otherwise. */
+	mediaStats?: false;
 	internal?: WriterInternal;
 }
 
@@ -167,6 +169,8 @@ export interface ParticipantDocument extends EntityBase {
 	quality: ParticipantQuality;
 	lastEventAt: Date;
 	lastStatsAt?: Date;
+	/** `false` when the node that created it does not report media statistics; absent otherwise. */
+	mediaStats?: false;
 	internal?: WriterInternal;
 }
 

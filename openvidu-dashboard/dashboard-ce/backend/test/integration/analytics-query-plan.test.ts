@@ -138,6 +138,17 @@ describe.skipIf(mongoUri === '')(`analytics query plan at scenario ${scenario}`,
 		).toBeGreaterThan(0);
 	});
 
+	it('summary: the media statistics coverage reads the nodes on lastSeenAt', async () => {
+		const from = new Date(now.getTime() - DAY);
+		const nodes = await db.collection(Collection.NODES).countDocuments({});
+		const summary = await expectIndexBacked(db, repository.nodesInRange('global', from, now), {
+			maxDocsExamined: nodes
+		});
+
+		expect(nodes).toBeGreaterThan(0);
+		expectIndexes(summary, ['lastSeenAt_ttl']);
+	});
+
 	it('sums of the rollups equal the entity counts over whole hours', async () => {
 		const from = new Date(hour.getTime() - Math.min(days, 2) * DAY);
 		const summary = await service.summary({ from, to: hour, tz: 'UTC', scope: 'global' });

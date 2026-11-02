@@ -158,6 +158,8 @@ export interface GenerateOptions {
 	activeWindowMinutes?: number;
 	/** Active rooms the active window holds at least, whatever the hour; extra rooms are added to it when needed. */
 	minActiveRooms?: number;
+	/** Generated nodes, the last ones, that report no media statistics; none by default. */
+	nodesWithoutMediaStats?: number;
 	log?: (line: string) => void;
 }
 
@@ -181,6 +183,12 @@ export async function generate(db: Db, options: GenerateOptions): Promise<Genera
 
 	if (options.minActiveRooms !== undefined && options.activeWindowMinutes === undefined) {
 		throw new Error('minActiveRooms requires activeWindowMinutes');
+	}
+
+	const nodesWithoutMediaStats = options.nodesWithoutMediaStats ?? 0;
+
+	if (nodesWithoutMediaStats > NODE_COUNT) {
+		throw new Error(`nodesWithoutMediaStats must be at most ${String(NODE_COUNT)}`);
 	}
 
 	const retention = {
@@ -215,7 +223,8 @@ export async function generate(db: Db, options: GenerateOptions): Promise<Genera
 		now,
 		nodeIds,
 		retentionEntitiesMs: retentionDays.entities * DAY,
-		retentionTracksMs: retentionDays.tracks * DAY
+		retentionTracksMs: retentionDays.tracks * DAY,
+		withoutMediaStats: new Set(nodeIds.slice(NODE_COUNT - nodesWithoutMediaStats))
 	};
 	const windows: DeriveWindows = {
 		now,
@@ -302,7 +311,8 @@ export async function generate(db: Db, options: GenerateOptions): Promise<Genera
 			lastSeenAt: new Date(now),
 			serverVersion: '3.10.0',
 			region: ['eu-west-1', 'eu-west-1', 'us-east-1'][i],
-			batchIntervalMs: BATCH_INTERVAL_MS
+			batchIntervalMs: BATCH_INTERVAL_MS,
+			mediaStats: !ctx.withoutMediaStats.has(nodeId)
 		});
 	}
 

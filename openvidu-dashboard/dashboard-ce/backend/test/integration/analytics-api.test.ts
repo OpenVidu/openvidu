@@ -13,6 +13,7 @@ import {
 	analyticsSeriesResponse,
 	analyticsSummaryResponse
 } from '../../src/analytics/analytics-responses.js';
+import { AnalyticsRepository } from '../../src/analytics/analytics-repository.js';
 import { openApiDocument } from '../../src/api/openapi.js';
 import type { RouteRegistry } from '../../src/api/route-registry.js';
 import { TOKENS } from '../../src/di/tokens.js';
@@ -262,6 +263,53 @@ describe.skipIf(mongoUri === '')('analytics API', () => {
 			expect(summary.from).toMatch(/T00:00:00\.000Z$/);
 			expect(summary).not.toHaveProperty('avgRoomSize');
 			expect(summary).not.toHaveProperty('avgRoomDurationMs');
+		});
+	});
+
+	describe('media statistics coverage', () => {
+		const node = (id: string, mediaStats: boolean, lastSeenAt = new Date()): { _id: string } & Document => ({
+			_id: id,
+			firstSeenAt: new Date(hour - DAY),
+			lastSeenAt,
+			serverVersion: 'test',
+			batchIntervalMs: 10_000,
+			mediaStats
+		});
+		const coverage = async () => (await json<AnalyticsSummary>(ce, '/analytics/summary?from=now-1h')).mediaStats;
+
+		afterAll(async () => {
+			await ce.dashboard.db.collection(Collection.NODES).deleteMany({});
+		});
+
+		it('says whether the nodes seen in the range report media statistics', async () => {
+			const nodes = ce.dashboard.db.collection<{ _id: string } & Document>(Collection.NODES);
+
+			await seedRollups(ce, {});
+			await nodes.deleteMany({});
+			await nodes.insertMany([node('ND_a', false), node('ND_b', false)]);
+			const summary = await json<AnalyticsSummary>(ce, '/analytics/summary?from=now-1h');
+
+			expect(analyticsSummaryResponse.parse(summary)).toEqual(summary);
+			expect(summary).toMatchObject({ mediaStats: 'none', bytesUp: 0, bytesDown: 0 });
+
+			await nodes.updateOne({ _id: 'ND_b' }, { $set: { mediaStats: true } });
+			expect(await coverage()).toBe('partial');
+
+			// A node last seen before the range does not count.
+			await nodes.updateOne({ _id: 'ND_a' }, { $set: { lastSeenAt: new Date(hour - 2 * DAY) } });
+			expect(await coverage()).toBeUndefined();
+		});
+
+		it('reads the node of a node scope only', async () => {
+			const nodes = ce.dashboard.db.collection<{ _id: string } & Document>(Collection.NODES);
+			const repository = new AnalyticsRepository(ce.dashboard.db);
+			const from = new Date(Date.now() - HOUR);
+
+			await nodes.deleteMany({});
+			await nodes.insertMany([node('ND_a', false), node('ND_b', true)]);
+
+			expect(await repository.nodesMediaStats('node:ND_b', from, new Date())).toEqual([true]);
+			expect((await repository.nodesMediaStats('global', from, new Date())).sort()).toEqual([false, true]);
 		});
 	});
 

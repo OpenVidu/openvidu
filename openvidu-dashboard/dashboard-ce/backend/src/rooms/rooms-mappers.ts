@@ -28,6 +28,7 @@ export function toRoomListItem(doc: RoomDocument): RoomListItem {
 			agent: doc.features.agent,
 			sip: doc.features.sip
 		},
-		lastStatsAt: iso(doc.lastStatsAt)
+		lastStatsAt: iso(doc.lastStatsAt),
+		mediaStats: doc.mediaStats === false ? false : undefined
 	});
 }

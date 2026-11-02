@@ -68,7 +68,7 @@ export {
 	tzParam
 } from './api/query.js';
 export { ROLLUP_INDEX } from './analytics/analytics-repository.js';
-export { isoDate, listResponse, staleField } from './api/responses.js';
+export { isoDate, listResponse, mediaStatsField, staleField } from './api/responses.js';
 export { prefixRegex } from './api/search.js';
 export { bucketStart, bucketStarts, MAX_BUCKETS } from './api/time-series.js';
 export { ifNoneMatchMatches } from './http/conditional.js';

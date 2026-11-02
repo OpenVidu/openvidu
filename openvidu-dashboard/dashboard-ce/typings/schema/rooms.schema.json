@@ -154,6 +154,10 @@
 		},
 		"lastEventAt": { "bsonType": "date" },
 		"lastStatsAt": { "bsonType": "date" },
+		"mediaStats": {
+			"bsonType": "bool",
+			"description": "Only false: the node that created the entity does not report media statistics; absent otherwise"
+		},
 		"internal": { "bsonType": "object", "description": "Writer bookkeeping; never read by the dashboard" },
 		"schemaVersion": {
 			"bsonType": ["int", "long"],

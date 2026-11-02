@@ -3,6 +3,7 @@ import type { Db } from 'mongodb';
 import {
 	type AnalyticsBreakdown,
 	type AnalyticsBreakdownsResponse,
+	type AnalyticsMediaStatsCoverage,
 	type AnalyticsSeries,
 	type AnalyticsSeriesResponse,
 	type AnalyticsSummary,
@@ -83,6 +84,17 @@ function roomAverage(counters: Counters, path: string, digits: 'one' | 'integer'
 	const average = value(counters, path) / ended;
 
 	return digits === 'one' ? round1(average) : Math.round(average);
+}
+
+/** Coverage of the media statistics of the nodes seen in a range: absent when every one of them reports them. */
+export function mediaStatsCoverage(marks: readonly (boolean | undefined)[]): AnalyticsMediaStatsCoverage | undefined {
+	const without = marks.filter((mark) => mark === false).length;
+
+	if (without === 0) {
+		return undefined;
+	}
+
+	return without === marks.length ? 'none' : 'partial';
 }
 
 /** Analytics over the rollup collections. */
@@ -240,7 +252,7 @@ export class AnalyticsService {
 		const now = this.options.now();
 		const range = snapRange(query.from, query.to);
 		const days = utcDaysOf(range.from, range.to);
-		const [counters, daily] = await Promise.all([
+		const [counters, daily, mediaStats] = await Promise.all([
 			this.read(
 				{
 					collection: range.collection,
@@ -262,7 +274,8 @@ export class AnalyticsService {
 					fields: ['uniqueIdentities']
 				},
 				now
-			)
+			),
+			this.repository.nodesMediaStats(query.scope, range.from, range.to).then(mediaStatsCoverage)
 		]);
 		const identities = [...daily.values()].flatMap((day) => {
 			const count = day.get('uniqueIdentities');
@@ -298,7 +311,8 @@ export class AnalyticsService {
 			ingressSessions: value(counters, 'ingress.sessionsStarted'),
 			ingressDurationMs: value(counters, 'ingress.durationMs'),
 			apiCalls: calls,
-			apiErrorRate: share(value(counters, 'apiErrors.total'), calls)
+			apiErrorRate: share(value(counters, 'apiErrors.total'), calls),
+			mediaStats
 		});
 	}
 

@@ -2,7 +2,7 @@ import * as z from 'zod';
 
 import { ClosedBy, RoomStatus } from '@openvidu-dashboard/typings';
 
-import { isoDate, listResponse, staleField } from '../api/responses.js';
+import { isoDate, listResponse, mediaStatsField, staleField } from '../api/responses.js';
 import { enumValues } from '../util/enum-values.js';
 
 const count = z.number().int();
@@ -24,7 +24,8 @@ export const roomListFields = {
 	bytes,
 	features: z.object({ egress: z.boolean(), ingress: z.boolean(), agent: z.boolean(), sip: z.boolean() }),
 	lastStatsAt: isoDate.optional(),
-	stale: staleField
+	stale: staleField,
+	mediaStats: mediaStatsField
 };
 
 export const roomListItem = z.object(roomListFields).meta({ id: 'RoomListItem' });

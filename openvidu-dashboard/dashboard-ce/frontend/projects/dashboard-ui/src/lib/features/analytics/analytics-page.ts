@@ -46,6 +46,7 @@ import {
 	INGRESS_INPUT_LABELS,
 	OS_LABELS,
 	PARTICIPANT_KIND_LABELS,
+	RANGE_MEDIA_STATS,
 	SDK_LABELS
 } from '../../format/labels.js';
 import { bandwidthLines } from '../rooms/room-display.js';
@@ -261,6 +262,8 @@ export class AnalyticsPage implements AnalyticsPageContext {
 
 	protected readonly result = this.loader.data;
 	protected readonly summary = computed(() => this.result()?.summary.value ?? null);
+	readonly mediaStats = computed(() => this.summary()?.mediaStats);
+	protected readonly mediaStatsTexts = RANGE_MEDIA_STATS;
 
 	protected readonly title = computed(() =>
 		this.scope() === 'global' ? 'Analytics' : `Analytics · ${this.scope()}`
@@ -358,10 +361,25 @@ export class AnalyticsPage implements AnalyticsPageContext {
 		return days === undefined ? 'Unique identities' : `Unique identities (sum of ${String(days)} UTC days)`;
 	}
 
-	protected bandwidthTile(): [string, string] | null {
+	protected bandwidthTile(): [string, string] | string | null {
 		const summary = this.summary();
 
-		return summary === null ? null : bandwidthLines({ up: summary.bytesUp, down: summary.bytesDown });
+		if (summary === null) {
+			return null;
+		}
+
+		return summary.mediaStats === 'none' ? '—' : bandwidthLines({ up: summary.bytesUp, down: summary.bytesDown });
+	}
+
+	protected bandwidthHint(): string | undefined {
+		switch (this.mediaStats()) {
+			case 'none':
+				return RANGE_MEDIA_STATS.notReported;
+			case 'partial':
+				return RANGE_MEDIA_STATS.partial;
+			default:
+				return undefined;
+		}
 	}
 
 	protected bytesTile(value: number | undefined, arrow: string): string | null {

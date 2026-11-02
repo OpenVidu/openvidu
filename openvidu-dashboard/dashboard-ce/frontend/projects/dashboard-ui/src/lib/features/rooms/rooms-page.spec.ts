@@ -345,6 +345,22 @@ describe('RoomsPage', () => {
 		expect(stale?.querySelector('ovd-status-badge .badge')?.getAttribute('aria-label')).toContain('No stats since');
 	});
 
+	it('reads a dash with its tooltip in Data up / down for a room whose server reports no media statistics', async () => {
+		const { element } = await open(
+			'/rooms',
+			page([room({ sid: 'RM_ms', mediaStats: false, bytes: { up: 0, down: 0 } }), room({ sid: 'RM_ok' })])
+		);
+		const [unreported, reported] = [...element.querySelectorAll('tbody tr')].map(
+			(row) => row.querySelectorAll('td')[8]
+		);
+
+		expect(text(unreported)).toBe('—');
+		expect(unreported?.querySelector('span')?.getAttribute('aria-label')).toBe(
+			"Not reported: this room's server does not report media statistics"
+		);
+		expect(text(reported)).toBe('↑ 12 MB ↓ 48 MB');
+	});
+
 	it('keeps a fresh room unmarked under a long interval, judged at the last response', async () => {
 		vi.useFakeTimers({ shouldAdvanceTime: true });
 
