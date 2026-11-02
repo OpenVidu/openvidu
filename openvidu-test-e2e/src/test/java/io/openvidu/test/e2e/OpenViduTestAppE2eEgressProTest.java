@@ -3165,8 +3165,7 @@ public class OpenViduTestAppE2eEgressProTest extends AbstractOpenViduTestappE2eT
 			if (cameras.isEmpty()) {
 				cameras.addAll(before);
 			}
-			click(".add-video-btn");
-			waitForEvent("localTrackPublished", ++published);
+			publishCamera(user, instance, ++published);
 			cameras.add(newId("video", "camera", before));
 			parkMouse();
 		}
@@ -3284,8 +3283,7 @@ public class OpenViduTestAppE2eEgressProTest extends AbstractOpenViduTestappE2eT
 		}
 
 		void unpublishVideo() throws Exception {
-			click(CAMERA + " .publish-unpublish-video");
-			waitForEvent("localTrackUnpublished", ++unpublished);
+			unpublishCamera(user, instance, ++unpublished);
 		}
 
 		void unpublishAudio() throws Exception {

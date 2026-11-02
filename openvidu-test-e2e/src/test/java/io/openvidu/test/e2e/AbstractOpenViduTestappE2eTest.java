@@ -790,6 +790,33 @@ public class AbstractOpenViduTestappE2eTest extends OpenViduTestE2e {
 		}
 	}
 
+	// The local camera track of an instance: the video element id carries the
+	// track source, and a track keeps its component while published
+	protected static final String LOCAL_CAMERA_TRACK = "app-video-track:has(video.local[id*='--camera--'])";
+
+	/**
+	 * Publishes a new camera track from the given instance ("Add video" button) and
+	 * waits until that instance has published expectedLocalTrackPublished local
+	 * tracks in total.
+	 */
+	protected void publishCamera(OpenViduTestappUser user, int instance, int expectedLocalTrackPublished)
+			throws Exception {
+		this.waitAndClick(user, "#openvidu-instance-" + instance + " .add-video-btn");
+		user.getEventManager().waitUntilEventReaches(instance, "localTrackPublished", "RoomEvent",
+				expectedLocalTrackPublished);
+	}
+
+	/**
+	 * Unpublishes the camera track of the given instance and waits until that
+	 * instance has unpublished expectedLocalTrackUnpublished local tracks in total.
+	 */
+	protected void unpublishCamera(OpenViduTestappUser user, int instance, int expectedLocalTrackUnpublished)
+			throws Exception {
+		this.waitAndClick(user, "#openvidu-instance-" + instance + " " + LOCAL_CAMERA_TRACK + " .publish-unpublish-video");
+		user.getEventManager().waitUntilEventReaches(instance, "localTrackUnpublished", "RoomEvent",
+				expectedLocalTrackUnpublished);
+	}
+
 	protected void createIngress(OpenViduTestappUser user, String preset, String codec, boolean simulcast,
 			String urlType,
 			String urlUri) throws InterruptedException {

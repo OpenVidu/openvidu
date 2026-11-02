@@ -114,10 +114,17 @@ export class VideoTrackComponent extends TrackComponent {
       const videoLayers: any[] = [];
       let stats = await (this._track! as VideoTrack).getRTCStatsReport();
       let codecs = new Map();
+      let transport: RTCTransportStats | undefined;
       stats?.forEach((report) => {
         if (report.type === 'codec') {
           // Store for matching with codecId in 'outbound-rtp' or 'inbound-rtp' reports
           codecs.set(report.id, report);
+        }
+        if (report.type === 'transport') {
+          // Whole-connection counters: RTP, RTX padding and RTCP of every track of
+          // this peer connection, so a subscriber can see traffic that its own
+          // 'inbound-rtp' does not count
+          transport = report as RTCTransportStats;
         }
         if (report.type === 'outbound-rtp') {
           const reportTyped = report as RTCOutboundRtpStreamStats;
@@ -160,6 +167,10 @@ export class VideoTrackComponent extends TrackComponent {
       videoLayers.forEach((layer) => {
         if (codecs.has(layer.codecId)) {
           layer.codec = codecs.get(layer.codecId).mimeType;
+        }
+        if (transport) {
+          layer.transportBytesReceived = transport.bytesReceived;
+          layer.transportPacketsReceived = transport.packetsReceived;
         }
       });
       return JSON.stringify(videoLayers, null, 2);

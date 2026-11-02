@@ -3220,6 +3220,184 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		gracefullyLeaveParticipants(user, 2);
 	}
 
+	// --- Subscriber bandwidth estimate across video pauses -------------------------
+	//
+	// A subscriber connection that carries only audio must not be probed for
+	// bandwidth (nothing can host the probes), and its estimate must survive the
+	// pause so that the video comes back on its top layer. The three tests below
+	// drive the ways a connection gets there: the publisher mutes the camera, the
+	// subscriber disables the video, and the camera is unpublished
+
+	// The top simulcast layer of the fake camera
+	private static final int CAMERA_TOP_LAYER_WIDTH = 640;
+	// Several periods of the server's periodic bandwidth probing (every 5 s while
+	// the connection sends much less than its estimate)
+	private static final long VIDEO_PAUSE_MILLIS = 20000;
+
+	/**
+	 * Publisher (instance 0) with audio and simulcast video and no dynacast, and a
+	 * subscriber (instance 1) without adaptive stream, so that it keeps the video
+	 * subscribed while it is hidden. Returns the subscriber's video once its top
+	 * layer flows and the server's estimate has had time to settle.
+	 */
+	private WebElement connectPublisherAndSubscriberForBwe(OpenViduTestappUser user) throws Exception {
+		this.addPublisher(user, false, true, false, false, true, true, null, null, null);
+		this.addSubscriber(user, false);
+
+		user.getDriver().findElements(By.className("connect-btn")).forEach(el -> el.sendKeys(Keys.ENTER));
+		user.getEventManager().waitUntilEventReaches("trackSubscribed", "RoomEvent", 2);
+
+		WebElement subscriberVideo = user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 video.remote"));
+		this.waitUntilSubscriberFramesDecodedIncrease(user, subscriberVideo);
+		this.waitUntilSubscriberFrameWidthIs(user, subscriberVideo, CAMERA_TOP_LAYER_WIDTH);
+		Thread.sleep(5000);
+		return subscriberVideo;
+	}
+
+	/**
+	 * With the video just paused: checks that no frame is decoded and that only the
+	 * audio reaches the subscriber during VIDEO_PAUSE_MILLIS. Returns the frames
+	 * decoded so far, for the resume check.
+	 */
+	private long assertOnlyAudioWhilePaused(OpenViduTestappUser user, WebElement subscriberVideo) throws Exception {
+		// Let the video packets in flight arrive before taking the reference counters
+		Thread.sleep(1000);
+
+		JsonObject pauseStart = this.getSubscriberVideoLayer(user, subscriberVideo);
+		final long framesDecodedPaused = this.getLayerCounter(pauseStart, "framesDecoded");
+		final long bytesAtPauseStart = this.getLayerCounter(pauseStart, "transportBytesReceived");
+		Assertions.assertTrue(isStatPresent(framesDecodedPaused), "framesDecoded is not reported");
+		Assertions.assertTrue(isStatPresent(bytesAtPauseStart), "transportBytesReceived is not reported");
+
+		Thread.sleep(VIDEO_PAUSE_MILLIS);
+
+		JsonObject pauseEnd = this.getSubscriberVideoLayer(user, subscriberVideo);
+		final long bytesWhilePaused = this.getLayerCounter(pauseEnd, "transportBytesReceived") - bytesAtPauseStart;
+		Assertions.assertEquals(framesDecodedPaused, this.getLayerCounter(pauseEnd, "framesDecoded"),
+				"Frames were decoded while the video was paused");
+		// Only the audio and the RTCP may have reached the subscriber, well under
+		// 100 kbps. A server that probes a connection with no video to carry the
+		// probes shows up here as hundreds of KB of RTX padding per probing period
+		final long maxBytesWhilePaused = 100 * 1000 / 8 * VIDEO_PAUSE_MILLIS / 1000;
+		Assertions.assertTrue(bytesWhilePaused < maxBytesWhilePaused,
+				"The subscriber received " + bytesWhilePaused + " bytes during the " + (VIDEO_PAUSE_MILLIS / 1000)
+						+ " s video pause, more than the " + maxBytesWhilePaused
+						+ " bytes the audio accounts for: the server is probing the connection while it has no video to send");
+		return framesDecodedPaused;
+	}
+
+	/**
+	 * With the video just resumed: the first frames to arrive must already be the
+	 * top layer. The server kept its bandwidth estimate across the pause, so it picks
+	 * that layer at once. An estimate lost during the pause brings the video back on
+	 * its lowest layer and climbs for a couple of seconds.
+	 */
+	private void assertVideoResumesOnTopLayer(OpenViduTestappUser user, WebElement subscriberVideo,
+			long framesDecodedBefore) throws Exception {
+		final JsonObject[] firstFrames = { new JsonObject() };
+		this.waitUntilAux(user, subscriberVideo, () -> {
+			JsonObject layer = this.getSubscriberVideoLayer(user, subscriberVideo);
+			if (this.getLayerCounter(layer, "framesDecoded") > framesDecodedBefore) {
+				firstFrames[0] = layer;
+				return true;
+			}
+			return false;
+		}, "Timeout waiting for the video to resume");
+		Assertions.assertEquals(CAMERA_TOP_LAYER_WIDTH, this.getLayerCounter(firstFrames[0], "frameWidth"),
+				"The video came back below its top layer: the server lost its bandwidth estimate while the video was paused. "
+						+ describeSubscriberVideoLayer(firstFrames[0]));
+
+		// And it stays there
+		this.waitUntilSubscriberFramesDecodedIncrease(user, subscriberVideo);
+		Assertions.assertEquals(CAMERA_TOP_LAYER_WIDTH, this.getSubscriberVideoFrameWidth(user, subscriberVideo),
+				"The video left its top layer after resuming");
+	}
+
+	@Test
+	@DisplayName("Camera mute keeps the subscriber bandwidth estimate")
+	void cameraMuteKeepsSubscriberBweTest() throws Exception {
+
+		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
+
+		log.info("Camera mute keeps the subscriber bandwidth estimate");
+
+		WebElement subscriberVideo = connectPublisherAndSubscriberForBwe(user);
+
+		// The publisher mutes the camera. Its audio keeps flowing
+		user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 .mute-unmute-video")).sendKeys(Keys.ENTER);
+		user.getEventManager().waitUntilEventReaches("trackMuted", "RoomEvent", 1);
+
+		long framesDecodedPaused = assertOnlyAudioWhilePaused(user, subscriberVideo);
+
+		// The publisher unmutes
+		user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 .mute-unmute-video")).sendKeys(Keys.ENTER);
+		user.getEventManager().waitUntilEventReaches("trackUnmuted", "RoomEvent", 1);
+
+		assertVideoResumesOnTopLayer(user, subscriberVideo, framesDecodedPaused);
+
+		gracefullyLeaveParticipants(user, 2);
+	}
+
+	@Test
+	@DisplayName("Subscriber disabled video keeps the subscriber bandwidth estimate")
+	void subscriberDisabledVideoKeepsSubscriberBweTest() throws Exception {
+
+		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
+
+		log.info("Subscriber disabled video keeps the subscriber bandwidth estimate");
+
+		WebElement subscriberVideo = connectPublisherAndSubscriberForBwe(user);
+
+		// The subscriber disables the video (what adaptive stream does with a hidden
+		// video). The server stops forwarding it after a 100 ms debounce
+		user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 .toggle-video-enabled"))
+				.sendKeys(Keys.ENTER);
+
+		long framesDecodedPaused = assertOnlyAudioWhilePaused(user, subscriberVideo);
+
+		// The subscriber enables the video again
+		user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 .toggle-video-enabled"))
+				.sendKeys(Keys.ENTER);
+
+		assertVideoResumesOnTopLayer(user, subscriberVideo, framesDecodedPaused);
+
+		gracefullyLeaveParticipants(user, 2);
+	}
+
+	@Test
+	@OnlyMediasoup
+	@DisplayName("Camera unpublish keeps the subscriber bandwidth estimate")
+	void cameraUnpublishKeepsSubscriberBweTest() throws Exception {
+
+		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
+
+		log.info("Camera unpublish keeps the subscriber bandwidth estimate");
+
+		WebElement subscriberVideo = connectPublisherAndSubscriberForBwe(user);
+
+		// The publisher unpublishes the camera: the subscriber's connection is left
+		// with the audio alone and no video track at all, for several periods of the
+		// server's periodic bandwidth probing. The probes it would send in this state
+		// have no track to be routed to, so the subscriber drops them unaccounted and
+		// they cannot be measured from here: what shows is the estimate they ruin
+		this.unpublishCamera(user, 0, 1);
+		user.getEventManager().waitUntilEventReaches("trackUnpublished", "RoomEvent", 1);
+		Thread.sleep(VIDEO_PAUSE_MILLIS);
+
+		// The publisher publishes the camera again: a new track, subscribed anew. With
+		// mediasoup its first frames are the top layer, since the connection's
+		// estimate was kept. The pion engine starts a new track on its lowest layer
+		// by design, hence the engine restriction of this test
+		this.publishCamera(user, 0, 3);
+		user.getEventManager().waitUntilEventReaches("trackSubscribed", "RoomEvent", 3);
+		subscriberVideo = user.getWaiter()
+				.until(ExpectedConditions.presenceOfElementLocated(By.cssSelector("#openvidu-instance-1 video.remote")));
+
+		assertVideoResumesOnTopLayer(user, subscriberVideo, 0);
+
+		gracefullyLeaveParticipants(user, 2);
+	}
+
 	@Test
 	@DisplayName("Enable disable track with dynacast")
 	void enableDisableTrackWithDynacastTest() throws Exception {
