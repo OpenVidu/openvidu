@@ -144,6 +144,11 @@ public class OpenViduTestAppE2eEgressProTest extends AbstractOpenViduTestappE2eT
 	private static final double BAR_WINDOW_S = 0.5;
 	// Width of the luma row the bar is read from, whatever the frame size
 	private static final int BAR_ROW_WIDTH = 640;
+	// A pixel of the row this bright is flash white: nothing else on the canvas is
+	private static final int FLASH_WHITE = 250;
+	// Bright stretches of the row this many pixels apart or less are one stretch
+	// of the bar: the encoder can leave a darker seam through it
+	private static final int BAR_SEAM_PX = 2;
 	// A/V offset drift allowed between the start and the end of a long recording
 	private static final double MAX_AV_DRIFT_MS = 40;
 	// The SDK egress's sync engine places a track by its arrival time until it has
@@ -4609,7 +4614,11 @@ public class OpenViduTestAppE2eEgressProTest extends AbstractOpenViduTestappE2eT
 					if (edge != null) {
 						s.bar.add(new double[] { time, edge / BAR_ROW_WIDTH * BAR_PERIOD_MS });
 					}
-					barRuns.add(new Object[] { time, brightRuns(row) });
+					// a row with flash white is part of a flash: one the encoder, short of
+					// bits, only partly drew, leaving blocks of the dark frame before it
+					if (!showsFlashWhite(row)) {
+						barRuns.add(new Object[] { time, brightRuns(row) });
+					}
 				}
 				previousLuma = luma;
 				previousTime = time;
@@ -4671,10 +4680,23 @@ public class OpenViduTestAppE2eEgressProTest extends AbstractOpenViduTestappE2eT
 			return null;
 		}
 
+		/** Whether a luma row has three pixels in a row at FLASH_WHITE or more. */
+		private static boolean showsFlashWhite(int[] row) {
+			int white = 0;
+			for (int value : row) {
+				white = value >= FLASH_WHITE ? white + 1 : 0;
+				if (white >= 3) {
+					return true;
+				}
+			}
+			return false;
+		}
+
 		/**
 		 * The stretches of a luma row, of 3 pixels or more, brighter than halfway
 		 * between the background (the median) and the brightest pixel, as [start,
-		 * width]; null if nothing stands out of the background.
+		 * width]; null if nothing stands out of the background. Stretches at most
+		 * BAR_SEAM_PX apart are one.
 		 */
 		private static List<int[]> brightRuns(int[] row) {
 			int[] sorted = row.clone();
@@ -4693,7 +4715,12 @@ public class OpenViduTestAppE2eEgressProTest extends AbstractOpenViduTestappE2eT
 					start = x;
 				} else if (!bright && start >= 0) {
 					if (x - start >= 3) {
-						runs.add(new int[] { start, x - start });
+						int[] last = runs.isEmpty() ? null : runs.get(runs.size() - 1);
+						if (last != null && start - (last[0] + last[1]) <= BAR_SEAM_PX) {
+							last[1] = x - last[0];
+						} else {
+							runs.add(new int[] { start, x - start });
+						}
 					}
 					start = -1;
 				}
