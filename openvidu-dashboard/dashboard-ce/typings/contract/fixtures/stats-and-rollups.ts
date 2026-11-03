@@ -203,7 +203,7 @@ export const analyticsDaily: DailyRollupDocument[] = [
 			byKind: { STANDARD: 6, INGRESS: 2, EGRESS: 2, SIP: 1, AGENT: 1 },
 			bySdk: { JS: 5, ANDROID: 1 },
 			byOs: { windows: 1, macos: 3, linux: 1, android: 1 },
-			byBrowser: { chrome: 2, safari: 2, firefox: 1, other: 1 },
+			byBrowser: { chrome: 2, safari: 2, firefox: 1, none: 1 },
 			byConnectionType: { udp: 2, tcp: 1, turn: 1 },
 			disconnectReasons: {
 				CLIENT_INITIATED: 1,

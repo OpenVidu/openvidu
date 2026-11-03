@@ -33,7 +33,7 @@
 				"chrome": { "$numberInt": "2" },
 				"safari": { "$numberInt": "2" },
 				"firefox": { "$numberInt": "1" },
-				"other": { "$numberInt": "1" }
+				"none": { "$numberInt": "1" }
 			},
 			"byConnectionType": {
 				"udp": { "$numberInt": "2" },

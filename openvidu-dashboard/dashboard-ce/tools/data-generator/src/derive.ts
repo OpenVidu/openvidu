@@ -1078,8 +1078,12 @@ function toDoc(scope: string, bucket: number, b: Bucket, daily: boolean): Rollup
 
 const BROWSER_KEYS = new Set(['chrome', 'firefox', 'safari', 'edge']);
 
-/** Rollup key of a client browser: the lower-case name of a known browser, else `other`. */
+/** Rollup key of a client browser: `none` without one, the lower-case name of a known browser, else `other`. */
 function browserKey(browser: string): string {
+	if (browser === '') {
+		return 'none';
+	}
+
 	const key = browser.toLowerCase();
 
 	return BROWSER_KEYS.has(key) ? key : 'other';

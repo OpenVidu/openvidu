@@ -127,12 +127,13 @@ export const OsFamily = {
 } as const;
 export type OsFamily = ValueOf<typeof OsFamily>;
 
-/** Fixed vocabulary of rollup browser keys; values outside it are counted as `other`. */
+/** Fixed vocabulary of rollup browser keys; a session that reports no browser is `none`, other values `other`. */
 export const BrowserFamily = {
 	CHROME: 'chrome',
 	FIREFOX: 'firefox',
 	SAFARI: 'safari',
 	EDGE: 'edge',
+	NONE: 'none',
 	OTHER: 'other'
 } as const;
 export type BrowserFamily = ValueOf<typeof BrowserFamily>;

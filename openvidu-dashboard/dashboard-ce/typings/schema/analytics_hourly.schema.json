@@ -91,6 +91,7 @@
 						"firefox": { "bsonType": ["int", "long"] },
 						"safari": { "bsonType": ["int", "long"] },
 						"edge": { "bsonType": ["int", "long"] },
+						"none": { "bsonType": ["int", "long"] },
 						"other": { "bsonType": ["int", "long"] }
 					},
 					"additionalProperties": false
