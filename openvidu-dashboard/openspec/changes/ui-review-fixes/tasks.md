@@ -41,5 +41,5 @@
 ## 4. Integration check
 
 - [x] 4.1 Run `./dashboard.sh check` and `./dashboard.sh test-integration`. Verify that both pass.
-- [ ] 4.2 On a local deployment with `./dashboard.sh dev`, check an Analytics chart of a 15-minute custom range, the
+- [x] 4.2 On a local deployment with `./dashboard.sh dev`, check an Analytics chart of a 15-minute custom range, the
       About table and a fast page load against the scenarios. Verify by screenshots.
