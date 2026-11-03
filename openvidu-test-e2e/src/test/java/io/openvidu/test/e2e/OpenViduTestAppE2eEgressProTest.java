@@ -194,9 +194,27 @@ public class OpenViduTestAppE2eEgressProTest extends AbstractOpenViduTestappE2eT
 	// mediasoup release: it would take a smoother offset in the worker or a more
 	// tolerant estimator in server-sdk-go. So the median stays.
 	private static final double HEALED_AV_TOLERANCE_MS = 70;
-	// Packets lost from the SFU to the egress: more than NACKs recover, so frames are
-	// lost for good
+	// Once healed, every A/V offset must also be within HEALED_AV_TOLERANCE_MS of
+	// that range, and never past this. Not AV_SYNC_TOLERANCE_MS: the offset these
+	// long recordings settle on once the sync engine places the tracks by their
+	// sender reports changes from one recording to the next, trouble or not
+	// (+79..+109 ms on pion in CI, 2026-11-02; +140..+155 ms in a local run on
+	// pion, 2026-11-03, where the first 12 s had +7..+15 ms until the video's NTP
+	// transition moved it by 145 ms), and on pion every rebuild of the audio
+	// estimate, every 24 s, moves the audio by up to 70 ms more. A few ms of that
+	// failed tests whose recordings had healed. This only stops a recording far off
+	// whatever it was before: a track the trouble left misplaced is off its range
+	// by much more (+241 ms after a long outage with mediasoup, 2026-10-29, against
+	// +17..+42 before)
+	private static final double HEALED_AV_MAX_MS = 250;
+	// Packets lost from the SFU to the egress: usually more than NACKs recover, so
+	// frames are lost for good
 	private static final int EGRESS_PACKET_LOSS_PERCENT = 30;
+	// A hole in the video longer than this is frames lost. The frames of the
+	// synthetic camera come at most some 100 ms apart in these recordings; the
+	// egress drops frames until a keyframe after a loss, for some 300 ms (103
+	// frames in 12 losses with LiveKit's SFU in CI)
+	private static final double EGRESS_LOSS_HOLE_S = 0.2;
 	// Packets lost on the publisher's uplink: NACKs recover nearly all of them
 	private static final int PUBLISHER_PACKET_LOSS_PERCENT = 20;
 	// Uplink of a congested publisher: room for its low layer only (the synthetic
@@ -1432,7 +1450,10 @@ public class OpenViduTestAppE2eEgressProTest extends AbstractOpenViduTestappE2eT
 		waitUntilEgressStatus(egressId, "EGRESS_ACTIVE", 20);
 		Thread.sleep(4000);
 		alice.addVideo();
-		Thread.sleep(8000);
+		long added = System.currentTimeMillis();
+		// both cameras recorded at their captured size for 3 s at least, 8 s in all
+		waitForCamerasSending(alice, 2, CAMERA_WIDTH, 30);
+		Thread.sleep(Math.max(8000 - (System.currentTimeMillis() - added), 3000));
 		// the second camera, published while the first is, goes to the other file
 		Recordings recordings = stopAndGetRecordings(egressId);
 		recordings.assertFiles("camera", "other");
@@ -3023,9 +3044,22 @@ public class OpenViduTestAppE2eEgressProTest extends AbstractOpenViduTestappE2eT
 				new double[] { troubleTo + recovery, Double.MAX_VALUE });
 		switch (trouble) {
 		case EGRESS_LOSS:
+			// The egress drops the frames that follow one lost for good until a keyframe
+			// (videoLosses counts those runs), which leaves a hole in the video. NACKs
+			// may also get every packet back: mediasoup resends a packet as often as it
+			// is asked, and an AV1 track of the synthetic camera takes few packets per
+			// frame (seen in CI, 2026-11-02: no frame lost in 15 s, where LiveKit's SFU
+			// lost 12). Then the video must not have lost a frame either. File
+			// times run ahead of times since the egress became active by up to 2 s
 			int losses = remuxFinalizedCount(egressId, since, "videoLosses");
-			Assertions.assertTrue(losses > 0,
-					"The egress must have lost video frames for good during the packet loss: videoLosses " + losses);
+			List<double[]> lostFrames = recording.video(0).gaps(EGRESS_LOSS_HOLE_S).stream()
+					.filter(g -> g[1] >= troubleFrom && g[0] <= troubleTo + 2).collect(Collectors.toList());
+			log.info("Packet loss to the egress: videoLosses {}, holes in the video during it: [{}]", losses,
+					FileTrack.format(lostFrames));
+			Assertions.assertTrue(losses > 0 || lostFrames.isEmpty(), String.format(Locale.ROOT,
+					"The egress counted no video frame lost for good during the packet loss (videoLosses 0), but the"
+							+ " video has holes during it (%.1f-%.1f s): %s",
+					troubleFrom, troubleTo, FileTrack.format(lostFrames)));
 			break;
 		case PUBLISHER_CONGESTION:
 			recording.video(0).assertDropsAndRecovers(CAMERA_WIDTH, CAMERA_HEIGHT, 3);
@@ -3119,6 +3153,73 @@ public class OpenViduTestAppE2eEgressProTest extends AbstractOpenViduTestappE2eT
 			encodings = encodings(p);
 		}
 		log.info("Camera of {}: {} ({})", p.identity, encodings, what);
+	}
+
+	// Every layer each camera of the publisher sends, as its browser reports it:
+	// cameras separated by " | ", layers as rid:WIDTHxHEIGHT@FPS(quality limitation
+	// reason), and the outgoing bitrate the browser estimates
+	private static final String CAMERAS_SENDING_SCRIPT = "const done = arguments[arguments.length - 1];"
+			+ "const pubs = [...window.room_%d.localParticipant.videoTrackPublications.values()]"
+			+ ".filter(p => p.source === 'camera' && p.track && p.track.sender);"
+			+ "Promise.all(pubs.map(p => p.track.sender.getStats().then(stats => {"
+			+ "  const layers = []; let out = '';"
+			+ "  stats.forEach(s => {"
+			+ "    if (s.type === 'outbound-rtp' && s.kind === 'video') layers.push((s.rid || '-') + ':'"
+			+ "      + (s.frameWidth || 0) + 'x' + (s.frameHeight || 0) + '@' + Math.round(s.framesPerSecond || 0)"
+			+ "      + '(' + (s.qualityLimitationReason || '?') + ')');"
+			+ "    if (s.type === 'candidate-pair' && s.nominated && s.availableOutgoingBitrate)"
+			+ "      out = ' out ' + Math.round(s.availableOutgoingBitrate / 1000) + ' kbps';"
+			+ "  });"
+			+ "  return layers.sort().join(' ') + out;"
+			+ "}))).then(r => done(r.join(' | '))).catch(e => done('error: ' + e));";
+	private static final Pattern SENT_LAYER = Pattern.compile(":(\\d+)x\\d+@(\\d+)");
+	// A layer sent at fewer frames per second than this (the synthetic camera gives
+	// some 20) is one the browser is starting or dropping
+	private static final int SENT_LAYER_MIN_FPS = 10;
+
+	/**
+	 * Waits until each of the publisher's cameras sends a layer as wide as width,
+	 * as its browser reports it: the egress can only record what the publisher
+	 * sends. A browser adding a second camera may send both on their low layer for
+	 * a while, limited by the bandwidth it estimates (seen in CI with LiveKit's SFU,
+	 * 2026-10-27 and 2026-11-02: 240x180 for the 7 s left of the recording),
+	 * whatever the SFU forwards.
+	 */
+	private void waitForCamerasSending(Publisher p, int cameras, int width, int timeoutSeconds) throws Exception {
+		long start = System.currentTimeMillis();
+		String sending = camerasSending(p);
+		while (!camerasSend(sending, cameras, width)) {
+			Assertions.assertTrue(System.currentTimeMillis() - start < timeoutSeconds * 1000L,
+					String.format(Locale.ROOT, "The browser of %s did not send %d cameras %d wide within %d s, so no"
+							+ " recording can have them: %s", p.identity, cameras, width, timeoutSeconds, sending));
+			Thread.sleep(500);
+			sending = camerasSending(p);
+		}
+		log.info("Cameras of {} after {} ms: {}", p.identity, System.currentTimeMillis() - start, sending);
+	}
+
+	private String camerasSending(Publisher p) {
+		return String.valueOf(((JavascriptExecutor) p.user.getDriver())
+				.executeAsyncScript(String.format(CAMERAS_SENDING_SCRIPT, p.instance)));
+	}
+
+	private static boolean camerasSend(String sending, int cameras, int width) {
+		String[] perCamera = sending.split(" \\| ");
+		if (sending.startsWith("error") || perCamera.length != cameras) {
+			return false;
+		}
+		for (String camera : perCamera) {
+			boolean sent = false;
+			Matcher layer = SENT_LAYER.matcher(camera);
+			while (layer.find()) {
+				sent |= Integer.parseInt(layer.group(1)) >= width
+						&& Integer.parseInt(layer.group(2)) >= SENT_LAYER_MIN_FPS;
+			}
+			if (!sent) {
+				return false;
+			}
+		}
+		return true;
 	}
 
 	private static String uniqueRoom(String name) {
@@ -4908,12 +5009,14 @@ public class OpenViduTestAppE2eEgressProTest extends AbstractOpenViduTestappE2eT
 		 * The recording is back, in after, to what it was in before, with a
 		 * disturbance in between: in after, the video without holes until the end,
 		 * the timestamps of each track consistent (assertOriginalTimestamps), every
-		 * A/V offset within AV_SYNC_TOLERANCE_MS, and their median within
-		 * HEALED_AV_TOLERANCE_MS of the range the offsets spanned in before. Before is
-		 * only the reference for the A/V offset: neither the offsets nor the
-		 * timestamps are compared across the two, since the sync engine moves the
-		 * tracks of a recording by itself (see NETWORK_TROUBLE_AT_S). A null before
-		 * (no time without trouble) skips that comparison.
+		 * A/V offset within HEALED_AV_TOLERANCE_MS of the range the offsets spanned in
+		 * before and within HEALED_AV_MAX_MS, and their median within
+		 * HEALED_AV_TOLERANCE_MS of that range too. Before is only the reference for
+		 * the A/V offset: neither the offsets nor the timestamps are compared across
+		 * the two, since the sync engine moves the tracks of a recording by itself
+		 * (see NETWORK_TROUBLE_AT_S). A null before (no time without trouble) skips
+		 * that comparison, and every A/V offset in after must then be within
+		 * AV_SYNC_TOLERANCE_MS.
 		 */
 		void assertRecovered(double[] before, double[] after) {
 			List<double[]> pairs = avPairs();
@@ -4940,14 +5043,25 @@ public class OpenViduTestAppE2eEgressProTest extends AbstractOpenViduTestappE2eT
 					+ file.getFileName() + " before the disturbance: " + offsets(pairsBefore));
 			Assertions.assertTrue(pairsAfter.size() >= 5, "At least 5 A/V pairs expected in " + file.getFileName()
 					+ " after the disturbance: " + offsets(pairsAfter));
-			double worstAfter = pairsAfter.stream().mapToDouble(p -> Math.abs(p[1])).max().getAsDouble();
-			Assertions.assertTrue(worstAfter <= AV_SYNC_TOLERANCE_MS, String.format(Locale.ROOT,
-					"Audio and video out of sync in %s after the disturbance, worst offset %.0f ms (tolerance %.0f ms): %s",
-					file.getFileName(), worstAfter, AV_SYNC_TOLERANCE_MS, offsets(pairsAfter)));
 			if (before == null) {
+				double worstAfter = pairsAfter.stream().mapToDouble(p -> Math.abs(p[1])).max().getAsDouble();
+				Assertions.assertTrue(worstAfter <= AV_SYNC_TOLERANCE_MS, String.format(Locale.ROOT,
+						"Audio and video out of sync in %s after the disturbance, worst offset %.0f ms (tolerance %.0f ms):"
+								+ " %s",
+						file.getFileName(), worstAfter, AV_SYNC_TOLERANCE_MS, offsets(pairsAfter)));
 				return;
 			}
 			DoubleSummaryStatistics range = pairsBefore.stream().mapToDouble(p -> p[1]).summaryStatistics();
+			double low = range.getMin() - HEALED_AV_TOLERANCE_MS;
+			double high = range.getMax() + HEALED_AV_TOLERANCE_MS;
+			List<double[]> outside = pairsAfter.stream()
+					.filter(p -> p[1] < low || p[1] > high || Math.abs(p[1]) > HEALED_AV_MAX_MS)
+					.collect(Collectors.toList());
+			Assertions.assertTrue(outside.isEmpty(), String.format(Locale.ROOT,
+					"Audio and video out of sync in %s after the disturbance: every A/V offset must be within %.0f ms of"
+							+ " the %+.0f..%+.0f ms it had before it, and within %.0f ms, these are not: %s (after: %s)",
+					file.getFileName(), HEALED_AV_TOLERANCE_MS, range.getMin(), range.getMax(), HEALED_AV_MAX_MS,
+					offsets(outside), offsets(pairsAfter)));
 			List<Double> healed = pairsAfter.stream().map(p -> p[1]).sorted().collect(Collectors.toList());
 			double median = healed.get(healed.size() / 2);
 			double off = Math.max(range.getMin() - median, median - range.getMax());
