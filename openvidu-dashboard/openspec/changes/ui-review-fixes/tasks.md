@@ -30,7 +30,7 @@
       total" and "Collection without an oldest date".
 - [x] 2.9 Add the locked `tracks/:trackSid` route, and map `track` in `exactIdTarget()` to it. Verify with a global
       search test of "Exact track ID" and an e2e test of "Track route in CE".
-- [ ] 2.10 Space the media statistics notice of the Data transferred card from the tiles below it. Verify by a
+- [x] 2.10 Space the media statistics notice of the Data transferred card from the tiles below it. Verify by a
       screenshot of an Analytics range with partial media statistics.
 
 ## 3. End-to-end and docs
