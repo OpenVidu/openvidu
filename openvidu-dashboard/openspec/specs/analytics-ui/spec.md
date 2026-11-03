@@ -94,7 +94,7 @@ formatters, show "n/a" with a hint for a value the summary omits and keep the la
 
 #### Scenario: Missing average
 
-- **GIVEN** a summary without `avgRoomSize`
+- **GIVEN** a summary with `roomsEnded: 12` and without `avgRoomSize`
 - **WHEN** the Rooms section tiles render
 - **THEN** the Average room size tile reads "n/a" with the hint "Not provided by this server version"
 
@@ -102,7 +102,7 @@ formatters, show "n/a" with a hint for a value the summary omits and keep the la
 
 Edition: CE. The Rooms section SHALL show a bar chart of `roomsCreated` and `roomsEnded` per bucket and the tiles
 Average room size (rounded to a whole number of participants) and Average room duration (in the shared duration
-format) from the summary.
+format) from the summary; with `roomsEnded: 0` both tiles read "n/a" with the hint "No room ended in this range".
 
 #### Scenario: Rooms over 24 hours
 
@@ -110,6 +110,12 @@ format) from the summary.
 - **WHEN** the section renders
 - **THEN** the chart shows 288 five-minute buckets with two bar series in fixed colours and the tiles read
   "4 participants" and "6 m 00 s"
+
+#### Scenario: No room ended yet
+
+- **GIVEN** a summary with `roomsCreated: 2`, `roomsEnded: 0` and neither average
+- **WHEN** the section renders
+- **THEN** both tiles read "n/a" with the hint "No room ended in this range"
 
 ### Requirement: Participants section
 
@@ -141,8 +147,8 @@ granularity is `1d`, otherwise a hint that unique identities are available at da
 
 Edition: CE. The Client breakdowns section SHALL show SDK, OS, browser and connection type from the breakdowns
 endpoint as donuts with legend, direct labels, fixed colours per key, "Other" beyond eight entries and a table toggle
-listing key, count and percent, every SDK, OS and connection type key shown by its shared friendly label (browser
-names as stored) and every percent in the shared percent format ("62.8 %").
+listing key, count and percent, every key shown by its shared friendly label and every percent in the shared percent
+format ("62.8 %").
 
 #### Scenario: Nine SDKs
 
@@ -161,6 +167,12 @@ names as stored) and every percent in the shared percent format ("62.8 %").
 - **GIVEN** a connection type breakdown with a known key and a key the label map does not know
 - **WHEN** the donut and its table render
 - **THEN** the known key reads its friendly label and the other key reads as stored
+
+#### Scenario: Sessions without a browser
+
+- **GIVEN** a browser breakdown with `chrome: 5` and `none: 5`
+- **WHEN** the browser donut renders
+- **THEN** its slices read "Chrome: 50.0 %" and "No browser: 50.0 %"
 
 ### Requirement: Bandwidth section
 
