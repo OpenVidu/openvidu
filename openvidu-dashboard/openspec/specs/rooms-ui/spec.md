@@ -122,6 +122,13 @@ Active, Data up / down, Features (badges E, I, A) and Node (hidden by default); 
 - **THEN** the status badge has the dotted outline and the Ended cell carries the tooltip "Closed by the reconciler:
   the end time is estimated"
 
+#### Scenario: Room of a node without media statistics
+
+- **GIVEN** a room item with `mediaStats: false`
+- **WHEN** the row renders
+- **THEN** the Data up / down cell reads "—" with the tooltip "Not reported: this room's server does not report media
+  statistics" instead of "↑ 0 B ↓ 0 B"
+
 ### Requirement: Rooms pagination
 
 Edition: CE. The Rooms page SHALL use the cursor paginator with Prev/Next bound to `prevCursor`/`nextCursor` for every

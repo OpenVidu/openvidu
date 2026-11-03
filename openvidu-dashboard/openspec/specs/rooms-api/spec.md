@@ -43,7 +43,8 @@ filters `status`, `q`, `features` and `nodeId`, the sort keys `createdAt` (defau
 
 Edition: CE. Each rooms list item SHALL be the room document's public projection: identity, lifecycle, node,
 participant, egress and ingress counters, bandwidth, feature flags, the end cause behind the "estimated" cue, the last
-stats flush and the `stale` flag of `api-conventions`, never internal id arrays, `schemaVersion` or `expiresAt`.
+stats flush, the media statistics mark and the `stale` flag of `api-conventions`, never internal id arrays,
+`schemaVersion` or `expiresAt`.
 Participant counters count STANDARD sessions only; `participants.unique` counts distinct STANDARD identities.
 
 #### Scenario: Fields of an item
@@ -52,8 +53,8 @@ Participant counters count STANDARD sessions only; `participants.unique` counts 
 - **THEN** it has `sid`, `name`, `status` (`active` | `closed`), `createdAt`, `endedAt?`, `durationMs?`, `closedBy?`
   (`event` | `reconciler`), `nodeId?`, `participants { sessions, unique, active, peakActive }`,
   `egress { total, active }`, `ingress { sessions, active }`, `bytes { up, down }`,
-  `features { egress, ingress, agent, sip }`, `lastStatsAt?`, `stale?` and no `participantSids`, `identities` or
-  similar array
+  `features { egress, ingress, agent, sip }`, `lastStatsAt?`, `stale?`, `mediaStats?` and no `participantSids`,
+  `identities` or similar array
 
 #### Scenario: Active room
 
@@ -73,6 +74,13 @@ Participant counters count STANDARD sessions only; `participants.unique` counts 
   server's clock
 - **WHEN** it is returned
 - **THEN** it has `stale: true`, and an active room whose `lastStatsAt` is 20 s old has no `stale` property
+
+#### Scenario: Room of a node without media statistics
+
+- **GIVEN** a room document with `mediaStats: false` and `bytes { up: 0, down: 0 }`
+- **WHEN** it is returned
+- **THEN** it has `mediaStats: false` and `bytes { up: 0, down: 0 }`, and an item of a room without the field has no
+  `mediaStats` property
 
 ### Requirement: Status filter
 
