@@ -2,9 +2,13 @@ import { Component, computed, input } from '@angular/core';
 
 export type SkeletonVariant = 'rows' | 'tiles' | 'chart' | 'text';
 
-/** Placeholder with the height of what it replaces, so content never jumps when it arrives. */
+/**
+ * Placeholder with the height of what it replaces, so content never jumps when it arrives. It stays invisible for its
+ * first 300 ms, so a fast response never flashes it.
+ */
 @Component({
 	selector: 'ovd-skeleton',
+	host: { class: 'ovd-skeleton-reveal' },
 	template: `
 		<div class="ovd-visually-hidden" role="status">Loading</div>
 		@switch (variant()) {

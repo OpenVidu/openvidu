@@ -137,6 +137,13 @@ describe('EgressPage', () => {
 		expect(tiles[2]).toContain('7');
 		expect(tiles[2]).toContain('Aborted 2');
 		expect(tiles[3]).toContain('10 h 00 m');
+		expect(tiles[3]).toContain('Total duration');
+		expect(
+			element
+				.querySelectorAll('ovd-kpi-tile')[3]
+				?.querySelector('ovd-info-tip button')
+				?.getAttribute('aria-label')
+		).toBe('About Total duration');
 	});
 
 	it('renders an active row, a failed row, a complete row with an error marker and a reconciler-closed row', async () => {

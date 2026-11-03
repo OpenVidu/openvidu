@@ -42,7 +42,7 @@ export const TICKING_MS = 5_000;
 		</div>
 		@if (shown() === null) {
 			@if (loading()) {
-				<div class="skeleton" aria-hidden="true"></div>
+				<div class="skeleton ovd-skeleton-reveal" aria-hidden="true"></div>
 				<span class="ovd-visually-hidden">Loading {{ label() }}</span>
 			} @else {
 				<div class="value">—</div>

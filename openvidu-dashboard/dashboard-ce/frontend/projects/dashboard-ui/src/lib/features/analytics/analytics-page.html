@@ -100,12 +100,12 @@
 				<ovd-kpi-tile
 					label="Average room size"
 					[value]="avgRoomSize()"
-					[hint]="missingHint(summary()?.avgRoomSize)"
+					[hint]="roomAverageHint(summary()?.avgRoomSize)"
 				/>
 				<ovd-kpi-tile
 					label="Average room duration"
 					[value]="avgRoomDuration()"
-					[hint]="missingHint(summary()?.avgRoomDurationMs)"
+					[hint]="roomAverageHint(summary()?.avgRoomDurationMs)"
 				/>
 			</ovd-tile-row>
 			<ovd-time-series-chart

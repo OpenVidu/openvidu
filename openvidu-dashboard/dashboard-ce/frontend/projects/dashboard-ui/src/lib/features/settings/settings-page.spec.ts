@@ -222,6 +222,36 @@ describe('SettingsPage', () => {
 		expect(about()?.querySelector('table')).not.toBeNull();
 	});
 
+	it('closes the storage table with a Total row and explains an undated collection', async () => {
+		const { harness } = await settings(
+			'/settings?tab=about',
+			infoResponse({
+				storage: {
+					rooms: { documents: 4, storageBytes: 36_864, indexBytes: 344_064, oldest: '2026-11-03T08:59:58Z' },
+					events: {
+						documents: 285,
+						storageBytes: 65_536,
+						indexBytes: 290_816,
+						oldest: '2026-11-03T08:59:58Z'
+					},
+					tracks: { documents: 16, storageBytes: 36_864, indexBytes: 147_456 }
+				}
+			})
+		);
+		const table = [...(harness.fixture.nativeElement as HTMLElement).querySelectorAll('ovd-about-tab table')].find(
+			(candidate) => candidate.querySelector('caption')?.textContent.includes('Storage per collection')
+		);
+		const cells = (row: Element | null | undefined) =>
+			[...(row?.querySelectorAll('th, td') ?? [])].map((cell) => cell.textContent.trim());
+		const tracks = [...(table?.querySelectorAll('tbody tr') ?? [])].find((row) =>
+			row.textContent.includes('tracks')
+		);
+
+		expect(cells(table?.querySelector('tfoot tr'))).toEqual(['Total', '305', '922 kB', '']);
+		expect(cells(tracks)[3]).toBe('—');
+		expect(tracks?.querySelector('[mattooltip], .mat-mdc-tooltip-trigger')).not.toBeNull();
+	});
+
 	it('reports unavailable server info with retry while Preferences stays usable', async () => {
 		const { harness, http } = await settings('/settings?tab=about', null);
 		const element = harness.fixture.nativeElement as HTMLElement;

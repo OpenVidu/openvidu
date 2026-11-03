@@ -1,4 +1,5 @@
 import type {
+	BrowserFamily,
 	ClientSdk,
 	ConnectionType,
 	EgressStatus,
@@ -92,6 +93,36 @@ export const OS_LABELS: Readonly<Record<OsFamily, string>> = {
 	linux: 'Linux',
 	android: 'Android',
 	ios: 'iOS',
+	other: 'Other'
+};
+
+/** Family names a client may report as its OS, matched whole and case-insensitively, and their family. */
+const REPORTED_OS: Readonly<Record<string, OsFamily>> = {
+	windows: 'windows',
+	macos: 'macos',
+	'mac os': 'macos',
+	linux: 'linux',
+	android: 'android',
+	ios: 'ios'
+};
+
+/** The OS a client reported, as its family label when it names one (`linux` reads "Linux"), else as reported. */
+export function clientOsLabel(os: string | null | undefined): string {
+	if (os === null || os === undefined || os.trim() === '') {
+		return '—';
+	}
+
+	const family = REPORTED_OS[os.trim().toLowerCase()];
+
+	return family === undefined ? os : OS_LABELS[family];
+}
+
+export const BROWSER_LABELS: Readonly<Record<BrowserFamily, string>> = {
+	chrome: 'Chrome',
+	firefox: 'Firefox',
+	safari: 'Safari',
+	edge: 'Edge',
+	none: 'No browser',
 	other: 'Other'
 };
 

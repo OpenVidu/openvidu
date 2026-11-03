@@ -72,6 +72,23 @@ describe('Duration', () => {
 		expect(element.textContent).toBe('—');
 	});
 
+	it('counts whole seconds while running and rounds the stored duration once ended', async () => {
+		vi.useFakeTimers({ now: NOW, toFake: ['Date', 'setInterval', 'clearInterval'] });
+
+		const fixture = TestBed.createComponent(Duration);
+		const element = fixture.nativeElement as HTMLElement;
+
+		fixture.componentRef.setInput('start', new Date(NOW.getTime() - 2_700).toISOString());
+		fixture.componentRef.setInput('running', true);
+		await fixture.whenStable();
+		expect(element.textContent).toBe('2 s');
+
+		fixture.componentRef.setInput('running', false);
+		fixture.componentRef.setInput('storedMs', 2_700);
+		await fixture.whenStable();
+		expect(element.textContent).toBe('3 s');
+	});
+
 	it('adds the running part to a stored total', async () => {
 		vi.useFakeTimers({ now: NOW, toFake: ['Date', 'setInterval', 'clearInterval'] });
 

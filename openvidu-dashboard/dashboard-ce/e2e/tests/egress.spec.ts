@@ -81,6 +81,29 @@ test('a failed list keeps the error banner with retry', async ({ page }) => {
 	await expect(page.getByRole('button', { name: 'Retry' })).toBeVisible();
 });
 
+test('a slow first response reveals the skeleton only after 300 ms', async ({ page }) => {
+	let release = (): void => undefined;
+	const held = new Promise<void>((resolve) => {
+		release = resolve;
+	});
+
+	await page.route('**/api/v1/egresses?*', async (route) => {
+		await held;
+		await route.fallback();
+	});
+	await page.goto('/egress?from=now-24h&to=now&tz=UTC');
+
+	const skeleton = page.locator('tr.skeleton-row').first();
+
+	await expect(skeleton).toBeAttached();
+	expect(await skeleton.evaluate((element) => getComputedStyle(element).animationDelay)).toBe('0.3s');
+	await expect.poll(() => skeleton.evaluate((element) => getComputedStyle(element).opacity)).toBe('1');
+
+	release();
+	await expect(page.getByRole('table', { name: 'Egress' }).getByRole('row')).not.toHaveCount(0);
+	await expect(page.locator('tr.skeleton-row')).toHaveCount(0);
+});
+
 test('the egress detail is locked in CE with the header from the list', async ({ page, api }) => {
 	await page.goto('/egress?from=now-24h&to=now&tz=UTC');
 	await page.getByRole('link', { name: 'EG_a1b2' }).click();

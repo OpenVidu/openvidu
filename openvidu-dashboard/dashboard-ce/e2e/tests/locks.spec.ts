@@ -28,6 +28,17 @@ test('CE shows no locked sidenav entry and the full-page lock on PRO routes with
 	expect(detailCalls).toEqual([]);
 });
 
+test('CE opens the track route of an exact track ID as the full-page lock without requesting the track', async ({
+	page,
+	api
+}) => {
+	await page.goto('/tracks/TR_a2b3');
+
+	await expect(page.getByText('Participant detail is available in OpenVidu PRO')).toBeVisible();
+	await expect(page.getByRole('heading', { level: 1 })).toHaveText('TR_a2b3');
+	expect(api.calls().filter((call) => call.startsWith('GET tracks'))).toEqual([]);
+});
+
 test.describe('PRO', () => {
 	test.use({ apiOptions: { edition: 'pro' } });
 

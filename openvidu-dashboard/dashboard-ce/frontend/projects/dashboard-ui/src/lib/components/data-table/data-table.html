@@ -202,7 +202,7 @@
 			<tbody>
 				@if (skeletonRows()) {
 					@for (index of skeletonIndexes(); track index) {
-						<tr class="skeleton-row" aria-hidden="true">
+						<tr class="skeleton-row ovd-skeleton-reveal" aria-hidden="true">
 							@for (column of visible(); track column.key) {
 								<td><span class="bar"></span></td>
 							}

@@ -77,8 +77,11 @@ export class Duration {
 	protected readonly text = computed(() => {
 		const total = this.totalMs();
 
+		// A running duration counts whole elapsed units; an ended one is rounded.
+		const options = { floor: this.running() };
+
 		if (total !== undefined) {
-			return formatDuration(liveTotalMs(total, this.running() ? this.start() : undefined, this.now()));
+			return formatDuration(liveTotalMs(total, this.running() ? this.start() : undefined, this.now()), options);
 		}
 
 		const ms = liveDurationMs(
@@ -86,6 +89,6 @@ export class Duration {
 			this.running() ? this.now() : new Date(0)
 		);
 
-		return ms === undefined ? '—' : formatDuration(ms);
+		return ms === undefined ? '—' : formatDuration(ms, options);
 	});
 }

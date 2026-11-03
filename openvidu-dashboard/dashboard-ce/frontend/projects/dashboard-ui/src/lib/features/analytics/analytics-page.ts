@@ -41,6 +41,7 @@ import { ToastService } from '../../core/ui/toast.js';
 import { formatBytes, formatDuration, formatNumber, formatPercent } from '../../format/formatters.js';
 import { INFO_TEXTS } from '../../format/info-texts.js';
 import {
+	BROWSER_LABELS,
 	CONNECTION_TYPE_LABELS,
 	EGRESS_TYPE_LABELS,
 	INGRESS_INPUT_LABELS,
@@ -80,6 +81,7 @@ import {
 } from './analytics-seams.js';
 
 const NOT_PROVIDED = 'Not provided by this server version';
+const NO_ROOM_ENDED = 'No room ended in this range';
 
 function retentionLength(ms: number): string {
 	return formatRetentionLength(ms, { formatCount: formatNumber });
@@ -118,10 +120,11 @@ const SERIES_LABELS: Partial<Record<AnalyticsMetric, { label: string; entity: st
 	ingressSessions: { label: 'Sessions', entity: 'sessions' }
 };
 
-/** Labels of the breakdown keys of the CE dimensions, matched case-insensitively; browsers read as stored. */
+/** Labels of the breakdown keys of the CE dimensions, matched case-insensitively. */
 const DIMENSION_LABELS: Partial<Record<AnalyticsDimension, Readonly<Record<string, string>>>> = {
 	sdk: lowerKeys(SDK_LABELS),
 	os: lowerKeys(OS_LABELS),
+	browser: lowerKeys(BROWSER_LABELS),
 	connectionType: lowerKeys(CONNECTION_TYPE_LABELS),
 	kind: lowerKeys(PARTICIPANT_KIND_LABELS),
 	egressType: lowerKeys(EGRESS_TYPE_LABELS),
@@ -422,6 +425,11 @@ export class AnalyticsPage implements AnalyticsPageContext {
 
 	protected missingHint(value: unknown, hint = NOT_PROVIDED): string | undefined {
 		return this.summary() !== null && value === undefined ? hint : undefined;
+	}
+
+	/** Why a room average is missing: no room ended in the range, or a server version that does not provide it. */
+	protected roomAverageHint(value: number | undefined): string | undefined {
+		return this.missingHint(value, this.summary()?.roomsEnded === 0 ? NO_ROOM_ENDED : NOT_PROVIDED);
 	}
 
 	// Series and breakdowns

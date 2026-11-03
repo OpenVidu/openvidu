@@ -35,6 +35,7 @@ import { QueryStateService } from '../../core/state/query-state.js';
 import { injectRankedSort } from '../../core/state/ranked-sort.js';
 import { rangeSpanMs } from '../../core/state/relative-time.js';
 import { formatDuration, formatNumber, formatTimestamp } from '../../format/formatters.js';
+import { INFO_TEXTS } from '../../format/info-texts.js';
 import { EGRESS_STATUS_LABELS, EGRESS_TYPE_LABELS, RECONCILER_ESTIMATE } from '../../format/labels.js';
 import { isRoomSid } from '../rooms/room-display.js';
 import { EgressDataService, type EgressListRequest } from './egress-data.js';
@@ -103,6 +104,7 @@ export class EgressPage {
 	protected readonly types = TYPES;
 	protected readonly typeLabels = EGRESS_TYPE_LABELS;
 	protected readonly estimate = RECONCILER_ESTIMATE;
+	protected readonly infoTexts = INFO_TEXTS;
 	protected readonly now = injectTicker();
 	protected readonly tz = this.query.tz;
 	protected readonly limit = this.query.limit;

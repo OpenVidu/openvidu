@@ -59,6 +59,18 @@ describe('formatters', () => {
 		expect(formatDuration(value)).toBe(expected);
 	});
 
+	it.each([
+		[2_700, '3 s', '2 s'],
+		[59_600, '1 m 00 s', '59 s'],
+		[3_569_600, '59 m 30 s', '59 m 29 s'],
+		[3_599_600, '1 h 00 m', '59 m 59 s'],
+		[999.6, '1 s', '999 ms'],
+		[86_370_000, '1 d 0 h', '23 h 59 m']
+	])('rounds %d ms to the smallest unit shown, and truncates it with floor', (value, rounded, floored) => {
+		expect(formatDuration(value)).toBe(rounded);
+		expect(formatDuration(value, { floor: true })).toBe(floored);
+	});
+
 	it('formats timestamps in the zone with a UTC suffix', () => {
 		const at = '2026-10-13T10:31:05.120Z';
 

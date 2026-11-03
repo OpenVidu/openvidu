@@ -32,7 +32,8 @@ application adds its own manifest to the library one.
 - **Routes.** `DASHBOARD_ROUTES` are `DashboardRoute` configs; `composeRoutes(...configs)` lets a later config replace
   any route by path (children merge by path) while keeping the `data` keys it does not set. A page of an extending
   application replaces a locked CE page by declaring the same path, e.g. `{ path: '', children: [{ path: 'rooms', children: [{ path: ':roomSid',
-loadComponent: … }] }] }`.
+loadComponent: … }] }] }`. The locked `tracks/:trackSid` route, outside the sidenav, is the one the global search
+  opens for an exact track ID; an edition with track details replaces it.
 - **Navigation metadata.** `data.navigation` is a `NavigationMeta` (label, icon, path, order, `feature`, `liveCapable`,
   `rangeScoped`, and on range-scoped routes `retention`, the `GET /api/v1/info` retention of the page's data that the
   range picker warns about); orders leave gaps of 10 for new entries. Detail routes declare `data.page` (`PageMeta`),

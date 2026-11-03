@@ -16,7 +16,12 @@
 		[loading]="summary() === null"
 		[approximate]="approximate()"
 	/>
-	<ovd-kpi-tile label="Recorded time" [value]="recorded(summary())" [loading]="summary() === null" />
+	<ovd-kpi-tile
+		label="Total duration"
+		[info]="infoTexts.egressTotalDuration"
+		[value]="recorded(summary())"
+		[loading]="summary() === null"
+	/>
 </ovd-tile-row>
 
 <div class="ovd-filter-bar">

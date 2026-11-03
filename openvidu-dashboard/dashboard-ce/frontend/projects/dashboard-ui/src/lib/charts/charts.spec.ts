@@ -74,6 +74,55 @@ describe('chart options', () => {
 		expect(option.yAxis).not.toHaveProperty('name');
 	});
 
+	describe('axes and steps', () => {
+		const counts = (
+			points: [string, number | null][],
+			kind: 'step' | 'line' = 'step',
+			from = '2026-10-13T10:06:00.000Z',
+			to = '2026-10-13T10:09:50.000Z'
+		) =>
+			timeSeriesOption({
+				series: [{ name: 'Active participants', points }],
+				from,
+				to,
+				tz: 'UTC',
+				format: 'number',
+				kind,
+				colors: COLORS,
+				animation: false
+			}) as {
+				xAxis: { minInterval: number };
+				yAxis: { minInterval?: number };
+				series: { data: [number, number | null][] }[];
+			};
+		const minutes: [string, number | null][] = [
+			['2026-10-13T10:06:00.000Z', 3],
+			['2026-10-13T10:07:00.000Z', 3],
+			['2026-10-13T10:08:00.000Z', 2],
+			['2026-10-13T10:09:00.000Z', 1]
+		];
+
+		it('never ticks the x axis closer than the unit of its labels', () => {
+			expect(counts(minutes, 'step', '2026-10-13T10:06:20.000Z').xAxis.minInterval).toBe(60_000);
+			expect(
+				counts(minutes, 'line', '2026-10-01T00:00:00.000Z', '2026-10-13T10:09:50.000Z').xAxis.minInterval
+			).toBe(86_400_000);
+		});
+
+		it('ticks the y axis at whole numbers only when every value is an integer', () => {
+			expect(counts(minutes).yAxis.minInterval).toBe(1);
+			expect(counts([...minutes, ['2026-10-13T10:09:30.000Z', 0.5]]).yAxis).not.toHaveProperty('minInterval');
+		});
+
+		it('holds the last value of a step series until the end of the range', () => {
+			expect(counts(minutes).series[0]?.data.at(-1)).toEqual([Date.parse('2026-10-13T10:09:50.000Z'), 1]);
+			expect(counts(minutes, 'line').series[0]?.data).toHaveLength(4);
+			expect(counts([...minutes.slice(0, 3), ['2026-10-13T10:09:00.000Z', null]]).series[0]?.data.at(-1)).toEqual(
+				[Date.parse('2026-10-13T10:09:00.000Z'), null]
+			);
+		});
+	});
+
 	it('draws at most 50 markers and otherwise reports the count', () => {
 		const markers = (count: number) =>
 			Array.from({ length: count }, (_, i) => ({

@@ -108,12 +108,17 @@ export const SEARCH_SOURCES = new InjectionToken<readonly SearchSource[]>('SEARC
 	factory: () => DEFAULT_SEARCH_SOURCES
 });
 
-/** The entity of an exact ID with a detail page (`RM_`, `PA_`, `EG_`, `IN_`) and that page, or `null`. */
-export function exactIdTarget(query: string): { kind: EntityKind; id: string; path: string } | null {
+/** Path of the track route, which an edition with track details resolves to the publisher's page. */
+export const TRACK_PATH = '/tracks';
+
+/** The entity of an exact ID (`RM_`, `PA_`, `EG_`, `IN_`, `TR_`) and its page, or `null`. */
+export function exactIdTarget(query: string): { kind: EntityKind | 'track'; id: string; path: string } | null {
 	const id = query.trim();
 	const kind = entityIdKind(id);
 
-	return kind === undefined || kind === 'track' ? null : { kind, id, path: `${DETAIL_PATHS[kind]}/${id}` };
+	return kind === undefined
+		? null
+		: { kind, id, path: `${kind === 'track' ? TRACK_PATH : DETAIL_PATHS[kind]}/${id}` };
 }
 
 /** Detail path of an exact ID, or `null`. */

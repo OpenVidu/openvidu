@@ -124,6 +124,21 @@ $mono-family: 'JetBrains Mono Variable', 'JetBrains Mono', ui-monospace, monospa
 		font-variant-numeric: tabular-nums;
 	}
 
+	// A loading placeholder stays invisible for its first 300 ms, so a fast response never flashes it.
+	.ovd-skeleton-reveal {
+		animation: ovd-skeleton-reveal 150ms ease-in 300ms both;
+	}
+
+	@keyframes ovd-skeleton-reveal {
+		from {
+			opacity: 0;
+		}
+
+		to {
+			opacity: 1;
+		}
+	}
+
 	.ovd-visually-hidden {
 		position: absolute;
 		width: 1px;

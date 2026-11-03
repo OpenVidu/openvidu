@@ -23,7 +23,7 @@ describe('sidTarget', () => {
 		['IN_c3d4', '/ingress/IN_c3d4'],
 		['dem', null],
 		['RM_', null],
-		['TR_abc', null]
+		['TR_abc', '/tracks/TR_abc']
 	])('maps %j to %s', (query, target) => {
 		expect(sidTarget(query)).toBe(target);
 	});
@@ -84,6 +84,20 @@ describe('GlobalSearch', () => {
 		await vi.advanceTimersByTimeAsync(50);
 
 		expect(TestBed.inject(Router).url).toMatch(/^\/participants\/PA_x1y2\?from=.+&to=now&tz=/);
+	});
+
+	it('offers to open an exact track ID on its track route', async () => {
+		type('TR_a2b3');
+		input().dispatchEvent(new Event('focusin'));
+		await vi.advanceTimersByTimeAsync(SEARCH_DEBOUNCE_MS);
+		controller.expectNone(() => true);
+		harness.fixture.detectChanges();
+		expect(document.querySelector('mat-option.exact')?.textContent.trim()).toBe('Open track TR_a2b3');
+
+		input().dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
+		await vi.advanceTimersByTimeAsync(50);
+
+		expect(TestBed.inject(Router).url).toMatch(/^\/tracks\/TR_a2b3\?/);
 	});
 
 	it('clears the box with "Clear search", keeping the focus and closing the results', async () => {

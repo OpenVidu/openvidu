@@ -32,7 +32,9 @@ export const INFO_TEXTS = {
 	activeParticipants: 'Regular participants connected now.',
 	roomFeatures: 'Services the room used: E egress, I ingress, A agent.',
 
-	ingressSessions: 'An ingress is a reusable input; each stream published to it is one session.'
+	ingressSessions: 'An ingress is a reusable input; each stream published to it is one session.',
+
+	egressTotalDuration: 'Time from each egress request to its end, failed egress included.'
 } as const;
 
 /** Tooltip of a value prefixed with "≈": a count summed from the hourly rollups. */

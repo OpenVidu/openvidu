@@ -288,7 +288,9 @@ describe('AnalyticsPage', () => {
 		expect(dimensionLabel('connectionType', 'turn')).toBe('TURN');
 		expect(dimensionLabel('connectionType', 'quic')).toBe('quic');
 		expect(dimensionLabel('ingressInputType', 'whip')).toBe('WHIP');
-		expect(dimensionLabel('browser', 'chrome')).toBe('chrome');
+		expect(dimensionLabel('browser', 'chrome')).toBe('Chrome');
+		expect(dimensionLabel('browser', 'none')).toBe('No browser');
+		expect(dimensionLabel('browser', 'other')).toBe('Other');
 	});
 
 	it('shows the Ingress section in CE, after Egress and right before the Quality card, with no divider', async () => {
@@ -332,6 +334,21 @@ describe('AnalyticsPage', () => {
 
 		expect(size).toContain('n/a');
 		expect(size).toContain('Not provided by this server version');
+	});
+
+	it('says no room ended in the range when the room averages are missing for that reason', async () => {
+		const { avgRoomSize: _size, avgRoomDurationMs: _duration, ...withoutAverages } = SUMMARY;
+		const { element } = await open('/analytics?from=now-7d&to=now&tz=UTC', [], {
+			summary: { ...withoutAverages, roomsCreated: 2, roomsEnded: 0 }
+		});
+		const tiles = [...(card(element, 'Rooms')?.querySelectorAll('ovd-kpi-tile') ?? [])].map(text);
+
+		expect(tiles).toHaveLength(2);
+
+		for (const tile of tiles) {
+			expect(tile).toContain('n/a');
+			expect(tile).toContain('No room ended in this range');
+		}
 	});
 
 	it('says the data is not reported when no server of the range reports media statistics', async () => {

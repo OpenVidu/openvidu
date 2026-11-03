@@ -101,11 +101,20 @@ export class LockedPage {
 		return entity === undefined || id === null ? undefined : this.previews.get(entity.kind, id);
 	});
 	protected readonly domain = computed(() => STATUS_DOMAINS[this.data.entity?.kind ?? 'room'] ?? 'room');
-	/** The name from the list (never for egress, titled by its ID), else the identifier, else the page label. */
+	/** The breadcrumb parameter of a route without an entity, such as the track route. */
+	private readonly breadcrumbId = computed(() => {
+		const breadcrumb = this.data.breadcrumb;
+
+		return typeof breadcrumb === 'object' ? this.route.snapshot.paramMap.get(breadcrumb.param) : null;
+	});
+	/**
+	 * The name from the list (never for egress, titled by its ID), else the identifier, else the breadcrumb parameter,
+	 * else the page label.
+	 */
 	protected readonly heading = computed(() => {
 		const name = this.data.entity?.kind === 'egress' ? undefined : this.preview()?.name;
 
-		return name ?? this.entityId() ?? this.data.navigation?.label ?? '';
+		return name ?? this.entityId() ?? this.breadcrumbId() ?? this.data.navigation?.label ?? '';
 	});
 	protected readonly copyLabel = computed(() => {
 		const kind = this.data.entity?.kind;

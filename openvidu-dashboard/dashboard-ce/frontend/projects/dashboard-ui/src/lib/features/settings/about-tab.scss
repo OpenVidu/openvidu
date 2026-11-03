@@ -48,3 +48,9 @@ td {
 .end {
 	text-align: end;
 }
+
+tfoot th,
+tfoot td {
+	border-bottom: none;
+	font-weight: 500;
+}

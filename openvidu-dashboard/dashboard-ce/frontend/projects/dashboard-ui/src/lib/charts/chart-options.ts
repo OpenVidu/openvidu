@@ -247,10 +247,35 @@ export function chartSummary(
 	return `${title}, ${range} (${options.tz}). ${parts.join('; ')}.`;
 }
 
+const MINUTE_MS = 60_000;
+const DAY_MS = 86_400_000;
+
 function axisLabel(value: number, tz: string, spanMs: number): string {
 	const date = new TZDate(value, tz);
 
-	return format(date, spanMs <= 86_400_000 ? 'HH:mm' : spanMs <= 7 * 86_400_000 ? 'MM-dd HH:mm' : 'MM-dd');
+	return format(date, spanMs <= DAY_MS ? 'HH:mm' : spanMs <= 7 * DAY_MS ? 'MM-dd HH:mm' : 'MM-dd');
+}
+
+/** The unit the axis labels of a span show (minutes up to 7 days, then days): ticks never come closer. */
+function axisLabelUnitMs(spanMs: number): number {
+	return spanMs <= 7 * DAY_MS ? MINUTE_MS : DAY_MS;
+}
+
+/** Every value of every series is a whole number (nulls aside), as counts are. */
+function integerSeries(series: readonly ChartSeries[]): boolean {
+	return series.every((item) => item.points.every(([, value]) => value === null || Number.isInteger(value)));
+}
+
+/** The points of a series, a step series extended to `to` with its last value so its last bucket is drawn. */
+function seriesData(series: ChartSeries, kind: SeriesKind, to: number): [number, number | null][] {
+	const data = series.points.map(([ts, value]): [number, number | null] => [new Date(ts).getTime(), value]);
+	const last = data.at(-1);
+
+	if (kind === 'step' && last !== undefined && last[1] !== null && last[0] < to) {
+		data.push([to, last[1]]);
+	}
+
+	return data;
 }
 
 /** ECharts option of a time series fixed to `from`–`to`, with gaps for missing buckets and no zoom. */
@@ -277,6 +302,7 @@ export function timeSeriesOption(options: TimeSeriesOptions): EChartsCoreOption 
 			type: 'time',
 			min: from,
 			max: to,
+			minInterval: axisLabelUnitMs(to - from),
 			axisLabel: {
 				color: colors.text,
 				formatter: (value: number) => axisLabel(value, options.tz, to - from),
@@ -287,6 +313,7 @@ export function timeSeriesOption(options: TimeSeriesOptions): EChartsCoreOption 
 		},
 		yAxis: {
 			type: 'value',
+			...(integerSeries(options.series) ? { minInterval: 1 } : {}),
 			...(options.yRange ?? {}),
 			axisLabel: { color: colors.text, formatter: (value: number) => formatValue(value, options.format) },
 			splitLine: { lineStyle: { color: colors.grid } }
@@ -310,7 +337,7 @@ export function timeSeriesOption(options: TimeSeriesOptions): EChartsCoreOption 
 			return {
 				name: series.name,
 				type: options.kind === 'bar' ? 'bar' : 'line',
-				data: series.points.map(([ts, value]) => [new Date(ts).getTime(), value]),
+				data: seriesData(series, options.kind, to),
 				connectNulls: false,
 				showSymbol: false,
 				symbolSize: 8,

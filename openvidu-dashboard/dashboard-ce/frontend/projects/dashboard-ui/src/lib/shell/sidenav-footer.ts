@@ -1,7 +1,6 @@
 import { booleanAttribute, Component, computed, inject, input } from '@angular/core';
 import { MatIcon } from '@angular/material/icon';
 import { MatTooltip } from '@angular/material/tooltip';
-import { RouterLink } from '@angular/router';
 
 import { ExternalLink } from '../components/external-link/external-link.js';
 import { InfoService } from '../core/info.js';
@@ -9,12 +8,12 @@ import { EXTERNAL_LINKS } from '../core/links.js';
 import { EditionBadge } from './edition-badge.js';
 
 /**
- * The bottom of the sidenav: "OpenVidu {version}" linking to About, the edition badge, the documentation link and, when
+ * The bottom of the sidenav: "OpenVidu {version}", the edition badge, the documentation link and, when
  * the server serves it, the OpenAPI link; in rail mode the short badge and a documentation icon.
  */
 @Component({
 	selector: 'ovd-sidenav-footer',
-	imports: [EditionBadge, ExternalLink, MatIcon, MatTooltip, RouterLink],
+	imports: [EditionBadge, ExternalLink, MatIcon, MatTooltip],
 	template: `
 		@if (rail()) {
 			<ovd-edition-badge compact />
@@ -31,7 +30,7 @@ import { EditionBadge } from './edition-badge.js';
 			</a>
 		} @else {
 			<div class="version">
-				<a routerLink="/settings" [queryParams]="{ tab: 'about' }">{{ version() }}</a>
+				<span class="name">{{ version() }}</span>
 				<ovd-edition-badge />
 			</div>
 			<ovd-external-link [href]="documentation">Documentation</ovd-external-link>
@@ -55,15 +54,10 @@ import { EditionBadge } from './edition-badge.js';
 			align-items: center;
 			gap: 4px 8px;
 
-			a {
+			.name {
 				color: var(--mat-sys-on-surface-variant);
 				font: var(--mat-sys-label-large);
-				text-decoration: none;
 				white-space: nowrap;
-			}
-
-			a:hover {
-				text-decoration: underline;
 			}
 		}
 

@@ -224,6 +224,15 @@ export const DASHBOARD_ROUTES: DashboardRoute[] = [
 				]
 			},
 			{
+				path: 'tracks/:trackSid',
+				title: 'Track',
+				loadComponent: () => import('./components/lock/locked-page.js').then((module) => module.LockedPage),
+				data: {
+					page: { feature: 'participant-detail', liveCapable: false, rangeScoped: false, timed: true },
+					breadcrumb: { param: 'trackSid' }
+				}
+			},
+			{
 				path: 'settings',
 				title: 'Settings',
 				loadComponent: () =>

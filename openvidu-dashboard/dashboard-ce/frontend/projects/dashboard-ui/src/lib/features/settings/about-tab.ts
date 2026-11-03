@@ -1,6 +1,7 @@
 import { Component, computed, effect, inject, signal } from '@angular/core';
 import { MatProgressBar } from '@angular/material/progress-bar';
-import { formatRetentionLength, type InfoMigration, type InfoRetention } from '@openvidu-dashboard/typings';
+import { MatTooltip } from '@angular/material/tooltip';
+import { Collection, formatRetentionLength, type InfoMigration, type InfoRetention } from '@openvidu-dashboard/typings';
 
 import { Notice } from '../../components/feedback/notice.js';
 import { Skeleton } from '../../components/feedback/skeleton.js';
@@ -46,13 +47,21 @@ export function migrationLine(migration: InfoMigration, tz: string): string | nu
 	}
 }
 
+/** Collections without an index that leads with their time field, which the info endpoint never dates. */
+const UNDATED: ReadonlySet<string> = new Set([
+	Collection.TRACKS,
+	Collection.TRACK_SUBSCRIPTIONS,
+	Collection.TRACK_STATS
+]);
+const UNDATED_HINT = "Not shown: no index starts with this collection's time field";
+
 /**
  * The OpenVidu version with the edition, the legacy migration while it runs (and its outcome when it ends while the
  * tab is open), the retention per data class and the storage per collection.
  */
 @Component({
 	selector: 'ovd-about-tab',
-	imports: [EditionBadge, MatProgressBar, Notice, Skeleton],
+	imports: [EditionBadge, MatProgressBar, MatTooltip, Notice, Skeleton],
 	templateUrl: './about-tab.html',
 	styleUrl: './about-tab.scss'
 })
@@ -96,9 +105,20 @@ export class AboutTab {
 			collection,
 			documents: formatNumber(entry.documents),
 			size: formatBytes(entry.storageBytes + entry.indexBytes),
-			oldest: entry.oldest === undefined ? '—' : formatTimestamp(entry.oldest, { tz: this.tz() })
+			oldest: entry.oldest === undefined ? '—' : formatTimestamp(entry.oldest, { tz: this.tz() }),
+			undatedHint: entry.oldest === undefined && UNDATED.has(collection) ? UNDATED_HINT : null
 		}))
 	);
+	protected readonly storageTotal = computed(() => {
+		const entries = Object.values(this.info()?.storage ?? {});
+
+		return entries.length === 0
+			? null
+			: {
+					documents: formatNumber(entries.reduce((sum, entry) => sum + entry.documents, 0)),
+					size: formatBytes(entries.reduce((sum, entry) => sum + entry.storageBytes + entry.indexBytes, 0))
+				};
+	});
 
 	constructor() {
 		effect(() => {

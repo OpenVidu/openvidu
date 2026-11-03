@@ -49,33 +49,51 @@ function pad(value: number): string {
 	return String(value).padStart(2, '0');
 }
 
-/** `850 ms`, `42 s`, `12 m 05 s`, `1 h 02 m`, `3 d 4 h`. */
-export function formatDuration(ms: number): string {
+const SECOND_MS = 1000;
+const MINUTE_MS = 60 * SECOND_MS;
+const HOUR_MS = 60 * MINUTE_MS;
+
+export interface DurationOptions {
+	/** Truncate to the smallest unit shown instead of rounding to it, as a running counter does. */
+	floor?: boolean;
+}
+
+/** Smallest unit a duration of this length shows: seconds below an hour, minutes below a day, then hours. */
+function durationUnitMs(ms: number): number {
+	return ms < HOUR_MS ? SECOND_MS : ms < DAY_MS ? MINUTE_MS : HOUR_MS;
+}
+
+/** `850 ms`, `42 s`, `12 m 05 s`, `1 h 02 m`, `3 d 4 h`, rounded to the smallest unit shown (truncated with `floor`). */
+export function formatDuration(ms: number, options: DurationOptions = {}): string {
 	const value = Math.max(0, ms);
+	const fit = options.floor === true ? Math.floor : Math.round;
 
-	if (value < 1000) {
-		return `${String(Math.round(value))} ms`;
+	if (fit(value) < SECOND_MS) {
+		return `${String(fit(value))} ms`;
 	}
 
-	const seconds = Math.floor(value / 1000);
+	let unit = durationUnitMs(value);
+	let total = fit(value / unit) * unit;
 
-	if (seconds < 60) {
-		return `${String(seconds)} s`;
+	// Rounding up can reach the next unit, as 59.6 s does: round again at that unit.
+	if (durationUnitMs(total) !== unit) {
+		unit = durationUnitMs(total);
+		total = fit(value / unit) * unit;
 	}
 
-	const minutes = Math.floor(seconds / 60);
-
-	if (minutes < 60) {
-		return `${String(minutes)} m ${pad(seconds % 60)} s`;
+	if (total < MINUTE_MS) {
+		return `${String(total / SECOND_MS)} s`;
 	}
 
-	const hours = Math.floor(minutes / 60);
-
-	if (hours < 24) {
-		return `${String(hours)} h ${pad(minutes % 60)} m`;
+	if (total < HOUR_MS) {
+		return `${String(Math.floor(total / MINUTE_MS))} m ${pad((total % MINUTE_MS) / SECOND_MS)} s`;
 	}
 
-	return `${String(Math.floor(hours / 24))} d ${String(hours % 24)} h`;
+	if (total < DAY_MS) {
+		return `${String(Math.floor(total / HOUR_MS))} h ${pad((total % HOUR_MS) / MINUTE_MS)} m`;
+	}
+
+	return `${String(Math.floor(total / DAY_MS))} d ${String((total % DAY_MS) / HOUR_MS)} h`;
 }
 
 export interface TimestampOptions {

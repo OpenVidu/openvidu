@@ -65,7 +65,13 @@
 						<th scope="row" class="ovd-mono">{{ row.collection }}</th>
 						<td class="end ovd-tabular">{{ row.documents }}</td>
 						<td class="end ovd-tabular">{{ row.size }}</td>
-						<td class="ovd-tabular">{{ row.oldest }}</td>
+						<td class="ovd-tabular">
+							@if (row.undatedHint) {
+								<span tabindex="0" [matTooltip]="row.undatedHint">{{ row.oldest }}</span>
+							} @else {
+								{{ row.oldest }}
+							}
+						</td>
 					</tr>
 				} @empty {
 					<tr>
@@ -73,6 +79,16 @@
 					</tr>
 				}
 			</tbody>
+			@if (storageTotal(); as total) {
+				<tfoot>
+					<tr>
+						<th scope="row">Total</th>
+						<td class="end ovd-tabular">{{ total.documents }}</td>
+						<td class="end ovd-tabular">{{ total.size }}</td>
+						<td></td>
+					</tr>
+				</tfoot>
+			}
 		</table>
 	</div>
 } @else {

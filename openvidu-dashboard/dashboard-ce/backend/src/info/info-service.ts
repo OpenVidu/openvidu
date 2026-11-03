@@ -1,4 +1,4 @@
-import type { Db, Document } from 'mongodb';
+import type { Db, Document, FindCursor } from 'mongodb';
 
 import {
 	Collection,
@@ -23,8 +23,40 @@ import type { StatsModeReader } from '../stats/stats-mode.js';
 
 export const STORAGE_CACHE_MS = 60_000;
 
-/** Field whose earliest value dates a collection, when an index starts with it. */
-const OLDEST_FIELDS = ['ts', 'bucket', 'createdAt'] as const;
+/**
+ * Field that dates each collection, read through an index that leads with it (the `global` scope for the daily rollups);
+ * `nodes` holds one document per node. Tracks and subscriptions have no such index, and the earliest stats sample
+ * would scan the buckets of the time series.
+ */
+const OLDEST: Partial<Record<string, { field: string; filter?: Document }>> = {
+	[Collection.ROOMS]: { field: 'createdAt' },
+	[Collection.PARTICIPANTS]: { field: 'joinedAt' },
+	[Collection.EGRESSES]: { field: 'startedAt' },
+	[Collection.INGRESSES]: { field: 'createdAt' },
+	[Collection.INGRESS_SESSIONS]: { field: 'startedAt' },
+	[Collection.EVENTS]: { field: 'ts' },
+	[Collection.ANALYTICS_5MIN]: { field: 'bucket' },
+	[Collection.ANALYTICS_HOURLY]: { field: 'bucket' },
+	[Collection.ANALYTICS_DAILY]: { field: 'bucket', filter: { scope: 'global' } },
+	[Collection.NODES]: { field: 'firstSeenAt' }
+};
+
+/** The query of the oldest document of a collection and its date field, or `null` for a collection without one. */
+export function oldestQuery(db: Db, name: string): { cursor: FindCursor<Document>; field: string } | null {
+	const oldest = OLDEST[name];
+
+	if (oldest === undefined) {
+		return null;
+	}
+
+	const cursor = db
+		.collection(name)
+		.find({ ...oldest.filter, [oldest.field]: { $type: 'date' } }, { projection: { _id: 0, [oldest.field]: 1 } })
+		.sort({ [oldest.field]: 1 })
+		.limit(1);
+
+	return { cursor, field: oldest.field };
+}
 
 type SchemaMetaDocument =
 	SchemaMetaSchema | SchemaMetaMigration | SchemaMetaRetention | SchemaMetaCapabilities | SchemaMetaConfig;
@@ -128,18 +160,11 @@ export class InfoService {
 			storageBytes: Number(storageStats.storageSize ?? 0),
 			indexBytes: Number(storageStats.totalIndexSize ?? 0)
 		};
-		const indexes = (await collection.listIndexes().toArray()) as { key: Document }[];
-		const field = OLDEST_FIELDS.find((candidate) =>
-			indexes.some((index) => Object.keys(index.key)[0] === candidate)
-		);
+		const query = oldestQuery(this.db, name);
 
-		if (field !== undefined) {
-			const [oldest] = await collection
-				.find({ [field]: { $type: 'date' } }, { projection: { [field]: 1 } })
-				.sort({ [field]: 1 })
-				.limit(1)
-				.toArray();
-			const value: unknown = oldest?.[field];
+		if (query !== null) {
+			const [oldest] = await query.cursor.toArray();
+			const value: unknown = oldest?.[query.field];
 
 			if (value instanceof Date) {
 				entry.oldest = value.toISOString();

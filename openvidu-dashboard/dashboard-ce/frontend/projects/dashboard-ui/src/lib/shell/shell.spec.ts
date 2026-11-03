@@ -52,6 +52,7 @@ describe('route metadata', () => {
 			'egress/:egressId': true,
 			ingress: true,
 			'ingress/:ingressId': true,
+			'tracks/:trackSid': true,
 			settings: false
 		});
 	});
@@ -306,7 +307,8 @@ describe('DashboardShell', () => {
 		);
 		const footer = element.querySelector('ovd-navigation-list ovd-sidenav-footer');
 
-		expect(footer?.querySelector('.version a')?.textContent.trim()).toBe('OpenVidu 3.10.0');
+		expect(footer?.querySelector('.version .name')?.textContent.trim()).toBe('OpenVidu 3.10.0');
+		expect(footer?.querySelector('.version a')).toBeNull();
 		expect(footer?.querySelector('ovd-edition-badge')?.textContent.trim()).toBe('COMMUNITY');
 		expect(
 			[...(footer?.querySelectorAll('ovd-external-link') ?? [])].map((link) =>
