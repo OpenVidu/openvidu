@@ -41,6 +41,10 @@
 	gap: 16px;
 }
 
+.media-stats-notice:not(:last-child) {
+	margin-bottom: 12px;
+}
+
 .identities-hint {
 	display: flex;
 	flex-direction: column;
