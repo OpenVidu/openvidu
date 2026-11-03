@@ -55,6 +55,6 @@
 ## 7. Integration check
 
 - [x] 7.1 Run `./dashboard.sh check` and `./dashboard.sh contract-check ../openvidu-livekit`. Verify that both pass.
-- [ ] 7.2 Run the analytics writer suite of `openvidu-test-integration` against a local deployment with the new
+- [x] 7.2 Run the analytics writer suite of `openvidu-test-integration` against a local deployment with the new
       server image. Verify that the node document has `mediaStats: true` and that rooms of signal-only participants get
       `lastStatsAt`.
