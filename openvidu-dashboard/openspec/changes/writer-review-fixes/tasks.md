@@ -19,7 +19,7 @@
 
 ## 3. Integration check
 
-- [ ] 3.1 Run `./dashboard.sh check` and `./dashboard.sh contract-check ../openvidu-livekit`. Verify that both pass.
+- [x] 3.1 Run `./dashboard.sh check` and `./dashboard.sh contract-check ../openvidu-livekit`. Verify that both pass.
 - [ ] 3.2 On a local deployment with the nightly server image, publish an RTMP ingress into an active room and start a
       room composite egress with a file and a stream output. Verify that the session has `roomSid` while it publishes,
       the room counts it, the egress history reads starting, active, ending, complete, and a Go SDK session is counted
