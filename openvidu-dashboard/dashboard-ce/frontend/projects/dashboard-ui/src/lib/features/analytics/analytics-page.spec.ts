@@ -407,6 +407,14 @@ describe('AnalyticsPage', () => {
 		expect(text(identities?.querySelector('.chart-heading + .chart-note'))).toBe('per UTC day');
 	});
 
+	it('names a node scope in the title by its media node label', async () => {
+		const { element } = await open('/analytics?from=now-24h&to=now&tz=UTC&scope=node:media-node-10-0-1-23', [
+			'per-node-breakdown'
+		]);
+
+		expect(text(element.querySelector('h1'))).toBe('Analytics · media-node-10-0-1-23');
+	});
+
 	it('locks the PRO strip on CE without any PRO request', async () => {
 		const { requests, element, http } = await open('/analytics?from=now-24h&to=now&tz=UTC');
 		const locks = [...element.querySelectorAll('ovd-pro-lock-overlay')].map(text);

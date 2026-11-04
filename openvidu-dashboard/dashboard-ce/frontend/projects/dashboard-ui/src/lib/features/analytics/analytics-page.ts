@@ -262,8 +262,9 @@ export class AnalyticsPage implements AnalyticsPageContext {
 	readonly mediaStats = computed(() => this.summary()?.mediaStats);
 	protected readonly mediaStatsTexts = RANGE_MEDIA_STATS;
 
+	/** "Analytics", or "Analytics · <media node label>" for a node scope. */
 	protected readonly title = computed(() =>
-		this.scope() === 'global' ? 'Analytics' : `Analytics · ${this.scope()}`
+		this.scope() === 'global' ? 'Analytics' : `Analytics · ${this.scope().replace(/^node:/, '')}`
 	);
 	/** Names what `auto` resolves to for the range, whatever value is selected. */
 	protected readonly autoLabel = computed(() => {
