@@ -18,7 +18,7 @@ export const INFO_TEXTS = {
 	todayParticipants: 'Participant sessions that started today. Only regular participants count.',
 	todayMinutes: 'Minutes of the participant sessions that ended today.',
 	dataPipeline: 'The OpenVidu server writes analytics in batches. This card shows when the last batch arrived.',
-	byNode: 'Nodes that reported analytics recently. A node is alive while its analytics batches keep arriving.',
+	byNode: 'Media nodes of this deployment. A node is alive while its analytics batches keep arriving; one that stopped reporting is listed for 24 hours, and one that was stopped, for an hour.',
 
 	dailyUniqueIdentities:
 		'Distinct participant identities per UTC day, counted once the day has closed; over several days the daily values are added up, so someone who joined on two days counts twice.',
