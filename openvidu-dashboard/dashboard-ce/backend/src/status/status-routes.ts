@@ -14,9 +14,8 @@ export const statusResponse = z
 		migration: healthFactsShape.migration,
 		writer: z.object({
 			lastSeenAt: isoDate.optional(),
-			nodes: count,
-			aliveNodes: count.meta({
-				description: 'Nodes whose last batch is within the fresh window of their own batch interval'
+			stoppedAt: isoDate.optional().meta({
+				description: 'Graceful stop of the newest node, present only when no node is alive'
 			}),
 			batchIntervalMs: count.optional().meta({
 				description: 'Largest batch interval of the nodes seen in the last hour; absent reads as 10 s'

@@ -38,7 +38,8 @@ describe.skipIf(mongoUri === '')('info oldest-document queries', () => {
 			seed: 1,
 			retentionDays: { events: 7, stats: 7, tracks: 7, entities: 90 },
 			timeseries: true,
-			rollups: { fiveMinute: true, nodes: true, roomSums: true }
+			rollups: { fiveMinute: true, nodes: true, roomSums: true },
+			mediaNodes: true
 		});
 	}, 600_000);
 

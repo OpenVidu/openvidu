@@ -41,6 +41,7 @@ export function toParticipantListItem(doc: ParticipantDocument): ParticipantList
 		durationMs: doc.durationMs,
 		connectionType: doc.connectionType,
 		nodeId: doc.nodeId,
+		mediaNode: doc.mediaNode,
 		isPublisher: doc.isPublisher,
 		publishedSources: publishedSources(doc),
 		client: clientSummary(doc)

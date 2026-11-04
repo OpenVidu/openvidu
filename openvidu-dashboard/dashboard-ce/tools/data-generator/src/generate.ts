@@ -44,7 +44,8 @@ async function main(): Promise<void> {
 		'room-sums': { type: 'boolean' },
 		'active-window': { type: 'string' },
 		'min-active-rooms': { type: 'string' },
-		'nodes-without-media-stats': { type: 'string' }
+		'nodes-without-media-stats': { type: 'string' },
+		'media-nodes': { type: 'boolean' }
 	});
 	const uri = requireString(values, 'uri');
 	const dbName = requireString(values, 'db');
@@ -84,6 +85,7 @@ async function main(): Promise<void> {
 				? {}
 				: { minActiveRooms: intOption(values, 'min-active-rooms', 0) }),
 			nodesWithoutMediaStats: intOption(values, 'nodes-without-media-stats', 0),
+			mediaNodes: flag(values, 'media-nodes'),
 			log: (line) => {
 				console.log(line);
 			}

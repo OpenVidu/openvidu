@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 
-test('overview against the real backend: live tiles, stale hint, writer health, recent rooms and the lock', async ({
+test('overview against the real backend: live tiles, stale hint, writer health, recent rooms and nothing per node', async ({
 	page
 }) => {
 	await page.goto('/login?redirect=%2Foverview%3Ftz%3DUTC');
@@ -18,9 +18,9 @@ test('overview against the real backend: live tiles, stale hint, writer health, 
 	await expect(page.getByRole('alert').filter({ hasText: 'may be stale' })).toContainText('1 active room');
 	await expect(page.locator('.page-header ovd-live-chip')).toHaveText('LIVE');
 	await expect(card('Data pipeline')).toContainText(/Last batch at \d\d:\d\d:\d\d/);
-	await expect(card('Data pipeline')).toContainText(/\d+ of \d+ nodes? reporting/);
+	await expect(card('Data pipeline')).not.toContainText('node');
 	await expect(card('Today (UTC, since 00:00)')).toContainText('3');
 	await expect(card('Recent rooms').getByRole('row', { name: /Webinar-Q4/ })).toBeVisible();
 	await expect(card('Recent rooms').locator('ovd-status-badge mat-icon.stale')).toHaveCount(1);
-	await expect(card('By node')).toContainText('Per-node breakdown is available in OpenVidu PRO');
+	await expect(card('By node')).toHaveCount(0);
 });

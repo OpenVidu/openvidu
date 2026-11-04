@@ -19,6 +19,7 @@ export const PARTICIPANT_LIST_PROJECTION: Readonly<Document> = {
 	durationMs: 1,
 	connectionType: 1,
 	nodeId: 1,
+	mediaNode: 1,
 	isPublisher: 1,
 	lastStatsAt: 1,
 	'tracks.bySource': 1,

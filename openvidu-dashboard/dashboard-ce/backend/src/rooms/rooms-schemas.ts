@@ -28,7 +28,12 @@ export function roomsListQuery(now: () => Date) {
 		features: csvParam(enumValues(RoomFeature))
 			.optional()
 			.meta({ description: 'Rooms that used any of these features' }),
-		nodeId: z.string().min(1).max(128).optional().meta({ description: 'Rooms hosted by this node' }),
+		mediaNode: z
+			.string()
+			.min(1)
+			.max(128)
+			.optional()
+			.meta({ description: 'Rooms hosted by the server with this media node label' }),
 		sort: z
 			.enum(enumValues(RoomSort), { error: 'must be createdAt, endedAt, duration, uniqueIdentities or active' })
 			.default(RoomSort.CREATED_AT)

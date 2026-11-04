@@ -4,7 +4,7 @@ import type {
 	HourlyRollupDocument,
 	TrackStatsDocument
 } from '../../src/index.js';
-import { ACTIVE_ROOM, at, between, DAY, NODE_ALPHA, NODE_BETA, P, T } from './scenario.js';
+import { ACTIVE_ROOM, at, between, DAY, MEDIA_NODE_ALPHA, MEDIA_NODE_BETA, NODE_BETA, P, T } from './scenario.js';
 
 const statsAt = at('10:35:00');
 const daveUp = { roomSid: ACTIVE_ROOM.sid, participantSid: P.dave, kind: 'up', nodeId: NODE_BETA } as const;
@@ -103,8 +103,8 @@ export const analytics5min: FiveMinuteRollupDocument[] = [
 		internal: { connectedSids: [P.dave, P.ingress2, P.egressStreamer] }
 	},
 	{
-		_id: rollupId(`node:${NODE_BETA}`, fiveMinBucket),
-		scope: `node:${NODE_BETA}`,
+		_id: rollupId(`node:${MEDIA_NODE_BETA}`, fiveMinBucket),
+		scope: `node:${MEDIA_NODE_BETA}`,
 		bucket: fiveMinBucket,
 		...fiveMinCounters,
 		internal: { connectedSids: [P.dave, P.ingress2, P.egressStreamer] }
@@ -180,8 +180,8 @@ export const analyticsHourly: HourlyRollupDocument[] = [
 		}
 	},
 	{
-		_id: rollupId(`node:${NODE_ALPHA}`, hourBucket),
-		scope: `node:${NODE_ALPHA}`,
+		_id: rollupId(`node:${MEDIA_NODE_ALPHA}`, hourBucket),
+		scope: `node:${MEDIA_NODE_ALPHA}`,
 		bucket: hourBucket,
 		...closedRoomHour
 	}
@@ -240,8 +240,8 @@ export const analyticsDaily: DailyRollupDocument[] = [
 		uniqueIdentities: 5
 	},
 	{
-		_id: rollupId(`node:${NODE_ALPHA}`, dayBucket),
-		scope: `node:${NODE_ALPHA}`,
+		_id: rollupId(`node:${MEDIA_NODE_ALPHA}`, dayBucket),
+		scope: `node:${MEDIA_NODE_ALPHA}`,
 		bucket: dayBucket,
 		...closedRoomHour,
 		uniqueIdentities: 3

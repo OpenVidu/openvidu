@@ -2,20 +2,6 @@
 	display: block;
 }
 
-.node {
-	width: 200px;
-}
-
-.lock {
-	display: inline-flex;
-	margin-inline-end: 8px;
-
-	mat-icon {
-		width: 20px;
-		height: 20px;
-	}
-}
-
 .cell,
 .features {
 	display: inline-flex;

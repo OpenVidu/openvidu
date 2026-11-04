@@ -26,7 +26,8 @@ Behaviour is specified in `openspec/specs/*-api`, `api-conventions`, `auth`, `st
   lock's place (mount order kept) and swaps a CE route for its extension with `registry.replace()`; a `pro` startup
   that leaves a lock without a definition exits with code 1, naming it.
 - Extension tokens that `configure` can rebind: `Features`, `AnalyticsCatalogue` (metrics and dimensions the
-  analytics endpoints compute) and `OverviewExtension` (extra overview fields, merged before the `ETag`). A
+  analytics endpoints compute) and `OverviewExtension` (extra overview fields, merged before the `ETag`, folded from the
+  node documents and the active rooms and sessions grouped by `mediaNode`). A
   `configure` that throws stops the startup with code 1.
 - A resource slice is `src/<resource>/`: `*-schemas.ts` (Zod), `*-query.ts` (pure filter builders), `*-repository.ts`
   (MongoDB), `*-service.ts` (paging, mapping), `*-responses.ts` (OpenAPI response schemas, checked against the mappers

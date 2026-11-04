@@ -6,7 +6,8 @@
 		"serverVersion": "3.10.0",
 		"region": "eu-west",
 		"batchIntervalMs": { "$numberInt": "10000" },
-		"mediaStats": true
+		"mediaStats": true,
+		"mediaNode": "media-node-10-0-0-1"
 	},
 	{
 		"_id": "ND_beta3Vx9Pw",
@@ -15,6 +16,7 @@
 		"serverVersion": "3.10.0",
 		"region": "eu-west",
 		"batchIntervalMs": { "$numberInt": "10000" },
-		"mediaStats": true
+		"mediaStats": true,
+		"mediaNode": "media-node-10-0-0-2"
 	}
 ]

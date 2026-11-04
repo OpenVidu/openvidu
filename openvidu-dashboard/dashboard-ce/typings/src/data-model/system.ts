@@ -1,6 +1,6 @@
 import type { MigrationState, StatsDetail } from './enums.js';
 
-/** `nodes`: one document per server node, refreshed on every writer batch. `_id` is the node id. */
+/** `nodes`: one document per server process, refreshed on every writer batch. `_id` is the node id of the process. */
 export interface NodeDocument {
 	_id: string;
 	firstSeenAt: Date;
@@ -11,6 +11,10 @@ export interface NodeDocument {
 	batchIntervalMs?: number;
 	/** Whether the node reports media statistics; absent on documents written before it existed (read as true). */
 	mediaStats?: boolean;
+	/** Media node label of the server: a name of the machine that stays the same across restarts; absent without one. */
+	mediaNode?: string;
+	/** Set by a graceful stop, after the final batch. */
+	stoppedAt?: Date;
 }
 
 /** `schema_meta` `_id: "schema"`: contract version implemented by the writer. */

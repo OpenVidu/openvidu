@@ -1,6 +1,6 @@
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
-import { Component } from '@angular/core';
+import { Component, input } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
@@ -13,6 +13,7 @@ import { InfoService } from '../../core/info.js';
 import { PreferencesService } from '../../core/preferences/preferences.js';
 import { LiveCountersService } from '../../core/refresh/live-counters.js';
 import { ServerStatusService } from '../../core/refresh/server-status.js';
+import { OVERVIEW_NODES_CARD } from './overview-data.js';
 import { OverviewPage } from './overview-page.js';
 
 @Component({ selector: 'ovd-blank', template: '' })
@@ -92,10 +93,7 @@ function status(overrides: Partial<StatusResponse> = {}, writerAgeMs: number | n
 		generatedAt: new Date(reference).toISOString(),
 		schema: { dashboard: 2, writer: 2, status: 'ok' },
 		migration: { state: 'completed', progress: { processed: 10, total: 10 } },
-		writer:
-			writerAgeMs === null
-				? { nodes: 0, aliveNodes: 0 }
-				: { lastSeenAt: ago(writerAgeMs), nodes: 2, aliveNodes: 2 },
+		writer: writerAgeMs === null ? {} : { lastSeenAt: ago(writerAgeMs) },
 		...overrides
 	};
 }
@@ -107,13 +105,21 @@ async function loadStatus(http: HttpTestingController, body: StatusResponse): Pr
 	await load;
 }
 
+/** Content an edition gives the By node card. */
+@Component({ selector: 'ovd-test-nodes-card', template: 'media nodes' })
+class NodesCard {
+	readonly overview = input<OverviewResponse | null>(null);
+}
+
 async function open(
 	body: OverviewResponse | 'fail' = overview(),
 	features: string[] = [],
-	server: StatusResponse | null = status()
+	server: StatusResponse | null = status(),
+	nodesCard: typeof NodesCard | null = null
 ) {
 	TestBed.configureTestingModule({
 		providers: [
+			{ provide: OVERVIEW_NODES_CARD, useValue: nodesCard },
 			provideRouter([
 				{ path: 'overview', component: OverviewPage },
 				{ path: '**', component: Blank }
@@ -236,7 +242,7 @@ describe('OverviewPage', () => {
 	it('turns the chip and the writer line to stale from the last server status', async () => {
 		const { element } = await open(overview(), [], {
 			...status({}, 3 * MINUTE),
-			writer: { lastSeenAt: ago(3 * MINUTE), nodes: 1, aliveNodes: 0 }
+			writer: { lastSeenAt: ago(3 * MINUTE) }
 		});
 		const chip = element.querySelector('.page-header ovd-live-chip');
 
@@ -244,10 +250,21 @@ describe('OverviewPage', () => {
 		const pipeline = section(element, 'Data pipeline');
 		const lines = [...(pipeline?.querySelectorAll('li.line') ?? [])];
 
+		expect(lines).toHaveLength(1);
 		expect(text(lines[0])).toMatch(/^Last batch at \d\d:\d\d:\d\d/);
 		expect(lines[0]?.querySelector('mat-icon.warn')).not.toBeNull();
-		expect(text(lines[1])).toBe('0 of 1 node reporting');
-		expect(lines[1]?.querySelector('mat-icon.warn')).not.toBeNull();
+	});
+
+	it('reads a stopped server with the neutral icon, not as a warning', async () => {
+		const { element } = await open(overview(), [], {
+			...status({}, 10 * MINUTE),
+			writer: { lastSeenAt: ago(10 * MINUTE), stoppedAt: ago(10 * MINUTE) }
+		});
+		const line = section(element, 'Data pipeline')?.querySelector('li.line');
+
+		expect(text(line)).toMatch(/^Server stopped at \d\d:\d\d:\d\d/);
+		expect(line?.querySelector('mat-icon.neutral')).not.toBeNull();
+		expect(line?.querySelector('mat-icon.warn')).toBeNull();
 	});
 
 	it('keeps LIVE and fresh rooms under a long interval, judged at the responses', async () => {
@@ -281,12 +298,13 @@ describe('OverviewPage', () => {
 		expect(text(section(element, 'Data pipeline')?.querySelector('li.line'))).not.toBe(before);
 	});
 
-	it('explains node liveness on the By node heading in PRO', async () => {
-		const { element } = await open(overview(), ['per-node-breakdown']);
+	it('renders the edition card under By node with per-node-breakdown, explained by its info tip', async () => {
+		const { element } = await open(overview(), ['per-node-breakdown'], status(), NodesCard);
+		const card = section(element, 'By node');
 
-		expect(
-			section(element, 'By node')?.querySelector('header ovd-info-tip button')?.getAttribute('aria-label')
-		).toBe('About By node');
+		expect(text(card)).toContain('media nodes');
+		expect(card?.querySelector('header ovd-info-tip button')?.getAttribute('aria-label')).toBe('About By node');
+		expect(section(element, 'Recent rooms')?.classList.contains('full')).toBe(false);
 	});
 
 	it('marks an approximate today and an empty one', async () => {
@@ -387,8 +405,8 @@ describe('OverviewPage', () => {
 		const status = text(pipeline);
 
 		expect(status).toMatch(/Last batch at \d\d:\d\d:\d\d/);
-		expect(status).toContain('2 of 2 nodes reporting');
-		expect(pipeline?.querySelectorAll('mat-icon.ok')).toHaveLength(2);
+		expect(status).not.toContain('node');
+		expect(pipeline?.querySelectorAll('mat-icon.ok')).toHaveLength(1);
 		expect(pipeline?.querySelector('mat-progress-bar')).toBeNull();
 		expect(status).not.toContain('schema');
 		expect(status).not.toContain('openvidu-livekit');
@@ -442,7 +460,7 @@ describe('OverviewPage', () => {
 			[...element.querySelectorAll('.tiles ovd-kpi-tile')].map((tile) => text(tile).split(' ').at(-1))
 		).toEqual(['0', '0', '0', '0', '0', '0']);
 		expect(text(section(element, 'Data pipeline'))).toContain('Last batch: never');
-		expect(text(section(element, 'Data pipeline'))).toContain('no node has reported yet');
+		expect(text(section(element, 'Data pipeline'))).not.toContain('node');
 		expect(text(section(element, 'Today'))).toContain('No rooms today yet');
 		expect(section(element, 'Recent rooms')?.querySelectorAll('.links a')).toHaveLength(0);
 		expect(element.querySelector('ovd-error-banner')).toBeNull();
@@ -460,10 +478,12 @@ describe('OverviewPage', () => {
 		expect(text(element.querySelector('ovd-error-banner'))).toContain('req-9');
 	});
 
-	it('locks the per-node card on CE with the request of the overview only', async () => {
+	it('shows nothing per node on CE, with Recent rooms at full width and the request of the overview only', async () => {
 		const { element, http } = await open();
 
-		expect(text(section(element, 'By node'))).toContain('Per-node breakdown is available in OpenVidu PRO');
+		expect(section(element, 'By node')).toBeUndefined();
+		expect(text(element)).not.toContain('Per-node breakdown');
+		expect(section(element, 'Recent rooms')?.classList.contains('full')).toBe(true);
 		http.verify();
 	});
 });

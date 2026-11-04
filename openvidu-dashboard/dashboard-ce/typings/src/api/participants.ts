@@ -30,6 +30,8 @@ export interface ParticipantListItem {
 	durationMs?: number;
 	connectionType?: Exclude<ConnectionType, 'other'>;
 	nodeId?: string;
+	/** Media node label of the server that hosts the session; absent when it has none. */
+	mediaNode?: string;
 	isPublisher: boolean;
 	/** Track sources with at least one publication, in `TrackSource` order. */
 	publishedSources: TrackSource[];

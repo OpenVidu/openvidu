@@ -2,7 +2,7 @@ import { setTimeout as sleep } from 'node:timers/promises';
 
 import { MongoClient } from 'mongodb';
 import { intOption, parseCli, requireString } from './args.js';
-import { BATCH_INTERVAL_MS, COLLECTIONS } from './schema.js';
+import { keepLive } from './schema.js';
 
 /**
  * Keeps a generated database live while a local demo runs: every interval, the node heartbeats and the stats time of
@@ -25,15 +25,7 @@ async function main(): Promise<void> {
 
 	try {
 		while (!stop.signal.aborted) {
-			const now = new Date();
-
-			await db
-				.collection(COLLECTIONS.nodes)
-				.updateMany({}, { $set: { lastSeenAt: now, batchIntervalMs: BATCH_INTERVAL_MS } });
-			await db.collection(COLLECTIONS.rooms).updateMany({ status: 'active' }, { $set: { lastStatsAt: now } });
-			await db
-				.collection(COLLECTIONS.participants)
-				.updateMany({ status: 'active' }, { $set: { lastStatsAt: now } });
+			await keepLive(db, new Date());
 			await sleep(intervalMs, undefined, { signal: stop.signal }).catch(() => undefined);
 		}
 	} finally {

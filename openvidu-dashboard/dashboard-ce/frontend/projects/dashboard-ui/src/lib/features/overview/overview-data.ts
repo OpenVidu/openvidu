@@ -28,7 +28,10 @@ function elapsed(snapshot: OverviewSnapshot, now: number): number {
 	return Math.max(0, now - snapshot.receivedAt);
 }
 
-/** Component of the PRO "By node" card, given `overview`, the last overview response; CE provides none and renders the lock. */
+/**
+ * Content of the "By node" card, given `overview`, the last overview response; rendered only with `per-node-breakdown`.
+ * CE provides none and shows no card.
+ */
 export const OVERVIEW_NODES_CARD = new InjectionToken<Type<unknown> | null>('OVERVIEW_NODES_CARD', {
 	factory: () => null
 });

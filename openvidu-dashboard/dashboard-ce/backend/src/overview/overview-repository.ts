@@ -25,16 +25,16 @@ export const TODAY_FIELDS = [
 	'ingress.sessionsStarted'
 ] as const;
 
-/** Active rooms of a node. */
+/** Active rooms of a media node; `_id` is the label, `null` for the rooms without one. */
 export interface RoomGroup {
 	_id: string | null;
 	rooms: number;
 	stale: number;
 }
 
-/** Active participants of one kind on a node. */
+/** Active participants of one kind on a media node; `mediaNode` is `null` for the sessions without a label. */
 export interface ParticipantGroup {
-	_id: { nodeId: string | null; kind: ParticipantKind };
+	_id: { mediaNode: string | null; kind: ParticipantKind };
 	count: number;
 	publishers: number;
 	stale: number;
@@ -52,7 +52,7 @@ function staleCount(threshold: Date): Document {
 export function activeRoomsPipeline(threshold: Date): Document[] {
 	return [
 		{ $match: { status: RoomStatus.ACTIVE } },
-		{ $group: { _id: '$nodeId', rooms: { $sum: 1 }, stale: staleCount(threshold) } }
+		{ $group: { _id: '$mediaNode', rooms: { $sum: 1 }, stale: staleCount(threshold) } }
 	];
 }
 
@@ -62,7 +62,7 @@ export function activeParticipantsPipeline(threshold: Date): Document[] {
 		{ $match: { kind: { $in: Object.values(ParticipantKind) }, status: ParticipantStatus.ACTIVE } },
 		{
 			$group: {
-				_id: { nodeId: '$nodeId', kind: '$kind' },
+				_id: { mediaNode: '$mediaNode', kind: '$kind' },
 				count: { $sum: 1 },
 				publishers: { $sum: { $cond: ['$isPublisher', 1, 0] } },
 				stale: staleCount(threshold)

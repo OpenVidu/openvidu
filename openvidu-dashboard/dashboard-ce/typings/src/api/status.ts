@@ -4,9 +4,8 @@ import type { InfoMigration, InfoSchema } from './info.js';
 export interface StatusWriter {
 	/** Newest `lastSeenAt` of the server nodes, ISO 8601. */
 	lastSeenAt?: string;
-	nodes: number;
-	/** Nodes whose last batch is within the fresh window of their own batch interval at `generatedAt`. */
-	aliveNodes: number;
+	/** `stoppedAt` of the newest node document when no node is alive: the server stopped gracefully, ISO 8601. */
+	stoppedAt?: string;
 	/** Largest batch interval among the nodes seen in the last hour; absent when none reports one (read as 10 s). */
 	batchIntervalMs?: number;
 }

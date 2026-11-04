@@ -32,7 +32,7 @@ export class RoomLockedPage {
 				status: RoomStatusFilter.ALL,
 				q: sid,
 				features: [],
-				nodeId: null,
+				mediaNode: null,
 				sort: RoomSort.CREATED_AT,
 				order: 'desc',
 				cursor: null,

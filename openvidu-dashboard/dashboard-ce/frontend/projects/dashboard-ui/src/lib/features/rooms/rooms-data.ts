@@ -13,7 +13,10 @@ import { HttpService, type QueryValue } from '../../core/http/http.js';
 import type { RangeParams } from '../../core/state/query-state.js';
 import { resolveRange } from '../../core/state/relative-time.js';
 
-/** Loads the Node select of the Rooms filter bar, shown with `per-node-breakdown`; CE renders the locked select. */
+/**
+ * Loads the Node select of the Rooms filter bar, shown with `per-node-breakdown`: it binds a media node label to the
+ * `node` URL parameter. CE provides none and shows no select.
+ */
 export const ROOMS_NODE_FILTER = new InjectionToken<(() => Promise<Type<unknown>>) | null>('ROOMS_NODE_FILTER', {
 	factory: () => null
 });
@@ -23,7 +26,7 @@ export interface RoomsListRequest {
 	status: RoomStatusFilter;
 	q: string | null;
 	features: readonly RoomFeature[];
-	nodeId: string | null;
+	mediaNode: string | null;
 	sort: RoomSort;
 	order: SortOrder;
 	cursor: string | null;
@@ -50,7 +53,7 @@ export class RoomsDataService {
 			status: request.status,
 			q: request.q,
 			features: request.features,
-			nodeId: request.nodeId,
+			mediaNode: request.mediaNode,
 			sort: request.sort,
 			order: request.order,
 			cursor: request.cursor,

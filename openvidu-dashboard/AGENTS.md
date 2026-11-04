@@ -68,8 +68,9 @@ published by `docker-release.yaml` in openvidu-deployment.
 - UI: every CE page and building block lives in the `dashboard-ui` library; the applications only compose routes. An
   extending edition adds its pages over locked CE routes and fills explicit seams (see the library README). Keep seams
   open in CE (injectable services, route configs, content projection) and never put logic in the shells.
-- `GET /api/v1/info` reports the edition and its features. CE shows PRO features locked, never hidden; PRO API routes
-  answer `403 PRO_FEATURE` in CE.
+- `GET /api/v1/info` reports the edition and its features. CE shows PRO features locked, never hidden, except
+  `per-node-breakdown`: CE runs on one machine, so nothing about nodes renders without it. PRO API routes answer
+  `403 PRO_FEATURE` in CE.
 
 ## Data contract
 

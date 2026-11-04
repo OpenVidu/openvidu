@@ -139,7 +139,7 @@ export const ANALYTICS_GRANULARITIES = ['5m', '15m', '1h', '6h', '1d'] as const 
 export type AnalyticsBucketGranularity = (typeof ANALYTICS_GRANULARITIES)[number];
 export type AnalyticsGranularity = 'auto' | AnalyticsBucketGranularity;
 
-/** `global` or `node:<nodeId>`. */
+/** `global` or `node:<media node label>`. */
 export type AnalyticsScope = 'global' | `node:${string}`;
 
 export const ANALYTICS_GLOBAL_SCOPE = 'global';

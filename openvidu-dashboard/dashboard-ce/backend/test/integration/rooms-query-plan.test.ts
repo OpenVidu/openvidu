@@ -88,7 +88,8 @@ describe.skipIf(mongoUri === '')(`rooms query plan at scenario ${scenario}`, () 
 			statsMode: 'participant',
 			seed: 1,
 			retentionDays: { events: 7, stats: 7, tracks: 7, entities: 90 },
-			timeseries: true
+			timeseries: true,
+			mediaNodes: true
 		});
 		ctx = await queryContext(db);
 		service = new RoomsService(db, {
@@ -127,27 +128,28 @@ describe.skipIf(mongoUri === '')(`rooms query plan at scenario ${scenario}`, () 
 		it.each(['endedAt', 'duration', 'uniqueIdentities', 'active'])(
 			'ranked by %s: the range index of the filters, at most the rooms in range',
 			async (sort) => {
-				const { nodeId } = (await db.collection<RoomDocument>(Collection.ROOMS).findOne({})) ?? {};
+				const { mediaNode } = (await db.collection<RoomDocument>(Collection.ROOMS).findOne({})) ?? {};
 
 				expectIndexes(await explainList({ sort }, page), ['createdAt_id']);
 				expectIndexes(await explainList({ sort, status: 'closed' }, page), ['status_createdAt_id']);
-				expectIndexes(await explainList({ sort, nodeId: nodeId ?? 'none' }, page), [
-					'nodeId_status_createdAt_id'
+				expectIndexes(await explainList({ sort, mediaNode: mediaNode ?? 'none' }, page), [
+					'mediaNode_status_createdAt_id'
 				]);
 				expectIndexes(await explainList({ sort, features: 'egress' }, page), ['status_createdAt_id_egress']);
 				expectIndexes(await explainList({ sort, q: ctx.samples.namePrefix }, page), ['nameLower_createdAt']);
 			}
 		);
 
-		it('name prefix within one node: nameLower_createdAt, node residual', async () => {
-			const { nodeId } = (await db.collection<RoomDocument>(Collection.ROOMS).findOne({})) ?? {};
+		it('name prefix within one media node: nameLower_createdAt, media node residual', async () => {
+			const { mediaNode } = (await db.collection<RoomDocument>(Collection.ROOMS).findOne({})) ?? {};
 			const inPrefix = await db
 				.collection(Collection.ROOMS)
 				.countDocuments({ nameLower: prefixRegex(ctx.samples.namePrefix) });
 
-			expectIndexes(await explainList({ q: ctx.samples.namePrefix, nodeId: nodeId ?? 'none' }, () => inPrefix), [
-				'nameLower_createdAt'
-			]);
+			expectIndexes(
+				await explainList({ q: ctx.samples.namePrefix, mediaNode: mediaNode ?? 'none' }, () => inPrefix),
+				['nameLower_createdAt']
+			);
 		});
 
 		it('features: one partial index per flag', async () => {
@@ -174,10 +176,12 @@ describe.skipIf(mongoUri === '')(`rooms query plan at scenario ${scenario}`, () 
 			expectIdLookup(await explainList({ q: ctx.samples.roomSid }, () => 1));
 		});
 
-		it('node: nodeId_status_createdAt_id', async () => {
-			const { nodeId } = (await db.collection<RoomDocument>(Collection.ROOMS).findOne({})) ?? {};
+		it('media node: mediaNode_status_createdAt_id', async () => {
+			const { mediaNode } = (await db.collection<RoomDocument>(Collection.ROOMS).findOne({})) ?? {};
 
-			expectIndexes(await explainList({ nodeId: nodeId ?? 'none' }, page), ['nodeId_status_createdAt_id']);
+			expectIndexes(await explainList({ mediaNode: mediaNode ?? 'none' }, page), [
+				'mediaNode_status_createdAt_id'
+			]);
 		});
 
 		it('a page after a cursor keeps the index and examines the page and the ties', async () => {
@@ -300,7 +304,7 @@ describe.skipIf(mongoUri === '')(`rooms query plan at scenario ${scenario}`, () 
 					]
 				),
 				['List, two features', '150 ms', () => service.list(listParams({ features: 'egress,agent' }))],
-				['List, node', '150 ms', () => service.list(listParams({ nodeId: biggest?.nodeId ?? 'none' }))],
+				['List, node', '150 ms', () => service.list(listParams({ mediaNode: biggest?.mediaNode ?? 'none' }))],
 				[`List, prefix "${common}"`, '150 ms', () => service.list(listParams({ q: common }))],
 				[
 					'Summary, exact (24 h)',

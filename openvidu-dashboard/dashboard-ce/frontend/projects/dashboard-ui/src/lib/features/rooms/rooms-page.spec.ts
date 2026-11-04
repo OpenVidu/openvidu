@@ -38,7 +38,7 @@ function room(overrides: Partial<RoomListItem> = {}): RoomListItem {
 		name: 'demo-room',
 		status: 'active',
 		createdAt: new Date(Date.now() - 42 * 60_000).toISOString(),
-		nodeId: 'node-a',
+		nodeId: 'ND_a',
 		participants: { sessions: 7, unique: 6, active: 5, peakActive: 6 },
 		egress: { total: 1, active: 1 },
 		ingress: { sessions: 0, active: 0 },
@@ -296,32 +296,39 @@ describe('RoomsPage', () => {
 		expect(text(document.querySelector('.mat-mdc-tooltip'))).toBe('Narrow the range to 7 days to sort by Duration');
 	});
 
-	it('locks the Node select in CE, ignores nodeId and asks for no scopes', async () => {
-		const { element, request, http } = await open('/rooms?nodeId=a');
-		const node = element.querySelector('.node');
+	it('shows no Node select, lock or column in CE, ignores node and asks for no scopes', async () => {
+		const { element, request, http, harness } = await open('/rooms?node=a');
+		const columns = (harness.routeDebugElement?.componentInstance as { columns(): { key: string }[] }).columns();
 
-		expect(request.params.has('nodeId')).toBe(false);
-		expect(node?.querySelector('mat-select')?.getAttribute('aria-disabled')).toBe('true');
-		expect(text(node?.querySelector('.mat-mdc-select-value'))).toBe('All nodes');
-		expect(node?.querySelector('.lock')?.getAttribute('aria-label')).toBe(
-			'Filtering by node is available in OpenVidu PRO'
-		);
+		expect(request.params.has('mediaNode')).toBe(false);
+		expect(request.params.has('node')).toBe(false);
+		expect(text(element)).not.toContain('All nodes');
+		expect(text(element)).not.toContain('Filtering by node');
+		expect(columns.map((column) => column.key)).not.toContain('node');
 		http.expectNone((req) => req.url === 'api/v1/analytics/scopes');
 	});
 
-	it('renders the ROOMS_NODE_FILTER select with per-node breakdown and filters by the URL node', async () => {
+	it('renders the ROOMS_NODE_FILTER select and the Node column with per-node breakdown', async () => {
 		const http = setup([{ provide: ROOMS_NODE_FILTER, useValue: () => Promise.resolve(NodeFilterStub) }]);
 
 		await withInfo(http, ['per-node-breakdown']);
+		TestBed.inject(PreferencesService).setHiddenColumns('rooms', []);
 
-		const harness = await RouterTestingHarness.create('/rooms?nodeId=a&q=demo');
-		const request = await load(http, harness, page([room()]));
+		const harness = await RouterTestingHarness.create('/rooms?node=mn-a&q=demo');
+		const request = await load(http, harness, page([room({ mediaNode: 'mn-a' }), room({ sid: 'RM_plain' })]));
 
 		await harness.fixture.whenStable();
-		expect(request.params.get('nodeId')).toBe('a');
+		expect(request.params.get('mediaNode')).toBe('mn-a');
 		expect(request.params.get('q')).toBe('demo');
 		expect(routeElement(harness).querySelector('ovd-node-filter-stub')).not.toBeNull();
-		expect(routeElement(harness).querySelector('.node .lock')).toBeNull();
+
+		const rows = [...routeElement(harness).querySelectorAll('tbody tr')];
+		const nodeIndex = [...routeElement(harness).querySelectorAll('thead th')].findIndex(
+			(th) => text(th) === 'Node'
+		);
+
+		expect(nodeIndex).toBeGreaterThan(-1);
+		expect(rows.map((row) => text(row.querySelectorAll('td')[nodeIndex]))).toEqual(['mn-a', '—']);
 	});
 
 	it('marks a reconciler-closed room as estimated and an active room the API marks stale', async () => {

@@ -31,6 +31,10 @@ export const participantListFields = {
 	durationMs: count.optional(),
 	connectionType: connectionType.optional(),
 	nodeId: z.string().optional(),
+	mediaNode: z
+		.string()
+		.optional()
+		.meta({ description: 'Media node label of the hosting server, absent without one' }),
 	isPublisher: z.boolean(),
 	publishedSources: z
 		.array(z.enum(enumValues(TrackSource)))

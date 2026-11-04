@@ -33,6 +33,7 @@ export interface RoomDoc {
 	endReason: string | null;
 	closedBy: 'event' | 'reconciler' | null;
 	nodeId: string;
+	mediaNode?: string;
 	config: { maxParticipants: number; emptyTimeoutMs: number; departureTimeoutMs: number };
 	participantSids: string[];
 	activeParticipantSids: string[];
@@ -93,6 +94,7 @@ export interface ParticipantDoc {
 	connectionType: string | null;
 	region: string;
 	nodeId: string;
+	mediaNode?: string;
 	resumes: number;
 	client: ClientInfo;
 	permission: { canPublish: boolean; canSubscribe: boolean; canPublishData: boolean; hidden: boolean };
@@ -290,6 +292,10 @@ export interface GeneratorContext {
 	retentionTracksMs: number;
 	/** Nodes that report no media statistics: their sessions carry no bytes, quality or `track_stats`. */
 	withoutMediaStats: ReadonlySet<string>;
+	/** Media node label of each node id (the previous process of a restarted node included); empty without labels. */
+	mediaNodes: ReadonlyMap<string, string>;
+	/** The restart of the first node: its rooms created before `at` were hosted by `previousNodeId`. */
+	restart?: { nodeId: string; previousNodeId: string; at: number };
 }
 
 export interface RoomPlan {
@@ -408,7 +414,10 @@ export function generateRoom(ctx: GeneratorContext, plan: RoomPlan): RoomBundle 
 	const { rng, now } = ctx;
 	const roomSid = rng.id('RM_');
 	const name = `room-${String(plan.index + 1).padStart(6, '0')}`;
-	const nodeId = rng.pick(ctx.nodeIds);
+	const picked = rng.pick(ctx.nodeIds);
+	const nodeId =
+		picked === ctx.restart?.nodeId && plan.createdAt < ctx.restart.at ? ctx.restart.previousNodeId : picked;
+	const mediaNode = ctx.mediaNodes.get(nodeId);
 	const hasEgress = rng.chance(0.1);
 	const hasIngress = rng.chance(0.02);
 	const hasAgent = rng.chance(0.05);
@@ -420,7 +429,7 @@ export function generateRoom(ctx: GeneratorContext, plan: RoomPlan): RoomBundle 
 			? 'reconciler'
 			: 'event';
 
-	const base = { roomSid, roomName: name, nodeId, createdAt: plan.createdAt };
+	const base: RoomBase = { roomSid, roomName: name, nodeId, mediaNode, createdAt: plan.createdAt };
 	const sessions: Session[] = [];
 	const identityCount = Math.min(60, Math.max(1, rng.poisson(ctx.scenario.avgRoomSize)));
 	const reconnects = rng.poisson(
@@ -599,6 +608,7 @@ export function generateRoom(ctx: GeneratorContext, plan: RoomPlan): RoomBundle 
 		endReason,
 		closedBy,
 		nodeId,
+		...(mediaNode === undefined ? {} : { mediaNode }),
 		config: { maxParticipants: 0, emptyTimeoutMs: 300_000, departureTimeoutMs: DEPARTURE_TIMEOUT_MS },
 		participantSids: participants.map((p) => p._id),
 		activeParticipantSids: activeStandard.map((s) => s.doc._id),
@@ -680,6 +690,7 @@ interface RoomBase {
 	roomSid: string;
 	roomName: string;
 	nodeId: string;
+	mediaNode: string | undefined;
 	createdAt: number;
 }
 
@@ -815,6 +826,7 @@ function newSession(
 		connectionType: aborted ? null : rng.weighted(CONNECTION_TYPES),
 		region: '',
 		nodeId: base.nodeId,
+		...(base.mediaNode === undefined ? {} : { mediaNode: base.mediaNode }),
 		resumes: aborted ? 0 : rng.poisson(0.2),
 		client,
 		permission: {

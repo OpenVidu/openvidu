@@ -163,3 +163,18 @@ function toIndexDescription(index: IndexDefinition, retention: RetentionSeconds)
 function describe(error: unknown): string {
 	return error instanceof Error ? error.message : String(error);
 }
+
+/**
+ * One keep-alive tick at `now`: the heartbeats of the running node processes (not the stopped ones) and the stats time
+ * of the active rooms and sessions move to `now`, as a running server would keep them.
+ */
+export async function keepLive(db: Db, now: Date): Promise<void> {
+	await db
+		.collection(COLLECTIONS.nodes)
+		.updateMany(
+			{ stoppedAt: { $exists: false } },
+			{ $set: { lastSeenAt: now, batchIntervalMs: BATCH_INTERVAL_MS } }
+		);
+	await db.collection(COLLECTIONS.rooms).updateMany({ status: 'active' }, { $set: { lastStatsAt: now } });
+	await db.collection(COLLECTIONS.participants).updateMany({ status: 'active' }, { $set: { lastStatsAt: now } });
+}

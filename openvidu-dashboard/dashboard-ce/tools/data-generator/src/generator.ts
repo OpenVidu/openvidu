@@ -160,6 +160,8 @@ export interface GenerateOptions {
 	minActiveRooms?: number;
 	/** Generated nodes, the last ones, that report no media statistics; none by default. */
 	nodesWithoutMediaStats?: number;
+	/** Labels the nodes `media-node-10-0-0-<n>` and adds an earlier, stopped process of the first one. */
+	mediaNodes?: boolean;
 	log?: (line: string) => void;
 }
 
@@ -187,6 +189,10 @@ export async function generate(db: Db, options: GenerateOptions): Promise<Genera
 
 	const nodesWithoutMediaStats = options.nodesWithoutMediaStats ?? 0;
 
+	if (options.rollups?.nodes === true && options.mediaNodes !== true) {
+		throw new Error('node rollups require mediaNodes: node scopes are keyed by the media node label');
+	}
+
 	if (nodesWithoutMediaStats > NODE_COUNT) {
 		throw new Error(`nodesWithoutMediaStats must be at most ${String(NODE_COUNT)}`);
 	}
@@ -208,6 +214,28 @@ export async function generate(db: Db, options: GenerateOptions): Promise<Genera
 	const windowStart = now - days * DAY;
 	const rng = new Rng(options.seed);
 	const nodeIds = Array.from({ length: NODE_COUNT }, () => rng.id('ND_', 8));
+	const labelled = options.mediaNodes === true;
+	// A separate generator keeps the rooms of a seed the same with and without labels.
+	const restart = labelled
+		? {
+				nodeId: nodeIds[0] ?? '',
+				previousNodeId: new Rng(options.seed + 1_000_003).id('ND_', 8),
+				at: Math.floor((windowStart + (now - windowStart) / 2) / MINUTE) * MINUTE
+			}
+		: undefined;
+	const mediaNodes = new Map<string, string>(
+		labelled ? nodeIds.map((id, i) => [id, `media-node-10-0-0-${String(i + 1)}`] as const) : []
+	);
+	const withoutMediaStats = new Set(nodeIds.slice(NODE_COUNT - nodesWithoutMediaStats));
+
+	if (restart !== undefined) {
+		mediaNodes.set(restart.previousNodeId, mediaNodes.get(restart.nodeId) ?? '');
+
+		if (withoutMediaStats.has(restart.nodeId)) {
+			withoutMediaStats.add(restart.previousNodeId);
+		}
+	}
+
 	const plans = planRooms(
 		rng,
 		scenario,
@@ -224,7 +252,9 @@ export async function generate(db: Db, options: GenerateOptions): Promise<Genera
 		nodeIds,
 		retentionEntitiesMs: retentionDays.entities * DAY,
 		retentionTracksMs: retentionDays.tracks * DAY,
-		withoutMediaStats: new Set(nodeIds.slice(NODE_COUNT - nodesWithoutMediaStats))
+		withoutMediaStats,
+		mediaNodes,
+		...(restart === undefined ? {} : { restart })
 	};
 	const windows: DeriveWindows = {
 		now,
@@ -304,15 +334,34 @@ export async function generate(db: Db, options: GenerateOptions): Promise<Genera
 		writer.add(COLLECTIONS.analytics5min, doc);
 	}
 
+	const regions = ['eu-west-1', 'eu-west-1', 'us-east-1'];
+
 	for (const [i, nodeId] of nodeIds.entries()) {
+		const mediaNode = mediaNodes.get(nodeId);
 		writer.add(COLLECTIONS.nodes, {
 			_id: nodeId,
-			firstSeenAt: new Date(windowStart - DAY),
+			firstSeenAt: new Date(restart?.nodeId === nodeId ? restart.at : windowStart - DAY),
 			lastSeenAt: new Date(now),
 			serverVersion: '3.10.0',
-			region: ['eu-west-1', 'eu-west-1', 'us-east-1'][i],
+			region: regions[i],
 			batchIntervalMs: BATCH_INTERVAL_MS,
-			mediaStats: !ctx.withoutMediaStats.has(nodeId)
+			mediaStats: !ctx.withoutMediaStats.has(nodeId),
+			...(mediaNode === undefined ? {} : { mediaNode })
+		});
+	}
+
+	if (restart !== undefined) {
+		const stoppedAt = new Date(restart.at - MINUTE);
+		writer.add(COLLECTIONS.nodes, {
+			_id: restart.previousNodeId,
+			firstSeenAt: new Date(windowStart - DAY),
+			lastSeenAt: stoppedAt,
+			stoppedAt,
+			serverVersion: '3.10.0',
+			region: regions[0],
+			batchIntervalMs: BATCH_INTERVAL_MS,
+			mediaStats: !ctx.withoutMediaStats.has(restart.previousNodeId),
+			mediaNode: mediaNodes.get(restart.previousNodeId)
 		});
 	}
 

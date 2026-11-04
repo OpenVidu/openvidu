@@ -158,6 +158,11 @@
 			"bsonType": "bool",
 			"description": "Only false: the node that created the entity does not report media statistics; absent otherwise"
 		},
+		"mediaNode": {
+			"bsonType": "string",
+			"description": "Media node label of the server that hosts the entity; absent when it has none",
+			"pattern": "^[A-Za-z0-9_.-]{1,128}$"
+		},
 		"internal": { "bsonType": "object", "description": "Writer bookkeeping; never read by the dashboard" },
 		"schemaVersion": {
 			"bsonType": ["int", "long"],

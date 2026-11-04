@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, describe, expect, inject, it } from 'vitest';
 
-import { type ListResponse, type ParticipantListItem } from '@openvidu-dashboard/typings';
+import { Collection, type ListResponse, type ParticipantListItem } from '@openvidu-dashboard/typings';
 
 import { openApiDocument } from '../../src/api/openapi.js';
 import type { RouteRegistry } from '../../src/api/route-registry.js';
@@ -371,6 +371,30 @@ describe.skipIf(mongoUri === '')('participants API', () => {
 				'PA_ag1',
 				'PA_ag3'
 			]);
+		});
+
+		it('carries the media node label of the sessions that have one', async () => {
+			await reseed(ce.dashboard.db, {
+				participants: [
+					participant({
+						_id: 'PA_labelled',
+						identity: 'alice',
+						roomSid: 'RM_a',
+						joinedAt: minutesAgo(3),
+						mediaNode: 'mn-a'
+					}),
+					participant({ _id: 'PA_plain', identity: 'bob', roomSid: 'RM_a', joinedAt: minutesAgo(2) })
+				]
+			});
+
+			await ce.dashboard.db
+				.collection(Collection.PARTICIPANTS)
+				.updateOne({ _id: 'PA_plain' } as never, { $unset: { mediaNode: '' } });
+
+			const items = (await json<ListResponse<ParticipantListItem>>(ce, '/participants')).items;
+
+			expect(items.find((item) => item.sid === 'PA_labelled')).toMatchObject({ mediaNode: 'mn-a' });
+			expect(items.find((item) => item.sid === 'PA_plain')).not.toHaveProperty('mediaNode');
 		});
 	});
 });

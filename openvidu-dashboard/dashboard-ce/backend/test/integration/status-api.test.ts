@@ -62,12 +62,12 @@ describe.skipIf(mongoUri === '')('status API', () => {
 			generatedAt: expect.any(String) as string,
 			schema: { dashboard: SCHEMA_VERSION, status: 'uninitialized' },
 			migration: { state: 'none' },
-			writer: { nodes: 0, aliveNodes: 0 }
+			writer: {}
 		});
 		expect(Math.abs(Date.parse(body.generatedAt) - Date.now())).toBeLessThan(SECOND);
 	});
 
-	it('reports the newest batch, the nodes reporting and a running migration', async () => {
+	it('reports the newest batch and a running migration', async () => {
 		const newest = node('node-a', 4 * SECOND);
 
 		await replace(ce.dashboard.db, Collection.NODES, [
@@ -90,7 +90,7 @@ describe.skipIf(mongoUri === '')('status API', () => {
 
 		const body = await json<StatusResponse>(ce, '/status');
 
-		expect(body.writer).toEqual({ lastSeenAt: newest.lastSeenAt.toISOString(), nodes: 3, aliveNodes: 2 });
+		expect(body.writer).toEqual({ lastSeenAt: newest.lastSeenAt.toISOString() });
 		expect(body.schema.status).toBe('ok');
 		expect(body.migration).toMatchObject({
 			state: 'running',
@@ -99,7 +99,7 @@ describe.skipIf(mongoUri === '')('status API', () => {
 		expect(Object.keys(body)).not.toContain('retention');
 	});
 
-	it('judges each node by its own batch interval and reports the largest of the last hour', async () => {
+	it('reports the largest batch interval of the last hour', async () => {
 		await replace(ce.dashboard.db, Collection.NODES, [
 			node('node-a', 80 * SECOND, 60_000),
 			node('node-b', 40 * SECOND, 10_000),
@@ -108,8 +108,28 @@ describe.skipIf(mongoUri === '')('status API', () => {
 
 		const body = await json<StatusResponse>(ce, '/status');
 
-		expect(body.writer).toMatchObject({ nodes: 3, aliveNodes: 1, batchIntervalMs: 60_000 });
+		expect(body.writer).toMatchObject({ batchIntervalMs: 60_000 });
+		expect(body.writer).not.toHaveProperty('stoppedAt');
 		expect(statusResponse.parse(body)).toEqual(body);
+	});
+
+	it('reports a server stopped gracefully until another node reports', async () => {
+		const stoppedAt = ago(6 * SECOND);
+
+		await replace(ce.dashboard.db, Collection.NODES, [
+			{ ...node('node-a', 6 * SECOND), stoppedAt },
+			node('node-old', 2 * HOUR)
+		]);
+		expect((await json<StatusResponse>(ce, '/status')).writer).toEqual({
+			lastSeenAt: stoppedAt.toISOString(),
+			stoppedAt: stoppedAt.toISOString()
+		});
+
+		await replace(ce.dashboard.db, Collection.NODES, [
+			{ ...node('node-a', 60 * SECOND), stoppedAt: ago(60 * SECOND) },
+			node('node-b', 3 * SECOND)
+		]);
+		expect((await json<StatusResponse>(ce, '/status')).writer).not.toHaveProperty('stoppedAt');
 	});
 
 	it('documents the route', () => {

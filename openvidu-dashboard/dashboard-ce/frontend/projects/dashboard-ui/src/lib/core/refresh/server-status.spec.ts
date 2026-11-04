@@ -72,8 +72,6 @@ describe('ServerStatusService', () => {
 				{
 					writer: {
 						lastSeenAt: new Date(Date.parse('2026-10-13T12:00:00.000Z') - age).toISOString(),
-						nodes: 1,
-						aliveNodes: 1,
 						batchIntervalMs: 60_000
 					}
 				},
@@ -88,7 +86,7 @@ describe('ServerStatusService', () => {
 		expect(status.writerFresh()).toBe(false);
 		expect(status.writerSilent()).toBe(false);
 
-		await answer(statusResponse({ writer: { nodes: 1, aliveNodes: 1, batchIntervalMs: 1_000 } }, 4_000));
+		await answer(statusResponse({ writer: { batchIntervalMs: 1_000 } }, 4_000));
 		expect(status.windows()).toMatchObject({ freshMs: 30_000, silentMs: 60_000 });
 	});
 

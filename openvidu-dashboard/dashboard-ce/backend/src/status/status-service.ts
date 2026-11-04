@@ -12,17 +12,20 @@ export interface StatusServiceOptions {
 	now: () => Date;
 }
 
-/** The newest batch of the nodes, their count, the alive ones and the writer's batch interval at `now`. */
+/**
+ * The newest batch of the nodes, the writer's batch interval and, when no node is alive at `now` and the newest one
+ * stopped gracefully, its stop.
+ */
 export function foldWriter(nodes: readonly NodeHeartbeat[], now: Date): StatusWriter {
-	const lastSeen = nodes.reduce<Date | undefined>(
-		(newest, node) => (newest === undefined || node.lastSeenAt > newest ? node.lastSeenAt : newest),
+	const newest = nodes.reduce<NodeHeartbeat | undefined>(
+		(found, node) => (found === undefined || node.lastSeenAt > found.lastSeenAt ? node : found),
 		undefined
 	);
+	const stopped = newest?.stoppedAt !== undefined && !nodes.some((node) => nodeAlive(node, now));
 
 	return compact<StatusWriter>({
-		lastSeenAt: lastSeen?.toISOString(),
-		nodes: nodes.length,
-		aliveNodes: nodes.filter((node) => nodeAlive(node, now)).length,
+		lastSeenAt: newest?.lastSeenAt.toISOString(),
+		stoppedAt: stopped ? newest.stoppedAt?.toISOString() : undefined,
 		batchIntervalMs: writerBatchInterval(nodes, now)
 	});
 }
@@ -39,7 +42,7 @@ export class StatusService {
 			this.clock(),
 			this.db
 				.collection<NodeDocument>(Collection.NODES)
-				.find({}, { projection: { lastSeenAt: 1, batchIntervalMs: 1 } })
+				.find({}, { projection: { lastSeenAt: 1, batchIntervalMs: 1, stoppedAt: 1 } })
 				.toArray(),
 			this.options.info.health()
 		]);

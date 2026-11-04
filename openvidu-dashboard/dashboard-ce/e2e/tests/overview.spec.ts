@@ -24,12 +24,15 @@ test('the overview shows the live tiles with links, the hint, the status card an
 		'1 active room and 4 participants have had no stats for over 90 s and may be stale'
 	);
 	await expect(card(page, 'Data pipeline')).toContainText(/Last batch at \d\d:\d\d:\d\d/);
-	await expect(card(page, 'Data pipeline')).toContainText(/\d+ of \d+ nodes? reporting/);
+	await expect(card(page, 'Data pipeline')).not.toContainText('node');
 	await expect(card(page, 'Data pipeline')).not.toContainText('schema');
 	await expect(card(page, 'Data pipeline')).not.toContainText('retention:');
 	await expect(card(page, 'Data pipeline').getByRole('link', { name: 'Storage and retention' })).toBeVisible();
 	await expect(card(page, 'Today (UTC, since 00:00)')).toContainText('143');
-	await expect(card(page, 'By node')).toContainText('Per-node breakdown is available in OpenVidu PRO');
+	// CE has a single machine: no per-node card, and Recent rooms takes the full width.
+	await expect(page.locator('ovd-section-card').filter({ hasText: 'By node' })).toHaveCount(0);
+	await expect(page.getByText('Per-node breakdown')).toHaveCount(0);
+	await expect(card(page, 'Recent rooms')).toHaveClass(/\bfull\b/);
 
 	const recent = card(page, 'Recent rooms');
 
@@ -105,7 +108,7 @@ test.describe('a silent writer', () => {
 
 		await page.getByRole('navigation', { name: 'Main' }).getByRole('link', { name: 'Overview' }).click();
 		await expect(page.locator('.page-header ovd-live-chip')).toHaveText('stale');
-		await expect(card(page, 'Data pipeline')).toContainText('0 of 2 nodes reporting');
+		await expect(card(page, 'Data pipeline').locator('mat-icon.warn')).toBeVisible();
 	});
 });
 

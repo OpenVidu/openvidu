@@ -41,11 +41,12 @@ pnpm generate --uri "$MONGO_URI" --db ov_data_l --scenario L --days 1 --drop --s
 | `--drop`                            | off           | Drop the database first                                                                                                   |
 | `--plain-stats`                     | off           | Force the plain-collection fallback for `track_stats`                                                                     |
 | `--five-minute-rollups`             | off           | Write `analytics_5min` inside the 5-minute rollup window                                                                  |
-| `--node-rollups`                    | off           | Write the `node:<nodeId>` scope beside `global` in every rollup                                                           |
+| `--node-rollups`                    | off           | With `--media-nodes`: write the `node:<label>` scope beside `global` in every rollup                                      |
 | `--room-sums`                       | off           | Write `rooms.participantsSum` and `rooms.durationMsSum` at room end                                                       |
 | `--active-window <minutes>`         | off           | Rooms created in the last minutes stay active (two of three); without it, the most recent 10 % of the rooms are active    |
 | `--min-active-rooms <n>`            | 0             | With `--active-window`: rooms added to the window when the hour of day leaves fewer than `n` active rooms                 |
 | `--nodes-without-media-stats <n>`   | 0             | The last `n` of the three nodes report no media statistics: `mediaStats: false`, no media `track_stats`, bytes or quality |
+| `--media-nodes`                     | off           | Label the nodes `media-node-10-0-0-1` to `-3` and add an earlier stopped process of the first one (a restart)             |
 
 | Scenario | Rooms per day | Sessions per day | Average room size |
 | -------- | ------------- | ---------------- | ----------------- |
@@ -77,13 +78,14 @@ What it writes (`analytics_5min` stays empty without `--five-minute-rollups`):
   direction (`track` mode), only inside the stats retention window, with plausible score/bytes/rtt/jitter.
   Time-series collection (`timeField: ts`, `metaField: meta`, `granularity: seconds`) with
   `expireAfterSeconds`; plain collection with a TTL index on `ts` when the server rejects time-series.
-- `analytics_hourly` and `analytics_daily` (global scope, plus one scope per node with `--node-rollups`)
-  aggregated from the generated entities; bytes and quality are spread over the hours each session was connected.
-  `--room-sums` adds the room size and duration sums; `--five-minute-rollups` adds `analytics_5min` (lifecycle
-  counters, the `participants.connected` gauge, bytes and quality per five minutes) inside the 5-minute rollup
-  window. `analytics_daily` gets no TTL index: daily rollups are kept forever.
-  `generate()` takes the same switches as `rollups: { fiveMinute, nodes, roomSums }`.
-- `nodes` (3 nodes) and `schema_meta` (`schema`, `retention`, `capabilities`, `config`).
+- `analytics_hourly` and `analytics_daily` (global scope, plus one scope per media node label with
+  `--media-nodes --node-rollups`) aggregated from the generated entities; bytes and quality are spread over the
+  hours each session was connected. `--room-sums` adds the room size and duration sums; `--five-minute-rollups`
+  adds `analytics_5min` (lifecycle counters, the `participants.connected` gauge, bytes and quality per five minutes)
+  inside the 5-minute rollup window. `analytics_daily` gets no TTL index: daily rollups are kept forever.
+  `generate()` takes the same switches as `rollups: { fiveMinute, nodes, roomSums }` and `mediaNodes`.
+- `nodes` (3 nodes, plus the stopped earlier process of the first one with `--media-nodes`) and `schema_meta`
+  (`schema`, `retention`, `capabilities`, `config`).
 
 Documents are inserted in batches of 5 000 with `insertMany(ordered: false)`. The output shows progress
 and a final summary with documents per collection, elapsed time and inserts per second. The generator

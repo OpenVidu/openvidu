@@ -60,7 +60,7 @@ export const ANALYTICS_PRO_CARDS = new InjectionToken<Readonly<Partial<Record<An
 	{ factory: () => ({}) }
 );
 
-/** Loads the scope select of the page header, shown with `per-node-breakdown`; CE renders the locked select. */
+/** Loads the scope select of the page header, shown with `per-node-breakdown`; CE provides none and shows no select. */
 export const ANALYTICS_SCOPE_SELECT = new InjectionToken<(() => Promise<Type<unknown>>) | null>(
 	'ANALYTICS_SCOPE_SELECT',
 	{ factory: () => null }

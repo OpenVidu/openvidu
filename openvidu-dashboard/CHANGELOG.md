@@ -36,7 +36,8 @@ queried) and `Deployment` (running the service). One line per observable change,
 #### UI
 
 - Overview page with live counters of rooms, participants, publishers, egress, ingress and agents linked to their
-  lists, today's figures, recent rooms, the data pipeline health (writer and nodes reporting) and stale-data notices.
+  lists, today's figures, recent rooms, the data pipeline health (last batch, or when the server stopped) and stale-data
+  notices.
 - Participants page with live refresh: active participants, sessions in range and active services; search participant
   sessions by identity or SID, filter by kind (standard participants by default), status, room and publishers, sort by
   join, leave and duration, and see the sources each session published.
@@ -131,6 +132,7 @@ queried) and `Deployment` (running the service). One line per observable change,
   their rooms with the last of their sessions once LiveKit's dead node cleanup released them, with an end time accurate
   to 30 s (`openvidu.analytics.reconciler` options `enabled`, `interval` and `max_closures_per_run`); a recording lost
   with its node is reported as failed.
-- Analytics events and statistics queued in a node are written before it stops on a graceful shutdown.
+- Analytics events and statistics queued in a node are written before it stops on a graceful shutdown, and the node
+  records when it stopped.
 - Credentials are never stored in the analytics database; metadata is stored only with `store_metadata`, and client
   IP addresses are left out unless `anonymize_ip: false`.

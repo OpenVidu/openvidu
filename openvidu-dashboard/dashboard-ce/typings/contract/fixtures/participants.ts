@@ -6,6 +6,8 @@ import {
 	CLOSED_ROOM,
 	EG,
 	ENTITIES_RETENTION_MS,
+	MEDIA_NODE_ALPHA,
+	MEDIA_NODE_BETA,
 	NODE_ALPHA,
 	NODE_BETA,
 	P,
@@ -15,10 +17,22 @@ import {
 	T
 } from './scenario.js';
 
-type Base = Pick<ParticipantDocument, 'roomSid' | 'roomName' | 'nodeId' | 'schemaVersion'>;
+type Base = Pick<ParticipantDocument, 'roomSid' | 'roomName' | 'nodeId' | 'mediaNode' | 'schemaVersion'>;
 
-const closedRoom: Base = { roomSid: CLOSED_ROOM.sid, roomName: CLOSED_ROOM.name, nodeId: NODE_ALPHA, schemaVersion };
-const activeRoom: Base = { roomSid: ACTIVE_ROOM.sid, roomName: ACTIVE_ROOM.name, nodeId: NODE_BETA, schemaVersion };
+const closedRoom: Base = {
+	roomSid: CLOSED_ROOM.sid,
+	roomName: CLOSED_ROOM.name,
+	nodeId: NODE_ALPHA,
+	mediaNode: MEDIA_NODE_ALPHA,
+	schemaVersion
+};
+const activeRoom: Base = {
+	roomSid: ACTIVE_ROOM.sid,
+	roomName: ACTIVE_ROOM.name,
+	nodeId: NODE_BETA,
+	mediaNode: MEDIA_NODE_BETA,
+	schemaVersion
+};
 
 const standardPermission = { canSubscribe: true, canPublish: true, canPublishData: true };
 const recorderPermission = { canSubscribe: true, canPublish: false, canPublishData: false, hidden: true };

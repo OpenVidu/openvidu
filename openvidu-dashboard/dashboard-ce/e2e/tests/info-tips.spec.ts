@@ -28,8 +28,10 @@ test('an info tip shows on hover without opening the list its tile links to', as
 test('an info tip shows on keyboard focus and hides on Escape', async ({ page }) => {
 	await page.goto('/overview?tz=UTC');
 	// The pointer rests at the top-left corner, where the overlay renders the tooltip before positioning it: the
-	// mouseleave that follows would close a tooltip still opening, as on a slow runner.
-	await page.mouse.move(640, 700);
+	// mouseleave that follows would close a tooltip still opening, as on a slow runner. The page title has no tooltip.
+	const title = await page.getByRole('heading', { level: 1, name: 'Overview' }).boundingBox();
+
+	await page.mouse.move((title?.x ?? 0) + 4, (title?.y ?? 0) + 4);
 
 	const tiles = page.getByRole('region', { name: 'Live' });
 

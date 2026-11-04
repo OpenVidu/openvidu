@@ -15,6 +15,7 @@ export const ROOM_LIST_PROJECTION: Readonly<Document> = {
 	durationMs: 1,
 	closedBy: 1,
 	nodeId: 1,
+	mediaNode: 1,
 	'participants.sessions': 1,
 	'participants.unique': 1,
 	'participants.active': 1,
@@ -81,8 +82,8 @@ function anyFeature(flags: Document[]): Document {
 
 /**
  * Filter, sort and keyset condition of a rooms list request, following the filter-to-index table of the design: a
- * SID is a point lookup; a name prefix drives `{ nameLower, createdAt }` (node, status and features residual); a node
- * drives `{ nodeId, status, createdAt, _id }`; features are an `$or` of branches, one per partial index; otherwise
+ * SID is a point lookup; a name prefix drives `{ nameLower, createdAt }` (media node, status and features residual); a
+ * media node drives `{ mediaNode, status, createdAt, _id }`; features are an `$or` of branches, one per partial index; otherwise
  * the `status` picks `{ status, createdAt, _id }` or `{ createdAt, _id }`. The range is always on `createdAt`; a
  * ranked sort key scans it whole and ranks in memory.
  */
@@ -102,14 +103,19 @@ export function roomsListPlan(params: RoomsListParams, cursor?: CursorPayload): 
 			return {
 				nameLower: prefixRegex(params.q),
 				...(status ? { status } : {}),
-				...(params.nodeId === undefined ? {} : { nodeId: params.nodeId }),
+				...(params.mediaNode === undefined ? {} : { mediaNode: params.mediaNode }),
 				[field]: fieldFilter,
 				...anyFeature(flags)
 			};
 		}
 
-		if (params.nodeId !== undefined) {
-			return { nodeId: params.nodeId, status: status ?? ANY_STATUS, [field]: fieldFilter, ...anyFeature(flags) };
+		if (params.mediaNode !== undefined) {
+			return {
+				mediaNode: params.mediaNode,
+				status: status ?? ANY_STATUS,
+				[field]: fieldFilter,
+				...anyFeature(flags)
+			};
 		}
 
 		if (flags.length > 0) {

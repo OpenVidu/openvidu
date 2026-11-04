@@ -13,6 +13,9 @@ export const TRACKS_RETENTION_MS = 7 * RETENTION_DAY_MS;
 
 export const NODE_ALPHA = 'ND_alpha8Kq2Lm';
 export const NODE_BETA = 'ND_beta3Vx9Pw';
+/** Media node labels of the two servers: the scenario is a deployment of two labelled media nodes. */
+export const MEDIA_NODE_ALPHA = 'media-node-10-0-0-1';
+export const MEDIA_NODE_BETA = 'media-node-10-0-0-2';
 export const SERVER_VERSION = '3.10.0';
 export const REGION = 'eu-west';
 

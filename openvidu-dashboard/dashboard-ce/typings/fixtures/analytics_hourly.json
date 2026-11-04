@@ -73,8 +73,8 @@
 		}
 	},
 	{
-		"_id": "node:ND_alpha8Kq2Lm:2026-10-12T09:00:00Z",
-		"scope": "node:ND_alpha8Kq2Lm",
+		"_id": "node:media-node-10-0-0-1:2026-10-12T09:00:00Z",
+		"scope": "node:media-node-10-0-0-1",
 		"bucket": { "$date": "2026-10-12T09:00:00.000Z" },
 		"rooms": {
 			"created": { "$numberInt": "1" },

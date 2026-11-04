@@ -53,7 +53,7 @@ prepare_data() {
 	if [ "${DASHBOARD_DEMO_KEEP_DATA:-false}" != true ]; then
 		echo "Generating $DATABASE (scenario S, 30 days, $STATS_MODE stats)"
 		pnpm --silent --dir "$TOOLS_DIR/data-generator" run generate --uri "$MONGO_URI" --db "$DATABASE" \
-			--scenario S --days 30 --stats-mode "$STATS_MODE" --drop --five-minute-rollups --node-rollups --room-sums \
+			--scenario S --days 30 --stats-mode "$STATS_MODE" --drop --five-minute-rollups --room-sums \
 			--active-window 60 --min-active-rooms 10 ${GENERATOR_ARGS[@]+"${GENERATOR_ARGS[@]}"} | tail -2
 	fi
 

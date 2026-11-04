@@ -39,7 +39,10 @@ export interface RoomListItem {
 	durationMs?: number;
 	/** `reconciler` marks an estimated end. */
 	closedBy?: ClosedBy;
+	/** Id of the server process that hosts the room. */
 	nodeId?: string;
+	/** Media node label of that server; absent when it has none. */
+	mediaNode?: string;
 	participants: { sessions: number; unique: number; active: number; peakActive: number };
 	egress: { total: number; active: number };
 	ingress: { sessions: number; active: number };
@@ -66,5 +69,6 @@ export interface RoomSummary {
 export interface RoomsListQuery extends ListQuery<RoomSort> {
 	status?: RoomStatusFilter;
 	features?: RoomFeature[];
-	nodeId?: string;
+	/** Exact media node label. */
+	mediaNode?: string;
 }

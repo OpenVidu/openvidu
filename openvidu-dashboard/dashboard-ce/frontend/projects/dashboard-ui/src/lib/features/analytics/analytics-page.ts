@@ -1,10 +1,8 @@
 import { NgComponentOutlet } from '@angular/common';
 import { Component, computed, effect, forwardRef, inject, signal, type Type, untracked } from '@angular/core';
 import { MatButton } from '@angular/material/button';
-import { MatFormField, MatLabel, MatSuffix } from '@angular/material/form-field';
-import { MatIcon } from '@angular/material/icon';
+import { MatFormField, MatLabel } from '@angular/material/form-field';
 import { MatOption, MatSelect } from '@angular/material/select';
-import { MatTooltip } from '@angular/material/tooltip';
 import {
 	ANALYTICS_SCOPE_PATTERN,
 	type AnalyticsBreakdown,
@@ -166,12 +164,9 @@ function count(value: number | undefined): string | null {
 		KpiTile,
 		MatButton,
 		MatFormField,
-		MatIcon,
 		MatLabel,
 		MatOption,
 		MatSelect,
-		MatSuffix,
-		MatTooltip,
 		NgComponentOutlet,
 		Notice,
 		TileRow,
@@ -204,7 +199,6 @@ export class AnalyticsPage implements AnalyticsPageContext {
 
 	private readonly features = this.info.features;
 	protected readonly perNode = computed(() => this.features().has('per-node-breakdown'));
-	protected readonly perNodeLockHint = 'Per-node analytics is available in OpenVidu PRO';
 	private readonly retention = computed(() => this.info.info()?.retention);
 
 	/** The range resolved when the URL changes; the clock does not move it. */

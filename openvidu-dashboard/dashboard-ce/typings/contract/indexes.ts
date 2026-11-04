@@ -52,12 +52,17 @@ export const INDEXES: readonly IndexDefinition[] = [
 		['nameLower', 1],
 		['createdAt', -1]
 	]),
-	index(Collection.ROOMS, 'nodeId_status_createdAt_id', [
-		['nodeId', 1],
-		['status', 1],
-		['createdAt', -1],
-		['_id', -1]
-	]),
+	index(
+		Collection.ROOMS,
+		'mediaNode_status_createdAt_id',
+		[
+			['mediaNode', 1],
+			['status', 1],
+			['createdAt', -1],
+			['_id', -1]
+		],
+		{ options: { partialFilterExpression: { mediaNode: { $exists: true } } } }
+	),
 	index(
 		Collection.ROOMS,
 		'status_lastEventAt_active',

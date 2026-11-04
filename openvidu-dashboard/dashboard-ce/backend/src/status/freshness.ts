@@ -8,7 +8,7 @@ const INTERVAL_WINDOW_MS = 3_600_000;
 /** How long the windows read from `nodes` are reused. */
 const WINDOWS_CACHE_MS = 10_000;
 
-export type NodeHeartbeat = Pick<NodeDocument, 'lastSeenAt' | 'batchIntervalMs'>;
+export type NodeHeartbeat = Pick<NodeDocument, 'lastSeenAt' | 'batchIntervalMs' | 'stoppedAt'>;
 
 /** The largest batch interval among the nodes seen within the last hour of `now`; undefined when none reports one. */
 export function writerBatchInterval(nodes: readonly NodeHeartbeat[], now: Date): number | undefined {
@@ -23,9 +23,12 @@ export function writerBatchInterval(nodes: readonly NodeHeartbeat[], now: Date):
 	return largest;
 }
 
-/** A node is alive while its last batch is within the fresh window of its own batch interval. */
+/** A node is alive while it has not stopped and its last batch is within the fresh window of its own batch interval. */
 export function nodeAlive(node: NodeHeartbeat, now: Date): boolean {
-	return now.getTime() - node.lastSeenAt.getTime() <= freshnessWindows(node.batchIntervalMs).freshMs;
+	return (
+		node.stoppedAt === undefined &&
+		now.getTime() - node.lastSeenAt.getTime() <= freshnessWindows(node.batchIntervalMs).freshMs
+	);
 }
 
 /** The stale window and the server clock of one response. */

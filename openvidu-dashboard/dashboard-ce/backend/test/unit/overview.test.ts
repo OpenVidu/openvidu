@@ -10,7 +10,7 @@ import { todayWindow } from '../../src/overview/overview-window.js';
 const at = (iso: string) => new Date(iso);
 
 function group(kind: ParticipantGroup['_id']['kind'], count: number, extra: Partial<ParticipantGroup> = {}) {
-	return { _id: { nodeId: 'node-a', kind }, count, publishers: 0, stale: 0, ...extra };
+	return { _id: { mediaNode: 'mn-a', kind }, count, publishers: 0, stale: 0, ...extra };
 }
 
 describe('overview today window', () => {

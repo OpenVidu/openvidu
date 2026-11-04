@@ -3,9 +3,6 @@ import { Component, computed, effect, inject, signal, type Type, untracked } fro
 import { MatButton } from '@angular/material/button';
 import { MatButtonToggle, MatButtonToggleGroup } from '@angular/material/button-toggle';
 import { MatChipListbox, MatChipOption } from '@angular/material/chips';
-import { MatFormField, MatLabel, MatSuffix } from '@angular/material/form-field';
-import { MatIcon } from '@angular/material/icon';
-import { MatOption, MatSelect } from '@angular/material/select';
 import { MatTooltip } from '@angular/material/tooltip';
 import { RouterLink } from '@angular/router';
 import {
@@ -72,12 +69,6 @@ interface RoomsData {
 		MatButtonToggleGroup,
 		MatChipListbox,
 		MatChipOption,
-		MatFormField,
-		MatIcon,
-		MatLabel,
-		MatOption,
-		MatSelect,
-		MatSuffix,
 		MatTooltip,
 		NgComponentOutlet,
 		RouterLink,
@@ -102,17 +93,17 @@ export class RoomsPage {
 	protected readonly now = injectTicker();
 	protected readonly tz = this.query.tz;
 	protected readonly limit = this.query.limit;
-	/** The `ROOMS_NODE_FILTER` select with `per-node-breakdown`, the locked select without it. */
+	/** The `ROOMS_NODE_FILTER` select and the Node column with `per-node-breakdown`; nothing about nodes without it. */
 	protected readonly nodeFilter = inject(FeatureService).enabledSignal('per-node-breakdown');
 	private readonly loadNodeFilter = inject(ROOMS_NODE_FILTER);
 	protected readonly nodeSelect = signal<Type<unknown> | null>(null);
-	protected readonly nodeLockHint = 'Filtering by node is available in OpenVidu PRO';
 
 	protected readonly status = computed(() => this.query.oneOf('status', STATUSES, RoomStatusFilter.ALL));
 	protected readonly q = computed(() => listSearchQuery(this.query.q(), 'room'));
 	protected readonly exactId = computed(() => exactListId(this.q(), 'room'));
 	protected readonly selectedFeatures = computed(() => this.query.csv('features', FEATURE_KEYS));
-	protected readonly nodeId = computed(() => (this.nodeFilter() ? this.query.value('nodeId') : null));
+	/** The media node label of the `node` parameter, ignored without `per-node-breakdown`. */
+	protected readonly node = computed(() => (this.nodeFilter() ? this.query.value('node') : null));
 	private readonly rangeMs = computed(() => rangeSpanMs(this.listState.range(), this.now()));
 	/** Range span when the range last changed, so the ticker never re-renders the headers. */
 	private readonly requestRangeMs = computed(() => {
@@ -134,7 +125,7 @@ export class RoomsPage {
 		status: this.status(),
 		q: this.q(),
 		features: this.selectedFeatures(),
-		nodeId: this.nodeId(),
+		mediaNode: this.node(),
 		sort: this.sort(),
 		order: this.order(),
 		cursor: this.query.cursor(),
@@ -206,7 +197,7 @@ export class RoomsPage {
 		},
 		{ key: 'bytes', header: 'Data up / down', align: 'end' },
 		{ key: 'features', header: 'Features', info: INFO_TEXTS.roomFeatures },
-		{ key: 'node', header: 'Node', defaultHidden: true }
+		...(this.nodeFilter() ? [{ key: 'node', header: 'Node', defaultHidden: true }] : [])
 	]);
 
 	protected readonly trackRoom = (room: RoomListItem): string => room.sid;
@@ -264,7 +255,7 @@ export class RoomsPage {
 	}
 
 	protected clearFilters(): void {
-		void this.query.navigate({ status: null, q: null, features: null, nodeId: null });
+		void this.query.navigate({ status: null, q: null, features: null, node: null });
 	}
 
 	protected clearSearch(): void {

@@ -10,21 +10,38 @@ const seen = (secondsAgo: number, batchIntervalMs?: number) => ({
 });
 
 describe('writer status', () => {
-	it('takes the newest batch and counts the nodes seen within 30 s', () => {
-		expect(foldWriter([seen(50), seen(4), seen(30)], NOW)).toEqual({
-			lastSeenAt: '2026-10-13T11:59:56.000Z',
-			nodes: 3,
-			aliveNodes: 2
-		});
+	const stopped = (secondsAgo: number) => {
+		const at = new Date(NOW.getTime() - secondsAgo * 1000);
+
+		return { lastSeenAt: at, stoppedAt: at };
+	};
+
+	it('takes the newest batch', () => {
+		expect(foldWriter([seen(50), seen(4), seen(30)], NOW)).toEqual({ lastSeenAt: '2026-10-13T11:59:56.000Z' });
 	});
 
 	it('reports no batch without nodes', () => {
-		expect(foldWriter([], NOW)).toEqual({ nodes: 0, aliveNodes: 0 });
+		expect(foldWriter([], NOW)).toEqual({});
+	});
+
+	it('reports the stop of the newest node when no node is alive', () => {
+		expect(foldWriter([stopped(6), seen(3600)], NOW)).toEqual({
+			lastSeenAt: '2026-10-13T11:59:54.000Z',
+			stoppedAt: '2026-10-13T11:59:54.000Z'
+		});
+	});
+
+	it('reports no stop after a restart', () => {
+		expect(foldWriter([stopped(60), seen(3)], NOW)).toEqual({ lastSeenAt: '2026-10-13T11:59:57.000Z' });
+	});
+
+	it('reports no stop while another node is alive', () => {
+		expect(foldWriter([stopped(2), seen(6)], NOW)).toEqual({ lastSeenAt: '2026-10-13T11:59:58.000Z' });
 	});
 
 	it('judges each node by its own interval and reports the largest one', () => {
-		expect(foldWriter([seen(80, 60_000), seen(40, 10_000)], NOW)).toMatchObject({
-			aliveNodes: 1,
+		expect(foldWriter([seen(80, 60_000), stopped(120)], NOW)).toEqual({
+			lastSeenAt: '2026-10-13T11:58:40.000Z',
 			batchIntervalMs: 60_000
 		});
 	});

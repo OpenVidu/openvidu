@@ -62,6 +62,14 @@
 	.warn {
 		color: var(--ovd-status-warning-fg);
 	}
+
+	.neutral {
+		color: var(--mat-sys-on-surface-variant);
+	}
+}
+
+.full {
+	grid-column: 1 / -1;
 }
 
 .progress {

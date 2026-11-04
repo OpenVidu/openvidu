@@ -92,7 +92,7 @@ export function freshOverview(now = Date.now()): OverviewResponse {
 	};
 }
 
-/** The server status at `now`: two nodes reporting, the newest batch `writerAgo` old, and the migration given. */
+/** The server status at `now`: the newest batch `writerAgo` old, and the migration given. */
 export function activeStatus(
 	now = Date.now(),
 	writerAgo = 4 * SECOND,
@@ -102,11 +102,7 @@ export function activeStatus(
 		generatedAt: new Date(now).toISOString(),
 		schema: { dashboard: 1, writer: 1, status: 'ok' },
 		migration,
-		writer: {
-			lastSeenAt: new Date(now - writerAgo).toISOString(),
-			nodes: 2,
-			aliveNodes: writerAgo <= 30 * SECOND ? 2 : 0
-		}
+		writer: { lastSeenAt: new Date(now - writerAgo).toISOString() }
 	};
 }
 
@@ -116,6 +112,6 @@ export function freshStatus(now = Date.now()): StatusResponse {
 		generatedAt: new Date(now).toISOString(),
 		schema: { dashboard: 1, status: 'uninitialized' },
 		migration: { state: 'none' },
-		writer: { nodes: 0, aliveNodes: 0 }
+		writer: {}
 	};
 }

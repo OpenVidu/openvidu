@@ -97,6 +97,8 @@ export interface RoomDocument extends EntityBase {
 	lastStatsAt?: Date;
 	/** `false` when the node that created it does not report media statistics; absent otherwise. */
 	mediaStats?: false;
+	/** Media node label of the server that hosts it; absent when that server has none. */
+	mediaNode?: string;
 	internal?: WriterInternal;
 }
 
@@ -171,6 +173,8 @@ export interface ParticipantDocument extends EntityBase {
 	lastStatsAt?: Date;
 	/** `false` when the node that created it does not report media statistics; absent otherwise. */
 	mediaStats?: false;
+	/** Media node label of the server that hosts it; absent when that server has none. */
+	mediaNode?: string;
 	internal?: WriterInternal;
 }
 

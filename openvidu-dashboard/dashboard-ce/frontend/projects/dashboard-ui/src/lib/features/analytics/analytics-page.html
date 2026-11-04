@@ -14,23 +14,6 @@
 			@if (scopeSelect(); as select) {
 				<ng-container *ngComponentOutlet="select" />
 			}
-		} @else {
-			<mat-form-field class="select scope-select locked" subscriptSizing="dynamic">
-				<mat-label>Scope</mat-label>
-				<mat-select value="global" disabled>
-					<mat-option value="global">All nodes</mat-option>
-				</mat-select>
-				<span
-					matSuffix
-					class="lock"
-					role="img"
-					tabindex="0"
-					[attr.aria-label]="perNodeLockHint"
-					[matTooltip]="perNodeLockHint"
-				>
-					<mat-icon svgIcon="lock" aria-hidden="true" />
-				</span>
-			</mat-form-field>
 		}
 	</div>
 </div>

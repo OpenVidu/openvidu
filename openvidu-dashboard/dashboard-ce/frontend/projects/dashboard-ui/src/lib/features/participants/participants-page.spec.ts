@@ -11,6 +11,7 @@ import { infoResponse, settle } from '../../../testing/fixtures.js';
 import { routeElement } from '../../../testing/harness.js';
 import { LIST_SEARCH_DEBOUNCE_MS } from '../../components/search/list-search.js';
 import { InfoService } from '../../core/info.js';
+import { PreferencesService } from '../../core/preferences/preferences.js';
 import { EntityPreviewService } from '../../core/state/entity-preview.js';
 import { ParticipantLockedPage } from './participant-locked-page.js';
 import { ParticipantsPage } from './participants-page.js';
@@ -119,6 +120,37 @@ function text(element: Element | null | undefined): string {
 const debounce = () => new Promise((resolve) => setTimeout(resolve, LIST_SEARCH_DEBOUNCE_MS + 50));
 
 describe('ParticipantsPage', () => {
+	it('offers no Node column in CE', async () => {
+		const { harness } = await open('/participants');
+		const columns = (
+			harness.routeDebugElement?.componentInstance as { sessions: { columns(): { key: string }[] } }
+		).sessions.columns();
+
+		expect(columns.map((column) => column.key)).not.toContain('node');
+	});
+
+	it('shows the media node label in the Node column with per-node breakdown', async () => {
+		const http = setup();
+		const info = TestBed.inject(InfoService).load();
+
+		http.expectOne('api/v1/info').flush(infoResponse({ features: ['per-node-breakdown'] as never[] }));
+		await info;
+		TestBed.inject(PreferencesService).setHiddenColumns('participants', []);
+
+		const harness = await RouterTestingHarness.create('/participants');
+
+		await load(http, harness, page([item({ mediaNode: 'mn-a' }), item({ sid: 'PA_plain' })]), summary());
+		await harness.fixture.whenStable();
+
+		const element = routeElement(harness);
+		const nodeIndex = [...element.querySelectorAll('thead th')].findIndex((th) => text(th) === 'Node');
+
+		expect(nodeIndex).toBeGreaterThan(-1);
+		expect(
+			[...element.querySelectorAll('tbody tr')].map((row) => text(row.querySelectorAll('td')[nodeIndex]))
+		).toEqual(['mn-a', '—']);
+	});
+
 	it('reproduces the URL state in the controls and the request', async () => {
 		const { element, request } = await open(
 			'/participants?from=now-7d&to=now&tz=UTC&q=ali&kind=STANDARD,EGRESS&status=left&limit=50'

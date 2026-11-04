@@ -96,20 +96,14 @@
 		@if (status(); as status) {
 			<ul class="status">
 				<li class="line">
-					@if (writerFresh()) {
+					@if (status.writer.stoppedAt !== undefined) {
+						<mat-icon svgIcon="stop_circle" class="neutral" aria-hidden="true" />
+					} @else if (writerFresh()) {
 						<mat-icon svgIcon="check_circle" class="ok" aria-hidden="true" />
 					} @else {
 						<mat-icon svgIcon="warning" class="warn" aria-hidden="true" />
 					}
 					<span>{{ writerLine(status.writer) }}</span>
-				</li>
-				<li class="line">
-					@if (status.writer.aliveNodes < status.writer.nodes || status.writer.nodes === 0) {
-						<mat-icon svgIcon="warning" class="warn" aria-hidden="true" />
-					} @else {
-						<mat-icon svgIcon="check_circle" class="ok" aria-hidden="true" />
-					}
-					<span>{{ nodesLine(status.writer) }}</span>
 				</li>
 				@if (migrationProgress(); as progress) {
 					<li class="progress">
@@ -129,7 +123,7 @@
 		}
 	</ovd-section-card>
 
-	<ovd-section-card heading="Recent rooms" sectionId="recent-rooms">
+	<ovd-section-card heading="Recent rooms" sectionId="recent-rooms" [class.full]="!nodesCardShown()">
 		<div ovdSectionActions class="links">
 			@if ((live()?.rooms ?? 0) > 0) {
 				<a routerLink="/rooms" [queryParams]="{ status: 'active' }">View active rooms</a>
@@ -194,13 +188,9 @@
 		}
 	</ovd-section-card>
 
-	<ovd-section-card heading="By node" sectionId="nodes" [info]="perNode() ? info.byNode : undefined">
-		<ovd-feature-gate feature="per-node-breakdown">
-			<ng-template ovdFeatureContent>
-				@if (nodesCard; as card) {
-					<ng-container *ngComponentOutlet="card; inputs: { overview: overview() }" />
-				}
-			</ng-template>
-		</ovd-feature-gate>
-	</ovd-section-card>
+	@if (nodesCardShown() && nodesCard; as card) {
+		<ovd-section-card heading="By node" sectionId="nodes" [info]="info.byNode">
+			<ng-container *ngComponentOutlet="card; inputs: { overview: overview() }" />
+		</ovd-section-card>
+	}
 </div>

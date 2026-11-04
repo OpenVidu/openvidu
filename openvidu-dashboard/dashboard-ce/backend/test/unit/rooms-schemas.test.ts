@@ -51,9 +51,9 @@ describe('rooms list query', () => {
 		expect(list.parse({ features: 'egress, ingress' }).features).toEqual(['egress', 'ingress']);
 	});
 
-	it('bounds the node id and the page size', () => {
-		expect(firstIssue(list, { nodeId: '' })?.path).toEqual(['nodeId']);
-		expect(firstIssue(list, { nodeId: 'n'.repeat(129) })?.path).toEqual(['nodeId']);
+	it('bounds the media node label and the page size', () => {
+		expect(firstIssue(list, { mediaNode: '' })?.path).toEqual(['mediaNode']);
+		expect(firstIssue(list, { mediaNode: 'n'.repeat(129) })?.path).toEqual(['mediaNode']);
 		expect(firstIssue(list, { limit: '101' })?.path).toEqual(['limit']);
 	});
 });

@@ -300,16 +300,22 @@ describe.skipIf(mongoUri === '')('analytics API', () => {
 			expect(await coverage()).toBeUndefined();
 		});
 
-		it('reads the node of a node scope only', async () => {
+		it('reads the node documents of the media node of a node scope only', async () => {
 			const nodes = ce.dashboard.db.collection<{ _id: string } & Document>(Collection.NODES);
 			const repository = new AnalyticsRepository(ce.dashboard.db);
 			const from = new Date(Date.now() - HOUR);
 
 			await nodes.deleteMany({});
-			await nodes.insertMany([node('ND_a', false), node('ND_b', true)]);
+			await nodes.insertMany([
+				{ ...node('ND_a', false), mediaNode: 'mn-a' },
+				{ ...node('ND_b', true), mediaNode: 'mn-b' },
+				{ ...node('ND_b2', false), mediaNode: 'mn-b' }
+			]);
 
-			expect(await repository.nodesMediaStats('node:ND_b', from, new Date())).toEqual([true]);
-			expect((await repository.nodesMediaStats('global', from, new Date())).sort()).toEqual([false, true]);
+			expect(await repository.nodesMediaStats('node:mn-a', from, new Date())).toEqual([false]);
+			expect((await repository.nodesMediaStats('node:mn-b', from, new Date())).sort()).toEqual([false, true]);
+			expect(await repository.nodesMediaStats('node:ND_b', from, new Date())).toEqual([]);
+			expect((await repository.nodesMediaStats('global', from, new Date())).sort()).toEqual([false, false, true]);
 		});
 	});
 

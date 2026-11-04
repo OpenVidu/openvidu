@@ -17,8 +17,7 @@ export const INFO_TEXTS = {
 		'Agent sessions connected now. Agents join rooms as participants of kind Agent but are not counted as participants.',
 	todayParticipants: 'Participant sessions that started today. Only regular participants count.',
 	todayMinutes: 'Minutes of the participant sessions that ended today.',
-	dataPipeline:
-		'The OpenVidu server writes analytics in batches. This card shows when the last batch arrived and how many nodes are reporting.',
+	dataPipeline: 'The OpenVidu server writes analytics in batches. This card shows when the last batch arrived.',
 	byNode: 'Nodes that reported analytics recently. A node is alive while its analytics batches keep arriving.',
 
 	dailyUniqueIdentities:

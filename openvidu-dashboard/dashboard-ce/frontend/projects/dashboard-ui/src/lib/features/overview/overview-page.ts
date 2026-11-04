@@ -14,7 +14,6 @@ import { EmptyState } from '../../components/feedback/empty-state.js';
 import { ErrorBanner } from '../../components/feedback/error-banner.js';
 import { Notice } from '../../components/feedback/notice.js';
 import { Skeleton } from '../../components/feedback/skeleton.js';
-import { FeatureContent, FeatureGate } from '../../components/lock/feature-gate.js';
 import { KpiTile } from '../../components/tiles/kpi-tile.js';
 import { SectionCard } from '../../components/tiles/section-card.js';
 import { TileRow } from '../../components/tiles/tile-row.js';
@@ -35,8 +34,8 @@ const APPROXIMATE_HINT =
 const STALE_RESPONSES = 2;
 
 /**
- * The landing page: live tiles, the stale entities hint, today's rollups, the server status, the recent rooms and the
- * per-node card (PRO, locked in CE), polled with `If-None-Match` at the live interval.
+ * The landing page: live tiles, the stale entities hint, today's rollups, the server status, the recent rooms and, with
+ * `per-node-breakdown`, the edition's per-node card, polled with `If-None-Match` at the live interval.
  */
 @Component({
 	selector: 'ovd-overview-page',
@@ -46,8 +45,6 @@ const STALE_RESPONSES = 2;
 		Duration,
 		EmptyState,
 		ErrorBanner,
-		FeatureContent,
-		FeatureGate,
 		KpiTile,
 		LiveChip,
 		MatIcon,
@@ -73,8 +70,9 @@ export class OverviewPage {
 	protected readonly nodesCard = inject(OVERVIEW_NODES_CARD);
 	protected readonly estimate = RECONCILER_ESTIMATE;
 	protected readonly info = INFO_TEXTS;
-	/** The By node heading explains node liveness only where the card shows nodes. */
-	protected readonly perNode = inject(FeatureService).enabledSignal('per-node-breakdown');
+	private readonly perNode = inject(FeatureService).enabledSignal('per-node-breakdown');
+	/** The By node card, only with `per-node-breakdown` and a card from the edition; nothing about nodes otherwise. */
+	protected readonly nodesCardShown = computed(() => this.perNode() && this.nodesCard !== null);
 	protected readonly approximateText = APPROXIMATE_HINT;
 	/** The column order of the Rooms list. */
 	protected readonly recentColumns = computed<TableColumn[]>(() => [
@@ -208,15 +206,13 @@ export class OverviewPage {
 	}
 
 	protected writerLine(writer: StatusWriter): string {
+		if (writer.stoppedAt !== undefined) {
+			return `Server stopped at ${formatTimestamp(writer.stoppedAt, { tz: this.tz(), now: this.now(), rangeMs: DAY_MS })}`;
+		}
+
 		return writer.lastSeenAt === undefined
 			? 'Last batch: never'
 			: `Last batch at ${formatTimestamp(writer.lastSeenAt, { tz: this.tz(), now: this.now(), rangeMs: DAY_MS })}`;
-	}
-
-	protected nodesLine(writer: StatusWriter): string {
-		return writer.nodes === 0
-			? 'no node has reported yet'
-			: `${formatNumber(writer.aliveNodes)} of ${formatNumber(writer.nodes)} node${writer.nodes === 1 ? '' : 's'} reporting`;
 	}
 
 	/** Time only for today's rooms, the date as well for older ones. */

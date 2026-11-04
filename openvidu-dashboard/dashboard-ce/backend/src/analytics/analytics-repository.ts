@@ -31,12 +31,15 @@ export class AnalyticsRepository {
 			.sort({ bucket: 1 });
 	}
 
-	/** The `mediaStats` of the nodes of `scope` whose heartbeats span overlaps `[from, to]`, on `lastSeenAt`. */
+	/**
+	 * The `mediaStats` of the node documents of `scope` (every one for `global`, those with the media node label of a node
+	 * scope) whose heartbeats span overlaps `[from, to]`, on `lastSeenAt`.
+	 */
 	nodesInRange(scope: string, from: Date, to: Date): FindCursor<Pick<NodeDocument, 'mediaStats'>> {
 		const filter: Document = { lastSeenAt: { $gte: from }, firstSeenAt: { $lte: to } };
 
 		if (scope.startsWith(NODE_SCOPE_PREFIX)) {
-			filter._id = scope.slice(NODE_SCOPE_PREFIX.length);
+			filter.mediaNode = scope.slice(NODE_SCOPE_PREFIX.length);
 		}
 
 		return this.db

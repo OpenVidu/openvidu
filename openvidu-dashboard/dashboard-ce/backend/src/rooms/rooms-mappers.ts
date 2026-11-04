@@ -13,6 +13,7 @@ export function toRoomListItem(doc: RoomDocument): RoomListItem {
 		durationMs: doc.durationMs,
 		closedBy: doc.closedBy,
 		nodeId: doc.nodeId,
+		mediaNode: doc.mediaNode,
 		participants: {
 			sessions: doc.participants.sessions,
 			unique: doc.participants.unique,

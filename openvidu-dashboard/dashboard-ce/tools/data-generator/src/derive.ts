@@ -719,7 +719,7 @@ export interface FiveMinuteRollupDoc extends Omit<FiveMinuteBucket, 'bytes'> {
 export interface RollupOptions {
 	/** `analytics_5min` documents inside the 5-minute rollup window. */
 	fiveMinute: boolean;
-	/** `node:<nodeId>` documents beside `global` in every rollup collection. */
+	/** `node:<media node label>` documents beside `global` in every rollup collection (needs labelled nodes). */
 	nodes: boolean;
 	/** `rooms.participantsSum` and `rooms.durationMsSum` at room end. */
 	roomSums: boolean;
@@ -745,7 +745,8 @@ export class Rollups {
 	add(bundle: RoomBundle, windows: DeriveWindows): void {
 		const { room } = bundle;
 
-		this.scopes = this.options.nodes ? ['global', `node:${room.nodeId}`] : ['global'];
+		this.scopes =
+			this.options.nodes && room.mediaNode !== undefined ? ['global', `node:${room.mediaNode}`] : ['global'];
 		this.fiveMinuteFrom = windows.fiveMinuteFrom;
 		this.at(
 			room.createdAt,

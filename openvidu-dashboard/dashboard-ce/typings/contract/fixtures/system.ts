@@ -1,5 +1,15 @@
 import { DEFAULT_RETENTION_MS, type NodeDocument, type SchemaMetaDocument } from '../../src/index.js';
-import { at, i64, NODE_ALPHA, NODE_BETA, REGION, schemaVersion, SERVER_VERSION } from './scenario.js';
+import {
+	at,
+	i64,
+	MEDIA_NODE_ALPHA,
+	MEDIA_NODE_BETA,
+	NODE_ALPHA,
+	NODE_BETA,
+	REGION,
+	schemaVersion,
+	SERVER_VERSION
+} from './scenario.js';
 
 export const nodes: NodeDocument[] = [
 	{
@@ -9,7 +19,8 @@ export const nodes: NodeDocument[] = [
 		serverVersion: SERVER_VERSION,
 		region: REGION,
 		batchIntervalMs: 10_000,
-		mediaStats: true
+		mediaStats: true,
+		mediaNode: MEDIA_NODE_ALPHA
 	},
 	{
 		_id: NODE_BETA,
@@ -18,7 +29,8 @@ export const nodes: NodeDocument[] = [
 		serverVersion: SERVER_VERSION,
 		region: REGION,
 		batchIntervalMs: 10_000,
-		mediaStats: true
+		mediaStats: true,
+		mediaNode: MEDIA_NODE_BETA
 	}
 ];
 

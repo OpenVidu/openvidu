@@ -420,11 +420,9 @@ describe('AnalyticsPage', () => {
 		expect(requests.map((request) => request.request.url)).not.toContain('api/v1/analytics/top');
 		expect(requests.map((request) => request.request.url)).not.toContain('api/v1/analytics/scopes');
 		expect(seriesRequests(requests).flatMap((request) => request.metrics)).not.toContain('scoreAvg');
-		expect(element.querySelector('.scope-select mat-select')?.getAttribute('aria-disabled')).toBe('true');
-		expect(text(element.querySelector('.scope-select .mat-mdc-select-value'))).toBe('All nodes');
-		expect(element.querySelector('.scope-select .lock')?.getAttribute('aria-label')).toBe(
-			'Per-node analytics is available in OpenVidu PRO'
-		);
+		// Nothing per node on CE: no scope selector, lock or text about nodes.
+		expect(element.querySelector('.scope-select')).toBeNull();
+		expect(text(element.querySelector('.page-header'))).not.toContain('All nodes');
 		expect(card(element, 'By node')).toBeUndefined();
 		http.verify();
 	});

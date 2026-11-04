@@ -170,7 +170,7 @@ describe.skipIf(mongoUri === '')('rooms API', () => {
 			expect(sids(exact)).toEqual(['RM_ab12cd']);
 		});
 
-		it('filters by features and node', async () => {
+		it('filters by features and media node', async () => {
 			const plain = { egress: false, ingress: false, agent: false, sip: false };
 
 			await reseed(ce.dashboard.db, {
@@ -178,14 +178,30 @@ describe.skipIf(mongoUri === '')('rooms API', () => {
 					closedRoom({ _id: 'RM_eg', createdAt: minutesAgo(30), features: { ...plain, egress: true } }),
 					closedRoom({ _id: 'RM_in', createdAt: minutesAgo(20), features: { ...plain, ingress: true } }),
 					closedRoom({ _id: 'RM_plain', createdAt: minutesAgo(10), features: plain }),
-					activeRoom({ _id: 'RM_nodeA', createdAt: minutesAgo(5), nodeId: 'node-a', features: plain }),
-					activeRoom({ _id: 'RM_nodeB', createdAt: minutesAgo(4), nodeId: 'node-b', features: plain })
+					activeRoom({
+						_id: 'RM_nodeA',
+						createdAt: minutesAgo(5),
+						nodeId: 'ND_a',
+						mediaNode: 'mn-a',
+						features: plain
+					}),
+					activeRoom({
+						_id: 'RM_nodeB',
+						createdAt: minutesAgo(4),
+						nodeId: 'ND_b',
+						mediaNode: 'mn-b',
+						features: plain
+					})
 				]
 			});
 
 			expect(sids(await json(ce, '/rooms?features=egress,ingress'))).toEqual(['RM_in', 'RM_eg']);
-			expect(sids(await json(ce, '/rooms?nodeId=node-a&status=active'))).toEqual(['RM_nodeA']);
-			expect(sids(await json(ce, '/rooms?q=rm_node&nodeId=node-a'))).toEqual(['RM_nodeA']);
+			const one = await json<ListResponse<RoomListItem>>(ce, '/rooms?mediaNode=mn-a&status=active');
+
+			expect(sids(one)).toEqual(['RM_nodeA']);
+			expect(one.items[0]).toMatchObject({ nodeId: 'ND_a', mediaNode: 'mn-a' });
+			expect(sids(await json(ce, '/rooms?mediaNode=mn-z'))).toEqual([]);
+			expect(sids(await json(ce, '/rooms?q=rm_node&mediaNode=mn-a'))).toEqual(['RM_nodeA']);
 		});
 
 		it('carries the media statistics mark of the rooms whose node reports none, sorted or ranked', async () => {

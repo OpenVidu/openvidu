@@ -1,11 +1,12 @@
 import { CONTRACT_SCHEMAS } from '@openvidu-dashboard/data-generator/contract';
 import { generate } from '@openvidu-dashboard/data-generator/generator';
-import { COLLECTION_NAMES } from '@openvidu-dashboard/data-generator/schema';
+import { COLLECTION_NAMES, keepLive } from '@openvidu-dashboard/data-generator/schema';
 import type {
 	EgressDocument,
 	EventDocument,
 	HourlyRollupDocument,
-	IngressSessionDocument
+	IngressSessionDocument,
+	NodeDocument
 } from '@openvidu-dashboard/typings';
 import { type Document, type Filter, MongoClient } from 'mongodb';
 import { afterAll, beforeAll, describe, expect, inject, it } from 'vitest';
@@ -41,6 +42,7 @@ describe.skipIf(mongoUri === '')('data generator', () => {
 				retentionDays: { events: 7, stats: 7, tracks: 7, entities: 90 },
 				timeseries: true,
 				rollups: { fiveMinute: true, nodes: true, roomSums: true },
+				mediaNodes: true,
 				activeWindowMinutes: 60,
 				minActiveRooms: 10
 			});
@@ -200,6 +202,88 @@ describe.skipIf(mongoUri === '')('data generator', () => {
 		}
 	});
 
+	it('labels the nodes and adds an earlier stopped process with media nodes', async () => {
+		const db = client.db('dashboard_test_generator_media_nodes');
+		await db.dropDatabase();
+
+		try {
+			await generate(db, {
+				scenario: 'S',
+				days: 2,
+				statsMode: 'participant',
+				seed: 3,
+				retentionDays: { events: 7, stats: 7, tracks: 7, entities: 90 },
+				timeseries: true,
+				rollups: { fiveMinute: true, nodes: true, roomSums: true },
+				mediaNodes: true
+			});
+
+			const nodes = await db.collection<NodeDocument>('nodes').find().toArray();
+			const first = nodes.filter((node) => node.mediaNode === 'media-node-10-0-0-1');
+			const stopped = first.find((node) => node.stoppedAt !== undefined);
+			const current = first.find((node) => node.stoppedAt === undefined);
+
+			expect(nodes).toHaveLength(4);
+			expect(new Set(nodes.map((node) => node.mediaNode))).toEqual(
+				new Set(['media-node-10-0-0-1', 'media-node-10-0-0-2', 'media-node-10-0-0-3'])
+			);
+			expect(first).toHaveLength(2);
+			expect(stopped?.lastSeenAt.getTime()).toBeLessThan(current?.firstSeenAt.getTime() ?? 0);
+			expect(await db.collection('rooms').countDocuments({ nodeId: stopped?._id })).toBeGreaterThan(0);
+
+			for (const node of nodes) {
+				expect(
+					await db
+						.collection('rooms')
+						.countDocuments({ nodeId: node._id, mediaNode: { $ne: node.mediaNode } })
+				).toBe(0);
+				expect(
+					await db
+						.collection('participants')
+						.countDocuments({ nodeId: node._id, mediaNode: { $ne: node.mediaNode } })
+				).toBe(0);
+			}
+
+			const scopes = (await db.collection('analytics_hourly').distinct('scope')) as string[];
+
+			expect(scopes.filter((scope) => scope !== 'global').sort()).toEqual([
+				'node:media-node-10-0-0-1',
+				'node:media-node-10-0-0-2',
+				'node:media-node-10-0-0-3'
+			]);
+			expect(
+				await db.collection('nodes').countDocuments({ $nor: [{ $jsonSchema: CONTRACT_SCHEMAS.nodes }] })
+			).toBe(0);
+
+			const later = new Date(Date.now() + 10 * 60_000);
+
+			await keepLive(db, later);
+			const kept = await db.collection<NodeDocument>('nodes').find().toArray();
+
+			expect(kept.filter((node) => node.lastSeenAt.getTime() === later.getTime())).toHaveLength(3);
+			expect(kept.find((node) => node._id === stopped?._id)?.lastSeenAt).toEqual(stopped?.lastSeenAt);
+		} finally {
+			await db.dropDatabase();
+		}
+	});
+
+	it('rejects node rollups without media nodes', async () => {
+		const db = client.db('dashboard_test_generator_node_rollups');
+
+		await expect(
+			generate(db, {
+				scenario: 'S',
+				days: 1,
+				statsMode: 'participant',
+				seed: 3,
+				retentionDays: { events: 7, stats: 7, tracks: 7, entities: 90 },
+				timeseries: true,
+				rollups: { fiveMinute: false, nodes: true, roomSums: false }
+			})
+		).rejects.toThrow('mediaNodes');
+		await db.dropDatabase();
+	});
+
 	it('generates a node without media statistics on request', async () => {
 		const db = client.db('dashboard_test_generator_media_stats');
 		await db.dropDatabase();
@@ -213,6 +297,7 @@ describe.skipIf(mongoUri === '')('data generator', () => {
 				retentionDays: { events: 7, stats: 7, tracks: 7, entities: 90 },
 				timeseries: true,
 				rollups: { fiveMinute: true, nodes: true, roomSums: true },
+				mediaNodes: true,
 				nodesWithoutMediaStats: 1
 			});
 

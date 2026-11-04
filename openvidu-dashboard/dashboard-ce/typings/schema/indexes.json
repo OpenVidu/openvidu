@@ -39,14 +39,14 @@
 	},
 	{
 		"collection": "rooms",
-		"name": "nodeId_status_createdAt_id",
+		"name": "mediaNode_status_createdAt_id",
 		"key": [
-			["nodeId", 1],
+			["mediaNode", 1],
 			["status", 1],
 			["createdAt", -1],
 			["_id", -1]
 		],
-		"options": {}
+		"options": { "partialFilterExpression": { "mediaNode": { "$exists": true } } }
 	},
 	{
 		"collection": "rooms",

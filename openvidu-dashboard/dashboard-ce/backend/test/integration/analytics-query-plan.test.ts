@@ -88,7 +88,8 @@ describe.skipIf(mongoUri === '')(`analytics query plan at scenario ${scenario}`,
 			seed: 1,
 			retentionDays: { events: 7, stats: 7, tracks: 7, entities: 90 },
 			timeseries: true,
-			rollups: { fiveMinute: true, nodes: true, roomSums: true }
+			rollups: { fiveMinute: true, nodes: true, roomSums: true },
+			mediaNodes: true
 		});
 		repository = new AnalyticsRepository(db);
 		service = new AnalyticsService(db, {

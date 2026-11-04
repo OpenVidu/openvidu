@@ -10,6 +10,7 @@
 		"endReason": "API_DELETE",
 		"closedBy": "event",
 		"nodeId": "ND_alpha8Kq2Lm",
+		"mediaNode": "media-node-10-0-0-1",
 		"config": {
 			"maxParticipants": { "$numberInt": "20" },
 			"emptyTimeoutMs": { "$numberLong": "300000" },
@@ -74,6 +75,7 @@
 		"status": "active",
 		"createdAt": { "$date": "2026-10-12T10:00:00.000Z" },
 		"nodeId": "ND_beta3Vx9Pw",
+		"mediaNode": "media-node-10-0-0-2",
 		"config": {
 			"maxParticipants": { "$numberInt": "0" },
 			"emptyTimeoutMs": { "$numberLong": "300000" },

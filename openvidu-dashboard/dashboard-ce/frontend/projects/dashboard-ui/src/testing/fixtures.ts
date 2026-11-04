@@ -29,11 +29,9 @@ export function statusResponse(
 		migration: { state: 'completed', progress: { processed: 10, total: 10 } },
 		writer:
 			writerAgeMs === null
-				? { nodes: 0, aliveNodes: 0 }
+				? {}
 				: {
-						lastSeenAt: new Date(Date.parse(generatedAt) - writerAgeMs).toISOString(),
-						nodes: 1,
-						aliveNodes: 1
+						lastSeenAt: new Date(Date.parse(generatedAt) - writerAgeMs).toISOString()
 					},
 		...overrides
 	};

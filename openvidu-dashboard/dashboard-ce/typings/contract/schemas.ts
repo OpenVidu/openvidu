@@ -49,6 +49,8 @@ import {
 } from './schema-builder.js';
 
 const SCOPE_PATTERN = '^(global|node:[^:]+)$';
+/** A media node label: the characters a `node:<label>` analytics scope accepts. */
+const MEDIA_NODE_PATTERN = '^[A-Za-z0-9_.-]{1,128}$';
 const ROLLUP_ID_PATTERN = '^(global|node:[^:]+):[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:00Z$';
 const API_METHOD_PATTERN = '^[A-Za-z0-9]+_[A-Za-z0-9]+$';
 
@@ -61,6 +63,10 @@ const internal = anyObject('Writer bookkeeping; never read by the dashboard');
 const mediaStatsMark = bool(
 	'Only false: the node that created the entity does not report media statistics; absent otherwise'
 );
+const mediaNodeMark: BsonSchema = {
+	...str('Media node label of the server that hosts the entity; absent when it has none'),
+	pattern: MEDIA_NODE_PATTERN
+};
 
 const closedBy = oneOfValues(ClosedBy);
 
@@ -125,6 +131,7 @@ const rooms = obj({
 	lastEventAt: req(date()),
 	lastStatsAt: date(),
 	mediaStats: mediaStatsMark,
+	mediaNode: mediaNodeMark,
 	internal,
 	...entityBase
 });
@@ -196,6 +203,7 @@ const participants = obj({
 	lastEventAt: req(date()),
 	lastStatsAt: date(),
 	mediaStats: mediaStatsMark,
+	mediaNode: mediaNodeMark,
 	internal,
 	...entityBase
 });
@@ -487,7 +495,9 @@ const nodes = obj({
 	batchIntervalMs: { ...int('Configured batch interval of the node, in milliseconds'), minimum: 1000 },
 	mediaStats: bool(
 		'Whether the node reports media statistics; absent on documents written before it existed (read as true)'
-	)
+	),
+	mediaNode: { ...str('Media node label of the server; absent when it has none'), pattern: MEDIA_NODE_PATTERN },
+	stoppedAt: date('Set by a graceful stop, after the final batch')
 });
 
 const metaId = (id: string): BsonSchema => ({ bsonType: 'string', enum: [id] });

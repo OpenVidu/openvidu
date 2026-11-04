@@ -109,10 +109,9 @@ test('the PRO strip is locked on CE and sends no PRO request', async ({ page, ap
 	await page.goto('/analytics?from=now-24h&to=now&tz=UTC');
 
 	await expect(page.locator('ovd-pro-lock-overlay')).toHaveCount(3);
-	await expect(page.locator('.scope-select mat-select')).toBeDisabled();
-	await expect(
-		page.locator('.scope-select').getByRole('img', { name: 'Per-node analytics is available in OpenVidu PRO' })
-	).toBeVisible();
+	// Nothing per node on CE: no scope selector, lock or text about nodes.
+	await expect(page.locator('.scope-select')).toHaveCount(0);
+	await expect(page.getByText('All nodes')).toHaveCount(0);
 	await expect(card(page, 'Quality')).toContainText('Quality analytics is available in OpenVidu PRO');
 	await expect(card(page, 'Top rooms')).toContainText('Top rooms is available in OpenVidu PRO');
 	await expect(card(page, 'Quality').getByRole('button', { name: 'Export CSV' })).toBeDisabled();

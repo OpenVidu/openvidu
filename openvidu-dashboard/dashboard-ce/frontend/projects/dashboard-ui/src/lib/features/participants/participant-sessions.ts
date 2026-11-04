@@ -4,6 +4,7 @@ import { type ParticipantListItem, ParticipantSort, ParticipantStatus } from '@o
 import type { SortChange, TableColumn } from '../../components/data-table/data-table.js';
 import { RangePickerService } from '../../components/date-time-range-picker/date-time-range-picker.js';
 import { exactListId, listSearchQuery } from '../../components/search/list-search.js';
+import { FeatureService } from '../../core/info.js';
 import { EntityPreviewService } from '../../core/state/entity-preview.js';
 import { ListStateService } from '../../core/state/list-state.js';
 import { QueryStateService } from '../../core/state/query-state.js';
@@ -34,6 +35,7 @@ export function injectParticipantSessions(options: { kindColumn: boolean }) {
 	const listState = inject(ListStateService);
 	const previews = inject(EntityPreviewService);
 	const rangePicker = inject(RangePickerService);
+	const perNode = inject(FeatureService).enabledSignal('per-node-breakdown');
 
 	const q = computed(() => listSearchQuery(query.q(), 'participant'));
 	const room = computed(() => {
@@ -86,7 +88,8 @@ export function injectParticipantSessions(options: { kindColumn: boolean }) {
 				...ranked.column('duration')
 			},
 			{ key: 'published', header: 'Published', card: 'metric' },
-			{ key: 'node', header: 'Node', defaultHidden: true }
+			// The media node label, only where there are several media nodes.
+			...(perNode() ? [{ key: 'node', header: 'Node', defaultHidden: true }] : [])
 		]),
 		/** Dates as on the other lists: the time alone inside the current day of a range up to 24 h. */
 		time: (value: string): string =>

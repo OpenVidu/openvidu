@@ -42,23 +42,6 @@
 		@if (nodeSelect(); as select) {
 			<ng-container *ngComponentOutlet="select" />
 		}
-	} @else {
-		<mat-form-field class="node" subscriptSizing="dynamic">
-			<mat-label>Node</mat-label>
-			<mat-select value="all" disabled>
-				<mat-option value="all">All nodes</mat-option>
-			</mat-select>
-			<span
-				matSuffix
-				class="lock"
-				role="img"
-				tabindex="0"
-				[attr.aria-label]="nodeLockHint"
-				[matTooltip]="nodeLockHint"
-			>
-				<mat-icon svgIcon="lock" aria-hidden="true" />
-			</span>
-		</mat-form-field>
 	}
 
 	<div class="ovd-filter-slot">
@@ -168,7 +151,7 @@
 		</span>
 	</ng-template>
 	<ng-template ovdCell="node" let-room>
-		<span class="ovd-mono">{{ room.nodeId ?? '—' }}</span>
+		<span class="ovd-mono">{{ room.mediaNode ?? '—' }}</span>
 	</ng-template>
 
 	@if (exactId(); as sid) {

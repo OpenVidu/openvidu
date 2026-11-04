@@ -25,10 +25,6 @@
 	width: 170px;
 }
 
-.scope-select {
-	width: 240px;
-}
-
 .sections {
 	display: flex;
 	flex-direction: column;
@@ -54,14 +50,4 @@
 	min-height: 240px;
 	color: var(--mat-sys-on-surface-variant);
 	text-align: center;
-}
-
-.lock {
-	display: inline-flex;
-	margin-inline-end: 8px;
-
-	mat-icon {
-		width: 20px;
-		height: 20px;
-	}
 }

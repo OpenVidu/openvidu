@@ -93,10 +93,10 @@ describe('rooms list plan', () => {
 		});
 	});
 
-	it('name prefix within one node: the node stays a residual filter', () => {
-		expect(plan({ q: 'demo', nodeId: 'node-a' }).filter).toEqual({
+	it('name prefix within one media node: the label stays a residual filter', () => {
+		expect(plan({ q: 'demo', mediaNode: 'mn-a' }).filter).toEqual({
 			nameLower: { $regex: '^demo' },
-			nodeId: 'node-a',
+			mediaNode: 'mn-a',
 			createdAt: range
 		});
 	});
@@ -113,16 +113,16 @@ describe('rooms list plan', () => {
 	});
 
 	it('SID: point lookup ignoring every other filter', () => {
-		expect(roomsListPlan(params({ q: 'RM_ab12cd', status: 'active', features: 'sip', nodeId: 'n' }))).toEqual({
+		expect(roomsListPlan(params({ q: 'RM_ab12cd', status: 'active', features: 'sip', mediaNode: 'n' }))).toEqual({
 			kind: 'sid',
 			filter: { _id: 'RM_ab12cd' }
 		});
 	});
 
-	it('node: { nodeId, status, createdAt, _id } with status all as $in', () => {
-		expect(plan({ nodeId: 'node-a' }).filter).toEqual({ nodeId: 'node-a', status: ANY, createdAt: range });
-		expect(plan({ nodeId: 'node-a', status: 'active', features: 'egress' }).filter).toEqual({
-			nodeId: 'node-a',
+	it('media node: { mediaNode, status, createdAt, _id } with status all as $in', () => {
+		expect(plan({ mediaNode: 'mn-a' }).filter).toEqual({ mediaNode: 'mn-a', status: ANY, createdAt: range });
+		expect(plan({ mediaNode: 'mn-a', status: 'active', features: 'egress' }).filter).toEqual({
+			mediaNode: 'mn-a',
 			status: 'active',
 			createdAt: range,
 			'features.egress': true

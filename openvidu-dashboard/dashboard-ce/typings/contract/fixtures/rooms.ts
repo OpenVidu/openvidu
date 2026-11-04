@@ -7,6 +7,8 @@ import {
 	EG,
 	ENTITIES_RETENTION_MS,
 	INGRESS_SESSION,
+	MEDIA_NODE_ALPHA,
+	MEDIA_NODE_BETA,
 	NODE_ALPHA,
 	NODE_BETA,
 	P,
@@ -30,6 +32,7 @@ export const rooms: RoomDocument[] = [
 		endReason: 'API_DELETE',
 		closedBy: 'event',
 		nodeId: NODE_ALPHA,
+		mediaNode: MEDIA_NODE_ALPHA,
 		config: { maxParticipants: 20, emptyTimeoutMs: 300_000, departureTimeoutMs: 20_000 },
 		participants: {
 			sessions: 4,
@@ -64,6 +67,7 @@ export const rooms: RoomDocument[] = [
 		status: 'active',
 		createdAt: at('10:00:00'),
 		nodeId: NODE_BETA,
+		mediaNode: MEDIA_NODE_BETA,
 		config: { maxParticipants: 0, emptyTimeoutMs: 300_000, departureTimeoutMs: 20_000 },
 		participants: {
 			sessions: 2,

@@ -29,7 +29,7 @@ describe('RoomsDataService', () => {
 		status: 'closed',
 		q: 'demo',
 		features: ['egress', 'agent'],
-		nodeId: 'node-a',
+		mediaNode: 'mn-a',
 		sort: 'endedAt',
 		order: 'asc',
 		cursor: 'abc',
@@ -52,11 +52,11 @@ describe('RoomsDataService', () => {
 			(req) =>
 				req.urlWithParams ===
 				'api/v1/rooms?from=2026-10-12T12:00:00.000Z&to=2026-10-13T12:00:00.000Z&tz=Europe/Madrid&status=closed' +
-					'&q=demo&features=egress,agent&nodeId=node-a&sort=endedAt&order=asc&cursor=abc&limit=50'
+					'&q=demo&features=egress,agent&mediaNode=mn-a&sort=endedAt&order=asc&cursor=abc&limit=50'
 		).flush({ items: [], nextCursor: null, prevCursor: null });
 		await full;
 
-		const bare = rooms.list({ ...list, q: null, features: [], nodeId: null, cursor: null });
+		const bare = rooms.list({ ...list, q: null, features: [], mediaNode: null, cursor: null });
 
 		http.expectOne(
 			(req) =>
