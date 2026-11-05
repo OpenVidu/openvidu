@@ -33,7 +33,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.Callable;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -80,6 +79,7 @@ import io.minio.MinioClient;
 import io.minio.Result;
 import io.minio.errors.MinioException;
 import io.minio.messages.Item;
+import io.openvidu.test.browsers.utils.BrowserNames;
 import io.openvidu.test.browsers.utils.Ffmpeg;
 import livekit.LivekitIngress.IngressInfo;
 import livekit.LivekitIngress.IngressState;
@@ -107,14 +107,10 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		pullFfmpegImage();
 		loadEnvironmentVariables();
 		setUpLiveKitClient();
-		CompletableFuture.runAsync(() -> {
-			try {
-				NetworkConditioner.pullImages();
-			} catch (Exception e) {
-				System.err.println("Download of images failed: " + e.getMessage());
-			}
-		});
-		CompletableFuture.runAsync(OpenViduTestAppE2eTest::pullRemoteBrowserImages);
+		// Most tests need Chrome: its image goes first
+		prePullRemoteBrowserImages(BrowserNames.CHROME, BrowserNames.FIREFOX, BrowserNames.EDGE);
+		NetworkConditioner.prePullImages();
+		DockerImages.prePull(RTSP_SERVER_IMAGE);
 	}
 
 	@BeforeEach()

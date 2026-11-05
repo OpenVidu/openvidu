@@ -69,10 +69,6 @@ public class NetworkConditioner {
 	// blockOutboundPackets().
 	private static String blackoutContainer;
 
-	// Both Pumba images are pinned to an immutable tag: pulling them once per JVM
-	// is enough. See pullImages().
-	private static final java.util.concurrent.atomic.AtomicBoolean imagesPulled = new java.util.concurrent.atomic.AtomicBoolean();
-
 	// Container Pumba is currently impairing. Tracked so that clear() can scrub its
 	// network namespace itself instead of trusting Pumba to have reverted.
 	private static String impairedContainer;
@@ -99,15 +95,20 @@ public class NetworkConditioner {
 	 * re-pulling them before every connection-quality test only buys another chance
 	 * of hitting a registry or DNS hiccup: seen in CI taking 171 s instead of the
 	 * usual 3 s, in the middle of the network outage that then kept the bridged
-	 * browser from connecting at all (run 35203642658).
+	 * browser from connecting at all (run 35203642658). {@link DockerImages} pulls
+	 * each one once, with retries, and returns at once if it is already local.
 	 */
 	public static void pullImages() {
-		if (!imagesPulled.compareAndSet(false, true)) {
-			return;
-		}
-		log.info("Pulling Pumba images {} and {}", PUMBA_IMAGE, NETTOOLS_IMAGE);
-		commandLine.executeCommand("docker pull " + PUMBA_IMAGE, 180);
-		commandLine.executeCommand("docker pull " + NETTOOLS_IMAGE, 180);
+		DockerImages.await(PUMBA_IMAGE);
+		DockerImages.await(NETTOOLS_IMAGE);
+	}
+
+	/**
+	 * Queues the pull of the Pumba images in the background (see
+	 * {@link DockerImages#prePull(String...)}).
+	 */
+	public static void prePullImages() {
+		DockerImages.prePull(PUMBA_IMAGE, NETTOOLS_IMAGE);
 	}
 
 	public static void applyLossToOutboundPackets(String targetContainer, String remotePorts, int lossPercent,

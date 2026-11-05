@@ -251,24 +251,6 @@ public class AbstractOpenViduTestappE2eTest extends OpenViduTestE2e {
 	protected static final long MIN_FRAMES_DECODED_FPS = 4;
 	protected static final long MIN_FRAMES_DECODED_WINDOW_MILLIS = 2000;
 
-	protected static void pullRemoteBrowserImages() {
-		pullRemoteBrowserImage("REMOTE_URL_CHROME", "selenium/standalone-chrome:" + CHROME_VERSION);
-		pullRemoteBrowserImage("REMOTE_URL_FIREFOX", "selenium/standalone-firefox:" + FIREFOX_VERSION);
-		pullRemoteBrowserImage("REMOTE_URL_EDGE", "selenium/standalone-edge:" + EDGE_VERSION);
-	}
-
-	protected static void pullRemoteBrowserImage(String remoteUrlProperty, String image) {
-		if (System.getProperty(remoteUrlProperty) == null) {
-			return; // This browser runs as a native driver here. No Docker image to pull
-		}
-		try {
-			log.info("Pre-pulling Selenium image {}", image);
-			commandLine.executeCommand("docker pull " + image, 300);
-		} catch (Exception e) {
-			System.err.println("Pre-pull of " + image + " failed: " + e.getMessage());
-		}
-	}
-
 	protected int countNumberOfPublishedLayers(OpenViduTestappUser user, WebElement publisherVideo) {
 		JsonArray json = this.getLayersAsJsonArray(user, publisherVideo);
 		return json.size();

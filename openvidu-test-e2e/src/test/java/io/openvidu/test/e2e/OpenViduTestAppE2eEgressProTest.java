@@ -15,7 +15,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Locale;
 import java.util.Random;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;
@@ -51,6 +50,7 @@ import io.livekit.server.RoomCreate;
 import io.livekit.server.RoomRecord;
 import io.minio.DownloadObjectArgs;
 import io.minio.MinioClient;
+import io.openvidu.test.browsers.utils.BrowserNames;
 import io.openvidu.test.browsers.utils.Ffmpeg;
 import livekit.LivekitModels.ParticipantInfo;
 import livekit.LivekitModels.TrackInfo;
@@ -276,7 +276,7 @@ public class OpenViduTestAppE2eEgressProTest extends AbstractOpenViduTestappE2eT
 		syncMediaScript = Files.readString(Paths.get("src/test/resources/participant-passthrough-sync-media.js"));
 		minio = MinioClient.builder().endpoint("localhost", 9000, false).credentials("minioadmin", "minioadmin")
 				.build();
-		CompletableFuture.runAsync(OpenViduTestAppE2eEgressProTest::pullRemoteBrowserImages);
+		prePullRemoteBrowserImages(BrowserNames.CHROME, BrowserNames.FIREFOX);
 	}
 
 	@BeforeEach()

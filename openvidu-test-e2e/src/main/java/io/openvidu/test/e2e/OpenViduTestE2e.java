@@ -186,14 +186,43 @@ public class OpenViduTestE2e {
 
 	protected static void pullFfmpegImage() {
 		try {
-			Ffmpeg.pullImage();
+			DockerImages.await(Ffmpeg.IMAGE);
 		} catch (Exception e) {
 			Assertions.fail("Could not pull the ffmpeg image " + Ffmpeg.IMAGE + ": " + e.getMessage());
 		}
 		log.info("ffmpeg and ffprobe run in Docker image {}", Ffmpeg.IMAGE);
 	}
 
+	/**
+	 * Queues in the background the pull of the Selenium images of these browsers,
+	 * in this order, for those that run in Docker here (REMOTE_URL_* set). Call it
+	 * after {@link #loadEnvironmentVariables()}, which sets the browser versions.
+	 */
+	protected static void prePullRemoteBrowserImages(BrowserNames... browsers) {
+		for (BrowserNames browser : browsers) {
+			if (isRemote(browser)) {
+				DockerImages.prePull(browserImage(browser));
+			}
+		}
+	}
+
+	private static String browserImage(BrowserNames browser) {
+		switch (browser) {
+			case CHROME:
+				return "selenium/standalone-chrome:" + CHROME_VERSION;
+			case FIREFOX:
+				return "selenium/standalone-firefox:" + FIREFOX_VERSION;
+			case EDGE:
+				return "selenium/standalone-edge:" + EDGE_VERSION;
+			default:
+				throw new IllegalArgumentException("No Selenium image for browser " + browser);
+		}
+	}
+
 	private GenericContainer<?> chromeContainer(String image, long shmSize, int maxBrowserSessions, boolean headless) {
+		if (isRemote(BrowserNames.CHROME)) {
+			DockerImages.await(image);
+		}
 		Map<String, String> map = new HashMap<>();
 		map.put("SE_OPTS", "--port 4444");
 		map.put("SE_EVENT_BUS_PUBLISH_PORT", "4542");
@@ -242,6 +271,7 @@ public class OpenViduTestE2e {
 	// host.docker.internal (host-gateway) reaches the host-published testapp.
 	private GenericContainer<?> chromeContainerNetem(String image, long shmSize, int maxBrowserSessions,
 			boolean headless, String containerName) {
+		DockerImages.await(image);
 		Map<String, String> map = new HashMap<>();
 		map.put("SE_OPTS", "--port 4444");
 		map.put("SE_EVENT_BUS_PUBLISH_PORT", "4542");
@@ -337,6 +367,9 @@ public class OpenViduTestE2e {
 	}
 
 	private GenericContainer<?> firefoxContainer(String image, long shmSize, int maxBrowserSessions, boolean headless) {
+		if (isRemote(BrowserNames.FIREFOX)) {
+			DockerImages.await(image);
+		}
 		Map<String, String> map = new HashMap<>();
 		map.put("SE_OPTS", "--port 4445");
 		map.put("SE_EVENT_BUS_PUBLISH_PORT", "4544");
@@ -355,6 +388,9 @@ public class OpenViduTestE2e {
 	}
 
 	private GenericContainer<?> edgeContainer(String image, long shmSize, int maxBrowserSessions, boolean headless) {
+		if (isRemote(BrowserNames.EDGE)) {
+			DockerImages.await(image);
+		}
 		Map<String, String> map = new HashMap<>();
 		map.put("SE_OPTS", "--port 4446");
 		map.put("SE_EVENT_BUS_PUBLISH_PORT", "4546");
@@ -382,6 +418,7 @@ public class OpenViduTestE2e {
 			rtspPort = socket.getLocalPort();
 		}
 
+		DockerImages.await(RTSP_SERVER_IMAGE);
 		GenericContainer<?> rtspServerContainer = new GenericContainer<>(DockerImageName.parse(RTSP_SERVER_IMAGE))
 				.withCreateContainerCmdModifier(cmd -> cmd.withName("rtsp-" + Math.random() * 100000))
 				.withEnv(Map.of("MTX_LOGLEVEL", "info", "MTX_RTSPTRANSPORTS", "tcp", "MTX_RTSPADDRESS", ":" + rtspPort,
@@ -410,6 +447,7 @@ public class OpenViduTestE2e {
 		// Clean adjacent white spaces or the ffmpeg command will fail
 		ffmpegCommand = ffmpegCommand.trim().replaceAll(" +", " ");
 
+		DockerImages.await(RTSP_SERVER_IMAGE);
 		GenericContainer<?> ffmpegPublishContainer = new GenericContainer<>(DockerImageName.parse(RTSP_SERVER_IMAGE))
 				.withCreateContainerCmdModifier(cmd -> cmd.withName("ffmpeg-" + Math.random() * 100000))
 				.withFileSystemBind(ingressMediaDir.toString(), "/media", BindMode.READ_ONLY)
@@ -463,6 +501,7 @@ public class OpenViduTestE2e {
 		// Clean adjacent white spaces or the ffmpeg command will fail
 		ffmpegCommand = ffmpegCommand.trim().replaceAll(" +", " ");
 
+		DockerImages.await(RTSP_SERVER_IMAGE);
 		GenericContainer<?> srtServerContainer = new GenericContainer<>(DockerImageName.parse(RTSP_SERVER_IMAGE))
 				.withCreateContainerCmdModifier(cmd -> cmd.withName("ffmpeg-" + Math.random() * 100000))
 				.withEnv(Map.ofEntries(Map.entry("MTX_LOGLEVEL", "info"), Map.entry("MTX_RTSPTRANSPORTS", "tcp"),
@@ -531,6 +570,13 @@ public class OpenViduTestE2e {
 			Map<String, String> env) {
 	}
 
+	// The server SDKs with a publisher program in src/test/resources/<sdk>-publisher
+	protected static final List<String> SERVER_SDKS = List.of("go", "node", "python", "rust", "dotnet");
+
+	protected static String[] serverSdkPublisherImages() {
+		return SERVER_SDKS.stream().map(sdk -> sdkPublisher(sdk).image()).distinct().toArray(String[]::new);
+	}
+
 	private static SdkPublisher sdkPublisher(String sdk) {
 		Map<String, String> env = new HashMap<>();
 		switch (sdk) {
@@ -575,6 +621,7 @@ public class OpenViduTestE2e {
 	 */
 	private GenericContainer<?> sdkPublisherContainer(String sdk, String role, String image, Map<String, String> env,
 			String command) {
+		DockerImages.await(image);
 		String programDir = Paths.get("src/test/resources/" + sdk + "-publisher").toAbsolutePath().toString();
 		String cacheVolume = sdkCacheVolume(sdk);
 		return new GenericContainer<>(DockerImageName.parse(image))

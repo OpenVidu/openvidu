@@ -3,7 +3,6 @@ package io.openvidu.test.e2e;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
 
 import org.junit.jupiter.api.AfterEach;
@@ -27,6 +26,7 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonParser;
 
+import io.openvidu.test.browsers.utils.BrowserNames;
 import livekit.LivekitModels.ParticipantInfo;
 import livekit.LivekitModels.TrackInfo;
 import livekit.LivekitModels.TrackType;
@@ -53,7 +53,8 @@ public class OpenViduTestAppE2eServerSdkTest extends AbstractOpenViduTestappE2eT
 		pullFfmpegImage();
 		loadEnvironmentVariables();
 		setUpLiveKitClient();
-		CompletableFuture.runAsync(OpenViduTestAppE2eServerSdkTest::pullRemoteBrowserImages);
+		prePullRemoteBrowserImages(BrowserNames.CHROME, BrowserNames.FIREFOX);
+		DockerImages.prePull(serverSdkPublisherImages());
 	}
 
 	@BeforeEach()
