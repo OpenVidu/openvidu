@@ -176,19 +176,36 @@ test.describe('a room whose server reports no media statistics', () => {
 			'Rooms on servers using mediasoup as RTC engine show no value here yet. This data will be available soon.'
 		);
 	});
+});
 
-	test('keeps the warning on the Data up / down label of the cards on a phone', async ({ page }) => {
+test.describe('rooms on servers with and without media statistics', () => {
+	test.use({
+		apiOptions: {
+			rooms: [
+				roomItem({ mediaStats: false, bytes: { up: 0, down: 0 } }),
+				roomItem({ sid: 'RM_pion01', name: 'pion-room' })
+			],
+			roomSummary: ROOM_SUMMARY
+		}
+	});
+
+	test('warns on the Data up / down label of the cards without media statistics only, on a phone', async ({
+		page
+	}) => {
 		await page.setViewportSize({ width: 375, height: 800 });
 		await page.goto('/rooms');
-		await page.locator('.card').first().getByRole('button', { name: 'More' }).click();
 
-		await expect(
-			page
-				.locator('.card')
-				.getByRole('button', {
-					name: 'Rooms on servers using mediasoup as RTC engine show no value here yet. This data will be available soon.'
-				})
-				.first()
-		).toBeAttached();
+		const warning = {
+			name: 'Rooms on servers using mediasoup as RTC engine show no value here yet. This data will be available soon.'
+		};
+		const unreported = page.locator('.card', { hasText: 'RM_ab12cd' });
+		const reported = page.locator('.card', { hasText: 'RM_pion01' });
+
+		await unreported.getByRole('button', { name: 'More' }).click();
+		await reported.getByRole('button', { name: 'More' }).click();
+
+		await expect(unreported.getByRole('button', warning)).toBeAttached();
+		await expect(reported.getByText('↑ 12 MB')).toBeVisible();
+		await expect(reported.getByRole('button', warning)).toHaveCount(0);
 	});
 });

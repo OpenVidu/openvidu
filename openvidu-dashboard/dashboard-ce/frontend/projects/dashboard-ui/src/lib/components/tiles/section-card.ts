@@ -17,8 +17,19 @@ export class SectionHeaderActions {
 
 	readonly templates = this.registered.asReadonly();
 
-	add(template: TemplateRef<unknown>): void {
-		this.registered.update((templates) => (templates.includes(template) ? templates : [...templates, template]));
+	/**
+	 * Registers a control after the projected actions.
+	 * @param template The control.
+	 * @param place `start` puts it before the controls registered so far, as links go before the Columns button.
+	 */
+	add(template: TemplateRef<unknown>, place: 'start' | 'end' = 'end'): void {
+		this.registered.update((templates) =>
+			templates.includes(template)
+				? templates
+				: place === 'start'
+					? [template, ...templates]
+					: [...templates, template]
+		);
 	}
 
 	remove(template: TemplateRef<unknown>): void {

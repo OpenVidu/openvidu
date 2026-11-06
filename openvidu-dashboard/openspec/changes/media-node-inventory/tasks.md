@@ -73,3 +73,5 @@
   The library README lists the seams. Verify: reviewed in the diff.
 - [x] 7.2 Full check: `./dashboard.sh check`, `test-integration`, `e2e` and `contract-check`, one heavy load at a
   time. Verify: all green.
+- [x] 7.3 Owner review: `SectionHeaderActions.add(template, 'start')`, so the nodes card content can put its link in
+  the section header before the Columns button. Verify: the section card spec and `./dashboard.sh check`.

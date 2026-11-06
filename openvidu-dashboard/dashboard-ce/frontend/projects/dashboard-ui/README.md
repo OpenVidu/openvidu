@@ -62,14 +62,17 @@ loadComponent: … }] }] }`. The locked `tracks/:trackSid` route, outside the si
   instead of the full-page lock.
 - **Status styles.** `provideStatusStyles()` registers status domains beyond the CE ones of `ovd-status-badge`, with
   the styles of `STATUS_FAMILY_STYLES`.
+- **Section header controls.** Content of an `ovd-section-card` adds controls to its header through
+  `SectionHeaderActions`, as the table does with its Columns button; `add(template, 'start')` puts a link before it.
 - **Shared lists.** `ovd-rooms-table` with `roomColumns()` renders any list of rooms with the columns and cells of the
   Rooms page, and its empty state projected with `ovdTableEmpty`; `ovd-list-search` with `entity` `null` searches a
   list of no entity kind, without the exact ID shortcut.
 - **Chart colours.** `ChartColorsService.colors()` resolves the theme's chart tokens; `resolved(tokens)` resolves an
   application's own custom properties under the applied scheme.
 - **Missing media statistics.** `MEDIA_STATS_TEXTS`, `ovd-media-stats-warning`, `ovd-unavailable`, and the `warning`
-  and `unavailable` inputs of `ovd-kpi-tile`, `ovd-time-series-chart`, `ovd-section-card` and `TableColumn`; the
-  Analytics page context exposes `mediaStatsWarning()` for the cards of its seams.
+  and `unavailable` inputs of `ovd-kpi-tile`, `ovd-time-series-chart`, `ovd-section-card` and `TableColumn` (with
+  `warningWhen`, the rows a column warning applies to on phone cards); the Analytics page context exposes
+  `mediaStatsWarning()` for the cards of its seams.
 - **Injection tokens.** `SEARCH_SOURCES` (lists searched by the header), `BROWSER_STORAGE` (storage behind
   `StorageService`). Root services such as `InfoService` can be replaced with a provider.
 - **Shell slots.** `DashboardShell` projects `[ovdBanner]` content under the header, next to the migration, schema and

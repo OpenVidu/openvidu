@@ -323,6 +323,7 @@ describe('TimeSeriesChart', () => {
 		const option = (chart as unknown as { option: () => Record<string, unknown> }).option();
 
 		expect(element.querySelector('.chart-heading ovd-media-stats-warning')).not.toBeNull();
+		expect(element.querySelector('ovd-time-series-chart')?.classList.contains('dimmed')).toBe(true);
 		expect(element.querySelector('.chart.unavailable')?.getAttribute('aria-label')).toBe(
 			'Bitrate up / down: not available'
 		);

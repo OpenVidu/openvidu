@@ -44,6 +44,8 @@ export interface TableColumn {
 	info?: string;
 	/** Media statistics warning beside the header and beside the label of the card layout. */
 	warning?: string;
+	/** The rows the warning applies to: the card layout shows it beside the label of those rows only. */
+	warningWhen?: (row: never) => boolean;
 	/** Why the column cannot sort now, e.g. a range wider than the sort's limit; the header is disabled with it as tooltip. */
 	sortDisabledReason?: string;
 	/** Hidden until the viewer shows it from the Columns menu. */
@@ -234,6 +236,13 @@ export class DataTable<T> {
 		}
 
 		this.preferences.setHiddenColumns(this.tableId(), [...hidden]);
+	}
+
+	/** The warning beside the label of a card: the column's, unless `warningWhen` leaves the row out. */
+	protected cardWarning(column: TableColumn, row: T): string | undefined {
+		const applies = column.warningWhen as ((row: T) => boolean) | undefined;
+
+		return applies === undefined || applies(row) ? column.warning : undefined;
 	}
 
 	protected toggleMore(id: string): void {

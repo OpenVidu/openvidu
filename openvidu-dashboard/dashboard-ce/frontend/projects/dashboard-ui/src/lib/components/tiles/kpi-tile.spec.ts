@@ -1,4 +1,4 @@
-import { Component, signal } from '@angular/core';
+import { Component, signal, type TemplateRef } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
@@ -7,7 +7,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { routeElement } from '../../../testing/harness.js';
 import { setMediaQuery } from '../../../testing/media.js';
 import { HIGHLIGHT_MS, KpiTile, TICKING_MS } from './kpi-tile.js';
-import { SectionCard } from './section-card.js';
+import { SectionCard, SectionHeaderActions } from './section-card.js';
 
 @Component({
 	selector: 'ovd-host',
@@ -135,7 +135,7 @@ describe('KpiTile', () => {
 		expect(element.querySelector('.value')?.textContent.trim()).toBe('90');
 		expect(element.querySelector('.highlight')).toBeNull();
 	});
-	it('reads a dimmed dash after its info tip and warning when it is unavailable', async () => {
+	it('reads a dash after its info tip and warning, dimmed as a whole tile, when it is unavailable', async () => {
 		const fixture = TestBed.createComponent(UnavailableHost);
 		const element = fixture.nativeElement as HTMLElement;
 
@@ -151,6 +151,7 @@ describe('KpiTile', () => {
 			'This data is not available when using mediasoup as RTC engine. It will be available soon.'
 		);
 		expect(element.querySelector('.value.unavailable')?.textContent.trim()).toBe('—');
+		expect(element.querySelector('ovd-kpi-tile')?.classList.contains('dimmed')).toBe(true);
 		expect(element.querySelector('.ovd-visually-hidden')?.textContent.trim()).toBe('Not available');
 		expect(element.textContent).not.toContain('4.3');
 	});
@@ -187,6 +188,18 @@ describe('SectionCard', () => {
 		);
 		expect(element.querySelector('h2 ovd-info-tip')).toBeNull();
 		expect(element.querySelector('h2')?.textContent.trim()).toBe('Data pipeline');
+	});
+
+	it('renders the header controls of its content in order, links registered at the start first', () => {
+		const actions = new SectionHeaderActions();
+		const columns = {} as TemplateRef<unknown>;
+		const link = {} as TemplateRef<unknown>;
+
+		actions.add(columns);
+		actions.add(link, 'start');
+		actions.add(columns);
+
+		expect(actions.templates()).toEqual([link, columns]);
 	});
 
 	it('keeps its collapsed state per route when the page renders again', async () => {

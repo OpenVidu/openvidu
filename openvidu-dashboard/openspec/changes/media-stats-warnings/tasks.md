@@ -62,6 +62,9 @@
   Verify: the CE Playwright suite.
 - [ ] 6.2 Visual check on `./dashboard.sh demo` with `--nodes-without-media-stats` (light, dark, phone). Verify:
   screenshots reviewed by the owner.
+- [x] 6.3 Owner review of the demo: the whole unavailable tile and chart dimmed except the warning, and on phones the
+  column warning only on the cards of the rows it applies to (`warningWhen`). Verify: `kpi-tile.spec.ts`,
+  `charts.spec.ts`, `data-table.spec.ts` and the Rooms and Analytics e2e specs with their axe checks.
 
 ## 7. Docs and CHANGELOG
 

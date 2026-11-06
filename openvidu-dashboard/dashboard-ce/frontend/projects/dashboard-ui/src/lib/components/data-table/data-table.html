@@ -100,7 +100,7 @@
 									@if (column.info; as info) {
 										<ovd-info-tip [text]="info" [subject]="column.header" />
 									}
-									@if (column.warning; as warning) {
+									@if (cardWarning(column, row); as warning) {
 										<ovd-media-stats-warning [text]="warning" />
 									}
 								</dt>
@@ -136,7 +136,7 @@
 										@if (column.info; as info) {
 											<ovd-info-tip [text]="info" [subject]="column.header" />
 										}
-										@if (column.warning; as warning) {
+										@if (cardWarning(column, row); as warning) {
 											<ovd-media-stats-warning [text]="warning" />
 										}
 									</dt>

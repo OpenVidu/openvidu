@@ -22,28 +22,32 @@ from their definition.
 - **WHEN** it renders
 - **THEN** the label is followed by the info icon and then the warning icon
 
+### Requirement: Column warning in card layout
+Edition: CE. A data table column warning that applies to some rows only SHALL name those rows: the table header always
+shows it, and the card layout shows it beside the column's label in the cards of those rows only.
+
 #### Scenario: Column header in card layout
-- **GIVEN** an XSmall viewport and a Data up / down column with a media statistics warning
-- **WHEN** the rows render as cards
-- **THEN** that column's label in each card carries the warning icon
+- **GIVEN** an XSmall viewport and a Data up / down column whose warning applies to the rooms without media statistics
+- **WHEN** a page with one such room and one other room renders as cards
+- **THEN** that column's label carries the warning icon in the card of the room without media statistics only
 
 ### Requirement: Unavailable tile and chart
-Edition: CE. A KPI tile marked unavailable SHALL read "—", dimmed to 38 % opacity without colour and announced as "Not
-available", keeping its label, info tip and warning at full strength. A time-series chart marked unavailable SHALL
-keep its heading, warning and x-axis over the range and render its plot dimmed the same way over a hatched
-background, with no legend, tooltip or "Show table". Neither is highlighted on refresh.
+Edition: CE. A KPI tile marked unavailable SHALL read "—" announced as "Not available", at 38 % opacity without
+colour. A time-series chart marked unavailable SHALL keep its heading, info tip, note, warning and x-axis, and render
+its plot the same way over hatching, with no legend, tooltip or "Show table". Both dim their texts and info tip within
+a 4.5:1 text contrast, keep the warning at full strength and are not highlighted on refresh.
 
 #### Scenario: Unavailable tile
 - **GIVEN** a KPI tile "Quality" marked unavailable with a media statistics warning
 - **WHEN** it renders
-- **THEN** its value reads a dimmed "—", a screen reader reads "Quality, Not available", and the label and the
-  warning icon keep their colours
+- **THEN** it reads a dimmed "—", a screen reader reads "Quality, Not available", the label and the info icon are
+  dimmed within the text contrast minimum, and the warning icon keeps its colour
 
 #### Scenario: Unavailable chart
 - **GIVEN** a "Bitrate up / down" chart from 10:01:25 to 10:06:55 marked unavailable
 - **WHEN** it renders
-- **THEN** its x-axis reads 10:02 to 10:06, the plot is dimmed over hatching, and it shows no legend, no tooltip on
-  hover and no "Show table" action
+- **THEN** its x-axis reads 10:02 to 10:06, the heading and the plot over hatching are dimmed while the warning icon
+  keeps its colour, and it shows no legend, no tooltip on hover and no "Show table" action
 
 #### Scenario: Unavailable cell
 - **GIVEN** a data table cell rendered as unavailable

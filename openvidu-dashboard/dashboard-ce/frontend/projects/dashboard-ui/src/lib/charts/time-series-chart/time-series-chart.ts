@@ -31,12 +31,14 @@ interface BrushEndEvent {
  * A time series fixed to the range: x axis from `from` to `to` in the zone, gaps for missing buckets, no zoom, a tooltip
  * shared with the other charts of the page, at most 50 markers and an optional brush that writes an absolute range to
  * the URL. It exposes a text summary and a data table for assistive technology. An unavailable chart keeps its heading
- * and its x axis over the range, dims an empty plot over hatching and offers no legend, tooltip, markers or table.
+ * and its x axis over the range, dims all but its warning, draws an empty plot over hatching and offers no legend,
+ * tooltip, markers or table.
  */
 @Component({
 	selector: 'ovd-time-series-chart',
 	imports: [InfoTip, MatButton, MatIcon, MediaStatsWarning, NgxEchartsDirective],
 	providers: [provideLazyEcharts()],
+	host: { '[class.dimmed]': 'unavailable()' },
 	templateUrl: './time-series-chart.html',
 	styleUrl: '../chart.scss'
 })

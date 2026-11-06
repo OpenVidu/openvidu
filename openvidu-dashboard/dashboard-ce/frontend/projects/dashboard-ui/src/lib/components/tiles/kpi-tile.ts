@@ -25,12 +25,12 @@ export const TICKING_MS = 5_000;
  * One figure with label, unit, delta and hint. It keeps the last value while a refresh runs, shows a skeleton only on
  * the first load and highlights a changed value for 600 ms unless reduced motion is requested. An info tip explains the
  * label, a warning says what data is missing, a "≈" mark explains an approximate value, and a link makes the whole tile
- * open a list. An unavailable tile reads a dimmed "—" whatever its value.
+ * open a list. An unavailable tile reads a dimmed "—" whatever its value, its texts dimmed too but not its warning.
  */
 @Component({
 	selector: 'ovd-kpi-tile',
 	imports: [InfoTip, MatTooltip, MediaStatsWarning, RouterLink],
-	host: { '[class.linked]': 'link() !== undefined' },
+	host: { '[class.linked]': 'link() !== undefined', '[class.dimmed]': 'unavailable()' },
 	template: `
 		<div class="label">
 			@if (link(); as link) {
@@ -167,10 +167,25 @@ export const TICKING_MS = 5_000;
 			background: var(--mat-sys-primary-container);
 		}
 
-		/* Material 3 disabled content: the value reflects nothing. */
-		.unavailable {
-			opacity: 0.38;
-			filter: grayscale(1);
+		/*
+		 * The tile reflects nothing: its value takes the Material 3 disabled treatment and its texts dim as far as their
+		 * contrast stays above 4.5:1; the warning keeps full strength to say why.
+		 */
+		:host(.dimmed) {
+			.label,
+			.hint,
+			.delta {
+				color: color-mix(in srgb, var(--mat-sys-on-surface-variant) 75%, transparent);
+			}
+
+			.label ovd-info-tip {
+				opacity: 0.75;
+			}
+
+			.value {
+				opacity: 0.38;
+				filter: grayscale(1);
+			}
 		}
 
 		.accent {

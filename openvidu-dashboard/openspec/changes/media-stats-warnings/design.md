@@ -69,13 +69,17 @@ unreleased.
 - `ovd-time-series-chart`: `warning?: string` and `unavailable?: boolean`. Unavailable keeps the x-axis over
   `from`/`to`, draws the series dimmed over a hatched band, and turns off the legend, the tooltip and "Show table".
 - `ovd-analytics-card`: `warning?: string` beside its info tip.
-- `TableColumn`: `warning?: string`, rendered in the header and in the card label. Pages render an unavailable cell
-  with the shared `ovd-unavailable` element.
+- `TableColumn`: `warning?: string`, rendered in the header and in the card label, and `warningWhen?: (row) =>
+  boolean`, the rows it applies to: the card layout shows it beside the label of those rows only, so a list where
+  only some rooms lack the data does not repeat it on every card. Pages render an unavailable cell with the shared
+  `ovd-unavailable` element.
 - A new `ovd-media-stats-warning` holds the icon button. It reuses the info tip's tooltip directive, so hover, focus,
   tap and Escape behave the same.
 
-The dimming is `opacity: 0.38` with `filter: grayscale(1)`, the Material 3 disabled content treatment, applied to the
-value or plot only.
+The value or plot takes `opacity: 0.38` with `filter: grayscale(1)`, the Material 3 disabled content treatment. The
+rest of the tile or chart (label or heading, note, info tip) dims too, to 75 % of its colour, which keeps the text
+contrast above the WCAG 4.5:1 minimum that the axe checks of the e2e suite enforce. The warning icon keeps full
+strength to say why the data is missing.
 
 ### D5. One set of texts in CE
 

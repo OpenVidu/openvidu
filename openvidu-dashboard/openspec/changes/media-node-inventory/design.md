@@ -101,6 +101,8 @@ nodes, at no cost to unlabelled deployments.
   - No lock, no breadcrumbs, no request.
 - Overview: the nodes card slot moves into its own full-width row before Recent rooms, and Recent rooms always uses the
   `.full` layout.
+- `SectionHeaderActions.add(template, 'start')`: the content of a section card, such as the nodes card component, puts
+  a link in the header before its table's Columns button, in the same line as the links of Recent rooms.
 - `MEDIA_NODE_LINK`:
   - an `InjectionToken<((label: string) => string) | null>`, default `null`;
   - read by the three Node cell templates, which render a `routerLink` when it returns a path and plain text

@@ -32,7 +32,24 @@
 	border-radius: 8px;
 }
 
-/* Material 3 disabled content over hatching: the chart reflects no data. */
+/*
+ * An unavailable chart reflects no data: its texts dim as far as their contrast stays above 4.5:1, its plot takes the
+ * Material 3 disabled treatment over hatching, and its warning keeps full strength to say why.
+ */
+:host(.dimmed) {
+	.chart-title {
+		color: color-mix(in srgb, var(--mat-sys-on-surface) 75%, transparent);
+	}
+
+	.chart-note {
+		color: color-mix(in srgb, var(--mat-sys-on-surface-variant) 75%, transparent);
+	}
+
+	.chart-heading ovd-info-tip {
+		opacity: 0.75;
+	}
+}
+
 .chart.unavailable {
 	opacity: 0.38;
 	filter: grayscale(1);
