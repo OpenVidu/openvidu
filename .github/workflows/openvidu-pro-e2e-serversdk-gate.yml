@@ -4,9 +4,13 @@
 #
 # The job dispatches the workflow "OpenVidu Pro E2E server SDK tests" of the
 # private repository OpenVidu/openvidu-pro against the pull request's head commit
-# and waits for it, so the job's own result is the E2E result. The job name is the
-# status check that the master ruleset requires. On any other pull request the job
-# is skipped (or ends at its first step), which counts as a pass.
+# twice, once per RTC engine (mediasoup and pion), and waits for both runs, which
+# go to different self-hosted runners at the same time when two are free. The job
+# passes only if both runs succeed. It is a single job on purpose: its name is the
+# one status check that the master ruleset requires, and on any other pull request
+# the job is skipped (or ends at its first step), which counts as a pass. A matrix
+# per engine would report a single unexpanded check name when skipped, never the
+# per-engine names a ruleset would require.
 #
 # Runs triggered by Dependabot only get Dependabot secrets: the token must be a
 # Dependabot secret of this repository, able to run and read the workflows of
@@ -51,7 +55,7 @@ jobs:
             echo "publishers=false" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Dispatch OpenVidu Pro E2E server SDK tests
+      - name: Dispatch OpenVidu Pro E2E server SDK tests (mediasoup and pion)
         id: dispatch
         if: steps.changes.outputs.publishers == 'true'
         env:
@@ -63,39 +67,69 @@ jobs:
             echo "::error::Dependabot secret OPENVIDU_PRO_E2E_DISPATCH_TOKEN is not set in $GITHUB_REPOSITORY"
             exit 1
           fi
-          response=$(gh api --method POST "repos/$PRO_REPO/actions/workflows/$PRO_WORKFLOW/dispatches" \
-            -f ref=master \
-            -F return_run_details=true \
-            -f "inputs[ref-openvidu]=$HEAD_SHA")
-          run_id=$(jq -r '.workflow_run_id' <<<"$response")
-          html_url=$(jq -r '.html_url' <<<"$response")
-          echo "run-id=$run_id" >> "$GITHUB_OUTPUT"
-          echo "Dispatched $html_url for OpenVidu/openvidu@$HEAD_SHA"
-          echo "OpenVidu Pro E2E server SDK tests for \`$HEAD_SHA\`: $html_url" >> "$GITHUB_STEP_SUMMARY"
-
-      - name: Wait for OpenVidu Pro E2E server SDK tests
-        if: steps.dispatch.outputs.run-id != ''
-        env:
-          GH_TOKEN: ${{ secrets.OPENVIDU_PRO_E2E_DISPATCH_TOKEN }}
-          RUN_ID: ${{ steps.dispatch.outputs.run-id }}
-        run: |
-          set -uo pipefail
-          while true; do
-            sleep 60
-            # A failed poll (API hiccup) is retried on the next iteration
-            state=$(gh run view "$RUN_ID" -R "$PRO_REPO" --json status,conclusion --jq '.status + " " + .conclusion') || continue
-            read -r status conclusion <<<"$state"
-            if [ "$status" = "completed" ]; then
-              echo "OpenVidu Pro E2E server SDK tests: $conclusion"
-              [ "$conclusion" = "success" ] && exit 0
-              echo "::error::OpenVidu Pro E2E server SDK tests ended with conclusion '$conclusion'"
-              exit 1
-            fi
+          # Written on exit, so that a run already dispatched is cancelled by the
+          # last step even if the next dispatch fails
+          runs=""
+          trap 'echo "runs=${runs# }" >> "$GITHUB_OUTPUT"' EXIT
+          for engine in mediasoup pion; do
+            response=$(gh api --method POST "repos/$PRO_REPO/actions/workflows/$PRO_WORKFLOW/dispatches" \
+              -f ref=master \
+              -F return_run_details=true \
+              -f "inputs[ref-openvidu]=$HEAD_SHA" \
+              -f "inputs[rtc-engine]=$engine")
+            run_id=$(jq -r '.workflow_run_id' <<<"$response")
+            html_url=$(jq -r '.html_url' <<<"$response")
+            runs="$runs $engine:$run_id"
+            echo "Dispatched $html_url ($engine) for OpenVidu/openvidu@$HEAD_SHA"
+            echo "OpenVidu Pro E2E server SDK tests, $engine, for \`$HEAD_SHA\`: $html_url" >> "$GITHUB_STEP_SUMMARY"
           done
 
-      - name: Cancel OpenVidu Pro E2E server SDK tests
-        if: cancelled() && steps.dispatch.outputs.run-id != ''
+      - name: Wait for OpenVidu Pro E2E server SDK tests (mediasoup and pion)
+        if: steps.dispatch.outputs.runs != ''
         env:
           GH_TOKEN: ${{ secrets.OPENVIDU_PRO_E2E_DISPATCH_TOKEN }}
-          RUN_ID: ${{ steps.dispatch.outputs.run-id }}
-        run: gh run cancel "$RUN_ID" -R "$PRO_REPO" || true
+          RUNS: ${{ steps.dispatch.outputs.runs }}
+        run: |
+          set -uo pipefail
+          # Both runs are awaited to the end, so the result of each engine is known
+          declare -A results=()
+          while true; do
+            sleep 60
+            pending=0
+            for run in $RUNS; do
+              engine=${run%%:*}
+              run_id=${run#*:}
+              [ -n "${results[$engine]:-}" ] && continue
+              # A failed poll (API hiccup) is retried on the next iteration
+              state=$(gh run view "$run_id" -R "$PRO_REPO" --json status,conclusion --jq '.status + " " + .conclusion') || { pending=1; continue; }
+              read -r status conclusion <<<"$state"
+              if [ "$status" = "completed" ]; then
+                results[$engine]=$conclusion
+                echo "OpenVidu Pro E2E server SDK tests, $engine: $conclusion"
+                echo "- $engine: **$conclusion**" >> "$GITHUB_STEP_SUMMARY"
+              else
+                pending=1
+              fi
+            done
+            [ "$pending" = 0 ] && break
+          done
+          failed=0
+          for engine in "${!results[@]}"; do
+            if [ "${results[$engine]}" != "success" ]; then
+              echo "::error::OpenVidu Pro E2E server SDK tests with $engine ended with conclusion '${results[$engine]}'"
+              failed=1
+            fi
+          done
+          exit $failed
+
+      - name: Cancel OpenVidu Pro E2E server SDK tests
+        if: (cancelled() || failure()) && steps.dispatch.outputs.runs != ''
+        env:
+          GH_TOKEN: ${{ secrets.OPENVIDU_PRO_E2E_DISPATCH_TOKEN }}
+          RUNS: ${{ steps.dispatch.outputs.runs }}
+        run: |
+          # Runs still in progress after a cancellation (a newer push to the pull
+          # request) or a failure of this job; a completed run is left as it is
+          for run in $RUNS; do
+            gh run cancel "${run#*:}" -R "$PRO_REPO" || true
+          done
