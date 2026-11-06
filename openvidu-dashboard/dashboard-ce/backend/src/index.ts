@@ -35,7 +35,7 @@ export { AnalyticsService } from './analytics/analytics-service.js';
 export { EgressService } from './egress/egress-service.js';
 export { ApiError } from './http/api-error.js';
 export { InfoService } from './info/info-service.js';
-export type { ParticipantGroup, RoomGroup } from './overview/overview-repository.js';
+export { OverviewRepository, type ParticipantGroup, type RoomGroup } from './overview/overview-repository.js';
 export { overviewResponse } from './overview/overview-responses.js';
 export { overviewRoute } from './overview/overview-routes.js';
 export { type OverviewExtension, type OverviewInputs, OverviewService } from './overview/overview-service.js';
