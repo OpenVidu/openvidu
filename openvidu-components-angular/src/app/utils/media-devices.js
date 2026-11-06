@@ -20,6 +20,18 @@ export const monkeyPatchMediaDevices = () => {
 		label: 'custom_fake_audio_1'
 	};
 
+	// The video rendered by the app is not necessarily the captured track: when the background processor is attached
+	// (it is pre-attached in modern browsers) the element receives the processor output, a MediaStreamTrackGenerator
+	// whose label is a random UUID. So E2E tests can't read the captured track label from the <video> element.
+	// Expose the label of the last captured video track instead.
+	const recordCapturedVideoLabel = (stream) => {
+		const videoTrack = stream?.getVideoTracks()[0];
+		if (videoTrack) {
+			window.lastCapturedVideoLabel = videoTrack.label;
+		}
+		return stream;
+	};
+
 	const enumerateDevicesMonkeyPatch = async function () {
 		const res = await enumerateDevicesFn.call(navigator.mediaDevices);
 		res.push(fakeVideoDevice);
@@ -57,13 +69,13 @@ export const monkeyPatchMediaDevices = () => {
 
 			if (res) {
 				const filter = new FilterStream(res, fakeVideoDevice.label);
-				return filter.outputStream;
+				return recordCapturedVideoLabel(filter.outputStream);
 			}
 
 			return res;
 		}
 
-		return getUserMediaFn.call(navigator.mediaDevices, ...arguments);
+		return recordCapturedVideoLabel(await getUserMediaFn.call(navigator.mediaDevices, ...arguments));
 	};
 
 	const getDisplayMediaMonkeyPatch = async function () {
