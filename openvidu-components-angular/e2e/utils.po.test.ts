@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 import pixelmatch from 'pixelmatch';
 import { PNG } from 'pngjs';
-import { By, until, WebDriver, WebElement } from 'selenium-webdriver';
+import { By, error, until, WebDriver, WebElement } from 'selenium-webdriver';
 type PNGWithMetadata = PNG & { data: Buffer };
 
 export class OpenViduComponentsPO {
@@ -285,9 +285,23 @@ export class OpenViduComponentsPO {
 	 * @param streamSelector CSS selector for the stream element (e.g., '.screen-type', '.camera-type')
 	 */
 	async toggleStreamPin(streamSelector: string): Promise<void> {
-		const stream = await this.waitForElement(streamSelector);
-		await stream.click();
-		await this.clickOn('#pin-btn');
+		// #pin-btn only exists while the stream is hovered, and the layout is rearranged after every pin/unpin.
+		// The button can therefore go stale or be covered by another stream: hover the stream and click again.
+		const maxAttempts = 3;
+		for (let attempt = 1; ; attempt++) {
+			try {
+				const stream = await this.waitForElement(streamSelector);
+				await stream.click();
+				await this.clickOn('#pin-btn');
+				break;
+			} catch (e) {
+				const isRetriable = e instanceof error.ElementClickInterceptedError || e instanceof error.StaleElementReferenceError;
+				if (!isRetriable || attempt === maxAttempts) {
+					throw e;
+				}
+				await this.browser.sleep(500);
+			}
+		}
 		await this.browser.sleep(300);
 	}
 

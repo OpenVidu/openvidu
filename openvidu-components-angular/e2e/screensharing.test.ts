@@ -314,7 +314,6 @@ describe('E2E: Screensharing features', () => {
 		if (screenElements.length >= 2) {
 			// Pin the first screen that is not already pinned (should be A's screen)
 			await utils.toggleStreamPin('.OV_stream.remote .screen-type');
-			await utils.toggleStreamPin('#pin-btn');
 			await browser.sleep(500);
 		}
 
