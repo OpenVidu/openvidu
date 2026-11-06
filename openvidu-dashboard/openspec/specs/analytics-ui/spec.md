@@ -267,17 +267,6 @@ requested at `1h` below an effective `1h`, and the `ingressInputType` breakdown 
 - **THEN** the Ingress section follows the Egress section and precedes the locked Quality card, shows its data without
   a lock, and its ingress series request is sent
 
-### Requirement: Per-node scope selector
-
-Edition: CE. Without `per-node-breakdown` the page header SHALL show the scope selector disabled on "All nodes"
-with a lock icon whose tooltip says per-node analytics is available in OpenVidu PRO.
-
-#### Scenario: Locked in CE
-
-- **GIVEN** `features` without `per-node-breakdown`
-- **WHEN** the header renders
-- **THEN** the selector reads "All nodes", is disabled with the lock icon and no `/analytics/scopes` request is sent
-
 ### Requirement: CSV export per section
 
 Edition: CE. Every section card except Top rooms SHALL have an "Export CSV" action in its header that downloads the CSV
@@ -399,3 +388,16 @@ values and add the note "Only from the servers that report media statistics".
 - **GIVEN** a summary without `mediaStats`
 - **WHEN** the page renders
 - **THEN** the tile and the Bandwidth section render as before, without the note
+
+### Requirement: Scope selector only with per-node breakdown
+
+Edition: CE. Without `per-node-breakdown` the page header SHALL show no scope selector, lock or text about nodes and
+send no `/analytics/scopes` request; with it, it renders the scope selector the edition provides, whose node options
+are `node:<label>` scopes.
+
+#### Scenario: Nothing per node in CE
+
+- **GIVEN** `features` without `per-node-breakdown`
+- **WHEN** the header renders
+- **THEN** it has the range, time zone and granularity controls and no scope selector or lock, and no
+  `/analytics/scopes` request is sent

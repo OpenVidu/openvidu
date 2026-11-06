@@ -88,7 +88,7 @@ has that SID.
 
 Edition: CE. Each item of the participants and agents lists SHALL carry `sid`, `identity`, `kind`, `status`, `roomSid`,
 `roomName`, `joinedAt`, `isPublisher`, `publishedSources`, the optional `name`, `leftAt`, `durationMs`,
-`connectionType`, `nodeId`, the `stale` flag that `api-conventions` defines and a `client` summary, with unknown values
+`connectionType`, `nodeId`, `mediaNode`, the `stale` flag that `api-conventions` defines and a `client` summary, with unknown values
 omitted as `api-conventions` requires.
 
 #### Scenario: Complete row
@@ -110,6 +110,11 @@ omitted as `api-conventions` requires.
 - **GIVEN** the default writer batch interval of 10 s and an active session whose `lastStatsAt` is 100 s old at the server's clock
 - **WHEN** it is listed
 - **THEN** the item has `stale: true`, and a left session with the same `lastStatsAt` has no `stale` property
+
+#### Scenario: Session of a labelled node
+- **GIVEN** a session document with `nodeId: "ND_x"` and `mediaNode: "mn-a"`, and one without `mediaNode`
+- **WHEN** both are listed
+- **THEN** the first item has `nodeId: "ND_x"` and `mediaNode: "mn-a"`, and the second has no `mediaNode` property
 
 #### Scenario: Sources and client summary
 - **WHEN** an item of the participants or agents list is returned

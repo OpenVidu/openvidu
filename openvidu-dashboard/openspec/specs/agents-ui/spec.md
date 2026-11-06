@@ -42,15 +42,16 @@ shows only that session ignoring the range and every filter, and Enter opens it 
 
 
 ### Requirement: Agents table
-Edition: CE. The table SHALL show, in order, SID (participant detail link with copy button), Identity (copy button),
-Name, Room (link to the room detail), Status (stale cue), Joined, Left, Duration (live), Published (source icons) and
-Node (hidden by default), with times formatted as on the other lists and the time-zone header hint; Joined (the
-default), Left and Duration are sortable; the cursor paginator and the shared skeleton, error and empty states apply.
+Edition: CE. The table SHALL show, in order, SID (detail link, copy button), Identity (copy button), Name, Room
+(room detail link), Status (stale cue), Joined, Left, Duration (live), Published (source icons) and, with
+`per-node-breakdown` only, Node (`mediaNode`, hidden by default), with the time formats and time-zone header hint of the
+other lists; Joined (the default), Left and Duration are sortable, with the cursor paginator and the shared skeleton,
+error and empty states.
 
 #### Scenario: Agent row
-- **GIVEN** an active agent `agent-1` (session `PA_z9`, name "Support bot") in `demo-room` on node `node-a` publishing a microphone
+- **GIVEN** an active agent `agent-1` (session `PA_z9`, name "Support bot") in `demo-room` publishing a microphone
 - **WHEN** the row renders
-- **THEN** the cells read, in order, `PA_z9` once, linking to `/participants/PA_z9` with its copy button, `agent-1` with its copy button, "Support bot", `demo-room` linking to `/rooms/RM_abc`, "active", the join time, "—", a duration counting up live and the microphone source icon, and the Node column is hidden until chosen in the Columns menu
+- **THEN** the cells read, in order, `PA_z9` once, linking to `/participants/PA_z9` with its copy button, `agent-1` with its copy button, "Support bot", `demo-room` linking to `/rooms/RM_abc`, "active", the join time, "—", a duration counting up live and the microphone source icon, and, with `features: []`, no Node column is offered
 
 #### Scenario: Detail links in CE
 - **GIVEN** the CE dashboard with `features: []`
@@ -71,7 +72,6 @@ default), Left and Duration are sortable; the cursor paginator and the shared sk
 - **GIVEN** an active agent session that the list response marks `stale: true`
 - **WHEN** the row renders
 - **THEN** its status badge carries the stale cue, judged by the API and never by the browser clock
-
 
 ### Requirement: Live agents counter tile
 Edition: CE. Above the filters, the page SHALL show a KPI tile "Agents now" with the number of active agent sessions

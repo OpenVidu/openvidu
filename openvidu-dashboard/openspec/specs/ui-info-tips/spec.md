@@ -31,7 +31,7 @@ reads two ways: Participant sessions, Unique identities, Services, Data up / dow
 ### Requirement: Overview info tips
 Edition: CE. The Overview SHALL carry info tips on the live tiles Participants, Publishers and Agents, the Today tiles
 Participants and Minutes, the Data pipeline card and the Unique identities column of Recent rooms, and on no other tile,
-card or column.
+card or column of its own.
 
 #### Scenario: Live tiles
 - **WHEN** the user opens the info tips of the live tiles Participants, Publishers and Agents
@@ -43,7 +43,7 @@ card or column.
 
 #### Scenario: Data pipeline and recent rooms
 - **WHEN** the user opens the info tips of the Data pipeline card and of the Recent rooms "Unique identities" header
-- **THEN** the card's reads "The OpenVidu server writes analytics in batches. This card shows when the last batch arrived and how many nodes are reporting." and the header's reads the shared Unique identities text
+- **THEN** the card's reads "The OpenVidu server writes analytics in batches. This card shows when the last batch arrived." and the header's reads the shared Unique identities text
 
 ### Requirement: Analytics info tips
 Edition: CE. The Analytics page SHALL carry info tips on the tiles Participant sessions, Unique identities, Connection

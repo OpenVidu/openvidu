@@ -10,7 +10,7 @@ newest rooms and whether the analytics writer, schema and migration are healthy.
 ### Requirement: Overview route and layout
 Edition: CE. `/overview` SHALL read only `tz` from the URL, show the page title, the live chip and the refresh
 control in its header, and render, in order: live tiles (balanced tile rows), the today card next to the server status
-card, and the recent rooms table next to the per-node card.
+card, and the recent rooms table, next to the per-node card when there is one and at full width otherwise.
 
 #### Scenario: Default landing
 - **GIVEN** an authenticated user without a stored default zone, in a browser whose zone is Europe/Madrid
@@ -20,6 +20,11 @@ card, and the recent rooms table next to the per-node card.
 #### Scenario: Phone width
 - **WHEN** the viewport is narrower than 600 px
 - **THEN** tiles render two per row, the cards stack and the recent rooms table switches to cards
+
+#### Scenario: Recent rooms at full width
+- **GIVEN** `features` without `per-node-breakdown` and a viewport 1440 px wide
+- **WHEN** the page renders
+- **THEN** the recent rooms card spans the width of the today and server status cards together
 
 ### Requirement: Live KPI tiles
 
@@ -157,16 +162,26 @@ up to `0`.
 - **THEN** the notice reads "2 active rooms and 0 participants have had no stats for over 135 s and may be stale"
 
 ### Requirement: Server status card
-Edition: CE. A "Data pipeline" card SHALL show, from the last server status, the writer line ("Last batch at
-hh:mm:ss" with a check icon when the batch is fresh, as for the live chip, a warning icon otherwise, "Last batch:
-never" when no batch was ever seen), "N of M nodes reporting" (warning icon when N < M), the migration progress bar
-only while it runs, and a "Storage and retention" link to `/settings?tab=about`; it shows a skeleton until the first
-status and updates with the status poll.
+Edition: CE. A "Data pipeline" card SHALL show, from the last server status (a skeleton until the first, updated on
+each poll), the writer line, the migration progress bar only while it runs, and a "Storage and retention" link to
+`/settings?tab=about`. The writer line reads "Server stopped at hh:mm:ss" (neutral icon) when `writer.stoppedAt` is
+set, "Last batch: never" (warning icon) without batches, and otherwise "Last batch at hh:mm:ss" with a check icon when
+fresh, a warning icon if not.
 
 #### Scenario: Healthy card
-- **GIVEN** a status with the writer batch 4 s before `generatedAt` at 12:31:05, `nodes: 2`, `aliveNodes: 2` and migration `completed`
+- **GIVEN** a status with the writer batch 4 s before `generatedAt` at 12:31:05 and migration `completed`
 - **WHEN** the card renders
-- **THEN** it reads "Data pipeline", "Last batch at 12:31:05" with the check icon and "2 of 2 nodes reporting", and shows no migration progress
+- **THEN** it reads "Data pipeline" and "Last batch at 12:31:05" with the check icon, has no line about nodes, and shows no migration progress
+
+#### Scenario: Server stopped
+- **GIVEN** a status with `writer.stoppedAt` and `writer.lastSeenAt` at 12:00:04, 10 minutes before `generatedAt`
+- **WHEN** the card renders
+- **THEN** the writer line reads "Server stopped at 12:00:04" with the neutral icon, not the warning icon
+
+#### Scenario: Server silent without a stop
+- **GIVEN** a status whose writer batch is 10 minutes old and that has no `writer.stoppedAt`
+- **WHEN** the card renders
+- **THEN** the writer line reads "Last batch at hh:mm:ss" with the warning icon
 
 #### Scenario: Migration running
 - **GIVEN** a status with `migration` `{ state: "running", progress: { processed: 400000, total: 1200000 } }`
@@ -197,7 +212,7 @@ visible.
 #### Scenario: Empty database
 - **GIVEN** a fresh deployment with no room ever created
 - **WHEN** the page renders
-- **THEN** the empty state reads "Waiting for the first events", every tile reads 0, the status card shows "Last batch: never" and "no node has reported yet" with warning icons, and no error banner is shown
+- **THEN** the empty state reads "Waiting for the first events", every tile reads 0, the status card shows "Last batch: never" with the warning icon, and no error banner is shown
 
 ### Requirement: Overview refresh policy
 Edition: CE. The page SHALL follow the shared auto-refresh policy with the live-view default of 10 s, send
@@ -209,12 +224,12 @@ and expose the latest `live` counters to other pages through a shared service.
 - **WHEN** a poll fails with `500`
 - **THEN** the values stay, the error banner shows the message, request id and retry, and the next tick follows the back-off
 
-### Requirement: Per-node cards
+### Requirement: Per-node card only with per-node breakdown
 
-Edition: CE. Without `per-node-breakdown` the "By node" card next to the recent rooms table SHALL render the lock
-for `per-node-breakdown` without any request of its own.
+Edition: CE. Without `per-node-breakdown` the Overview SHALL render no per-node card, lock or request of its own; with
+it, the "By node" card next to the recent rooms table holds the per-node content the edition provides.
 
-#### Scenario: Locked in CE
+#### Scenario: Nothing per node in CE
 - **GIVEN** `features` without `per-node-breakdown`
 - **WHEN** the page renders
-- **THEN** the card shows the lock with "Per-node breakdown is available in OpenVidu PRO" and its link, and the page requests nothing besides `GET /api/v1/overview` and the shell's status poll
+- **THEN** no "By node" card, lock or text about nodes is shown, and the page requests nothing besides `GET /api/v1/overview` and the shell's status poll

@@ -265,7 +265,7 @@ of an error banner and refresh its cached feature flags.
 ### Requirement: URL query parameters as the single source of truth
 
 Edition: CE. List and chart state SHALL live only in the query parameters `from`, `to`, `tz`, `granularity`, `scope`,
-`status`, `kind`, `publisher`, `features`, `nodeId`, `room`, `type`, `inputType`, `q`, `sort`, `order`, `limit`,
+`status`, `kind`, `publisher`, `features`, `node`, `room`, `type`, `inputType`, `q`, `sort`, `order`, `limit`,
 `cursor` and `page`, read by components as signals with no parallel state. Invalid values fall back to defaults
 silently. Every change is a new history entry merged into the current parameters; changing a filter, sort, range or
 `limit` removes `cursor` and `page`.

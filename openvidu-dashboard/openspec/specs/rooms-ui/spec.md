@@ -8,7 +8,7 @@ building blocks and driven by the URL state rules of the shell; the Room detail 
 
 ### Requirement: Rooms page URL state
 
-Edition: CE. `/rooms` SHALL read its whole state from the query parameters `status`, `q`, `features`, `nodeId`,
+Edition: CE. `/rooms` SHALL read its whole state from the query parameters `status`, `q`, `features`, `node`,
 `from`, `to`, `tz`, `sort`, `order`, `cursor` and `limit` as the shell's URL-state rules describe: defaults
 `status=all`, `sort=createdAt`, `order=desc`, the global range and the stored page size; the range always applies to
 the start time; invalid values fall back silently; any change of filter, search, range, sort or page size drops
@@ -85,12 +85,11 @@ range. SIP is not offered as a feature chip nor shown as a room feature.
 - **THEN** the feature chips offer Egress, Ingress and Agent only and the room's Features cell is empty
 
 ### Requirement: Rooms table
-
-Edition: CE. The Rooms table SHALL render, in order, the columns SID (detail link with copy button), Name (copy
-button), Status (estimated and stale cues), Started, Ended, Duration (live), Unique identities (`participants.unique`),
-Active, Data up / down, Features (badges E, I, A) and Node (hidden by default); the sortable headers are Started
+Edition: CE. The Rooms table SHALL render, in order, SID (detail link, copy button), Name (copy button), Status
+(estimated and stale cues), Started, Ended, Duration (live), Unique identities (`participants.unique`), Active, Data up /
+down, Features (badges E, I, A) and, with `per-node-breakdown` only, Node (`mediaNode`, hidden by default). Started
 (`createdAt`, the default), Ended (`endedAt`), Duration (`duration`), Unique identities (`uniqueIdentities`) and Active
-(`active`).
+(`active`) sort.
 
 #### Scenario: Row of an active room
 
@@ -121,6 +120,16 @@ Active, Data up / down, Features (badges E, I, A) and Node (hidden by default); 
 - **WHEN** the row renders
 - **THEN** the status badge has the dotted outline and the Ended cell carries the tooltip "Closed by the reconciler:
   the end time is estimated"
+
+#### Scenario: Node column
+- **GIVEN** `features` with `per-node-breakdown` and a room item with `mediaNode: "mn-a"`
+- **WHEN** the user shows the Node column from the Columns menu
+- **THEN** its cell reads `mn-a`, and reads "—" for a room without `mediaNode`
+
+#### Scenario: No Node column in CE
+- **GIVEN** `features` without `per-node-breakdown`
+- **WHEN** the table renders
+- **THEN** it has no Node column and the Columns menu does not offer one
 
 #### Scenario: Room of a node without media statistics
 
@@ -189,7 +198,7 @@ previous rows when a load fails.
 - **GIVEN** `?status=active&q=zzz`
 - **WHEN** the list answers no items
 - **THEN** the empty state reads "No rooms match" with the hint "Change the filters or widen the time range." and offers
-  "Clear filters" (removes `status`, `q`, `features` and `nodeId`) and "Widen range" (opens the range picker)
+  "Clear filters" (removes `status`, `q`, `features` and `node`) and "Widen range" (opens the range picker)
 
 #### Scenario: Failed refresh
 
@@ -259,19 +268,24 @@ them SHALL fall back silently to Started descending. Started is sortable with an
 
 ### Requirement: Rooms node filter
 
-Edition: CE. Without the `per-node-breakdown` feature the Rooms page SHALL show the Node select disabled on "All nodes"
-with a lock icon whose tooltip says filtering by node is available in OpenVidu PRO, SHALL ignore `nodeId` and SHALL
-NOT request the scopes.
+Edition: CE. Without the `per-node-breakdown` feature the Rooms page SHALL show no Node select, lock or text about
+nodes, SHALL ignore `node` and SHALL NOT request the scopes; with it, it renders the Node select the edition provides,
+which sets `node` to a media node label, and sends it to the list as `mediaNode`.
 
 #### Scenario: Node filter in CE
 
 - **GIVEN** `features` without `per-node-breakdown`
 - **WHEN** the Rooms page renders
-- **THEN** the Node select reads "All nodes", is disabled with the lock icon and its tooltip, and no request to
-  `/api/v1/analytics/scopes` is sent
+- **THEN** the filter bar has no Node select and no lock, and no request to `/api/v1/analytics/scopes` is sent
 
 #### Scenario: Node in a CE URL
 
-- **GIVEN** `features` without `per-node-breakdown` and `/rooms?nodeId=a`
+- **GIVEN** `features` without `per-node-breakdown` and `/rooms?node=mn-a`
 - **WHEN** the page loads
-- **THEN** the list request carries no `nodeId`
+- **THEN** the list request carries no `mediaNode`
+
+#### Scenario: Node filter with the feature
+
+- **GIVEN** `features` with `per-node-breakdown` and `/rooms?node=mn-a`
+- **WHEN** the page loads
+- **THEN** the list request carries `mediaNode=mn-a`

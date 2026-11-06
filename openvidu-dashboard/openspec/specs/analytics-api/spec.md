@@ -363,7 +363,7 @@ range by input type. It is not gated by any feature.
 Edition: CE. The summary SHALL carry `mediaStats: "none"` when every `nodes` document of its scope whose heartbeat span
 (`firstSeenAt` to `lastSeenAt`) overlaps the range has `mediaStats: false`, `mediaStats: "partial"` when only some do,
 and no `mediaStats` property when none does or no node document overlaps the range. The `global` scope covers every
-node, a `node:<id>` scope that node only.
+node document, a `node:<label>` scope the documents with that `mediaNode`.
 
 #### Scenario: No server reports media statistics
 
@@ -379,9 +379,17 @@ node, a `node:<id>` scope that node only.
 
 #### Scenario: Node scope
 
-- **GIVEN** the same two nodes and `scope=node:<id>` of the node with `mediaStats: true`
+- **GIVEN** the same two nodes, labelled `mn-a` (`mediaStats: false`) and `mn-b` (`mediaStats: true`), and
+  `scope=node:mn-b`
 - **WHEN** the summary is requested
 - **THEN** the body has no `mediaStats` property
+
+#### Scenario: Restarts of one media node
+
+- **GIVEN** two node documents with `mediaNode: "mn-a"` seen during the range, the earlier with `mediaStats: true` and
+  the later with `mediaStats: false`, and `scope=node:mn-a`
+- **WHEN** the summary is requested
+- **THEN** the body has `mediaStats: "partial"`
 
 #### Scenario: Node seen outside the range
 

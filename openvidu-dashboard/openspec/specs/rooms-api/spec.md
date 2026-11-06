@@ -8,7 +8,7 @@ Read access to room sessions: the rooms list and its summary numbers, every quer
 ### Requirement: Rooms list endpoint
 
 Edition: CE. `GET /api/v1/rooms` SHALL list the room sessions created in the range with the common query contract, the
-filters `status`, `q`, `features` and `nodeId`, the sort keys `createdAt` (default, index-backed) and the ranked
+filters `status`, `q`, `features` and `mediaNode`, the sort keys `createdAt` (default, index-backed) and the ranked
 `endedAt`, `duration`, `uniqueIdentities` and `active`, `order` (`desc` default, `asc`), and the list envelope
 `{ items, nextCursor, prevCursor, total? }` with `total` under the `DASHBOARD_LIST_TOTAL_MAX_RANGE` rule.
 
@@ -41,7 +41,7 @@ filters `status`, `q`, `features` and `nodeId`, the sort keys `createdAt` (defau
 
 ### Requirement: Room list item
 
-Edition: CE. Each rooms list item SHALL be the room document's public projection: identity, lifecycle, node,
+Edition: CE. Each rooms list item SHALL be the room document's public projection: identity, lifecycle, node, media node,
 participant, egress and ingress counters, bandwidth, feature flags, the end cause behind the "estimated" cue, the last
 stats flush, the media statistics mark and the `stale` flag of `api-conventions`, never internal id arrays,
 `schemaVersion` or `expiresAt`.
@@ -51,7 +51,7 @@ Participant counters count STANDARD sessions only; `participants.unique` counts 
 
 - **WHEN** an item is read
 - **THEN** it has `sid`, `name`, `status` (`active` | `closed`), `createdAt`, `endedAt?`, `durationMs?`, `closedBy?`
-  (`event` | `reconciler`), `nodeId?`, `participants { sessions, unique, active, peakActive }`,
+  (`event` | `reconciler`), `nodeId?`, `mediaNode?`, `participants { sessions, unique, active, peakActive }`,
   `egress { total, active }`, `ingress { sessions, active }`, `bytes { up, down }`,
   `features { egress, ingress, agent, sip }`, `lastStatsAt?`, `stale?`, `mediaStats?` and no `participantSids`,
   `identities` or similar array
@@ -74,6 +74,13 @@ Participant counters count STANDARD sessions only; `participants.unique` counts 
   server's clock
 - **WHEN** it is returned
 - **THEN** it has `stale: true`, and an active room whose `lastStatsAt` is 20 s old has no `stale` property
+
+#### Scenario: Room of a labelled node
+
+- **GIVEN** a room document with `nodeId: "ND_x"` and `mediaNode: "mn-a"`
+- **WHEN** it is returned
+- **THEN** it has `nodeId: "ND_x"` and `mediaNode: "mn-a"`, and an item of a room without the label has no
+  `mediaNode` property
 
 #### Scenario: Room of a node without media statistics
 
@@ -151,9 +158,9 @@ accepted with any `status` when the range is within `DASHBOARD_LIST_TOTAL_MAX_RA
 ### Requirement: Name prefix search and SID lookup
 
 Edition: CE. The rooms list SHALL treat `q` as a case-insensitive prefix over the room name when it has at least two
-characters, combined with `status`, `features` and `nodeId`, SHALL reject a one-character `q` with `400`, and SHALL
+characters, combined with `status`, `features` and `mediaNode`, SHALL reject a one-character `q` with `400`, and SHALL
 treat a value matching `^RM_[A-Za-z0-9]+$` as an exact SID lookup that ignores `from`, `to`, `status`, `features`,
-`nodeId` and `sort` and returns at most one item.
+`mediaNode` and `sort` and returns at most one item.
 
 #### Scenario: Prefix search
 
@@ -175,15 +182,15 @@ treat a value matching `^RM_[A-Za-z0-9]+$` as an exact SID lookup that ignores `
 
 #### Scenario: Prefix within one node
 
-- **GIVEN** rooms named `demo-a` on `node-a` and `demo-b` on `node-b`, both created in range
-- **WHEN** the client sends `?q=demo&nodeId=node-a`
+- **GIVEN** rooms named `demo-a` with `mediaNode: "mn-a"` and `demo-b` with `mediaNode: "mn-b"`, both created in range
+- **WHEN** the client sends `?q=demo&mediaNode=mn-a`
 - **THEN** `items` holds `demo-a` only
 
 ### Requirement: Feature and node filters
 
 Edition: CE. The rooms list SHALL accept `features` as a comma-separated subset of `egress`, `ingress`, `agent`, `sip`
-and return rooms whose flag is set for any of the listed values, SHALL accept `nodeId` as an exact match on the room's
-node, and SHALL reject an unknown feature value with `400`.
+and return rooms whose flag is set for any of the listed values, SHALL accept `mediaNode` as an exact match on the room's
+media node label, and SHALL reject an unknown feature value with `400`.
 
 #### Scenario: Rooms with egress or ingress
 
@@ -193,8 +200,14 @@ node, and SHALL reject an unknown feature value with `400`.
 
 #### Scenario: Rooms of one node
 
-- **WHEN** the client sends `?nodeId=node-a&status=active`
-- **THEN** every item has `nodeId: "node-a"` and `status: "active"`
+- **WHEN** the client sends `?mediaNode=mn-a&status=active`
+- **THEN** every item has `mediaNode: "mn-a"` and `status: "active"`
+
+#### Scenario: Label of a CE server
+
+- **GIVEN** rooms without `mediaNode`
+- **WHEN** the client sends `?mediaNode=mn-a`
+- **THEN** the response is `200` with no items
 
 #### Scenario: Unknown feature
 
@@ -240,12 +253,12 @@ for the ranked sorts.
 #### Scenario: Ranked sorts over 7 days
 
 - **GIVEN** a database generated at scenario M for 7 days
-- **WHEN** the list is explained with each ranked sort key, with and without `status`, `q`, `nodeId` and `features`
+- **WHEN** the list is explained with each ranked sort key, with and without `status`, `q`, `mediaNode` and `features`
 - **THEN** each plan scans the range index of its filters (`createdAt_id`, `status_createdAt_id`,
-  `nameLower_createdAt`, `nodeId_status_createdAt_id` or the feature indexes), `totalDocsExamined` is at most the rooms
+  `nameLower_createdAt`, `mediaNode_status_createdAt_id` or the feature indexes), `totalDocsExamined` is at most the rooms
   created in the range, and the p95 of a page is within 300 ms
 
 #### Scenario: Name prefix within one node
 
-- **WHEN** the list with `q` and `nodeId` is explained
-- **THEN** the plan uses `nameLower_createdAt` with `nodeId` as a residual filter
+- **WHEN** the list with `q` and `mediaNode` is explained
+- **THEN** the plan uses `nameLower_createdAt` with `mediaNode` as a residual filter
