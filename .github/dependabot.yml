@@ -46,6 +46,9 @@ updates:
   - package-ecosystem: "pip"
     directory: "/openvidu-test-e2e/src/test/resources/python-publisher"
     multi-ecosystem-group: "livekit-server-sdks"
+    # TEMPORARY, gate test of 2026-11-06: restore Dependabot's 3-day default cooldown afterwards
+    cooldown:
+      exclude: ["livekit"]
     patterns: ["livekit"]
     allow:
       - dependency-name: "livekit"
@@ -58,6 +61,9 @@ updates:
   - package-ecosystem: "nuget"
     directory: "/openvidu-test-e2e/src/test/resources/dotnet-publisher"
     multi-ecosystem-group: "livekit-server-sdks"
+    # TEMPORARY, gate test of 2026-11-06: restore Dependabot's 3-day default cooldown afterwards
+    cooldown:
+      exclude: ["Livekit.Rtc.Dotnet"]
     patterns: ["Livekit.Rtc.Dotnet"]
     allow:
       - dependency-name: "Livekit.Rtc.Dotnet"
