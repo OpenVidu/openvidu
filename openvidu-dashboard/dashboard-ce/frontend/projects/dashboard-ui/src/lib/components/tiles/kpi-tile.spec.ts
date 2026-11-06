@@ -33,6 +33,19 @@ class TileHost {
 })
 class LinkedHost {}
 
+@Component({
+	selector: 'ovd-unavailable-host',
+	imports: [KpiTile],
+	template: `<ovd-kpi-tile
+		label="Quality"
+		value="4.3"
+		info="Average MOS score."
+		warning="This data is not available when using mediasoup as RTC engine. It will be available soon."
+		unavailable
+	/>`
+})
+class UnavailableHost {}
+
 @Component({ selector: 'ovd-list', template: 'list' })
 class ListPage {}
 
@@ -121,6 +134,25 @@ describe('KpiTile', () => {
 
 		expect(element.querySelector('.value')?.textContent.trim()).toBe('90');
 		expect(element.querySelector('.highlight')).toBeNull();
+	});
+	it('reads a dimmed dash after its info tip and warning when it is unavailable', async () => {
+		const fixture = TestBed.createComponent(UnavailableHost);
+		const element = fixture.nativeElement as HTMLElement;
+
+		await fixture.whenStable();
+
+		const label = element.querySelector('.label');
+		const icons = [...(label?.querySelectorAll('ovd-info-tip mat-icon') ?? [])].map((icon) =>
+			icon.getAttribute('data-mat-icon-name')
+		);
+
+		expect(icons).toEqual(['info', 'warning']);
+		expect(label?.querySelector('ovd-media-stats-warning button')?.getAttribute('aria-label')).toBe(
+			'This data is not available when using mediasoup as RTC engine. It will be available soon.'
+		);
+		expect(element.querySelector('.value.unavailable')?.textContent.trim()).toBe('—');
+		expect(element.querySelector('.ovd-visually-hidden')?.textContent.trim()).toBe('Not available');
+		expect(element.textContent).not.toContain('4.3');
 	});
 });
 

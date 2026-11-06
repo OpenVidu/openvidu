@@ -322,6 +322,69 @@ describe.skipIf(mongoUri === '')('data generator', () => {
 			expect(
 				await db.collection('rooms').countDocuments({ $nor: [{ $jsonSchema: CONTRACT_SCHEMAS.rooms }] })
 			).toBe(0);
+
+			// Rollups carry the media statistics marks of the nodes of the rooms they count.
+			const label = nodes.find((node) => node._id === unmarked[0]) as { mediaNode?: string } | undefined;
+			const hourly = db.collection('analytics_hourly');
+
+			expect(
+				await hourly.countDocuments({
+					scope: 'global',
+					'mediaStats.reported': true,
+					'mediaStats.missing': true
+				})
+			).toBeGreaterThan(0);
+			expect(await hourly.countDocuments({ scope: `node:${String(label?.mediaNode)}` })).toBeGreaterThan(0);
+			expect(
+				await hourly.countDocuments({
+					scope: `node:${String(label?.mediaNode)}`,
+					$or: [{ 'mediaStats.reported': true }, { 'mediaStats.missing': { $ne: true } }]
+				})
+			).toBe(0);
+			expect(
+				await hourly.countDocuments({
+					scope: { $nin: ['global', `node:${String(label?.mediaNode)}`] },
+					$or: [{ 'mediaStats.missing': true }, { 'mediaStats.reported': { $ne: true } }]
+				})
+			).toBe(0);
+
+			for (const collection of ['analytics_5min', 'analytics_hourly', 'analytics_daily']) {
+				expect(
+					await db
+						.collection(collection)
+						.countDocuments({ $nor: [{ $jsonSchema: CONTRACT_SCHEMAS[collection as 'analytics_hourly'] }] })
+				).toBe(0);
+			}
+		} finally {
+			await db.dropDatabase();
+		}
+	});
+
+	it('marks every rollup as reported when every node reports media statistics', async () => {
+		const db = client.db('dashboard_test_generator_media_stats_reported');
+		await db.dropDatabase();
+
+		try {
+			await generate(db, {
+				scenario: 'S',
+				days: 1,
+				statsMode: 'track',
+				seed: 7,
+				retentionDays: { events: 7, stats: 7, tracks: 7, entities: 90 },
+				timeseries: true,
+				rollups: { fiveMinute: true, nodes: false, roomSums: true }
+			});
+
+			for (const collection of ['analytics_5min', 'analytics_hourly', 'analytics_daily']) {
+				const rollups = db.collection(collection);
+
+				expect(await rollups.countDocuments({})).toBeGreaterThan(0);
+				expect(
+					await rollups.countDocuments({
+						$or: [{ 'mediaStats.missing': true }, { 'mediaStats.reported': { $ne: true } }]
+					})
+				).toBe(0);
+			}
 		} finally {
 			await db.dropDatabase();
 		}

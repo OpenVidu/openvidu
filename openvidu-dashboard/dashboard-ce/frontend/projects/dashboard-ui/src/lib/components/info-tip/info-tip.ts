@@ -1,11 +1,12 @@
-import { Component, ElementRef, inject, input, viewChild } from '@angular/core';
+import { Component, computed, ElementRef, inject, input, viewChild } from '@angular/core';
 import { MatIcon } from '@angular/material/icon';
 import { MatTooltip } from '@angular/material/tooltip';
 
 /**
- * An info icon after a label or heading that explains it. The text shows on hover and keyboard focus like any tooltip;
- * touch screens have no hover, so a tap toggles it and a tap elsewhere hides it. Activating the icon never reaches the
- * element around it (a sortable header, a linked tile).
+ * An info icon after a label or heading that explains it, or with `variant="warning"` a warning icon that tells what is
+ * missing. The text shows on hover and keyboard focus like any tooltip; touch screens have no hover, so a tap toggles
+ * it and a tap elsewhere hides it. Activating the icon never reaches the element around it (a sortable header, a linked
+ * tile).
  */
 @Component({
 	selector: 'ovd-info-tip',
@@ -15,13 +16,14 @@ import { MatTooltip } from '@angular/material/tooltip';
 		<button
 			type="button"
 			class="tip"
-			[attr.aria-label]="'About ' + subject()"
+			[class.warning]="variant() === 'warning'"
+			[attr.aria-label]="accessibleName()"
 			[matTooltip]="text()"
 			matTooltipTouchGestures="off"
 			(pointerdown)="pointer = $event.pointerType"
 			(click)="activate($event)"
 		>
-			<mat-icon svgIcon="info" aria-hidden="true" />
+			<mat-icon [svgIcon]="variant()" aria-hidden="true" />
 		</button>
 	`,
 	styles: `
@@ -52,6 +54,11 @@ import { MatTooltip } from '@angular/material/tooltip';
 				color: var(--mat-sys-primary);
 			}
 
+			&.warning,
+			&.warning:hover {
+				color: var(--ovd-status-warning-fg);
+			}
+
 			&:focus-visible {
 				outline: 2px solid var(--mat-sys-primary);
 				outline-offset: 1px;
@@ -77,8 +84,13 @@ export class InfoTip {
 
 	/** The explanation shown in the tooltip. */
 	readonly text = input.required<string>();
-	/** What the icon explains, read as "About <subject>". */
-	readonly subject = input.required<string>();
+	/** What the icon explains, read as "About <subject>"; a warning is read as its text. */
+	readonly subject = input('');
+	readonly variant = input<'info' | 'warning'>('info');
+
+	protected readonly accessibleName = computed(() =>
+		this.variant() === 'warning' ? this.text() : `About ${this.subject()}`
+	);
 
 	/** Pointer type of the last press on the icon: `touch` toggles, anything else (mouse, pen, keyboard) shows. */
 	protected pointer = '';

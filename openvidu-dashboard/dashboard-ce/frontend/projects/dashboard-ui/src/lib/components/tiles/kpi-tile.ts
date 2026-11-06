@@ -15,6 +15,7 @@ import { type Params, RouterLink } from '@angular/router';
 
 import { APPROXIMATE_TEXT } from '../../format/info-texts.js';
 import { InfoTip } from '../info-tip/info-tip.js';
+import { MediaStatsWarning } from '../info-tip/media-stats-warning.js';
 
 export const HIGHLIGHT_MS = 600;
 /** Values that change more often than this (a duration ticking every second) are never highlighted. */
@@ -23,11 +24,12 @@ export const TICKING_MS = 5_000;
 /**
  * One figure with label, unit, delta and hint. It keeps the last value while a refresh runs, shows a skeleton only on
  * the first load and highlights a changed value for 600 ms unless reduced motion is requested. An info tip explains the
- * label, a "≈" mark explains an approximate value, and a link makes the whole tile open a list.
+ * label, a warning says what data is missing, a "≈" mark explains an approximate value, and a link makes the whole tile
+ * open a list. An unavailable tile reads a dimmed "—" whatever its value.
  */
 @Component({
 	selector: 'ovd-kpi-tile',
-	imports: [InfoTip, MatTooltip, RouterLink],
+	imports: [InfoTip, MatTooltip, MediaStatsWarning, RouterLink],
 	host: { '[class.linked]': 'link() !== undefined' },
 	template: `
 		<div class="label">
@@ -39,8 +41,14 @@ export const TICKING_MS = 5_000;
 			@if (info(); as info) {
 				<ovd-info-tip [text]="info" [subject]="label()" />
 			}
+			@if (warning(); as warning) {
+				<ovd-media-stats-warning [text]="warning" />
+			}
 		</div>
-		@if (shown() === null) {
+		@if (unavailable()) {
+			<div class="value unavailable" aria-hidden="true">—</div>
+			<span class="ovd-visually-hidden">Not available</span>
+		} @else if (shown() === null) {
 			@if (loading()) {
 				<div class="skeleton ovd-skeleton-reveal" aria-hidden="true"></div>
 				<span class="ovd-visually-hidden">Loading {{ label() }}</span>
@@ -159,6 +167,12 @@ export const TICKING_MS = 5_000;
 			background: var(--mat-sys-primary-container);
 		}
 
+		/* Material 3 disabled content: the value reflects nothing. */
+		.unavailable {
+			opacity: 0.38;
+			filter: grayscale(1);
+		}
+
 		.accent {
 			display: inline-block;
 			width: 12px;
@@ -211,6 +225,10 @@ export class KpiTile {
 	/** Colour of a marker before the value, e.g. the quality band; the value text keeps its contrast. */
 	readonly accent = input<string>();
 	readonly loading = input(false, { transform: booleanAttribute });
+	/** Text of the media statistics warning after the label. */
+	readonly warning = input<string>();
+	/** The value reflects no data: a dimmed "—", read as "Not available". */
+	readonly unavailable = input(false, { transform: booleanAttribute });
 
 	protected readonly shown = signal<string | number | readonly string[] | null>(null);
 	protected readonly lines = computed(() => {

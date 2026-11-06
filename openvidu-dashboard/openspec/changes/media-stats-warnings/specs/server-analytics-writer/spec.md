@@ -1,10 +1,10 @@
 ## ADDED Requirements
 
 ### Requirement: Media statistics marks of rollup buckets
-Edition: CE and PRO. Every update of an `analytics_5min`, `analytics_hourly` or `analytics_daily` document SHALL also
-set, with `$max`, `mediaStats.reported: true` when the server that writes it reports media statistics and
-`mediaStats.missing: true` when it does not, in the `global` and the node scope alike. The increments of a reconciler
-closure SHALL carry the mark of the closed room or session (its `mediaStats`), not the reconciling server's.
+Edition: CE and PRO. Every counter increment of a 5-minute, hourly or daily rollup document SHALL also set, with
+`$max`, `mediaStats.reported: true` when the server that writes it reports media statistics and `mediaStats.missing:
+true` when it does not, in every scope. A reconciler closure SHALL mark with the `mediaStats` of the closed session, or
+of the room of a closed room, egress or ingress session, not with the reconciling server's.
 
 #### Scenario: Bucket of a server without media statistics
 - **GIVEN** a server that does not report media statistics and no earlier write in the hour

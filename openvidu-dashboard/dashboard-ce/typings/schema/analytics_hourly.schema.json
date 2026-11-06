@@ -8,6 +8,18 @@
 		},
 		"scope": { "bsonType": "string", "pattern": "^(global|node:[^:]+)$" },
 		"bucket": { "bsonType": "date", "description": "Start of the UTC bucket" },
+		"mediaStats": {
+			"bsonType": "object",
+			"properties": {
+				"reported": { "bsonType": "bool", "description": "Written by a server that reports media statistics" },
+				"missing": {
+					"bsonType": "bool",
+					"description": "Written by a server that does not report media statistics"
+				}
+			},
+			"additionalProperties": false,
+			"description": "Media statistics of the servers that wrote the bucket; absent on older buckets (reported)"
+		},
 		"rooms": {
 			"bsonType": "object",
 			"properties": {

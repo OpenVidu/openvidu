@@ -1,6 +1,13 @@
 import { describe, expect, it } from 'vitest';
 
-import { BROWSER_LABELS, clientOsLabel, EGRESS_TYPE_LABELS, enumLabel, INGRESS_INPUT_LABELS } from './labels.js';
+import {
+	BROWSER_LABELS,
+	clientOsLabel,
+	EGRESS_TYPE_LABELS,
+	enumLabel,
+	INGRESS_INPUT_LABELS,
+	MEDIA_STATS_TEXTS
+} from './labels.js';
 
 describe('enumLabel', () => {
 	it('reads the label, the raw value without one, and "—" when absent', () => {
@@ -28,5 +35,18 @@ describe('client labels', () => {
 			'Chrome OS',
 			'—'
 		]);
+	});
+});
+
+describe('MEDIA_STATS_TEXTS', () => {
+	it('names mediasoup and Pion, the same in every edition', () => {
+		expect(MEDIA_STATS_TEXTS).toEqual({
+			entity: 'This data is not available when using mediasoup as RTC engine. It will be available soon.',
+			rangeNone:
+				'The servers of this range use mediasoup as RTC engine, which does not generate media statistics yet. This data will be available soon.',
+			rangePartial:
+				'This data comes only from rooms on servers using Pion as RTC engine. mediasoup does not generate media statistics yet. They will be available soon.',
+			column: 'Rooms on servers using mediasoup as RTC engine show no value here yet. This data will be available soon.'
+		});
 	});
 });

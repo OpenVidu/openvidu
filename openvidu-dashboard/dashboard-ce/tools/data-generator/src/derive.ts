@@ -655,7 +655,14 @@ function sample(
 
 type Counter = Record<string, number>;
 
+/** Media statistics marks of a rollup bucket, as the writer sets them: only ever `true`. */
+interface MediaStatsMarks {
+	reported?: true;
+	missing?: true;
+}
+
 interface Bucket {
+	mediaStats: MediaStatsMarks;
 	rooms: {
 		created: number;
 		ended: number;
@@ -687,6 +694,7 @@ interface Bucket {
 }
 
 interface FiveMinuteBucket {
+	mediaStats: MediaStatsMarks;
 	rooms: { created: number; ended: number };
 	participants: { connected: number; joined: number; active: number; left: number; aborted: number };
 	egress: { started: number; ended: number };
@@ -705,6 +713,7 @@ export interface RollupDoc {
 	ingress: Bucket['ingress'];
 	bytes: { up: Long; down: Long };
 	quality: Bucket['quality'];
+	mediaStats: MediaStatsMarks;
 	uniqueIdentities?: number;
 }
 
@@ -738,6 +747,8 @@ export class Rollups {
 	private readonly daily = new Map<string, Bucket>();
 	private readonly fiveMinute = new Map<string, FiveMinuteBucket>();
 	private scopes: string[] = ['global'];
+	/** Mark of the bundle being added: its room's server reports media statistics or not. */
+	private mark: keyof MediaStatsMarks = 'reported';
 	private fiveMinuteFrom = Number.POSITIVE_INFINITY;
 
 	constructor(private readonly options: RollupOptions = BASE_ROLLUPS) {}
@@ -747,6 +758,7 @@ export class Rollups {
 
 		this.scopes =
 			this.options.nodes && room.mediaNode !== undefined ? ['global', `node:${room.mediaNode}`] : ['global'];
+		this.mark = room.mediaStats === false ? 'missing' : 'reported';
 		this.fiveMinuteFrom = windows.fiveMinuteFrom;
 		this.at(
 			room.createdAt,
@@ -973,8 +985,13 @@ export class Rollups {
 		const ms = ts.getTime();
 
 		for (const scope of this.scopes) {
-			update(getOrCreate(this.hourly, scope, Math.floor(ms / HOUR) * HOUR, this.options.roomSums), false);
-			update(getOrCreate(this.daily, scope, Math.floor(ms / DAY) * DAY, this.options.roomSums), true);
+			const hourly = getOrCreate(this.hourly, scope, Math.floor(ms / HOUR) * HOUR, this.options.roomSums);
+			const daily = getOrCreate(this.daily, scope, Math.floor(ms / DAY) * DAY, this.options.roomSums);
+
+			hourly.mediaStats[this.mark] = true;
+			daily.mediaStats[this.mark] = true;
+			update(hourly, false);
+			update(daily, true);
 		}
 
 		if (fiveMinute !== undefined) {
@@ -995,6 +1012,7 @@ export class Rollups {
 
 			if (five === undefined) {
 				five = {
+					mediaStats: {},
 					rooms: { created: 0, ended: 0 },
 					participants: { connected: 0, joined: 0, active: 0, left: 0, aborted: 0 },
 					egress: { started: 0, ended: 0 },
@@ -1004,6 +1022,7 @@ export class Rollups {
 				this.fiveMinute.set(key, five);
 			}
 
+			five.mediaStats[this.mark] = true;
 			update(five);
 		}
 	}
@@ -1026,6 +1045,7 @@ function getOrCreate(map: Map<string, Bucket>, scope: string, bucketStart: numbe
 
 	if (bucket === undefined) {
 		bucket = {
+			mediaStats: {},
 			rooms: {
 				created: 0,
 				ended: 0,
@@ -1073,6 +1093,7 @@ function toDoc(scope: string, bucket: number, b: Bucket, daily: boolean): Rollup
 		ingress: b.ingress,
 		bytes: { up: int64(b.bytes.up), down: int64(b.bytes.down) },
 		quality: { ...b.quality, scoreSum: round2(b.quality.scoreSum) },
+		mediaStats: b.mediaStats,
 		...(daily ? { uniqueIdentities: b.identities?.size ?? 0 } : {})
 	};
 }

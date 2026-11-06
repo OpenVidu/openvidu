@@ -58,6 +58,9 @@ loadComponent: … }] }] }`. The locked `tracks/:trackSid` route, outside the si
   the styles of `STATUS_FAMILY_STYLES`.
 - **Chart colours.** `ChartColorsService.colors()` resolves the theme's chart tokens; `resolved(tokens)` resolves an
   application's own custom properties under the applied scheme.
+- **Missing media statistics.** `MEDIA_STATS_TEXTS`, `ovd-media-stats-warning`, `ovd-unavailable`, and the `warning`
+  and `unavailable` inputs of `ovd-kpi-tile`, `ovd-time-series-chart`, `ovd-section-card` and `TableColumn`; the
+  Analytics page context exposes `mediaStatsWarning()` for the cards of its seams.
 - **Injection tokens.** `SEARCH_SOURCES` (lists searched by the header), `BROWSER_STORAGE` (storage behind
   `StorageService`). Root services such as `InfoService` can be replaced with a provider.
 - **Shell slots.** `DashboardShell` projects `[ovdBanner]` content under the header, next to the migration, schema and

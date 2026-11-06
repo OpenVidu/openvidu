@@ -88,6 +88,8 @@ export abstract class AnalyticsPageContext {
 	abstract readonly refreshes: Signal<number>;
 	/** How much of the range's media statistics its servers report, from the summary; undefined when all of it. */
 	abstract readonly mediaStats: Signal<AnalyticsMediaStatsCoverage | undefined>;
+	/** The media statistics warning of the range (`MEDIA_STATS_TEXTS`), undefined when every server reports them. */
+	abstract readonly mediaStatsWarning: Signal<string | undefined>;
 	/** The series of `metrics` from the combined series requests. */
 	abstract chart(metrics: readonly AnalyticsMetric[]): ChartSeries[];
 	/** Axis range of the series of `metric`. */

@@ -133,6 +133,15 @@ describe('schema files', () => {
 		expect(validate(Collection.NODES, { ...node, batchIntervalMs: new Int32(1000) })).toBeNull();
 	});
 
+	it.each([Collection.ANALYTICS_5MIN, Collection.ANALYTICS_HOURLY, Collection.ANALYTICS_DAILY])(
+		'accepts both media statistics marks on %s and nothing else under mediaStats',
+		(collection) => {
+			const [rollup] = readFixtures(collection);
+			expect(validate(collection, { ...rollup, mediaStats: { reported: true, missing: true } })).toBeNull();
+			expect(validate(collection, { ...rollup, mediaStats: { other: true } })).toContain('/mediaStats');
+		}
+	);
+
 	it('rejects API_CALL raw events', () => {
 		const [event] = readFixtures(Collection.EVENTS);
 		expect(validate(Collection.EVENTS, { ...event, type: 'API_CALL' })).not.toBeNull();

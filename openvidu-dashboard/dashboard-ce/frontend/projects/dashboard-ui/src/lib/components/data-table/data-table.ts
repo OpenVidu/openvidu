@@ -26,6 +26,7 @@ import { BreakpointService } from '../../core/ui/breakpoints.js';
 import { ErrorBanner } from '../feedback/error-banner.js';
 import { Skeleton } from '../feedback/skeleton.js';
 import { InfoTip } from '../info-tip/info-tip.js';
+import { MediaStatsWarning } from '../info-tip/media-stats-warning.js';
 import { SectionHeaderActions } from '../tiles/section-card.js';
 
 export interface TableColumn {
@@ -41,6 +42,8 @@ export interface TableColumn {
 	headerHint?: string;
 	/** Explanation of the header, shown by an info tip beside it and beside the label of the card layout. */
 	info?: string;
+	/** Media statistics warning beside the header and beside the label of the card layout. */
+	warning?: string;
 	/** Why the column cannot sort now, e.g. a range wider than the sort's limit; the header is disabled with it as tooltip. */
 	sortDisabledReason?: string;
 	/** Hidden until the viewer shows it from the Columns menu. */
@@ -84,6 +87,7 @@ export class TableCell {
 		MatTooltip,
 		ErrorBanner,
 		InfoTip,
+		MediaStatsWarning,
 		Skeleton
 	],
 	templateUrl: './data-table.html',

@@ -32,6 +32,13 @@
 	border-radius: 8px;
 }
 
+/* Material 3 disabled content over hatching: the chart reflects no data. */
+.chart.unavailable {
+	opacity: 0.38;
+	filter: grayscale(1);
+	background: repeating-linear-gradient(45deg, transparent 0 6px, var(--mat-sys-outline-variant) 6px 7px);
+}
+
 .reset {
 	position: absolute;
 	top: 0;

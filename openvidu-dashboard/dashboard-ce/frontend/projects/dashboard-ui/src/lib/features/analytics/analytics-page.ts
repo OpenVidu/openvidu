@@ -44,8 +44,8 @@ import {
 	EGRESS_TYPE_LABELS,
 	INGRESS_INPUT_LABELS,
 	OS_LABELS,
+	MEDIA_STATS_TEXTS,
 	PARTICIPANT_KIND_LABELS,
-	RANGE_MEDIA_STATS,
 	SDK_LABELS
 } from '../../format/labels.js';
 import { bandwidthLines } from '../rooms/room-display.js';
@@ -260,7 +260,16 @@ export class AnalyticsPage implements AnalyticsPageContext {
 	protected readonly result = this.loader.data;
 	protected readonly summary = computed(() => this.result()?.summary.value ?? null);
 	readonly mediaStats = computed(() => this.summary()?.mediaStats);
-	protected readonly mediaStatsTexts = RANGE_MEDIA_STATS;
+	readonly mediaStatsWarning = computed(() => {
+		switch (this.mediaStats()) {
+			case 'none':
+				return MEDIA_STATS_TEXTS.rangeNone;
+			case 'partial':
+				return MEDIA_STATS_TEXTS.rangePartial;
+			default:
+				return undefined;
+		}
+	});
 
 	/** "Analytics", or "Analytics · <media node label>" for a node scope. */
 	protected readonly title = computed(() =>
@@ -366,18 +375,7 @@ export class AnalyticsPage implements AnalyticsPageContext {
 			return null;
 		}
 
-		return summary.mediaStats === 'none' ? '—' : bandwidthLines({ up: summary.bytesUp, down: summary.bytesDown });
-	}
-
-	protected bandwidthHint(): string | undefined {
-		switch (this.mediaStats()) {
-			case 'none':
-				return RANGE_MEDIA_STATS.notReported;
-			case 'partial':
-				return RANGE_MEDIA_STATS.partial;
-			default:
-				return undefined;
-		}
+		return bandwidthLines({ up: summary.bytesUp, down: summary.bytesDown });
 	}
 
 	protected bytesTile(value: number | undefined, arrow: string): string | null {

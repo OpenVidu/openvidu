@@ -172,18 +172,30 @@ test.describe('a failed request', () => {
 });
 
 test.describe('a range whose servers report no media statistics', () => {
-	test.use({ apiOptions: { analyticsSummary: { mediaStats: 'none' } } });
+	test.use({ apiOptions: { analyticsSummary: { mediaStats: 'none', bytesUp: 0, bytesDown: 0 } } });
 
-	test('the Data up / down tile and the Bandwidth section say so', async ({ page }) => {
+	test('keeps the Data up / down tile and the Data transferred section, unavailable, with the warning', async ({
+		page
+	}) => {
 		await page.goto('/analytics?from=now-7d&to=now&tz=UTC');
 
-		await expect(page.getByRole('region', { name: 'Summary' })).toContainText(
-			'Not reported by the servers of this range'
+		const summary = page.getByRole('region', { name: 'Summary' });
+		const section = card(page, 'Data transferred');
+
+		await expect(summary.locator('.value.unavailable')).toHaveCount(1);
+		await expect(section.locator('.value.unavailable')).toHaveCount(2);
+		await expect(section.locator('ovd-time-series-chart .chart.unavailable')).toHaveCount(1);
+		await expect(section.getByRole('button', { name: 'Show table' })).toHaveCount(0);
+		await expect(section.locator('ovd-notice')).toHaveCount(0);
+		await section
+			.getByRole('button', {
+				name: 'The servers of this range use mediasoup as RTC engine, which does not generate media statistics yet. This data will be available soon.'
+			})
+			.first()
+			.hover();
+		await expect(page.locator('.mat-mdc-tooltip')).toHaveText(
+			'The servers of this range use mediasoup as RTC engine, which does not generate media statistics yet. This data will be available soon.'
 		);
-		await expect(card(page, 'Data transferred')).toContainText(
-			'The servers of this range do not report media statistics'
-		);
-		await expect(card(page, 'Data transferred').locator('ovd-time-series-chart')).toHaveCount(0);
 		await expectNoViolations(page);
 	});
 });
@@ -191,15 +203,36 @@ test.describe('a range whose servers report no media statistics', () => {
 test.describe('a range where only some servers report media statistics', () => {
 	test.use({ apiOptions: { analyticsSummary: { mediaStats: 'partial' } } });
 
-	test('the Data up / down tile and the Bandwidth chart carry the note', async ({ page }) => {
+	test('the Data up / down tile and the Data transferred section warn and keep their data', async ({ page }) => {
 		await page.goto('/analytics?from=now-7d&to=now&tz=UTC');
 
-		await expect(page.getByRole('region', { name: 'Summary' })).toContainText(
-			'Only from the servers that report media statistics'
+		const section = card(page, 'Data transferred');
+
+		await expect(
+			page.getByRole('region', { name: 'Summary' }).getByRole('button', {
+				name: 'This data comes only from rooms on servers using Pion as RTC engine. mediasoup does not generate media statistics yet. They will be available soon.'
+			})
+		).toHaveCount(1);
+		await expect(
+			section.getByRole('button', {
+				name: 'This data comes only from rooms on servers using Pion as RTC engine. mediasoup does not generate media statistics yet. They will be available soon.'
+			})
+		).toHaveCount(1);
+		await expect(section.locator('.unavailable')).toHaveCount(0);
+		await expect(section.locator('ovd-time-series-chart')).toHaveCount(1);
+	});
+
+	test('the warning tooltip opens with a tap on a phone', async ({ page }) => {
+		await page.setViewportSize({ width: 375, height: 800 });
+		await page.goto('/analytics?from=now-7d&to=now&tz=UTC');
+
+		await card(page, 'Data transferred')
+			.getByRole('button', {
+				name: 'This data comes only from rooms on servers using Pion as RTC engine. mediasoup does not generate media statistics yet. They will be available soon.'
+			})
+			.click();
+		await expect(page.locator('.mat-mdc-tooltip')).toHaveText(
+			'This data comes only from rooms on servers using Pion as RTC engine. mediasoup does not generate media statistics yet. They will be available soon.'
 		);
-		await expect(card(page, 'Data transferred')).toContainText(
-			'Only from the servers that report media statistics'
-		);
-		await expect(card(page, 'Data transferred').locator('ovd-time-series-chart')).toHaveCount(1);
 	});
 });

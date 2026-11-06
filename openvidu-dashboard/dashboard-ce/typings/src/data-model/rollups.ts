@@ -21,10 +21,20 @@ type Counts<K extends string> = Partial<Record<K, number>>;
  */
 export interface RollupBase {
 	_id: string;
-	/** `global` or `node:<nodeId>`. */
+	/** `global` or `node:<media node label>`. */
 	scope: string;
 	/** Start of the UTC bucket. */
 	bucket: Date;
+	/** Media statistics of the servers that wrote the bucket; absent on buckets written before the marks (reported). */
+	mediaStats?: RollupMediaStats;
+}
+
+/** Marks of a rollup document, only ever `true`. */
+export interface RollupMediaStats {
+	/** Written by a server that reports media statistics. */
+	reported?: true;
+	/** Written by a server that does not report them. */
+	missing?: true;
 }
 
 export interface RollupBytes {

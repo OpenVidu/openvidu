@@ -56,6 +56,8 @@ queried) and `Deployment` (running the service). One line per observable change,
   batch interval.
 - Info icons next to tiles, cards, charts and columns explain the terms they show, such as participant sessions and
   unique identities; they open on hover, keyboard focus or a tap.
+- Data that servers running mediasoup do not generate shows a warning icon that explains why. Its tiles and charts stay
+  in place, dimmed when the range or entity has no media statistics at all.
 - Settings page with viewer preferences (any time zone as the default) and an About tab with the OpenVidu version, the
   migration progress while it runs, the retention per data class and the storage.
 - PRO features appear locked in CE with a short explanation and a link.

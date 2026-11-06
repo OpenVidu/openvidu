@@ -41,7 +41,8 @@
 		label="Data up / down"
 		[info]="infoTexts.dataUpDown"
 		[value]="bandwidthTile()"
-		[hint]="bandwidthHint()"
+		[warning]="mediaStatsWarning()"
+		[unavailable]="mediaStats() === 'none'"
 		[loading]="summary() === null"
 	/>
 	<ovd-kpi-tile
@@ -194,36 +195,39 @@
 	<ovd-analytics-card
 		heading="Data transferred"
 		sectionId="bandwidth"
+		[warning]="mediaStatsWarning()"
 		[loading]="bandwidth.loading"
 		[error]="bandwidth.error"
-		[empty]="bandwidth.empty"
+		[empty]="bandwidth.empty && mediaStats() !== 'none'"
 		[exporting]="isExporting('bandwidth')"
 		(exportCsv)="exportCsv('bandwidth', { metrics: ['bytesUp', 'bytesDown'] })"
 		(retry)="retry()"
 		(widen)="widenRange()"
 	>
 		<ng-template ovdCardContent>
-			@if (mediaStats() === 'none') {
-				<ovd-notice class="media-stats-notice" variant="info">{{ mediaStatsTexts.notice }}</ovd-notice>
-			} @else {
-				@if (mediaStats() === 'partial') {
-					<ovd-notice class="media-stats-notice" variant="info">{{ mediaStatsTexts.partial }}</ovd-notice>
-				}
-				<ovd-tile-row class="card-tiles">
-					<ovd-kpi-tile label="Total up" [value]="bytesTile(summary()?.bytesUp, '↑')" />
-					<ovd-kpi-tile label="Total down" [value]="bytesTile(summary()?.bytesDown, '↓')" />
-				</ovd-tile-row>
-				<ovd-time-series-chart
-					heading="Data up / down"
-					kind="area"
-					format="bytes"
-					[series]="charts().bytes"
-					[from]="chartRange('bytesUp').from"
-					[to]="chartRange('bytesUp').to"
-					[tz]="tz()"
-					[note]="note('bytesUp')"
+			<ovd-tile-row class="card-tiles">
+				<ovd-kpi-tile
+					label="Total up"
+					[value]="bytesTile(summary()?.bytesUp, '↑')"
+					[unavailable]="mediaStats() === 'none'"
 				/>
-			}
+				<ovd-kpi-tile
+					label="Total down"
+					[value]="bytesTile(summary()?.bytesDown, '↓')"
+					[unavailable]="mediaStats() === 'none'"
+				/>
+			</ovd-tile-row>
+			<ovd-time-series-chart
+				heading="Data up / down"
+				kind="area"
+				format="bytes"
+				[series]="charts().bytes"
+				[from]="chartRange('bytesUp').from"
+				[to]="chartRange('bytesUp').to"
+				[tz]="tz()"
+				[note]="note('bytesUp')"
+				[unavailable]="mediaStats() === 'none'"
+			/>
 		</ng-template>
 	</ovd-analytics-card>
 

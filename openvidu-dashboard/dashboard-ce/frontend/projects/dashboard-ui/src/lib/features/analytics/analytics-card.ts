@@ -36,7 +36,12 @@ export class CardContent {
 	selector: 'ovd-analytics-card',
 	imports: [EmptyState, ErrorBanner, MatButton, MatIcon, NgTemplateOutlet, ProLockOverlay, SectionCard, Skeleton],
 	template: `
-		<ovd-section-card [heading]="heading()" [info]="locked() ? undefined : info()" [sectionId]="sectionId()">
+		<ovd-section-card
+			[heading]="heading()"
+			[info]="locked() ? undefined : info()"
+			[warning]="locked() ? undefined : warning()"
+			[sectionId]="sectionId()"
+		>
 			@if (exportable()) {
 				<button
 					ovdSectionActions
@@ -87,6 +92,8 @@ export class AnalyticsCard {
 	readonly heading = input.required<string>();
 	/** Explanation of the heading, shown by an info tip after it. */
 	readonly info = input<string>();
+	/** Text of the media statistics warning after the heading. */
+	readonly warning = input<string>();
 	readonly sectionId = input.required<string>();
 	/** PRO feature of the card; the card renders its lock, and requests nothing, while it is disabled. */
 	readonly feature = input<FeatureKey>();

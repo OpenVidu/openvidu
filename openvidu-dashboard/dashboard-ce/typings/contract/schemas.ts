@@ -411,7 +411,14 @@ const trackStats = obj({
 const rollupBase = {
 	_id: req({ bsonType: 'string', pattern: ROLLUP_ID_PATTERN }),
 	scope: req({ bsonType: 'string', pattern: SCOPE_PATTERN }),
-	bucket: req(date('Start of the UTC bucket'))
+	bucket: req(date('Start of the UTC bucket')),
+	mediaStats: obj(
+		{
+			reported: bool('Written by a server that reports media statistics'),
+			missing: bool('Written by a server that does not report media statistics')
+		},
+		{ description: 'Media statistics of the servers that wrote the bucket; absent on older buckets (reported)' }
+	)
 };
 
 const rollupBytes = obj({ up: long(), down: long() });

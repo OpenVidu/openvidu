@@ -41,6 +41,9 @@ together (badges, feedback, locks, search, tiles, zone) share a folder and its s
 - A term a newcomer would not understand gets an info tip through the `info` input of tiles, cards, charts,
   `TableColumn` and `EntityFact`, with its text in `INFO_TEXTS` (`format/info-texts.ts`); labels carry no hover text of
   their own.
+- Missing media statistics: the `warning` input of tiles, cards, charts and `TableColumn` with a `MEDIA_STATS_TEXTS`
+  text, plus `unavailable` on tiles and charts (and `ovd-unavailable` in cells) when there is no real data; never a
+  notice in their place.
 - Charts: bucket and zone in the `note` (`seriesNote()`), options merged into the kept instance (`bindChartOptions()`),
   colours from `chartSlots()`, no zoom on wheel.
 - Identifiers appear once, with `ovd-copy-button` beside the visible value; navigation uses links, never row clicks.

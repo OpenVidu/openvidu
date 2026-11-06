@@ -100,6 +100,9 @@
 									@if (column.info; as info) {
 										<ovd-info-tip [text]="info" [subject]="column.header" />
 									}
+									@if (column.warning; as warning) {
+										<ovd-media-stats-warning [text]="warning" />
+									}
 								</dt>
 								<dd>
 									<ng-container
@@ -132,6 +135,9 @@
 										{{ column.header }}
 										@if (column.info; as info) {
 											<ovd-info-tip [text]="info" [subject]="column.header" />
+										}
+										@if (column.warning; as warning) {
+											<ovd-media-stats-warning [text]="warning" />
 										}
 									</dt>
 									<dd>
@@ -194,6 +200,9 @@
 							}
 							@if (column.info; as info) {
 								<ovd-info-tip [text]="info" [subject]="column.header" />
+							}
+							@if (column.warning; as warning) {
+								<ovd-media-stats-warning [text]="warning" />
 							}
 						</th>
 					}

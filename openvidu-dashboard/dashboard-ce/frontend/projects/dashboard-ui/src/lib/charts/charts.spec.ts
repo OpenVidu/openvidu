@@ -237,6 +237,23 @@ describe('chart options', () => {
 });
 
 @Component({
+	selector: 'ovd-unavailable-chart-host',
+	imports: [TimeSeriesChart],
+	template: `<ovd-time-series-chart
+		heading="Bitrate up / down"
+		[series]="series"
+		from="2026-10-13T10:01:25Z"
+		to="2026-10-13T10:06:55Z"
+		tz="UTC"
+		warning="This data is not available when using mediasoup as RTC engine. It will be available soon."
+		unavailable
+	/>`
+})
+class UnavailableChartHost {
+	readonly series = [{ name: 'Up', points: [['2026-10-13T10:02:00Z', 5] as [string, number]] }];
+}
+
+@Component({
 	selector: 'ovd-chart-host',
 	imports: [TimeSeriesChart],
 	template: `<ovd-time-series-chart
@@ -291,6 +308,28 @@ describe('TimeSeriesChart', () => {
 		expect(element.querySelector('ovd-time-series-chart')?.hasAttribute('title')).toBe(false);
 		expect(element.querySelector('.chart')?.getAttribute('role')).toBe('img');
 		expect(element.querySelector('.chart')?.getAttribute('aria-label')).toContain('Rooms: min 3, max 3, last 3');
+	});
+
+	it('keeps an unavailable chart with its warning, dimmed and without series, legend, tooltip or table', async () => {
+		TestBed.configureTestingModule({ providers: [provideRouter([])] });
+		TestBed.overrideComponent(TimeSeriesChart, { set: { providers: [NEVER_LOADED] } });
+
+		const fixture = TestBed.createComponent(UnavailableChartHost);
+
+		await fixture.whenStable();
+
+		const element = fixture.nativeElement as HTMLElement;
+		const chart = fixture.debugElement.query(By.directive(TimeSeriesChart)).componentInstance as TimeSeriesChart;
+		const option = (chart as unknown as { option: () => Record<string, unknown> }).option();
+
+		expect(element.querySelector('.chart-heading ovd-media-stats-warning')).not.toBeNull();
+		expect(element.querySelector('.chart.unavailable')?.getAttribute('aria-label')).toBe(
+			'Bitrate up / down: not available'
+		);
+		expect(element.querySelector('.toggle')).toBeNull();
+		expect(option['series']).toEqual([]);
+		expect(option['tooltip']).toEqual({ show: false });
+		expect(option['legend']).toEqual({ show: false });
 	});
 
 	it('toggles to a data table', async () => {

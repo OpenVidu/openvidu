@@ -267,55 +267,66 @@ describe.skipIf(mongoUri === '')('analytics API', () => {
 	});
 
 	describe('media statistics coverage', () => {
-		const node = (id: string, mediaStats: boolean, lastSeenAt = new Date()): { _id: string } & Document => ({
-			_id: id,
-			firstSeenAt: new Date(hour - DAY),
-			lastSeenAt,
-			serverVersion: 'test',
-			batchIntervalMs: 10_000,
-			mediaStats
-		});
-		const coverage = async () => (await json<AnalyticsSummary>(ce, '/analytics/summary?from=now-1h')).mediaStats;
+		const missing = { mediaStats: { missing: true } };
+		const reported = { mediaStats: { reported: true } };
+		const coverage = async (from = 'now-1h') =>
+			(await json<AnalyticsSummary>(ce, `/analytics/summary?from=${from}`)).mediaStats;
 
-		afterAll(async () => {
-			await ce.dashboard.db.collection(Collection.NODES).deleteMany({});
-		});
-
-		it('says whether the nodes seen in the range report media statistics', async () => {
-			const nodes = ce.dashboard.db.collection<{ _id: string } & Document>(Collection.NODES);
-
-			await seedRollups(ce, {});
-			await nodes.deleteMany({});
-			await nodes.insertMany([node('ND_a', false), node('ND_b', false)]);
+		it('says whether the rollups of the range report media statistics', async () => {
+			await seedRollups(ce, { analytics_hourly: [rollup(hour, { ...missing, rooms: { created: 1 } })] });
 			const summary = await json<AnalyticsSummary>(ce, '/analytics/summary?from=now-1h');
 
 			expect(analyticsSummaryResponse.parse(summary)).toEqual(summary);
 			expect(summary).toMatchObject({ mediaStats: 'none', bytesUp: 0, bytesDown: 0 });
 
-			await nodes.updateOne({ _id: 'ND_b' }, { $set: { mediaStats: true } });
-			expect(await coverage()).toBe('partial');
+			await seedRollups(ce, {
+				analytics_hourly: [rollup(hour - HOUR, reported), rollup(hour, { mediaStats: { missing: true } })]
+			});
+			expect(await coverage('now-2h')).toBe('partial');
 
-			// A node last seen before the range does not count.
-			await nodes.updateOne({ _id: 'ND_a' }, { $set: { lastSeenAt: new Date(hour - 2 * DAY) } });
+			// A bucket before the range does not count, nor do buckets written before the marks.
+			await seedRollups(ce, {
+				analytics_hourly: [rollup(hour - 5 * HOUR, missing), rollup(hour, { rooms: { created: 1 } })]
+			});
 			expect(await coverage()).toBeUndefined();
 		});
 
-		it('reads the node documents of the media node of a node scope only', async () => {
-			const nodes = ce.dashboard.db.collection<{ _id: string } & Document>(Collection.NODES);
+		it('keeps the coverage of servers gone from the node documents', async () => {
+			const today = Math.floor(hour / DAY) * DAY;
+
+			await seedRollups(ce, {
+				analytics_daily: [rollup(today - 110 * DAY, reported), rollup(today - 10 * DAY, missing)]
+			});
+
+			expect(await coverage('now-180d')).toBe('partial');
+			expect(await coverage('now-100d')).toBe('none');
+		});
+
+		it('reads the marks of one scope only', async () => {
 			const repository = new AnalyticsRepository(ce.dashboard.db);
-			const from = new Date(Date.now() - HOUR);
+			const from = new Date(hour - HOUR);
+			const to = new Date(hour + HOUR);
 
-			await nodes.deleteMany({});
-			await nodes.insertMany([
-				{ ...node('ND_a', false), mediaNode: 'mn-a' },
-				{ ...node('ND_b', true), mediaNode: 'mn-b' },
-				{ ...node('ND_b2', false), mediaNode: 'mn-b' }
-			]);
+			await seedRollups(ce, {
+				analytics_hourly: [
+					rollup(hour, { mediaStats: { reported: true, missing: true } }),
+					rollup(hour, missing, 'node:mn-a'),
+					rollup(hour, reported, 'node:mn-b')
+				]
+			});
 
-			expect(await repository.nodesMediaStats('node:mn-a', from, new Date())).toEqual([false]);
-			expect((await repository.nodesMediaStats('node:mn-b', from, new Date())).sort()).toEqual([false, true]);
-			expect(await repository.nodesMediaStats('node:ND_b', from, new Date())).toEqual([]);
-			expect((await repository.nodesMediaStats('global', from, new Date())).sort()).toEqual([false, false, true]);
+			expect(await repository.mediaStatsMarks(Collection.ANALYTICS_HOURLY, 'node:mn-a', from, to)).toEqual({
+				reported: false,
+				missing: true
+			});
+			expect(await repository.mediaStatsMarks(Collection.ANALYTICS_HOURLY, 'node:mn-b', from, to)).toEqual({
+				reported: true,
+				missing: false
+			});
+			expect(await repository.mediaStatsMarks(Collection.ANALYTICS_HOURLY, 'global', from, to)).toEqual({
+				reported: true,
+				missing: true
+			});
 		});
 	});
 

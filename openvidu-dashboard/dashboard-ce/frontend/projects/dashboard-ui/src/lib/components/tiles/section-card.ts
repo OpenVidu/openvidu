@@ -6,6 +6,7 @@ import { MatIcon } from '@angular/material/icon';
 import { RouteStateService } from '../../core/state/route-state.js';
 import { SectionStateService } from '../../core/state/section-state.js';
 import { InfoTip } from '../info-tip/info-tip.js';
+import { MediaStatsWarning } from '../info-tip/media-stats-warning.js';
 
 let nextId = 0;
 
@@ -31,7 +32,7 @@ export class SectionHeaderActions {
  */
 @Component({
 	selector: 'ovd-section-card',
-	imports: [InfoTip, MatIconButton, MatIcon, NgTemplateOutlet],
+	imports: [InfoTip, MatIconButton, MatIcon, MediaStatsWarning, NgTemplateOutlet],
 	providers: [SectionHeaderActions],
 	template: `
 		<header>
@@ -54,6 +55,9 @@ export class SectionHeaderActions {
 				</h2>
 				@if (info(); as info) {
 					<ovd-info-tip [text]="info" [subject]="heading()" />
+				}
+				@if (warning(); as warning) {
+					<ovd-media-stats-warning [text]="warning" />
 				}
 			</div>
 			<div class="actions">
@@ -115,6 +119,8 @@ export class SectionCard {
 	readonly count = input<number>();
 	/** Explanation of the heading, shown by an info tip after it. */
 	readonly info = input<string>();
+	/** Text of the media statistics warning after the heading. */
+	readonly warning = input<string>();
 	/** Key of the section on its page, e.g. `events`. */
 	readonly sectionId = input.required<string>();
 

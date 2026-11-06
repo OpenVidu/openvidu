@@ -20,6 +20,7 @@ import { settle } from '../../../testing/fixtures.js';
 import { PreferencesService } from '../../core/preferences/preferences.js';
 import { RefreshRegistry } from '../../core/refresh/refresh.js';
 import { ToastService } from '../../core/ui/toast.js';
+import { MEDIA_STATS_TEXTS } from '../../format/labels.js';
 import { analyticsPlan } from './analytics-data.js';
 import { autoGranularity, granularityOptions } from './analytics-granularity.js';
 import { dimensionLabel } from './analytics-page.js';
@@ -351,36 +352,49 @@ describe('AnalyticsPage', () => {
 		}
 	});
 
-	it('says the data is not reported when no server of the range reports media statistics', async () => {
+	it('keeps the Data transferred section unavailable with a warning when no server reports media statistics', async () => {
 		const { element } = await open('/analytics?from=now-7d&to=now&tz=UTC', [], {
-			summary: { ...SUMMARY, mediaStats: 'none' }
+			summary: { ...SUMMARY, mediaStats: 'none', bytesUp: 0, bytesDown: 0 }
 		});
-		const tile = [...element.querySelectorAll('.tiles ovd-kpi-tile')].map(text)[3];
+		const tile = element.querySelectorAll('.tiles ovd-kpi-tile')[3];
 		const bandwidth = card(element, 'Data transferred');
 
-		expect(tile).toContain('—');
-		expect(tile).toContain('Not reported by the servers of this range');
-		expect(tile).not.toContain('TB');
-		expect(text(bandwidth?.querySelector('.media-stats-notice'))).toBe(
-			'The servers of this range do not report media statistics'
+		expect(tile?.querySelector('.value.unavailable')).not.toBeNull();
+		expect(tile?.querySelector('ovd-media-stats-warning button')?.getAttribute('aria-label')).toBe(
+			MEDIA_STATS_TEXTS.rangeNone
 		);
-		expect(bandwidth?.querySelector('ovd-time-series-chart')).toBeNull();
-		expect(bandwidth?.querySelectorAll('ovd-kpi-tile')).toHaveLength(0);
+		expect(bandwidth?.querySelector('.heading-row ovd-media-stats-warning')).not.toBeNull();
+		expect(bandwidth?.querySelector('ovd-notice')).toBeNull();
+		expect(bandwidth?.querySelectorAll('ovd-kpi-tile .value.unavailable')).toHaveLength(2);
+		expect(bandwidth?.querySelector('ovd-time-series-chart .chart.unavailable')).not.toBeNull();
+		expect(text(bandwidth?.querySelector('ovd-time-series-chart'))).not.toContain('Show table');
 	});
 
-	it('notes that the data covers only some servers when the others report no media statistics', async () => {
+	it('warns that the data covers only some servers when the others report no media statistics', async () => {
 		const { element } = await open('/analytics?from=now-7d&to=now&tz=UTC', [], {
 			summary: { ...SUMMARY, mediaStats: 'partial' }
 		});
-		const tile = [...element.querySelectorAll('.tiles ovd-kpi-tile')].map(text)[3];
+		const tile = element.querySelectorAll('.tiles ovd-kpi-tile')[3];
 		const bandwidth = card(element, 'Data transferred');
 
-		expect(tile).toContain('↑ 1.2 TB');
-		expect(tile).toContain('Only from the servers that report media statistics');
-		expect(text(bandwidth?.querySelector('.media-stats-notice'))).toBe(
-			'Only from the servers that report media statistics'
+		expect(text(tile)).toContain('↑ 1.2 TB');
+		expect(tile?.querySelector('ovd-media-stats-warning button')?.getAttribute('aria-label')).toBe(
+			MEDIA_STATS_TEXTS.rangePartial
 		);
+		expect(
+			bandwidth?.querySelector('.heading-row ovd-media-stats-warning button')?.getAttribute('aria-label')
+		).toBe(MEDIA_STATS_TEXTS.rangePartial);
+		expect(bandwidth?.querySelector('.unavailable')).toBeNull();
 		expect(bandwidth?.querySelector('ovd-time-series-chart')).not.toBeNull();
+	});
+
+	it('shows no media statistics warning when every server reports them', async () => {
+		const { element } = await open('/analytics?from=now-7d&to=now&tz=UTC');
+		const bandwidth = card(element, 'Data transferred');
+
+		expect(element.querySelector('.tiles ovd-media-stats-warning')).toBeNull();
+		expect(bandwidth?.querySelector('ovd-media-stats-warning')).toBeNull();
+		expect(bandwidth?.querySelector('.unavailable')).toBeNull();
 	});
 
 	it('hides unique identities below a day and shows them per UTC day at one day', async () => {

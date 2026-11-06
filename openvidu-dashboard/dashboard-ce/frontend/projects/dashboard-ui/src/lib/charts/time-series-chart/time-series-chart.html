@@ -3,6 +3,9 @@
 	@if (info(); as info) {
 		<ovd-info-tip [text]="info" [subject]="heading()" />
 	}
+	@if (warning(); as warning) {
+		<ovd-media-stats-warning [text]="warning" />
+	}
 </div>
 @if (note()) {
 	<p class="chart-note">{{ note() }}</p>
@@ -13,7 +16,7 @@
 		Reset range
 	</button>
 }
-@if (showTable()) {
+@if (showTable() && !unavailable()) {
 	<div class="table-wrap" [style.max-height.px]="height()">
 		<table>
 			<caption class="ovd-visually-hidden">
@@ -44,6 +47,7 @@
 } @else if (ready()) {
 	<div
 		class="chart"
+		[class.unavailable]="unavailable()"
 		role="img"
 		tabindex="0"
 		[attr.aria-label]="summary()"
@@ -54,8 +58,17 @@
 		(chartBrushEnd)="onBrushEnd($event)"
 	></div>
 } @else {
-	<div class="chart" role="img" tabindex="0" [attr.aria-label]="summary()" [style.height.px]="height()"></div>
+	<div
+		class="chart"
+		[class.unavailable]="unavailable()"
+		role="img"
+		tabindex="0"
+		[attr.aria-label]="summary()"
+		[style.height.px]="height()"
+	></div>
 }
-<button matButton type="button" class="toggle" (click)="toggleTable()">
-	{{ showTable() ? 'Show chart' : 'Show table' }}
-</button>
+@if (!unavailable()) {
+	<button matButton type="button" class="toggle" (click)="toggleTable()">
+		{{ showTable() ? 'Show chart' : 'Show table' }}
+	</button>
+}

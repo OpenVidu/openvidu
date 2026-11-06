@@ -20,6 +20,7 @@ import { type SortChange, type TableColumn, DataTable, TableCell } from '../../c
 import { RangePickerService } from '../../components/date-time-range-picker/date-time-range-picker.js';
 import { Duration } from '../../components/duration/duration.js';
 import { EmptyState } from '../../components/feedback/empty-state.js';
+import { UnavailableValue } from '../../components/feedback/unavailable-value.js';
 import { exactListId, ListSearch, listSearchQuery } from '../../components/search/list-search.js';
 import { KpiTile } from '../../components/tiles/kpi-tile.js';
 import { TileRow } from '../../components/tiles/tile-row.js';
@@ -33,7 +34,7 @@ import { injectRankedSort } from '../../core/state/ranked-sort.js';
 import { rangeSpanMs } from '../../core/state/relative-time.js';
 import { formatNumber, formatTimestamp } from '../../format/formatters.js';
 import { INFO_TEXTS } from '../../format/info-texts.js';
-import { RECONCILER_ESTIMATE, ROOM_MEDIA_STATS_NOT_REPORTED } from '../../format/labels.js';
+import { MEDIA_STATS_TEXTS, RECONCILER_ESTIMATE } from '../../format/labels.js';
 import { formatBandwidth, ROOM_FEATURES, roomPreview } from './room-display.js';
 import { ROOMS_NODE_FILTER, RoomsDataService, type RoomsListRequest } from './rooms-data.js';
 
@@ -74,7 +75,8 @@ interface RoomsData {
 		RouterLink,
 		StatusBadge,
 		TableCell,
-		TileRow
+		TileRow,
+		UnavailableValue
 	],
 	templateUrl: './rooms-page.html',
 	styleUrl: './rooms-page.scss'
@@ -89,7 +91,6 @@ export class RoomsPage {
 
 	protected readonly features = ROOM_FEATURES;
 	protected readonly estimate = RECONCILER_ESTIMATE;
-	protected readonly mediaStatsNotReported = ROOM_MEDIA_STATS_NOT_REPORTED;
 	protected readonly now = injectTicker();
 	protected readonly tz = this.query.tz;
 	protected readonly limit = this.query.limit;
@@ -195,7 +196,12 @@ export class RoomsPage {
 			info: INFO_TEXTS.activeParticipants,
 			...this.rankedSort.column('active')
 		},
-		{ key: 'bytes', header: 'Data up / down', align: 'end' },
+		{
+			key: 'bytes',
+			header: 'Data up / down',
+			align: 'end',
+			...(this.rows().some((room) => room.mediaStats === false) ? { warning: MEDIA_STATS_TEXTS.column } : {})
+		},
 		{ key: 'features', header: 'Features', info: INFO_TEXTS.roomFeatures },
 		...(this.nodeFilter() ? [{ key: 'node', header: 'Node', defaultHidden: true }] : [])
 	]);

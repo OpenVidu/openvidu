@@ -35,7 +35,7 @@ import {
 	snapRange,
 	utcDaysOf
 } from './analytics-planner.js';
-import { AnalyticsRepository } from './analytics-repository.js';
+import { AnalyticsRepository, type MediaStatsMarks } from './analytics-repository.js';
 import type {
 	AnalyticsBreakdownsParams,
 	AnalyticsExportParams,
@@ -86,15 +86,13 @@ function roomAverage(counters: Counters, path: string, digits: 'one' | 'integer'
 	return digits === 'one' ? round1(average) : Math.round(average);
 }
 
-/** Coverage of the media statistics of the nodes seen in a range: absent when every one of them reports them. */
-export function mediaStatsCoverage(marks: readonly (boolean | undefined)[]): AnalyticsMediaStatsCoverage | undefined {
-	const without = marks.filter((mark) => mark === false).length;
-
-	if (without === 0) {
+/** Coverage of the media statistics of a range from its rollup marks: absent unless some bucket lacks them. */
+export function mediaStatsCoverage(marks: MediaStatsMarks): AnalyticsMediaStatsCoverage | undefined {
+	if (!marks.missing) {
 		return undefined;
 	}
 
-	return without === marks.length ? 'none' : 'partial';
+	return marks.reported ? 'partial' : 'none';
 }
 
 /** Analytics over the rollup collections. */
@@ -275,7 +273,9 @@ export class AnalyticsService {
 				},
 				now
 			),
-			this.repository.nodesMediaStats(query.scope, range.from, range.to).then(mediaStatsCoverage)
+			this.repository
+				.mediaStatsMarks(range.collection, query.scope, range.from, range.to)
+				.then(mediaStatsCoverage)
 		]);
 		const identities = [...daily.values()].flatMap((day) => {
 			const count = day.get('uniqueIdentities');

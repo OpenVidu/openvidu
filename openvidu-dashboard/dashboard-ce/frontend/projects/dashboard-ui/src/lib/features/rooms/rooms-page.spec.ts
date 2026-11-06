@@ -14,6 +14,7 @@ import { LIST_SEARCH_DEBOUNCE_MS } from '../../components/search/list-search.js'
 import { InfoService } from '../../core/info.js';
 import { PreferencesService } from '../../core/preferences/preferences.js';
 import { EntityPreviewService } from '../../core/state/entity-preview.js';
+import { MEDIA_STATS_TEXTS } from '../../format/labels.js';
 import { RoomLockedPage } from './room-locked-page.js';
 import { ROOMS_NODE_FILTER } from './rooms-data.js';
 import { RoomsPage } from './rooms-page.js';
@@ -352,7 +353,7 @@ describe('RoomsPage', () => {
 		expect(stale?.querySelector('ovd-status-badge .badge')?.getAttribute('aria-label')).toContain('No stats since');
 	});
 
-	it('reads a dash with its tooltip in Data up / down for a room whose server reports no media statistics', async () => {
+	it('reads an unavailable dash and warns in the Data up / down header for a room without media statistics', async () => {
 		const { element } = await open(
 			'/rooms',
 			page([room({ sid: 'RM_ms', mediaStats: false, bytes: { up: 0, down: 0 } }), room({ sid: 'RM_ok' })])
@@ -360,12 +361,22 @@ describe('RoomsPage', () => {
 		const [unreported, reported] = [...element.querySelectorAll('tbody tr')].map(
 			(row) => row.querySelectorAll('td')[8]
 		);
+		const header = [...element.querySelectorAll('thead th')].find((th) => text(th).startsWith('Data up / down'));
 
-		expect(text(unreported)).toBe('—');
-		expect(unreported?.querySelector('span')?.getAttribute('aria-label')).toBe(
-			"Not reported: this room's server does not report media statistics"
-		);
+		expect(unreported?.querySelector('ovd-unavailable')).not.toBeNull();
+		expect(text(unreported)).not.toContain('0 B');
 		expect(text(reported)).toBe('↑ 12 MB ↓ 48 MB');
+		expect(header?.querySelector('ovd-media-stats-warning button')?.getAttribute('aria-label')).toBe(
+			MEDIA_STATS_TEXTS.column
+		);
+	});
+
+	it('has no warning in the Data up / down header when every room reports media statistics', async () => {
+		const { element } = await open('/rooms', page([room({ sid: 'RM_ok' })]));
+		const header = [...element.querySelectorAll('thead th')].find((th) => text(th).startsWith('Data up / down'));
+
+		expect(header).toBeDefined();
+		expect(header?.querySelector('ovd-media-stats-warning')).toBeNull();
 	});
 
 	it('keeps a fresh room unmarked under a long interval, judged at the last response', async () => {

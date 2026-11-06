@@ -20,6 +20,7 @@ import {
 	type ValueFormat
 } from '../chart-options.js';
 import { InfoTip } from '../../components/info-tip/info-tip.js';
+import { MediaStatsWarning } from '../../components/info-tip/media-stats-warning.js';
 import { bindChartOptions, injectEchartsReady, provideLazyEcharts } from '../echarts-provider.js';
 
 interface BrushEndEvent {
@@ -29,11 +30,12 @@ interface BrushEndEvent {
 /**
  * A time series fixed to the range: x axis from `from` to `to` in the zone, gaps for missing buckets, no zoom, a tooltip
  * shared with the other charts of the page, at most 50 markers and an optional brush that writes an absolute range to
- * the URL. It exposes a text summary and a data table for assistive technology.
+ * the URL. It exposes a text summary and a data table for assistive technology. An unavailable chart keeps its heading
+ * and its x axis over the range, dims an empty plot over hatching and offers no legend, tooltip, markers or table.
  */
 @Component({
 	selector: 'ovd-time-series-chart',
-	imports: [InfoTip, MatButton, MatIcon, NgxEchartsDirective],
+	imports: [InfoTip, MatButton, MatIcon, MediaStatsWarning, NgxEchartsDirective],
 	providers: [provideLazyEcharts()],
 	templateUrl: './time-series-chart.html',
 	styleUrl: '../chart.scss'
@@ -62,6 +64,10 @@ export class TimeSeriesChart {
 	readonly bands = input<readonly QualityBand[]>();
 	/** Shown under the heading, e.g. the bucket ("Hourly") or the unit ("per UTC day"). */
 	readonly note = input<string>();
+	/** Text of the media statistics warning after the heading. */
+	readonly warning = input<string>();
+	/** The chart reflects no data: dimmed, without series, legend, tooltip, markers or table. */
+	readonly unavailable = input(false, { transform: booleanAttribute });
 
 	protected readonly ready = injectEchartsReady();
 	protected readonly showTable = signal(false);
@@ -69,32 +75,36 @@ export class TimeSeriesChart {
 	protected readonly option = computed(() => {
 		const yRange = this.yRange();
 		const bands = this.bands();
-
-		return timeSeriesOption({
-			series: this.series(),
+		const unavailable = this.unavailable();
+		const option = timeSeriesOption({
+			series: unavailable ? [] : this.series(),
 			from: this.from(),
 			to: this.to(),
 			tz: this.tz(),
 			format: this.format(),
 			kind: this.kind(),
 			stacked: this.stacked(),
-			markers: this.markers(),
-			brush: this.brush(),
+			markers: unavailable ? [] : this.markers(),
+			brush: this.brush() && !unavailable,
 			colors: this.palette.colors(),
 			animation: !this.reducedMotion,
 			...(yRange === undefined ? {} : { yRange }),
 			...(bands === undefined ? {} : { bands })
 		});
+
+		return unavailable ? { ...option, tooltip: { show: false }, legend: { show: false } } : option;
 	});
 	protected readonly chartOptions = bindChartOptions(this.option);
 	protected readonly summary = computed(() =>
-		chartSummary(this.heading(), {
-			series: this.series(),
-			from: this.from(),
-			to: this.to(),
-			tz: this.tz(),
-			format: this.format()
-		})
+		this.unavailable()
+			? `${this.heading()}: not available`
+			: chartSummary(this.heading(), {
+					series: this.series(),
+					from: this.from(),
+					to: this.to(),
+					tz: this.tz(),
+					format: this.format()
+				})
 	);
 	protected readonly table = computed(() => {
 		const buckets = [...new Set(this.series().flatMap((series) => series.points.map(([ts]) => ts)))].sort();

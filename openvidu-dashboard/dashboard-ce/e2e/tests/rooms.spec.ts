@@ -159,18 +159,36 @@ test.describe('a room whose server reports no media statistics', () => {
 		apiOptions: { rooms: [roomItem({ mediaStats: false, bytes: { up: 0, down: 0 } })], roomSummary: ROOM_SUMMARY }
 	});
 
-	test('reads a dash with its explanation under Data up / down', async ({ page }) => {
+	test('reads an unavailable dash and explains it from the Data up / down header', async ({ page }) => {
 		await page.goto('/rooms');
 
-		const cell = table(page)
-			.getByRole('row', { name: /demo-room/ })
-			.getByLabel("Not reported: this room's server does not report media statistics");
+		const row = table(page).getByRole('row', { name: /demo-room/ });
+		const warning = table(page)
+			.getByRole('columnheader', { name: /Data up \/ down/ })
+			.getByRole('button', {
+				name: 'Rooms on servers using mediasoup as RTC engine show no value here yet. This data will be available soon.'
+			});
 
-		await expect(cell).toHaveText('—');
-		await cell.hover();
-		await expect(page.locator('.mat-mdc-tooltip')).toHaveText(
-			"Not reported: this room's server does not report media statistics"
-		);
+		await expect(row.locator('ovd-unavailable')).toHaveCount(1);
 		await expect(table(page)).not.toContainText('0 B');
+		await warning.hover();
+		await expect(page.locator('.mat-mdc-tooltip')).toHaveText(
+			'Rooms on servers using mediasoup as RTC engine show no value here yet. This data will be available soon.'
+		);
+	});
+
+	test('keeps the warning on the Data up / down label of the cards on a phone', async ({ page }) => {
+		await page.setViewportSize({ width: 375, height: 800 });
+		await page.goto('/rooms');
+		await page.locator('.card').first().getByRole('button', { name: 'More' }).click();
+
+		await expect(
+			page
+				.locator('.card')
+				.getByRole('button', {
+					name: 'Rooms on servers using mediasoup as RTC engine show no value here yet. This data will be available soon.'
+				})
+				.first()
+		).toBeAttached();
 	});
 });

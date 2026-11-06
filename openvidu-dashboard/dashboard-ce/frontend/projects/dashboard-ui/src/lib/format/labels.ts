@@ -136,12 +136,15 @@ export const CONNECTION_TYPE_LABELS: Readonly<Record<ConnectionType, string>> = 
 /** The one explanation of a value estimated by the reconciler. */
 export const RECONCILER_ESTIMATE = 'Closed by the reconciler: the end time is estimated';
 
-/** Bytes and quality of a room whose server does not report media statistics. */
-export const ROOM_MEDIA_STATS_NOT_REPORTED = "Not reported: this room's server does not report media statistics";
-
-/** Texts of a range whose servers report no media statistics (`none`) or only some do (`partial`). */
-export const RANGE_MEDIA_STATS = {
-	notReported: 'Not reported by the servers of this range',
-	notice: 'The servers of this range do not report media statistics',
-	partial: 'Only from the servers that report media statistics'
+/**
+ * Warnings of the media statistics that mediasoup does not generate: of one room, session or track (`entity`), of a
+ * range whose rollups have none (`rangeNone`) or only some (`rangePartial`), and of a table column (`column`).
+ */
+export const MEDIA_STATS_TEXTS = {
+	entity: 'This data is not available when using mediasoup as RTC engine. It will be available soon.',
+	rangeNone:
+		'The servers of this range use mediasoup as RTC engine, which does not generate media statistics yet. This data will be available soon.',
+	rangePartial:
+		'This data comes only from rooms on servers using Pion as RTC engine. mediasoup does not generate media statistics yet. They will be available soon.',
+	column: 'Rooms on servers using mediasoup as RTC engine show no value here yet. This data will be available soon.'
 } as const;

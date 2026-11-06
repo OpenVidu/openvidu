@@ -50,7 +50,11 @@ interface Read {
  * A database holding rollup documents per collection and the `mediaStats` of the nodes; `schema_meta` is empty, so the
  * retention is the default.
  */
-function fakeDb(collections: Record<string, Doc[]>, reads: Read[] = [], nodes: (boolean | undefined)[] = []): Db {
+function fakeDb(
+	collections: Record<string, Doc[]>,
+	reads: Read[] = [],
+	marks?: { reported: boolean | null; missing: boolean | null }
+): Db {
 	return {
 		collection: (name: string) => ({
 			find: (filter: { scope: string; bucket: { $gte: Date; $lt: Date } }) => ({
@@ -69,9 +73,9 @@ function fakeDb(collections: Record<string, Doc[]>, reads: Read[] = [], nodes: (
 
 					// `for await` reads an array as well as the driver's cursor.
 					return rows;
-				},
-				toArray: () => Promise.resolve(name === 'nodes' ? nodes.map((mediaStats) => ({ mediaStats })) : [])
+				}
 			}),
+			aggregate: () => ({ toArray: () => Promise.resolve(marks === undefined ? [] : [marks]) }),
 			findOne: () => Promise.resolve(null)
 		})
 	} as unknown as Db;
@@ -521,20 +525,23 @@ describe('analytics summary and breakdowns', () => {
 		});
 	});
 
-	it('reports the media statistics coverage of the nodes seen in the range', async () => {
-		const summary = await service(fakeDb({}, [], [false, false])).summary(summaryQuery.parse({}));
+	it('reports the media statistics coverage of the rollup marks of the range', async () => {
+		const summary = await service(fakeDb({}, [], { reported: null, missing: true })).summary(
+			summaryQuery.parse({})
+		);
 
 		expect(analyticsSummaryResponse.parse(summary)).toEqual(summary);
 		expect(summary).toMatchObject({ mediaStats: 'none', bytesUp: 0, bytesDown: 0 });
-		expect(await service(fakeDb({}, [], [true])).summary(summaryQuery.parse({}))).not.toHaveProperty('mediaStats');
+		expect(
+			await service(fakeDb({}, [], { reported: true, missing: null })).summary(summaryQuery.parse({}))
+		).not.toHaveProperty('mediaStats');
 	});
 
-	it('folds the media statistics marks of the nodes into a coverage', () => {
-		expect(mediaStatsCoverage([])).toBeUndefined();
-		expect(mediaStatsCoverage([true, undefined])).toBeUndefined();
-		expect(mediaStatsCoverage([false])).toBe('none');
-		expect(mediaStatsCoverage([false, true])).toBe('partial');
-		expect(mediaStatsCoverage([false, undefined])).toBe('partial');
+	it('folds the media statistics marks into a coverage', () => {
+		expect(mediaStatsCoverage({ reported: false, missing: false })).toBeUndefined();
+		expect(mediaStatsCoverage({ reported: true, missing: false })).toBeUndefined();
+		expect(mediaStatsCoverage({ reported: false, missing: true })).toBe('none');
+		expect(mediaStatsCoverage({ reported: true, missing: true })).toBe('partial');
 	});
 
 	it('omits the averages written without the room sums', async () => {

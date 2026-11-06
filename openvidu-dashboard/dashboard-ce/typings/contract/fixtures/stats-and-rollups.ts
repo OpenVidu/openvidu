@@ -91,7 +91,8 @@ const fiveMinBucket = at('10:30:00');
 const fiveMinCounters: Omit<FiveMinuteRollupDocument, '_id' | 'scope' | 'bucket'> = {
 	participants: { connected: 3, joined: 1 },
 	bytes: { up: 13_986_950, down: 12_811_470 },
-	quality: { scoreSum: 21.6, scoreCount: 5 }
+	quality: { scoreSum: 21.6, scoreCount: 5 },
+	mediaStats: { reported: true }
 };
 
 export const analytics5min: FiveMinuteRollupDocument[] = [
@@ -124,6 +125,7 @@ const closedRoomMinutes = minutes([
 
 const hourBucket = at('09:00:00');
 const closedRoomHour: Omit<HourlyRollupDocument, '_id' | 'scope' | 'bucket'> = {
+	mediaStats: { reported: true },
 	rooms: { created: 1, ended: 1, endedByReason: { API_DELETE: 1 }, durationMsSum: 2_700_000, participantsSum: 4 },
 	participants: {
 		joined: 4,
@@ -194,6 +196,7 @@ export const analyticsDaily: DailyRollupDocument[] = [
 		_id: rollupId('global', dayBucket),
 		scope: 'global',
 		bucket: dayBucket,
+		mediaStats: { reported: true },
 		rooms: { created: 2, ended: 1, endedByReason: { API_DELETE: 1 }, durationMsSum: 2_700_000, participantsSum: 4 },
 		participants: {
 			joined: 6,

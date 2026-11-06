@@ -10,7 +10,7 @@ import { AnalyticsCache } from '../../src/analytics/analytics-cache.js';
 import { CE_ANALYTICS_CATALOGUE, metricFields } from '../../src/analytics/analytics-catalogue.js';
 import { AnalyticsFeatureGate } from '../../src/analytics/analytics-gate.js';
 import { planSeries, type RollupCollection } from '../../src/analytics/analytics-planner.js';
-import { AnalyticsRepository, ROLLUP_INDEX } from '../../src/analytics/analytics-repository.js';
+import { AnalyticsRepository, mediaStatsMarksQuery, ROLLUP_INDEX } from '../../src/analytics/analytics-repository.js';
 import {
 	analyticsBreakdownsQuery,
 	analyticsExportQuery,
@@ -139,15 +139,19 @@ describe.skipIf(mongoUri === '')(`analytics query plan at scenario ${scenario}`,
 		).toBeGreaterThan(0);
 	});
 
-	it('summary: the media statistics coverage reads the nodes on lastSeenAt', async () => {
-		const from = new Date(now.getTime() - DAY);
-		const nodes = await db.collection(Collection.NODES).countDocuments({});
-		const summary = await expectIndexBacked(db, repository.nodesInRange('global', from, now), {
-			maxDocsExamined: nodes
-		});
+	it('summary: the media statistics coverage reads the rollup marks on scope_bucket', async () => {
+		const from = new Date(now.getTime() - 30 * DAY);
+		const documents = await db
+			.collection(Collection.ANALYTICS_HOURLY)
+			.countDocuments({ scope: 'global', bucket: { $gte: from, $lt: now } });
+		const summary = await expectIndexBacked(
+			db,
+			mediaStatsMarksQuery(Collection.ANALYTICS_HOURLY, 'global', from, now),
+			{ maxDocsExamined: documents }
+		);
 
-		expect(nodes).toBeGreaterThan(0);
-		expectIndexes(summary, ['lastSeenAt_ttl']);
+		expect(documents).toBeGreaterThan(0);
+		expectIndexes(summary, ['scope_bucket']);
 	});
 
 	it('sums of the rollups equal the entity counts over whole hours', async () => {

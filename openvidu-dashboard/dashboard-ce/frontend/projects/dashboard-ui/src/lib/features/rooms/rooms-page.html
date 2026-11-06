@@ -128,13 +128,7 @@
 	</ng-template>
 	<ng-template ovdCell="bytes" let-room>
 		@if (room.mediaStats === false) {
-			<span
-				class="ovd-tabular"
-				tabindex="0"
-				[matTooltip]="mediaStatsNotReported"
-				[attr.aria-label]="mediaStatsNotReported"
-				>—</span
-			>
+			<ovd-unavailable />
 		} @else {
 			<span class="ovd-tabular">{{ bandwidth(room) }}</span>
 		}
