@@ -3,15 +3,15 @@ set -eu
 
 
 export INSTALL_PREFIX="${INSTALL_PREFIX:-/opt/openvidu}"
-export DOCKER_VERSION="${DOCKER_VERSION:-29.8.0}"
-export DOCKER_COMPOSE_VERSION="${DOCKER_COMPOSE_VERSION:-v5.5.1}"
+export DOCKER_VERSION="${DOCKER_VERSION:-29.9.3}"
+export DOCKER_COMPOSE_VERSION="${DOCKER_COMPOSE_VERSION:-v5.7.0}"
 export OPENVIDU_VERSION="${OPENVIDU_VERSION:-main}"
 export UPDATE_BASE_URL="${UPDATE_BASE_URL:-https://get.openvidu.io/update}"
 export UPDATER_IMAGE="${UPDATER_IMAGE:-docker.io/openvidu/openvidu-updater:${OPENVIDU_VERSION}}"
-export MINIO_SERVER_IMAGE="${MINIO_SERVER_IMAGE:-docker.io/openvidu/minio:RELEASE.2026-09-22T19-25-18Z-r0}"
-export MINIO_CLIENT_IMAGE="${MINIO_CLIENT_IMAGE:-docker.io/openvidu/minio-client:RELEASE.2026-09-02T16-12-00Z}"
+export MINIO_SERVER_IMAGE="${MINIO_SERVER_IMAGE:-docker.io/openvidu/minio:RELEASE.2026-10-23T20-06-51Z-r0}"
+export MINIO_CLIENT_IMAGE="${MINIO_CLIENT_IMAGE:-docker.io/openvidu/minio-client:RELEASE.2026-11-06T20-02-59Z}"
 export MONGO_SERVER_IMAGE="${MONGO_SERVER_IMAGE:-docker.io/mongo:8.0.34}"
-export REDIS_SERVER_IMAGE="${REDIS_SERVER_IMAGE:-docker.io/redis:8.10.2-alpine}"
+export REDIS_SERVER_IMAGE="${REDIS_SERVER_IMAGE:-docker.io/redis:8.10.3-alpine}"
 export BUSYBOX_IMAGE="${BUSYBOX_IMAGE:-docker.io/busybox:1.38.0}"
 export CADDY_SERVER_IMAGE="${CADDY_SERVER_IMAGE:-docker.io/openvidu/openvidu-caddy:${OPENVIDU_VERSION}}"
 export CADDY_SERVER_PRO_IMAGE="${CADDY_SERVER_PRO_IMAGE:-docker.io/openvidu/openvidu-pro-caddy:${OPENVIDU_VERSION}}"
@@ -27,12 +27,12 @@ export OPENVIDU_AGENT_PRO_SPEECH_PROCESSING_IMAGE="${OPENVIDU_AGENT_PRO_SPEECH_P
 export LIVEKIT_INGRESS_SERVER_IMAGE="${LIVEKIT_INGRESS_SERVER_IMAGE:-docker.io/openvidu/ingress:${OPENVIDU_VERSION}}"
 export LIVEKIT_EGRESS_SERVER_IMAGE="${LIVEKIT_EGRESS_SERVER_IMAGE:-docker.io/openvidu/egress:${OPENVIDU_VERSION}}"
 export LIVEKIT_EGRESS_SERVER_PRO_IMAGE="${LIVEKIT_EGRESS_SERVER_PRO_IMAGE:-docker.io/openvidu/egress-pro:${OPENVIDU_VERSION}}"
-export PROMETHEUS_IMAGE="${PROMETHEUS_IMAGE:-docker.io/prom/prometheus:v3.14.0}"
+export PROMETHEUS_IMAGE="${PROMETHEUS_IMAGE:-docker.io/prom/prometheus:v3.16.0}"
 export PROMTAIL_IMAGE="${PROMTAIL_IMAGE:-docker.io/grafana/promtail:3.6.11}"
-export ALLOY_IMAGE="${ALLOY_IMAGE:-docker.io/grafana/alloy:v1.19.2}"
-export LOKI_IMAGE="${LOKI_IMAGE:-docker.io/openvidu/grafana-loki:3.7.7-r0}"
-export MIMIR_IMAGE="${MIMIR_IMAGE:-docker.io/openvidu/grafana-mimir:3.2.0-r0}"
-export GRAFANA_IMAGE="${GRAFANA_IMAGE:-docker.io/grafana/grafana:12.4.10}"
+export ALLOY_IMAGE="${ALLOY_IMAGE:-docker.io/grafana/alloy:v1.21.3}"
+export LOKI_IMAGE="${LOKI_IMAGE:-docker.io/openvidu/grafana-loki:3.7.9-r1}"
+export MIMIR_IMAGE="${MIMIR_IMAGE:-docker.io/openvidu/grafana-mimir:3.2.4-r1}"
+export GRAFANA_IMAGE="${GRAFANA_IMAGE:-docker.io/grafana/grafana:12.4.14}"
 
 get_next_version() {
   case "$1" in

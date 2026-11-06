@@ -2,7 +2,7 @@
 # OpenVidu Dashboard CE. Build context: the workspace root (openvidu-dashboard/).
 ARG NODE_VERSION=24.22.1
 ARG DEBIAN_RELEASE=trixie
-ARG SAFE_CHAIN_VERSION=1.5.25
+ARG SAFE_CHAIN_VERSION=1.5.27
 
 # Workspace manifests and the lockfile, shared by the install stages. They run on the build platform, so no package is
 # installed, nor checked by safe-chain, under emulation; a --platform on a FROM that names a stage would be ignored.
