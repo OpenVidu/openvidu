@@ -1,4 +1,17 @@
 version: 2
+
+# One weekly pull request with every LiveKit SDK release of the server SDK
+# publishers that openvidu-test-e2e runs (OpenViduTestAppE2eServerSdkTest). Its
+# merge is gated by .github/workflows/openvidu-pro-e2e-serversdk-gate.yml. Only
+# the SDK packages are updated here; the transitive dependencies and the Docker
+# images of OpenViduTestE2e#sdkPublisher are bumped by hand.
+multi-ecosystem-groups:
+  livekit-server-sdks:
+    schedule:
+      interval: "weekly"
+    commit-message:
+      prefix: "openvidu-test-e2e"
+
 updates:
   - package-ecosystem: "github-actions"
     directory: "/"
@@ -18,3 +31,33 @@ updates:
         update-types:
           - "minor"
           - "patch"
+  - package-ecosystem: "gomod"
+    directory: "/openvidu-test-e2e/src/test/resources/go-publisher"
+    multi-ecosystem-group: "livekit-server-sdks"
+    patterns: ["github.com/livekit/server-sdk-go/v2"]
+    allow:
+      - dependency-name: "github.com/livekit/server-sdk-go/v2"
+  - package-ecosystem: "npm"
+    directory: "/openvidu-test-e2e/src/test/resources/node-publisher"
+    multi-ecosystem-group: "livekit-server-sdks"
+    patterns: ["@livekit/rtc-node"]
+    allow:
+      - dependency-name: "@livekit/rtc-node"
+  - package-ecosystem: "pip"
+    directory: "/openvidu-test-e2e/src/test/resources/python-publisher"
+    multi-ecosystem-group: "livekit-server-sdks"
+    patterns: ["livekit"]
+    allow:
+      - dependency-name: "livekit"
+  - package-ecosystem: "cargo"
+    directory: "/openvidu-test-e2e/src/test/resources/rust-publisher"
+    multi-ecosystem-group: "livekit-server-sdks"
+    patterns: ["livekit"]
+    allow:
+      - dependency-name: "livekit"
+  - package-ecosystem: "nuget"
+    directory: "/openvidu-test-e2e/src/test/resources/dotnet-publisher"
+    multi-ecosystem-group: "livekit-server-sdks"
+    patterns: ["Livekit.Rtc.Dotnet"]
+    allow:
+      - dependency-name: "Livekit.Rtc.Dotnet"

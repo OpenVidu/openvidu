@@ -1,0 +1,101 @@
+# Merge gate for the Dependabot pull requests that bump the LiveKit SDKs of the
+# server SDK publishers (openvidu-test-e2e/src/test/resources/*-publisher, group
+# "livekit-server-sdks" in .github/dependabot.yml).
+#
+# The job dispatches the workflow "OpenVidu Pro E2E server SDK tests" of the
+# private repository OpenVidu/openvidu-pro against the pull request's head commit
+# and waits for it, so the job's own result is the E2E result. The job name is the
+# status check that the master ruleset requires. On any other pull request the job
+# is skipped (or ends at its first step), which counts as a pass.
+#
+# Runs triggered by Dependabot only get Dependabot secrets: the token must be a
+# Dependabot secret of this repository, able to run and read the workflows of
+# OpenVidu/openvidu-pro (fine-grained: "Actions: Read and write" on that repository).
+name: OpenVidu Pro E2E server SDK tests gate
+on:
+  pull_request:
+    branches:
+      - master
+
+permissions:
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: openvidu-pro-e2e-serversdk-gate-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  server-sdk-e2e:
+    name: OpenVidu Pro E2E server SDK tests
+    if: github.event.pull_request.user.login == 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    # The OpenVidu Pro job may take 4 hours, plus the wait for its self-hosted runner
+    timeout-minutes: 360
+    env:
+      PRO_REPO: OpenVidu/openvidu-pro
+      PRO_WORKFLOW: openvidu-pro-e2e-serversdk-tests.yml
+    steps:
+      - name: Check whether the server SDK publishers changed
+        id: changes
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          set -euo pipefail
+          files=$(gh api --paginate "repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER/files" --jq '.[].filename')
+          if grep -q '^openvidu-test-e2e/src/test/resources/[a-z]*-publisher/' <<<"$files"; then
+            echo "publishers=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "No server SDK publisher changed: nothing to test"
+            echo "publishers=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Dispatch OpenVidu Pro E2E server SDK tests
+        id: dispatch
+        if: steps.changes.outputs.publishers == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.OPENVIDU_PRO_E2E_DISPATCH_TOKEN }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          if [ -z "$GH_TOKEN" ]; then
+            echo "::error::Dependabot secret OPENVIDU_PRO_E2E_DISPATCH_TOKEN is not set in $GITHUB_REPOSITORY"
+            exit 1
+          fi
+          response=$(gh api --method POST "repos/$PRO_REPO/actions/workflows/$PRO_WORKFLOW/dispatches" \
+            -f ref=master \
+            -F return_run_details=true \
+            -f "inputs[ref-openvidu]=$HEAD_SHA")
+          run_id=$(jq -r '.workflow_run_id' <<<"$response")
+          html_url=$(jq -r '.html_url' <<<"$response")
+          echo "run-id=$run_id" >> "$GITHUB_OUTPUT"
+          echo "Dispatched $html_url for OpenVidu/openvidu@$HEAD_SHA"
+          echo "OpenVidu Pro E2E server SDK tests for \`$HEAD_SHA\`: $html_url" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Wait for OpenVidu Pro E2E server SDK tests
+        if: steps.dispatch.outputs.run-id != ''
+        env:
+          GH_TOKEN: ${{ secrets.OPENVIDU_PRO_E2E_DISPATCH_TOKEN }}
+          RUN_ID: ${{ steps.dispatch.outputs.run-id }}
+        run: |
+          set -uo pipefail
+          while true; do
+            sleep 60
+            # A failed poll (API hiccup) is retried on the next iteration
+            state=$(gh run view "$RUN_ID" -R "$PRO_REPO" --json status,conclusion --jq '.status + " " + .conclusion') || continue
+            read -r status conclusion <<<"$state"
+            if [ "$status" = "completed" ]; then
+              echo "OpenVidu Pro E2E server SDK tests: $conclusion"
+              [ "$conclusion" = "success" ] && exit 0
+              echo "::error::OpenVidu Pro E2E server SDK tests ended with conclusion '$conclusion'"
+              exit 1
+            fi
+          done
+
+      - name: Cancel OpenVidu Pro E2E server SDK tests
+        if: cancelled() && steps.dispatch.outputs.run-id != ''
+        env:
+          GH_TOKEN: ${{ secrets.OPENVIDU_PRO_E2E_DISPATCH_TOKEN }}
+          RUN_ID: ${{ steps.dispatch.outputs.run-id }}
+        run: gh run cancel "$RUN_ID" -R "$PRO_REPO" || true
