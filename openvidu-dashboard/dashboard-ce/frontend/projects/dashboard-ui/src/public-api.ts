@@ -76,6 +76,7 @@ export * from './lib/features/participants/participant-display.js';
 export * from './lib/features/participants/participants-data.js';
 export * from './lib/features/rooms/room-display.js';
 export * from './lib/features/rooms/rooms-data.js';
+export * from './lib/features/rooms/rooms-table/rooms-table.js';
 export * from './lib/format/formatters.js';
 export * from './lib/format/info-texts.js';
 export * from './lib/format/labels.js';

@@ -3,26 +3,13 @@ import { Component, computed, effect, inject, signal, type Type, untracked } fro
 import { MatButton } from '@angular/material/button';
 import { MatButtonToggle, MatButtonToggleGroup } from '@angular/material/button-toggle';
 import { MatChipListbox, MatChipOption } from '@angular/material/chips';
-import { MatTooltip } from '@angular/material/tooltip';
-import { RouterLink } from '@angular/router';
-import {
-	type RoomFeature,
-	type RoomListItem,
-	RoomSort,
-	RoomStatusFilter,
-	type RoomSummary
-} from '@openvidu-dashboard/typings';
+import { type RoomFeature, RoomSort, RoomStatusFilter, type RoomSummary } from '@openvidu-dashboard/typings';
 
-import { StatusBadge } from '../../components/badges/status-badge.js';
-import { CopyButton } from '../../components/copy-button/copy-button.js';
 import { CursorPaginator } from '../../components/data-table/cursor-paginator.js';
-import { type SortChange, type TableColumn, DataTable, TableCell } from '../../components/data-table/data-table.js';
+import { type SortChange, type TableColumn } from '../../components/data-table/data-table.js';
 import { RangePickerService } from '../../components/date-time-range-picker/date-time-range-picker.js';
-import { Duration } from '../../components/duration/duration.js';
 import { EmptyState } from '../../components/feedback/empty-state.js';
-import { UnavailableValue } from '../../components/feedback/unavailable-value.js';
 import { exactListId, ListSearch, listSearchQuery } from '../../components/search/list-search.js';
-import { MediaNodeLabel } from '../../components/media-node/media-node.js';
 import { KpiTile } from '../../components/tiles/kpi-tile.js';
 import { TileRow } from '../../components/tiles/tile-row.js';
 import { FeatureService } from '../../core/info.js';
@@ -33,11 +20,11 @@ import { ListStateService } from '../../core/state/list-state.js';
 import { QueryStateService } from '../../core/state/query-state.js';
 import { injectRankedSort } from '../../core/state/ranked-sort.js';
 import { rangeSpanMs } from '../../core/state/relative-time.js';
-import { formatNumber, formatTimestamp } from '../../format/formatters.js';
+import { formatNumber } from '../../format/formatters.js';
 import { INFO_TEXTS } from '../../format/info-texts.js';
-import { MEDIA_STATS_TEXTS, RECONCILER_ESTIMATE } from '../../format/labels.js';
-import { formatBandwidth, ROOM_FEATURES, roomPreview } from './room-display.js';
+import { ROOM_FEATURES, roomPreview } from './room-display.js';
 import { ROOMS_NODE_FILTER, RoomsDataService, type RoomsListRequest } from './rooms-data.js';
+import { roomColumns, RoomsTable } from './rooms-table/rooms-table.js';
 
 const STATUSES = Object.values(RoomStatusFilter);
 const SORTS = Object.values(RoomSort);
@@ -59,26 +46,18 @@ interface RoomsData {
 @Component({
 	selector: 'ovd-rooms-page',
 	imports: [
-		CopyButton,
 		CursorPaginator,
-		DataTable,
-		Duration,
 		EmptyState,
 		KpiTile,
 		ListSearch,
 		MatButton,
-		MediaNodeLabel,
 		MatButtonToggle,
 		MatButtonToggleGroup,
 		MatChipListbox,
 		MatChipOption,
-		MatTooltip,
 		NgComponentOutlet,
-		RouterLink,
-		StatusBadge,
-		TableCell,
-		TileRow,
-		UnavailableValue
+		RoomsTable,
+		TileRow
 	],
 	templateUrl: './rooms-page.html',
 	styleUrl: './rooms-page.scss'
@@ -92,7 +71,6 @@ export class RoomsPage {
 	private readonly rangePicker = inject(RangePickerService);
 
 	protected readonly features = ROOM_FEATURES;
-	protected readonly estimate = RECONCILER_ESTIMATE;
 	protected readonly now = injectTicker();
 	protected readonly tz = this.query.tz;
 	protected readonly limit = this.query.limit;
@@ -107,7 +85,7 @@ export class RoomsPage {
 	protected readonly selectedFeatures = computed(() => this.query.csv('features', FEATURE_KEYS));
 	/** The media node label of the `node` parameter, ignored without `per-node-breakdown`. */
 	protected readonly node = computed(() => (this.nodeFilter() ? this.query.value('node') : null));
-	private readonly rangeMs = computed(() => rangeSpanMs(this.listState.range(), this.now()));
+	protected readonly rangeMs = computed(() => rangeSpanMs(this.listState.range(), this.now()));
 	/** Range span when the range last changed, so the ticker never re-renders the headers. */
 	private readonly requestRangeMs = computed(() => {
 		this.listState.range();
@@ -162,53 +140,14 @@ export class RoomsPage {
 	protected readonly page = computed(() => this.loader.data()?.rooms ?? null);
 	protected readonly summary = computed(() => this.loader.data()?.summary ?? null);
 
-	protected readonly columns = computed<TableColumn[]>(() => [
-		{ key: 'sid', header: 'SID', hideable: false, card: 'title' },
-		{ key: 'name', header: 'Name' },
-		{ key: 'status', header: 'Status', hideable: false, card: 'status' },
-		{
-			key: RoomSort.CREATED_AT,
-			header: 'Started',
-			sortable: true,
-			hideable: false,
-			card: 'timestamp',
-			headerHint: this.tz()
-		},
-		{ key: RoomSort.ENDED_AT, header: 'Ended', headerHint: this.tz(), ...this.rankedSort.column('endedAt') },
-		{
-			key: RoomSort.DURATION,
-			header: 'Duration',
-			align: 'end',
-			card: 'metric',
-			...this.rankedSort.column('duration')
-		},
-		{
-			key: RoomSort.UNIQUE_IDENTITIES,
-			header: 'Unique identities',
-			align: 'end',
-			card: 'metric',
-			info: INFO_TEXTS.uniqueIdentities,
-			...this.rankedSort.column('uniqueIdentities')
-		},
-		{
-			key: RoomSort.ACTIVE,
-			header: 'Active',
-			align: 'end',
-			card: 'metric',
-			info: INFO_TEXTS.activeParticipants,
-			...this.rankedSort.column('active')
-		},
-		{
-			key: 'bytes',
-			header: 'Data up / down',
-			align: 'end',
-			...(this.rows().some((room) => room.mediaStats === false) ? { warning: MEDIA_STATS_TEXTS.column } : {})
-		},
-		{ key: 'features', header: 'Features', info: INFO_TEXTS.roomFeatures },
-		...(this.nodeFilter() ? [{ key: 'node', header: 'Node', defaultHidden: true }] : [])
-	]);
-
-	protected readonly trackRoom = (room: RoomListItem): string => room.sid;
+	protected readonly columns = computed<TableColumn[]>(() =>
+		roomColumns({
+			tz: this.tz(),
+			rows: this.rows(),
+			ranked: (sort) => this.rankedSort.column(sort),
+			node: this.nodeFilter()
+		})
+	);
 
 	constructor() {
 		effect(() => {
@@ -229,25 +168,6 @@ export class RoomsPage {
 	/** The range counts come from the hourly rollups: the tiles prefix them with "≈". */
 	protected approximate(): boolean {
 		return this.summary()?.approximate === true;
-	}
-
-	protected time(value: string): string {
-		return formatTimestamp(value, { tz: this.tz(), now: this.now(), rangeMs: this.rangeMs() });
-	}
-
-	protected bandwidth(room: RoomListItem): string {
-		return formatBandwidth(room.bytes);
-	}
-
-	/** "No stats since 12:31:05" for an active room the list response marks stale. */
-	protected staleHint(room: RoomListItem): string | undefined {
-		return room.stale === true && room.lastStatsAt !== undefined
-			? `No stats since ${this.time(room.lastStatsAt)}`
-			: undefined;
-	}
-
-	protected number(value: number): string {
-		return formatNumber(value);
 	}
 
 	protected setStatus(status: RoomStatusFilter): void {

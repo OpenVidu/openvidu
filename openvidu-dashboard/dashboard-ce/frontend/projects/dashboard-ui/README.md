@@ -62,6 +62,9 @@ loadComponent: … }] }] }`. The locked `tracks/:trackSid` route, outside the si
   instead of the full-page lock.
 - **Status styles.** `provideStatusStyles()` registers status domains beyond the CE ones of `ovd-status-badge`, with
   the styles of `STATUS_FAMILY_STYLES`.
+- **Shared lists.** `ovd-rooms-table` with `roomColumns()` renders any list of rooms with the columns and cells of the
+  Rooms page, and its empty state projected with `ovdTableEmpty`; `ovd-list-search` with `entity` `null` searches a
+  list of no entity kind, without the exact ID shortcut.
 - **Chart colours.** `ChartColorsService.colors()` resolves the theme's chart tokens; `resolved(tokens)` resolves an
   application's own custom properties under the applied scheme.
 - **Missing media statistics.** `MEDIA_STATS_TEXTS`, `ovd-media-stats-warning`, `ovd-unavailable`, and the `warning`

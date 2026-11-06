@@ -225,7 +225,7 @@ export class KpiTile {
 	/** Colour of a marker before the value, e.g. the quality band; the value text keeps its contrast. */
 	readonly accent = input<string>();
 	readonly loading = input(false, { transform: booleanAttribute });
-	/** Text of the media statistics warning after the label. */
+	/** Text of a warning icon after the label: missing media statistics, or what needs attention in the value. */
 	readonly warning = input<string>();
 	/** The value reflects no data: a dimmed "—", read as "Not available". */
 	readonly unavailable = input(false, { transform: booleanAttribute });

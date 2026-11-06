@@ -6,6 +6,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { routeElement } from '../../../testing/harness.js';
 import {
+	exactListId,
 	EXACT_ID_HINT,
 	LIST_SEARCH_DEBOUNCE_MS,
 	ListSearch,
@@ -55,6 +56,12 @@ describe('listSearchQuery', () => {
 		expect(listSearchQuery('d', 'room')).toBeNull();
 		expect(listSearchQuery('de', 'room')).toBe('de');
 		expect(listSearchQuery('RM_a', 'room')).toBe('RM_a');
+	});
+
+	it('accepts two characters in a list of no entity kind, which has no exact IDs', () => {
+		expect(listSearchQuery('R', null)).toBeNull();
+		expect(listSearchQuery('10', null)).toBe('10');
+		expect(exactListId('RM_ab12cd', null)).toBeNull();
 	});
 });
 

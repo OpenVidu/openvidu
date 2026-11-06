@@ -24,13 +24,13 @@ export const DETAIL_PATHS: Readonly<Record<EntityKind, string>> = {
 };
 
 /** `q` when the API accepts it: two characters or more, or an exact ID of the list's entity. */
-export function listSearchQuery(q: string, entity: EntityKind): string | null {
-	return q.length >= 2 || isEntityId(entity, q) ? q : null;
+export function listSearchQuery(q: string, entity: EntityKind | null): string | null {
+	return q.length >= 2 || (entity !== null && isEntityId(entity, q)) ? q : null;
 }
 
-/** The exact ID held by `q`, or `null`. */
-export function exactListId(q: string | null, entity: EntityKind): string | null {
-	return q !== null && isEntityId(entity, q) ? q : null;
+/** The exact ID held by `q`, or `null`; a list of no entity kind has none. */
+export function exactListId(q: string | null, entity: EntityKind | null): string | null {
+	return q !== null && entity !== null && isEntityId(entity, q) ? q : null;
 }
 
 /**
@@ -96,8 +96,8 @@ export class ListSearch {
 
 	/** Label of the field, such as "Room name or SID". */
 	readonly label = input.required<string>();
-	/** Entity whose exact IDs the list accepts and Enter opens. */
-	readonly entity = input.required<EntityKind>();
+	/** Entity whose exact IDs the list accepts and Enter opens; `null` for a list of no entity kind. */
+	readonly entity = input.required<EntityKind | null>();
 
 	protected readonly text = signal(untracked(this.query.q));
 	private readonly exactId = computed(() => exactListId(this.text().trim(), this.entity()));
@@ -140,10 +140,11 @@ export class ListSearch {
 	/** Opens the detail of an exact ID with the range, which its breadcrumb carries back. */
 	protected open(): void {
 		const id = this.exactId();
+		const entity = this.entity();
 
-		if (id !== null) {
+		if (id !== null && entity !== null) {
 			clearTimeout(this.timer);
-			void this.router.navigate([DETAIL_PATHS[this.entity()], id], { queryParams: this.listState.rangeParams() });
+			void this.router.navigate([DETAIL_PATHS[entity], id], { queryParams: this.listState.rangeParams() });
 		}
 	}
 
