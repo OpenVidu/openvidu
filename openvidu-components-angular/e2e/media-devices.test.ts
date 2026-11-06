@@ -53,7 +53,9 @@ describe('Media Devices: Virtual Device Replacement and Permissions Handling', (
 	});
 
 	it('should allow selecting and replacing the video track with a custom virtual device in the videoconference page', async () => {
-		const script = 'return document.getElementsByTagName("video")[0].srcObject.getVideoTracks()[0].label;';
+		// The camera <video> shows the background processor output (a generated track with a UUID label),
+		// so the label of the captured track is read from the value exposed by the media devices monkey patch.
+		const script = 'return window.lastCapturedVideoLabel;';
 
 		await browser.get(`${url}&prejoin=false&fakeDevices=true`);
 
