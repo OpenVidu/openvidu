@@ -19,6 +19,7 @@ export * from './lib/components/lock/features.js';
 export * from './lib/components/search/global-search.js';
 export * from './lib/components/info-tip/info-tip.js';
 export * from './lib/components/info-tip/media-stats-warning.js';
+export * from './lib/components/media-node/media-node.js';
 export * from './lib/components/badges/kind-badge.js';
 export * from './lib/components/tiles/kpi-tile.js';
 export * from './lib/components/search/list-search.js';

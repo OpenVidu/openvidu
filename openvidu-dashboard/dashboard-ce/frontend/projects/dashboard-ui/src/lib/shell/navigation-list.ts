@@ -136,10 +136,14 @@ export class NavigationList {
 	readonly navigated = output();
 
 	protected readonly range = inject(ListStateService).rangeParams;
-	protected readonly groups = computed(() => [
-		this.entries.filter((entry) => entry.order < BOTTOM_ENTRIES_FROM),
-		this.entries.filter((entry) => entry.order >= BOTTOM_ENTRIES_FROM)
-	]);
+	protected readonly groups = computed(() => {
+		const shown = this.entries.filter((entry) => !(entry.hiddenWithoutFeature === true && this.locked(entry)));
+
+		return [
+			shown.filter((entry) => entry.order < BOTTOM_ENTRIES_FROM),
+			shown.filter((entry) => entry.order >= BOTTOM_ENTRIES_FROM)
+		];
+	});
 
 	protected locked(entry: NavigationMeta): boolean {
 		return entry.feature !== undefined && !this.features.enabled(entry.feature);

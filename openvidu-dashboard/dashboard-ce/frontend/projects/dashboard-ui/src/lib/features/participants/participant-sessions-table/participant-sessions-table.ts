@@ -10,6 +10,7 @@ import { CopyButton } from '../../../components/copy-button/copy-button.js';
 import { DataTable, type SortChange, TableCell, type TableColumn } from '../../../components/data-table/data-table.js';
 import { Duration } from '../../../components/duration/duration.js';
 import { EmptyState } from '../../../components/feedback/empty-state.js';
+import { MediaNodeLabel } from '../../../components/media-node/media-node.js';
 
 /** The table of a list of participant sessions, with its cells and its empty states. */
 @Component({
@@ -21,6 +22,7 @@ import { EmptyState } from '../../../components/feedback/empty-state.js';
 		EmptyState,
 		KindBadge,
 		MatButton,
+		MediaNodeLabel,
 		RouterLink,
 		SourceIcon,
 		StatusBadge,

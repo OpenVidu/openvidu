@@ -3,7 +3,6 @@ import {
 	type CollectionDefinition,
 	ENTITY_RETENTION_CLASS,
 	type IndexDefinition,
-	NODE_RETENTION_MS,
 	ParticipantStatus,
 	RetentionClass,
 	RoomStatus
@@ -286,9 +285,16 @@ export const INDEXES: readonly IndexDefinition[] = [
 		retentionClass: RetentionClass.ROLLUPS_DAILY
 	}),
 
-	index(Collection.NODES, 'lastSeenAt_ttl', [['lastSeenAt', 1]], {
-		options: { expireAfterSeconds: NODE_RETENTION_MS / 1000 }
-	})
+	index(Collection.NODES, 'lastSeenAt_ttl', [['lastSeenAt', 1]], { retentionClass: RetentionClass.ENTITIES }),
+	index(
+		Collection.NODES,
+		'mediaNode_firstSeenAt',
+		[
+			['mediaNode', 1],
+			['firstSeenAt', -1]
+		],
+		{ options: { partialFilterExpression: { mediaNode: { $exists: true } } } }
+	)
 ];
 
 /** Every collection of the model in creation order, with its validator file and retention. */

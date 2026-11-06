@@ -54,8 +54,18 @@ describe('UI contract', () => {
 
 	it('declares the route metadata of a sidenav entry', () => {
 		expectTypeOf<keyof NavigationMeta>().toEqualTypeOf<
-			'label' | 'icon' | 'path' | 'order' | 'feature' | 'liveCapable' | 'rangeScoped' | 'timed' | 'retention'
+			| 'label'
+			| 'icon'
+			| 'path'
+			| 'order'
+			| 'feature'
+			| 'liveCapable'
+			| 'rangeScoped'
+			| 'timed'
+			| 'retention'
+			| 'hiddenWithoutFeature'
 		>();
 		expectTypeOf<NavigationMeta['retention']>().toEqualTypeOf<keyof InfoRetention | undefined>();
+		expectTypeOf<NavigationMeta['hiddenWithoutFeature']>().toEqualTypeOf<true | undefined>();
 	});
 });

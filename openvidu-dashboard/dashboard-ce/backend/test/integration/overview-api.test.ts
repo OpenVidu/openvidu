@@ -40,8 +40,7 @@ function node(id: string, seenAgo: number): NodeDocument {
 		_id: id,
 		firstSeenAt: ago(HOUR),
 		lastSeenAt: ago(seenAgo),
-		serverVersion: '3.10.0',
-		region: 'eu-west-1'
+		serverVersion: '3.10.0'
 	};
 }
 

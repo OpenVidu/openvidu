@@ -58,7 +58,8 @@ describe.skipIf(mongoUri === '')(`overview query plan at scenario ${scenario}`, 
 			statsMode: 'participant',
 			seed: 1,
 			retentionDays: { events: 7, stats: 7, tracks: 7, entities: 90 },
-			timeseries: true
+			timeseries: true,
+			mediaNodes: true
 		});
 		service = new OverviewService(db, { now: () => now, extension: () => ({}) });
 	}, GENERATION_TIMEOUT_MS);
@@ -130,6 +131,17 @@ describe.skipIf(mongoUri === '')(`overview query plan at scenario ${scenario}`, 
 		expect(recent.totalKeysExamined).toBeLessThanOrEqual(2 * RECENT_ROOMS);
 		expectIndexes(today, ['scope_bucket']);
 		expect(today.nReturned).toBeLessThanOrEqual(25);
+	});
+
+	it('the servers of one media node read the mediaNode_firstSeenAt index, newest first', async () => {
+		const servers = db
+			.collection(Collection.NODES)
+			.find({ mediaNode: 'media-node-10-0-0-1' })
+			.sort({ firstSeenAt: -1 });
+		const plan = await expectIndexBacked(db, servers, { maxDocsExamined: 2 });
+
+		expectIndexes(plan, ['mediaNode_firstSeenAt']);
+		expect(plan.nReturned).toBe(2);
 	});
 
 	it('reports the p95 of every budgeted query and fails above its budget', async () => {

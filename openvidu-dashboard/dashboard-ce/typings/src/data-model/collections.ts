@@ -46,9 +46,6 @@ export const DEFAULT_RETENTION_MS: Readonly<Record<RetentionClass, number | null
 	rollupsDaily: null
 };
 
-/** Retention of `nodes` documents after their last heartbeat. Not configurable. */
-export const NODE_RETENTION_MS = 30 * DAY_MS;
-
 /**
  * Retention class that sets `expiresAt` (`closedAt + retention`) on closed entity documents. Other collections
  * expire through TTL indexes on their own timestamp (see `schema/indexes.json`).

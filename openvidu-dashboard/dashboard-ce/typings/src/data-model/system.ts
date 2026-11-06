@@ -1,4 +1,4 @@
-import type { MigrationState, StatsDetail } from './enums.js';
+import type { MigrationState, RtcEngine, StatsDetail } from './enums.js';
 
 /** `nodes`: one document per server process, refreshed on every writer batch. `_id` is the node id of the process. */
 export interface NodeDocument {
@@ -6,15 +6,22 @@ export interface NodeDocument {
 	firstSeenAt: Date;
 	lastSeenAt: Date;
 	serverVersion: string;
-	region?: string;
 	/** Configured batch interval of the node; absent on documents written before it existed (read as 10 s). */
 	batchIntervalMs?: number;
 	/** Whether the node reports media statistics; absent on documents written before it existed (read as true). */
 	mediaStats?: boolean;
+	/** RTC engine of the server; absent on documents written before it existed (read as `pion`). */
+	rtcEngine?: RtcEngine;
 	/** Media node label of the server: a name of the machine that stays the same across restarts; absent without one. */
 	mediaNode?: string;
+	/** IP of the machine named by `mediaNode`; only with a label. */
+	ip?: string;
+	/** First heartbeat while LiveKit drained the server. */
+	drainingAt?: Date;
 	/** Set by a graceful stop, after the final batch. */
 	stoppedAt?: Date;
+	/** Rooms this server hosted, and those of them the reconciler closed; absent counters read as 0. */
+	rooms?: { hosted?: number; reconciled?: number };
 }
 
 /** `schema_meta` `_id: "schema"`: contract version implemented by the writer. */

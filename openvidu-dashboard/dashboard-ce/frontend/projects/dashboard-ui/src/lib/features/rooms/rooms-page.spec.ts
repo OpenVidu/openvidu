@@ -13,6 +13,7 @@ import { RangePickerService } from '../../components/date-time-range-picker/date
 import { LIST_SEARCH_DEBOUNCE_MS } from '../../components/search/list-search.js';
 import { InfoService } from '../../core/info.js';
 import { PreferencesService } from '../../core/preferences/preferences.js';
+import { MEDIA_NODE_LINK } from '../../components/media-node/media-node.js';
 import { EntityPreviewService } from '../../core/state/entity-preview.js';
 import { MEDIA_STATS_TEXTS } from '../../format/labels.js';
 import { RoomLockedPage } from './room-locked-page.js';
@@ -330,6 +331,33 @@ describe('RoomsPage', () => {
 
 		expect(nodeIndex).toBeGreaterThan(-1);
 		expect(rows.map((row) => text(row.querySelectorAll('td')[nodeIndex]))).toEqual(['mn-a', '—']);
+	});
+
+	it('links the Node cell to the media node page the edition provides', async () => {
+		const http = setup([
+			{ provide: ROOMS_NODE_FILTER, useValue: () => Promise.resolve(NodeFilterStub) },
+			{ provide: MEDIA_NODE_LINK, useValue: (label: string) => `/extra/${label}` }
+		]);
+
+		await withInfo(http, ['per-node-breakdown']);
+		TestBed.inject(PreferencesService).setHiddenColumns('rooms', []);
+
+		const harness = await RouterTestingHarness.create('/rooms');
+
+		await load(http, harness, page([room({ mediaNode: 'mn-a' }), room({ sid: 'RM_plain' })]));
+		await harness.fixture.whenStable();
+
+		const nodeIndex = [...routeElement(harness).querySelectorAll('thead th')].findIndex(
+			(th) => text(th) === 'Node'
+		);
+		const cells = [...routeElement(harness).querySelectorAll('tbody tr')].map(
+			(row) => row.querySelectorAll('td')[nodeIndex]
+		);
+
+		expect(cells[0]?.querySelector('a')?.getAttribute('href')).toBe('/extra/mn-a');
+		expect(cells[0]?.querySelector('a')?.classList).toContain('ovd-mono');
+		expect(cells[1]?.querySelector('a')).toBeNull();
+		expect(text(cells[1])).toBe('—');
 	});
 
 	it('marks a reconciler-closed room as estimated and an active room the API marks stale', async () => {

@@ -63,9 +63,9 @@ node takes no new rooms.
 
 ### D3. Room counters through the projection and the reconciler
 
-- `rooms.hosted`: the projector emits a node increment for the host's `ROOM_CREATED` in the same gated rollup step as
-  the counters, so a replayed event never counts twice. Node increments of a batch merge per node id into one
-  `$inc`, applied in the batch's bulk write on `nodes`.
+- `rooms.hosted`: the processor counts the `ROOM_CREATED` events whose rollups it applied, in the same gated step, so
+  a replayed event never counts twice. A node writes only the events it emits, and only the host emits a room's
+  `ROOM_CREATED`. The next heartbeat adds the count with `$inc`, and puts it back for the following one if it fails.
 - `rooms.reconciled`: the reconciler adds `$inc: { "rooms.reconciled": 1 }` to the room's `nodeId` document when it
   closes the room. A real `ROOM_ENDED` that arrives later goes through the closure correction path and does not touch
   it.
@@ -112,17 +112,18 @@ With `--media-nodes`, the generator models five labels with life spans:
 - `-1`: the existing restart.
 - `-2`: alive.
 - `-3`: alive, `drainingAt` 20 minutes before the end of the data.
-- `-4`: last seen 3 hours before the end. The rooms it hosts open at that time are closed as the reconciler would,
-  with `closedBy: "reconciler"`, and counted in `rooms.reconciled`.
+- `-4`: last seen 3 hours before the end. It hosts some of the rooms that ended before then, the reconciler-closed ones
+  among them counted in `rooms.reconciled`.
 - `-5`: drains at 40 minutes and stops 30 minutes before the end.
 
 Details:
-- Rooms are assigned only to nodes alive at their creation time.
+- Rooms are moved to `-4` and `-5` only when they ended before those nodes went silent or drained, after their
+  generation and before their events, stats and rollups are derived.
 - `rooms.hosted` is the count of rooms per `nodeId`.
 - `--nodes-without-media-stats N` (at most 3) applies to `-3`, `-2` and `-1` in that order, and those nodes get
   `rtcEngine: "mediasoup"`.
-- `keepLive` refreshes only documents without `stoppedAt` whose `lastSeenAt` is less than 5 minutes old, which leaves
-  `-4` silent.
+- `keepLive` refreshes only documents without `stoppedAt` seen within an hour of the freshest one, which leaves `-4`
+  silent whatever time passed since the last tick.
 
 ## Data model
 
@@ -151,8 +152,7 @@ No dashboard endpoint changes. `/status` keeps reading `nodes` for writer freshn
 ## Performance budget
 
 - **Heartbeat:** the same single upsert with three more fields.
-- **Room counters:** at most one merged `$inc` per node per batch on `nodes`, in the bulk write the batch already
-  issues.
+- **Room counters:** no extra write: the hosted rooms ride on the heartbeat.
 - **Reconciler:** one `$inc` per room it closes, a rare path.
 - **Verification:**
   - the writer round-trip counter in the integration tests stays at its budget per batch;

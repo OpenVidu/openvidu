@@ -21,6 +21,7 @@ import {
 	ParticipantStatus,
 	RoomEndReason,
 	RoomStatus,
+	RtcEngine,
 	StatsDetail,
 	StatsDirection,
 	StoredEventType,
@@ -498,13 +499,20 @@ const nodes = obj({
 	firstSeenAt: req(date()),
 	lastSeenAt: req(date()),
 	serverVersion: req(str()),
-	region: str(),
+	region: str('No longer written; documents written before keep it'),
 	batchIntervalMs: { ...int('Configured batch interval of the node, in milliseconds'), minimum: 1000 },
 	mediaStats: bool(
 		'Whether the node reports media statistics; absent on documents written before it existed (read as true)'
 	),
+	rtcEngine: oneOfValues(RtcEngine, 'RTC engine of the server; absent on older documents (pion)'),
 	mediaNode: { ...str('Media node label of the server; absent when it has none'), pattern: MEDIA_NODE_PATTERN },
-	stoppedAt: date('Set by a graceful stop, after the final batch')
+	ip: str('IP of the machine named by mediaNode; only with a label'),
+	drainingAt: date('First heartbeat while the server drained'),
+	stoppedAt: date('Set by a graceful stop, after the final batch'),
+	rooms: obj({
+		hosted: int('Rooms whose ROOM_CREATED the server wrote as their host'),
+		reconciled: int('Rooms of the server closed by the reconciler')
+	})
 });
 
 const metaId = (id: string): BsonSchema => ({ bsonType: 'string', enum: [id] });

@@ -145,7 +145,7 @@
 		</span>
 	</ng-template>
 	<ng-template ovdCell="node" let-room>
-		<span class="ovd-mono">{{ room.mediaNode ?? '—' }}</span>
+		<ovd-media-node [label]="room.mediaNode" />
 	</ng-template>
 
 	@if (exactId(); as sid) {

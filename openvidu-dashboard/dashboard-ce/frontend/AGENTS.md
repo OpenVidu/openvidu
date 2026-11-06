@@ -41,6 +41,8 @@ together (badges, feedback, locks, search, tiles, zone) share a folder and its s
 - A term a newcomer would not understand gets an info tip through the `info` input of tiles, cards, charts,
   `TableColumn` and `EntityFact`, with its text in `INFO_TEXTS` (`format/info-texts.ts`); labels carry no hover text of
   their own.
+- An edition page that must not exist without its feature (rather than render the lock) sets
+  `hiddenWithoutFeature` in its `NavigationMeta`.
 - Missing media statistics: the `warning` input of tiles, cards, charts and `TableColumn` with a `MEDIA_STATS_TEXTS`
   text, plus `unavailable` on tiles and charts (and `ovd-unavailable` in cells) when there is no real data; never a
   notice in their place.

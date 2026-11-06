@@ -67,7 +67,7 @@
 		}
 	</ng-template>
 	<ng-template ovdCell="node" let-item>
-		<span class="ovd-mono">{{ item.mediaNode ?? '—' }}</span>
+		<ovd-media-node [label]="item.mediaNode" />
 	</ng-template>
 
 	@if (exactId(); as sid) {

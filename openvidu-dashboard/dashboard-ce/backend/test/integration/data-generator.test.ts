@@ -202,7 +202,7 @@ describe.skipIf(mongoUri === '')('data generator', () => {
 		}
 	});
 
-	it('labels the nodes and adds an earlier stopped process with media nodes', async () => {
+	it('generates five media nodes, one per state, with media nodes', async () => {
 		const db = client.db('dashboard_test_generator_media_nodes');
 		await db.dropDatabase();
 
@@ -223,15 +223,34 @@ describe.skipIf(mongoUri === '')('data generator', () => {
 			const stopped = first.find((node) => node.stoppedAt !== undefined);
 			const current = first.find((node) => node.stoppedAt === undefined);
 
-			expect(nodes).toHaveLength(4);
+			const label = (n: number) => nodes.find((node) => node.mediaNode === `media-node-10-0-0-${String(n)}`);
+			const end = Math.max(...nodes.map((node) => node.lastSeenAt.getTime()));
+
+			expect(nodes).toHaveLength(6);
 			expect(new Set(nodes.map((node) => node.mediaNode))).toEqual(
-				new Set(['media-node-10-0-0-1', 'media-node-10-0-0-2', 'media-node-10-0-0-3'])
+				new Set([1, 2, 3, 4, 5].map((n) => `media-node-10-0-0-${String(n)}`))
 			);
+			expect(
+				nodes.every((node) => node.ip === node.mediaNode?.replace('media-node-', '').replaceAll('-', '.'))
+			).toBe(true);
+			expect(nodes.every((node) => node.rtcEngine === 'pion')).toBe(true);
 			expect(first).toHaveLength(2);
+			expect(label(2)?.drainingAt).toBeUndefined();
+			expect(end - (label(3)?.drainingAt?.getTime() ?? 0)).toBe(20 * 60_000);
+			expect(label(4)?.stoppedAt).toBeUndefined();
+			expect(end - (label(4)?.lastSeenAt.getTime() ?? 0)).toBe(3 * 3_600_000);
+			expect(end - (label(5)?.stoppedAt?.getTime() ?? 0)).toBe(30 * 60_000);
+			expect(end - (label(5)?.drainingAt?.getTime() ?? 0)).toBe(40 * 60_000);
 			expect(stopped?.lastSeenAt.getTime()).toBeLessThan(current?.firstSeenAt.getTime() ?? 0);
 			expect(await db.collection('rooms').countDocuments({ nodeId: stopped?._id })).toBeGreaterThan(0);
 
 			for (const node of nodes) {
+				const rooms = db.collection('rooms');
+
+				expect(node.rooms?.hosted).toBe(await rooms.countDocuments({ nodeId: node._id }));
+				expect(node.rooms?.reconciled).toBe(
+					await rooms.countDocuments({ nodeId: node._id, closedBy: 'reconciler' })
+				);
 				expect(
 					await db
 						.collection('rooms')
@@ -246,11 +265,23 @@ describe.skipIf(mongoUri === '')('data generator', () => {
 
 			const scopes = (await db.collection('analytics_hourly').distinct('scope')) as string[];
 
-			expect(scopes.filter((scope) => scope !== 'global').sort()).toEqual([
-				'node:media-node-10-0-0-1',
-				'node:media-node-10-0-0-2',
-				'node:media-node-10-0-0-3'
-			]);
+			expect(scopes.filter((scope) => scope !== 'global').sort()).toEqual(
+				[1, 2, 3, 4, 5].map((n) => `node:media-node-10-0-0-${String(n)}`)
+			);
+
+			// The media nodes gone before the end host only rooms that ended before they went silent or drained.
+			for (const gone of [label(4), label(5)]) {
+				const rooms = db.collection('rooms');
+
+				expect(await rooms.countDocuments({ nodeId: gone?._id })).toBeGreaterThan(0);
+				expect(
+					await rooms.countDocuments({
+						nodeId: gone?._id,
+						$or: [{ endedAt: null }, { endedAt: { $gt: gone?.drainingAt ?? gone?.lastSeenAt } }]
+					})
+				).toBe(0);
+			}
+
 			expect(
 				await db.collection('nodes').countDocuments({ $nor: [{ $jsonSchema: CONTRACT_SCHEMAS.nodes }] })
 			).toBe(0);
@@ -260,8 +291,15 @@ describe.skipIf(mongoUri === '')('data generator', () => {
 			await keepLive(db, later);
 			const kept = await db.collection<NodeDocument>('nodes').find().toArray();
 
-			expect(kept.filter((node) => node.lastSeenAt.getTime() === later.getTime())).toHaveLength(3);
+			expect(
+				kept
+					.filter((node) => node.lastSeenAt.getTime() === later.getTime())
+					.map((node) => node._id)
+					.sort()
+			).toEqual([current?._id, label(2)?._id, label(3)?._id].sort());
 			expect(kept.find((node) => node._id === stopped?._id)?.lastSeenAt).toEqual(stopped?.lastSeenAt);
+			expect(kept.find((node) => node._id === label(4)?._id)?.lastSeenAt).toEqual(label(4)?.lastSeenAt);
+			expect(kept.find((node) => node._id === label(3)?._id)?.drainingAt).toEqual(label(3)?.drainingAt);
 		} finally {
 			await db.dropDatabase();
 		}
@@ -301,8 +339,14 @@ describe.skipIf(mongoUri === '')('data generator', () => {
 				nodesWithoutMediaStats: 1
 			});
 
-			const nodes = await db.collection<{ _id: string; mediaStats: boolean }>('nodes').find().toArray();
+			const nodes = await db
+				.collection<{ _id: string; mediaStats: boolean; rtcEngine: string; mediaNode?: string }>('nodes')
+				.find()
+				.toArray();
 			const unmarked = nodes.filter((node) => !node.mediaStats).map((node) => node._id);
+
+			expect(nodes.every((node) => node.rtcEngine === (node.mediaStats ? 'pion' : 'mediasoup'))).toBe(true);
+			expect(nodes.find((node) => !node.mediaStats)?.mediaNode).toBe('media-node-10-0-0-3');
 
 			expect(nodes.filter((node) => node.mediaStats)).toHaveLength(nodes.length - 1);
 			expect(unmarked).toHaveLength(1);

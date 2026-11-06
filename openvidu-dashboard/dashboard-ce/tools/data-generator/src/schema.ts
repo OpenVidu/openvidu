@@ -164,17 +164,27 @@ function describe(error: unknown): string {
 	return error instanceof Error ? error.message : String(error);
 }
 
+/** Nodes silent for longer than this before the freshest one stay silent: the not reporting media node. */
+const SILENT_NODE_MS = 3_600_000;
+
 /**
- * One keep-alive tick at `now`: the heartbeats of the running node processes (not the stopped ones) and the stats time
- * of the active rooms and sessions move to `now`, as a running server would keep them.
+ * One keep-alive tick at `now`: the heartbeats of the node processes still reporting (not the stopped or silent ones)
+ * and the stats time of the active rooms and sessions move to `now`, as a running server would keep them.
  */
 export async function keepLive(db: Db, now: Date): Promise<void> {
-	await db
-		.collection(COLLECTIONS.nodes)
-		.updateMany(
-			{ stoppedAt: { $exists: false } },
+	const nodes = db.collection<{ lastSeenAt: Date }>(COLLECTIONS.nodes);
+	const freshest = await nodes.findOne({ stoppedAt: { $exists: false } }, { sort: { lastSeenAt: -1 } });
+
+	if (freshest !== null) {
+		await nodes.updateMany(
+			{
+				stoppedAt: { $exists: false },
+				lastSeenAt: { $gte: new Date(freshest.lastSeenAt.getTime() - SILENT_NODE_MS) }
+			},
 			{ $set: { lastSeenAt: now, batchIntervalMs: BATCH_INTERVAL_MS } }
 		);
+	}
+
 	await db.collection(COLLECTIONS.rooms).updateMany({ status: 'active' }, { $set: { lastStatsAt: now } });
 	await db.collection(COLLECTIONS.participants).updateMany({ status: 'active' }, { $set: { lastStatsAt: now } });
 }

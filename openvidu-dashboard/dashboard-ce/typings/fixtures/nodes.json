@@ -4,19 +4,23 @@
 		"firstSeenAt": { "$date": "2026-10-01T08:00:00.000Z" },
 		"lastSeenAt": { "$date": "2026-10-12T10:35:10.000Z" },
 		"serverVersion": "3.10.0",
-		"region": "eu-west",
 		"batchIntervalMs": { "$numberInt": "10000" },
 		"mediaStats": true,
-		"mediaNode": "media-node-10-0-0-1"
+		"rtcEngine": "pion",
+		"mediaNode": "media-node-10-0-0-1",
+		"ip": "10.0.0.1",
+		"rooms": { "hosted": { "$numberInt": "1" } }
 	},
 	{
 		"_id": "ND_beta3Vx9Pw",
 		"firstSeenAt": { "$date": "2026-10-05T12:00:00.000Z" },
 		"lastSeenAt": { "$date": "2026-10-12T10:35:10.000Z" },
 		"serverVersion": "3.10.0",
-		"region": "eu-west",
 		"batchIntervalMs": { "$numberInt": "10000" },
 		"mediaStats": true,
-		"mediaNode": "media-node-10-0-0-2"
+		"rtcEngine": "pion",
+		"mediaNode": "media-node-10-0-0-2",
+		"ip": "10.0.0.2",
+		"rooms": { "hosted": { "$numberInt": "1" } }
 	}
 ]

@@ -160,7 +160,10 @@ export interface GenerateOptions {
 	minActiveRooms?: number;
 	/** Generated nodes, the last ones, that report no media statistics; none by default. */
 	nodesWithoutMediaStats?: number;
-	/** Labels the nodes `media-node-10-0-0-<n>` and adds an earlier, stopped process of the first one. */
+	/**
+	 * Five media nodes `media-node-10-0-0-<n>`, one per state: `-1` restarted (an earlier, stopped process), `-2` alive,
+	 * `-3` draining, `-4` not reporting for the last 3 hours and `-5` stopped 30 minutes before the end.
+	 */
 	mediaNodes?: boolean;
 	log?: (line: string) => void;
 }
@@ -227,6 +230,24 @@ export async function generate(db: Db, options: GenerateOptions): Promise<Genera
 		labelled ? nodeIds.map((id, i) => [id, `media-node-10-0-0-${String(i + 1)}`] as const) : []
 	);
 	const withoutMediaStats = new Set(nodeIds.slice(NODE_COUNT - nodesWithoutMediaStats));
+	// Media nodes gone before the end of the data: they host some of the rooms that ended before they did.
+	const extraRng = new Rng(options.seed + 2_000_003);
+	const departed = labelled
+		? [
+				{ nodeId: extraRng.id('ND_', 8), n: 4, lastSeenAt: now - 3 * HOUR, drainingAt: null, stoppedAt: null },
+				{
+					nodeId: extraRng.id('ND_', 8),
+					n: 5,
+					lastSeenAt: now - 30 * MINUTE,
+					drainingAt: now - 40 * MINUTE,
+					stoppedAt: now - 30 * MINUTE
+				}
+			]
+		: [];
+
+	for (const node of departed) {
+		mediaNodes.set(node.nodeId, `media-node-10-0-0-${String(node.n)}`);
+	}
 
 	if (restart !== undefined) {
 		mediaNodes.set(restart.previousNodeId, mediaNodes.get(restart.nodeId) ?? '');
@@ -276,8 +297,28 @@ export async function generate(db: Db, options: GenerateOptions): Promise<Genera
 			`track_stats ${timeseries ? 'time-series' : 'plain collection'}, seed ${String(options.seed)}`
 	);
 
+	const hosted = new Map<string, number>();
+	const reconciled = new Map<string, number>();
+
 	for (const [i, plan] of plans.entries()) {
 		const bundle = generateRoom(ctx, plan);
+		const target = departed[plan.index % 5];
+
+		if (
+			target !== undefined &&
+			bundle.room.mediaStats !== false &&
+			bundle.room.endedAt !== null &&
+			bundle.room.endedAt.getTime() < (target.drainingAt ?? target.lastSeenAt)
+		) {
+			rehost(bundle, target.nodeId, `media-node-10-0-0-${String(target.n)}`);
+		}
+
+		hosted.set(bundle.room.nodeId, (hosted.get(bundle.room.nodeId) ?? 0) + 1);
+
+		if (bundle.room.closedBy === 'reconciler') {
+			reconciled.set(bundle.room.nodeId, (reconciled.get(bundle.room.nodeId) ?? 0) + 1);
+		}
+
 		writer.add(COLLECTIONS.rooms, bundle.room);
 
 		for (const doc of bundle.participants) {
@@ -334,34 +375,50 @@ export async function generate(db: Db, options: GenerateOptions): Promise<Genera
 		writer.add(COLLECTIONS.analytics5min, doc);
 	}
 
-	const regions = ['eu-west-1', 'eu-west-1', 'us-east-1'];
+	const nodeDocument = (nodeId: string, fields: { firstSeenAt: number; lastSeenAt: number }) => {
+		const mediaNode = mediaNodes.get(nodeId);
+		const reportsMediaStats = !ctx.withoutMediaStats.has(nodeId);
+		const rooms = { hosted: hosted.get(nodeId) ?? 0, reconciled: reconciled.get(nodeId) ?? 0 };
+
+		return {
+			_id: nodeId,
+			firstSeenAt: new Date(fields.firstSeenAt),
+			lastSeenAt: new Date(fields.lastSeenAt),
+			serverVersion: '3.10.0',
+			batchIntervalMs: BATCH_INTERVAL_MS,
+			mediaStats: reportsMediaStats,
+			rtcEngine: reportsMediaStats ? 'pion' : 'mediasoup',
+			...(mediaNode === undefined
+				? {}
+				: { mediaNode, ip: mediaNode.replace('media-node-', '').replaceAll('-', '.') }),
+			rooms
+		};
+	};
 
 	for (const [i, nodeId] of nodeIds.entries()) {
-		const mediaNode = mediaNodes.get(nodeId);
 		writer.add(COLLECTIONS.nodes, {
-			_id: nodeId,
-			firstSeenAt: new Date(restart?.nodeId === nodeId ? restart.at : windowStart - DAY),
-			lastSeenAt: new Date(now),
-			serverVersion: '3.10.0',
-			region: regions[i],
-			batchIntervalMs: BATCH_INTERVAL_MS,
-			mediaStats: !ctx.withoutMediaStats.has(nodeId),
-			...(mediaNode === undefined ? {} : { mediaNode })
+			...nodeDocument(nodeId, {
+				firstSeenAt: restart?.nodeId === nodeId ? restart.at : windowStart - DAY,
+				lastSeenAt: now
+			}),
+			// The third media node is draining: it takes no new rooms and stops once its rooms end.
+			...(labelled && i === 2 ? { drainingAt: new Date(now - 20 * MINUTE) } : {})
 		});
 	}
 
 	if (restart !== undefined) {
-		const stoppedAt = new Date(restart.at - MINUTE);
+		const stoppedAt = restart.at - MINUTE;
 		writer.add(COLLECTIONS.nodes, {
-			_id: restart.previousNodeId,
-			firstSeenAt: new Date(windowStart - DAY),
-			lastSeenAt: stoppedAt,
-			stoppedAt,
-			serverVersion: '3.10.0',
-			region: regions[0],
-			batchIntervalMs: BATCH_INTERVAL_MS,
-			mediaStats: !ctx.withoutMediaStats.has(restart.previousNodeId),
-			mediaNode: mediaNodes.get(restart.previousNodeId)
+			...nodeDocument(restart.previousNodeId, { firstSeenAt: windowStart - DAY, lastSeenAt: stoppedAt }),
+			stoppedAt: new Date(stoppedAt)
+		});
+	}
+
+	for (const node of departed) {
+		writer.add(COLLECTIONS.nodes, {
+			...nodeDocument(node.nodeId, { firstSeenAt: windowStart - DAY, lastSeenAt: node.lastSeenAt }),
+			...(node.drainingAt === null ? {} : { drainingAt: new Date(node.drainingAt) }),
+			...(node.stoppedAt === null ? {} : { stoppedAt: new Date(node.stoppedAt) })
 		});
 	}
 
@@ -415,4 +472,15 @@ function describeWriteError(error: unknown): string {
 
 function formatInt(value: number): string {
 	return value.toLocaleString('en-US');
+}
+
+/** Moves a generated room and its sessions to another server, before its events, stats and rollups are derived. */
+function rehost(bundle: ReturnType<typeof generateRoom>, nodeId: string, mediaNode: string): void {
+	bundle.room.nodeId = nodeId;
+	bundle.room.mediaNode = mediaNode;
+
+	for (const participant of bundle.participants) {
+		participant.nodeId = nodeId;
+		participant.mediaNode = mediaNode;
+	}
 }

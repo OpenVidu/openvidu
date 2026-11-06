@@ -22,6 +22,7 @@ import { Duration } from '../../components/duration/duration.js';
 import { EmptyState } from '../../components/feedback/empty-state.js';
 import { UnavailableValue } from '../../components/feedback/unavailable-value.js';
 import { exactListId, ListSearch, listSearchQuery } from '../../components/search/list-search.js';
+import { MediaNodeLabel } from '../../components/media-node/media-node.js';
 import { KpiTile } from '../../components/tiles/kpi-tile.js';
 import { TileRow } from '../../components/tiles/tile-row.js';
 import { FeatureService } from '../../core/info.js';
@@ -66,6 +67,7 @@ interface RoomsData {
 		KpiTile,
 		ListSearch,
 		MatButton,
+		MediaNodeLabel,
 		MatButtonToggle,
 		MatButtonToggleGroup,
 		MatChipListbox,

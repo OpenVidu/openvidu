@@ -6,7 +6,6 @@ import {
 	MEDIA_NODE_BETA,
 	NODE_ALPHA,
 	NODE_BETA,
-	REGION,
 	schemaVersion,
 	SERVER_VERSION
 } from './scenario.js';
@@ -17,20 +16,24 @@ export const nodes: NodeDocument[] = [
 		firstSeenAt: new Date('2026-10-01T08:00:00Z'),
 		lastSeenAt: at('10:35:10'),
 		serverVersion: SERVER_VERSION,
-		region: REGION,
 		batchIntervalMs: 10_000,
 		mediaStats: true,
-		mediaNode: MEDIA_NODE_ALPHA
+		rtcEngine: 'pion',
+		mediaNode: MEDIA_NODE_ALPHA,
+		ip: '10.0.0.1',
+		rooms: { hosted: 1 }
 	},
 	{
 		_id: NODE_BETA,
 		firstSeenAt: new Date('2026-10-05T12:00:00Z'),
 		lastSeenAt: at('10:35:10'),
 		serverVersion: SERVER_VERSION,
-		region: REGION,
 		batchIntervalMs: 10_000,
 		mediaStats: true,
-		mediaNode: MEDIA_NODE_BETA
+		rtcEngine: 'pion',
+		mediaNode: MEDIA_NODE_BETA,
+		ip: '10.0.0.2',
+		rooms: { hosted: 1 }
 	}
 ];
 

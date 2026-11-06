@@ -46,7 +46,7 @@ pnpm generate --uri "$MONGO_URI" --db ov_data_l --scenario L --days 1 --drop --s
 | `--active-window <minutes>`         | off           | Rooms created in the last minutes stay active (two of three); without it, the most recent 10 % of the rooms are active    |
 | `--min-active-rooms <n>`            | 0             | With `--active-window`: rooms added to the window when the hour of day leaves fewer than `n` active rooms                 |
 | `--nodes-without-media-stats <n>`   | 0             | The last `n` of the three nodes report no media statistics: `mediaStats: false`, no media `track_stats`, bytes or quality |
-| `--media-nodes`                     | off           | Label the nodes `media-node-10-0-0-1` to `-3` and add an earlier stopped process of the first one (a restart)             |
+| `--media-nodes`                     | off           | Five labelled media nodes `media-node-10-0-0-1` to `-5`, one per state (see Output)                                       |
 
 | Scenario | Rooms per day | Sessions per day | Average room size |
 | -------- | ------------- | ---------------- | ----------------- |
@@ -84,8 +84,15 @@ What it writes (`analytics_5min` stays empty without `--five-minute-rollups`):
   adds `analytics_5min` (lifecycle counters, the `participants.connected` gauge, bytes and quality per five minutes)
   inside the 5-minute rollup window. `analytics_daily` gets no TTL index: daily rollups are kept forever.
   `generate()` takes the same switches as `rollups: { fiveMinute, nodes, roomSums }` and `mediaNodes`.
-- `nodes` (3 nodes, plus the stopped earlier process of the first one with `--media-nodes`) and `schema_meta`
-  (`schema`, `retention`, `capabilities`, `config`).
+- `nodes`, with `rtcEngine` (`mediasoup` for the nodes of `--nodes-without-media-stats`), `ip` and the room counters
+  `rooms.hosted` and `rooms.reconciled`: 3 nodes, or with `--media-nodes` five media nodes, one per state:
+  - `-1` restarted: an earlier, stopped process hosts its older rooms;
+  - `-2` alive;
+  - `-3` draining for the last 20 minutes;
+  - `-4` not reporting for the last 3 hours, host of rooms that ended before;
+  - `-5` stopped 30 minutes before the end, after draining for 10.
+    The keep-alive refreshes only the nodes within an hour of the freshest one, so `-4` stays silent.
+- `schema_meta` (`schema`, `retention`, `capabilities`, `config`).
 
 Documents are inserted in batches of 5 000 with `insertMany(ordered: false)`. The output shows progress
 and a final summary with documents per collection, elapsed time and inserts per second. The generator

@@ -24,4 +24,9 @@ export interface NavigationMeta extends PageMeta {
 	path: string;
 	/** Position in the sidenav, ascending. */
 	order: number;
+	/**
+	 * Without `feature`, the entry is left out of the sidenav and the route behaves as an unknown path, instead of the
+	 * full-page lock.
+	 */
+	hiddenWithoutFeature?: true;
 }

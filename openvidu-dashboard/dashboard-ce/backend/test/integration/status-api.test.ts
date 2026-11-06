@@ -24,7 +24,6 @@ function node(id: string, seenAgo: number, batchIntervalMs?: number): NodeDocume
 		firstSeenAt: ago(HOUR),
 		lastSeenAt: ago(seenAgo),
 		serverVersion: '3.10.0',
-		region: 'eu-west-1',
 		...(batchIntervalMs === undefined ? {} : { batchIntervalMs })
 	};
 }

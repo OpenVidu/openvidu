@@ -53,7 +53,13 @@ loadComponent: … }] }] }`. The locked `tracks/:trackSid` route, outside the si
   - `OVERVIEW_NODES_CARD`: the content of the "By node" card of the Overview, given `overview`, the last overview
     response.
   - These three, and the Node columns of the Rooms, Participants and Agents tables (the `mediaNode` of each item),
-    render only with `per-node-breakdown`; without it nothing about nodes renders, not even locked.
+    render only with `per-node-breakdown`; without it nothing about nodes renders, not even locked. The "By node"
+    card takes the full width, above Recent rooms.
+  - `MEDIA_NODE_LINK`: the path of a media node's page, from its label; the Node cells (`ovd-media-node`) link to it,
+    and render plain text when none is provided.
+- **Hidden pages.** A route whose `NavigationMeta` sets `hiddenWithoutFeature` matches only with its `feature`
+  (`composeRoutes` adds the guard): without it the sidenav leaves the entry out and the path behaves as unknown,
+  instead of the full-page lock.
 - **Status styles.** `provideStatusStyles()` registers status domains beyond the CE ones of `ovd-status-badge`, with
   the styles of `STATUS_FAMILY_STYLES`.
 - **Chart colours.** `ChartColorsService.colors()` resolves the theme's chart tokens; `resolved(tokens)` resolves an

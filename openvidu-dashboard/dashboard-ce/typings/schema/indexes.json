@@ -457,6 +457,16 @@
 		"collection": "nodes",
 		"name": "lastSeenAt_ttl",
 		"key": [["lastSeenAt", 1]],
-		"options": { "expireAfterSeconds": 2592000 }
+		"options": {},
+		"retentionClass": "entities"
+	},
+	{
+		"collection": "nodes",
+		"name": "mediaNode_firstSeenAt",
+		"key": [
+			["mediaNode", 1],
+			["firstSeenAt", -1]
+		],
+		"options": { "partialFilterExpression": { "mediaNode": { "$exists": true } } }
 	}
 ]

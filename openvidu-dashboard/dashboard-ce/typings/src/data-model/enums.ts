@@ -12,6 +12,13 @@ export const RoomStatus = {
 } as const;
 export type RoomStatus = ValueOf<typeof RoomStatus>;
 
+/** RTC engine of a server. */
+export const RtcEngine = {
+	PION: 'pion',
+	MEDIASOUP: 'mediasoup'
+} as const;
+export type RtcEngine = ValueOf<typeof RtcEngine>;
+
 export const RoomEndReason = {
 	UNKNOWN: 'UNKNOWN',
 	API_DELETE: 'API_DELETE',

@@ -6,7 +6,7 @@
 		"firstSeenAt": { "bsonType": "date" },
 		"lastSeenAt": { "bsonType": "date" },
 		"serverVersion": { "bsonType": "string" },
-		"region": { "bsonType": "string" },
+		"region": { "bsonType": "string", "description": "No longer written; documents written before keep it" },
 		"batchIntervalMs": {
 			"bsonType": ["int", "long"],
 			"description": "Configured batch interval of the node, in milliseconds",
@@ -16,12 +16,33 @@
 			"bsonType": "bool",
 			"description": "Whether the node reports media statistics; absent on documents written before it existed (read as true)"
 		},
+		"rtcEngine": {
+			"bsonType": "string",
+			"enum": ["pion", "mediasoup"],
+			"description": "RTC engine of the server; absent on older documents (pion)"
+		},
 		"mediaNode": {
 			"bsonType": "string",
 			"description": "Media node label of the server; absent when it has none",
 			"pattern": "^[A-Za-z0-9_.-]{1,128}$"
 		},
-		"stoppedAt": { "bsonType": "date", "description": "Set by a graceful stop, after the final batch" }
+		"ip": { "bsonType": "string", "description": "IP of the machine named by mediaNode; only with a label" },
+		"drainingAt": { "bsonType": "date", "description": "First heartbeat while the server drained" },
+		"stoppedAt": { "bsonType": "date", "description": "Set by a graceful stop, after the final batch" },
+		"rooms": {
+			"bsonType": "object",
+			"properties": {
+				"hosted": {
+					"bsonType": ["int", "long"],
+					"description": "Rooms whose ROOM_CREATED the server wrote as their host"
+				},
+				"reconciled": {
+					"bsonType": ["int", "long"],
+					"description": "Rooms of the server closed by the reconciler"
+				}
+			},
+			"additionalProperties": false
+		}
 	},
 	"additionalProperties": false
 }

@@ -123,7 +123,13 @@
 		}
 	</ovd-section-card>
 
-	<ovd-section-card heading="Recent rooms" sectionId="recent-rooms" [class.full]="!nodesCardShown()">
+	@if (nodesCardShown() && nodesCard; as card) {
+		<ovd-section-card class="full" heading="By node" sectionId="nodes" [info]="info.byNode">
+			<ng-container *ngComponentOutlet="card; inputs: { overview: overview() }" />
+		</ovd-section-card>
+	}
+
+	<ovd-section-card class="full" heading="Recent rooms" sectionId="recent-rooms">
 		<div ovdSectionActions class="links">
 			@if ((live()?.rooms ?? 0) > 0) {
 				<a routerLink="/rooms" [queryParams]="{ status: 'active' }">View active rooms</a>
@@ -187,10 +193,4 @@
 			</ovd-data-table>
 		}
 	</ovd-section-card>
-
-	@if (nodesCardShown() && nodesCard; as card) {
-		<ovd-section-card heading="By node" sectionId="nodes" [info]="info.byNode">
-			<ng-container *ngComponentOutlet="card; inputs: { overview: overview() }" />
-		</ovd-section-card>
-	}
 </div>

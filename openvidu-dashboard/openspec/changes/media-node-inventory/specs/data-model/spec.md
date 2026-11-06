@@ -109,11 +109,11 @@ and stopped. It SHALL stamp each label on the rooms and sessions its node hosted
   - `media-node-10-0-0-1` has two, the earlier with `stoppedAt` before the later one's `firstSeenAt`;
   - `-2` is alive;
   - `-3` is alive with `drainingAt` 20 minutes before the end of the data;
-  - `-4` was last seen 3 hours before the end, without `stoppedAt`, and its rooms open at that time are closed by the
-    reconciler, with `closedBy: "reconciler"`, and counted in its `rooms.reconciled`;
+  - `-4` was last seen 3 hours before the end, without `stoppedAt`, and hosts only rooms that ended before then;
   - `-5` has `drainingAt` and, 10 minutes later, `stoppedAt` 30 minutes before the end.
   Every room has the `mediaNode` of its node document, each document's `rooms.hosted` equals the rooms with its
-  `nodeId`, and every node scope of the rollups is `node:media-node-10-0-0-<n>`.
+  `nodeId` and `rooms.reconciled` those of them closed by the reconciler, and every node scope of the rollups is
+  `node:media-node-10-0-0-<n>`.
 
 #### Scenario: Keep-alive and the stopped process
 - **GIVEN** that database kept live by the generator's keep-alive

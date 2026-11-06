@@ -304,7 +304,18 @@ describe('OverviewPage', () => {
 
 		expect(text(card)).toContain('media nodes');
 		expect(card?.querySelector('header ovd-info-tip button')?.getAttribute('aria-label')).toBe('About By node');
-		expect(section(element, 'Recent rooms')?.classList.contains('full')).toBe(false);
+	});
+
+	it('places the By node card at full width between the today row and Recent rooms, also at full width', async () => {
+		const { element } = await open(overview(), ['per-node-breakdown'], status(), NodesCard);
+		const cards = [...element.querySelectorAll('.cards > ovd-section-card')];
+		const headings = cards.map((card) => text(card.querySelector('h2')));
+		const byNode = headings.findIndex((heading) => heading.startsWith('By node'));
+
+		expect(byNode).toBeGreaterThan(headings.findIndex((heading) => heading.startsWith('Data pipeline')));
+		expect(headings[byNode + 1]).toMatch(/^Recent rooms/);
+		expect(section(element, 'By node')?.classList.contains('full')).toBe(true);
+		expect(section(element, 'Recent rooms')?.classList.contains('full')).toBe(true);
 	});
 
 	it('marks an approximate today and an empty one', async () => {

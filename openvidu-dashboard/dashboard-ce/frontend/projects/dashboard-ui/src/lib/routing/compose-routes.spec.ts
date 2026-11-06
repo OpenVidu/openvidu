@@ -5,6 +5,8 @@ import { RouterTestingHarness } from '@angular/router/testing';
 import type { NavigationMeta } from '@openvidu-dashboard/typings';
 import { describe, expect, it } from 'vitest';
 
+import { FeatureService } from '../core/info.js';
+import { NavigationList } from '../shell/navigation-list.js';
 import { composeRoutes, type DashboardRoute, navigationEntries } from './compose-routes.js';
 
 @Component({ selector: 'ovd-ce-list', template: 'CE list' })
@@ -70,5 +72,61 @@ describe('composeRoutes', () => {
 		]);
 
 		expect(navigationEntries(routes).map((entry) => entry.label)).toEqual(['Overview', 'Rooms', 'Agents']);
+	});
+
+	describe('an entry hidden without its feature', () => {
+		const EXTRA: DashboardRoute[] = [
+			{
+				path: 'extra',
+				data: {
+					navigation: {
+						...nav('Extra', '/extra', 80),
+						feature: 'per-node-breakdown',
+						hiddenWithoutFeature: true
+					}
+				},
+				children: [{ path: ':id', component: ProDetail }]
+			}
+		];
+
+		function configure(features: string[]) {
+			const routes = composeRoutes(CE, EXTRA);
+
+			TestBed.configureTestingModule({
+				providers: [
+					provideRouter(routes),
+					{ provide: FeatureService, useValue: { enabled: (feature: string) => features.includes(feature) } }
+				]
+			});
+
+			return routes;
+		}
+
+		it('behaves as an unknown path and leaves the sidenav without the feature', async () => {
+			configure([]);
+
+			const harness = await RouterTestingHarness.create('/extra/mn-a');
+
+			expect(harness.routeNativeElement?.textContent).toBe('CE list');
+
+			const fixture = TestBed.createComponent(NavigationList);
+
+			await fixture.whenStable();
+			expect((fixture.nativeElement as HTMLElement).textContent).not.toContain('Extra');
+			expect((fixture.nativeElement as HTMLElement).querySelector('.lock')).toBeNull();
+		});
+
+		it('opens the page and lists the entry with the feature', async () => {
+			configure(['per-node-breakdown']);
+
+			const harness = await RouterTestingHarness.create('/extra/mn-a');
+
+			expect(harness.routeNativeElement?.textContent).toBe('PRO detail');
+
+			const fixture = TestBed.createComponent(NavigationList);
+
+			await fixture.whenStable();
+			expect((fixture.nativeElement as HTMLElement).textContent).toContain('Extra');
+		});
 	});
 });

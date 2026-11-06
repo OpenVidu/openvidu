@@ -1,6 +1,8 @@
-import type { Route, Routes } from '@angular/router';
-import type { NavigationMeta } from '@openvidu-dashboard/typings';
+import { inject } from '@angular/core';
+import type { CanMatchFn, Route, Routes } from '@angular/router';
+import type { FeatureKey, NavigationMeta } from '@openvidu-dashboard/typings';
 
+import { FeatureService } from '../core/info.js';
 import type { DashboardRouteData } from '../core/state/route-state.js';
 
 /** A route of the dashboard whose `data` follows `DashboardRouteData`. */
@@ -50,13 +52,33 @@ function mergeLevel(base: readonly DashboardRoute[], overrides: readonly Dashboa
 	return result;
 }
 
+/** Matches only while the edition has `feature`, so the router falls through to the catch-all route. */
+function featureMatch(feature: FeatureKey): CanMatchFn {
+	return () => inject(FeatureService).enabled(feature);
+}
+
+/** Routes whose navigation entry is hidden without its feature match only with it. */
+function hideWithoutFeature(routes: readonly DashboardRoute[]): DashboardRoute[] {
+	return routes.map((route) => {
+		const navigation = route.data?.navigation;
+		const feature = navigation?.hiddenWithoutFeature === true ? navigation.feature : undefined;
+
+		return {
+			...route,
+			...(route.children === undefined ? {} : { children: hideWithoutFeature(route.children) }),
+			...(feature === undefined ? {} : { canMatch: [...(route.canMatch ?? []), featureMatch(feature)] })
+		};
+	});
+}
+
 /**
  * Composes route configs: a later config replaces the earlier route with the same path at the same level, keeping the
  * earlier `data` keys it does not set (so a PRO page keeps the CE navigation metadata) and merging children by path.
- * New paths are inserted before a catch-all route.
+ * New paths are inserted before a catch-all route. A route whose entry is hidden without its feature matches only with
+ * the feature.
  */
 export function composeRoutes(...configs: readonly (readonly DashboardRoute[])[]): Routes {
-	return configs.reduce<DashboardRoute[]>((composed, config) => mergeLevel(composed, config), []);
+	return hideWithoutFeature(configs.reduce<DashboardRoute[]>((composed, config) => mergeLevel(composed, config), []));
 }
 
 function collect(routes: readonly Route[], entries: NavigationMeta[]): void {
