@@ -327,7 +327,7 @@ describe('TimeSeriesChart', () => {
 			'Bitrate up / down: not available'
 		);
 		expect(element.querySelector('.toggle')).toBeNull();
-		expect(option['series']).toEqual([]);
+		expect((option['series'] as { data: unknown[] }[]).map((series) => series.data)).toEqual([[]]);
 		expect(option['tooltip']).toEqual({ show: false });
 		expect(option['legend']).toEqual({ show: false });
 	});

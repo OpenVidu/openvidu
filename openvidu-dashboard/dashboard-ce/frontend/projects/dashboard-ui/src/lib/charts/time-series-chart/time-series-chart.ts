@@ -77,7 +77,8 @@ export class TimeSeriesChart {
 		const bands = this.bands();
 		const unavailable = this.unavailable();
 		const option = timeSeriesOption({
-			series: unavailable ? [] : this.series(),
+			// One empty series keeps what hangs from the first one, such as the quality bands.
+			series: unavailable ? [{ name: this.heading(), points: [] }] : this.series(),
 			from: this.from(),
 			to: this.to(),
 			tz: this.tz(),
