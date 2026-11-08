@@ -45,6 +45,12 @@ test('the summary tiles and the rows render with copy chips, badges and live cue
 	await expect(tiles).toContainText('120');
 	await expect(tiles).toContainText('900');
 	await expect(tiles).toContainText('31');
+	await expect(tiles.locator('ovd-kpi-tile .label')).toHaveText([
+		'Active now',
+		'Participants active now',
+		'Rooms in range',
+		'Sessions in range'
+	]);
 
 	const demo = table(page).getByRole('row', { name: /demo-room/ });
 
@@ -207,5 +213,7 @@ test.describe('rooms on servers with and without media statistics', () => {
 		await expect(unreported.getByRole('button', warning)).toBeAttached();
 		await expect(reported.getByText('↑ 12 MB')).toBeVisible();
 		await expect(reported.getByRole('button', warning)).toHaveCount(0);
+		await expect(unreported.getByRole('button', { name: 'About Data up / down' })).toBeAttached();
+		await expect(reported.getByRole('button', { name: 'About Data up / down' })).toBeAttached();
 	});
 });

@@ -9,6 +9,8 @@ export const INFO_TEXTS = {
 	services:
 		'Egress, ingress, agent and other non-user sessions. They join rooms as participants but are not counted as participants.',
 	dataUpDown: 'Up: bytes the participants sent to the server. Down: bytes the server sent to the participants.',
+	dataUp: 'Bytes the participants sent to the server.',
+	dataDown: 'Bytes the server sent to the participants.',
 	sdk: 'Software development kit the client connected with.',
 
 	liveParticipants: 'Regular participants connected now. Egress, ingress and agents are not counted.',

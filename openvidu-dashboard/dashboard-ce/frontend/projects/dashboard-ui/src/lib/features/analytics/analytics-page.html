@@ -208,11 +208,13 @@
 			<ovd-tile-row class="card-tiles">
 				<ovd-kpi-tile
 					label="Total up"
+					[info]="infoTexts.dataUp"
 					[value]="bytesTile(summary()?.bytesUp, '↑')"
 					[unavailable]="mediaStats() === 'none'"
 				/>
 				<ovd-kpi-tile
 					label="Total down"
+					[info]="infoTexts.dataDown"
 					[value]="bytesTile(summary()?.bytesDown, '↓')"
 					[unavailable]="mediaStats() === 'none'"
 				/>
@@ -221,6 +223,7 @@
 				heading="Data up / down"
 				kind="area"
 				format="bytes"
+				[info]="infoTexts.dataUpDown"
 				[series]="charts().bytes"
 				[from]="chartRange('bytesUp').from"
 				[to]="chartRange('bytesUp').to"

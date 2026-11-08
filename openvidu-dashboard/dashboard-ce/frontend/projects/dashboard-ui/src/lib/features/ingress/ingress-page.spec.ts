@@ -128,6 +128,12 @@ describe('IngressPage', () => {
 			'Input',
 			'Status'
 		]);
+		expect([...element.querySelectorAll('ovd-kpi-tile .label')].map(text)).toEqual([
+			'Active now',
+			'Ingress in range',
+			'Sessions in range',
+			'Duration in range'
+		]);
 		expect(tiles[1]).toMatch(/^Ingress in range 5/);
 		expect(tiles[1]).toContain('RTMP 3 · WHIP 2 · URL 0');
 		expect(tiles[2]).toContain('12');

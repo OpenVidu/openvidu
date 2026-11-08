@@ -32,7 +32,7 @@ test('egress against the real backend: seeded list, filters, the locked detail a
 	await expect(
 		table.getByRole('row', { name: new RegExp(RECONCILED_EGRESS) }).getByRole('img', { name: /Egress failed/ })
 	).toHaveCount(0);
-	await expect(page.getByRole('region', { name: 'Summary' })).toContainText('Total duration');
+	await expect(page.getByRole('region', { name: 'Summary' })).toContainText('Duration in range');
 
 	await page.getByRole('combobox', { name: 'Status' }).click();
 	await page.getByRole('option', { name: 'Failed' }).click();

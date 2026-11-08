@@ -397,6 +397,20 @@ describe('AnalyticsPage', () => {
 		expect(bandwidth?.querySelector('.unavailable')).toBeNull();
 	});
 
+	it('explains Total up, Total down and the Data up / down chart, not the Data transferred heading', async () => {
+		const { element } = await open('/analytics?from=now-7d&to=now&tz=UTC');
+		const bandwidth = card(element, 'Data transferred');
+		const tip = (root: Element | null | undefined) =>
+			root?.querySelector('ovd-info-tip button')?.getAttribute('aria-label') ?? null;
+
+		expect([...(bandwidth?.querySelectorAll('ovd-kpi-tile') ?? [])].map(tip)).toEqual([
+			'About Total up',
+			'About Total down'
+		]);
+		expect(tip(bandwidth?.querySelector('ovd-time-series-chart'))).toBe('About Data up / down');
+		expect(bandwidth?.querySelector('.heading-row ovd-info-tip')).toBeNull();
+	});
+
 	it('hides unique identities below a day and shows them per UTC day at one day', async () => {
 		const weekly = await open('/analytics?from=now-7d&to=now&tz=UTC');
 

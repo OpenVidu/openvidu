@@ -131,7 +131,13 @@ describe('RoomsPage', () => {
 		const { element, http } = await open('/rooms');
 		const tiles = [...element.querySelectorAll('ovd-kpi-tile .value')].map(text);
 
-		expect(tiles).toEqual(['7', '120', '900', '31']);
+		expect(tiles).toEqual(['7', '31', '120', '900']);
+		expect([...element.querySelectorAll('ovd-kpi-tile .label')].map(text)).toEqual([
+			'Active now',
+			'Participants active now',
+			'Rooms in range',
+			'Sessions in range'
+		]);
 
 		const row = element.querySelector('tbody tr');
 		const cells = [...(row?.querySelectorAll('td') ?? [])].map(text);
@@ -433,7 +439,7 @@ describe('RoomsPage', () => {
 
 		const tiles = [...routeElement(harness).querySelectorAll('ovd-kpi-tile .value')].map(text);
 
-		expect(tiles).toEqual(['7', '≈ 120', '≈ 900', '31']);
+		expect(tiles).toEqual(['7', '31', '≈ 120', '≈ 900']);
 	});
 
 	it('explains participant sessions, unique identities, active and features with info tips only', async () => {
@@ -446,8 +452,8 @@ describe('RoomsPage', () => {
 		expect([...element.querySelectorAll('.tiles ovd-kpi-tile')].map((tile) => tip(tile) ?? null)).toEqual([
 			null,
 			null,
-			'About Participant sessions',
-			null
+			null,
+			'About Sessions in range'
 		]);
 		expect(tip(header('Unique identities'))).toBe('About Unique identities');
 		expect(tip(header('Active'))).toBe('About Active');

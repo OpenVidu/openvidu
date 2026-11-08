@@ -10,6 +10,9 @@ const SPEC: Partial<Record<keyof typeof INFO_TEXTS, string>> = {
 		'Distinct participant identities among those sessions: someone who joined three times counts once.',
 	services:
 		'Egress, ingress, agent and other non-user sessions. They join rooms as participants but are not counted as participants.',
+	dataUpDown: 'Up: bytes the participants sent to the server. Down: bytes the server sent to the participants.',
+	dataUp: 'Bytes the participants sent to the server.',
+	dataDown: 'Bytes the server sent to the participants.',
 	sdk: 'Software development kit the client connected with.',
 	liveAgents:
 		'Agent sessions connected now. Agents join rooms as participants of kind Agent but are not counted as participants.',

@@ -207,6 +207,7 @@ describe('AgentsPage', () => {
 
 		const tiles = [...routeElement(harness).querySelectorAll('ovd-kpi-tile')].map(text);
 
+		expect(tiles[0]).toMatch(/^Active now/);
 		expect(tiles[1]).toBe('Agent sessions in range ≈ 12');
 	});
 

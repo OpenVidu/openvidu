@@ -125,6 +125,9 @@ queried) and `Deployment` (running the service). One line per observable change,
 - Enum values read as friendly labels, durations count up live and charts update in place; every time-series chart
   names its bucket and time zone.
 - Light and dark themes meet WCAG AA, with self-hosted fonts and icons.
+- The list tiles say which figures are current ("active now") and which follow the range ("in range"), current ones
+  first.
+- Data transferred tiles, chart and column explain what up and down mean.
 
 #### Data
 

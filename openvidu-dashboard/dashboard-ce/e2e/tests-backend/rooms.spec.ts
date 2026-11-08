@@ -11,7 +11,7 @@ test('rooms against the real backend: seeded list, summary, search and the locke
 
 	await expect(table.getByRole('row', { name: /Webinar-Q4/ })).toContainText('active');
 	await expect(table.getByRole('row', { name: /Daily-Standup/ })).toContainText('closed');
-	await expect(page.getByRole('region', { name: 'Summary' })).toContainText('Active rooms');
+	await expect(page.getByRole('region', { name: 'Summary' })).toContainText('Active now');
 
 	await page.getByRole('radio', { name: 'Closed' }).click();
 	await expect(table.getByRole('row', { name: /Webinar-Q4/ })).toHaveCount(0);

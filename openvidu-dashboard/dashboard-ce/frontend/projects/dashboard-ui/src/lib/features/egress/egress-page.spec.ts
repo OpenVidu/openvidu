@@ -131,19 +131,25 @@ describe('EgressPage', () => {
 		const { element } = await open('/egress');
 		const tiles = [...element.querySelectorAll('ovd-kpi-tile')].map(text);
 
+		expect([...element.querySelectorAll('ovd-kpi-tile .label')].map(text)).toEqual([
+			'Active now',
+			'Started in range',
+			'Failed in range',
+			'Duration in range'
+		]);
 		expect(tiles[0]).toContain('3');
 		expect(tiles[1]).toContain('120');
 		expect(tiles[1]).toContain('Room composite 100 · Track 20');
 		expect(tiles[2]).toContain('7');
 		expect(tiles[2]).toContain('Aborted 2');
 		expect(tiles[3]).toContain('10 h 00 m');
-		expect(tiles[3]).toContain('Total duration');
+		expect(tiles[3]).toContain('Duration in range');
 		expect(
 			element
 				.querySelectorAll('ovd-kpi-tile')[3]
 				?.querySelector('ovd-info-tip button')
 				?.getAttribute('aria-label')
-		).toBe('About Total duration');
+		).toBe('About Duration in range');
 	});
 
 	it('renders an active row, a failed row, a complete row with an error marker and a reconciler-closed row', async () => {

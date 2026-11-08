@@ -1,7 +1,12 @@
 <h1 class="ovd-page-title">Rooms</h1>
 
 <ovd-tile-row class="tiles" role="region" aria-label="Summary">
-	<ovd-kpi-tile label="Active rooms" [value]="tile(summary()?.activeRooms)" [loading]="summary() === null" />
+	<ovd-kpi-tile label="Active now" [value]="tile(summary()?.activeRooms)" [loading]="summary() === null" />
+	<ovd-kpi-tile
+		label="Participants active now"
+		[value]="tile(summary()?.activeParticipants)"
+		[loading]="summary() === null"
+	/>
 	<ovd-kpi-tile
 		label="Rooms in range"
 		[value]="tile(summary()?.roomsInRange)"
@@ -9,16 +14,11 @@
 		[approximate]="approximate()"
 	/>
 	<ovd-kpi-tile
-		label="Participant sessions"
+		label="Sessions in range"
 		[info]="infoTexts.participantSessions"
 		[value]="tile(summary()?.participantSessions)"
 		[loading]="summary() === null"
 		[approximate]="approximate()"
-	/>
-	<ovd-kpi-tile
-		label="Active participants"
-		[value]="tile(summary()?.activeParticipants)"
-		[loading]="summary() === null"
 	/>
 </ovd-tile-row>
 

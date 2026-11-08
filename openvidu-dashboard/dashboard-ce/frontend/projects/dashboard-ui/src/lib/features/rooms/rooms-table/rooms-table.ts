@@ -64,6 +64,7 @@ export function roomColumns({ tz, rows, ranked = () => ({}), node = false }: Roo
 			key: 'bytes',
 			header: 'Data up / down',
 			align: 'end',
+			info: INFO_TEXTS.dataUpDown,
 			...(rows.some((room) => room.mediaStats === false)
 				? { warning: MEDIA_STATS_TEXTS.column, warningWhen: (room: RoomListItem) => room.mediaStats === false }
 				: {})

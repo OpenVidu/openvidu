@@ -182,12 +182,12 @@ describe('ParticipantsPage', () => {
 		const { element } = await open('/participants');
 		const tiles = [...element.querySelectorAll('ovd-kpi-tile')].map((tile) => text(tile));
 
-		expect(tiles).toEqual(['Active now 31', 'Sessions in range 900', 'Services now 5 Egress 3 · Agent 2']);
+		expect(tiles).toEqual(['Active now 31', 'Services active now 5 Egress 3 · Agent 2', 'Sessions in range 900']);
 		expect(
 			[...element.querySelectorAll('.tiles ovd-kpi-tile')].map(
 				(tile) => tile.querySelector('ovd-info-tip button')?.getAttribute('aria-label') ?? null
 			)
-		).toEqual([null, 'About Sessions in range', 'About Services now']);
+		).toEqual([null, 'About Services active now', 'About Sessions in range']);
 	});
 
 	it('marks the sessions as approximate beyond the exact-count limit', async () => {
@@ -197,7 +197,7 @@ describe('ParticipantsPage', () => {
 			summary({ approximate: true })
 		);
 
-		expect(text(element.querySelectorAll('ovd-kpi-tile')[1])).toBe('Sessions in range ≈ 900');
+		expect(text(element.querySelectorAll('ovd-kpi-tile')[2])).toBe('Sessions in range ≈ 900');
 	});
 
 	it('renders a row with links, badges, the live duration and the published sources', async () => {

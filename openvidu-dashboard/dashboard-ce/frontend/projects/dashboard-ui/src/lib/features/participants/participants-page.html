@@ -3,18 +3,18 @@
 <ovd-tile-row class="tiles" role="region" aria-label="Summary">
 	<ovd-kpi-tile label="Active now" [value]="tile(summary()?.active?.participants)" [loading]="summary() === null" />
 	<ovd-kpi-tile
+		label="Services active now"
+		[info]="infoTexts.services"
+		[value]="tile(summary()?.active?.services)"
+		[hint]="servicesHint() ?? undefined"
+		[loading]="summary() === null"
+	/>
+	<ovd-kpi-tile
 		label="Sessions in range"
 		[info]="infoTexts.participantSessions"
 		[value]="tile(summary()?.sessions?.participants)"
 		[loading]="summary() === null"
 		[approximate]="approximate()"
-	/>
-	<ovd-kpi-tile
-		label="Services now"
-		[info]="infoTexts.services"
-		[value]="tile(summary()?.active?.services)"
-		[hint]="servicesHint() ?? undefined"
-		[loading]="summary() === null"
 	/>
 </ovd-tile-row>
 

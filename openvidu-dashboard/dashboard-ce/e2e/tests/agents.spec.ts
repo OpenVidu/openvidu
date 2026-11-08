@@ -18,7 +18,7 @@ test('CE lists agent sessions with the counter tiles and the notice', async ({ p
 		/\/participants\/PA_agent1/
 	);
 	await expect(table.getByRole('row', { name: /agent-1/ })).not.toContainText('GO 1.2');
-	await expect(page.locator('ovd-kpi-tile').filter({ hasText: 'Agents now' })).toContainText('2');
+	await expect(page.locator('ovd-kpi-tile').filter({ hasText: 'Active now' })).toContainText('2');
 	await expect(page.getByRole('region', { name: 'Agents summary' })).toContainText('Agent sessions in range');
 	await expect(page.getByRole('link', { name: 'See them among the participants' })).toHaveAttribute(
 		'href',
