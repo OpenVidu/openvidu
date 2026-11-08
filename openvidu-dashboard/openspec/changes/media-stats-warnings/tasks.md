@@ -60,7 +60,7 @@
   - a rooms page with a `mediaStats: false` room;
   - the warnings' tooltips, and the unavailable tile and chart at desktop and phone width.
   Verify: the CE Playwright suite.
-- [ ] 6.2 Visual check on `./dashboard.sh demo` with `--nodes-without-media-stats` (light, dark, phone). Verify:
+- [x] 6.2 Visual check on `./dashboard.sh demo` with `--nodes-without-media-stats` (light, dark, phone). Verify:
   screenshots reviewed by the owner.
 - [x] 6.3 Owner review of the demo: the whole unavailable tile and chart dimmed except the warning, and on phones the
   column warning only on the cards of the rows it applies to (`warningWhen`). Verify: `kpi-tile.spec.ts`,

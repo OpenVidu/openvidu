@@ -10,7 +10,7 @@ newest rooms and whether the analytics writer, schema and migration are healthy.
 ### Requirement: Overview route and layout
 Edition: CE. `/overview` SHALL read only `tz` from the URL, show the page title, the live chip and the refresh
 control in its header, and render, in order: live tiles (balanced tile rows), the today card next to the server status
-card, and the recent rooms table, next to the per-node card when there is one and at full width otherwise.
+card, the per-node card at full width when there is one, and the recent rooms table at full width.
 
 #### Scenario: Default landing
 - **GIVEN** an authenticated user without a stored default zone, in a browser whose zone is Europe/Madrid
@@ -25,6 +25,13 @@ card, and the recent rooms table, next to the per-node card when there is one an
 - **GIVEN** `features` without `per-node-breakdown` and a viewport 1440 px wide
 - **WHEN** the page renders
 - **THEN** the recent rooms card spans the width of the today and server status cards together
+
+#### Scenario: Per-node card at full width
+- **GIVEN** `features` with `per-node-breakdown`, an edition that provides the per-node content and a viewport 1440 px
+  wide
+- **WHEN** the page renders
+- **THEN** the "By node" card follows the today and server status row, spans their width together, and the recent
+  rooms card follows it at the same width
 
 ### Requirement: Live KPI tiles
 
@@ -227,7 +234,7 @@ and expose the latest `live` counters to other pages through a shared service.
 ### Requirement: Per-node card only with per-node breakdown
 
 Edition: CE. Without `per-node-breakdown` the Overview SHALL render no per-node card, lock or request of its own; with
-it, the "By node" card next to the recent rooms table holds the per-node content the edition provides.
+it, the "By node" card, at full width above the recent rooms table, holds the per-node content the edition provides.
 
 #### Scenario: Nothing per node in CE
 - **GIVEN** `features` without `per-node-breakdown`
