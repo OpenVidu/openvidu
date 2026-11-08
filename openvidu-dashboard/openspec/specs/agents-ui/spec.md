@@ -40,7 +40,6 @@ shows only that session ignoring the range and every filter, and Enter opens it 
 - **WHEN** the page loads
 - **THEN** a chip reads "Room: demo-room" with a link to `/rooms/RM_abc` and a remove button, and removing it drops `room` and `cursor`
 
-
 ### Requirement: Agents table
 Edition: CE. The table SHALL show, in order, SID (detail link, copy button), Identity (copy button), Name, Room
 (room detail link), Status (stale cue), Joined, Left, Duration (live), Published (source icons) and, with
@@ -74,15 +73,14 @@ error and empty states.
 - **THEN** its status badge carries the stale cue, judged by the API and never by the browser clock
 
 ### Requirement: Live agents counter tile
-Edition: CE. Above the filters, the page SHALL show a KPI tile "Agents now" with the number of active agent sessions
-across all rooms, read from the overview live counters and refreshed at the auto-refresh interval, keeping the last
-value while refreshing.
+Edition: CE. Above the filters, the page SHALL show first a KPI tile "Active now" with the number of active agent
+sessions across all rooms, read from the overview live counters and refreshed at the auto-refresh interval, keeping the
+last value while refreshing.
 
 #### Scenario: Counter refresh
-- **GIVEN** the tile shows 3
+- **GIVEN** the Active now tile shows 3
 - **WHEN** a refresh reports 4
 - **THEN** the tile reads 4 with the change highlight and the table is reloaded with the current URL state
-
 
 ### Requirement: Agents are participants notice
 Edition: CE. The page SHALL show, as a dismissible info notice of the shared notice component, the statement that
@@ -97,22 +95,20 @@ collected, with a link to the Participants page filtered by `kind=AGENT`.
 - **WHEN** the user dismisses the notice
 - **THEN** the info notice disappears and stays hidden on the next visit to `/agents`
 
-
 ### Requirement: Agent sessions tile
-Edition: CE. Next to "Agents now", the page SHALL show a KPI tile "Agent sessions in range" with the agent
-sessions joined in the global range, read from the participants summary (`sessions.byKind.AGENT`, "≈" and the rollup
-tooltip when approximate) and refreshed with the page.
+Edition: CE. After "Active now", the page SHALL show a KPI tile "Agent sessions in range" with the agent sessions
+joined in the global range, read from the participants summary (`sessions.byKind.AGENT`, "≈" and the rollup tooltip
+when approximate) and refreshed with the page.
 
 #### Scenario: Sessions in range
 - **GIVEN** the participants summary answers `sessions.byKind.AGENT: 12` with `approximate: false`
 - **WHEN** the page renders
-- **THEN** the tile reads 12
+- **THEN** the tiles read "Active now" and then "Agent sessions in range 12"
 
 #### Scenario: Approximate sessions
 - **GIVEN** a 30-day range and `approximate: true`
 - **WHEN** the tile renders
 - **THEN** it shows "≈" before the value and the rollup tooltip on that mark
-
 
 ### Requirement: Agents ranked sort limit
 Edition: CE. The Left and Duration sorts of the Agents table SHALL be offered only while the resolved range is at most

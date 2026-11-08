@@ -137,15 +137,16 @@ other header row, no refresh control and no call to any PRO endpoint. The route 
 - **THEN** the breadcrumbs read `Participants / PA_x1y2`, the title reads `alice` with its copy button followed by the status badge, no other header row and no refresh control are shown, the lock page names the Participant detail feature over three silhouette tiles and one block, and no request to `/api/v1/participants/PA_x1y2` is sent
 
 ### Requirement: Participants summary tiles
-Edition: CE. The Participants page SHALL show three KPI tiles from the participants summary above the filters:
-Active now (STANDARD), Sessions in range (STANDARD, "≈" and the rollup tooltip when approximate) and Services now
-(active sessions of the other kinds, with the visible kinds that have active sessions as hint, explained by its info
-tip and carrying no tooltip of its own); the tiles keep their last value while refreshing.
+Edition: CE. The Participants page SHALL show three KPI tiles from the participants summary above the filters, in this
+order: Active now (STANDARD), Services active now (active sessions of the other kinds, with the visible kinds that have
+active sessions as hint, explained by its info tip and carrying no tooltip of its own) and Sessions in range
+(STANDARD, "≈" and the rollup tooltip when approximate); the tiles keep their last value while refreshing.
 
 #### Scenario: Tiles after load
 - **GIVEN** the summary answers `active { participants: 31, services: 5, byKind { EGRESS: 3, AGENT: 2 } }` and `sessions { participants: 900 }` with `approximate: false`
 - **WHEN** the page renders
-- **THEN** the tiles read 31, 900 and 5, and the Services now hint reads "Egress 3 · Agent 2"
+- **THEN** the tiles read "Active now 31", "Services active now 5" with the hint "Egress 3 · Agent 2", and "Sessions in
+  range 900"
 
 #### Scenario: Approximate sessions
 - **GIVEN** a 30-day range and `approximate: true`
@@ -153,7 +154,7 @@ tip and carrying no tooltip of its own); the tiles keep their last value while r
 - **THEN** Sessions in range shows a "≈" prefix whose tooltip says the count is an hour-aligned rollup sum
 
 #### Scenario: Services explained
-- **WHEN** the user hovers the Services now tile outside its info icon, and then opens the info icon
+- **WHEN** the user hovers the Services active now tile outside its info icon, and then opens the info icon
 - **THEN** the first shows nothing and the info tip reads "Egress, ingress, agent and other non-user sessions. They join rooms as participants but are not counted as participants."
 
 ### Requirement: Participants live refresh
