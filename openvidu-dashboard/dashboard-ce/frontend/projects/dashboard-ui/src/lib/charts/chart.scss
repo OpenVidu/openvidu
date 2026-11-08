@@ -41,8 +41,9 @@
 		color: color-mix(in srgb, var(--mat-sys-on-surface) 75%, transparent);
 	}
 
+	/* 75 % falls to 4.47:1 on the page background, outside the cards. */
 	.chart-note {
-		color: color-mix(in srgb, var(--mat-sys-on-surface-variant) 75%, transparent);
+		color: color-mix(in srgb, var(--mat-sys-on-surface-variant) 80%, transparent);
 	}
 
 	.chart-heading ovd-info-tip {
