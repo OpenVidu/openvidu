@@ -133,10 +133,17 @@ down, Features (badges E, I, A) and, with `per-node-breakdown` only, Node (`medi
 
 #### Scenario: Room of a node without media statistics
 
-- **GIVEN** a room item with `mediaStats: false`
-- **WHEN** the row renders
-- **THEN** the Data up / down cell reads "—" with the tooltip "Not reported: this room's server does not report media
-  statistics" instead of "↑ 0 B ↓ 0 B"
+- **GIVEN** a page with room `RM_m1` (`mediaStats: false`) and room `RM_p1` (no `mediaStats`, 12 MB up, 48 MB down)
+- **WHEN** the rows render
+- **THEN** the Data up / down cell of `RM_m1` reads an unavailable "—" announced as "Not available" instead of
+  "↑ 0 B ↓ 0 B", the cell of `RM_p1` reads "↑ 12.0 MB ↓ 48.0 MB", and the Data up / down header carries the column
+  warning "Rooms on servers using mediasoup as RTC engine show no value here yet. This data will be available soon."
+
+#### Scenario: Page without rooms lacking media statistics
+
+- **GIVEN** a page whose rooms have no `mediaStats` field
+- **WHEN** the table renders
+- **THEN** the Data up / down header has no warning
 
 ### Requirement: Rooms pagination
 

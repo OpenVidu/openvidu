@@ -363,32 +363,6 @@ and the time zone of its time axis; the unique identities chart names UTC and ke
 - **WHEN** the unique identities chart renders
 - **THEN** its note reads "per UTC day" and names UTC, not Europe/Madrid
 
-### Requirement: Media statistics coverage notes
-
-Edition: CE. With `mediaStats: "none"` in the summary, the Data up / down tile SHALL read "—" with the hint "Not
-reported by the servers of this range" and the Bandwidth section SHALL show the notice "The servers of this range do
-not report media statistics" instead of its chart and tiles. With `"partial"`, the tile and the section SHALL keep their
-values and add the note "Only from the servers that report media statistics".
-
-#### Scenario: No server reports media statistics
-
-- **GIVEN** a summary with `mediaStats: "none"`
-- **WHEN** the page renders
-- **THEN** the Data up / down tile reads "—" with its hint, and the Bandwidth section shows the notice and no chart
-
-#### Scenario: Some servers report media statistics
-
-- **GIVEN** a summary with `mediaStats: "partial"`, `bytesUp: 1200000000` and `bytesDown: 3400000000`
-- **WHEN** the page renders
-- **THEN** the tile reads "↑ 1.2 GB" over "↓ 3.4 GB" with the hint "Only from the servers that report media
-  statistics", and the Bandwidth chart renders with the same note under its heading
-
-#### Scenario: Every server reports media statistics
-
-- **GIVEN** a summary without `mediaStats`
-- **WHEN** the page renders
-- **THEN** the tile and the Bandwidth section render as before, without the note
-
 ### Requirement: Scope selector only with per-node breakdown
 
 Edition: CE. Without `per-node-breakdown` the page header SHALL show no scope selector, lock or text about nodes and
@@ -401,3 +375,32 @@ are `node:<label>` scopes.
 - **WHEN** the header renders
 - **THEN** it has the range, time zone and granularity controls and no scope selector or lock, and no
   `/analytics/scopes` request is sent
+
+### Requirement: Media statistics coverage warnings
+
+Edition: CE. With `mediaStats: "none"` in the summary, the Data up / down tile SHALL be unavailable and carry the
+range `none` warning, and the Data transferred section SHALL keep its tiles and chart, unavailable, with that warning
+on its heading. With `"partial"`, the tile and the section heading SHALL carry the range `partial` warning and keep
+their values. Without `mediaStats`, neither carries a warning. No notice replaces the section's content.
+
+#### Scenario: No server reports media statistics
+
+- **GIVEN** a summary with `mediaStats: "none"`, `bytesUp: 0` and `bytesDown: 0`
+- **WHEN** the page renders
+- **THEN** the Data up / down tile reads an unavailable "—" with the warning after its label, and the Data
+  transferred section shows the warning after its heading, the Total up and Total down tiles unavailable and the "Data
+  up / down" chart unavailable over the whole range
+
+#### Scenario: Some servers report media statistics
+
+- **GIVEN** a summary with `mediaStats: "partial"`, `bytesUp: 1200000000` and `bytesDown: 3400000000`
+- **WHEN** the page renders and the user opens the warning of the Data transferred heading
+- **THEN** the tile reads "↑ 1.2 GB" over "↓ 3.4 GB" with the warning after its label, the chart renders its data at
+  full strength, and the tooltip reads "This data comes only from rooms on servers using Pion as RTC engine.
+  mediasoup does not generate media statistics yet. They will be available soon."
+
+#### Scenario: Every server reports media statistics
+
+- **GIVEN** a summary without `mediaStats`
+- **WHEN** the page renders
+- **THEN** neither the tile nor the Data transferred section carries a warning or the unavailable state

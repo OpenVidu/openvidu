@@ -911,3 +911,78 @@ CE does; a row without `mediaNode` reads "—" either way.
 - **GIVEN** `features` with `per-node-breakdown` and no link provided for media nodes
 - **WHEN** the Node column of the Participants table renders a session with `mediaNode: "mn-a"`
 - **THEN** its cell reads `mn-a` in monospace, not as a link
+
+### Requirement: Media statistics warning
+Edition: CE. A media statistics warning SHALL be a warning icon button, in the warning colour, placed after a label or
+heading and after its info tip when it has one, named by its text for assistive technology and showing that text as a
+tooltip with the info tip interactions: hover, keyboard focus or tap to show; Escape, blur or a second tap to hide.
+KPI tiles, chart headings, Analytics card headings and data table column headers, in table and card layouts, take one
+from their definition.
+
+#### Scenario: Hover
+- **GIVEN** a KPI tile "Data up / down" with a media statistics warning
+- **WHEN** the pointer rests on the warning icon
+- **THEN** the tooltip shows the warning text, and resting on the label or the value shows nothing
+
+#### Scenario: Keyboard
+- **GIVEN** a chart heading with a media statistics warning
+- **WHEN** the user tabs to the icon and then presses Escape
+- **THEN** the icon is announced with the warning text, the tooltip shows on focus and hides on Escape
+
+#### Scenario: Next to an info tip
+- **GIVEN** the KPI tile "Quality" with an info tip and a media statistics warning
+- **WHEN** it renders
+- **THEN** the label is followed by the info icon and then the warning icon
+
+### Requirement: Column warning in card layout
+Edition: CE. A data table column warning that applies to some rows only SHALL name those rows: the table header always
+shows it, and the card layout shows it beside the column's label in the cards of those rows only.
+
+#### Scenario: Column header in card layout
+- **GIVEN** an XSmall viewport and a Data up / down column whose warning applies to the rooms without media statistics
+- **WHEN** a page with one such room and one other room renders as cards
+- **THEN** that column's label carries the warning icon in the card of the room without media statistics only
+
+### Requirement: Unavailable tile and chart
+Edition: CE. A KPI tile marked unavailable SHALL read "—" announced as "Not available", at 38 % opacity without
+colour. A time-series chart marked unavailable SHALL keep its heading, info tip, note, warning and x-axis, and render
+its plot the same way over hatching, with no legend, tooltip or "Show table". Both dim their texts and info tip within
+a 4.5:1 text contrast, keep the warning at full strength and are not highlighted on refresh.
+
+#### Scenario: Unavailable tile
+- **GIVEN** a KPI tile "Quality" marked unavailable with a media statistics warning
+- **WHEN** it renders
+- **THEN** it reads a dimmed "—", a screen reader reads "Quality, Not available", the label and the info icon are
+  dimmed within the text contrast minimum, and the warning icon keeps its colour
+
+#### Scenario: Unavailable chart
+- **GIVEN** a "Bitrate up / down" chart from 10:01:25 to 10:06:55 marked unavailable
+- **WHEN** it renders
+- **THEN** its x-axis reads 10:02 to 10:06, the heading and the plot over hatching are dimmed while the warning icon
+  keeps its colour, and it shows no legend, no tooltip on hover and no "Show table" action
+
+#### Scenario: Unavailable cell
+- **GIVEN** a data table cell rendered as unavailable
+- **WHEN** it renders
+- **THEN** it reads a dimmed "—" announced as "Not available"
+
+### Requirement: Media statistics texts
+Edition: CE. The UI library SHALL export four media statistics warning texts, shown by every edition: one for an
+entity (room, session or track), one for a range with `none`, one for a range with `partial` and one for a column
+header.
+
+#### Scenario: Texts
+- **WHEN** the exported texts are read
+- **THEN** they are:
+  - entity: "This data is not available when using mediasoup as RTC engine. It will be available soon."
+  - range `none`: "The servers of this range use mediasoup as RTC engine, which does not generate media statistics
+    yet. This data will be available soon."
+  - range `partial`: "This data comes only from rooms on servers using Pion as RTC engine. mediasoup does not generate
+    media statistics yet. They will be available soon."
+  - column: "Rooms on servers using mediasoup as RTC engine show no value here yet. This data will be available soon."
+
+#### Scenario: Same texts in every edition
+- **GIVEN** a room with `mediaStats: false` in the CE Rooms list and the same room in a PRO room page
+- **WHEN** the user opens the warnings of both
+- **THEN** the Rooms list column reads the column text and the room page tiles read the entity text, from the same
+  exported texts
