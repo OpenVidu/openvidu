@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 # OpenVidu Dashboard CE. Build context: the workspace root (openvidu-dashboard/).
-ARG NODE_VERSION=24.22.1
+ARG NODE_VERSION=24.22.2
 ARG DEBIAN_RELEASE=trixie
 ARG SAFE_CHAIN_VERSION=1.5.27
 
@@ -43,8 +43,12 @@ RUN pnpm --filter "@openvidu-dashboard/backend..." run build \
 COPY --from=frontend /workspace/dashboard-ce/frontend/dist/frontend/browser /out/app/dist/public
 
 FROM node:${NODE_VERSION}-${DEBIAN_RELEASE}-slim
-# Node bundles its own time zone data; npm, npx, corepack and yarn are not needed to run the backend.
-RUN dpkg --purge tzdata \
+# Debian fixes published after the base image was built. Node bundles its own time zone data; npm, npx, corepack and
+# yarn are not needed to run the backend.
+RUN apt-get update \
+	&& apt-get upgrade -y \
+	&& rm -rf /var/lib/apt/lists/* \
+	&& dpkg --purge tzdata \
 	&& rm -rf /usr/local/lib/node_modules /usr/local/bin/npm /usr/local/bin/npx /usr/local/bin/corepack \
 		/usr/local/bin/yarn /usr/local/bin/yarnpkg /opt/yarn-*
 COPY --from=backend /out/app /app
