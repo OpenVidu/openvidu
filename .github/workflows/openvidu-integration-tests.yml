@@ -21,7 +21,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Configure OpenVidu Local Deployment
-        uses: OpenVidu/actions/start-openvidu-local-deployment@26a149ff32c72503a7c7ce4fb5fa4d000cb3262d # 1.0.25
+        uses: OpenVidu/actions/start-openvidu-local-deployment@b4ecef6892b666b42fe037bc66b696ac9807f205 # v1.0.26
         with:
           ref-openvidu-local-deployment: development
           # Batches every second and a reconciler run every 10 s, instead of 10 s and 60 s.
@@ -41,7 +41,7 @@ jobs:
         with:
           node-version: 24
       - name: Install safe-chain
-        uses: OpenVidu/actions/install-safe-chain@26a149ff32c72503a7c7ce4fb5fa4d000cb3262d # 1.0.25
+        uses: OpenVidu/actions/install-safe-chain@b4ecef6892b666b42fe037bc66b696ac9807f205 # v1.0.26
 
       - name: Install dependencies
         working-directory: ./openvidu/openvidu-test-integration
@@ -62,5 +62,5 @@ jobs:
           retention-days: 7
       - name: Cleanup
         if: always()
-        uses: OpenVidu/actions/cleanup@26a149ff32c72503a7c7ce4fb5fa4d000cb3262d # 1.0.25
+        uses: OpenVidu/actions/cleanup@b4ecef6892b666b42fe037bc66b696ac9807f205 # v1.0.26
 

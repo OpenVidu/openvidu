@@ -35,7 +35,7 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
       - name: Install safe-chain
-        uses: OpenVidu/actions/install-safe-chain@26a149ff32c72503a7c7ce4fb5fa4d000cb3262d # 1.0.25
+        uses: OpenVidu/actions/install-safe-chain@b4ecef6892b666b42fe037bc66b696ac9807f205 # v1.0.26
       - name: Commit URL
         run: echo https://github.com/OpenVidu/openvidu/commit/${{ inputs.commit_sha || github.sha }}
       - name: Send Dispatch Event
@@ -96,7 +96,7 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
       - name: Install safe-chain
-        uses: OpenVidu/actions/install-safe-chain@26a149ff32c72503a7c7ce4fb5fa4d000cb3262d # 1.0.25
+        uses: OpenVidu/actions/install-safe-chain@b4ecef6892b666b42fe037bc66b696ac9807f205 # v1.0.26
       - name: Install wait-on package
         run: npm install -g wait-on
       - name: Run Chrome
@@ -107,15 +107,15 @@ jobs:
             docker run --network=host -d -p 4444:4444 ${{ env.CHROME_IMAGE }}
           fi
       - name: Run openvidu-local-deployment
-        uses: OpenVidu/actions/start-openvidu-local-deployment@26a149ff32c72503a7c7ce4fb5fa4d000cb3262d # 1.0.25
+        uses: OpenVidu/actions/start-openvidu-local-deployment@b4ecef6892b666b42fe037bc66b696ac9807f205 # v1.0.26
       - name: Start OpenVidu Call backend
-        uses: OpenVidu/actions/start-openvidu-call@26a149ff32c72503a7c7ce4fb5fa4d000cb3262d # 1.0.25
+        uses: OpenVidu/actions/start-openvidu-call@b4ecef6892b666b42fe037bc66b696ac9807f205 # v1.0.26
       - name: Build and Serve openvidu-components-angular Testapp
-        uses: OpenVidu/actions/start-openvidu-components-testapp@26a149ff32c72503a7c7ce4fb5fa4d000cb3262d # 1.0.25
+        uses: OpenVidu/actions/start-openvidu-components-testapp@b4ecef6892b666b42fe037bc66b696ac9807f205 # v1.0.26
       - name: Run Tests
         env:
           LAUNCH_MODE: CI
         run: npm run ${{ matrix.script }} --prefix openvidu-components-angular
       - name: Cleanup
         if: always()
-        uses: OpenVidu/actions/cleanup@26a149ff32c72503a7c7ce4fb5fa4d000cb3262d # 1.0.25
+        uses: OpenVidu/actions/cleanup@b4ecef6892b666b42fe037bc66b696ac9807f205 # v1.0.26
