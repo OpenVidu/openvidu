@@ -58,8 +58,9 @@ describe('API contract', () => {
 		expect(analyticsMetricFeature('scoreAvg')).toBe('analytics-quality');
 		expect(analyticsMetricFeature('roomsCreated')).toBeUndefined();
 
-		for (const info of Object.values(ANALYTICS_METRIC_INFO)) {
-			expect(info.empty).toBe(['percent', 'mos'].includes(info.unit) ? null : 0);
+		for (const [metric, info] of Object.entries(ANALYTICS_METRIC_INFO)) {
+			const peak = metric.endsWith('PeakActive');
+			expect(info.empty).toBe(peak || ['percent', 'mos'].includes(info.unit) ? null : 0);
 		}
 	});
 

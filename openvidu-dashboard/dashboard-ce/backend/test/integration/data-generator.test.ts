@@ -168,6 +168,28 @@ describe.skipIf(mongoUri === '')('data generator', () => {
 			expect(started).toBeGreaterThan(0);
 			expect(byInputType).toBe(started);
 
+			// Every rollup carries the peaks of the aggregator, and every hour of the range has a global document.
+			for (const collection of ['analytics_5min', 'analytics_hourly', 'analytics_daily']) {
+				expect(
+					await db.collection(collection).countDocuments({
+						$or: [
+							{ 'rooms.peakActive': { $exists: false } },
+							{ 'participants.peakActive': { $exists: false } }
+						]
+					}),
+					collection
+				).toBe(0);
+			}
+
+			const hours = await db.collection('analytics_hourly').distinct('bucket', { scope: 'global' });
+
+			expect(hours).toHaveLength(2 * 24 + 1);
+			expect(
+				await db
+					.collection('analytics_hourly')
+					.countDocuments({ scope: 'global', 'rooms.peakActive': { $gt: 0 } })
+			).toBeGreaterThan(0);
+
 			// Event payloads follow the writer's protojson shape: snake_case names nested by entity.
 			const camelCase = new Set<string>();
 
@@ -367,9 +389,11 @@ describe.skipIf(mongoUri === '')('data generator', () => {
 				await db.collection('rooms').countDocuments({ $nor: [{ $jsonSchema: CONTRACT_SCHEMAS.rooms }] })
 			).toBe(0);
 
-			// Rollups carry the media statistics marks of the nodes of the rooms they count.
+			// Rollups carry the media statistics marks of the nodes of the rooms they count; those holding only the
+			// aggregator's samples carry none.
 			const label = nodes.find((node) => node._id === unmarked[0]) as { mediaNode?: string } | undefined;
 			const hourly = db.collection('analytics_hourly');
+			const counted = { 'rooms.created': { $exists: true } };
 
 			expect(
 				await hourly.countDocuments({
@@ -381,12 +405,14 @@ describe.skipIf(mongoUri === '')('data generator', () => {
 			expect(await hourly.countDocuments({ scope: `node:${String(label?.mediaNode)}` })).toBeGreaterThan(0);
 			expect(
 				await hourly.countDocuments({
+					...counted,
 					scope: `node:${String(label?.mediaNode)}`,
 					$or: [{ 'mediaStats.reported': true }, { 'mediaStats.missing': { $ne: true } }]
 				})
 			).toBe(0);
 			expect(
 				await hourly.countDocuments({
+					...counted,
 					scope: { $nin: ['global', `node:${String(label?.mediaNode)}`] },
 					$or: [{ 'mediaStats.missing': true }, { 'mediaStats.reported': { $ne: true } }]
 				})
@@ -423,9 +449,12 @@ describe.skipIf(mongoUri === '')('data generator', () => {
 				const rollups = db.collection(collection);
 
 				expect(await rollups.countDocuments({})).toBeGreaterThan(0);
+				expect(await rollups.countDocuments({ 'mediaStats.missing': true })).toBe(0);
+				// The documents without a mark hold only the aggregator's samples.
 				expect(
 					await rollups.countDocuments({
-						$or: [{ 'mediaStats.missing': true }, { 'mediaStats.reported': { $ne: true } }]
+						'mediaStats.reported': { $ne: true },
+						$or: [{ 'rooms.created': { $exists: true } }, { bytes: { $exists: true } }]
 					})
 				).toBe(0);
 			}

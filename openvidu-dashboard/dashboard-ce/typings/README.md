@@ -25,7 +25,8 @@ The tests fail when a generated file is out of date.
   double; `score` is the LiveKit MOS (1.0–4.5).
 - Counters are int32 (int64 accepted); milliseconds and bytes are int64 (int32 accepted); ratios and scores are double.
 - An optional field is absent while unknown, never `null`. Exception: `expiresAt` is `null` while an entity is open.
-- Rollup counters are created by their first increment: an absent counter is zero.
+- Rollup counters are created by their first increment: an absent counter is zero. The peaks (`rooms.peakActive`,
+  `participants.peakActive`) are kept with `$max` by the server's aggregator instead: an absent peak means no sample.
 - Protocol enums keep the protocol name without prefix (`API_DELETE`, `CLIENT_INITIATED`); model statuses are lower
   case. Rollup map keys are enum names or fixed vocabularies, never user input.
 - `internal` holds writer bookkeeping (id sets behind counters); the dashboard never reads it.

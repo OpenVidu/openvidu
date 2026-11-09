@@ -101,10 +101,8 @@ interface AnalyticsResult {
 
 /** Labels and colour entities of the series the page draws. */
 const SERIES_LABELS: Partial<Record<AnalyticsMetric, { label: string; entity: string }>> = {
-	roomsCreated: { label: 'Created', entity: 'publish' },
-	roomsEnded: { label: 'Ended', entity: 'subscribe' },
-	participantsJoined: { label: 'Joined', entity: 'sessions' },
-	participantsAborted: { label: 'Aborted', entity: 'aborted' },
+	roomsPeakActive: { label: 'Active rooms', entity: 'rooms' },
+	participantsPeakActive: { label: 'Active participants', entity: 'sessions' },
 	connectionSuccessRate: { label: 'Connection success', entity: 'sessions' },
 	uniqueIdentities: { label: 'Unique identities', entity: 'unique' },
 	bytesUp: { label: 'Up', entity: 'up' },
@@ -286,8 +284,8 @@ export class AnalyticsPage implements AnalyticsPageContext {
 		this.result();
 
 		return {
-			rooms: this.chart(['roomsCreated', 'roomsEnded']),
-			participants: this.chart(['participantsJoined', 'participantsAborted']),
+			rooms: this.chart(['roomsPeakActive']),
+			participants: this.chart(['participantsPeakActive']),
 			success: this.chart(['connectionSuccessRate']),
 			identities: this.chart(['uniqueIdentities']),
 			bytes: this.chart(['bytesUp', 'bytesDown']),
@@ -536,6 +534,16 @@ export class AnalyticsPage implements AnalyticsPageContext {
 				values.every((value) => value === null || value === 0) &&
 				(!dimensionValues || totals.every((total) => total === 0))
 		};
+	}
+
+	/**
+	 * The Rooms card: empty only when no room was active at a sample and none was created, so the tiles of a range
+	 * sampled before the peaks existed still show.
+	 */
+	roomsView(): AnalyticsCardView {
+		const view = this.view(['roomsPeakActive']);
+
+		return { ...view, empty: view.empty && (this.summary()?.roomsCreated ?? 0) === 0 };
 	}
 
 	// Actions

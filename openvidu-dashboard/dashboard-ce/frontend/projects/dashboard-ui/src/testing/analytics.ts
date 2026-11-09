@@ -57,13 +57,15 @@ export interface AnalyticsAnswers {
 	fail?: string[];
 	/** Every series and breakdown answers without points or items. */
 	empty?: boolean;
+	/** Points of the named series instead of the default ones. */
+	points?: Readonly<Record<string, [string, number | null][]>>;
 	/** Bodies of the other paths under `analytics/`, such as the PRO ones. */
 	routes?: Record<string, (params: HttpParams) => unknown>;
 }
 
-function seriesBody(params: HttpParams) {
+function seriesBody(params: HttpParams, named: AnalyticsAnswers['points'] = {}) {
 	const metrics = (params.get('metrics') ?? '').split(',');
-	const points: [string, number][] = [
+	const points: [string, number | null][] = [
 		['2026-10-13T10:00:00.000Z', 3],
 		['2026-10-13T11:00:00.000Z', 5]
 	];
@@ -79,7 +81,7 @@ function seriesBody(params: HttpParams) {
 						{ name: 'egressEnded.complete', points },
 						{ name: 'egressEnded.failed', points }
 					]
-				: [{ name, points }]
+				: [{ name, points: named[name] ?? points }]
 		)
 	};
 }
@@ -128,7 +130,7 @@ export function answerAnalytics(http: HttpTestingController, answers: AnalyticsA
 				request.flush(answers.summary ?? ANALYTICS_SUMMARY);
 				break;
 			case 'series': {
-				const body = seriesBody(params);
+				const body = seriesBody(params, answers.points);
 
 				request.flush(
 					answers.empty ? { ...body, series: body.series.map((series) => ({ ...series, points: [] })) } : body

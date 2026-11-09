@@ -65,6 +65,18 @@ test('Analytics explains its terms and has no PRO divider', async ({ page }) => 
 	).toBeVisible();
 	await expect(page.getByRole('separator')).toHaveCount(0);
 	await expect(page.getByText('PRO', { exact: true })).toHaveCount(0);
+
+	await page.getByRole('button', { name: 'About Active rooms' }).click();
+	await expect(tooltip(page)).toHaveText(
+		'The most rooms open at the same time in each bucket, sampled every minute.'
+	);
+	await page.keyboard.press('Escape');
+	await page.getByRole('button', { name: 'About Active participants' }).click();
+	await expect(tooltip(page)).toHaveText(
+		'The most participants connected at the same time in each bucket, sampled every minute. Only regular participants count.'
+	);
+	await page.keyboard.press('Escape');
+	await expect(page.getByRole('button', { name: 'About Participant sessions' })).toHaveCount(1);
 });
 
 test.describe('touch', () => {

@@ -9,7 +9,8 @@
 			"ended": { "$numberInt": "1" },
 			"endedByReason": { "API_DELETE": { "$numberInt": "1" } },
 			"durationMsSum": { "$numberLong": "2700000" },
-			"participantsSum": { "$numberInt": "4" }
+			"participantsSum": { "$numberInt": "4" },
+			"peakActive": { "$numberInt": "1" }
 		},
 		"participants": {
 			"joined": { "$numberInt": "6" },
@@ -49,7 +50,8 @@
 			},
 			"connectTimeSumMs": { "$numberLong": "4600" },
 			"connectTimeCount": { "$numberInt": "4" },
-			"minutes": { "$numberDouble": "83.88333333333333" }
+			"minutes": { "$numberDouble": "83.88333333333333" },
+			"peakActive": { "$numberInt": "1" }
 		},
 		"tracks": {
 			"published": { "$numberInt": "6" },
@@ -101,7 +103,8 @@
 			"ended": { "$numberInt": "1" },
 			"endedByReason": { "API_DELETE": { "$numberInt": "1" } },
 			"durationMsSum": { "$numberLong": "2700000" },
-			"participantsSum": { "$numberInt": "4" }
+			"participantsSum": { "$numberInt": "4" },
+			"peakActive": { "$numberInt": "0" }
 		},
 		"participants": {
 			"joined": { "$numberInt": "4" },
@@ -130,7 +133,8 @@
 			},
 			"connectTimeSumMs": { "$numberLong": "3700" },
 			"connectTimeCount": { "$numberInt": "3" },
-			"minutes": { "$numberDouble": "83.88333333333333" }
+			"minutes": { "$numberDouble": "83.88333333333333" },
+			"peakActive": { "$numberInt": "0" }
 		},
 		"tracks": {
 			"published": { "$numberInt": "2" },

@@ -19,6 +19,7 @@ import {
 	type AnalyticsCatalogue,
 	dimensionDefinition,
 	EGRESS_ENDED_PATH,
+	maximumPaths,
 	metricDefinition,
 	metricFields,
 	round1,
@@ -98,12 +99,14 @@ export function mediaStatsCoverage(marks: MediaStatsMarks): AnalyticsMediaStatsC
 /** Analytics over the rollup collections. */
 export class AnalyticsService {
 	private readonly repository: AnalyticsRepository;
+	private readonly maxima: ReadonlySet<string>;
 
 	constructor(
 		private readonly db: Db,
 		private readonly options: AnalyticsServiceOptions
 	) {
 		this.repository = new AnalyticsRepository(db);
+		this.maxima = maximumPaths(options.catalogue);
 	}
 
 	async series(query: AnalyticsSeriesParams): Promise<AnalyticsSeriesResponse> {
@@ -352,7 +355,11 @@ export class AnalyticsService {
 		}
 
 		const fold = (start: Date, end: Date) =>
-			foldRows(this.repository.rollups(read.collection, read.scope, start, end, read.fields), read.starts);
+			foldRows(
+				this.repository.rollups(read.collection, read.scope, start, end, read.fields),
+				read.starts,
+				this.maxima
+			);
 		const open = openDocumentStart(read.collection, now);
 
 		if (!this.options.cache.enabled) {
@@ -381,7 +388,11 @@ export class AnalyticsService {
 		}
 
 		return read.to.getTime() > completedTo.getTime()
-			? mergeCounters(completed, await fold(new Date(Math.max(from.getTime(), completedTo.getTime())), read.to))
+			? mergeCounters(
+					completed,
+					await fold(new Date(Math.max(from.getTime(), completedTo.getTime())), read.to),
+					this.maxima
+				)
 			: completed;
 	}
 }

@@ -363,18 +363,6 @@ export async function generate(db: Db, options: GenerateOptions): Promise<Genera
 		}
 	}
 
-	for (const doc of rollups.hourlyDocs()) {
-		writer.add(COLLECTIONS.analyticsHourly, doc);
-	}
-
-	for (const doc of rollups.dailyDocs()) {
-		writer.add(COLLECTIONS.analyticsDaily, doc);
-	}
-
-	for (const doc of rollups.fiveMinuteDocs()) {
-		writer.add(COLLECTIONS.analytics5min, doc);
-	}
-
 	const nodeDocument = (nodeId: string, fields: { firstSeenAt: number; lastSeenAt: number }) => {
 		const mediaNode = mediaNodes.get(nodeId);
 		const reportsMediaStats = !ctx.withoutMediaStats.has(nodeId);
@@ -395,8 +383,10 @@ export async function generate(db: Db, options: GenerateOptions): Promise<Genera
 		};
 	};
 
+	const nodes: (ReturnType<typeof nodeDocument> & { drainingAt?: Date; stoppedAt?: Date })[] = [];
+
 	for (const [i, nodeId] of nodeIds.entries()) {
-		writer.add(COLLECTIONS.nodes, {
+		nodes.push({
 			...nodeDocument(nodeId, {
 				firstSeenAt: restart?.nodeId === nodeId ? restart.at : windowStart - DAY,
 				lastSeenAt: now
@@ -408,18 +398,48 @@ export async function generate(db: Db, options: GenerateOptions): Promise<Genera
 
 	if (restart !== undefined) {
 		const stoppedAt = restart.at - MINUTE;
-		writer.add(COLLECTIONS.nodes, {
+		nodes.push({
 			...nodeDocument(restart.previousNodeId, { firstSeenAt: windowStart - DAY, lastSeenAt: stoppedAt }),
 			stoppedAt: new Date(stoppedAt)
 		});
 	}
 
 	for (const node of departed) {
-		writer.add(COLLECTIONS.nodes, {
+		nodes.push({
 			...nodeDocument(node.nodeId, { firstSeenAt: windowStart - DAY, lastSeenAt: node.lastSeenAt }),
 			...(node.drainingAt === null ? {} : { drainingAt: new Date(node.drainingAt) }),
 			...(node.stoppedAt === null ? {} : { stoppedAt: new Date(node.stoppedAt) })
 		});
+	}
+
+	// A media node label is alive from the first to the last heartbeat of each of its servers.
+	const lifetimes = new Map<string, [number, number][]>();
+
+	for (const node of nodes) {
+		if (node.mediaNode !== undefined) {
+			lifetimes.set(node.mediaNode, [
+				...(lifetimes.get(node.mediaNode) ?? []),
+				[node.firstSeenAt.getTime(), node.lastSeenAt.getTime()]
+			]);
+		}
+	}
+
+	rollups.samplePeaks(windows, windowStart, lifetimes);
+
+	for (const doc of rollups.hourlyDocs()) {
+		writer.add(COLLECTIONS.analyticsHourly, doc);
+	}
+
+	for (const doc of rollups.dailyDocs()) {
+		writer.add(COLLECTIONS.analyticsDaily, doc);
+	}
+
+	for (const doc of rollups.fiveMinuteDocs()) {
+		writer.add(COLLECTIONS.analytics5min, doc);
+	}
+
+	for (const node of nodes) {
+		writer.add(COLLECTIONS.nodes, node);
 	}
 
 	const generatedAt = new Date(now);

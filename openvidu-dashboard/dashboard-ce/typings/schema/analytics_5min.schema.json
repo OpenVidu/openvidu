@@ -22,7 +22,14 @@
 		},
 		"rooms": {
 			"bsonType": "object",
-			"properties": { "created": { "bsonType": ["int", "long"] }, "ended": { "bsonType": ["int", "long"] } },
+			"properties": {
+				"created": { "bsonType": ["int", "long"] },
+				"ended": { "bsonType": ["int", "long"] },
+				"peakActive": {
+					"bsonType": ["int", "long"],
+					"description": "Most rooms active at once in the bucket, sampled every minute by the server aggregator"
+				}
+			},
 			"additionalProperties": false
 		},
 		"participants": {
@@ -35,7 +42,11 @@
 				"joined": { "bsonType": ["int", "long"] },
 				"active": { "bsonType": ["int", "long"], "description": "PARTICIPANT_ACTIVE events" },
 				"left": { "bsonType": ["int", "long"] },
-				"aborted": { "bsonType": ["int", "long"] }
+				"aborted": { "bsonType": ["int", "long"] },
+				"peakActive": {
+					"bsonType": ["int", "long"],
+					"description": "Most STANDARD sessions active at once in the bucket, sampled every minute by the server aggregator"
+				}
 			},
 			"additionalProperties": false
 		},

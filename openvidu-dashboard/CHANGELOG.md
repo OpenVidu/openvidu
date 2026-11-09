@@ -115,9 +115,10 @@ queried) and `Deployment` (running the service). One line per observable change,
   type, status and room filters and sorts by start, end and duration. Ingress: the ingresses created, used or
   publishing in the range, searchable by name or ID, with input type and status filters and sorts by creation, total
   duration, sessions and last session. Both with summary tiles and live refresh.
-- Analytics covers any range instead of four fixed periods, loads on demand and exports CSV, with rooms, participants,
-  client, data transferred, egress and ingress (with the input type) sections; every series of a chart has its own
-  colour, and a section without data shrinks to its "No data in this range" message.
+- Analytics covers any range instead of four fixed periods, loads on demand and exports CSV, with rooms and
+  participants (the most active at once in each bucket), client, data transferred, egress and ingress (with the input
+  type) sections; every series of a chart has its own colour, and a section without data shrinks to its "No data in
+  this range" message.
 - Auto-refresh offers one interval for every live view; a page that cannot refresh now, such as an ended room, shows
   why on the disabled interval control.
 - Tables show every selected column and scroll sideways when they do not fit, turn into cards only on phones, keep

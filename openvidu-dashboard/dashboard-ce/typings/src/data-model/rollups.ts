@@ -57,6 +57,8 @@ export interface RollupRooms {
 	durationMsSum?: number;
 	/** Sum of participant sessions, excluding dependent kinds, of the rooms ended in the bucket. */
 	participantsSum?: number;
+	/** Most rooms active at once in the bucket, sampled every minute by the server's aggregator. */
+	peakActive?: number;
 }
 
 /** Counters of STANDARD sessions; `byKind` counts the sessions of every kind that joined. */
@@ -76,6 +78,8 @@ export interface RollupParticipants {
 	connectTimeCount?: number;
 	/** Connection minutes. */
 	minutes?: number;
+	/** Most sessions active at once in the bucket, sampled every minute by the server's aggregator. */
+	peakActive?: number;
 }
 
 export interface RollupTracks {
@@ -123,7 +127,7 @@ export interface HourlyRollupDocument extends RollupBase {
 /** `analytics_daily`. */
 export interface DailyRollupDocument extends HourlyRollupDocument {
 	/**
-	 * Distinct STANDARD identities that joined during the UTC day; set by the server's reconciler once the day has
+	 * Distinct STANDARD identities that joined during the UTC day; set by the server's aggregator once the day has
 	 * closed.
 	 */
 	uniqueIdentities?: number;
@@ -138,11 +142,13 @@ export interface FiveMinuteRollupParticipants {
 	active?: number;
 	left?: number;
 	aborted?: number;
+	/** Most sessions active at once in the bucket, sampled every minute by the server's aggregator. */
+	peakActive?: number;
 }
 
 /** `analytics_5min`: bandwidth, quality, presence and lifecycle counters for sub-day ranges. */
 export interface FiveMinuteRollupDocument extends RollupBase {
-	rooms?: { created?: number; ended?: number };
+	rooms?: Pick<RollupRooms, 'created' | 'ended' | 'peakActive'>;
 	participants?: FiveMinuteRollupParticipants;
 	egress?: { started?: number; ended?: number };
 	bytes?: RollupBytes;

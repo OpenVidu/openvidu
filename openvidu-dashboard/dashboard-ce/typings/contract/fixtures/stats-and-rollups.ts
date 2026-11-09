@@ -87,9 +87,17 @@ function rollupId(scope: string, bucket: Date): string {
 	return `${scope}:${bucket.toISOString().replace('.000Z', 'Z')}`;
 }
 
+/**
+ * The server's aggregator sampled the deployment once, at 10:34:20: the active room and Dave's session on node beta,
+ * and node alpha alive with nothing active.
+ */
+const sampled = { rooms: { peakActive: 1 }, participants: { peakActive: 1 } };
+const idleNodeSample = { rooms: { peakActive: 0 }, participants: { peakActive: 0 } };
+
 const fiveMinBucket = at('10:30:00');
 const fiveMinCounters: Omit<FiveMinuteRollupDocument, '_id' | 'scope' | 'bucket'> = {
-	participants: { connected: 3, joined: 1 },
+	rooms: sampled.rooms,
+	participants: { connected: 3, joined: 1, ...sampled.participants },
 	bytes: { up: 13_986_950, down: 12_811_470 },
 	quality: { scoreSum: 21.6, scoreCount: 5 },
 	mediaStats: { reported: true }
@@ -109,6 +117,12 @@ export const analytics5min: FiveMinuteRollupDocument[] = [
 		bucket: fiveMinBucket,
 		...fiveMinCounters,
 		internal: { connectedSids: [P.dave, P.ingress2, P.egressStreamer] }
+	},
+	{
+		_id: rollupId(`node:${MEDIA_NODE_ALPHA}`, fiveMinBucket),
+		scope: `node:${MEDIA_NODE_ALPHA}`,
+		bucket: fiveMinBucket,
+		...idleNodeSample
 	}
 ];
 
@@ -197,7 +211,14 @@ export const analyticsDaily: DailyRollupDocument[] = [
 		scope: 'global',
 		bucket: dayBucket,
 		mediaStats: { reported: true },
-		rooms: { created: 2, ended: 1, endedByReason: { API_DELETE: 1 }, durationMsSum: 2_700_000, participantsSum: 4 },
+		rooms: {
+			created: 2,
+			ended: 1,
+			endedByReason: { API_DELETE: 1 },
+			durationMsSum: 2_700_000,
+			participantsSum: 4,
+			...sampled.rooms
+		},
 		participants: {
 			joined: 6,
 			active: 4,
@@ -216,7 +237,8 @@ export const analyticsDaily: DailyRollupDocument[] = [
 			},
 			connectTimeSumMs: 4_600,
 			connectTimeCount: 4,
-			minutes: closedRoomMinutes
+			minutes: closedRoomMinutes,
+			...sampled.participants
 		},
 		tracks: { published: 6, subscribed: 4, subscribeFailed: 1 },
 		egress: {
@@ -247,6 +269,8 @@ export const analyticsDaily: DailyRollupDocument[] = [
 		scope: `node:${MEDIA_NODE_ALPHA}`,
 		bucket: dayBucket,
 		...closedRoomHour,
+		rooms: { ...closedRoomHour.rooms, ...idleNodeSample.rooms },
+		participants: { ...closedRoomHour.participants, ...idleNodeSample.participants },
 		uniqueIdentities: 3
 	}
 ];

@@ -17,6 +17,8 @@ export const EGRESS_ENDED_PATH = 'egress.endedByStatus';
 export interface MetricDefinition {
 	/** Paths to project from the rollup documents; never the parent of another projected path. */
 	fields: readonly string[];
+	/** The fields combine across rollup documents by their maximum instead of their sum. */
+	maximum?: true;
 	/** Value of a bucket; `counters` is undefined when the bucket has no document. */
 	value: (counters: Counters | undefined) => number | null;
 }
@@ -28,6 +30,11 @@ export function round1(value: number): number {
 /** A counter summed over the bucket's documents, `0` without one. */
 export function sum(path: string): MetricDefinition {
 	return { fields: [path], value: (counters) => counters?.get(path) ?? 0 };
+}
+
+/** The largest value of the bucket's documents, `null` when none of them has one. */
+export function peak(path: string): MetricDefinition {
+	return { fields: [path], maximum: true, value: (counters) => counters?.get(path) ?? null };
 }
 
 /** `numerator / denominator × scale` with one decimal, `null` without a denominator. */
@@ -64,14 +71,17 @@ export interface AnalyticsCatalogue {
 const CE_METRICS = {
 	roomsCreated: sum('rooms.created'),
 	roomsEnded: sum('rooms.ended'),
+	roomsPeakActive: peak('rooms.peakActive'),
 	participantsJoined: sum('participants.joined'),
 	participantsActive: sum('participants.active'),
 	participantsAborted: sum('participants.aborted'),
+	participantsPeakActive: peak('participants.peakActive'),
 	// A participant that joins at the end of a bucket becomes active in the next one: the share never exceeds 100.
 	connectionSuccessRate: ratio('participants.active', 'participants.joined', 100, 100),
 	uniqueIdentities: {
 		fields: ['uniqueIdentities'],
-		// The reconciler writes the value once the UTC day has closed: a day with documents but no value has none yet.
+		// The server's aggregator writes the value once the UTC day has closed: a day with documents but no value has none
+		// yet.
 		value: (counters) => (counters === undefined ? 0 : (counters.get('uniqueIdentities') ?? null))
 	},
 	participantMinutes: {
@@ -148,6 +158,13 @@ export function dimensionDefinition(catalogue: AnalyticsCatalogue, dimension: An
 	}
 
 	return definition;
+}
+
+/** Paths of the catalogue that combine across rollup documents by their maximum. */
+export function maximumPaths(catalogue: AnalyticsCatalogue): ReadonlySet<string> {
+	return new Set(
+		Object.values(catalogue.metrics).flatMap((definition) => (definition.maximum === true ? definition.fields : []))
+	);
 }
 
 /** Projected paths of `metrics`. */

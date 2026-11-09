@@ -10,7 +10,8 @@ import {
 } from '@openvidu-dashboard/typings';
 
 import { AnalyticsCache } from '../../src/analytics/analytics-cache.js';
-import { CE_ANALYTICS_CATALOGUE } from '../../src/analytics/analytics-catalogue.js';
+import { CE_ANALYTICS_CATALOGUE, maximumPaths } from '../../src/analytics/analytics-catalogue.js';
+import { foldRows, mergeCounters } from '../../src/analytics/analytics-counters.js';
 import { breakdownsCsv, seriesCsv, toCsv } from '../../src/analytics/analytics-csv.js';
 import { AnalyticsFeatureGate } from '../../src/analytics/analytics-gate.js';
 import { planSeries, type SeriesPlanInput, snapRange } from '../../src/analytics/analytics-planner.js';
@@ -292,6 +293,67 @@ describe('analytics catalogue', () => {
 		);
 		expect(Object.keys(CE_ANALYTICS_CATALOGUE.dimensions).sort()).toEqual([...ANALYTICS_CE_DIMENSIONS].sort());
 	});
+
+	it('reads a peak as the stored maximum, or null without a sample', () => {
+		const rooms = CE_ANALYTICS_CATALOGUE.metrics.roomsPeakActive;
+
+		expect(rooms?.value(undefined)).toBeNull();
+		expect(rooms?.value(new Map([['rooms.created', 3]]))).toBeNull();
+		expect(rooms?.value(new Map([['rooms.peakActive', 0]]))).toBe(0);
+		expect(
+			CE_ANALYTICS_CATALOGUE.metrics.participantsPeakActive?.value(new Map([['participants.peakActive', 7]]))
+		).toBe(7);
+		expect([...maximumPaths(CE_ANALYTICS_CATALOGUE)].sort()).toEqual([
+			'participants.peakActive',
+			'rooms.peakActive'
+		]);
+	});
+});
+
+describe('analytics counters', () => {
+	const maxima = new Set(['rooms.peakActive']);
+
+	async function fold(rows: { bucket: Date; [field: string]: unknown }[], starts: Date[]) {
+		// `for await` reads an array as well as the driver's cursor.
+		return foldRows(rows as unknown as Parameters<typeof foldRows>[0], starts, maxima);
+	}
+
+	it('sums counters and keeps the largest peak of the documents of a bucket', async () => {
+		const start = at('2026-10-13T10:00:00Z');
+		const folded = await fold(
+			[3, 5, 2].map((peak, index) => ({
+				bucket: new Date(start.getTime() + index * 5 * MINUTE),
+				rooms: { created: 1, peakActive: peak }
+			})),
+			[start]
+		);
+
+		expect(Object.fromEntries(folded.get(start.getTime()) ?? [])).toEqual({
+			'#documents': 3,
+			'rooms.created': 3,
+			'rooms.peakActive': 5
+		});
+	});
+
+	it('keeps the larger peak when a memoised fold meets the fresh tail of the same bucket', async () => {
+		const start = at('2026-10-13T11:45:00Z');
+		const completed = await fold(
+			[7, 2].map((peak, index) => ({
+				bucket: new Date(start.getTime() + index * 5 * MINUTE),
+				rooms: { created: 1, peakActive: peak }
+			})),
+			[start]
+		);
+		const fresh = await fold(
+			[{ bucket: at('2026-10-13T11:55:00Z'), rooms: { created: 1, peakActive: 4 } }],
+			[start]
+		);
+		const merged = mergeCounters(completed, fresh, maxima).get(start.getTime());
+
+		expect(merged?.get('rooms.peakActive')).toBe(7);
+		expect(merged?.get('rooms.created')).toBe(3);
+		expect(mergeCounters(completed, fresh).get(start.getTime())?.get('rooms.peakActive')).toBe(11);
+	});
 });
 
 describe('analytics feature gate', () => {
@@ -368,6 +430,23 @@ describe('analytics series', () => {
 
 		expect(bucket('connectionSuccessRate')).toEqual(['2026-10-13T10:00:00.000Z', 80]);
 		expect(bucket('participantsJoined')).toEqual(['2026-10-13T10:00:00.000Z', 10]);
+	});
+
+	it('takes the largest five-minute peak of a fifteen-minute bucket, null without a sample', async () => {
+		const docs: Doc[] = [3, 5, 2].map((peakActive, index) => ({
+			scope: 'global',
+			bucket: new Date(at('2026-10-13T10:00:00Z').getTime() + index * 5 * MINUTE),
+			rooms: { peakActive }
+		}));
+		docs.push({ scope: 'global', bucket: at('2026-10-13T10:15:00Z'), rooms: { created: 2 } });
+		const response = await service(fakeDb({ analytics_5min: docs })).series(
+			series({ metrics: 'roomsPeakActive', granularity: '15m' })
+		);
+		const point = (ts: string) => response.series[0]?.points.find(([bucket]) => bucket === ts)?.[1];
+
+		expect(point('2026-10-13T10:00:00.000Z')).toBe(5);
+		expect(point('2026-10-13T10:15:00.000Z')).toBeNull();
+		expect(point('2026-10-13T09:45:00.000Z')).toBeNull();
 	});
 
 	it('computes the connection success rate and the participant minutes', async () => {

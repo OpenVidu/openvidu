@@ -42,8 +42,8 @@ Behaviour is specified in `openspec/specs/*-api`, `api-conventions`, `auth`, `st
 - `src/stats/stats-mode.ts`: `StatsModeReader` reads the writer's `stats_detail` for `GET /info`.
 - `src/analytics/` answers from the rollup collections only: `analytics-planner.ts` picks the granularity, source
   collection and bucket grid, `analytics-counters.ts` folds the documents in process with the definitions of the
-  catalogue, `AnalyticsCache` keeps the folds of completed documents and `AnalyticsFeatureGate` rejects PRO metrics,
-  dimensions and node scopes on CE.
+  catalogue (summed, or the largest value for the paths of `peak()` metrics), `AnalyticsCache` keeps the folds of
+  completed documents and `AnalyticsFeatureGate` rejects PRO metrics, dimensions and node scopes on CE.
 - `src/status/freshness.ts` marks active rooms and participants `stale` with the backend clock, from the typings
   `freshnessWindows()`.
 - `src/index.ts` exports what an extending backend builds on: the startup, tokens and registry, the generic query,

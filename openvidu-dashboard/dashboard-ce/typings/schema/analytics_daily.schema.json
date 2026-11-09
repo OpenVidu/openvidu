@@ -39,7 +39,11 @@
 					"additionalProperties": false
 				},
 				"durationMsSum": { "bsonType": ["long", "int"] },
-				"participantsSum": { "bsonType": ["int", "long"] }
+				"participantsSum": { "bsonType": ["int", "long"] },
+				"peakActive": {
+					"bsonType": ["int", "long"],
+					"description": "Most rooms active at once in the bucket, sampled every minute by the server aggregator"
+				}
 			},
 			"additionalProperties": false
 		},
@@ -144,7 +148,11 @@
 				},
 				"connectTimeSumMs": { "bsonType": ["long", "int"] },
 				"connectTimeCount": { "bsonType": ["int", "long"] },
-				"minutes": { "bsonType": "double" }
+				"minutes": { "bsonType": "double" },
+				"peakActive": {
+					"bsonType": ["int", "long"],
+					"description": "Most STANDARD sessions active at once in the bucket, sampled every minute by the server aggregator"
+				}
 			},
 			"additionalProperties": false
 		},
@@ -249,7 +257,7 @@
 		},
 		"uniqueIdentities": {
 			"bsonType": ["int", "long"],
-			"description": "Set by the server reconciler once the UTC day has closed"
+			"description": "Set by the server aggregator once the UTC day has closed"
 		}
 	},
 	"additionalProperties": false

@@ -84,6 +84,10 @@ What it writes (`analytics_5min` stays empty without `--five-minute-rollups`):
   adds `analytics_5min` (lifecycle counters, the `participants.connected` gauge, bytes and quality per five minutes)
   inside the 5-minute rollup window. `analytics_daily` gets no TTL index: daily rollups are kept forever.
   `generate()` takes the same switches as `rollups: { fiveMinute, nodes, roomSums }` and `mediaNodes`.
+  Every rollup gets `rooms.peakActive` and `participants.peakActive`, the most rooms and active STANDARD sessions
+  at any minute of its bucket, as the server's aggregator samples them: every bucket of the range has a global
+  document, with peaks of 0 and nothing else when no room was active, and a media node scope is sampled while one of
+  its servers is alive or it holds an active room or session.
 - `nodes`, with `rtcEngine` (`mediasoup` for the nodes of `--nodes-without-media-stats`), `ip` and the room counters
   `rooms.hosted` and `rooms.reconciled`: 3 nodes, or with `--media-nodes` five media nodes, one per state:
   - `-1` restarted: an earlier, stopped process hosts its older rooms;

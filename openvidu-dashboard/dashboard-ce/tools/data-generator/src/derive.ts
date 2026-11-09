@@ -62,6 +62,7 @@ export interface StatsDoc {
 	mimeType?: string;
 }
 
+const MINUTE = 60_000;
 const HOUR = 3_600_000;
 const DAY = 86_400_000;
 const FLUSH_MS = 30_000;
@@ -661,16 +662,21 @@ interface MediaStatsMarks {
 	missing?: true;
 }
 
+/** Most rooms and STANDARD sessions active at once in a bucket, as the server's aggregator samples them. */
+interface Peaks {
+	peakActive?: number;
+}
+
 interface Bucket {
 	mediaStats: MediaStatsMarks;
-	rooms: {
+	rooms: Peaks & {
 		created: number;
 		ended: number;
 		endedByReason: Counter;
 		participantsSum?: number;
 		durationMsSum?: number;
 	};
-	participants: {
+	participants: Peaks & {
 		joined: number;
 		active: number;
 		aborted: number;
@@ -695,14 +701,26 @@ interface Bucket {
 
 interface FiveMinuteBucket {
 	mediaStats: MediaStatsMarks;
-	rooms: { created: number; ended: number };
-	participants: { connected: number; joined: number; active: number; left: number; aborted: number };
+	rooms: Peaks & { created: number; ended: number };
+	participants: Peaks & { connected: number; joined: number; active: number; left: number; aborted: number };
 	egress: { started: number; ended: number };
 	bytes: { up: number; down: number };
 	quality: { scoreSum: number; scoreCount: number; poor: number; lost: number };
 }
 
-export interface RollupDoc {
+/** A rollup document only the aggregator's samples wrote: the peaks, and the unique identities of a day. */
+export interface SampledRollupDoc {
+	_id: string;
+	scope: string;
+	bucket: Date;
+	rooms: Peaks;
+	participants: Peaks;
+	uniqueIdentities?: number;
+}
+
+export type RollupDoc = CountedRollupDoc | SampledRollupDoc;
+
+export interface CountedRollupDoc {
 	_id: string;
 	scope: string;
 	bucket: Date;
@@ -741,11 +759,44 @@ const FIVE_MINUTES = 300_000;
 type Update = (bucket: Bucket, daily: boolean) => void;
 type FiveMinuteUpdate = (bucket: FiveMinuteBucket) => void;
 
+/** Start and end (ms) of the rooms or sessions of a scope; an open one ends at infinity. */
+interface Spans {
+	starts: number[];
+	ends: number[];
+}
+
+/** Running count of the spans active at increasing instants: started at or before it and not ended. */
+function activeCounter(spans: Spans | undefined): (time: number) => number {
+	const starts = [...(spans?.starts ?? [])].sort((a, b) => a - b);
+	const ends = [...(spans?.ends ?? [])].sort((a, b) => a - b);
+	let started = 0;
+	let ended = 0;
+
+	return (time) => {
+		while (started < starts.length && (starts[started] ?? 0) <= time) {
+			started += 1;
+		}
+
+		while (ended < ends.length && (ends[ended] ?? 0) <= time) {
+			ended += 1;
+		}
+
+		return Math.max(0, started - ended);
+	};
+}
+
+function keepPeaks(bucket: { rooms: Peaks; participants: Peaks }, rooms: number, sessions: number): void {
+	bucket.rooms.peakActive = Math.max(bucket.rooms.peakActive ?? 0, rooms);
+	bucket.participants.peakActive = Math.max(bucket.participants.peakActive ?? 0, sessions);
+}
+
 /** Accumulates the hourly, daily and (optionally) five-minute rollups of every bundle it receives. */
 export class Rollups {
 	private readonly hourly = new Map<string, Bucket>();
 	private readonly daily = new Map<string, Bucket>();
 	private readonly fiveMinute = new Map<string, FiveMinuteBucket>();
+	private readonly activeRooms = new Map<string, Spans>();
+	private readonly activeSessions = new Map<string, Spans>();
 	private scopes: string[] = ['global'];
 	/** Mark of the bundle being added: its room's server reports media statistics or not. */
 	private mark: keyof MediaStatsMarks = 'reported';
@@ -760,6 +811,7 @@ export class Rollups {
 			this.options.nodes && room.mediaNode !== undefined ? ['global', `node:${room.mediaNode}`] : ['global'];
 		this.mark = room.mediaStats === false ? 'missing' : 'reported';
 		this.fiveMinuteFrom = windows.fiveMinuteFrom;
+		this.span(this.activeRooms, room.mediaNode, room.createdAt, room.endedAt);
 		this.at(
 			room.createdAt,
 			(b) => {
@@ -840,6 +892,69 @@ export class Rollups {
 		}
 	}
 
+	/**
+	 * Samples every minute from `from` to `windows.now` the rooms and STANDARD sessions active in each scope and keeps
+	 * the largest of each bucket as its peaks, as the server's aggregator does: in the global documents of every bucket,
+	 * and in those of a media node label while it holds an active entity or one of its `alive` spans covers the minute.
+	 * Documents of a node scope without any sample get peaks of 0.
+	 */
+	samplePeaks(
+		windows: DeriveWindows,
+		from: number,
+		alive: ReadonlyMap<string, readonly (readonly [number, number])[]>
+	): void {
+		const scopes = new Set(['global', ...this.activeRooms.keys(), ...this.activeSessions.keys()]);
+
+		if (this.options.nodes) {
+			for (const label of alive.keys()) {
+				scopes.add(`node:${label}`);
+			}
+		}
+
+		for (const scope of scopes) {
+			const rooms = activeCounter(this.activeRooms.get(scope));
+			const sessions = activeCounter(this.activeSessions.get(scope));
+			const spans = scope.startsWith('node:') ? (alive.get(scope.slice('node:'.length)) ?? []) : undefined;
+
+			for (let time = Math.ceil(from / MINUTE) * MINUTE; time <= windows.now; time += MINUTE) {
+				const activeRooms = rooms(time);
+				const activeSessions = sessions(time);
+				const sampled =
+					spans === undefined ||
+					activeRooms > 0 ||
+					activeSessions > 0 ||
+					spans.some(([start, end]) => start <= time && time <= end);
+
+				if (!sampled) {
+					continue;
+				}
+
+				keepPeaks(
+					getOrCreate(this.hourly, scope, Math.floor(time / HOUR) * HOUR, this.options.roomSums),
+					activeRooms,
+					activeSessions
+				);
+				keepPeaks(
+					getOrCreate(this.daily, scope, Math.floor(time / DAY) * DAY, this.options.roomSums),
+					activeRooms,
+					activeSessions
+				);
+
+				if (this.options.fiveMinute && time >= windows.fiveMinuteFrom) {
+					keepPeaks(
+						this.fiveMinuteBucket(scope, Math.floor(time / FIVE_MINUTES) * FIVE_MINUTES),
+						activeRooms,
+						activeSessions
+					);
+				}
+			}
+		}
+
+		for (const bucket of [...this.hourly.values(), ...this.daily.values(), ...this.fiveMinute.values()]) {
+			keepPeaks(bucket, 0, 0);
+		}
+	}
+
 	hourlyDocs(): RollupDoc[] {
 		return sortedEntries(this.hourly).map(([scope, bucket, b]) => toDoc(scope, bucket, b, false));
 	}
@@ -848,12 +963,17 @@ export class Rollups {
 		return sortedEntries(this.daily).map(([scope, bucket, b]) => toDoc(scope, bucket, b, true));
 	}
 
-	fiveMinuteDocs(): FiveMinuteRollupDoc[] {
+	fiveMinuteDocs(): (FiveMinuteRollupDoc | SampledRollupDoc)[] {
 		return sortedEntries(this.fiveMinute).map(([scope, bucket, b]) => {
 			const date = new Date(bucket);
+			const _id = `${scope}:${date.toISOString().replace('.000Z', 'Z')}`;
+
+			if (sampledOnly(b)) {
+				return { _id, scope, bucket: date, ...peaksOf(b) };
+			}
 
 			return {
-				_id: `${scope}:${date.toISOString().replace('.000Z', 'Z')}`,
+				_id,
 				scope,
 				bucket: date,
 				...b,
@@ -861,6 +981,23 @@ export class Rollups {
 				quality: { ...b.quality, scoreSum: round2(b.quality.scoreSum) }
 			};
 		});
+	}
+
+	/** Records an entity active from `start` until `end` (open without one) in the global and `mediaNode` scopes. */
+	private span(target: Map<string, Spans>, mediaNode: string | undefined, start: Date, end: Date | null): void {
+		const scopes = this.options.nodes && mediaNode !== undefined ? ['global', `node:${mediaNode}`] : ['global'];
+
+		for (const scope of scopes) {
+			let spans = target.get(scope);
+
+			if (spans === undefined) {
+				spans = { starts: [], ends: [] };
+				target.set(scope, spans);
+			}
+
+			spans.starts.push(start.getTime());
+			spans.ends.push(end?.getTime() ?? Number.POSITIVE_INFINITY);
+		}
 	}
 
 	private addParticipant(p: ParticipantDoc, bundle: RoomBundle, windows: DeriveWindows): void {
@@ -890,6 +1027,11 @@ export class Rollups {
 				f.participants.joined += 1;
 			}
 		);
+
+		if (p.activeAt !== null) {
+			this.span(this.activeSessions, p.mediaNode, p.activeAt, p.leftAt);
+		}
+
 		this.at(
 			p.activeAt,
 			(b) => {
@@ -1007,24 +1149,30 @@ export class Rollups {
 		const bucket = Math.floor(ms / FIVE_MINUTES) * FIVE_MINUTES;
 
 		for (const scope of this.scopes) {
-			const key = `${scope}|${String(bucket)}`;
-			let five = this.fiveMinute.get(key);
-
-			if (five === undefined) {
-				five = {
-					mediaStats: {},
-					rooms: { created: 0, ended: 0 },
-					participants: { connected: 0, joined: 0, active: 0, left: 0, aborted: 0 },
-					egress: { started: 0, ended: 0 },
-					bytes: { up: 0, down: 0 },
-					quality: { scoreSum: 0, scoreCount: 0, poor: 0, lost: 0 }
-				};
-				this.fiveMinute.set(key, five);
-			}
+			const five = this.fiveMinuteBucket(scope, bucket);
 
 			five.mediaStats[this.mark] = true;
 			update(five);
 		}
+	}
+
+	private fiveMinuteBucket(scope: string, bucket: number): FiveMinuteBucket {
+		const key = `${scope}|${String(bucket)}`;
+		let five = this.fiveMinute.get(key);
+
+		if (five === undefined) {
+			five = {
+				mediaStats: {},
+				rooms: { created: 0, ended: 0 },
+				participants: { connected: 0, joined: 0, active: 0, left: 0, aborted: 0 },
+				egress: { started: 0, ended: 0 },
+				bytes: { up: 0, down: 0 },
+				quality: { scoreSum: 0, scoreCount: 0, poor: 0, lost: 0 }
+			};
+			this.fiveMinute.set(key, five);
+		}
+
+		return five;
 	}
 }
 
@@ -1079,11 +1227,29 @@ function getOrCreate(map: Map<string, Bucket>, scope: string, bucketStart: numbe
 	return bucket;
 }
 
+/** A bucket no counter wrote, only the aggregator's samples: the writer marks every bucket it counts in. */
+function sampledOnly(bucket: { mediaStats: MediaStatsMarks }): boolean {
+	return Object.keys(bucket.mediaStats).length === 0;
+}
+
+function peaksOf(bucket: { rooms: Peaks; participants: Peaks }): { rooms: Peaks; participants: Peaks } {
+	return {
+		rooms: { peakActive: bucket.rooms.peakActive ?? 0 },
+		participants: { peakActive: bucket.participants.peakActive ?? 0 }
+	};
+}
+
 function toDoc(scope: string, bucket: number, b: Bucket, daily: boolean): RollupDoc {
 	const date = new Date(bucket);
+	const _id = `${scope}:${date.toISOString().replace('.000Z', 'Z')}`;
+	const identities = daily ? { uniqueIdentities: b.identities?.size ?? 0 } : {};
+
+	if (sampledOnly(b)) {
+		return { _id, scope, bucket: date, ...peaksOf(b), ...identities };
+	}
 
 	return {
-		_id: `${scope}:${date.toISOString().replace('.000Z', 'Z')}`,
+		_id,
 		scope,
 		bucket: date,
 		rooms: b.rooms,
@@ -1094,7 +1260,7 @@ function toDoc(scope: string, bucket: number, b: Bucket, daily: boolean): Rollup
 		bytes: { up: int64(b.bytes.up), down: int64(b.bytes.down) },
 		quality: { ...b.quality, scoreSum: round2(b.quality.scoreSum) },
 		mediaStats: b.mediaStats,
-		...(daily ? { uniqueIdentities: b.identities?.size ?? 0 } : {})
+		...identities
 	};
 }
 

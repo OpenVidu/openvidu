@@ -4,9 +4,11 @@ import type { BucketGranularity, TimeSeriesPoint, TimeSeriesResponse } from './t
 export const AnalyticsMetric = {
 	ROOMS_CREATED: 'roomsCreated',
 	ROOMS_ENDED: 'roomsEnded',
+	ROOMS_PEAK_ACTIVE: 'roomsPeakActive',
 	PARTICIPANTS_JOINED: 'participantsJoined',
 	PARTICIPANTS_ACTIVE: 'participantsActive',
 	PARTICIPANTS_ABORTED: 'participantsAborted',
+	PARTICIPANTS_PEAK_ACTIVE: 'participantsPeakActive',
 	CONNECTION_SUCCESS_RATE: 'connectionSuccessRate',
 	UNIQUE_IDENTITIES: 'uniqueIdentities',
 	PARTICIPANT_MINUTES: 'participantMinutes',
@@ -29,7 +31,7 @@ export type AnalyticsMetric = (typeof AnalyticsMetric)[keyof typeof AnalyticsMet
 
 export interface AnalyticsMetricInfo {
 	unit: 'count' | 'percent' | 'bytes' | 'ms' | 'minutes' | 'mos';
-	/** Value of a bucket without data: `0` for counters and sums, `null` for rates and averages. */
+	/** Value of a bucket without data: `0` for counters and sums, `null` for rates, averages and peaks. */
 	empty: 0 | null;
 	/** Served at `1h` or coarser: `analytics_5min` does not carry it. */
 	hourlyOnly?: true;
@@ -41,9 +43,11 @@ export interface AnalyticsMetricInfo {
 export const ANALYTICS_METRIC_INFO: Readonly<Partial<Record<AnalyticsMetric, AnalyticsMetricInfo>>> = {
 	roomsCreated: { unit: 'count', empty: 0 },
 	roomsEnded: { unit: 'count', empty: 0 },
+	roomsPeakActive: { unit: 'count', empty: null },
 	participantsJoined: { unit: 'count', empty: 0 },
 	participantsActive: { unit: 'count', empty: 0 },
 	participantsAborted: { unit: 'count', empty: 0 },
+	participantsPeakActive: { unit: 'count', empty: null },
 	connectionSuccessRate: { unit: 'percent', empty: null },
 	uniqueIdentities: { unit: 'count', empty: 0, dailyOnly: true },
 	participantMinutes: { unit: 'minutes', empty: 0, hourlyOnly: true },
@@ -77,9 +81,11 @@ export type AnalyticsDimension = (typeof AnalyticsDimension)[keyof typeof Analyt
 export const ANALYTICS_CE_METRICS: readonly AnalyticsMetric[] = [
 	'roomsCreated',
 	'roomsEnded',
+	'roomsPeakActive',
 	'participantsJoined',
 	'participantsActive',
 	'participantsAborted',
+	'participantsPeakActive',
 	'connectionSuccessRate',
 	'uniqueIdentities',
 	'participantMinutes',

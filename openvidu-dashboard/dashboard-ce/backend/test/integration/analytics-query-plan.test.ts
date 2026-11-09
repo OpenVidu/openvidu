@@ -139,6 +139,20 @@ describe.skipIf(mongoUri === '')(`analytics query plan at scenario ${scenario}`,
 		).toBeGreaterThan(0);
 	});
 
+	it('series: the peaks read the same bounded scans at every granularity', async () => {
+		const metrics = 'roomsPeakActive,participantsPeakActive';
+
+		expect(await explainSeries({ metrics, from: 'now-24h', granularity: '5m' }, 'analytics_5min')).toBeGreaterThan(
+			0
+		);
+		expect(await explainSeries({ metrics, from: 'now-7d', granularity: '1h' }, 'analytics_hourly')).toBeGreaterThan(
+			0
+		);
+		expect(
+			await explainSeries({ metrics, from: 'now-400d', granularity: '1d' }, 'analytics_daily')
+		).toBeGreaterThan(0);
+	});
+
 	it('summary: the media statistics coverage reads the rollup marks on scope_bucket', async () => {
 		const from = new Date(now.getTime() - 30 * DAY);
 		const documents = await db

@@ -435,7 +435,8 @@ const hourlyFields = {
 		ended: int(),
 		endedByReason: counts(RoomEndReason),
 		durationMsSum: long(),
-		participantsSum: int()
+		participantsSum: int(),
+		peakActive: int('Most rooms active at once in the bucket, sampled every minute by the server aggregator')
 	}),
 	participants: obj({
 		joined: int(),
@@ -450,7 +451,10 @@ const hourlyFields = {
 		disconnectReasons: counts(DisconnectReason),
 		connectTimeSumMs: long(),
 		connectTimeCount: int(),
-		minutes: double()
+		minutes: double(),
+		peakActive: int(
+			'Most STANDARD sessions active at once in the bucket, sampled every minute by the server aggregator'
+		)
 	}),
 	tracks: obj({ published: int(), subscribed: int(), subscribeFailed: int() }),
 	egress: obj({
@@ -475,18 +479,25 @@ const analyticsHourly = obj(hourlyFields);
 
 const analyticsDaily = obj({
 	...hourlyFields,
-	uniqueIdentities: int('Set by the server reconciler once the UTC day has closed')
+	uniqueIdentities: int('Set by the server aggregator once the UTC day has closed')
 });
 
 const analytics5min = obj({
 	...rollupBase,
-	rooms: obj({ created: int(), ended: int() }),
+	rooms: obj({
+		created: int(),
+		ended: int(),
+		peakActive: int('Most rooms active at once in the bucket, sampled every minute by the server aggregator')
+	}),
 	participants: obj({
 		connected: int('Distinct participants with stats in the bucket'),
 		joined: int(),
 		active: int('PARTICIPANT_ACTIVE events'),
 		left: int(),
-		aborted: int()
+		aborted: int(),
+		peakActive: int(
+			'Most STANDARD sessions active at once in the bucket, sampled every minute by the server aggregator'
+		)
 	}),
 	egress: obj({ started: int(), ended: int() }),
 	bytes: rollupBytes,

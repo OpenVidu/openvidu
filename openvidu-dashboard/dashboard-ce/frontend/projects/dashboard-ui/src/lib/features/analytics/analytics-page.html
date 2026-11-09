@@ -67,7 +67,7 @@
 </ovd-tile-row>
 
 <div class="sections">
-	@let rooms = view(['roomsCreated', 'roomsEnded']);
+	@let rooms = roomsView();
 	<ovd-analytics-card
 		heading="Rooms"
 		sectionId="rooms"
@@ -75,7 +75,7 @@
 		[error]="rooms.error"
 		[empty]="rooms.empty"
 		[exporting]="isExporting('rooms')"
-		(exportCsv)="exportCsv('rooms', { metrics: ['roomsCreated', 'roomsEnded'] })"
+		(exportCsv)="exportCsv('rooms', { metrics: ['roomsPeakActive'] })"
 		(retry)="retry()"
 		(widen)="widenRange()"
 	>
@@ -93,18 +93,19 @@
 				/>
 			</ovd-tile-row>
 			<ovd-time-series-chart
-				heading="Rooms created and ended"
-				kind="bar"
+				heading="Active rooms"
+				kind="step"
+				[info]="infoTexts.activeRoomsChart"
 				[series]="charts().rooms"
-				[from]="chartRange('roomsCreated').from"
-				[to]="chartRange('roomsCreated').to"
+				[from]="chartRange('roomsPeakActive').from"
+				[to]="chartRange('roomsPeakActive').to"
 				[tz]="tz()"
-				[note]="note('roomsCreated')"
+				[note]="note('roomsPeakActive')"
 			/>
 		</ng-template>
 	</ovd-analytics-card>
 
-	@let participants = view(['participantsJoined', 'participantsAborted', 'connectionSuccessRate'], ['kind']);
+	@let participants = view(['participantsPeakActive', 'connectionSuccessRate'], ['kind']);
 	<ovd-analytics-card
 		heading="Participants"
 		sectionId="participants"
@@ -114,7 +115,7 @@
 		[exporting]="isExporting('participants')"
 		(exportCsv)="
 			exportCsv('participants', {
-				metrics: ['participantsJoined', 'participantsAborted', 'connectionSuccessRate', 'uniqueIdentities']
+				metrics: ['participantsPeakActive', 'connectionSuccessRate', 'uniqueIdentities']
 			})
 		"
 		(retry)="retry()"
@@ -123,13 +124,14 @@
 		<ng-template ovdCardContent>
 			<div class="grid">
 				<ovd-time-series-chart
-					heading="Participant sessions"
-					[info]="infoTexts.sessionsChart"
+					heading="Active participants"
+					kind="step"
+					[info]="infoTexts.activeParticipantsChart"
 					[series]="charts().participants"
-					[from]="chartRange('participantsJoined').from"
-					[to]="chartRange('participantsJoined').to"
+					[from]="chartRange('participantsPeakActive').from"
+					[to]="chartRange('participantsPeakActive').to"
 					[tz]="tz()"
-					[note]="note('participantsJoined')"
+					[note]="note('participantsPeakActive')"
 				/>
 				<ovd-time-series-chart
 					heading="Connection success"

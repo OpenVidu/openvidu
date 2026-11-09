@@ -26,8 +26,9 @@ export const INFO_TEXTS = {
 		'Distinct participant identities per UTC day, counted once the day has closed; over several days the daily values are added up, so someone who joined on two days counts twice.',
 	connectionSuccess:
 		'Share of participant sessions that finished connecting; the rest were aborted before becoming active.',
-	sessionsChart:
-		'Participant sessions that started in each bucket, and those aborted before becoming active. Only regular participants count.',
+	activeRoomsChart: 'The most rooms open at the same time in each bucket, sampled every minute.',
+	activeParticipantsChart:
+		'The most participants connected at the same time in each bucket, sampled every minute. Only regular participants count.',
 	participantKind: 'Every participant session by kind, services included.',
 
 	activeParticipants: 'Regular participants connected now.',

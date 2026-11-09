@@ -1,5 +1,6 @@
 import type { HttpTestingController } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
+import { By } from '@angular/platform-browser';
 import { Router } from '@angular/router';
 import type { RouterTestingHarness } from '@angular/router/testing';
 import { FeatureKey, type InfoRetention } from '@openvidu-dashboard/typings';
@@ -17,6 +18,7 @@ import {
 	seriesRequests
 } from '../../../testing/analytics.js';
 import { settle } from '../../../testing/fixtures.js';
+import { TimeSeriesChart } from '../../charts/time-series-chart/time-series-chart.js';
 import { PreferencesService } from '../../core/preferences/preferences.js';
 import { RefreshRegistry } from '../../core/refresh/refresh.js';
 import { ToastService } from '../../core/ui/toast.js';
@@ -80,10 +82,8 @@ describe('analytics plan', () => {
 		expect(plan.series).toEqual([
 			{
 				metrics: [
-					'roomsCreated',
-					'roomsEnded',
-					'participantsJoined',
-					'participantsAborted',
+					'roomsPeakActive',
+					'participantsPeakActive',
 					'connectionSuccessRate',
 					'bytesUp',
 					'bytesDown',
@@ -163,8 +163,80 @@ describe('AnalyticsPage', () => {
 			'About Data up / down',
 			'About Connection success'
 		]);
-		expect(tips(card(element, 'Participants'))).toEqual(['About Participant sessions', 'About Participant kind']);
+		expect(tips(card(element, 'Rooms'))).toEqual(['About Active rooms']);
+		expect(tips(card(element, 'Participants'))).toEqual(['About Active participants', 'About Participant kind']);
 		expect(tips(card(element, 'Client breakdowns'))).toEqual(['About SDK']);
+	});
+
+	it('draws the active rooms as one step line beside the room averages', async () => {
+		const { element, harness, requests } = await open('/analytics?from=now-24h&to=now&tz=UTC');
+		const metrics = seriesRequests(requests).flatMap((request) => request.metrics);
+		const charts = (harness.routeDebugElement?.queryAll(By.directive(TimeSeriesChart)) ?? []).map(
+			(chart) => chart.componentInstance as TimeSeriesChart
+		);
+		const chart = (heading: string) => charts.find((item) => item.heading() === heading);
+		const rooms = card(element, 'Rooms');
+
+		expect(metrics).toEqual(expect.arrayContaining(['roomsPeakActive', 'participantsPeakActive']));
+		expect(metrics).not.toEqual(expect.arrayContaining(['roomsCreated']));
+		expect(
+			metrics.filter((metric) => ['roomsEnded', 'participantsJoined', 'participantsAborted'].includes(metric))
+		).toEqual([]);
+		expect([...(rooms?.querySelectorAll('ovd-kpi-tile') ?? [])].map(text)).toEqual([
+			'Average room size 4 participants',
+			'Average room duration 6 m 00 s'
+		]);
+		expect(chart('Active rooms')?.kind()).toBe('step');
+		expect(
+			chart('Active rooms')
+				?.series()
+				.map(({ name, entity }) => [name, entity])
+		).toEqual([['Active rooms', 'rooms']]);
+		expect(chart('Active participants')?.kind()).toBe('step');
+		expect(
+			chart('Active participants')
+				?.series()
+				.map(({ name }) => name)
+		).toEqual(['Active participants']);
+		expect(chart('Participant sessions')).toBeUndefined();
+		expect(chart('Rooms created and ended')).toBeUndefined();
+	});
+
+	it('keeps the Rooms card of a range sampled only in part, with a gap where no sample exists', async () => {
+		const points: [string, number | null][] = [
+			['2026-10-13T09:00:00.000Z', null],
+			['2026-10-13T10:00:00.000Z', null],
+			['2026-10-13T11:00:00.000Z', 0]
+		];
+		const { element, harness } = await open('/analytics?from=now-7d&to=now&tz=UTC', [], {
+			points: { roomsPeakActive: points },
+			summary: { ...SUMMARY, roomsCreated: 40 }
+		});
+		const rooms = card(element, 'Rooms');
+		const page = harness.routeDebugElement?.componentInstance as {
+			chart(metrics: string[]): { points: [string, number | null][] }[];
+		};
+
+		expect(rooms?.querySelector('ovd-empty-state')).toBeNull();
+		expect(rooms?.querySelector('ovd-time-series-chart')).not.toBeNull();
+		expect(rooms?.querySelectorAll('ovd-kpi-tile')).toHaveLength(2);
+		expect(page.chart(['roomsPeakActive'])[0]?.points).toEqual(points);
+	});
+
+	it('shows the Rooms card empty only without active rooms and without rooms created', async () => {
+		const { element } = await open('/analytics?from=now-7d&to=now&tz=UTC', [], {
+			points: {
+				roomsPeakActive: [
+					['2026-10-13T10:00:00.000Z', null],
+					['2026-10-13T11:00:00.000Z', 0]
+				]
+			},
+			summary: { ...SUMMARY, roomsCreated: 0 }
+		});
+		const rooms = card(element, 'Rooms');
+
+		expect(text(rooms?.querySelector('ovd-empty-state'))).toContain('No data in this range');
+		expect(text(rooms)).toContain('Widen range');
 	});
 
 	it('shows an empty card only as tall as its message', async () => {
@@ -512,6 +584,31 @@ describe('AnalyticsPage', () => {
 		await settle();
 		expect(toast).toHaveBeenCalledWith(expect.stringContaining('req-7'));
 		expect(exportButton()?.disabled).toBe(false);
+	});
+
+	it('exports the peaks in the CSV of the Rooms and Participants cards', async () => {
+		const { element, http } = await open('/analytics?from=now-7d&to=now&tz=UTC&granularity=1d');
+
+		URL.createObjectURL = vi.fn(() => 'blob:csv');
+		URL.revokeObjectURL = vi.fn();
+		vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => undefined);
+
+		const exported = async (heading: string) => {
+			[...(card(element, heading)?.querySelectorAll<HTMLButtonElement>('button') ?? [])]
+				.find((button) => text(button).includes('Export CSV'))
+				?.click();
+
+			const download = http.expectOne((req) => req.url === 'api/v1/analytics/export.csv');
+			const metrics = download.request.params.get('metrics');
+
+			download.flush(new Blob(['bucket\r\n']));
+			await settle();
+
+			return metrics;
+		};
+
+		expect(await exported('Rooms')).toBe('roomsPeakActive');
+		expect(await exported('Participants')).toBe('participantsPeakActive,connectionSuccessRate,uniqueIdentities');
 	});
 
 	it('never refreshes by itself and reloads on the manual refresh', async () => {

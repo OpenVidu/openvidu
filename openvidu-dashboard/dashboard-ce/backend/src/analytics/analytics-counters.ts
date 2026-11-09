@@ -9,12 +9,23 @@ export interface RollupRow {
 	[field: string]: unknown;
 }
 
-function addLeaves(target: Map<string, number>, value: unknown, path: string): void {
+/** Adds `value` to the counter at `path`, or keeps the larger of both when `path` is in `maxima`. */
+function combine(target: Map<string, number>, path: string, value: number, maxima: ReadonlySet<string>): void {
+	const current = target.get(path);
+
+	if (maxima.has(path)) {
+		target.set(path, current === undefined ? value : Math.max(current, value));
+	} else {
+		target.set(path, (current ?? 0) + value);
+	}
+}
+
+function addLeaves(target: Map<string, number>, value: unknown, path: string, maxima: ReadonlySet<string>): void {
 	if (typeof value === 'number') {
-		target.set(path, (target.get(path) ?? 0) + value);
+		combine(target, path, value, maxima);
 	} else if (value !== null && typeof value === 'object' && !(value instanceof Date)) {
 		for (const [key, child] of Object.entries(value)) {
-			addLeaves(target, child, path === '' ? key : `${path}.${key}`);
+			addLeaves(target, child, path === '' ? key : `${path}.${key}`, maxima);
 		}
 	}
 }
@@ -39,8 +50,15 @@ function bucketIndex(starts: readonly number[], time: number): number {
 	return found;
 }
 
-/** Sums the numeric leaves of each row into the bucket of `starts` containing its `bucket`. */
-export async function foldRows(rows: AsyncIterable<RollupRow>, starts: readonly Date[]): Promise<BucketCounters> {
+/**
+ * Sums the numeric leaves of each row into the bucket of `starts` containing its `bucket`; the leaves at `maxima` keep
+ * their largest value instead.
+ */
+export async function foldRows(
+	rows: AsyncIterable<RollupRow>,
+	starts: readonly Date[],
+	maxima: ReadonlySet<string> = new Set()
+): Promise<BucketCounters> {
 	const times = starts.map((start) => start.getTime());
 	const buckets = new Map<number, Map<string, number>>();
 
@@ -59,14 +77,18 @@ export async function foldRows(rows: AsyncIterable<RollupRow>, starts: readonly 
 		}
 
 		counters.set(DOCUMENTS, (counters.get(DOCUMENTS) ?? 0) + 1);
-		addLeaves(counters, fields, '');
+		addLeaves(counters, fields, '', maxima);
 	}
 
 	return buckets;
 }
 
-/** Bucket-wise sum of two folds. */
-export function mergeCounters(base: BucketCounters, extra: BucketCounters): BucketCounters {
+/** Bucket-wise sum of two folds; the counters at `maxima` keep the larger value. */
+export function mergeCounters(
+	base: BucketCounters,
+	extra: BucketCounters,
+	maxima: ReadonlySet<string> = new Set()
+): BucketCounters {
 	if (extra.size === 0) {
 		return base;
 	}
@@ -81,13 +103,13 @@ export function mergeCounters(base: BucketCounters, extra: BucketCounters): Buck
 			continue;
 		}
 
-		const sum = new Map(existing);
+		const combined = new Map(existing);
 
 		for (const [path, value] of counters) {
-			sum.set(path, (sum.get(path) ?? 0) + value);
+			combine(combined, path, value, maxima);
 		}
 
-		merged.set(start, sum);
+		merged.set(start, combined);
 	}
 
 	return merged;

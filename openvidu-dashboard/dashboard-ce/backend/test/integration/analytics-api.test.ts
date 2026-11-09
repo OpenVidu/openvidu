@@ -2,6 +2,7 @@ import type { Document } from 'mongodb';
 import { afterAll, beforeAll, describe, expect, inject, it } from 'vitest';
 
 import {
+	ANALYTICS_CE_METRICS,
 	type AnalyticsBreakdownsResponse,
 	type AnalyticsSeriesResponse,
 	type AnalyticsSummary,
@@ -131,6 +132,77 @@ describe.skipIf(mongoUri === '')('analytics API', () => {
 				'egressEnded.EGRESS_FAILED'
 			]);
 			expect(values(response, 'egressEnded.EGRESS_COMPLETE').slice(-3)).toEqual([4, 1, 0]);
+		});
+
+		it('serves the peaks at five minutes, null before the first sample', async () => {
+			const sampledFrom = hour - 3 * HOUR;
+			const samples = Array.from({ length: 36 }, (_, index) =>
+				rollup(sampledFrom + index * 5 * MINUTE, {
+					rooms: { peakActive: index % 4 },
+					participants: { peakActive: 2 * (index % 4) }
+				})
+			);
+			await seedRollups(ce, {
+				analytics_5min: [rollup(hour - 4 * HOUR, { rooms: { created: 2 } }), ...samples]
+			});
+
+			const response = await json<AnalyticsSeriesResponse>(
+				ce,
+				`/analytics/series?metrics=roomsPeakActive,participantsPeakActive&from=${iso(hour - DAY)}&to=${iso(hour)}`
+			);
+			const sampled = 288 - samples.length;
+
+			expect(analyticsSeriesResponse.parse(response)).toEqual(response);
+			expect(response.granularity).toBe('5m');
+			expect(response.series.map((series) => [series.name, series.points.length])).toEqual([
+				['roomsPeakActive', 288],
+				['participantsPeakActive', 288]
+			]);
+			expect(
+				values(response, 'roomsPeakActive')
+					.slice(0, sampled)
+					.every((value) => value === null)
+			).toBe(true);
+			expect(values(response, 'roomsPeakActive').slice(sampled, sampled + 5)).toEqual([0, 1, 2, 3, 0]);
+			expect(values(response, 'participantsPeakActive').slice(sampled, sampled + 5)).toEqual([0, 2, 4, 6, 0]);
+		});
+
+		it('takes the highest hourly peak of a local day', async () => {
+			const query = `metrics=participantsPeakActive&granularity=1d&tz=Europe/Madrid&from=${iso(hour - 7 * DAY)}&to=${iso(hour)}`;
+
+			await seedRollups(ce, {});
+
+			const grid =
+				(await json<AnalyticsSeriesResponse>(ce, `/analytics/series?${query}`)).series[0]?.points ?? [];
+			const start = Date.parse(grid[3]?.[0] ?? '');
+			const next = Date.parse(grid[4]?.[0] ?? '');
+
+			await seedRollups(ce, {
+				analytics_hourly: [
+					rollup(start - HOUR, { participants: { peakActive: 60 } }),
+					rollup(start, { participants: { peakActive: 10 } }),
+					rollup(start + 5 * HOUR, { participants: { peakActive: 40 } }),
+					rollup(next - HOUR, { participants: { peakActive: 25 } }),
+					rollup(next, { participants: { peakActive: 5 } })
+				]
+			});
+
+			const response = await json<AnalyticsSeriesResponse>(ce, `/analytics/series?${query}`);
+
+			expect(values(response, 'participantsPeakActive').slice(2, 5)).toEqual([60, 40, 5]);
+		});
+
+		it('accepts every CE metric', async () => {
+			await seedRollups(ce, {});
+
+			expect(ANALYTICS_CE_METRICS).toHaveLength(20);
+			expect(ANALYTICS_CE_METRICS).toEqual(expect.arrayContaining(['roomsPeakActive', 'participantsPeakActive']));
+
+			for (const metric of ANALYTICS_CE_METRICS) {
+				const response = await get(ce, `/analytics/series?metrics=${metric}&granularity=1d&from=now-7d`);
+
+				expect([metric, response.status]).toEqual([metric, 200]);
+			}
 		});
 
 		it.each([
@@ -357,6 +429,21 @@ describe.skipIf(mongoUri === '')('analytics API', () => {
 			expect(paths).not.toContain('/api/v1/analytics/top');
 			expect(paths).not.toContain('/api/v1/analytics/scopes');
 		});
+
+		it('lists the peaks in the metrics of the series and the export', () => {
+			const registry = ce.dashboard.running.container.get<RouteRegistry>(TOKENS.RouteRegistry);
+			const document = JSON.stringify(
+				openApiDocument(registry, { version: 'test' }).paths?.['/api/v1/analytics/series']
+			);
+			const exported = JSON.stringify(
+				openApiDocument(registry, { version: 'test' }).paths?.['/api/v1/analytics/export.csv']
+			);
+
+			for (const text of [document, exported]) {
+				expect(text).toContain('"roomsPeakActive"');
+				expect(text).toContain('"participantsPeakActive"');
+			}
+		});
 	});
 
 	describe('CSV export', () => {
@@ -389,6 +476,22 @@ describe.skipIf(mongoUri === '')('analytics API', () => {
 			);
 			expect(lines.at(-4)).toBe(`${iso(hour - 3 * HOUR)},1200,2`);
 			expect(lines.at(-3)).toBe(`${iso(hour - 2 * HOUR)},300,0`);
+		});
+
+		it('exports a missing peak as an empty cell', async () => {
+			await seedRollups(ce, {
+				analytics_hourly: [
+					rollup(hour - 3 * HOUR, { rooms: { created: 2 } }),
+					rollup(hour - 2 * HOUR, { rooms: { peakActive: 4, created: 1 } })
+				]
+			});
+
+			const query = `metrics=roomsPeakActive,roomsCreated&granularity=1h&from=${iso(hour - DAY)}&to=${iso(hour)}`;
+			const lines = (await (await get(ce, `/analytics/export.csv?kind=series&${query}`)).text()).split('\r\n');
+
+			expect(lines[0]).toBe('bucket,roomsPeakActive,roomsCreated');
+			expect(lines.at(-4)).toBe(`${iso(hour - 3 * HOUR)},,2`);
+			expect(lines.at(-3)).toBe(`${iso(hour - 2 * HOUR)},4,1`);
 		});
 
 		it('exports the breakdowns dimension after dimension', async () => {

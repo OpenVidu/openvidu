@@ -54,6 +54,13 @@ test('tiles, the six sections, the breakdown table and the page scroll over a ch
 	}
 
 	await expect(card(page, 'Rooms')).toContainText('4 participants');
+	await expect(card(page, 'Rooms').locator('.chart-heading')).toContainText(['Active rooms']);
+	await expect(card(page, 'Rooms').locator('.chart-heading + .chart-note')).toHaveText(['Five-minute buckets · UTC']);
+	await expect(card(page, 'Participants').locator('.chart-heading')).toContainText([
+		'Active participants',
+		'Connection success',
+		'Participant kind'
+	]);
 	await expect(card(page, 'Egress').locator('.chart-heading + .chart-note')).toHaveText([
 		'Five-minute buckets · UTC',
 		'Hourly · UTC'
@@ -148,6 +155,32 @@ test('a card exports its CSV under the server file name', async ({ page, api }) 
 			''
 		)
 	);
+});
+
+test('the Rooms and Participants cards draw and export the peaks', async ({ page, api }) => {
+	await page.goto('/analytics?from=now-7d&to=now&tz=UTC&granularity=1d');
+	await expect(card(page, 'Rooms').locator('ovd-time-series-chart')).toBeVisible();
+
+	const metrics = api.requests
+		.filter((request) => request.path === 'analytics/series')
+		.flatMap((request) => request.params.get('metrics')?.split(',') ?? []);
+
+	expect(metrics).toEqual(expect.arrayContaining(['roomsPeakActive', 'participantsPeakActive']));
+	expect(
+		metrics.filter((metric) => /^(roomsCreated|roomsEnded|participantsJoined|participantsAborted)$/.test(metric))
+	).toEqual([]);
+
+	const exported = async (title: string) => {
+		const download = page.waitForEvent('download');
+
+		await card(page, title).getByRole('button', { name: 'Export CSV' }).click();
+		await download;
+
+		return api.requests.findLast((item) => item.path === 'analytics/export.csv')?.params.get('metrics');
+	};
+
+	expect(await exported('Rooms')).toBe('roomsPeakActive');
+	expect(await exported('Participants')).toBe('participantsPeakActive,connectionSuccessRate,uniqueIdentities');
 });
 
 test.describe('a failed request', () => {

@@ -24,10 +24,8 @@ import type { AnalyticsProCard } from './analytics-seams.js';
 
 /** Metrics of the CE cards, asked for on every refresh. */
 export const PAGE_METRICS: readonly AnalyticsMetric[] = [
-	'roomsCreated',
-	'roomsEnded',
-	'participantsJoined',
-	'participantsAborted',
+	'roomsPeakActive',
+	'participantsPeakActive',
 	'connectionSuccessRate',
 	'uniqueIdentities',
 	'bytesUp',
