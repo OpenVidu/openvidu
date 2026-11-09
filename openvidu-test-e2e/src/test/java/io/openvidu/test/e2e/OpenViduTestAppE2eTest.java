@@ -33,6 +33,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.Callable;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -40,6 +41,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.function.BiFunction;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
@@ -84,6 +86,8 @@ import io.openvidu.test.browsers.utils.Ffmpeg;
 import livekit.LivekitIngress.IngressInfo;
 import livekit.LivekitIngress.IngressState;
 import livekit.LivekitModels.ConnectionQuality;
+import livekit.LivekitModels.SimulcastCodecInfo;
+import livekit.LivekitModels.TrackInfo;
 import okhttp3.Request;
 import okhttp3.Response;
 
@@ -2848,30 +2852,38 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		firefoxSubscribeToCodecTest("vp9", false, "L3T3_KEY", false, List.of("video/VP9"));
 	}
 
+	/**
+	 * LiveKit disables AV1 for every Firefox (client configuration, livekit#5015,
+	 * LiveKit v1.13.11), with both RTC engines: a Firefox subscriber is refused an
+	 * AV1 publication that has no backup codec
+	 */
 	@Test
 	@DisplayName("Firefox subscribe to AV1 without SVC")
 	void firefoxSubscribeToAV1Test() throws Exception {
 		log.info("Firefox subscribe to AV1 without SVC");
-		firefoxSubscribeToCodecTest("av1", false, "L1T1", false, List.of("video/AV1"));
+		firefoxRefusedCodecTest("av1", "L1T1");
 	}
 
+	/**
+	 * Same as {@link #firefoxSubscribeToAV1Test()}, with an AV1 SVC publication
+	 */
 	@Test
 	@DisplayName("Firefox subscribe to AV1 with SVC")
 	void firefoxSubscribeToAV1SvcTest() throws Exception {
 		log.info("Firefox subscribe to AV1 with SVC");
-		firefoxSubscribeToCodecTest("av1", false, "L3T3_KEY", false, List.of("video/AV1"));
+		firefoxRefusedCodecTest("av1", "L3T3_KEY");
 	}
 
 	/**
-	 * Firefox negotiates AV1 but cannot decode AV1 SVC (Bugzilla 1571470), which
-	 * is what an AV1 simulcast publication is: it must receive the publisher's
-	 * VP8 backup codec instead, or AV1 once it decodes SVC
+	 * LiveKit disables AV1 for every Firefox (client configuration, livekit#5015,
+	 * LiveKit v1.13.11), with both RTC engines: a Firefox subscriber must receive
+	 * the publisher's VP8 backup codec
 	 */
 	@Test
 	@DisplayName("Firefox subscribe to AV1 SVC with backup codec")
 	void firefoxSubscribeToAV1SvcWithBackupCodecTest() throws Exception {
 		log.info("Firefox subscribe to AV1 SVC with backup codec");
-		firefoxSubscribeToCodecTest("av1", true, "L3T3_KEY", true, List.of("video/VP8", "video/AV1"));
+		firefoxSubscribeToCodecTest("av1", true, "L3T3_KEY", true, List.of("video/VP8"));
 	}
 
 	private void firefoxSubscribeToCodecTest(String codec, boolean simulcast) throws Exception {
@@ -2941,6 +2953,1088 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		});
 
 		awaitBrowserTasks(task1, task2);
+	}
+
+	/**
+	 * A Chrome publisher forces the codec, with no backup codec, and a Firefox
+	 * subscriber, which LiveKit does not let receive that codec, must be refused
+	 * the track (SE_CODEC_UNSUPPORTED) and left without a video element
+	 */
+	private void firefoxRefusedCodecTest(String codec, String scalabilityMode) throws Exception {
+		final String expectedCodec = "video/" + codec.toUpperCase();
+		final CountDownLatch latch = new CountDownLatch(2);
+		ExecutorService executor = Executors.newFixedThreadPool(2);
+
+		Future<?> task1 = executor.submit(() -> {
+			try {
+				OpenViduTestappUser chromeUser = setupBrowserAndConnectToOpenViduTestapp("chrome");
+				this.addPublisher(chromeUser, false, false, false, false, false, true, null, null, scalabilityMode);
+				WebElement participantNameInput = chromeUser.getDriver().findElement(By.id("participant-name-input-0"));
+				participantNameInput.clear();
+				participantNameInput.sendKeys("CHROME_USER");
+				this.forceCodec(chromeUser, 0, codec, true);
+				chromeUser.getDriver().findElement(By.className("connect-btn")).click();
+				chromeUser.getEventManager().waitUntilEventReaches("localTrackPublished", "ParticipantEvent", 1);
+				// The server's view of the publication: the codec alone, with no backup
+				// codec the Firefox subscriber could receive instead
+				TrackInfo trackInfo = this.getPublishedVideoTrackInfo("TestRoom", "CHROME_USER");
+				Assertions.assertEquals(List.of(expectedCodec.toLowerCase()),
+						trackInfo.getCodecsList().stream().map(SimulcastCodecInfo::getMimeType)
+								.map(String::toLowerCase).toList(),
+						"Codecs of the track published by Chrome");
+				latch.countDown();
+				latch.await(60, TimeUnit.SECONDS);
+				gracefullyLeaveParticipants(chromeUser, 1);
+			} catch (Throwable e) {
+				Assertions.fail("Error while setting up Chrome publisher", e);
+			}
+		});
+
+		Future<?> task2 = executor.submit(() -> {
+			try {
+				OpenViduTestappUser firefoxUser = setupBrowserAndConnectToOpenViduTestapp("firefox");
+				this.addSubscriber(firefoxUser, false);
+				WebElement participantNameInput = firefoxUser.getDriver()
+						.findElement(By.id("participant-name-input-0"));
+				participantNameInput.clear();
+				participantNameInput.sendKeys("FIREFOX_USER");
+				CompletableFuture<String> subscriptionFailure = this.trackSubscriptionFailure(firefoxUser, 0);
+				firefoxUser.getDriver().findElement(By.className("connect-btn")).click();
+				final String failure;
+				try {
+					failure = subscriptionFailure.get(120, TimeUnit.SECONDS);
+				} catch (TimeoutException e) {
+					throw new AssertionError("The Firefox subscriber should be refused the " + expectedCodec
+							+ " track, but got no trackSubscriptionFailed event in 120 s");
+				}
+				Assertions.assertTrue(failure.endsWith("Reason: SE_CODEC_UNSUPPORTED"),
+						"The Firefox subscriber should be refused the " + expectedCodec
+								+ " track for its codec, but got: " + failure);
+				latch.countDown();
+				latch.await(10, TimeUnit.SECONDS);
+				gracefullyLeaveParticipants(firefoxUser, 1);
+			} catch (Throwable e) {
+				Assertions.fail("Error while setting up Firefox subscriber", e);
+			}
+		});
+
+		awaitBrowserTasks(task1, task2);
+	}
+
+	/**
+	 * Backup codec with LiveKit's default policy (PREFER_REGRESSION, which
+	 * regresses on a single node): once a Firefox subscriber, which cannot receive
+	 * AV1, makes the publisher send its VP8 backup codec, every subscriber
+	 * receives VP8, including a Chrome one that was receiving AV1
+	 */
+	@Test
+	@DisplayName("Backup codec default policy")
+	void backupCodecDefaultPolicyTest() throws Exception {
+		log.info("Backup codec default policy");
+		backupCodecTest(null, null, "video/VP8");
+	}
+
+	/**
+	 * Same as {@link #backupCodecDefaultPolicyTest()}, with the REGRESSION policy
+	 */
+	@Test
+	@DisplayName("Backup codec REGRESSION policy")
+	void backupCodecRegressionPolicyTest() throws Exception {
+		log.info("Backup codec REGRESSION policy");
+		backupCodecTest("REGRESSION", null, "video/VP8");
+	}
+
+	/**
+	 * Backup codec with the SIMULCAST policy: the publisher sends both codecs, so
+	 * the Chrome subscribers keep receiving AV1 while the Firefox one receives VP8
+	 */
+	@Test
+	@DisplayName("Backup codec SIMULCAST policy")
+	void backupCodecSimulcastPolicyTest() throws Exception {
+		log.info("Backup codec SIMULCAST policy");
+		backupCodecTest("SIMULCAST", null, "video/AV1");
+	}
+
+	/**
+	 * Backup codec with the default policy and H.264 as the backup codec: the
+	 * Firefox subscriber receives H.264, and so do the Chrome ones after the
+	 * regression
+	 */
+	@Test
+	@DisplayName("Backup codec H264 default policy")
+	void backupCodecH264DefaultPolicyTest() throws Exception {
+		log.info("Backup codec H264 default policy");
+		backupCodecTest(null, "h264", "video/H264");
+	}
+
+	/**
+	 * Backup codec with the SIMULCAST policy and H.264 as the backup codec: the
+	 * Chrome subscribers keep AV1 while the Firefox one receives H.264
+	 */
+	@Test
+	@DisplayName("Backup codec H264 SIMULCAST policy")
+	void backupCodecH264SimulcastPolicyTest() throws Exception {
+		log.info("Backup codec H264 SIMULCAST policy");
+		backupCodecTest("SIMULCAST", "h264", "video/AV1");
+	}
+
+	/**
+	 * A Chrome publisher (instance 0) publishes AV1 SVC with its backup codec
+	 * (backupCodec, null for VP8) and the given backup codec policy (null for the
+	 * default one), and a Chrome subscriber (instance 1) receives AV1. Then a
+	 * Firefox subscriber joins: it must receive the backup codec, and the Chrome
+	 * subscriber must end up receiving chromeCodecAfter, as must a Chrome
+	 * subscriber joining last (instance 2). Every subscriber must decode what it
+	 * receives, and the Firefox one must switch between the simulcast layers of
+	 * the backup codec.
+	 */
+	private void backupCodecTest(String policy, String backupCodec, String chromeCodecAfter) throws Exception {
+		final String backup = backupCodec != null ? backupCodec : "vp8";
+		Future<OpenViduTestappUser> firefoxSetup = setupBrowserInBackground("firefox");
+		OpenViduTestappUser chromeUser = setupBrowserAndConnectToOpenViduTestapp("chrome");
+		this.addBackupCodecPublisher(chromeUser, policy, backupCodec, null);
+		this.addSubscriber(chromeUser, false);
+		chromeUser.getDriver().findElements(By.className("connect-btn")).forEach(el -> el.sendKeys(Keys.ENTER));
+		chromeUser.getEventManager().waitUntilEventReaches(1, "trackSubscribed", "ParticipantEvent", 1);
+		this.assertBackupCodecTrackCodecs(backup);
+		this.waitUntilSubscriberDecodes(chromeUser, 1, "video/AV1");
+
+		OpenViduTestappUser firefoxUser = firefoxSetup.get();
+		this.addSubscriber(firefoxUser, false);
+		firefoxUser.getDriver().findElement(By.className("connect-btn")).click();
+		firefoxUser.getEventManager().waitUntilEventReaches("trackSubscribed", "ParticipantEvent", 1);
+		this.waitUntilSubscriberDecodes(firefoxUser, 0, mimeOf(backup));
+		this.waitUntilSubscriberDecodes(chromeUser, 1, chromeCodecAfter);
+		this.waitUntilSubscriberSwitchesBackupCodecLayers(firefoxUser, 0);
+
+		this.addSubscriber(chromeUser, false);
+		chromeUser.getDriver().findElement(By.cssSelector("#openvidu-instance-2 .connect-btn")).click();
+		chromeUser.getEventManager().waitUntilEventReaches(2, "trackSubscribed", "ParticipantEvent", 1);
+		this.waitUntilSubscriberDecodes(chromeUser, 2, chromeCodecAfter);
+
+		gracefullyLeaveParticipants(firefoxUser, 1);
+		gracefullyLeaveParticipants(chromeUser, 3);
+	}
+
+	/**
+	 * The subscribers are in the room before the publisher: the Firefox one is
+	 * subscribed when the track is published, before the backup codec exists, so
+	 * its first offer carries no Consumer at all
+	 */
+	@Test
+	@DisplayName("Backup codec subscribers before the publisher")
+	void backupCodecSubscribersBeforePublisherTest() throws Exception {
+		log.info("Backup codec subscribers before the publisher");
+		backupCodecSubscribersBeforePublisherTest(null, "video/VP8");
+	}
+
+	/**
+	 * Same as {@link #backupCodecSubscribersBeforePublisherTest()}, with the
+	 * SIMULCAST policy
+	 */
+	@Test
+	@DisplayName("Backup codec subscribers before the publisher SIMULCAST policy")
+	void backupCodecSubscribersBeforePublisherSimulcastPolicyTest() throws Exception {
+		log.info("Backup codec subscribers before the publisher SIMULCAST policy");
+		backupCodecSubscribersBeforePublisherTest("SIMULCAST", "video/AV1");
+	}
+
+	private void backupCodecSubscribersBeforePublisherTest(String policy, String chromeCodecAfter) throws Exception {
+		Future<OpenViduTestappUser> firefoxSetup = setupBrowserInBackground("firefox");
+		OpenViduTestappUser chromeUser = setupBrowserAndConnectToOpenViduTestapp("chrome");
+		this.addSubscriber(chromeUser, false);
+		this.connectInstance(chromeUser, 0);
+		chromeUser.getEventManager().waitUntilEventReaches(0, "connected", "RoomEvent", 1);
+		OpenViduTestappUser firefoxUser = firefoxSetup.get();
+		this.addFirefoxSubscriber(firefoxUser, false);
+		this.connectInstance(firefoxUser, 0);
+		firefoxUser.getEventManager().waitUntilEventReaches(0, "connected", "RoomEvent", 1);
+
+		final int publisher = this.addBackupCodecPublisher(chromeUser, policy, null, null);
+		this.connectInstance(chromeUser, publisher);
+		chromeUser.getEventManager().waitUntilEventReaches(0, "trackSubscribed", "ParticipantEvent", 1);
+		firefoxUser.getEventManager().waitUntilEventReaches(0, "trackSubscribed", "ParticipantEvent", 1);
+		this.assertBackupCodecTrackCodecs("vp8");
+		this.waitUntilSubscriberDecodes(firefoxUser, 0, "video/VP8");
+		this.waitUntilSubscriberDecodes(chromeUser, 0, chromeCodecAfter);
+
+		gracefullyLeaveParticipants(firefoxUser, 1);
+		gracefullyLeaveParticipants(chromeUser, 2);
+	}
+
+	/**
+	 * With the default policy, PREFER_REGRESSION, LiveKit only regresses rooms with
+	 * fewer participants than video.codec_regression_threshold (5 by default):
+	 * with 6 participants the publisher sends both codecs, and the Chrome
+	 * subscribers keep AV1 while the Firefox one receives VP8
+	 */
+	@Test
+	@DisplayName("Backup codec default policy above the regression threshold")
+	void backupCodecDefaultPolicyAboveRegressionThresholdTest() throws Exception {
+		log.info("Backup codec default policy above the regression threshold");
+		Future<OpenViduTestappUser> firefoxSetup = setupBrowserInBackground("firefox");
+		OpenViduTestappUser chromeUser = setupBrowserAndConnectToOpenViduTestapp("chrome");
+		this.addBackupCodecPublisher(chromeUser, null, null, new int[] { 640, 360 });
+		for (int i = 1; i <= 4; i++) {
+			this.addSubscriber(chromeUser, false);
+		}
+		chromeUser.getDriver().findElements(By.className("connect-btn")).forEach(el -> el.sendKeys(Keys.ENTER));
+		for (int i = 1; i <= 4; i++) {
+			chromeUser.getEventManager().waitUntilEventReaches(i, "trackSubscribed", "ParticipantEvent", 1);
+		}
+		OpenViduTestappUser firefoxUser = firefoxSetup.get();
+		this.addFirefoxSubscriber(firefoxUser, false);
+		this.connectInstance(firefoxUser, 0);
+		firefoxUser.getEventManager().waitUntilEventReaches("trackSubscribed", "ParticipantEvent", 1);
+		this.waitUntilSubscriberDecodes(firefoxUser, 0, "video/VP8");
+		// Long enough for a regression to happen, were it going to
+		Thread.sleep(5000);
+		for (int i = 1; i <= 4; i++) {
+			this.waitUntilSubscriberDecodes(chromeUser, i, "video/AV1");
+		}
+
+		gracefullyLeaveParticipants(firefoxUser, 1);
+		gracefullyLeaveParticipants(chromeUser, 5);
+	}
+
+	/**
+	 * Subscriptions renewed by the subscribers themselves: the Firefox one
+	 * unsubscribes from the track and subscribes again three times, receiving the
+	 * backup codec each time (with the SIMULCAST policy dynacast stops the backup
+	 * codec while nobody receives it), and the Chrome one once
+	 */
+	@Test
+	@DisplayName("Backup codec toggle subscription SIMULCAST policy")
+	void backupCodecToggleSubscriptionSimulcastPolicyTest() throws Exception {
+		log.info("Backup codec toggle subscription SIMULCAST policy");
+		backupCodecToggleSubscriptionTest("SIMULCAST", "video/AV1");
+	}
+
+	/**
+	 * Same as {@link #backupCodecToggleSubscriptionSimulcastPolicyTest()}, with the
+	 * default policy, after the regression
+	 */
+	@Test
+	@DisplayName("Backup codec toggle subscription default policy")
+	void backupCodecToggleSubscriptionDefaultPolicyTest() throws Exception {
+		log.info("Backup codec toggle subscription default policy");
+		backupCodecToggleSubscriptionTest(null, "video/VP8");
+	}
+
+	private void backupCodecToggleSubscriptionTest(String policy, String chromeCodecAfter) throws Exception {
+		BackupCodecRoom room = this.joinBackupCodecRoom(policy, chromeCodecAfter);
+		for (int i = 1; i <= 3; i++) {
+			this.toggleVideoSubscription(room.firefoxUser, 0, i);
+			this.waitUntilSubscriberDecodes(room.firefoxUser, 0, "video/VP8");
+		}
+		this.toggleVideoSubscription(room.chromeUser, 1, 1);
+		this.waitUntilSubscriberDecodes(room.chromeUser, 1, chromeCodecAfter);
+		this.waitUntilSubscriberDecodes(room.firefoxUser, 0, "video/VP8");
+		room.leave();
+	}
+
+	/**
+	 * The publisher mutes and unmutes its camera twice: every subscriber decodes
+	 * its codec again each time
+	 */
+	@Test
+	@DisplayName("Backup codec publisher mute SIMULCAST policy")
+	void backupCodecPublisherMuteSimulcastPolicyTest() throws Exception {
+		log.info("Backup codec publisher mute SIMULCAST policy");
+		backupCodecPublisherMuteTest("SIMULCAST", "video/AV1");
+	}
+
+	/**
+	 * Same as {@link #backupCodecPublisherMuteSimulcastPolicyTest()}, with the
+	 * default policy, after the regression
+	 */
+	@Test
+	@DisplayName("Backup codec publisher mute default policy")
+	void backupCodecPublisherMuteDefaultPolicyTest() throws Exception {
+		log.info("Backup codec publisher mute default policy");
+		backupCodecPublisherMuteTest(null, "video/VP8");
+	}
+
+	private void backupCodecPublisherMuteTest(String policy, String chromeCodecAfter) throws Exception {
+		BackupCodecRoom room = this.joinBackupCodecRoom(policy, chromeCodecAfter);
+		for (int i = 1; i <= 2; i++) {
+			room.chromeUser.getDriver().findElement(By.cssSelector("#openvidu-instance-0 .mute-unmute-video"))
+					.sendKeys(Keys.ENTER);
+			room.firefoxUser.getEventManager().waitUntilEventReaches(0, "trackMuted", "ParticipantEvent", i);
+			room.chromeUser.getEventManager().waitUntilEventReaches(1, "trackMuted", "ParticipantEvent", i);
+			Thread.sleep(2000);
+			room.chromeUser.getDriver().findElement(By.cssSelector("#openvidu-instance-0 .mute-unmute-video"))
+					.sendKeys(Keys.ENTER);
+			room.firefoxUser.getEventManager().waitUntilEventReaches(0, "trackUnmuted", "ParticipantEvent", i);
+			room.chromeUser.getEventManager().waitUntilEventReaches(1, "trackUnmuted", "ParticipantEvent", i);
+			this.waitUntilSubscriberDecodes(room.firefoxUser, 0, "video/VP8");
+			this.waitUntilSubscriberDecodes(room.chromeUser, 1, chromeCodecAfter);
+		}
+		room.leave();
+	}
+
+	/**
+	 * The publisher unpublishes its camera and publishes a new one, twice: each new
+	 * track starts again with AV1 only, so the Firefox subscriber makes the
+	 * publisher send the backup codec of each new track, and with the default
+	 * policy the Chrome subscriber regresses again
+	 */
+	@Test
+	@DisplayName("Backup codec republish")
+	void backupCodecRepublishTest() throws Exception {
+		log.info("Backup codec republish");
+		BackupCodecRoom room = this.joinBackupCodecRoom(null, "video/VP8");
+		for (int i = 1; i <= 2; i++) {
+			this.unpublishCamera(room.chromeUser, 0, i);
+			room.firefoxUser.getEventManager().waitUntilEventReaches(0, "trackUnsubscribed", "ParticipantEvent", i);
+			room.chromeUser.getEventManager().waitUntilEventReaches(1, "trackUnsubscribed", "ParticipantEvent", i);
+			this.publishCamera(room.chromeUser, 0, i + 1);
+			room.firefoxUser.getEventManager().waitUntilEventReaches(0, "trackSubscribed", "ParticipantEvent", i + 1);
+			room.chromeUser.getEventManager().waitUntilEventReaches(1, "trackSubscribed", "ParticipantEvent", i + 1);
+			this.waitUntilSubscriberDecodes(room.firefoxUser, 0, "video/VP8");
+			this.waitUntilSubscriberDecodes(room.chromeUser, 1, "video/VP8");
+			this.assertBackupCodecTrackCodecs("vp8");
+		}
+		room.leave();
+	}
+
+	/**
+	 * Several Firefox subscribers: two join at once and wait together for the
+	 * backup codec, and a third one joins once it exists
+	 */
+	@Test
+	@DisplayName("Backup codec several Firefox subscribers")
+	void backupCodecSeveralFirefoxSubscribersTest() throws Exception {
+		log.info("Backup codec several Firefox subscribers");
+		Future<OpenViduTestappUser> firefoxSetup = setupBrowserInBackground("firefox");
+		OpenViduTestappUser chromeUser = setupBrowserAndConnectToOpenViduTestapp("chrome");
+		this.addBackupCodecPublisher(chromeUser, null, null, new int[] { 640, 360 });
+		this.addSubscriber(chromeUser, false);
+		chromeUser.getDriver().findElements(By.className("connect-btn")).forEach(el -> el.sendKeys(Keys.ENTER));
+		chromeUser.getEventManager().waitUntilEventReaches(1, "trackSubscribed", "ParticipantEvent", 1);
+		this.waitUntilSubscriberDecodes(chromeUser, 1, "video/AV1");
+
+		OpenViduTestappUser firefoxUser = firefoxSetup.get();
+		this.addFirefoxSubscriber(firefoxUser, false);
+		this.addFirefoxSubscriber(firefoxUser, false);
+		firefoxUser.getDriver().findElements(By.className("connect-btn")).forEach(el -> el.sendKeys(Keys.ENTER));
+		for (int i = 0; i <= 1; i++) {
+			firefoxUser.getEventManager().waitUntilEventReaches(i, "trackSubscribed", "ParticipantEvent", 1);
+		}
+		this.waitUntilSubscriberDecodes(firefoxUser, 0, "video/VP8");
+		this.waitUntilSubscriberDecodes(firefoxUser, 1, "video/VP8");
+		this.waitUntilSubscriberDecodes(chromeUser, 1, "video/VP8");
+
+		this.addFirefoxSubscriber(firefoxUser, false);
+		this.connectInstance(firefoxUser, 2);
+		firefoxUser.getEventManager().waitUntilEventReaches(2, "trackSubscribed", "ParticipantEvent", 1);
+		this.waitUntilSubscriberDecodes(firefoxUser, 2, "video/VP8");
+		this.waitUntilSubscriberDecodes(firefoxUser, 0, "video/VP8");
+
+		gracefullyLeaveParticipants(firefoxUser, 3);
+		gracefullyLeaveParticipants(chromeUser, 2);
+	}
+
+	/**
+	 * Subscribers that reconnect: a resumed session (signal-reconnect) keeps the
+	 * subscriptions, and a full reconnection renews them, for the Firefox
+	 * subscriber of the backup codec and for the Chrome one
+	 */
+	@Test
+	@DisplayName("Backup codec subscribers reconnect")
+	void backupCodecSubscribersReconnectTest() throws Exception {
+		log.info("Backup codec subscribers reconnect");
+		BackupCodecRoom room = this.joinBackupCodecRoom(null, "video/VP8");
+		this.simulateScenario(room.firefoxUser, 0, "signal-reconnect", 1);
+		this.waitUntilSubscriberDecodes(room.firefoxUser, 0, "video/VP8");
+		this.simulateScenario(room.firefoxUser, 0, "full-reconnect", 2);
+		this.waitUntilClientDecodes(room.firefoxUser, 0, "CHROME_PUBLISHER", "video/VP8");
+		this.simulateScenario(room.chromeUser, 1, "signal-reconnect", 1);
+		this.waitUntilSubscriberDecodes(room.chromeUser, 1, "video/VP8");
+		this.simulateScenario(room.chromeUser, 1, "full-reconnect", 2);
+		this.waitUntilClientDecodes(room.chromeUser, 1, "CHROME_PUBLISHER", "video/VP8");
+		this.waitUntilClientDecodes(room.firefoxUser, 0, "CHROME_PUBLISHER", "video/VP8");
+		room.leave();
+	}
+
+	/**
+	 * A publisher that reconnects: a resumed session (signal-reconnect) keeps its
+	 * tracks, and a full reconnection publishes them again, so the Firefox
+	 * subscriber makes it send the backup codec of the new track
+	 */
+	@Test
+	@DisplayName("Backup codec publisher reconnects")
+	void backupCodecPublisherReconnectsTest() throws Exception {
+		log.info("Backup codec publisher reconnects");
+		BackupCodecRoom room = this.joinBackupCodecRoom("SIMULCAST", "video/AV1");
+		this.simulateScenario(room.chromeUser, 0, "signal-reconnect", 1);
+		this.waitUntilSubscriberDecodes(room.firefoxUser, 0, "video/VP8");
+		this.waitUntilSubscriberDecodes(room.chromeUser, 1, "video/AV1");
+		this.simulateScenario(room.chromeUser, 0, "full-reconnect", 2);
+		room.firefoxUser.getEventManager().waitUntilEventReaches(0, "trackSubscribed", "ParticipantEvent", 2);
+		room.chromeUser.getEventManager().waitUntilEventReaches(1, "trackSubscribed", "ParticipantEvent", 2);
+		this.waitUntilSubscriberDecodes(room.firefoxUser, 0, "video/VP8");
+		this.waitUntilSubscriberDecodes(room.chromeUser, 1, "video/AV1");
+		room.leave();
+	}
+
+	/**
+	 * A screen share in AV1: livekit-client sends its backup codec as a single
+	 * layer, which the Firefox subscriber receives, as do the Chrome ones after
+	 * the regression
+	 */
+	@Test
+	@DisplayName("Backup codec screen share")
+	void backupCodecScreenShareTest() throws Exception {
+		log.info("Backup codec screen share");
+		Future<OpenViduTestappUser> firefoxSetup = setupBrowserInBackground("firefox");
+		OpenViduTestappUser chromeUser = setupBrowserAndConnectToOpenViduTestapp("chrome");
+		this.addBackupCodecPublisher(chromeUser, null, null, null);
+		// No camera: the screen is the only video track. And no simulcast: mediasoup
+		// refuses AV1 simulcast (one encoding per layer), which livekit-client would
+		// use for the screen
+		this.waitAndClick(chromeUser, "#room-options-btn-0");
+		chromeUser.getDriver().findElement(By.id("video-capture-false")).click();
+		chromeUser.getDriver().findElement(By.id("trackPublish-simulcast")).click();
+		this.waitAndClick(chromeUser, "#close-dialog-btn");
+		Thread.sleep(300);
+		this.addSubscriber(chromeUser, false);
+		chromeUser.getDriver().findElements(By.className("connect-btn")).forEach(el -> el.sendKeys(Keys.ENTER));
+		chromeUser.getEventManager().waitUntilEventReaches(0, "connected", "RoomEvent", 1);
+		this.waitAndClick(chromeUser, "#openvidu-instance-0 .add-screen-btn");
+		chromeUser.getEventManager().waitUntilEventReaches(0, "localTrackPublished", "RoomEvent", 1);
+		chromeUser.getEventManager().waitUntilEventReaches(1, "trackSubscribed", "ParticipantEvent", 1);
+		this.assertBackupCodecTrackCodecs("vp8");
+		this.waitUntilSubscriberDecodes(chromeUser, 1, "video/AV1");
+
+		OpenViduTestappUser firefoxUser = firefoxSetup.get();
+		this.addFirefoxSubscriber(firefoxUser, false);
+		this.connectInstance(firefoxUser, 0);
+		firefoxUser.getEventManager().waitUntilEventReaches("trackSubscribed", "ParticipantEvent", 1);
+		this.waitUntilSubscriberDecodes(firefoxUser, 0, "video/VP8");
+		this.waitUntilSubscriberDecodes(chromeUser, 1, "video/VP8");
+
+		gracefullyLeaveParticipants(firefoxUser, 1);
+		gracefullyLeaveParticipants(chromeUser, 2);
+	}
+
+	/**
+	 * Two cameras published in AV1 with a backup codec each: the Firefox subscriber
+	 * receives both backup codecs, and the Chrome one keeps both in AV1
+	 */
+	@Test
+	@DisplayName("Backup codec two tracks")
+	void backupCodecTwoTracksTest() throws Exception {
+		log.info("Backup codec two tracks");
+		Future<OpenViduTestappUser> firefoxSetup = setupBrowserInBackground("firefox");
+		OpenViduTestappUser chromeUser = setupBrowserAndConnectToOpenViduTestapp("chrome");
+		this.addBackupCodecPublisher(chromeUser, "SIMULCAST", null, new int[] { 640, 360 });
+		this.addSubscriber(chromeUser, false);
+		chromeUser.getDriver().findElements(By.className("connect-btn")).forEach(el -> el.sendKeys(Keys.ENTER));
+		chromeUser.getEventManager().waitUntilEventReaches(1, "trackSubscribed", "ParticipantEvent", 1);
+		this.publishCamera(chromeUser, 0, 2);
+		chromeUser.getEventManager().waitUntilEventReaches(1, "trackSubscribed", "ParticipantEvent", 2);
+
+		OpenViduTestappUser firefoxUser = firefoxSetup.get();
+		this.addFirefoxSubscriber(firefoxUser, false);
+		this.connectInstance(firefoxUser, 0);
+		firefoxUser.getEventManager().waitUntilEventReaches("trackSubscribed", "ParticipantEvent", 2);
+		for (int track = 0; track <= 1; track++) {
+			this.waitUntilSubscriberDecodes(firefoxUser, 0, "video/VP8", track);
+			this.waitUntilSubscriberDecodes(chromeUser, 1, "video/AV1", track);
+		}
+
+		gracefullyLeaveParticipants(firefoxUser, 1);
+		gracefullyLeaveParticipants(chromeUser, 2);
+	}
+
+	/**
+	 * A Firefox subscriber with adaptive stream: the size of its video element
+	 * selects the layer of the backup codec it receives
+	 */
+	@Test
+	@DisplayName("Backup codec adaptive stream")
+	void backupCodecAdaptiveStreamTest() throws Exception {
+		log.info("Backup codec adaptive stream");
+		Future<OpenViduTestappUser> firefoxSetup = setupBrowserInBackground("firefox");
+		OpenViduTestappUser chromeUser = setupBrowserAndConnectToOpenViduTestapp("chrome");
+		this.addBackupCodecPublisher(chromeUser, "SIMULCAST", null, null);
+		this.addSubscriber(chromeUser, false);
+		chromeUser.getDriver().findElements(By.className("connect-btn")).forEach(el -> el.sendKeys(Keys.ENTER));
+		chromeUser.getEventManager().waitUntilEventReaches(1, "trackSubscribed", "ParticipantEvent", 1);
+
+		OpenViduTestappUser firefoxUser = firefoxSetup.get();
+		this.addFirefoxSubscriber(firefoxUser, true);
+		this.connectInstance(firefoxUser, 0);
+		firefoxUser.getEventManager().waitUntilEventReaches("trackSubscribed", "ParticipantEvent", 1);
+		this.waitUntilSubscriberDecodes(firefoxUser, 0, "video/VP8");
+		final WebElement video = firefoxUser.getDriver().findElement(By.cssSelector("#openvidu-instance-0 video.remote"));
+		this.changeElementSize(firefoxUser, video, 80, 45);
+		final int lowestWidth = this.waitUntilSubscriberFrameWidthSettles(firefoxUser, video);
+		this.changeElementSize(firefoxUser, video, 1600, 900);
+		this.waitUntilSubscriberFrameWidthAtLeast(firefoxUser, video, 3 * lowestWidth);
+		this.waitUntilSubscriberFramesDecodedIncrease(firefoxUser, video);
+
+		gracefullyLeaveParticipants(firefoxUser, 1);
+		gracefullyLeaveParticipants(chromeUser, 2);
+	}
+
+	/**
+	 * Firefox subscribers that leave right after joining, before or while the
+	 * publisher starts sending the backup codec, three times: a Firefox subscriber
+	 * joining afterwards still receives the backup codec, and the Chrome one its
+	 * codec
+	 */
+	@Test
+	@DisplayName("Backup codec subscribers leaving early")
+	void backupCodecSubscribersLeavingEarlyTest() throws Exception {
+		log.info("Backup codec subscribers leaving early");
+		Future<OpenViduTestappUser> firefoxSetup = setupBrowserInBackground("firefox");
+		OpenViduTestappUser chromeUser = setupBrowserAndConnectToOpenViduTestapp("chrome");
+		this.addBackupCodecPublisher(chromeUser, null, null, null);
+		this.addSubscriber(chromeUser, false);
+		chromeUser.getDriver().findElements(By.className("connect-btn")).forEach(el -> el.sendKeys(Keys.ENTER));
+		chromeUser.getEventManager().waitUntilEventReaches(1, "trackSubscribed", "ParticipantEvent", 1);
+		this.waitUntilSubscriberDecodes(chromeUser, 1, "video/AV1");
+
+		OpenViduTestappUser firefoxUser = firefoxSetup.get();
+		this.addFirefoxSubscriber(firefoxUser, false);
+		for (int i = 1; i <= 3; i++) {
+			this.connectInstance(firefoxUser, 0);
+			firefoxUser.getEventManager().waitUntilEventReaches(0, "trackSubscribed", "ParticipantEvent", i);
+			firefoxUser.getDriver().findElement(By.cssSelector("#openvidu-instance-0 .disconnect-btn"))
+					.sendKeys(Keys.ENTER);
+			firefoxUser.getEventManager().waitUntilEventReaches(0, "disconnected", "RoomEvent", i);
+		}
+		this.connectInstance(firefoxUser, 0);
+		firefoxUser.getEventManager().waitUntilEventReaches(0, "trackSubscribed", "ParticipantEvent", 4);
+		this.waitUntilSubscriberDecodes(firefoxUser, 0, "video/VP8");
+		this.waitUntilSubscriberDecodes(chromeUser, 1, "video/VP8");
+
+		gracefullyLeaveParticipants(firefoxUser, 1);
+		gracefullyLeaveParticipants(chromeUser, 2);
+	}
+
+	/**
+	 * Every participant keeps livekit-client's default singlePeerConnection, which
+	 * the testapp turns off. On Pion they join through /rtc/v1 with a single peer
+	 * connection; on mediasoup the server answers /rtc/v1 with a 404 and
+	 * livekit-client joins again through /rtc with two peer connections. Either
+	 * way, the backup codec works as with the testapp's default
+	 */
+	@Test
+	@DisplayName("Backup codec single peer connection")
+	void backupCodecSinglePeerConnectionTest() throws Exception {
+		log.info("Backup codec single peer connection");
+		Future<OpenViduTestappUser> firefoxSetup = setupBrowserInBackground("firefox");
+		OpenViduTestappUser chromeUser = setupBrowserAndConnectToOpenViduTestapp("chrome");
+		this.addBackupCodecPublisher(chromeUser, null, null, null);
+		this.enableSinglePeerConnection(chromeUser, 0);
+		this.addSubscriber(chromeUser, false);
+		this.enableSinglePeerConnection(chromeUser, 1);
+		chromeUser.getDriver().findElements(By.className("connect-btn")).forEach(el -> el.sendKeys(Keys.ENTER));
+		chromeUser.getEventManager().waitUntilEventReaches(1, "trackSubscribed", "ParticipantEvent", 1);
+		this.assertBackupCodecTrackCodecs("vp8");
+		this.waitUntilSubscriberDecodes(chromeUser, 1, "video/AV1");
+
+		OpenViduTestappUser firefoxUser = firefoxSetup.get();
+		this.addFirefoxSubscriber(firefoxUser, false);
+		this.enableSinglePeerConnection(firefoxUser, 0);
+		this.connectInstance(firefoxUser, 0);
+		firefoxUser.getEventManager().waitUntilEventReaches(0, "trackSubscribed", "ParticipantEvent", 1);
+		this.waitUntilSubscriberDecodes(firefoxUser, 0, "video/VP8");
+		this.waitUntilSubscriberDecodes(chromeUser, 1, "video/VP8");
+		this.waitUntilSubscriberSwitchesBackupCodecLayers(firefoxUser, 0);
+		this.assertSignalPathOfEngine(chromeUser, 0);
+		this.assertSignalPathOfEngine(chromeUser, 1);
+		this.assertSignalPathOfEngine(firefoxUser, 0);
+
+		gracefullyLeaveParticipants(firefoxUser, 1);
+		gracefullyLeaveParticipants(chromeUser, 2);
+	}
+
+	/**
+	 * SIMULCAST policy, so the publisher sends both codecs: dynacast stops each
+	 * codec once its last subscriber leaves and starts it again for the next one.
+	 * When the Firefox subscriber leaves, the publisher stops sending VP8 while the
+	 * Chrome subscriber keeps AV1, and a Firefox subscriber joining afterwards
+	 * receives VP8 from the Producer that had stopped. Then the same with the
+	 * Chrome subscriber and AV1
+	 */
+	@Test
+	@DisplayName("Backup codec dynacast stops and resumes each codec")
+	void backupCodecDynacastResumesEachCodecTest() throws Exception {
+		log.info("Backup codec dynacast stops and resumes each codec");
+		BackupCodecRoom room = this.joinBackupCodecRoom("SIMULCAST", "video/AV1");
+		this.waitUntilPublisherSendsCodec(room.chromeUser, 0, "video/VP8", true);
+		this.waitUntilPublisherSendsCodec(room.chromeUser, 0, "video/AV1", true);
+
+		room.firefoxUser.getDriver().findElement(By.cssSelector("#openvidu-instance-0 .disconnect-btn"))
+				.sendKeys(Keys.ENTER);
+		room.firefoxUser.getEventManager().waitUntilEventReaches(0, "disconnected", "RoomEvent", 1);
+		this.waitUntilPublisherSendsCodec(room.chromeUser, 0, "video/VP8", false);
+		this.waitUntilSubscriberDecodes(room.chromeUser, 1, "video/AV1");
+		this.connectInstance(room.firefoxUser, 0);
+		room.firefoxUser.getEventManager().waitUntilEventReaches(0, "trackSubscribed", "ParticipantEvent", 2);
+		this.waitUntilPublisherSendsCodec(room.chromeUser, 0, "video/VP8", true);
+		this.waitUntilSubscriberDecodes(room.firefoxUser, 0, "video/VP8");
+		this.waitUntilSubscriberSwitchesBackupCodecLayers(room.firefoxUser, 0);
+
+		room.chromeUser.getDriver().findElement(By.cssSelector("#openvidu-instance-1 .disconnect-btn"))
+				.sendKeys(Keys.ENTER);
+		room.chromeUser.getEventManager().waitUntilEventReaches(1, "disconnected", "RoomEvent", 1);
+		this.waitUntilPublisherSendsCodec(room.chromeUser, 0, "video/AV1", false);
+		this.waitUntilSubscriberDecodes(room.firefoxUser, 0, "video/VP8");
+		this.connectInstance(room.chromeUser, 1);
+		room.chromeUser.getEventManager().waitUntilEventReaches(1, "trackSubscribed", "ParticipantEvent", 2);
+		this.waitUntilPublisherSendsCodec(room.chromeUser, 0, "video/AV1", true);
+		this.waitUntilSubscriberDecodes(room.chromeUser, 1, "video/AV1");
+		this.waitUntilSubscriberDecodes(room.firefoxUser, 0, "video/VP8");
+		room.leave();
+	}
+
+	/**
+	 * Six Firefox subscribers join at once, the most the evaluation mode allows
+	 * next to the publisher and a Chrome subscriber: their subscriptions wait
+	 * together for the backup codec, and the server binds them all when it
+	 * arrives. The Chrome subscriber keeps AV1 throughout (SIMULCAST policy)
+	 */
+	@Test
+	@DisplayName("Backup codec six Firefox subscribers at once")
+	void backupCodecSixFirefoxSubscribersAtOnceTest() throws Exception {
+		log.info("Backup codec six Firefox subscribers at once");
+		Future<OpenViduTestappUser> firefoxSetup = setupBrowserInBackground("firefox");
+		OpenViduTestappUser chromeUser = setupBrowserAndConnectToOpenViduTestapp("chrome");
+		this.addBackupCodecPublisher(chromeUser, "SIMULCAST", null, new int[] { 640, 360 });
+		this.addSubscriber(chromeUser, false);
+		chromeUser.getDriver().findElements(By.className("connect-btn")).forEach(el -> el.sendKeys(Keys.ENTER));
+		chromeUser.getEventManager().waitUntilEventReaches(1, "trackSubscribed", "ParticipantEvent", 1);
+		this.waitUntilSubscriberDecodes(chromeUser, 1, "video/AV1");
+
+		OpenViduTestappUser firefoxUser = firefoxSetup.get();
+		final int firefoxSubscribers = 6;
+		for (int i = 0; i < firefoxSubscribers; i++) {
+			this.addFirefoxSubscriber(firefoxUser, false);
+		}
+		firefoxUser.getDriver().findElements(By.className("connect-btn")).forEach(el -> el.sendKeys(Keys.ENTER));
+		for (int i = 0; i < firefoxSubscribers; i++) {
+			firefoxUser.getEventManager().waitUntilEventReaches(i, "trackSubscribed", "ParticipantEvent", 1);
+		}
+		for (int i = 0; i < firefoxSubscribers; i++) {
+			this.waitUntilSubscriberDecodes(firefoxUser, i, "video/VP8");
+		}
+		this.waitUntilSubscriberDecodes(chromeUser, 1, "video/AV1");
+
+		gracefullyLeaveParticipants(firefoxUser, firefoxSubscribers);
+		gracefullyLeaveParticipants(chromeUser, 2);
+	}
+
+	/**
+	 * A Chrome subscriber that cannot decode AV1 and that no client configuration
+	 * rule describes, like a native client built without an AV1 decoder: the
+	 * testapp renames AV1 in every offer its subscriber receives, so Chrome
+	 * answers without AV1 as such a client would. Its first subscription is to
+	 * the AV1 track: it must receive the VP8 backup, while the other Chrome
+	 * subscriber ends up with chromeCodecAfter
+	 */
+	@Test
+	@DisplayName("Backup codec subscriber without AV1 SIMULCAST policy")
+	void backupCodecSubscriberWithoutAV1SimulcastPolicyTest() throws Exception {
+		log.info("Backup codec subscriber without AV1 SIMULCAST policy");
+		backupCodecSubscriberWithoutCodecTest("SIMULCAST", "av1", "video/AV1");
+	}
+
+	/**
+	 * Same as {@link #backupCodecSubscriberWithoutAV1SimulcastPolicyTest()}, with
+	 * the default policy, so the other Chrome subscriber regresses to VP8
+	 */
+	@Test
+	@DisplayName("Backup codec subscriber without AV1 default policy")
+	void backupCodecSubscriberWithoutAV1DefaultPolicyTest() throws Exception {
+		log.info("Backup codec subscriber without AV1 default policy");
+		backupCodecSubscriberWithoutCodecTest(null, "av1", "video/VP8");
+	}
+
+	/**
+	 * Same as {@link #backupCodecSubscriberWithoutAV1SimulcastPolicyTest()} with a
+	 * VP9 SVC track and a subscriber that cannot decode VP9: every browser decodes
+	 * VP9, so this is the only way to make a VP9 track need its backup codec
+	 */
+	@Test
+	@DisplayName("Backup codec VP9 subscriber without VP9")
+	void backupCodecVP9SubscriberWithoutVP9Test() throws Exception {
+		log.info("Backup codec VP9 subscriber without VP9");
+		backupCodecSubscriberWithoutCodecTest("SIMULCAST", "vp9", "video/VP9");
+	}
+
+	/**
+	 * A Chrome publisher sends codec ("av1" or "vp9") with a VP8 backup and the
+	 * given policy; a Chrome subscriber receives codec. Then a Chrome subscriber
+	 * whose testapp renames codec in every offer it receives subscribes: it must
+	 * receive VP8, and the first subscriber end up with chromeCodecAfter
+	 */
+	private void backupCodecSubscriberWithoutCodecTest(String policy, String codec, String chromeCodecAfter)
+			throws Exception {
+		OpenViduTestappUser chromeUser = setupBrowserAndConnectToOpenViduTestapp("chrome");
+		this.addBackupCodecPublisher(chromeUser, policy, null, null, codec);
+		this.addSubscriber(chromeUser, false);
+		chromeUser.getDriver().findElements(By.className("connect-btn")).forEach(el -> el.sendKeys(Keys.ENTER));
+		chromeUser.getEventManager().waitUntilEventReaches(1, "trackSubscribed", "ParticipantEvent", 1);
+		this.assertBackupCodecTrackCodecs(codec, "vp8");
+		this.waitUntilSubscriberDecodes(chromeUser, 1, mimeOf(codec));
+
+		this.addSubscriber(chromeUser, false);
+		final int without = 2;
+		this.waitAndClick(chromeUser, "#room-options-btn-" + without);
+		this.waitAndClick(chromeUser, "#room-subscriberRejects" + codec.toUpperCase());
+		this.waitAndClick(chromeUser, "#close-dialog-btn");
+		Thread.sleep(300);
+		this.connectInstance(chromeUser, without);
+		chromeUser.getEventManager().waitUntilEventReaches(without, "trackSubscribed", "ParticipantEvent", 1);
+		this.waitUntilSubscriberDecodes(chromeUser, without, "video/VP8");
+		this.waitUntilSubscriberDecodes(chromeUser, 1, chromeCodecAfter);
+		final Number renamedOffers = (Number) ((JavascriptExecutor) chromeUser.getDriver())
+				.executeScript("return window['rejectedCodecOffers_" + without + "'];");
+		Assertions.assertTrue(renamedOffers != null && renamedOffers.intValue() > 0,
+				"The testapp renamed " + codec + " in no offer of instance " + without + ": " + renamedOffers);
+
+		gracefullyLeaveParticipants(chromeUser, 3);
+	}
+
+	/**
+	 * Waits until the publisher of the testapp instance sends the given codec
+	 * (bytesSent of its outbound-rtp streams grows), or stops sending it (bytesSent
+	 * does not grow for 3 s)
+	 */
+	private void waitUntilPublisherSendsCodec(OpenViduTestappUser user, int instance, String codec, boolean sending)
+			throws Exception {
+		final String script = "const done = arguments[arguments.length - 1]; const mime = arguments[0].toLowerCase();"
+				+ "const pc = window['room_" + instance + "'].engine.pcManager.publisher;"
+				+ "const stats = pc && pc.getStats(); if (!stats) { done(-1); return; }"
+				+ "stats.then(report => { let bytes = 0; report.forEach(s => {"
+				+ "  if (s.type === 'outbound-rtp' && s.kind === 'video') { const c = report.get(s.codecId);"
+				+ "    if (c && c.mimeType.toLowerCase() === mime) { bytes += s.bytesSent || 0; } } });"
+				+ "  done(bytes); }).catch(() => done(-1));";
+		final long deadline = System.currentTimeMillis() + 60000;
+		long previous = -1;
+		int unchanged = 0;
+		while (System.currentTimeMillis() < deadline) {
+			final long bytes = ((Number) ((JavascriptExecutor) user.getDriver()).executeAsyncScript(script, codec))
+					.longValue();
+			if (previous >= 0 && bytes >= 0) {
+				if (sending && bytes > previous) {
+					return;
+				}
+				unchanged = bytes == previous ? unchanged + 1 : 0;
+				if (!sending && unchanged >= 3) {
+					return;
+				}
+			}
+			previous = bytes;
+			Thread.sleep(1000);
+		}
+		Assertions.fail("The publisher of testapp instance " + instance + (sending ? " does not send " : " keeps sending ")
+				+ codec + " (bytesSent " + previous + ")");
+	}
+
+	/** Turns on singlePeerConnection, livekit-client's default, in the instance */
+	private void enableSinglePeerConnection(OpenViduTestappUser user, int instance) throws Exception {
+		this.waitAndClick(user, "#room-options-btn-" + instance);
+		this.waitAndClick(user, "#room-singlePeerConnection");
+		this.waitAndClick(user, "#close-dialog-btn");
+		Thread.sleep(300);
+	}
+
+	/**
+	 * The connected Room of the testapp instance joined through the signal path of
+	 * the engine given with -DOPENVIDU_RTC_ENGINE: /rtc/v1 (single peer connection)
+	 * on Pion, /rtc (two peer connections) on mediasoup
+	 */
+	private void assertSignalPathOfEngine(OpenViduTestappUser user, int instance) {
+		Assertions.assertEquals(Boolean.TRUE, ((JavascriptExecutor) user.getDriver())
+				.executeScript("return window['room_" + instance + "'].options.singlePeerConnection;"),
+				"singlePeerConnection of testapp instance " + instance);
+		final boolean v0 = Boolean.TRUE.equals(((JavascriptExecutor) user.getDriver())
+				.executeScript("return window['room_" + instance + "'].engine.client.useV0SignalPath;"));
+		log.info("Testapp instance {} joined through {}", instance,
+				v0 ? "/rtc (two peer connections)" : "/rtc/v1 (single peer connection)");
+		final String engine = System.getProperty("OPENVIDU_RTC_ENGINE");
+		if (engine != null) {
+			Assertions.assertEquals("mediasoup".equals(engine), v0,
+					"Signal path of testapp instance " + instance + " with the " + engine + " engine");
+		}
+	}
+
+	/**
+	 * The publisher, a Chrome subscriber and a Firefox subscriber of a backup codec
+	 * room, once every subscriber receives its codec: the Firefox one the VP8
+	 * backup, the Chrome one chromeCodec.
+	 */
+	private class BackupCodecRoom {
+		final OpenViduTestappUser chromeUser;
+		final OpenViduTestappUser firefoxUser;
+
+		BackupCodecRoom(OpenViduTestappUser chromeUser, OpenViduTestappUser firefoxUser) {
+			this.chromeUser = chromeUser;
+			this.firefoxUser = firefoxUser;
+		}
+
+		void leave() throws Exception {
+			gracefullyLeaveParticipants(firefoxUser, 1);
+			gracefullyLeaveParticipants(chromeUser, 2);
+		}
+	}
+
+	private BackupCodecRoom joinBackupCodecRoom(String policy, String chromeCodec) throws Exception {
+		Future<OpenViduTestappUser> firefoxSetup = setupBrowserInBackground("firefox");
+		OpenViduTestappUser chromeUser = setupBrowserAndConnectToOpenViduTestapp("chrome");
+		this.addBackupCodecPublisher(chromeUser, policy, null, null);
+		this.addSubscriber(chromeUser, false);
+		chromeUser.getDriver().findElements(By.className("connect-btn")).forEach(el -> el.sendKeys(Keys.ENTER));
+		chromeUser.getEventManager().waitUntilEventReaches(1, "trackSubscribed", "ParticipantEvent", 1);
+		OpenViduTestappUser firefoxUser = firefoxSetup.get();
+		this.addFirefoxSubscriber(firefoxUser, false);
+		this.connectInstance(firefoxUser, 0);
+		firefoxUser.getEventManager().waitUntilEventReaches(0, "trackSubscribed", "ParticipantEvent", 1);
+		this.waitUntilSubscriberDecodes(firefoxUser, 0, "video/VP8");
+		this.waitUntilSubscriberDecodes(chromeUser, 1, chromeCodec);
+		return new BackupCodecRoom(chromeUser, firefoxUser);
+	}
+
+	/**
+	 * Adds a Chrome instance named CHROME_PUBLISHER that publishes its camera in
+	 * AV1 SVC (L3T3_KEY) with simulcast, dynacast and a backup codec: backupCodec
+	 * ("vp8" or "h264"; null for livekit-client's default, VP8) with the given
+	 * policy (null for the default one), at the given capture size (null for the
+	 * default one). Returns the index of the instance.
+	 */
+	private int addBackupCodecPublisher(OpenViduTestappUser user, String policy, String backupCodec, int[] size)
+			throws Exception {
+		return this.addBackupCodecPublisher(user, policy, backupCodec, size, "av1");
+	}
+
+	/**
+	 * Same as {@link #addBackupCodecPublisher(OpenViduTestappUser, String, String, int[])},
+	 * publishing the camera in the given codec ("av1" or "vp9", both in L3T3_KEY)
+	 */
+	private int addBackupCodecPublisher(OpenViduTestappUser user, String policy, String backupCodec, int[] size,
+			String codec) throws Exception {
+		final int instance = user.getDriver().findElements(By.cssSelector("app-openvidu-instance")).size();
+		this.addPublisher(user, false, true, true, false, false, true, size != null ? size[0] : null,
+				size != null ? size[1] : null, "L3T3_KEY");
+		WebElement participantNameInput = user.getDriver().findElement(By.id("participant-name-input-" + instance));
+		participantNameInput.clear();
+		participantNameInput.sendKeys("CHROME_PUBLISHER");
+		this.forceCodec(user, instance, codec, false);
+		if (policy != null || backupCodec != null) {
+			this.waitAndClick(user, "#room-options-btn-" + instance);
+			if (policy != null) {
+				this.selectMatOption(user, "#trackPublish-backupCodecPolicy", policy);
+			}
+			if (backupCodec != null) {
+				this.selectMatOption(user, "#trackPublish-backupCodecCodec", "backup-" + backupCodec);
+			}
+			this.waitAndClick(user, "#close-dialog-btn");
+			Thread.sleep(300);
+		}
+		return instance;
+	}
+
+	/**
+	 * Adds a subscriber-only instance named FIREFOX_SUBSCRIBER_<index>: the default
+	 * names (TestParticipant<index>) repeat across browsers, and LiveKit closes a
+	 * participant whose identity another one takes (DUPLICATE_IDENTITY). Returns
+	 * the index of the instance.
+	 */
+	private int addFirefoxSubscriber(OpenViduTestappUser user, boolean adaptiveStream) throws Exception {
+		final int instance = user.getDriver().findElements(By.cssSelector("app-openvidu-instance")).size();
+		this.addSubscriber(user, adaptiveStream);
+		WebElement participantNameInput = user.getDriver().findElement(By.id("participant-name-input-" + instance));
+		participantNameInput.clear();
+		participantNameInput.sendKeys("FIREFOX_SUBSCRIBER_" + instance);
+		return instance;
+	}
+
+	/** The published track of CHROME_PUBLISHER has AV1 and then the backup codec. */
+	private void assertBackupCodecTrackCodecs(String backupCodec) throws Exception {
+		this.assertBackupCodecTrackCodecs("av1", backupCodec);
+	}
+
+	/** The published track of CHROME_PUBLISHER has codec and then the backup codec. */
+	private void assertBackupCodecTrackCodecs(String codec, String backupCodec) throws Exception {
+		Assertions.assertEquals(List.of("video/" + codec, "video/" + backupCodec),
+				this.getPublishedVideoTrackInfo("TestRoom", "CHROME_PUBLISHER").getCodecsList().stream()
+						.map(SimulcastCodecInfo::getMimeType).map(String::toLowerCase).toList(),
+				"Codecs of the track published by Chrome");
+	}
+
+	private static String mimeOf(String codec) {
+		return "video/" + codec.toUpperCase();
+	}
+
+	private Future<OpenViduTestappUser> setupBrowserInBackground(String browser) {
+		ExecutorService executor = Executors.newSingleThreadExecutor();
+		Future<OpenViduTestappUser> setup = executor.submit(() -> setupBrowserAndConnectToOpenViduTestapp(browser));
+		executor.shutdown();
+		return setup;
+	}
+
+	private void connectInstance(OpenViduTestappUser user, int instance) {
+		user.getDriver().findElement(By.cssSelector("#openvidu-instance-" + instance + " .connect-btn"))
+				.sendKeys(Keys.ENTER);
+	}
+
+	/**
+	 * Unsubscribes the testapp instance from its remote video and subscribes it
+	 * again, for the given time
+	 */
+	private void toggleVideoSubscription(OpenViduTestappUser user, int instance, int time) throws Exception {
+		final By toggle = By.cssSelector("#openvidu-instance-" + instance + " .toggle-video-subscribed");
+		user.getDriver().findElement(toggle).click();
+		user.getEventManager().waitUntilEventReaches(instance, "trackUnsubscribed", "ParticipantEvent", time);
+		user.getDriver().findElement(toggle).click();
+		user.getEventManager().waitUntilEventReaches(instance, "trackSubscribed", "ParticipantEvent", time + 1);
+	}
+
+	/**
+	 * Runs room.simulateScenario(scenario) in the livekit-client Room of the
+	 * testapp instance and waits for its reconnected event of the given time
+	 */
+	private void simulateScenario(OpenViduTestappUser user, int instance, String scenario, int reconnection)
+			throws Exception {
+		log.info("Simulating scenario {} in the Room of testapp instance {}", scenario, instance);
+		((JavascriptExecutor) user.getDriver())
+				.executeScript("window['room_" + instance + "'].simulateScenario(arguments[0]);", scenario);
+		user.getEventManager().waitUntilEventReaches(instance, "reconnected", "RoomEvent", reconnection);
+	}
+
+	/**
+	 * Waits until the livekit-client Room of the testapp instance receives the
+	 * first video track of the given remote participant with the given codec, and
+	 * decodes it, reading the stats of the track from the client itself. After a
+	 * full reconnection the testapp does not attach the new remote track to a
+	 * video element (with both engines), so the video elements cannot tell.
+	 */
+	private void waitUntilClientDecodes(OpenViduTestappUser user, int instance, String identity, String codec)
+			throws Exception {
+		final String script = "const done = arguments[arguments.length - 1];"
+				+ "const participant = window['room_" + instance + "'].remoteParticipants.get(arguments[0]);"
+				+ "const publication = participant && [...participant.videoTrackPublications.values()][0];"
+				+ "if (!publication || !publication.videoTrack) { done(null); return; }"
+				+ "publication.videoTrack.getRTCStatsReport().then(report => {"
+				+ "  let result = null;"
+				+ "  report?.forEach(s => { if (s.type === 'inbound-rtp' && s.kind === 'video') {"
+				+ "    const c = report.get(s.codecId); result = (c ? c.mimeType : '') + '|' + (s.framesDecoded || 0); } });"
+				+ "  done(result);"
+				+ "}).catch(() => done(null));";
+		final long deadline = System.currentTimeMillis() + WAIT_UNTIL_MAX_MILLIS;
+		String last = null;
+		long firstFrames = -1;
+		while (System.currentTimeMillis() < deadline) {
+			last = (String) ((JavascriptExecutor) user.getDriver()).executeAsyncScript(script, identity);
+			if (last != null && last.startsWith(codec + "|")) {
+				long frames = Long.parseLong(last.substring(last.indexOf('|') + 1));
+				if (firstFrames < 0) {
+					firstFrames = frames;
+				} else if (frames > firstFrames) {
+					return;
+				}
+			}
+			Thread.sleep(500);
+		}
+		Assertions.fail("Testapp instance " + instance + " should decode " + codec + " from " + identity
+				+ ", last stats (codec|framesDecoded): " + last);
+	}
+
+	private void waitUntilSubscriberFrameWidthAtLeast(OpenViduTestappUser user, WebElement video, int width) {
+		final JsonObject[] lastLayer = { new JsonObject() };
+		this.waitUntilAux(user, video, () -> {
+			lastLayer[0] = this.getSubscriberVideoLayer(user, video);
+			long frameWidth = this.getLayerCounter(lastLayer[0], "frameWidth");
+			return isStatPresent(frameWidth) && frameWidth >= width;
+		}, () -> "Timeout waiting for a frame width of at least " + width + ". "
+				+ describeSubscriberVideoLayer(lastLayer[0]));
+	}
+
+	/**
+	 * The remote video of the given testapp instance, which receives the VP8
+	 * backup codec, goes down to its lowest simulcast layer and back up to its top
+	 * one. Going back up needs the subscriber's bandwidth estimation to reach the
+	 * top layer again, which dynacast may have paused in the meantime. The widths
+	 * are compared with each other: the server's TrackInfo gives the backup codec
+	 * the layers of the primary one (AV1 SVC, 480/960/1920 for 1080p), while VP8
+	 * simulcast sends 320/640/1920. Of three layers, the top one is at least three
+	 * times as wide as the lowest one, the middle one twice.
+	 */
+	private void waitUntilSubscriberSwitchesBackupCodecLayers(OpenViduTestappUser user, int instance)
+			throws Exception {
+		final String instanceSelector = "#openvidu-instance-" + instance;
+		final WebElement video = user.getDriver().findElement(By.cssSelector(instanceSelector + " video.remote"));
+		this.selectSubscriberVideoQuality(user, instanceSelector, "LOW");
+		final int lowestWidth = this.waitUntilSubscriberFrameWidthSettles(user, video);
+		this.selectSubscriberVideoQuality(user, instanceSelector, "HIGH");
+		this.waitUntilSubscriberFrameWidthAtLeast(user, video, 3 * lowestWidth);
+		this.waitUntilSubscriberFramesDecodedIncrease(user, video);
+	}
+
+	/**
+	 * Waits until the frame width of the remote video is the same in three samples
+	 * in a row, a second apart, and returns it.
+	 */
+	private int waitUntilSubscriberFrameWidthSettles(OpenViduTestappUser user, WebElement video) throws Exception {
+		final long deadline = System.currentTimeMillis() + WAIT_UNTIL_MAX_MILLIS;
+		int width = -1;
+		int samples = 0;
+		while (samples < 3 && System.currentTimeMillis() < deadline) {
+			Thread.sleep(1000);
+			final int sample = this.getSubscriberVideoFrameWidth(user, video);
+			samples = sample == width ? samples + 1 : 1;
+			width = sample;
+		}
+		Assertions.assertEquals(3, samples, "Frame width of the remote video never settled, last one: " + width);
+		return width;
+	}
+
+	/**
+	 * Waits until the remote video of the given testapp instance is received with
+	 * the given codec, and then until it is decoded. The video element is looked
+	 * up again on every attempt: a subscription can be renewed when its codec
+	 * changes, and then the testapp replaces the element.
+	 */
+	private void waitUntilSubscriberDecodes(OpenViduTestappUser user, int instance, String codec) throws Exception {
+		this.waitUntilSubscriberDecodes(user, instance, codec, 0);
+	}
+
+	/** Same, for the remote video at the given position in the instance. */
+	private void waitUntilSubscriberDecodes(OpenViduTestappUser user, int instance, String codec, int videoIndex)
+			throws Exception {
+		final By videos = By.cssSelector("#openvidu-instance-" + instance + " video.remote");
+		final long deadline = System.currentTimeMillis() + WAIT_UNTIL_MAX_MILLIS;
+		String received = null;
+		while (!codec.equals(received) && System.currentTimeMillis() < deadline) {
+			try {
+				received = this.getSubscriberVideoCodec(user, user.getDriver().findElements(videos).get(videoIndex));
+			} catch (Exception | AssertionError e) {
+				received = null;
+			}
+			if (!codec.equals(received)) {
+				Thread.sleep(500);
+			}
+		}
+		if (!codec.equals(received)) {
+			// Every remote video of the instance, to tell a stale element from missing media
+			List<String> all = new ArrayList<>();
+			for (WebElement element : user.getDriver().findElements(videos)) {
+				try {
+					all.add(element.getAttribute("id") + "=" + this.getSubscriberVideoCodec(user, element));
+				} catch (Exception | AssertionError e) {
+					all.add(element.getAttribute("id") + "=?");
+				}
+			}
+			Assertions.fail("Codec received by remote video " + videoIndex + " of testapp instance " + instance
+					+ ": expected " + codec + " but was " + received + ". Remote videos of the instance: " + all);
+		}
+		this.waitUntilSubscriberFramesDecodedIncrease(user, user.getDriver().findElements(videos).get(videoIndex));
 	}
 
 	@Test

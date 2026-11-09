@@ -33,6 +33,8 @@ import {
 export class OptionsDialogComponent {
   roomOptions?: RoomOptions;
   forceRelay = false;
+  subscriberRejectsAV1 = false;
+  subscriberRejectsVP9 = false;
   createLocalTracksOptions?: CreateLocalTracksOptions;
   shareScreen = false;
   screenShareCaptureOptions?: ScreenShareCaptureOptions;
@@ -79,6 +81,8 @@ export class OptionsDialogComponent {
   private data = inject<{
     roomOptions?: RoomOptions;
     forceRelay: boolean;
+    subscriberRejectsAV1?: boolean;
+    subscriberRejectsVP9?: boolean;
     createLocalTracksOptions?: CreateLocalTracksOptions;
     shareScreen: boolean;
     screenShareCaptureOptions?: ScreenShareCaptureOptions;
@@ -95,6 +99,8 @@ export class OptionsDialogComponent {
     const data = this.data;
     this.roomOptions = data.roomOptions;
     this.forceRelay = data.forceRelay;
+    this.subscriberRejectsAV1 = !!data.subscriberRejectsAV1;
+    this.subscriberRejectsVP9 = !!data.subscriberRejectsVP9;
     this.createLocalTracksOptions = data.createLocalTracksOptions;
     this.shareScreen = data.shareScreen;
     this.screenShareCaptureOptions = data.screenShareCaptureOptions;
@@ -177,11 +183,23 @@ export class OptionsDialogComponent {
     this.dialogRef.close({
       roomOptions: this.roomOptions,
       forceRelay: this.forceRelay,
+      subscriberRejectsAV1: this.subscriberRejectsAV1,
+      subscriberRejectsVP9: this.subscriberRejectsVP9,
       createLocalTracksOptions: this.createLocalTracksOptions,
       screenShareCaptureOptions: this.screenShareCaptureOptions,
       trackPublishOptions: this.trackPublishOptions,
       dataTrackName: this.dataTrackName,
     });
+  }
+
+  // The codec of the backup codec: livekit-client takes `true` as VP8
+  backupCodecName(): string {
+    const backupCodec = this.trackPublishOptions?.backupCodec;
+    return typeof backupCodec === 'object' ? backupCodec.codec : 'vp8';
+  }
+
+  setBackupCodec(codec: 'vp8' | 'h264') {
+    this.trackPublishOptions!.backupCodec = { codec };
   }
 
   screenOptionChanged(event: MatRadioChange) {

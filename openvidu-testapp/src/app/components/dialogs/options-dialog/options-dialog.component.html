@@ -14,6 +14,8 @@
         <mat-checkbox id="room-webAudioMix" [(ngModel)]="roomOptions.webAudioMix">webAudioMix</mat-checkbox>
         <mat-checkbox id="room-forceRelay" [(ngModel)]="forceRelay">Force relay candidates</mat-checkbox>
         <mat-checkbox id="room-singlePeerConnection" [(ngModel)]="roomOptions.singlePeerConnection">singlePeerConnection</mat-checkbox>
+        <mat-checkbox id="room-subscriberRejectsAV1" [(ngModel)]="subscriberRejectsAV1" title="Renames AV1 in the offers the subscriber receives, so the browser answers as one that cannot decode AV1">Subscriber rejects AV1</mat-checkbox>
+        <mat-checkbox id="room-subscriberRejectsVP9" [(ngModel)]="subscriberRejectsVP9" title="Renames VP9 in the offers the subscriber receives, so the browser answers as one that cannot decode VP9">Subscriber rejects VP9</mat-checkbox>
       </div>
     }
     @if (createLocalTracksOptions) {
@@ -204,6 +206,24 @@
           <mat-select [(value)]="trackPublishOptions.videoCodec">
             @for (codec of ['vp8','h264','vp9','av1']; track codec) {
               <mat-option [value]="codec" [id]="'mat-option-' + codec">{{codec | uppercase}}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+        <mat-form-field id="trackPublish-backupCodecCodec">
+          <mat-label>backupCodec codec</mat-label>
+          <mat-select [value]="backupCodecName()" (selectionChange)="setBackupCodec($event.value)">
+            <!-- The text of each option is its id suffix, as selectMatOption in the e2e tests expects -->
+            @for (codec of ['vp8','h264']; track codec) {
+              <mat-option [value]="codec" [id]="'mat-option-backup-' + codec">backup-{{codec}}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+        <mat-form-field id="trackPublish-backupCodecPolicy">
+          <mat-label>backupCodecPolicy</mat-label>
+          <mat-select [(value)]="trackPublishOptions.backupCodecPolicy">
+            <!-- The value of each BackupCodecPolicy is its index -->
+            @for (policy of ['PREFER_REGRESSION','SIMULCAST','REGRESSION']; track policy; let i = $index) {
+              <mat-option [value]="i" [id]="'mat-option-' + policy">{{policy}}</mat-option>
             }
           </mat-select>
         </mat-form-field>

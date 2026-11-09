@@ -132,6 +132,9 @@ export class OpenviduInstanceComponent {
     },
     singlePeerConnection: false
   };
+  // Emulate a client that cannot decode AV1 or VP9 (see rejectCodecsInSubscriberOffers)
+  subscriberRejectsAV1 = false;
+  subscriberRejectsVP9 = false;
   roomConnectOptions: RoomConnectOptions = {
     autoSubscribe: false,
     rtcConfig: {
@@ -226,6 +229,13 @@ export class OpenviduInstanceComponent {
     // creates a new room with options
     this.room = new Room(this.roomOptions);
     (window as any)['room_' + this.index] = this.room;
+    const rejectedCodecs = [
+      ...(this.subscriberRejectsAV1 ? ['AV1'] : []),
+      ...(this.subscriberRejectsVP9 ? ['VP9'] : []),
+    ];
+    if (rejectedCodecs.length > 0) {
+      this.rejectCodecsInSubscriberOffers(rejectedCodecs);
+    }
 
     // Register early participant event listeners on local participant BEFORE connect
     this.registerEarlyParticipantListeners(this.room.localParticipant);
@@ -1490,6 +1500,8 @@ export class OpenviduInstanceComponent {
         roomOptions: this.roomOptions,
         forceRelay:
           this.roomConnectOptions.rtcConfig!.iceTransportPolicy === 'relay',
+        subscriberRejectsAV1: this.subscriberRejectsAV1,
+        subscriberRejectsVP9: this.subscriberRejectsVP9,
         createLocalTracksOptions: this.createLocalTracksOptions,
         shareScreen: true,
         screenShareCaptureOptions: this.screenShareCaptureOptions,
@@ -1501,6 +1513,8 @@ export class OpenviduInstanceComponent {
         this.roomOptions = result.roomOptions;
         this.roomConnectOptions.rtcConfig!.iceTransportPolicy =
           result.forceRelay ? 'relay' : 'all';
+        this.subscriberRejectsAV1 = !!result.subscriberRejectsAV1;
+        this.subscriberRejectsVP9 = !!result.subscriberRejectsVP9;
         this.createLocalTracksOptions = result.createLocalTracksOptions;
         this.screenShareCaptureOptions = result.screenShareCaptureOptions;
         this.trackPublishOptions = result.trackPublishOptions;
@@ -1640,6 +1654,34 @@ export class OpenviduInstanceComponent {
         updateInterval: 0,
       },
       minWidth: '50vh',
+    });
+  }
+
+  /**
+   * Emulates a client that cannot decode the codecs and that no client configuration rule of the
+   * server describes (a native client built without those decoders): every offer the subscriber
+   * receives has the codecs renamed, so the browser answers as one lacking them would. Counts the
+   * offers renamed in window['rejectedCodecOffers_<index>'].
+   */
+  private rejectCodecsInSubscriberOffers(codecs: string[]) {
+    const counter = 'rejectedCodecOffers_' + this.index;
+    (window as any)[counter] = 0;
+    const rtpmap = new RegExp('^(a=rtpmap:\\d+ )(' + codecs.join('|') + ')/', 'gim');
+    this.room!.engine.on('transportsCreated' as any, (_publisher: PCTransport, subscriber?: PCTransport) => {
+      if (!subscriber) {
+        return;
+      }
+      const setRemoteDescription = subscriber.setRemoteDescription.bind(subscriber);
+      subscriber.setRemoteDescription = (sd: RTCSessionDescriptionInit, offerId: number) => {
+        if (sd.type === 'offer' && sd.sdp) {
+          const sdp = sd.sdp.replace(rtpmap, '$1X-UNSUPPORTED-$2/');
+          if (sdp !== sd.sdp) {
+            (window as any)[counter]++;
+          }
+          sd = { type: sd.type, sdp };
+        }
+        return setRemoteDescription(sd, offerId);
+      };
     });
   }
 
