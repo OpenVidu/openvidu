@@ -48,6 +48,7 @@ import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
@@ -3114,6 +3115,199 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 
 		gracefullyLeaveParticipants(firefoxUser, 1);
 		gracefullyLeaveParticipants(chromeUser, 3);
+	}
+
+	/**
+	 * Records, every 20 ms, each increase of framesDecoded of the video inbound-rtp
+	 * streams of the subscriber PeerConnection of the room window[arguments[0]], as
+	 * [time, stream id, codec, framesDecoded, previous framesDecoded or -1 for a
+	 * new stream], in window.decodeSampler.samples. It reads every stream, so it
+	 * does not depend on the video element, which a renewed subscription replaces.
+	 * For each stream, window.decodeSampler.streams also has when it was first seen
+	 * and when it first had packets (-1 for the streams present at the start)
+	 */
+	private static final String DECODE_SAMPLER = "const room = window[arguments[0]];"
+			+ "const sampler = { samples: [], last: {}, streams: {}, stop: false, trigger: -1, error: '' };"
+			+ "window.decodeSampler = sampler;"
+			+ "let first = true;"
+			+ "const tick = async () => {"
+			+ "  if (sampler.stop) return;"
+			+ "  try {"
+			+ "    const stats = await room.localParticipant.engine.pcManager.subscriber._pc.getStats();"
+			+ "    const now = performance.now();"
+			+ "    const codecs = {};"
+			+ "    stats.forEach(r => { if (r.type === 'codec') codecs[r.id] = r.mimeType; });"
+			+ "    stats.forEach(r => {"
+			+ "      if (r.type !== 'inbound-rtp' || r.kind !== 'video') return;"
+			+ "      const stream = sampler.streams[r.id] || (sampler.streams[r.id] = { seen: first ? -1 : now, packets: first ? -1 : 0 });"
+			+ "      if (stream.packets === 0 && (r.packetsReceived || 0) > 0) stream.packets = now;"
+			+ "      const frames = r.framesDecoded || 0;"
+			+ "      const previous = sampler.last[r.id];"
+			+ "      if (!first && previous !== frames) {"
+			+ "        sampler.samples.push([now, r.id, codecs[r.codecId] || '', frames, previous === undefined ? -1 : previous]);"
+			+ "      }"
+			+ "      sampler.last[r.id] = frames;"
+			+ "    });"
+			+ "    first = false;"
+			+ "  } catch (e) { sampler.error = String(e); }"
+			+ "  setTimeout(tick, 20);"
+			+ "};"
+			+ "tick();";
+
+	/**
+	 * How long the first Chrome subscriber goes without decoded frames when a
+	 * Firefox subscriber makes the publisher regress to its VP8 backup codec
+	 * (default policy). Pion switches a browser subscriber to VP8 in place, while
+	 * mediasoup renews its subscription. The gap is the longest time between two
+	 * frames decoded by the Chrome subscriber after the Firefox one connects, read
+	 * from its own stats (DECODE_SAMPLER)
+	 */
+	@Test
+	@DisplayName("Backup codec regression gap")
+	void backupCodecRegressionGapTest() throws Exception {
+		log.info("Backup codec regression gap");
+		Future<OpenViduTestappUser> firefoxSetup = setupBrowserInBackground("firefox");
+		OpenViduTestappUser chromeUser = setupBrowserAndConnectToOpenViduTestapp("chrome");
+		this.addBackupCodecPublisher(chromeUser, null, null, null);
+		this.addSubscriber(chromeUser, false);
+		chromeUser.getDriver().findElements(By.className("connect-btn")).forEach(el -> el.sendKeys(Keys.ENTER));
+		chromeUser.getEventManager().waitUntilEventReaches(1, "trackSubscribed", "ParticipantEvent", 1);
+		this.waitUntilSubscriberDecodes(chromeUser, 1, "video/AV1");
+
+		final JavascriptExecutor js = (JavascriptExecutor) chromeUser.getDriver();
+		js.executeScript(DECODE_SAMPLER, "room_1");
+		// Normal intervals between decoded frames, for comparison
+		Thread.sleep(3000);
+
+		OpenViduTestappUser firefoxUser = firefoxSetup.get();
+		this.addSubscriber(firefoxUser, false);
+		js.executeScript("window.decodeSampler.trigger = performance.now();");
+		firefoxUser.getDriver().findElement(By.className("connect-btn")).click();
+		firefoxUser.getEventManager().waitUntilEventReaches("trackSubscribed", "ParticipantEvent", 1);
+		this.waitUntilSubscriberDecodes(firefoxUser, 0, "video/VP8");
+		this.waitUntilSubscriberDecodes(chromeUser, 1, "video/VP8");
+		Thread.sleep(3000);
+
+		@SuppressWarnings("unchecked")
+		final Map<String, Object> sampler = (Map<String, Object>) js
+				.executeScript("window.decodeSampler.stop = true; return window.decodeSampler;");
+		Assertions.assertEquals("", sampler.get("error"), "The decode sampler failed");
+		final double trigger = ((Number) sampler.get("trigger")).doubleValue();
+
+		// Every sample in which a stream decoded frames: [time, codec, stream id]
+		final List<Object[]> decodes = new ArrayList<>();
+		for (Object entry : (List<?>) sampler.get("samples")) {
+			final List<?> sample = (List<?>) entry;
+			final long frames = ((Number) sample.get(3)).longValue();
+			final long previous = ((Number) sample.get(4)).longValue();
+			if (frames > Math.max(previous, 0)) {
+				decodes.add(new Object[] { ((Number) sample.get(0)).doubleValue(), sample.get(2), sample.get(1) });
+			}
+		}
+		// The gap is the longest interval between decoded frames from the trigger to
+		// 1 s after the first VP8 frame: later intervals are not the switch's
+		final double firstVp8 = decodes.stream().filter(d -> "video/VP8".equals(d[1])).mapToDouble(d -> (double) d[0])
+				.min().orElse(Double.MAX_VALUE);
+		Assertions.assertTrue(decodes.stream().anyMatch(d -> "video/AV1".equals(d[1]) && (double) d[0] < firstVp8),
+				"The Chrome subscriber decoded no AV1 before VP8");
+		Assertions.assertNotEquals(Double.MAX_VALUE, firstVp8, "The Chrome subscriber decoded no VP8");
+		double gap = -1, gapStart = 0, gapEnd = 0, before = 0;
+		String codecBefore = null, codecAfter = null;
+		for (int i = 1; i < decodes.size(); i++) {
+			final double start = (double) decodes.get(i - 1)[0], end = (double) decodes.get(i)[0];
+			if (end < trigger) {
+				before = Math.max(before, end - start);
+			} else if (end <= firstVp8 + 1000 && end - start > gap) {
+				gap = end - start;
+				gapStart = start;
+				gapEnd = end;
+				codecBefore = (String) decodes.get(i - 1)[1];
+				codecAfter = (String) decodes.get(i)[1];
+			}
+		}
+		// Per stream, times relative to the trigger: seen, first packets, first and last decode
+		final List<String> streams = new ArrayList<>();
+		@SuppressWarnings("unchecked")
+		final Map<String, Map<String, Object>> seen = (Map<String, Map<String, Object>>) sampler.get("streams");
+		for (Entry<String, Map<String, Object>> stream : seen.entrySet()) {
+			final List<Object[]> own = decodes.stream().filter(d -> stream.getKey().equals(d[2])).toList();
+			final double seenAt = ((Number) stream.getValue().get("seen")).doubleValue();
+			final double packetsAt = ((Number) stream.getValue().get("packets")).doubleValue();
+			streams.add((own.isEmpty() ? "?" : own.get(0)[1]) + " seen " + (seenAt < 0 ? "before" : Math.round(seenAt - trigger))
+					+ ", packets " + (packetsAt < 0 ? "before" : packetsAt == 0 ? "never" : Math.round(packetsAt - trigger))
+					+ ", decoded " + (own.isEmpty() ? "never"
+							: Math.round((double) own.get(0)[0] - trigger) + ".." + Math.round((double) own.get(own.size() - 1)[0] - trigger)));
+		}
+		log.info(
+				"Regression gap: {} ms without decoded frames ({} -> {}), from {} ms to {} ms after the Firefox subscriber connected. "
+						+ "Longest interval before: {} ms. Streams (ms after the trigger): {}",
+				Math.round(gap), codecBefore, codecAfter, Math.round(gapStart - trigger), Math.round(gapEnd - trigger),
+				Math.round(before), streams);
+		// About 1.1 s with both engines (2026-11-09), most of it waiting for a VP8
+		// keyframe: mediasoup's renewed subscription adds about 60 ms to Pion's
+		// in-place switch
+		Assertions.assertTrue(gap < 3000, "The Chrome subscriber decoded no frame for " + Math.round(gap)
+				+ " ms while switching from AV1 to VP8");
+
+		gracefullyLeaveParticipants(firefoxUser, 1);
+		gracefullyLeaveParticipants(chromeUser, 2);
+	}
+
+	/**
+	 * The events a subscriber gets when the publisher regresses to its backup codec
+	 * depend on the RTC engine, and this test pins both flows. With Pion the first
+	 * Chrome subscriber switches from AV1 to VP8 in place, without any event. With
+	 * mediasoup its subscription is renewed: the track is unsubscribed and
+	 * subscribed again, with a new MediaStreamTrack and video element. If mediasoup
+	 * ever switches in place too, this test fails, and its expectation must change
+	 */
+	@Test
+	@DisplayName("Backup codec regression events")
+	void backupCodecRegressionEventsTest() throws Exception {
+		final String engine = System.getProperty("OPENVIDU_RTC_ENGINE");
+		Assumptions.assumeTrue("mediasoup".equals(engine) || "pion".equals(engine),
+				"The expected events depend on the RTC engine: run with -DOPENVIDU_RTC_ENGINE=mediasoup or pion");
+		log.info("Backup codec regression events");
+		Future<OpenViduTestappUser> firefoxSetup = setupBrowserInBackground("firefox");
+		OpenViduTestappUser chromeUser = setupBrowserAndConnectToOpenViduTestapp("chrome");
+		this.addBackupCodecPublisher(chromeUser, null, null, null);
+		this.addSubscriber(chromeUser, false);
+		chromeUser.getDriver().findElements(By.className("connect-btn")).forEach(el -> el.sendKeys(Keys.ENTER));
+		chromeUser.getEventManager().waitUntilEventReaches(1, "trackSubscribed", "ParticipantEvent", 1);
+		this.waitUntilSubscriberDecodes(chromeUser, 1, "video/AV1");
+
+		// Events of the Chrome subscriber (testapp instance 1) counted from here on
+		final List<String> events = List.of("trackUnsubscribed-ParticipantEvent", "trackUnsubscribed-RoomEvent",
+				"trackSubscribed-ParticipantEvent", "trackSubscribed-RoomEvent",
+				"trackSubscriptionStatusChanged-ParticipantEvent", "trackSubscriptionStatusChanged-RoomEvent",
+				"elementDetached-TrackEvent", "ended-TrackEvent", "elementAttached-TrackEvent",
+				"videoPlaybackStarted-TrackEvent");
+		final Map<String, Integer> before = new LinkedHashMap<>();
+		events.forEach(e -> before.put(e, chromeUser.getEventManager().getNumEvents(1, e).get()));
+
+		OpenViduTestappUser firefoxUser = firefoxSetup.get();
+		this.addSubscriber(firefoxUser, false);
+		firefoxUser.getDriver().findElement(By.className("connect-btn")).click();
+		firefoxUser.getEventManager().waitUntilEventReaches("trackSubscribed", "ParticipantEvent", 1);
+		this.waitUntilSubscriberDecodes(chromeUser, 1, "video/VP8");
+		// The last events of the switch (videoPlaybackStarted) come after the first
+		// VP8 frame; with Pion this is how long nothing must happen
+		Thread.sleep(3000);
+
+		final Map<String, Integer> during = new LinkedHashMap<>();
+		events.forEach(e -> during.put(e, chromeUser.getEventManager().getNumEvents(1, e).get() - before.get(e)));
+		final Map<String, Integer> expected = new LinkedHashMap<>();
+		if ("mediasoup".equals(engine)) {
+			// Unsubscribed (status desired), then subscribed again (status subscribed)
+			events.forEach(e -> expected.put(e, e.startsWith("trackSubscriptionStatusChanged") ? 2 : 1));
+		} else {
+			events.forEach(e -> expected.put(e, 0));
+		}
+		Assertions.assertEquals(expected, during,
+				"Events of the Chrome subscriber while the publisher regresses from AV1 to VP8 with " + engine);
+
+		gracefullyLeaveParticipants(firefoxUser, 1);
+		gracefullyLeaveParticipants(chromeUser, 2);
 	}
 
 	/**
