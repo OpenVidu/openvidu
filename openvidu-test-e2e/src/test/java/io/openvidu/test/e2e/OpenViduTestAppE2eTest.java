@@ -4199,6 +4199,48 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		this.waitUntilSubscriberDecodes(user, instance, codec, 0);
 	}
 
+	/**
+	 * The subscriber PeerConnection of the testapp instance as its own getStats()
+	 * sees it: connection, ICE and DTLS states, the selected candidate pair, every
+	 * video inbound-rtp stream with its packet, frame and key frame request
+	 * counters, and each transceiver. When a subscriber shows no video it tells
+	 * nothing arriving at all from packets arriving that never decode. The info
+	 * dialog cannot: it lists a layer only once it is decoded
+	 */
+	private String subscriberConnectionDiagnostics(OpenViduTestappUser user, int instance) {
+		final String script = "const done = arguments[arguments.length - 1];"
+				+ "try {"
+				+ "  const pcManager = window['room_' + arguments[0]].localParticipant.engine.pcManager;"
+				+ "  const pc = (pcManager.subscriber || pcManager.publisher)._pc;"
+				+ "  pc.getStats().then(stats => {"
+				+ "    const out = { connectionState: pc.connectionState, iceConnectionState: pc.iceConnectionState,"
+				+ "      dtlsStates: [], selectedCandidatePair: null, video: [] };"
+				+ "    const codecs = {};"
+				+ "    stats.forEach(r => { if (r.type === 'codec') codecs[r.id] = r.mimeType; });"
+				+ "    stats.forEach(r => {"
+				+ "      if (r.type === 'transport') out.dtlsStates.push(r.dtlsState);"
+				+ "      if (r.type === 'candidate-pair' && r.state === 'succeeded' && (r.nominated || r.selected)) {"
+				+ "        out.selectedCandidatePair = { bytesReceived: r.bytesReceived, bytesSent: r.bytesSent };"
+				+ "      }"
+				+ "      if (r.type === 'inbound-rtp' && r.kind === 'video') {"
+				+ "        out.video.push({ ssrc: r.ssrc, mid: r.mid, codec: codecs[r.codecId], packetsReceived: r.packetsReceived,"
+				+ "          bytesReceived: r.bytesReceived, packetsLost: r.packetsLost, framesReceived: r.framesReceived,"
+				+ "          framesDecoded: r.framesDecoded, keyFramesDecoded: r.keyFramesDecoded, pliCount: r.pliCount,"
+				+ "          firCount: r.firCount, nackCount: r.nackCount });"
+				+ "      }"
+				+ "    });"
+				+ "    out.transceivers = pc.getTransceivers().map(t => t.mid + ' ' + t.currentDirection + ' '"
+				+ "      + (t.receiver.track ? t.receiver.track.kind + '/' + t.receiver.track.readyState : '-'));"
+				+ "    done(JSON.stringify(out));"
+				+ "  }, e => done('getStats failed: ' + e));"
+				+ "} catch (e) { done('diagnostics failed: ' + e); }";
+		try {
+			return String.valueOf(((JavascriptExecutor) user.getDriver()).executeAsyncScript(script, instance));
+		} catch (Exception e) {
+			return "diagnostics failed: " + e.getMessage();
+		}
+	}
+
 	/** Same, for the remote video at the given position in the instance. */
 	private void waitUntilSubscriberDecodes(OpenViduTestappUser user, int instance, String codec, int videoIndex)
 			throws Exception {
@@ -4226,7 +4268,8 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 				}
 			}
 			Assertions.fail("Codec received by remote video " + videoIndex + " of testapp instance " + instance
-					+ ": expected " + codec + " but was " + received + ". Remote videos of the instance: " + all);
+					+ ": expected " + codec + " but was " + received + ". Remote videos of the instance: " + all
+					+ ". Subscriber PeerConnection: " + this.subscriberConnectionDiagnostics(user, instance));
 		}
 		this.waitUntilSubscriberFramesDecodedIncrease(user, user.getDriver().findElements(videos).get(videoIndex));
 	}
