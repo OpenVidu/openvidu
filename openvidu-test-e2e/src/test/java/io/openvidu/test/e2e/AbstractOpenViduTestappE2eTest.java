@@ -12,6 +12,8 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -41,6 +43,9 @@ import io.minio.DownloadObjectArgs;
 import io.minio.MinioClient;
 import io.openvidu.test.browsers.BrowserUser;
 import io.openvidu.test.browsers.utils.Ffmpeg;
+import livekit.LivekitModels.ParticipantInfo;
+import livekit.LivekitModels.TrackInfo;
+import livekit.LivekitModels.TrackType;
 
 import static org.openqa.selenium.OutputType.BASE64;
 
@@ -971,6 +976,40 @@ public class AbstractOpenViduTestappE2eTest extends OpenViduTestE2e {
 		// If we get here, we've timed out
 		throw new RuntimeException("Timeout waiting for element '" + cssSelector
 				+ "' to be present, displayed and enabled after " + timeoutMillis + "ms");
+	}
+
+	/**
+	 * The first video track published by the given participant, as reported by
+	 * the LiveKit server (RoomService GetParticipant). Waits up to 10 seconds for
+	 * it: a publisher learns that its track is published (the SDK programs log
+	 * TRACK_PUBLISHED, browsers emit localTrackPublished) a few milliseconds before
+	 * the server registers it.
+	 */
+	protected TrackInfo getPublishedVideoTrackInfo(String roomName, String participantIdentity) throws Exception {
+		for (int attempt = 0; attempt < 40; attempt++) {
+			ParticipantInfo participant = LK.getParticipant(roomName, participantIdentity).execute().body();
+			if (participant != null) {
+				Optional<TrackInfo> videoTrack = participant.getTracksList().stream()
+						.filter(track -> track.getType() == TrackType.VIDEO).findFirst();
+				if (videoTrack.isPresent()) {
+					return videoTrack.get();
+				}
+			}
+			Thread.sleep(250);
+		}
+		throw new AssertionError(participantIdentity + " has no published video track in room " + roomName);
+	}
+
+	/**
+	 * The first trackSubscriptionFailed event of the testapp instance, as the
+	 * testapp describes it: "<track sid> . Reason: <SubscriptionError>". Call it
+	 * before the failure can happen: an event is not kept for later listeners.
+	 */
+	protected CompletableFuture<String> trackSubscriptionFailure(OpenViduTestappUser user, int instance) {
+		CompletableFuture<String> failure = new CompletableFuture<>();
+		user.getEventManager().on(instance, "trackSubscriptionFailed", "ParticipantEvent",
+				json -> failure.complete(json.get("eventDescription").getAsString()));
+		return failure;
 	}
 
 	protected boolean assertAllElementsHaveTracks(OpenViduTestappUser user, String selector, boolean hasAudio,

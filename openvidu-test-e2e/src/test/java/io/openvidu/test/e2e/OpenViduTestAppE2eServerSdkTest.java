@@ -2,7 +2,9 @@ package io.openvidu.test.e2e;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.stream.Stream;
 
 import org.junit.jupiter.api.AfterEach;
@@ -27,9 +29,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonParser;
 
 import io.openvidu.test.browsers.utils.BrowserNames;
-import livekit.LivekitModels.ParticipantInfo;
 import livekit.LivekitModels.TrackInfo;
-import livekit.LivekitModels.TrackType;
 import livekit.LivekitModels.VideoLayer;
 
 /**
@@ -140,9 +140,11 @@ public class OpenViduTestAppE2eServerSdkTest extends AbstractOpenViduTestappE2eT
 
 	/**
 	 * A subscriber-only participant of the room: the testapp instance (index
-	 * within its browser page) that hosts it, and its participant name.
+	 * within its browser page) that hosts it, its participant name, and its first
+	 * trackSubscriptionFailed event, listened to since before it connected.
 	 */
-	private record Subscriber(OpenViduTestappUser user, int instance, String name) {
+	private record Subscriber(OpenViduTestappUser user, int instance, String name,
+			CompletableFuture<String> subscriptionFailure) {
 		String instanceSelector() {
 			return "#openvidu-instance-" + instance;
 		}
@@ -164,7 +166,9 @@ public class OpenViduTestAppE2eServerSdkTest extends AbstractOpenViduTestappE2eT
 	 * publisher has been streaming for a while, so its first frame depends on the
 	 * SFU requesting a keyframe) that goes through the same media and layer checks
 	 * while the early subscribers keep the HIGH layer. The room ends up with 5
-	 * participants, and both join orders are covered in both browsers.
+	 * participants, and both join orders are covered in both browsers. A browser
+	 * that LiveKit does not let receive the codec (Firefox and AV1) must instead be
+	 * refused the track, early or late.
 	 */
 	private void serverSdkPublisherToBrowserSubscribersAux(String sdk, String codec, int layers) throws Exception {
 		final String expectedCodec = "video/" + codec.toUpperCase();
@@ -234,17 +238,17 @@ public class OpenViduTestAppE2eServerSdkTest extends AbstractOpenViduTestappE2eT
 		}
 
 		for (Subscriber subscriber : earlySubscribers) {
-			assertSubscriberReceivesVideo(subscriber, sdk, publisherIdentity, expectedCodec, trackInfo);
+			assertSubscriberGetsVideo(subscriber, sdk, publisherIdentity, codec, trackInfo);
 		}
-		assertSubscribersSwitchLayers(earlySubscribers, trackInfo);
+		assertSubscribersSwitchLayers(receivers(earlySubscribers, codec), trackInfo);
 
 		// Late subscribers: the publisher has been streaming for a while
 		List<Subscriber> lateSubscribers = List.of(joinAsSubscriberOnly(chrome, "late"),
 				joinAsSubscriberOnly(firefox, "late"));
 		for (Subscriber subscriber : lateSubscribers) {
-			assertSubscriberReceivesVideo(subscriber, sdk, publisherIdentity, expectedCodec, trackInfo);
+			assertSubscriberGetsVideo(subscriber, sdk, publisherIdentity, codec, trackInfo);
 		}
-		assertSubscribersSwitchLayers(lateSubscribers, trackInfo);
+		assertSubscribersSwitchLayers(receivers(lateSubscribers, codec), trackInfo);
 
 		gracefullyLeaveParticipants(chrome, 2);
 		gracefullyLeaveParticipants(firefox, 2);
@@ -264,11 +268,12 @@ public class OpenViduTestAppE2eServerSdkTest extends AbstractOpenViduTestappE2eT
 		WebElement participantNameInput = user.getDriver().findElement(By.id("participant-name-input-" + instance));
 		participantNameInput.clear();
 		participantNameInput.sendKeys(name);
+		CompletableFuture<String> subscriptionFailure = this.trackSubscriptionFailure(user, instance);
 		user.getDriver().findElement(By.cssSelector("#openvidu-instance-" + instance + " .connect-btn"))
 				.sendKeys(Keys.ENTER);
 		user.getEventManager().waitUntilEventReaches(instance, "connected", "RoomEvent", 1);
 		user.getEventManager().waitUntilEventReaches(instance, "active", "ParticipantEvent", 1);
-		return new Subscriber(user, instance, name);
+		return new Subscriber(user, instance, name, subscriptionFailure);
 	}
 
 	/** "Chrome", "Firefox"... from the BrowserUser class of the testapp user. */
@@ -285,6 +290,53 @@ public class OpenViduTestAppE2eServerSdkTest extends AbstractOpenViduTestappE2eT
 	 */
 	private void selectSubscriberVideoQuality(Subscriber subscriber, String quality) throws InterruptedException {
 		this.selectSubscriberVideoQuality(subscriber.user(), subscriber.instanceSelector(), quality);
+	}
+
+	/**
+	 * Whether LiveKit lets the subscriber's browser receive the codec. Its client
+	 * configuration disables AV1 for every Firefox (livekit#5015, LiveKit
+	 * v1.13.11), in both directions and with both RTC engines, and these
+	 * publishers send no backup codec, so a Firefox subscriber gets no AV1 track.
+	 */
+	private boolean canReceive(Subscriber subscriber, String codec) {
+		return !("av1".equals(codec) && "Firefox".equals(browserName(subscriber.user())));
+	}
+
+	private List<Subscriber> receivers(List<Subscriber> subscribers, String codec) {
+		return subscribers.stream().filter(subscriber -> canReceive(subscriber, codec)).toList();
+	}
+
+	/**
+	 * The subscriber receives the video track, or, when its browser may not
+	 * receive the codec, is refused it.
+	 */
+	private void assertSubscriberGetsVideo(Subscriber subscriber, String sdk, String publisherIdentity, String codec,
+			TrackInfo trackInfo) throws Exception {
+		final String expectedCodec = "video/" + codec.toUpperCase();
+		if (canReceive(subscriber, codec)) {
+			assertSubscriberReceivesVideo(subscriber, sdk, publisherIdentity, expectedCodec, trackInfo);
+			Assertions.assertFalse(subscriber.subscriptionFailure().isDone(), subscriber.name()
+					+ " received the track but was also refused it: " + subscriber.subscriptionFailure().getNow(""));
+		} else {
+			assertSubscriberRefusedVideo(subscriber, sdk, expectedCodec);
+		}
+	}
+
+	/**
+	 * The server must refuse the subscriber the track with SE_CODEC_UNSUPPORTED:
+	 * none of its codecs is one the subscriber's browser may receive.
+	 */
+	private void assertSubscriberRefusedVideo(Subscriber subscriber, String sdk, String expectedCodec)
+			throws Exception {
+		final String failure;
+		try {
+			failure = subscriber.subscriptionFailure().get(30, TimeUnit.SECONDS);
+		} catch (TimeoutException e) {
+			throw new AssertionError(subscriber.name() + " should be refused the " + expectedCodec + " track of the "
+					+ sdk + " SDK publisher, but got no trackSubscriptionFailed event in 30 s");
+		}
+		Assertions.assertTrue(failure.endsWith("Reason: SE_CODEC_UNSUPPORTED"), subscriber.name()
+				+ " should be refused the " + expectedCodec + " track for its codec, but got: " + failure);
 	}
 
 	/**
@@ -396,27 +448,6 @@ public class OpenViduTestAppE2eServerSdkTest extends AbstractOpenViduTestappE2eT
 	 */
 	private List<Integer> sortedLayerWidths(TrackInfo trackInfo) {
 		return trackInfo.getLayersList().stream().map(VideoLayer::getWidth).distinct().sorted().toList();
-	}
-
-	/**
-	 * The first video track published by the given participant, as reported by
-	 * the LiveKit server (RoomService GetParticipant). Waits up to 10 seconds for
-	 * it: the SDK programs log TRACK_PUBLISHED as soon as their publish call
-	 * returns, a few milliseconds before the server registers the track.
-	 */
-	private TrackInfo getPublishedVideoTrackInfo(String roomName, String participantIdentity) throws Exception {
-		for (int attempt = 0; attempt < 40; attempt++) {
-			ParticipantInfo participant = LK.getParticipant(roomName, participantIdentity).execute().body();
-			if (participant != null) {
-				Optional<TrackInfo> videoTrack = participant.getTracksList().stream()
-						.filter(track -> track.getType() == TrackType.VIDEO).findFirst();
-				if (videoTrack.isPresent()) {
-					return videoTrack.get();
-				}
-			}
-			Thread.sleep(250);
-		}
-		throw new AssertionError(participantIdentity + " has no published video track in room " + roomName);
 	}
 
 	/**
