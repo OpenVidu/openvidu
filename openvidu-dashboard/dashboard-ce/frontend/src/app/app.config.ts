@@ -1,4 +1,4 @@
-import { provideHttpClient, withInterceptors } from '@angular/common/http';
+import { provideHttpClient, withInterceptors, withNoXsrfProtection } from '@angular/common/http';
 import {
 	type ApplicationConfig,
 	provideBrowserGlobalErrorListeners,
@@ -12,7 +12,8 @@ export const appConfig: ApplicationConfig = {
 		provideBrowserGlobalErrorListeners(),
 		provideZonelessChangeDetection(),
 		provideRouter(composeRoutes(DASHBOARD_ROUTES), withComponentInputBinding()),
-		provideHttpClient(withInterceptors([...DASHBOARD_INTERCEPTORS])),
+		// Bearer tokens and a SameSite=Strict refresh cookie: no XSRF cookie to read on every write.
+		provideHttpClient(withInterceptors([...DASHBOARD_INTERCEPTORS]), withNoXsrfProtection()),
 		provideDashboard()
 	]
 };

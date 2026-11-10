@@ -314,7 +314,7 @@ export function timeSeriesOption(options: TimeSeriesOptions): EChartsCoreOption 
 	return {
 		animation: options.animation,
 		aria: { enabled: false },
-		grid: { left: 8, right: 16, top: 32, bottom: 8, containLabel: true },
+		grid: { left: 8, right: 16, top: 32, bottom: 8, outerBoundsMode: 'same', outerBoundsContain: 'axisLabel' },
 		legend: { top: 0, left: 0, textStyle: { color: colors.text }, icon: 'roundRect', itemHeight: 4 },
 		tooltip: {
 			trigger: 'axis',
@@ -437,7 +437,7 @@ export function breakdownOption(options: BreakdownOptions): EChartsCoreOption {
 	if (options.variant === 'bar') {
 		return {
 			animation: options.animation,
-			grid: { left: 8, right: 48, top: 8, bottom: 8, containLabel: true },
+			grid: { left: 8, right: 48, top: 8, bottom: 8, outerBoundsMode: 'same', outerBoundsContain: 'axisLabel' },
 			tooltip: {
 				trigger: 'item',
 				valueFormatter: (value: unknown) => formatValue(Number(value), options.format)
@@ -496,7 +496,7 @@ function unavailableBreakdownOption(options: BreakdownOptions): EChartsCoreOptio
 	if (options.variant === 'bar') {
 		return {
 			animation: false,
-			grid: { left: 8, right: 48, top: 8, bottom: 8, containLabel: true },
+			grid: { left: 8, right: 48, top: 8, bottom: 8, outerBoundsMode: 'same', outerBoundsContain: 'axisLabel' },
 			xAxis: { type: 'value', show: false },
 			yAxis: { type: 'category', show: false, data: [] },
 			series: [{ type: 'bar', data: [] }]
