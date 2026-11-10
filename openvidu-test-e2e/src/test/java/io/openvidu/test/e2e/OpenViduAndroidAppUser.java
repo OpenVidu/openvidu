@@ -23,13 +23,18 @@ import io.openvidu.test.browsers.AndroidAppUser;
  * <pre>
  * {"state":"CONNECTED", "identity":"...", "error":null, "connectionQuality":"EXCELLENT", "speaking":true,
  *  "activeSpeakers":["..."], "events":{"Connected":1, ...}, "data":[{"from":"...", "topic":"...", "text":"..."}],
+ *  "roomMetadata":"...", "localParticipant":{"name":"...", "metadata":"...", "attributes":{...}, "state":"ACTIVE",
+ *                                            "canPublish":true, "events":{"LocalTrackPublished":2, ...}},
+ *  "remoteEvents":{"<identity>":{"TrackSubscribed":2, ...}, ...},
  *  "local":[{"sid":"TR_...", "kind":"video", "source":"CAMERA", "muted":false, "frames":300, "width":720,
  *            "height":1280, "layers":[{"rid":"f", "active":true, "codec":"video/VP8", ...}, ...]},
  *           {"sid":"TR_...", "kind":"audio", "source":"MICROPHONE", "muted":false, "samples":96000, "level":5792}],
- *  "remote":[{"identity":"...", "connectionQuality":"EXCELLENT", "speaking":false, "tracks":[
+ *  "remote":[{"identity":"...", "connectionQuality":"EXCELLENT", "speaking":false, "name":"...", "metadata":"...",
+ *    "attributes":{...}, "state":"ACTIVE", "tracks":[
  *    {"sid":"TR_...", "kind":"video", ..., "subscribed":true, "streamState":"ACTIVE", "frames":120,
  *     "width":640, "height":360, "codec":"video/VP8", "decoder":"libvpx",
- *     "inbound":{"ssrc":..., "packetsReceived":..., "framesDecoded":..., "frameWidth":..., ...}},
+ *     "inbound":{"ssrc":..., "packetsReceived":..., "framesDecoded":..., "frameWidth":..., ...},
+ *     "events":{"VisibilityChanged":1, ...}, "visible":true, "viewSize":"420x236"},
  *    {"sid":"TR_...", "kind":"audio", ..., "subscribed":true, "samples":96000, "level":3000}]}]}
  * </pre>
  *
@@ -37,7 +42,12 @@ import io.openvidu.test.browsers.AndroidAppUser;
  * decoded from each remote track, "level" is the RMS of the 16-bit audio samples
  * of the last complete window of about 2 s, and "layers" and "inbound" come from
  * the WebRTC stats of the app's publisher and subscriber (see
- * {@link #localVideoLayers} and {@link #remoteVideoInbound}).
+ * {@link #localVideoLayers} and {@link #remoteVideoInbound}). Each "events"
+ * counts by name the events the app received: Room events at the top, the
+ * participant events of the local participant, and the track events of each
+ * remote video, whose last ones give "visible" and "viewSize" (the size of its
+ * views). "remoteEvents" counts the participant events of each remote
+ * participant, by identity, also after it left.
  */
 public class OpenViduAndroidAppUser {
 
@@ -163,6 +173,27 @@ public class OpenViduAndroidAppUser {
 			JsonObject p = participant.getAsJsonObject();
 			if (!p.get("identity").isJsonNull() && identity.equals(p.get("identity").getAsString())) {
 				return p;
+			}
+		}
+		return null;
+	}
+
+	/** The local participant, with its "name", "metadata", "attributes", "state", "canPublish" and "events" */
+	public static JsonObject localParticipant(JsonObject status) {
+		return status.getAsJsonObject("localParticipant");
+	}
+
+	/**
+	 * The track of the given source ("CAMERA", "MICROPHONE", "SCREEN_SHARE"...) of
+	 * the remote participant, or null
+	 */
+	public static JsonObject remoteTrackOfSource(JsonObject status, String identity, String source) {
+		JsonObject participant = remoteParticipant(status, identity);
+		if (participant != null) {
+			for (JsonElement track : participant.getAsJsonArray("tracks")) {
+				if (source.equals(track.getAsJsonObject().get("source").getAsString())) {
+					return track.getAsJsonObject();
+				}
 			}
 		}
 		return null;

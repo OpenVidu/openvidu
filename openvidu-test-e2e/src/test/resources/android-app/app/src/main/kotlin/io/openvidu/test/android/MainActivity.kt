@@ -22,9 +22,12 @@ import io.livekit.android.LiveKitOverrides
 import io.livekit.android.RoomOptions
 import io.livekit.android.audio.MixerAudioBufferCallback
 import io.livekit.android.events.RoomEvent
+import io.livekit.android.events.TrackEvent
 import io.livekit.android.events.collect
 import io.livekit.android.renderer.TextureViewRenderer
 import io.livekit.android.room.Room
+import io.livekit.android.room.participant.Participant
+import io.livekit.android.room.participant.RemoteParticipant
 import io.livekit.android.room.track.AudioTrack
 import io.livekit.android.room.track.DataPublishReliability
 import io.livekit.android.room.track.LocalAudioTrack
@@ -34,6 +37,8 @@ import io.livekit.android.room.track.Track
 import io.livekit.android.room.track.TrackPublication
 import io.livekit.android.room.track.VideoTrack
 import io.livekit.android.util.LoggingLevel
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -57,10 +62,12 @@ import kotlin.math.sqrt
 /**
  * Joins a LiveKit Room with the URL and token typed in, publishes camera and
  * microphone, and shows every remote video. The e2e test drives it through Appium
- * and reads, as JSON in the "status" view, its state, the Room events it received,
- * the connection quality and speaking state of each participant, the data messages
- * it received, what its camera and microphone capture and its encoder sends (per
- * simulcast layer), and what it decodes from each remote track.
+ * and reads, as JSON in the "status" view, its state, the events it received (Room
+ * events, the participant events of each participant and the track events of each
+ * remote video, counted by name), the connection quality, speaking state, name,
+ * metadata and attributes of each participant, the data messages it received, what
+ * its camera and microphone capture and its encoder sends (per simulcast layer),
+ * and what it decodes from each remote track.
  */
 class MainActivity : ComponentActivity() {
 
@@ -79,6 +86,18 @@ class MainActivity : ComponentActivity() {
 
     // Number of RoomEvents received, by event name
     private val eventCounts = ConcurrentHashMap<String, AtomicInteger>()
+
+    // Number of ParticipantEvents of the local participant and of each remote participant
+    // (by identity), and of TrackEvents of each remote video (by track sid), by event name
+    private val localEventCounts = ConcurrentHashMap<String, AtomicInteger>()
+    private val remoteEventCounts = ConcurrentHashMap<String, ConcurrentHashMap<String, AtomicInteger>>()
+    private val trackEventCounts = ConcurrentHashMap<String, ConcurrentHashMap<String, AtomicInteger>>()
+    private val trackEventJobs = HashMap<String, Job>()
+    private val participantsCollected = HashSet<RemoteParticipant>()
+
+    // What the last TrackEvents of each remote video said: visible, and the size of its views
+    private val videoVisible = ConcurrentHashMap<String, Boolean>()
+    private val videoViewSize = ConcurrentHashMap<String, String>()
 
     // What was captured by each local track and decoded from each subscribed remote
     // track, by track sid
@@ -141,10 +160,10 @@ class MainActivity : ComponentActivity() {
         findViewById<Button>(R.id.disconnect).setOnClickListener { room.disconnect() }
         testToneSwitch.setOnCheckedChangeListener { _, _ -> applyTestTone() }
         findViewById<CompoundButton>(R.id.camera).setOnCheckedChangeListener { _, enabled ->
-            lifecycleScope.launch { room.localParticipant.setCameraEnabled(enabled) }
+            setTrackEnabled("camera", enabled) { room.localParticipant.setCameraEnabled(it) }
         }
         findViewById<CompoundButton>(R.id.microphone).setOnCheckedChangeListener { _, enabled ->
-            lifecycleScope.launch { room.localParticipant.setMicrophoneEnabled(enabled) }
+            setTrackEnabled("microphone", enabled) { room.localParticipant.setMicrophoneEnabled(it) }
         }
         findViewById<Button>(R.id.send_data).setOnClickListener {
             lifecycleScope.launch {
@@ -164,6 +183,9 @@ class MainActivity : ComponentActivity() {
 
         lifecycleScope.launch {
             room.events.collect { onRoomEvent(it) }
+        }
+        lifecycleScope.launch {
+            room.localParticipant.events.collect { count(localEventCounts, it) }
         }
         lifecycleScope.launch {
             while (isActive) {
@@ -229,9 +251,41 @@ class MainActivity : ComponentActivity() {
         (microphone as? LocalAudioTrack)?.setAudioBufferCallback(if (testToneSwitch.isChecked) testTone else null)
     }
 
+    // A publication that fails (no permission to publish, for example) throws
+    private fun setTrackEnabled(name: String, enabled: Boolean, set: suspend (Boolean) -> Boolean) {
+        lifecycleScope.launch {
+            try {
+                if (!set(enabled)) {
+                    lastError = "Could not turn the $name ${if (enabled) "on" else "off"}"
+                }
+            } catch (e: Exception) {
+                Log.w(TAG, "Could not turn the $name ${if (enabled) "on" else "off"}", e)
+                lastError = e.toString()
+            }
+        }
+    }
+
+    private fun count(counts: ConcurrentHashMap<String, AtomicInteger>, event: Any) {
+        counts.computeIfAbsent(event.javaClass.simpleName) { AtomicInteger() }.incrementAndGet()
+    }
+
+    // Counts the ParticipantEvents of a remote participant from now on (undispatched: before
+    // the caller lets anything else run)
+    private fun collectEvents(participant: RemoteParticipant) {
+        val identity = participant.identity?.value ?: return
+        if (participantsCollected.add(participant)) {
+            val counts = remoteEventCounts.computeIfAbsent(identity) { ConcurrentHashMap() }
+            lifecycleScope.launch(start = CoroutineStart.UNDISPATCHED) {
+                participant.events.collect { count(counts, it) }
+            }
+        }
+    }
+
     private fun onRoomEvent(event: RoomEvent) {
-        eventCounts.computeIfAbsent(event.javaClass.simpleName) { AtomicInteger() }.incrementAndGet()
+        count(eventCounts, event)
         when (event) {
+            is RoomEvent.Connected -> room.remoteParticipants.values.forEach { collectEvents(it) }
+            is RoomEvent.ParticipantConnected -> collectEvents(event.participant)
             is RoomEvent.TrackSubscribed -> onTrackSubscribed(event.track)
             is RoomEvent.TrackUnsubscribed -> onTrackUnsubscribed(event.track)
             is RoomEvent.TrackStreamStateChanged ->
@@ -251,6 +305,8 @@ class MainActivity : ComponentActivity() {
             is RoomEvent.Disconnected -> {
                 event.error?.let { lastError = it.toString() }
                 remoteRenderers.keys.toList().forEach { removeRenderer(it) }
+                trackEventJobs.values.forEach { it.cancel() }
+                trackEventJobs.clear()
             }
             else -> {}
         }
@@ -283,6 +339,20 @@ class MainActivity : ComponentActivity() {
         val sid = track.sid ?: return
         if (track is VideoTrack) {
             addVideoReceiver(track)
+            // Before the renderer, whose view makes adaptive stream post the first ones
+            val counts = trackEventCounts.computeIfAbsent(sid) { ConcurrentHashMap() }
+            trackEventJobs.remove(sid)?.cancel()
+            trackEventJobs[sid] = lifecycleScope.launch(start = CoroutineStart.UNDISPATCHED) {
+                track.events.collect {
+                    count(counts, it)
+                    when (it) {
+                        is TrackEvent.VisibilityChanged -> videoVisible[sid] = it.isVisible
+                        is TrackEvent.VideoDimensionsChanged ->
+                            videoViewSize[sid] = "${it.newDimensions.width}x${it.newDimensions.height}"
+                        else -> {}
+                    }
+                }
+            }
             val renderer = TextureViewRenderer(this)
             room.initVideoRenderer(renderer)
             renderer.contentDescription = "remote-video-$sid"
@@ -297,6 +367,7 @@ class MainActivity : ComponentActivity() {
     private fun onTrackUnsubscribed(track: Track) {
         val sid = track.sid ?: return
         if (track is VideoTrack) {
+            trackEventJobs.remove(sid)?.cancel()
             videoReceivers.remove(sid)?.let { track.removeRenderer(it) }
             remoteRenderers[sid]?.let { track.removeRenderer(it) }
             removeRenderer(sid)
@@ -375,17 +446,21 @@ class MainActivity : ComponentActivity() {
     /**
      * {"state":"CONNECTED","identity":"...","error":null,"connectionQuality":"EXCELLENT","speaking":true,
      *  "activeSpeakers":["..."],"events":{"Connected":1,...},"data":[{"from":"...","topic":"...","text":"..."}],
+     *  "roomMetadata":"...","localParticipant":{"name":"...","metadata":"...","attributes":{...},
+     *    "state":"ACTIVE","canPublish":true,"events":{"LocalTrackPublished":2,...}},
+     *  "remoteEvents":{"<identity>":{"TrackSubscribed":2,...},...},
      *  "local":[{"sid":"TR_...","kind":"video","source":"CAMERA","muted":false,"frames":300,"width":720,
      *            "height":1280,"layers":[{"rid":"f","active":true,"codec":"video/VP8",...},...]},
      *           {"sid":"TR_...","kind":"audio","source":"MICROPHONE","muted":false,"samples":96000,"level":5792}],
-     *  "remote":[{"identity":"...","connectionQuality":"EXCELLENT","speaking":false,"tracks":[
+     *  "remote":[{"identity":"...","connectionQuality":"EXCELLENT","speaking":false,"name":"...","metadata":"...",
+     *    "attributes":{...},"state":"ACTIVE","tracks":[
      *     {"sid":"TR_...","kind":"video",...,"subscribed":true,"streamState":"ACTIVE","frames":120,"width":640,
-     *      "height":360,"codec":"video/VP8","decoder":"libvpx","inbound":{"ssrc":...,"packetsReceived":...,...}},
+     *      "height":360,"codec":"video/VP8","decoder":"libvpx","inbound":{"ssrc":...,"packetsReceived":...,...},
+     *      "events":{"VisibilityChanged":1,...},"visible":true,"viewSize":"420x236"},
      *     {"sid":"TR_...","kind":"audio",...,"subscribed":true,"samples":96000,"level":3000}]}]}
      */
     private fun showStatus() {
-        val events = JSONObject()
-        eventCounts.toSortedMap().forEach { (name, count) -> events.put(name, count.get()) }
+        val events = countsJson(eventCounts)
         val data = synchronized(dataReceived) { JSONArray(dataReceived.toList()) }
 
         val local = JSONArray()
@@ -409,10 +484,15 @@ class MainActivity : ComponentActivity() {
                         json.put("codec", it.get("codec")).put("decoder", it.get("decoder")).put("inbound", it)
                     }
                 }
+                trackEventCounts[publication.sid]?.let {
+                    json.put("events", countsJson(it))
+                        .put("visible", videoVisible[publication.sid] ?: JSONObject.NULL)
+                        .put("viewSize", videoViewSize[publication.sid] ?: JSONObject.NULL)
+                }
                 tracks.put(json)
             }
             remote.put(
-                JSONObject()
+                participantJson(participant)
                     .put("identity", participant.identity?.value)
                     .put("connectionQuality", participant.connectionQuality.name)
                     .put("speaking", participant.isSpeaking)
@@ -433,10 +513,32 @@ class MainActivity : ComponentActivity() {
             .put("activeSpeakers", JSONArray(room.activeSpeakers.map { it.identity?.value }))
             .put("events", events)
             .put("data", data)
+            .put("roomMetadata", room.metadata ?: JSONObject.NULL)
+            .put(
+                "localParticipant",
+                participantJson(room.localParticipant)
+                    .put("canPublish", room.localParticipant.permissions?.canPublish ?: JSONObject.NULL)
+                    .put("events", countsJson(localEventCounts)),
+            )
+            // By identity, those of participants that left included
+            .put("remoteEvents", JSONObject(remoteEventCounts.toSortedMap().mapValues { countsJson(it.value) }))
             .put("local", local)
             .put("remote", remote)
             .toString()
     }
+
+    private fun countsJson(counts: Map<String, AtomicInteger>?): JSONObject {
+        val json = JSONObject()
+        counts?.toSortedMap()?.forEach { (name, count) -> json.put(name, count.get()) }
+        return json
+    }
+
+    // What the server can change of a participant
+    private fun participantJson(participant: Participant): JSONObject = JSONObject()
+        .put("name", participant.name ?: JSONObject.NULL)
+        .put("metadata", participant.metadata ?: JSONObject.NULL)
+        .put("attributes", JSONObject(participant.attributes))
+        .put("state", participant.state.name)
 
     // With what was captured (local) or decoded (remote) from the track, if anything yet
     private fun publicationJson(publication: TrackPublication): JSONObject {

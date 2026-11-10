@@ -2,6 +2,7 @@ package io.openvidu.test.e2e;
 
 import java.io.IOException;
 import java.time.Duration;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -10,7 +11,9 @@ import java.util.Map.Entry;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
@@ -41,6 +44,7 @@ import io.livekit.server.RoomJoin;
 import io.livekit.server.RoomName;
 import io.openvidu.test.browsers.utils.BrowserNames;
 import livekit.LivekitModels.ParticipantInfo;
+import livekit.LivekitModels.ParticipantPermission;
 import livekit.LivekitModels.TrackInfo;
 import livekit.LivekitModels.TrackSource;
 
@@ -479,6 +483,196 @@ public class OpenViduAndroidE2eTest extends AbstractOpenViduTestappE2eTest {
 		});
 	}
 
+	/**
+	 * The Android app receives the events of the LiveKit Android SDK: Room events,
+	 * the participant events of the local participant and of a remote one (Chrome's
+	 * testapp), and the track events of Chrome's camera. Each step triggers some of
+	 * them, through the app, Chrome or the server API, and waits until every one
+	 * has reached the app since the step began: 23 of the 32 Room events (and
+	 * Reconnecting and Reconnected in androidAppReconnectionTest), 19 of the 23
+	 * participant events and 2 of the 3 track events. Left out, as hard to trigger
+	 * here: stream state changes (the server only sends them when it pauses a video
+	 * for lack of bandwidth, and with pion only), the recording status (egress),
+	 * data tracks, E2EE and transcriptions. And participant state changes but the
+	 * local participant's own StateChanged: SDK 2.30.0 never emits the Room's
+	 * ParticipantStateChanged of the local participant (the emitWhenConnected call
+	 * is missing in Room#setupLocalParticipantEventHandling), and a remote
+	 * participant reaches the app ACTIVE already, a state the SDK sets as it
+	 * creates the participant, before anything listens to it, and that it does not
+	 * change when the participant leaves.
+	 *
+	 * Chrome plays test.wav as its microphone: the beeps of its default fake
+	 * microphone are too short to make it a speaker.
+	 */
+	@Test
+	@DisplayName("Android app: SDK events")
+	void androidAppEventsTest() throws Exception {
+		log.info("Android app: SDK events");
+		final String CHROME = "ChromeUser";
+		OpenViduAndroidAppUser android = setupAndroidAppUser();
+		OpenViduTestappUser chrome = setupBrowserAndConnectToOpenViduTestapp("chromeFakeAudio");
+
+		withAndroidDiagnostics(android, () -> {
+			// A token the server refuses
+			JsonObject status = android.waitUntilStatus("its first status", s -> true, ANDROID_WAIT);
+			AccessToken wrongToken = new AccessToken(LIVEKIT_API_KEY, "not-the-api-secret-of-the-openvidu-server");
+			wrongToken.setIdentity(ANDROID);
+			wrongToken.addGrants(new RoomJoin(true), new RoomName(ROOM));
+			android.connect(livekitUrlForAndroidEmulator(), wrongToken.toJwt(), null, true);
+			status = waitUntilEvents(android, "a token the server refuses", status, roomEvent("FailedToConnect"));
+			Assertions.assertEquals("DISCONNECTED", OpenViduAndroidAppUser.state(status),
+					"The Android app should not be connected after FailedToConnect");
+
+			// The app joins, publishing its camera and its microphone, where its test tone
+			// makes it speak
+			connectAndroidApp(android, null, true);
+			status = waitUntilEvents(android, "the app joins", status, roomEvent("Connected"),
+					localEvent("LocalTrackPublished", 2), localEvent("StateChanged"), localEvent("SpeakingChanged"),
+					roomEvent("ActiveSpeakersChanged"));
+
+			// Chrome joins and publishes its camera and its microphone, which the app
+			// subscribes to and shows, and subscribes to the app's
+			status = android.getStatus();
+			chrome.getDriver().findElement(By.id("add-user-btn")).click();
+			connectTestappInstance(chrome, CHROME);
+			waitUntilTestappConnected(chrome, true, 1);
+			status = waitUntilEvents(android, "Chrome joins", status, roomEvent("ParticipantConnected"),
+					roomEvent("TrackSubscribed", 2),
+					remoteEvent(CHROME, "TrackSubscribed", 2), roomEvent("LocalTrackSubscribed", 2),
+					localEvent("LocalTrackSubscribed", 2), remoteEvent(CHROME, "SpeakingChanged"),
+					roomEvent("ConnectionQualityChanged"));
+			// Adaptive stream reports the view of Chrome's camera (TrackEvents)
+			status = android.waitUntilStatus("the view of Chrome's camera to be reported visible, with a size",
+					s -> Boolean.TRUE.equals(cameraVisible(s, CHROME)) && cameraViewWidth(s, CHROME) > 0,
+					ANDROID_WAIT);
+
+			// The server API changes the Room's metadata, and the name, the metadata and
+			// the attributes of Chrome and of the app
+			serverCall(LK.updateRoomMetadata(ROOM, "Room metadata"));
+			status = waitUntilEvents(android, "the Room's metadata changes", status, roomEvent("RoomMetadataChanged"));
+			Assertions.assertEquals("Room metadata", status.get("roomMetadata").getAsString(),
+					"Wrong Room metadata in the Android app");
+			for (String identity : List.of(CHROME, ANDROID)) {
+				boolean local = ANDROID.equals(identity);
+				status = android.getStatus();
+				serverCall(LK.updateParticipant(ROOM, identity, identity + " name", identity + " metadata", null,
+						Map.of("e2e", identity)));
+				status = waitUntilEvents(android, "the name, metadata and attributes of " + identity + " change",
+						status, roomEvent("ParticipantNameChanged"), roomEvent("ParticipantMetadataChanged"),
+						roomEvent("ParticipantAttributesChanged"),
+						local ? localEvent("NameChanged") : remoteEvent(identity, "NameChanged"),
+						local ? localEvent("MetadataChanged") : remoteEvent(identity, "MetadataChanged"),
+						local ? localEvent("AttributesChanged") : remoteEvent(identity, "AttributesChanged"));
+				JsonObject participant = local ? OpenViduAndroidAppUser.localParticipant(status)
+						: OpenViduAndroidAppUser.remoteParticipant(status, identity);
+				Assertions.assertEquals(identity + " name", stringOrNull(participant, "name"),
+						"Wrong name of " + identity + " in the Android app");
+				Assertions.assertEquals(identity + " metadata", stringOrNull(participant, "metadata"),
+						"Wrong metadata of " + identity + " in the Android app");
+				Assertions.assertEquals(identity, stringOrNull(participant.getAsJsonObject("attributes"), "e2e"),
+						"Wrong attributes of " + identity + " in the Android app");
+			}
+
+			// Chrome mutes and unmutes its camera, and the app its own
+			status = android.getStatus();
+			chromeRun(chrome, "return window['room_0'].localParticipant.setCameraEnabled(false);");
+			status = waitUntilEvents(android, "Chrome mutes its camera", status, roomEvent("TrackMuted"),
+					remoteEvent(CHROME, "TrackMuted"));
+			chromeRun(chrome, "return window['room_0'].localParticipant.setCameraEnabled(true);");
+			status = waitUntilEvents(android, "Chrome unmutes its camera", status, roomEvent("TrackUnmuted"),
+					remoteEvent(CHROME, "TrackUnmuted"));
+			android.setSwitch("camera", false);
+			status = waitUntilEvents(android, "the app mutes its camera", status, roomEvent("TrackMuted"),
+					localEvent("TrackMuted"));
+			android.setSwitch("camera", true);
+			status = waitUntilEvents(android, "the app unmutes its camera", status, roomEvent("TrackUnmuted"),
+					localEvent("TrackUnmuted"));
+
+			// Chrome sends a data message
+			status = android.getStatus();
+			chromeRun(chrome, "return window['room_0'].localParticipant.publishData("
+					+ "new TextEncoder().encode('Hello from Chrome'), { reliable: true, topic: 'openvidu-e2e' });");
+			status = waitUntilEvents(android, "Chrome sends data", status, roomEvent("DataReceived"),
+					remoteEvent(CHROME, "DataReceived"));
+
+			// The view of Chrome's camera grows, is hidden and is shown again (TrackEvents)
+			final int smallWidth = cameraViewWidth(status, CHROME);
+			android.setSwitch("large_videos", true);
+			status = waitUntilEvents(android, "the video views grow", status,
+					cameraEvent(CHROME, "VideoDimensionsChanged"));
+			status = android.waitUntilStatus("the view of Chrome's camera to be reported larger than " + smallWidth,
+					s -> cameraViewWidth(s, CHROME) > smallWidth, ANDROID_WAIT);
+			android.setSwitch("show_videos", false);
+			status = waitUntilEvents(android, "the video views are hidden", status,
+					cameraEvent(CHROME, "VisibilityChanged"));
+			status = android.waitUntilStatus("the view of Chrome's camera to be reported hidden",
+					s -> Boolean.FALSE.equals(cameraVisible(s, CHROME)), ANDROID_WAIT);
+			android.setSwitch("show_videos", true);
+			status = waitUntilEvents(android, "the video views are shown", status,
+					cameraEvent(CHROME, "VisibilityChanged"));
+			status = android.waitUntilStatus("the view of Chrome's camera to be reported visible",
+					s -> Boolean.TRUE.equals(cameraVisible(s, CHROME)), ANDROID_WAIT);
+
+			// Chrome forbids subscribing to its tracks, and then allows it again
+			chromeRun(chrome, "window['room_0'].localParticipant.setTrackSubscriptionPermissions(false, []);");
+			status = waitUntilEvents(android, "Chrome forbids its subscription", status,
+					roomEvent("TrackSubscriptionPermissionChanged", 2),
+					remoteEvent(CHROME, "TrackSubscriptionPermissionChanged", 2));
+			chromeRun(chrome, "window['room_0'].localParticipant.setTrackSubscriptionPermissions(true, []);");
+			status = waitUntilEvents(android, "Chrome allows its subscription", status,
+					roomEvent("TrackSubscriptionPermissionChanged", 2),
+					remoteEvent(CHROME, "TrackSubscriptionPermissionChanged", 2), roomEvent("TrackSubscribed", 2),
+					remoteEvent(CHROME, "TrackSubscribed", 2));
+			waitUntilAndroidAppDecodes(android, CHROME);
+
+			// Chrome publishes an H.264 video, without a backup codec, and unpublishes it.
+			// The app cannot subscribe to it: it decodes in software on an emulator, and
+			// WebRTC's software decoders have no H.264 (SE_CODEC_UNSUPPORTED)
+			status = android.getStatus();
+			chromeRun(chrome, "const canvas = document.createElement('canvas');"
+					+ "canvas.width = 320; canvas.height = 180;"
+					+ "const context = canvas.getContext('2d');"
+					+ "window.e2eCanvasTimer = setInterval(() => {"
+					+ "  context.fillStyle = '#' + Math.floor(Math.random() * 0xffffff).toString(16).padStart(6, '0');"
+					+ "  context.fillRect(0, 0, 320, 180); }, 100);"
+					+ "return window['room_0'].localParticipant.publishTrack(canvas.captureStream(10).getVideoTracks()[0],"
+					+ "  { name: 'e2e-h264', source: 'screen_share', videoCodec: 'h264', simulcast: false,"
+					+ "    backupCodec: false }).then(publication => { window.e2eH264 = publication; });");
+			status = waitUntilEvents(android, "Chrome publishes an H.264 video", status, roomEvent("TrackPublished"),
+					remoteEvent(CHROME, "TrackPublished"), roomEvent("TrackSubscriptionFailed"),
+					remoteEvent(CHROME, "TrackSubscriptionFailed"));
+			chromeRun(chrome, "clearInterval(window.e2eCanvasTimer);"
+					+ "return window['room_0'].localParticipant.unpublishTrack(window.e2eH264.track);");
+			status = waitUntilEvents(android, "Chrome unpublishes its H.264 video", status,
+					roomEvent("TrackUnpublished"), remoteEvent(CHROME, "TrackUnpublished"));
+
+			// The server takes the app's permission to publish: its tracks are unpublished,
+			// and publishing its camera again fails
+			serverCall(LK.updateParticipant(ROOM, ANDROID, null, null, ParticipantPermission.newBuilder()
+					.setCanSubscribe(true).setCanPublish(false).setCanPublishData(true).build(), null));
+			status = waitUntilEvents(android, "the app loses its permission to publish", status,
+					roomEvent("ParticipantPermissionsChanged"), localEvent("ParticipantPermissionsChanged"),
+					localEvent("LocalTrackUnpublished", 2));
+			Assertions.assertFalse(
+					OpenViduAndroidAppUser.localParticipant(status).get("canPublish").getAsBoolean(),
+					"The Android app should not be allowed to publish");
+			android.setSwitch("camera", false);
+			android.setSwitch("camera", true);
+			status = waitUntilEvents(android, "the app publishes its camera without permission", status,
+					roomEvent("TrackPublicationFailed"), localEvent("LocalTrackPublicationFailed"));
+
+			// Chrome leaves, and then the app
+			chromeRun(chrome, "return window['room_0'].disconnect();");
+			status = waitUntilEvents(android, "Chrome leaves", status, roomEvent("ParticipantDisconnected"),
+					roomEvent("TrackUnsubscribed", 2), remoteEvent(CHROME, "TrackUnsubscribed", 2),
+					roomEvent("TrackUnpublished", 2), remoteEvent(CHROME, "TrackUnpublished", 2));
+			android.disconnect();
+			status = waitUntilEvents(android, "the app leaves", status, roomEvent("Disconnected"));
+			Assertions.assertEquals("DISCONNECTED", OpenViduAndroidAppUser.state(status),
+					"The Android app should be disconnected");
+		});
+	}
+
 	// Android app helpers
 
 	private OpenViduAndroidAppUser setupAndroidAppUser() throws Exception {
@@ -705,6 +899,109 @@ public class OpenViduAndroidE2eTest extends AbstractOpenViduTestappE2eTest {
 				OpenViduAndroidAppUser.localVideoLayers(status));
 	}
 
+	/**
+	 * An event the app counts (see {@link OpenViduAndroidAppUser}): a Room event,
+	 * a participant event of the local participant or of a remote one, or a track
+	 * event of the camera of a remote participant, which a step expects at least
+	 * this many times
+	 */
+	private record AndroidEvent(String kind, Function<JsonObject, JsonObject> counts, String name, int times) {
+
+		long count(JsonObject status) {
+			JsonObject events;
+			try {
+				events = this.counts.apply(status);
+			} catch (RuntimeException e) {
+				events = null; // No such participant or track (yet)
+			}
+			return (events == null || !events.has(this.name)) ? 0 : events.get(this.name).getAsLong();
+		}
+
+		@Override
+		public String toString() {
+			return this.kind + " " + this.name + (this.times > 1 ? " x" + this.times : "");
+		}
+	}
+
+	private static AndroidEvent roomEvent(String name) {
+		return roomEvent(name, 1);
+	}
+
+	private static AndroidEvent roomEvent(String name, int times) {
+		return new AndroidEvent("RoomEvent", status -> status.getAsJsonObject("events"), name, times);
+	}
+
+	private static AndroidEvent localEvent(String name) {
+		return localEvent(name, 1);
+	}
+
+	private static AndroidEvent localEvent(String name, int times) {
+		return new AndroidEvent("ParticipantEvent (local)",
+				status -> OpenViduAndroidAppUser.localParticipant(status).getAsJsonObject("events"), name, times);
+	}
+
+	private static AndroidEvent remoteEvent(String identity, String name) {
+		return remoteEvent(identity, name, 1);
+	}
+
+	private static AndroidEvent remoteEvent(String identity, String name, int times) {
+		return new AndroidEvent("ParticipantEvent (" + identity + ")",
+				status -> status.getAsJsonObject("remoteEvents").getAsJsonObject(identity), name, times);
+	}
+
+	private static AndroidEvent cameraEvent(String identity, String name) {
+		return new AndroidEvent("TrackEvent (camera of " + identity + ")",
+				status -> OpenViduAndroidAppUser.remoteTrackOfSource(status, identity, "CAMERA").getAsJsonObject("events"),
+				name, 1);
+	}
+
+	/**
+	 * Waits until the app has received every one of the events, as many times as
+	 * each expects, since the status taken before the step that triggers them, and
+	 * returns the status then
+	 */
+	private JsonObject waitUntilEvents(OpenViduAndroidAppUser android, String step, JsonObject before,
+			AndroidEvent... events) throws InterruptedException {
+		final long deadline = System.currentTimeMillis() + ANDROID_WAIT.toMillis();
+		List<AndroidEvent> missing = List.of(events);
+		JsonObject status = before;
+		while (true) {
+			try {
+				final JsonObject current = android.getStatus();
+				status = current;
+				missing = Arrays.stream(events).filter(e -> e.count(current) - e.count(before) < e.times()).toList();
+				if (missing.isEmpty()) {
+					break;
+				}
+			} catch (RuntimeException e) {
+				// The status is not JSON yet
+			}
+			if (System.currentTimeMillis() > deadline) {
+				Assertions.fail("Android app, " + step + ": timeout after " + ANDROID_WAIT.toSeconds()
+						+ " s waiting for " + missing + ". Last status: " + status);
+			}
+			Thread.sleep(500);
+		}
+		final JsonObject after = status;
+		log.info("Android app, {}: {}", step, Arrays.stream(events)
+				.map(e -> e + " (" + (e.count(after) - e.count(before)) + ")").collect(Collectors.joining(", ")));
+		return status;
+	}
+
+	// What the last VisibilityChanged of the camera of the remote participant said, or null
+	private static Boolean cameraVisible(JsonObject status, String identity) {
+		JsonObject camera = OpenViduAndroidAppUser.remoteTrackOfSource(status, identity, "CAMERA");
+		return (camera == null || !camera.has("visible") || camera.get("visible").isJsonNull()) ? null
+				: camera.get("visible").getAsBoolean();
+	}
+
+	// The width of the views of the camera of the remote participant, as the last
+	// VideoDimensionsChanged said, or 0
+	private static int cameraViewWidth(JsonObject status, String identity) {
+		String size = stringOrNull(OpenViduAndroidAppUser.remoteTrackOfSource(status, identity, "CAMERA"), "viewSize");
+		return size == null ? 0 : Integer.parseInt(size.substring(0, size.indexOf('x')));
+	}
+
 	private static long counterDelta(JsonObject status, JsonObject first, String identity, String kind,
 			String field) {
 		return OpenViduAndroidAppUser.remoteTrackCounter(status, identity, kind, field)
@@ -734,6 +1031,13 @@ public class OpenViduAndroidE2eTest extends AbstractOpenViduTestappE2eTest {
 	}
 
 	// Server helpers
+
+	private static <T> T serverCall(retrofit2.Call<T> call) throws IOException {
+		retrofit2.Response<T> response = call.execute();
+		Assertions.assertTrue(response.isSuccessful(),
+				"Server API call failed: " + response.code() + " " + response.message());
+		return response.body();
+	}
 
 	/** The app's published track of the given source, once the server has it */
 	private TrackInfo androidTrack(TrackSource source) throws Exception {
@@ -774,6 +1078,18 @@ public class OpenViduAndroidE2eTest extends AbstractOpenViduTestappE2eTest {
 	}
 
 	// Testapp helpers
+
+	/**
+	 * Runs the script in the testapp as the body of a function, waits for the
+	 * promise it may return, and fails if it throws or the promise rejects
+	 */
+	private static void chromeRun(OpenViduTestappUser user, String script) {
+		Object result = ((JavascriptExecutor) user.getDriver())
+				.executeAsyncScript("const done = arguments[arguments.length - 1];"
+						+ "Promise.resolve().then(() => { " + script + " })"
+						+ ".then(() => done('ok'), e => done('error: ' + e));");
+		Assertions.assertEquals("ok", result, "Script failed in the testapp: " + script);
+	}
 
 	/**
 	 * Names the last added testapp instance (index 0) and connects it to the Room

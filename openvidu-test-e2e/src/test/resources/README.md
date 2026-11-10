@@ -106,8 +106,13 @@ the testapp with Selenium: `OpenViduAndroidAppUser` types into it, taps its
 buttons and switches, and reads the JSON that the app writes in its `status`
 view twice a second:
 
-- the Room state, the number of each Room event received, the data messages
-  received, and the connection quality and speaking state of every participant;
+- the Room state and metadata, the data messages received, and the connection
+  quality, speaking state, name, metadata, attributes and state of every
+  participant (and whether the local one may publish);
+- how many times it received each event of the SDK: Room events, the participant
+  events of the local participant and of each remote one (kept after it leaves),
+  and the track events of each remote video, whose last ones give whether its view
+  is visible and its size (`androidAppEventsTest` checks them);
 - for each local track, what the camera or the microphone captures, and for the
   camera the outbound layers of its encoder from the WebRTC stats (one per
   simulcast layer, or one with SVC: active or paused, codec, scalability mode,

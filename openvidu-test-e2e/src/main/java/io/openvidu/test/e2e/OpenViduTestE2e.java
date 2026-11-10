@@ -922,6 +922,12 @@ public class OpenViduTestE2e {
 		long start = System.currentTimeMillis();
 		emulator.start();
 		log.info("Android emulator ready in {} s", (System.currentTimeMillis() - start) / 1000);
+		// A logcat buffer that keeps a whole test for androidDiagnostics(): Appium's logs
+		// of the status the tests poll fill the default 256 KB in about two minutes
+		ExecResult logcatSize = emulator.execInContainer("adb", "logcat", "-G", "16M");
+		if (logcatSize.getExitCode() != 0) {
+			log.warn("Could not enlarge the emulator's logcat buffer: {}", logcatSize.getStderr());
+		}
 
 		ExecResult install = emulator.execInContainer("adb", "install", "-r", "-g", ANDROID_APP_APK);
 		if (install.getExitCode() != 0 || !install.getStdout().contains("Success")) {
@@ -1007,11 +1013,13 @@ public class OpenViduTestE2e {
 		}
 		StringBuilder diagnostics = new StringBuilder();
 		try {
-			ExecResult logcat = androidEmulator.execInContainer("adb", "logcat", "-d", "-t", "2000", "*:I");
-			// Without the guest's audio HAL, which logs every read of the emulator's
-			// microphone that fails, as most do without host audio, and without the
+			// Without Appium's server in the emulator, which logs every response to a
+			// command (the status, twice a second), adbd, which logs every connection of
+			// the health check, the guest's audio HAL, which logs every read of the
+			// emulator's microphone that fails, as most do without host audio, and the
 			// warning WebRTC logs for every frame of a video stream with no sink, only
 			// counted
+			ExecResult logcat = androidEmulator.execInContainer("adb", "logcat", "-d", "appium:S", "adbd:S", "*:I");
 			final String noSink = "VideoReceiveStreamInterface not connected to a VideoSink";
 			List<String> all = logcat.getStdout().lines().filter(line -> !line.contains("impl.ranchu")).toList();
 			List<String> lines = all.stream().filter(line -> !line.contains(noSink)).toList();
