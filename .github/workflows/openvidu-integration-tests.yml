@@ -39,7 +39,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
-          node-version: 24
+          node-version: 26
       - name: Install safe-chain
         uses: OpenVidu/actions/install-safe-chain@b4ecef6892b666b42fe037bc66b696ac9807f205 # v1.0.26
 
