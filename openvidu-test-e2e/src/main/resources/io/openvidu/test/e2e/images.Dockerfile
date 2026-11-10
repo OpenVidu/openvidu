@@ -5,7 +5,7 @@
 # emulator image (OpenViduTestE2e.ANDROID_IMAGE) is built in docker/openvidu-test-e2e-android.
 
 # RTSP and SRT server, and the ffmpeg that publishes to it (OpenViduTestE2e)
-FROM bluenviron/mediamtx:1.21.0-ffmpeg AS mediamtx
+FROM bluenviron/mediamtx:1.21.3-ffmpeg AS mediamtx
 
 # Network impairments (NetworkConditioner). Pumba 1.x installs netem at reserved handles
 # that NetworkConditioner.PUMBA_NETEM_QDISC hard-codes: run the connection quality tests
