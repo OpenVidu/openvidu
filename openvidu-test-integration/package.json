@@ -6,9 +6,9 @@
         "test:ci": "jest --ci --json --outputFile=test-results.json"
     },
     "devDependencies": {
-        "@types/jest": "29.5.14",
+        "@types/jest": "30.0.0",
         "@types/node": "24.19.2",
-        "jest": "29.7.0",
+        "jest": "30.5.2",
         "mongodb": "6.12.0",
         "ts-jest": "29.4.15",
         "ts-node": "10.9.2",
