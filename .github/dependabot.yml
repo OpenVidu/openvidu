@@ -205,6 +205,15 @@ updates:
     directory: "/openvidu-test-e2e/docker/openvidu-test-e2e-android/appium"
     multi-ecosystem-group: "android-test-environment"
     patterns: ["*"]
+    # appium-uiautomator2-driver 9 requires Appium 4, a beta on 2026-11-10, and driver 8
+    # requires Appium 3: neither major moves alone. Drop both rules once Appium 4 is stable
+    ignore:
+      - dependency-name: "appium"
+        update-types:
+          - "version-update:semver-major"
+      - dependency-name: "appium-uiautomator2-driver"
+        update-types:
+          - "version-update:semver-major"
   # The Appium client goes in the Android pull request; the other dependencies of the
   # project, which match no pattern, get pull requests of their own
   - package-ecosystem: "maven"
