@@ -1,5 +1,17 @@
 import { NgOptimizedImage } from '@angular/common';
-import { Component, computed, inject, output, signal } from '@angular/core';
+import {
+	afterNextRender,
+	Component,
+	computed,
+	DestroyRef,
+	effect,
+	type ElementRef,
+	inject,
+	output,
+	signal,
+	untracked,
+	viewChild
+} from '@angular/core';
 import { MatButton, MatIconButton } from '@angular/material/button';
 import { MatIcon } from '@angular/material/icon';
 import { MatDivider } from '@angular/material/list';
@@ -23,7 +35,8 @@ import { THEME_ICONS, ThemeToggle } from '../theme-toggle.js';
 /**
  * Burger, logo, global search, range picker (range-scoped routes) or zone chip (other unlocked timed routes), refresh
  * control (live-capable routes whose page registered a scheduler), theme toggle and user menu. Below 600 px it becomes a
- * brand row with an overflow menu plus a row with the picker or the chip and the refresh control.
+ * brand row with an overflow menu plus a row with the picker or the chip and the refresh control. On wide screens the
+ * picker shows its absolute range only while the row has room for it beside the other controls, whose widths vary.
  */
 @Component({
 	selector: 'ovd-header',
@@ -86,11 +99,14 @@ export class Header {
 	/** Below 960 px: short brand, icon-only user menu and the search behind an icon. */
 	protected readonly compact = computed(() => ['xsmall', 'small'].includes(this.size()));
 	protected readonly searchInline = computed(() => !this.compact());
+	private readonly brandRow = viewChild.required<ElementRef<HTMLElement>>('brandRow');
+	/** The full range picker fits in the brand row, measured as the username and the update time change its controls. */
+	private readonly fullPickerFits = signal(true);
 	protected readonly pickerDisplay = computed(() => {
 		switch (this.size()) {
 			case 'xlarge':
 			case 'large':
-				return 'full';
+				return this.fullPickerFits() ? 'full' : 'compact';
 			case 'medium':
 				return 'compact';
 			default:
@@ -99,6 +115,64 @@ export class Header {
 	});
 	protected readonly searchOpen = signal(false);
 	protected readonly themeIcon = computed(() => THEME_ICONS[this.theme.preference()]);
+
+	constructor() {
+		const destroyRef = inject(DestroyRef);
+
+		// Another page brings other controls: the full picker gets a new try.
+		effect(() => {
+			this.meta();
+			this.registry.active();
+			untracked(() => {
+				this.fullPickerFits.set(true);
+			});
+		});
+
+		afterNextRender(() => {
+			const row = this.brandRow().nativeElement;
+			let width = row.clientWidth;
+			let frame = 0;
+			// Measured in an animation frame, after the controls took their size, so the observers never loop.
+			const fit = () => {
+				cancelAnimationFrame(frame);
+				frame = requestAnimationFrame(() => {
+					if (row.clientWidth > width) {
+						this.fullPickerFits.set(true);
+					} else if (row.scrollWidth > row.clientWidth && this.pickerDisplay() === 'full') {
+						this.fullPickerFits.set(false);
+					}
+
+					width = row.clientWidth;
+				});
+			};
+
+			if (typeof ResizeObserver === 'undefined') {
+				return;
+			}
+
+			const resize = new ResizeObserver(fit);
+			const observeControls = () => {
+				resize.disconnect();
+				resize.observe(row);
+
+				for (const control of row.children) {
+					resize.observe(control);
+				}
+			};
+			const mutations = new MutationObserver(() => {
+				observeControls();
+				fit();
+			});
+
+			observeControls();
+			mutations.observe(row, { childList: true });
+			destroyRef.onDestroy(() => {
+				cancelAnimationFrame(frame);
+				resize.disconnect();
+				mutations.disconnect();
+			});
+		});
+	}
 
 	protected signOut(): void {
 		void this.auth.logout();

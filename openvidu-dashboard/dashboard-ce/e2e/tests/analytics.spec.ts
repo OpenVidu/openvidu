@@ -152,6 +152,27 @@ test('charts with and without an info tip start level', async ({ page }) => {
 	}
 });
 
+test('the header drops the absolute range rather than scroll the page on a laptop', async ({ page }) => {
+	const absolute = page.locator('ovd-header ovd-date-time-range-picker .absolute');
+	const sideways = () =>
+		page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+
+	await page.setViewportSize({ width: 1920, height: 1000 });
+	await page.goto('/analytics?from=now-24h&to=now&tz=UTC');
+	await expect(page.locator('ovd-refresh-control .updated')).not.toBeEmpty();
+	await expect(absolute).toBeVisible();
+
+	await page.setViewportSize({ width: 1280, height: 1000 });
+	await expect(absolute).toHaveCount(0);
+	await expect.poll(sideways).toBe(0);
+	await expect(page.locator('ovd-header ovd-date-time-range-picker .trigger')).toHaveAccessibleName(
+		/Time range: Last 24 hours ?, .+ → .+ ?, UTC/
+	);
+
+	await page.setViewportSize({ width: 1920, height: 1000 });
+	await expect(absolute).toBeVisible();
+});
+
 test('the charts of a card share its rows evenly', async ({ page }) => {
 	const rows = async (title: string) => {
 		const tops = await card(page, title)
