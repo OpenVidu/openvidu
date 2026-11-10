@@ -19,6 +19,9 @@
 }
 
 .scroll {
+	// The containing block of the absolutely positioned screen reader texts of the cells (`ovd-visually-hidden`), so
+	// they scroll with the table instead of widening the page.
+	position: relative;
 	// overflow-y would otherwise compute to auto and show a scrollbar for any pixel a cell overflows.
 	overflow-x: auto;
 	overflow-y: hidden;

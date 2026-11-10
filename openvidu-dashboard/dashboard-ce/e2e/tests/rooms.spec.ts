@@ -182,6 +182,21 @@ test.describe('a room whose server reports no media statistics', () => {
 			'Rooms on servers using mediasoup as RTC engine show no value here yet. This data will be available soon.'
 		);
 	});
+
+	test('scrolls the table, never the page, when its columns do not fit', async ({ page }) => {
+		await page.setViewportSize({ width: 1024, height: 800 });
+		await page.goto('/rooms');
+		await expect(table(page).locator('ovd-unavailable')).toHaveCount(1);
+
+		const overflow = (selector: string) =>
+			page
+				.locator(selector)
+				.first()
+				.evaluate((element) => element.scrollWidth - element.clientWidth);
+
+		expect(await overflow('ovd-data-table .scroll')).toBeGreaterThan(0);
+		expect(await overflow('mat-sidenav-content')).toBe(0);
+	});
 });
 
 test.describe('rooms on servers with and without media statistics', () => {
