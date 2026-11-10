@@ -4899,6 +4899,211 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestappE2eTest {
 		gracefullyLeaveParticipants(user, 2);
 	}
 
+	// The tracks a browser keeps sending while muted: livekit-client mutes a
+	// microphone or a screen share by disabling its MediaStreamTrack, which sends
+	// silence or black frames (a muted camera is stopped, and sends nothing)
+	private static final String[] TRACKS_SENDING_WHILE_MUTED = { "microphone", "screen_share" };
+	// LiveKit sends a subscriber 1 s of silence when it mutes an audio track
+	private static final long MUTE_SETTLE_MILLIS = 2500;
+	// How long a muted track is watched for media reaching the subscriber
+	private static final long MUTED_WATCH_MILLIS = 4000;
+
+	/**
+	 * A microphone and a screen share muted when their publisher reconnects from
+	 * scratch: livekit-client publishes them again, under new track ids, already
+	 * muted, and the browser keeps sending silence and black frames for them. The
+	 * server must forward nothing of them until they are unmuted, as it does for
+	 * a track muted after it was published, which is checked first. With
+	 * mediasoup, which stops the media of a muted track at its Producer, the
+	 * Producer of a track published already muted was never paused.
+	 */
+	@Test
+	@DisplayName("Tracks published again muted forward nothing until unmuted")
+	void tracksRepublishedMutedForwardNothingTest() throws Exception {
+		OpenViduTestappUser user = setupBrowserAndConnectToOpenViduTestapp("chrome");
+
+		log.info("Tracks published again muted forward nothing until unmuted");
+
+		// Microphone publisher, which then shares its screen, and a subscriber
+		// without adaptive stream, which would disable a video it does not show
+		this.addOnlyPublisherAudio(user);
+		this.addSubscriber(user, false);
+		user.getDriver().findElements(By.className("connect-btn")).forEach(el -> el.sendKeys(Keys.ENTER));
+		user.getEventManager().waitUntilEventReaches(0, "localTrackPublished", "RoomEvent", 1);
+		user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 .add-screen-btn")).click();
+		user.getEventManager().waitUntilEventReaches(0, "localTrackPublished", "RoomEvent", 2);
+		user.getEventManager().waitUntilEventReaches(1, "trackSubscribed", "RoomEvent", 2);
+		Map<String, RemoteTrackMedia> published = this.waitUntilRemoteMediaFlows(user, 1);
+
+		// Muted once published: nothing reaches the subscriber
+		this.setLocalTracksMuted(user, 0, true);
+		user.getEventManager().waitUntilEventReaches(1, "trackMuted", "RoomEvent", 2);
+		this.assertNoRemoteMedia(user, 1, "muted after being published");
+
+		// A full reconnection publishes both again, already muted: still nothing
+		this.simulateScenario(user, 0, "full-reconnect", 1);
+		this.waitUntilRemoteTracksReplaced(user, 1, published);
+		this.assertNoRemoteMedia(user, 1, "published again muted");
+
+		// Unmuted, both reach the subscriber again
+		this.setLocalTracksMuted(user, 0, false);
+		user.getEventManager().waitUntilEventReaches(1, "trackUnmuted", "RoomEvent", 2);
+		this.waitUntilRemoteMediaFlows(user, 1);
+
+		gracefullyLeaveParticipants(user, 2);
+	}
+
+	/**
+	 * A remote track of a testapp instance: its source, LiveKit track id and mute
+	 * state, and the media it received per SSRC of its inbound-rtp stats (frames
+	 * decoded for video, packets for audio). A renewed subscription can reuse the
+	 * RTCRtpReceiver of an earlier one, so the media is told by SSRC.
+	 */
+	private record RemoteTrackMedia(String source, String sid, boolean muted, Map<String, Long> received) {
+
+		/** Whether a stream of this track received media since that earlier reading. */
+		boolean receivedSince(RemoteTrackMedia earlier) {
+			return received.entrySet().stream().anyMatch(stream -> stream.getValue() > (earlier == null ? 0L
+					: earlier.received.getOrDefault(stream.getKey(), 0L)));
+		}
+	}
+
+	/**
+	 * Every remote track of the livekit-client Room window[arguments[0]], as a
+	 * JSON array of { source, sid, muted, received: { ssrc: count } }
+	 */
+	private static final String REMOTE_TRACK_MEDIA = "const [room, done] = [window[arguments[0]], arguments[1]];"
+			+ "const publications = [];"
+			+ "room.remoteParticipants.forEach(p => p.trackPublications.forEach(pub => publications.push(pub)));"
+			+ "Promise.all(publications.map(pub => (pub.track ? pub.track.getRTCStatsReport() : Promise.resolve())"
+			+ "  .catch(() => undefined)"
+			+ "  .then(report => {"
+			+ "    const received = {};"
+			+ "    report?.forEach(s => {"
+			+ "      if (s.type === 'inbound-rtp') received[s.ssrc] = (s.kind === 'video' ? s.framesDecoded : s.packetsReceived) || 0;"
+			+ "    });"
+			+ "    return { source: pub.source, sid: pub.trackSid, muted: pub.isMuted, subscribed: !!pub.track, received };"
+			+ "  })))"
+			+ ".then(list => done(JSON.stringify(list)), e => done(JSON.stringify(String(e))));";
+
+	/**
+	 * The subscribed remote tracks of a testapp instance whose source is one of
+	 * TRACKS_SENDING_WHILE_MUTED, by source, or null while a source has none or
+	 * more than one (a track being replaced by another one).
+	 */
+	private Map<String, RemoteTrackMedia> getRemoteTrackMedia(OpenViduTestappUser user, int instance) {
+		String json = (String) ((JavascriptExecutor) user.getDriver()).executeAsyncScript(REMOTE_TRACK_MEDIA,
+				"room_" + instance);
+		JsonElement tracks = JsonParser.parseString(json);
+		Assertions.assertTrue(tracks.isJsonArray(), "Remote tracks of testapp instance " + instance + ": " + json);
+		Map<String, RemoteTrackMedia> bySource = new LinkedHashMap<>();
+		for (JsonElement element : tracks.getAsJsonArray()) {
+			JsonObject track = element.getAsJsonObject();
+			String source = track.get("source").getAsString();
+			if (!List.of(TRACKS_SENDING_WHILE_MUTED).contains(source) || !track.get("subscribed").getAsBoolean()) {
+				continue;
+			}
+			Map<String, Long> received = new LinkedHashMap<>();
+			track.getAsJsonObject("received").entrySet()
+					.forEach(stream -> received.put(stream.getKey(), stream.getValue().getAsLong()));
+			if (bySource.put(source, new RemoteTrackMedia(source, track.get("sid").getAsString(),
+					track.get("muted").getAsBoolean(), received)) != null) {
+				return null;
+			}
+		}
+		return bySource.size() == TRACKS_SENDING_WHILE_MUTED.length ? bySource : null;
+	}
+
+	/**
+	 * Waits until every remote track of TRACKS_SENDING_WHILE_MUTED of a testapp
+	 * instance receives media, and returns them.
+	 */
+	private Map<String, RemoteTrackMedia> waitUntilRemoteMediaFlows(OpenViduTestappUser user, int instance)
+			throws Exception {
+		final Map<String, RemoteTrackMedia> start = this.getRemoteTrackMedia(user, instance);
+		final long deadline = System.currentTimeMillis() + WAIT_UNTIL_MAX_MILLIS;
+		Map<String, RemoteTrackMedia> now = start;
+		while (System.currentTimeMillis() < deadline) {
+			Thread.sleep(500);
+			now = this.getRemoteTrackMedia(user, instance);
+			if (now != null && now.values().stream()
+					.allMatch(track -> track.receivedSince(start == null ? null : start.get(track.source())))) {
+				return now;
+			}
+		}
+		Assertions.fail("Testapp instance " + instance + " should receive media of every track of "
+				+ List.of(TRACKS_SENDING_WHILE_MUTED) + ": " + start + " -> " + now);
+		return null;
+	}
+
+	/**
+	 * Waits until a testapp instance has replaced every remote track of
+	 * TRACKS_SENDING_WHILE_MUTED with a new one, as its publisher publishes them
+	 * again after a full reconnection.
+	 */
+	private void waitUntilRemoteTracksReplaced(OpenViduTestappUser user, int instance,
+			Map<String, RemoteTrackMedia> previous) throws Exception {
+		final long deadline = System.currentTimeMillis() + WAIT_UNTIL_MAX_MILLIS;
+		Map<String, RemoteTrackMedia> now = null;
+		while (System.currentTimeMillis() < deadline) {
+			now = this.getRemoteTrackMedia(user, instance);
+			if (now != null
+					&& now.values().stream().noneMatch(track -> track.sid().equals(previous.get(track.source()).sid()))) {
+				return;
+			}
+			Thread.sleep(250);
+		}
+		Assertions.fail("Testapp instance " + instance + " should get new tracks of " + previous.keySet()
+				+ " after their publisher's full reconnection: " + previous + " -> " + now);
+	}
+
+	/**
+	 * The remote tracks of TRACKS_SENDING_WHILE_MUTED of a testapp instance are
+	 * muted and receive no media for MUTED_WATCH_MILLIS, once MUTE_SETTLE_MILLIS
+	 * have passed.
+	 */
+	private void assertNoRemoteMedia(OpenViduTestappUser user, int instance, String when) throws Exception {
+		Thread.sleep(MUTE_SETTLE_MILLIS);
+		Map<String, RemoteTrackMedia> before = this.getRemoteTrackMedia(user, instance);
+		Assertions.assertNotNull(before, "Testapp instance " + instance + " should have one track of each of "
+				+ List.of(TRACKS_SENDING_WHILE_MUTED) + " while they are " + when);
+		Thread.sleep(MUTED_WATCH_MILLIS);
+		Map<String, RemoteTrackMedia> after = this.getRemoteTrackMedia(user, instance);
+		Assertions.assertNotNull(after, "Testapp instance " + instance + " should keep one track of each of "
+				+ List.of(TRACKS_SENDING_WHILE_MUTED) + " while they are " + when);
+		List<String> forwarded = new ArrayList<>();
+		for (RemoteTrackMedia track : after.values()) {
+			RemoteTrackMedia earlier = before.get(track.source());
+			Assertions.assertTrue(track.muted(), "The " + track.source() + " track must be muted while " + when + ": "
+					+ track);
+			Assertions.assertEquals(earlier.sid(), track.sid(), "The " + track.source() + " track was replaced while "
+					+ when + ": " + earlier + " -> " + track);
+			if (track.receivedSince(earlier)) {
+				forwarded.add(earlier + " -> " + track);
+			}
+		}
+		Assertions.assertTrue(forwarded.isEmpty(), "The server forwarded media of tracks " + when + ": " + forwarded);
+	}
+
+	/**
+	 * Mutes or unmutes the local tracks of TRACKS_SENDING_WHILE_MUTED of a testapp
+	 * instance, as an application does (LocalTrackPublication.mute / unmute).
+	 */
+	private void setLocalTracksMuted(OpenViduTestappUser user, int instance, boolean muted) {
+		Object error = ((JavascriptExecutor) user.getDriver()).executeAsyncScript(
+				"const [room, muted, sources, done] = [window[arguments[0]], arguments[1], arguments[2], arguments[3]];"
+						+ "const publications = [...room.localParticipant.trackPublications.values()]"
+						+ "  .filter(p => sources.includes(p.source));"
+						+ "if (publications.length !== sources.length) {"
+						+ "  done('local tracks: ' + publications.map(p => p.source)); return;"
+						+ "}"
+						+ "Promise.all(publications.map(p => muted ? p.mute() : p.unmute()))"
+						+ "  .then(() => done(null), e => done(String(e)));",
+				"room_" + instance, muted, List.of(TRACKS_SENDING_WHILE_MUTED));
+		Assertions.assertNull(error, "Testapp instance " + instance + " could not " + (muted ? "mute" : "unmute")
+				+ " its tracks of " + List.of(TRACKS_SENDING_WHILE_MUTED) + ": " + error);
+	}
+
 	@Test
 	@DisplayName("Speaker detection")
 	void speakerDetectionTest() throws Exception {

@@ -184,8 +184,13 @@ this test environment:
 - `docker`: the base images of `docker/openvidu-test-e2e-android` (Ubuntu, LTS
   releases only, and the Node.js image Appium's runtime is copied from);
 - `npm`: Appium and its UiAutomator2 driver, which the image installs with
-  `npm ci` from its `appium/package.json` and `package-lock.json`;
-- `maven`: the Appium Java client of `openvidu-test-browsers`.
+  `npm ci` from its `appium/package.json` and `package-lock.json`.
+
+The Appium Java client of `openvidu-test-browsers` is not in that pull request: a
+project in a multi-ecosystem group only gets updates of the dependencies its
+patterns name, so `openvidu-test-browsers` is in Dependabot's Maven entry, with
+`openvidu-test-e2e`. Its minor and patch releases come there; bump its majors by
+hand, together with Appium's.
 
 Before merging, run the tests on the pull request's branch with the CI workflow
 below, building the image when the pull request changes it, and push the image

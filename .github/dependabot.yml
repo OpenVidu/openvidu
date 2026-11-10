@@ -15,9 +15,10 @@ multi-ecosystem-groups:
       interval: "weekly"
     commit-message:
       prefix: "openvidu-test-e2e"
-  # One weekly pull request for OpenViduAndroidE2eTest (app, emulator image, Appium client). Test it
+  # One weekly pull request for OpenViduAndroidE2eTest (app, emulator image, Appium). Test it
   # with openvidu-pro's "OpenVidu Pro E2E Android tests" workflow; push the image (create_image.sh)
-  # once merged. The image's API and CMDLINE_TOOLS arguments are bumped by hand.
+  # once merged. The image's API and CMDLINE_TOOLS arguments are bumped by hand, and so are the
+  # majors of the Appium Java client (openvidu-test-browsers, in the Maven entry).
   android-test-environment:
     schedule:
       interval: "weekly"
@@ -117,14 +118,26 @@ updates:
         update-types:
           - "minor"
           - "patch"
-  # Shares Selenium, Spring Boot and Gson with /openvidu-test-browsers (entry below,
-  # in the Android group): a bump of one of them comes as one pull request per project
+  # openvidu-test-e2e and openvidu-test-browsers, which it depends on. Dependabot opens one
+  # pull request per directory, both in the same run. Both pin Spring Boot, Selenium and
+  # Gson: merge their pull requests together, since the e2e classpath takes Spring jars
+  # from both (Spring Boot 4.1.2 in one and 4.1.1 in the other failed every test). A
+  # project in a multi-ecosystem group only gets updates of the dependencies its patterns
+  # name, so openvidu-test-browsers is here and not in the Android group
   - package-ecosystem: "maven"
-    directory: "/openvidu-test-e2e"
+    directories:
+      - "/openvidu-test-e2e"
+      - "/openvidu-test-browsers"
     schedule:
       interval: "weekly"
     commit-message:
       prefix: "openvidu-test-e2e"
+    ignore:
+      # The Appium client of OpenViduAndroidE2eTest pairs with the Appium server of the
+      # Android group, whose majors are ignored too: move its major by hand with Appium
+      - dependency-name: "io.appium:java-client"
+        update-types:
+          - "version-update:semver-major"
     groups:
       minor-and-patch:
         update-types:
@@ -214,9 +227,3 @@ updates:
       - dependency-name: "appium-uiautomator2-driver"
         update-types:
           - "version-update:semver-major"
-  # The Appium client goes in the Android pull request; the other dependencies of the
-  # project, which match no pattern, get pull requests of their own
-  - package-ecosystem: "maven"
-    directory: "/openvidu-test-browsers"
-    multi-ecosystem-group: "android-test-environment"
-    patterns: ["io.appium:java-client"]

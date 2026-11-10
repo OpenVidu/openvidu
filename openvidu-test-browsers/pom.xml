@@ -48,11 +48,11 @@
 		<openvidu.scm.url>https://github.com/OpenVidu/openvidu</openvidu.scm.url>
 		<openvidu.scm.connection>git@github.com:OpenVidu/openvidu.git</openvidu.scm.connection>
 
-		<version.spring-boot>4.1.1</version.spring-boot>
+		<version.spring-boot>4.1.2</version.spring-boot>
 		<version.openvidu.java.client>2.32.2</version.openvidu.java.client>
 		<version.slf4j>2.0.20</version.slf4j>
-		<version.selenium>4.51.0</version.selenium>
-		<version.gson>2.14.0</version.gson>
+		<version.selenium>4.52.0</version.selenium>
+		<version.gson>2.15.0</version.gson>
 		<version.jcodec>0.2.5</version.jcodec>
 		<version.junit>6.1.3</version.junit>
 		<version.appium>11.0.0</version.appium>
