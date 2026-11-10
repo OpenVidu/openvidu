@@ -1,4 +1,5 @@
 import { Db, Document, Filter, MongoClient } from "mongodb";
+import * as os from "os";
 import { Collection } from "./types";
 
 const DATABASE_URL =
@@ -27,7 +28,11 @@ export class MongoService {
     private db: Db;
 
     private constructor() {
-        this.client = new MongoClient(DATABASE_URL, { serverSelectionTimeoutMS: 30000 });
+        // The driver loads the os module with a dynamic import() unless it is given one, and Jest
+        // refuses dynamic imports without --experimental-vm-modules: the driver then connects with
+        // an empty client metadata document, which MongoDB rejects ("Missing required
+        // sub-document 'driver' in the client metadata document")
+        this.client = new MongoClient(DATABASE_URL, { serverSelectionTimeoutMS: 30000, runtimeAdapters: { os } });
         this.db = this.client.db(DATABASE_NAME);
     }
 
