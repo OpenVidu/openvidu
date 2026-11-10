@@ -12,8 +12,9 @@ Minimal LiveKit server RTC SDK publisher programs used by
 | `dotnet-publisher/` | `Livekit.Rtc.Dotnet`                      | synthetic frames (FFI)  |
 
 Each program is launched by `OpenViduTestE2e#startServerSdkPublisher` inside a
-plain runtime container of its language (see that method for the images and run
-commands). The directory is mounted read-only at `/app`, copied to `/work` and
+plain runtime container of its language: the images are the stages of
+`sdk-publishers.Dockerfile` (never built; Dependabot keeps them up to date) and
+the run commands are in `OpenViduTestE2e#sdkPublisher`. The directory is mounted read-only at `/app`, copied to `/work` and
 run there. The dependency cache at `/cache` is a Docker volume that lives only
 for the test JVM that created it (one per SDK, removed with the containers when
 the JVM ends), so a run never sees the downloads, builds or caches of a previous

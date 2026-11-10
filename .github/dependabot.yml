@@ -1,10 +1,14 @@
 version: 2
 
 # One weekly pull request with every LiveKit SDK release of the server SDK
-# publishers that openvidu-test-e2e runs (OpenViduTestAppE2eServerSdkTest). Its
-# merge is gated by .github/workflows/openvidu-pro-e2e-serversdk-gate.yml. Only
-# the SDK packages are updated here; the transitive dependencies and the Docker
-# images of OpenViduTestE2e#sdkPublisher are bumped by hand.
+# publishers that openvidu-test-e2e runs (OpenViduTestAppE2eServerSdkTest), and
+# every release of the images they run in. Its merge is gated by
+# .github/workflows/openvidu-pro-e2e-serversdk-gate.yml. Of the publishers' own
+# dependencies, only the SDK packages (and tokio, the Rust publisher's one other)
+# are updated here. The Go
+# publisher's livekit/protocol and pion/webrtc follow server-sdk-go (Dependabot's
+# go mod tidy raises them to what it requires; a protocol released ahead of the
+# SDK breaks its build).
 multi-ecosystem-groups:
   livekit-server-sdks:
     schedule:
@@ -39,6 +43,118 @@ updates:
         update-types:
           - "minor"
           - "patch"
+  # The Node.js image of the dashboard. Dependabot never changes a tag's suffix: moving
+  # to the next Debian release (-trixie-slim) is done by hand
+  - package-ecosystem: "docker"
+    directory: "/openvidu-dashboard/dashboard-ce/docker"
+    schedule:
+      interval: "weekly"
+    commit-message:
+      prefix: "openvidu-dashboard"
+    ignore:
+      # A new Node.js major is adopted by hand, once it is LTS and the toolchain declares it
+      # in its engines (openvidu-dashboard/AGENTS.md), together with .node-version
+      - dependency-name: "node"
+        update-types:
+          - "version-update:semver-major"
+  - package-ecosystem: "npm"
+    directory: "/openvidu-test-integration"
+    schedule:
+      interval: "weekly"
+    commit-message:
+      prefix: "openvidu-test-integration"
+    ignore:
+      # ts-jest supports TypeScript ">=4.3 <7"
+      - dependency-name: "typescript"
+        update-types:
+          - "version-update:semver-major"
+      # The types of the Node.js that CI runs (.github/workflows/openvidu-integration-tests.yml)
+      - dependency-name: "@types/node"
+        versions: [">= 25"]
+    groups:
+      jest:
+        patterns:
+          - "jest"
+          - "ts-jest"
+          - "@types/jest"
+      minor-and-patch:
+        update-types:
+          - "minor"
+          - "patch"
+  # No workflow of this repository builds the testapp: validate a pull request with the
+  # OpenVidu Pro E2E workflows (ref-openvidu = its branch) before merging it
+  - package-ecosystem: "npm"
+    directory: "/openvidu-testapp"
+    schedule:
+      interval: "weekly"
+    commit-message:
+      prefix: "openvidu-testapp"
+    ignore:
+      # Angular 22 requires TypeScript ">=6.0 <6.1". Remove once Angular supports 7
+      - dependency-name: "typescript"
+        update-types:
+          - "version-update:semver-major"
+      # jasmine 7 freezes its Env, which zone.js's test patch writes to: ng test fails
+      # at load. Remove once zone.js supports it (or the tests run zoneless)
+      - dependency-name: "jasmine-core"
+        update-types:
+          - "version-update:semver-major"
+      - dependency-name: "@types/jasmine"
+        update-types:
+          - "version-update:semver-major"
+    groups:
+      # The framework's packages require each other's exact version
+      angular:
+        patterns:
+          - "@angular/*"
+      # The client under test, with the protocol that package.json's overrides force on it
+      livekit:
+        patterns:
+          - "livekit-client"
+          - "livekit-server-sdk"
+          - "@livekit/*"
+      minor-and-patch:
+        update-types:
+          - "minor"
+          - "patch"
+  # Shares Selenium, Spring Boot and Gson with /openvidu-test-browsers (entry below,
+  # in the Android group): a bump of one of them comes as one pull request per project
+  - package-ecosystem: "maven"
+    directory: "/openvidu-test-e2e"
+    schedule:
+      interval: "weekly"
+    commit-message:
+      prefix: "openvidu-test-e2e"
+    groups:
+      minor-and-patch:
+        update-types:
+          - "minor"
+          - "patch"
+  # Images that the e2e tests run (ffmpeg, mediamtx, Pumba), pinned in images.Dockerfile
+  # files that are never built
+  - package-ecosystem: "docker"
+    directories:
+      - "/openvidu-test-e2e/src/main/resources/io/openvidu/test/e2e"
+      - "/openvidu-test-browsers/src/main/resources/io/openvidu/test/browsers/utils"
+    schedule:
+      interval: "weekly"
+    commit-message:
+      prefix: "openvidu-test-e2e"
+  # Images that the server SDK publishers run in (sdk-publishers.Dockerfile)
+  - package-ecosystem: "docker"
+    directory: "/openvidu-test-e2e/src/test/resources"
+    multi-ecosystem-group: "livekit-server-sdks"
+    patterns: ["*"]
+    ignore:
+      # Node.js LTS majors only. From Node.js 27 on each major becomes LTS six months after
+      # its release, which no ignore rule can express: bump it by hand once it is Active LTS
+      - dependency-name: "node"
+        update-types:
+          - "version-update:semver-major"
+      # .NET LTS releases only (even majors). Extend the list before 21.0
+      - dependency-name: "dotnet/sdk"
+        versions:
+          [">= 11.0, < 12.0", ">= 13.0, < 14.0", ">= 15.0, < 16.0", ">= 17.0, < 18.0", ">= 19.0, < 20.0"]
   - package-ecosystem: "gomod"
     directory: "/openvidu-test-e2e/src/test/resources/go-publisher"
     multi-ecosystem-group: "livekit-server-sdks"
@@ -60,9 +176,10 @@ updates:
   - package-ecosystem: "cargo"
     directory: "/openvidu-test-e2e/src/test/resources/rust-publisher"
     multi-ecosystem-group: "livekit-server-sdks"
-    patterns: ["livekit"]
+    patterns: ["livekit", "tokio"]
     allow:
       - dependency-name: "livekit"
+      - dependency-name: "tokio"
   - package-ecosystem: "nuget"
     directory: "/openvidu-test-e2e/src/test/resources/dotnet-publisher"
     multi-ecosystem-group: "livekit-server-sdks"
@@ -88,9 +205,9 @@ updates:
     directory: "/openvidu-test-e2e/docker/openvidu-test-e2e-android/appium"
     multi-ecosystem-group: "android-test-environment"
     patterns: ["*"]
+  # The Appium client goes in the Android pull request; the other dependencies of the
+  # project, which match no pattern, get pull requests of their own
   - package-ecosystem: "maven"
     directory: "/openvidu-test-browsers"
     multi-ecosystem-group: "android-test-environment"
     patterns: ["io.appium:java-client"]
-    allow:
-      - dependency-name: "io.appium:java-client"

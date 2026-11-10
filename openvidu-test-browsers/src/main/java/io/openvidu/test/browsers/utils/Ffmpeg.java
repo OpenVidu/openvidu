@@ -34,13 +34,12 @@ public final class Ffmpeg {
 
 	/**
 	 * A static ffmpeg build with libdav1d, libvpx, libx264, libaom and libopus, its
-	 * multi-arch digest pinned: an image moved under the same tag could decode
-	 * differently. Bump the tag and the digest together. -DFFMPEG_IMAGE overrides
-	 * it with an image of the same layout (/ffmpeg and /ffprobe), e.g.
-	 * mwader/static-ffmpeg:latest.
+	 * tag and multi-arch digest pinned in images.Dockerfile (stage "ffmpeg"), where
+	 * Dependabot updates them. -DFFMPEG_IMAGE overrides it with an image of the
+	 * same layout (/ffmpeg and /ffprobe), e.g. mwader/static-ffmpeg:latest.
 	 */
 	public static final String IMAGE = System.getProperty("FFMPEG_IMAGE",
-			"mwader/static-ffmpeg:9.0.2@sha256:7d9bdaaf887f7e6ce6151f67325c344074b5ff1fb75316011c3376503e449a7b");
+			PinnedImages.get(Ffmpeg.class, "images.Dockerfile", "ffmpeg"));
 
 	private static String user;
 

@@ -1,6 +1,7 @@
 # Merge gate for the Dependabot pull requests that bump the LiveKit SDKs of the
-# server SDK publishers (openvidu-test-e2e/src/test/resources/*-publisher, group
-# "livekit-server-sdks" in .github/dependabot.yml).
+# server SDK publishers (openvidu-test-e2e/src/test/resources/*-publisher) and the
+# images they run in (sdk-publishers.Dockerfile there), group "livekit-server-sdks"
+# in .github/dependabot.yml.
 #
 # The job dispatches the workflow "OpenVidu Pro E2E server SDK tests" of the
 # private repository OpenVidu/openvidu-pro against the pull request's head commit
@@ -48,7 +49,8 @@ jobs:
         run: |
           set -euo pipefail
           files=$(gh api --paginate "repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER/files" --jq '.[].filename')
-          if grep -q '^openvidu-test-e2e/src/test/resources/[a-z]*-publisher/' <<<"$files"; then
+          # The publisher programs and the images they run in
+          if grep -qE '^openvidu-test-e2e/src/test/resources/([a-z]*-publisher/|sdk-publishers\.Dockerfile$)' <<<"$files"; then
             echo "publishers=true" >> "$GITHUB_OUTPUT"
           else
             echo "No server SDK publisher changed: nothing to test"

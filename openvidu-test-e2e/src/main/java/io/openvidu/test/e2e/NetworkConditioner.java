@@ -9,14 +9,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import io.openvidu.test.browsers.utils.CommandLineExecutor;
+import io.openvidu.test.browsers.utils.PinnedImages;
 
 public class NetworkConditioner {
 
 	private static final Logger log = LoggerFactory.getLogger(NetworkConditioner.class);
 	private static final CommandLineExecutor commandLine = new CommandLineExecutor();
 
-	private static final String PUMBA_IMAGE = "gaiaadm/pumba:1.2.1";
-	private static final String NETTOOLS_IMAGE = "ghcr.io/alexei-led/pumba-alpine-nettools:sha-19e0a46";
+	private static final String PUMBA_IMAGE = PinnedImages.get(NetworkConditioner.class, "images.Dockerfile",
+			"pumba");
+	private static final String NETTOOLS_IMAGE = PinnedImages.get(NetworkConditioner.class, "images.Dockerfile",
+			"pumba-nettools");
 
 	/**
 	 * Port range of the SFU's host candidates (livekit.yaml
@@ -50,8 +53,9 @@ public class NetworkConditioner {
 	// Where Pumba installs the netem qdisc of a port-scoped netem impairment. Pumba
 	// 1.x owns the whole tree under the reserved root handle 504d: (prio, 3 bands)
 	// with netem on band 3, and verifies exactly this topology before removing it
-	// (pkg/tc/netem.go in the Pumba repo), so it is a stable contract of the pinned
-	// PUMBA_IMAGE version. Re-check it when bumping the pin (0.x used 1:3 / 30:).
+	// (pkg/tc/netem.go in the Pumba repo), so it is a stable contract of the Pumba
+	// version pinned in images.Dockerfile. Re-check it when Dependabot bumps that
+	// pin (0.x used 1:3 / 30:).
 	private static final String PUMBA_NETEM_QDISC = "parent 504d:3 handle 5050:";
 
 	// Upper bound on expanded ports: Pumba creates one tc filter / iptables rule

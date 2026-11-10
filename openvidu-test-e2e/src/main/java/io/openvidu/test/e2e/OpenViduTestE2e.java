@@ -72,6 +72,7 @@ import io.openvidu.test.browsers.FirefoxUser;
 import io.openvidu.test.browsers.utils.BrowserNames;
 import io.openvidu.test.browsers.utils.CommandLineExecutor;
 import io.openvidu.test.browsers.utils.Ffmpeg;
+import io.openvidu.test.browsers.utils.PinnedImages;
 import livekit.LivekitIngress.IngressInfo;
 import livekit.LivekitModels.Room;
 import okhttp3.OkHttpClient;
@@ -82,7 +83,8 @@ public class OpenViduTestE2e {
 
 	private final static WaitStrategy waitBrowser = Wait.forLogMessage("^.*Started Selenium Standalone.*$", 1);
 
-	protected static String RTSP_SERVER_IMAGE = "bluenviron/mediamtx:1.21.0-ffmpeg";
+	protected static String RTSP_SERVER_IMAGE = PinnedImages.get(OpenViduTestE2e.class, "images.Dockerfile",
+			"mediamtx");
 
 	// Android emulator with an Appium server (docker/openvidu-test-e2e-android), which
 	// also builds the Android app of src/test/resources/android-app
@@ -573,9 +575,11 @@ public class OpenViduTestE2e {
 
 	/**
 	 * How the publisher program of a server SDK is built and run: its runtime
-	 * image, the command that installs its toolchain and dependencies and compiles
-	 * it into the /cache volume, the command that runs it (which still does both,
-	 * from the cache), how many minutes each may take and the environment of both.
+	 * image (a stage of src/test/resources/sdk-publishers.Dockerfile, which
+	 * Dependabot keeps up to date), the command that installs its toolchain and
+	 * dependencies and compiles it into the /cache volume, the command that runs
+	 * it (which still does both, from the cache), how many minutes each may take
+	 * and the environment of both.
 	 */
 	private record SdkPublisher(String image, String prepareCommand, String runCommand, int timeoutMinutes,
 			Map<String, String> env) {
@@ -589,20 +593,21 @@ public class OpenViduTestE2e {
 	}
 
 	private static SdkPublisher sdkPublisher(String sdk) {
+		String image = PinnedImages.get(OpenViduTestE2e.class, "/sdk-publishers.Dockerfile", sdk);
 		Map<String, String> env = new HashMap<>();
 		switch (sdk) {
 			case "go":
 				env.put("GOMODCACHE", "/cache/gomod");
 				env.put("GOCACHE", "/cache/gobuild");
-				return new SdkPublisher("golang:1.27", "go build -o /dev/null .", "go run .", 5, env);
+				return new SdkPublisher(image, "go build -o /dev/null .", "go run .", 5, env);
 			case "node":
 				env.put("npm_config_cache", "/cache/npm");
 				String npmInstall = "npm install --no-audit --no-fund --loglevel=error";
-				return new SdkPublisher("node:26", npmInstall, npmInstall + " && node main.mjs", 5, env);
+				return new SdkPublisher(image, npmInstall, npmInstall + " && node main.mjs", 5, env);
 			case "python":
 				env.put("PIP_CACHE_DIR", "/cache/pip");
 				String pipInstall = "pip install -q -r requirements.txt";
-				return new SdkPublisher("python:3.15", pipInstall, pipInstall + " && python main.py", 5, env);
+				return new SdkPublisher(image, pipInstall, pipInstall + " && python main.py", 5, env);
 			case "rust":
 				// webrtc-sys links a prebuilt libwebrtc that requires clang++ >= 21
 				// (apt.llvm.org); the first build compiles the whole livekit crate
@@ -613,13 +618,12 @@ public class OpenViduTestE2e {
 				env.put("CARGO_TARGET_DIR", "/cache/cargo-target");
 				env.put("CC", "clang-21");
 				env.put("CXX", "clang++-21");
-				return new SdkPublisher("rust:1", clang + " && cargo build --release --locked",
+				return new SdkPublisher(image, clang + " && cargo build --release --locked",
 						clang + " && cargo run --release --locked", 30, env);
 			case "dotnet":
 				env.put("NUGET_PACKAGES", "/cache/nuget");
 				env.put("DOTNET_CLI_TELEMETRY_OPTOUT", "1");
-				return new SdkPublisher("mcr.microsoft.com/dotnet/sdk:10.0", "dotnet build -c Release",
-						"dotnet run -c Release", 10, env);
+				return new SdkPublisher(image, "dotnet build -c Release", "dotnet run -c Release", 10, env);
 			default:
 				throw new IllegalArgumentException("Unknown server SDK publisher: " + sdk);
 		}
