@@ -174,12 +174,24 @@ describe.skipIf(mongoUri === '')('data generator', () => {
 					await db.collection(collection).countDocuments({
 						$or: [
 							{ 'rooms.peakActive': { $exists: false } },
-							{ 'participants.peakActive': { $exists: false } }
+							{ 'participants.peakActive': { $exists: false } },
+							{ scope: 'global', 'egress.peakActive': { $exists: false } }
 						]
 					}),
 					collection
 				).toBe(0);
 			}
+
+			for (const collection of ['analytics_hourly', 'analytics_daily']) {
+				expect(
+					await db
+						.collection(collection)
+						.countDocuments({ scope: 'global', 'ingress.peakActive': { $exists: false } }),
+					collection
+				).toBe(0);
+			}
+
+			expect(await db.collection('analytics_5min').countDocuments({ ingress: { $exists: true } })).toBe(0);
 
 			const hours = await db.collection('analytics_hourly').distinct('bucket', { scope: 'global' });
 
@@ -289,6 +301,35 @@ describe.skipIf(mongoUri === '')('data generator', () => {
 
 			expect(scopes.filter((scope) => scope !== 'global').sort()).toEqual(
 				[1, 2, 3, 4, 5].map((n) => `node:media-node-10-0-0-${String(n)}`)
+			);
+
+			// Egress and ingress stay in the global rollups and carry no media node.
+			for (const collection of ['analytics_5min', 'analytics_hourly', 'analytics_daily']) {
+				expect(
+					await db.collection(collection).countDocuments({
+						scope: { $ne: 'global' },
+						$or: [{ egress: { $exists: true } }, { ingress: { $exists: true } }]
+					}),
+					collection
+				).toBe(0);
+			}
+
+			for (const collection of ['egresses', 'ingress_sessions']) {
+				expect(
+					await db.collection(collection).countDocuments({ mediaNode: { $exists: true } }),
+					collection
+				).toBe(0);
+			}
+
+			const globalEgress = await db
+				.collection<HourlyRollupDocument>('analytics_hourly')
+				.find({ scope: 'global' })
+				.toArray();
+
+			expect(globalEgress.reduce((sum, hour) => sum + (hour.egress?.started ?? 0), 0)).toBe(
+				await db
+					.collection('egresses')
+					.countDocuments({ startedAt: { $gte: globalEgress[0]?.bucket ?? new Date(0) } })
 			);
 
 			// The media nodes gone before the end host only rooms that ended before they went silent or drained.

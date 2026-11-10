@@ -193,9 +193,14 @@
 					},
 					"additionalProperties": false
 				},
-				"durationMs": { "bsonType": ["long", "int"] }
+				"durationMs": { "bsonType": ["long", "int"] },
+				"peakActive": {
+					"bsonType": ["int", "long"],
+					"description": "Most egresses in progress at once in the bucket, sampled every minute by the server aggregator"
+				}
 			},
-			"additionalProperties": false
+			"additionalProperties": false,
+			"description": "Global scope only"
 		},
 		"ingress": {
 			"bsonType": "object",
@@ -212,9 +217,14 @@
 					"additionalProperties": false,
 					"description": "Sessions started by input type"
 				},
-				"durationMs": { "bsonType": ["long", "int"] }
+				"durationMs": { "bsonType": ["long", "int"] },
+				"peakActive": {
+					"bsonType": ["int", "long"],
+					"description": "Most ingress sessions publishing at once in the bucket, sampled every minute by the server aggregator"
+				}
 			},
-			"additionalProperties": false
+			"additionalProperties": false,
+			"description": "Global scope only"
 		},
 		"bytes": {
 			"bsonType": "object",

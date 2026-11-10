@@ -2,6 +2,7 @@ export type { NavigationMeta, PageMeta } from '@openvidu-dashboard/typings';
 
 export * from './lib/charts/breakdown-chart.js';
 export * from './lib/charts/chart-colors.js';
+export * from './lib/charts/chart-grid.js';
 export * from './lib/charts/chart-note.js';
 export * from './lib/charts/chart-options.js';
 export * from './lib/charts/time-series-chart/time-series-chart.js';

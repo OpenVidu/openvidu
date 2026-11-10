@@ -6,14 +6,15 @@ import {
 	ANALYTICS_CE_DIMENSIONS,
 	ANALYTICS_CE_METRICS,
 	ANALYTICS_CSV_CONTENT_TYPE,
-	type AnalyticsMetric
+	type AnalyticsMetric,
+	type FeatureKey
 } from '@openvidu-dashboard/typings';
 
 import { AnalyticsCache } from '../../src/analytics/analytics-cache.js';
 import { CE_ANALYTICS_CATALOGUE, maximumPaths } from '../../src/analytics/analytics-catalogue.js';
 import { foldRows, mergeCounters } from '../../src/analytics/analytics-counters.js';
 import { breakdownsCsv, seriesCsv, toCsv } from '../../src/analytics/analytics-csv.js';
-import { AnalyticsFeatureGate } from '../../src/analytics/analytics-gate.js';
+import { AnalyticsFeatureGate, checkGlobalOnly } from '../../src/analytics/analytics-gate.js';
 import { planSeries, type SeriesPlanInput, snapRange } from '../../src/analytics/analytics-planner.js';
 import {
 	analyticsBreakdownsResponse,
@@ -82,13 +83,16 @@ function fakeDb(
 	} as unknown as Db;
 }
 
-function service(db: Db, options: { now?: () => Date; ttlMs?: number } = {}): AnalyticsService {
+function service(
+	db: Db,
+	options: { now?: () => Date; ttlMs?: number; features?: readonly FeatureKey[] } = {}
+): AnalyticsService {
 	const now = options.now ?? (() => NOW);
 
 	return new AnalyticsService(db, {
 		now,
 		cache: new AnalyticsCache(options.ttlMs ?? 0, now),
-		gate: new AnalyticsFeatureGate(() => []),
+		gate: new AnalyticsFeatureGate(() => options.features ?? []),
 		catalogue: CE_ANALYTICS_CATALOGUE
 	});
 }
@@ -303,7 +307,13 @@ describe('analytics catalogue', () => {
 		expect(
 			CE_ANALYTICS_CATALOGUE.metrics.participantsPeakActive?.value(new Map([['participants.peakActive', 7]]))
 		).toBe(7);
+		expect(CE_ANALYTICS_CATALOGUE.metrics.egressPeakActive?.value(new Map([['egress.peakActive', 2]]))).toBe(2);
+		expect(
+			CE_ANALYTICS_CATALOGUE.metrics.ingressPeakActive?.value(new Map([['ingress.sessionsStarted', 1]]))
+		).toBeNull();
 		expect([...maximumPaths(CE_ANALYTICS_CATALOGUE)].sort()).toEqual([
+			'egress.peakActive',
+			'ingress.peakActive',
 			'participants.peakActive',
 			'rooms.peakActive'
 		]);
@@ -381,6 +391,34 @@ describe('analytics feature gate', () => {
 
 		expect(() => {
 			pro.check({ metrics: ['scoreAvg', 'ingressSessions'], scope: 'node:n1' });
+		}).not.toThrow();
+	});
+
+	it('serves egress and ingress for the global scope only', () => {
+		const info = CE_ANALYTICS_CATALOGUE.info;
+
+		expect(
+			issueOf(() => {
+				checkGlobalOnly({ metrics: ['roomsCreated', 'egressStarted'], scope: 'node:n1' }, info);
+			})
+		).toEqual({ path: ['metrics'], message: 'egressStarted is only available for the global scope' });
+		expect(
+			issueOf(() => {
+				checkGlobalOnly({ dimensions: ['sdk', 'ingressInputType'], scope: 'node:n1' }, info);
+			})
+		).toEqual({ path: ['dimensions'], message: 'ingressInputType is only available for the global scope' });
+
+		for (const metric of ['egressPeakActive', 'ingressPeakActive', 'egressEnded'] as const) {
+			expect(
+				issueOf(() => {
+					checkGlobalOnly({ metrics: [metric], scope: 'node:n1' }, info);
+				})?.path
+			).toEqual(['metrics']);
+		}
+
+		expect(() => {
+			checkGlobalOnly({ metrics: ['egressStarted'], dimensions: ['egressType'], scope: 'global' }, info);
+			checkGlobalOnly({ metrics: ['roomsPeakActive'], dimensions: ['kind'], scope: 'node:n1' }, info);
 		}).not.toThrow();
 	});
 });
@@ -621,6 +659,50 @@ describe('analytics summary and breakdowns', () => {
 		expect(mediaStatsCoverage({ reported: true, missing: false })).toBeUndefined();
 		expect(mediaStatsCoverage({ reported: false, missing: true })).toBe('none');
 		expect(mediaStatsCoverage({ reported: true, missing: true })).toBe('partial');
+	});
+
+	it('leaves egress and ingress out of the summary of a node', async () => {
+		const hour = {
+			bucket: at('2026-10-13T09:00:00Z'),
+			rooms: { created: 4 },
+			egress: { started: 2, durationMs: 60_000 },
+			ingress: { sessionsStarted: 1, durationMs: 30_000 }
+		};
+		const db = fakeDb({
+			analytics_hourly: [
+				{ scope: 'global', ...hour },
+				{ scope: 'node:n1', ...hour }
+			]
+		});
+		const pro = service(db, { features: ['per-node-breakdown'] });
+		const node = await pro.summary(summaryQuery.parse({ from: '2026-10-13T06:00:00Z', scope: 'node:n1' }));
+		const global = await pro.summary(summaryQuery.parse({ from: '2026-10-13T06:00:00Z' }));
+
+		expect(analyticsSummaryResponse.parse(node)).toEqual(node);
+		expect(node.roomsCreated).toBe(4);
+
+		for (const key of ['egressStarted', 'egressDurationMs', 'ingressSessions', 'ingressDurationMs'] as const) {
+			expect(node).not.toHaveProperty(key);
+		}
+
+		expect(global).toMatchObject({
+			egressStarted: 2,
+			egressDurationMs: 60_000,
+			ingressSessions: 1,
+			ingressDurationMs: 30_000
+		});
+	});
+
+	it('rejects egress and ingress series and breakdowns of a node', async () => {
+		const pro = service(fakeDb({}), { features: ['per-node-breakdown'] });
+
+		await expect(
+			pro.series(series({ metrics: 'roomsCreated,egressPeakActive', scope: 'node:n1' }))
+		).rejects.toMatchObject({ code: 'VALIDATION_ERROR' });
+		await expect(
+			pro.breakdowns(analyticsBreakdownsQuery(() => NOW).parse({ dimensions: 'egressType', scope: 'node:n1' }))
+		).rejects.toMatchObject({ code: 'VALIDATION_ERROR' });
+		await expect(pro.series(series({ metrics: 'egressPeakActive' }))).resolves.toMatchObject({ scope: 'global' });
 	});
 
 	it('omits the averages written without the room sums', async () => {

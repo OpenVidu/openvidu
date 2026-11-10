@@ -148,3 +148,8 @@ export const MEDIA_STATS_TEXTS = {
 		'This data comes only from rooms on servers using Pion as RTC engine. mediasoup does not generate media statistics yet. They will be available soon.',
 	column: 'Rooms on servers using mediasoup as RTC engine show no value here yet. This data will be available soon.'
 } as const;
+
+/** Why egress and ingress figures are missing in a node scope: they are counted for the whole deployment only. */
+export const NODE_SCOPE_TEXTS = {
+	egressIngress: 'Egress and ingress are not attributed to media nodes. Select All nodes in Scope to see them.'
+} as const;

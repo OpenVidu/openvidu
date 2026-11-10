@@ -65,10 +65,17 @@ export const analyticsSummaryResponse = z
 		avgRoomDurationMs: count.optional(),
 		bytesUp: count,
 		bytesDown: count,
-		egressStarted: count,
-		egressDurationMs: count,
-		ingressSessions: count.meta({ description: 'Ingress sessions started in the range' }),
-		ingressDurationMs: count.meta({ description: 'Duration of the ingress sessions ended in the range' }),
+		egressStarted: count
+			.optional()
+			.meta({ description: 'Absent in a node scope: egress is counted globally only' }),
+		egressDurationMs: count.optional().meta({ description: 'Absent in a node scope' }),
+		ingressSessions: count.optional().meta({
+			description:
+				'Ingress sessions started in the range; absent in a node scope, as ingress is counted globally only'
+		}),
+		ingressDurationMs: count
+			.optional()
+			.meta({ description: 'Duration of the ingress sessions ended in the range; absent in a node scope' }),
 		apiCalls: count,
 		apiErrorRate: z.number().optional(),
 		mediaStats: z.enum(['partial', 'none']).optional().meta({

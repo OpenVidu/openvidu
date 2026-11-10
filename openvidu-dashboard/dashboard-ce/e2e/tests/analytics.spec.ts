@@ -13,17 +13,20 @@ test('a deep link drives the selectors and every request', async ({ page, api })
 	await expect(page.getByRole('heading', { level: 1, name: 'Analytics' })).toBeVisible();
 	await expect(page.getByRole('button', { name: /Time range: Last 7 days/ })).toBeVisible();
 	await expect(page.locator('.granularity-select')).toContainText('1 h');
-	await expect(card(page, 'Rooms').locator('ovd-time-series-chart')).toBeVisible();
+	await expect(card(page, 'Rooms').locator('ovd-time-series-chart').first()).toBeVisible();
 
 	const analytics = api.requests.filter((request) => request.path.startsWith('analytics/'));
 
 	expect(analytics.map((request) => request.path).sort()).toEqual([
 		'analytics/breakdowns',
 		'analytics/series',
+		'analytics/series',
 		'analytics/summary'
 	]);
 	expect(analytics.every((request) => request.params.get('tz') === 'UTC')).toBe(true);
-	expect(analytics.find((request) => request.path === 'analytics/series')?.params.get('granularity')).toBe('1h');
+	expect(
+		analytics.filter((request) => request.path === 'analytics/series').map((item) => item.params.get('granularity'))
+	).toEqual(['1h', '1d']);
 });
 
 test('the granularity selector offers what the range accepts', async ({ page }) => {
@@ -54,19 +57,29 @@ test('tiles, the six sections, the breakdown table and the page scroll over a ch
 	}
 
 	await expect(card(page, 'Rooms')).toContainText('4 participants');
-	await expect(card(page, 'Rooms').locator('.chart-heading')).toContainText(['Active rooms']);
-	await expect(card(page, 'Rooms').locator('.chart-heading + .chart-note')).toHaveText(['Five-minute buckets · UTC']);
+	await expect(card(page, 'Rooms').locator('.chart-heading')).toContainText(['Active rooms', 'Rooms created']);
+	await expect(card(page, 'Rooms').locator('.chart-heading + .chart-note')).toHaveText([
+		'Five-minute buckets · UTC',
+		'Five-minute buckets · UTC'
+	]);
 	await expect(card(page, 'Participants').locator('.chart-heading')).toContainText([
 		'Active participants',
+		'Participant sessions',
 		'Connection success',
-		'Participant kind'
+		'Participant kind',
+		'Unique identities'
 	]);
 	await expect(card(page, 'Egress').locator('.chart-heading + .chart-note')).toHaveText([
 		'Five-minute buckets · UTC',
+		'Five-minute buckets · UTC',
+		'Hourly · UTC'
+	]);
+	await expect(card(page, 'Ingress').locator('.chart-heading + .chart-note')).toHaveText([
+		'Hourly · UTC',
 		'Hourly · UTC'
 	]);
 	await expect(page.locator('main [title]')).toHaveCount(0);
-	await expect(card(page, 'Participants')).toContainText('Unique identities are available at daily granularity');
+	await expect(card(page, 'Participants')).not.toContainText('Switch to 1 d');
 	await expect(card(page, 'Ingress').locator('ovd-breakdown-chart')).toContainText('Ingress input type');
 
 	const sdk = card(page, 'Client breakdowns').locator('ovd-breakdown-chart').first();
@@ -89,12 +102,9 @@ test('tiles, the six sections, the breakdown table and the page scroll over a ch
 		.toBeGreaterThan(before);
 });
 
-test('the daily override shows unique identities per UTC day', async ({ page, api }) => {
+test('unique identities show per UTC day at any granularity', async ({ page, api }) => {
 	await page.goto('/analytics?from=now-7d&to=now&tz=UTC');
-	await card(page, 'Participants').getByRole('button', { name: 'Switch to 1 d' }).click();
 
-	await expect(page).toHaveURL(/granularity=1d/);
-	await expect(card(page, 'Participants').locator('ovd-time-series-chart')).toHaveCount(3);
 	await expect(
 		card(page, 'Participants')
 			.locator('ovd-time-series-chart')
@@ -106,10 +116,32 @@ test('the daily override shows unique identities per UTC day', async ({ page, ap
 			api.requests.some(
 				(request) =>
 					request.path === 'analytics/series' &&
-					request.params.get('metrics')?.includes('uniqueIdentities') === true
+					request.params.get('metrics') === 'uniqueIdentities' &&
+					request.params.get('granularity') === '1d'
 			)
 		)
 		.toBe(true);
+});
+
+test('the charts of a card share its rows evenly', async ({ page }) => {
+	const rows = async (title: string) => {
+		const tops = await card(page, title)
+			.locator('ovd-chart-grid > *')
+			.evaluateAll((charts) => charts.map((chart) => Math.round(chart.getBoundingClientRect().top)));
+
+		return [...new Set(tops)].map((top) => tops.filter((value) => value === top).length);
+	};
+
+	await page.setViewportSize({ width: 1920, height: 1080 });
+	await page.goto('/analytics?from=now-24h&to=now&tz=UTC');
+	await expect(card(page, 'Egress').locator('ovd-time-series-chart').first()).toBeVisible();
+	await expect.poll(() => rows('Egress')).toEqual([2, 2]);
+	expect(await rows('Client breakdowns')).toEqual([2, 2]);
+	expect(await rows('Participants')).toEqual([3, 2]);
+	expect(await rows('Rooms')).toEqual([2]);
+
+	await page.setViewportSize({ width: 375, height: 800 });
+	await expect.poll(() => rows('Egress')).toEqual([1, 1, 1, 1]);
 });
 
 test('the PRO strip is locked on CE and sends no PRO request', async ({ page, api }) => {
@@ -122,7 +154,7 @@ test('the PRO strip is locked on CE and sends no PRO request', async ({ page, ap
 	await expect(card(page, 'Quality')).toContainText('Quality analytics is available in OpenVidu PRO');
 	await expect(card(page, 'Top rooms')).toContainText('Top rooms is available in OpenVidu PRO');
 	await expect(card(page, 'Quality').getByRole('button', { name: 'Export CSV' })).toBeDisabled();
-	await expect(card(page, 'Rooms').locator('ovd-time-series-chart')).toBeVisible();
+	await expect(card(page, 'Rooms').locator('ovd-time-series-chart').first()).toBeVisible();
 	expect(api.calls()).not.toContain('GET analytics/top');
 	expect(api.calls()).not.toContain('GET analytics/scopes');
 
@@ -131,7 +163,7 @@ test('the PRO strip is locked on CE and sends no PRO request', async ({ page, ap
 		.flatMap((request) => request.params.get('metrics')?.split(',') ?? []);
 
 	expect(metrics).not.toContain('scoreAvg');
-	expect(metrics).toContain('ingressSessions');
+	expect(metrics).toEqual(expect.arrayContaining(['ingressSessions', 'ingressPeakActive', 'egressPeakActive']));
 	await expectNoViolations(page);
 });
 
@@ -157,18 +189,25 @@ test('a card exports its CSV under the server file name', async ({ page, api }) 
 	);
 });
 
-test('the Rooms and Participants cards draw and export the peaks', async ({ page, api }) => {
+test('the entity cards draw their peak and volume and export them', async ({ page, api }) => {
 	await page.goto('/analytics?from=now-7d&to=now&tz=UTC&granularity=1d');
-	await expect(card(page, 'Rooms').locator('ovd-time-series-chart')).toBeVisible();
+	await expect(card(page, 'Rooms').locator('ovd-time-series-chart').first()).toBeVisible();
 
 	const metrics = api.requests
 		.filter((request) => request.path === 'analytics/series')
 		.flatMap((request) => request.params.get('metrics')?.split(',') ?? []);
 
-	expect(metrics).toEqual(expect.arrayContaining(['roomsPeakActive', 'participantsPeakActive']));
-	expect(
-		metrics.filter((metric) => /^(roomsCreated|roomsEnded|participantsJoined|participantsAborted)$/.test(metric))
-	).toEqual([]);
+	expect(metrics).toEqual(
+		expect.arrayContaining([
+			'roomsPeakActive',
+			'roomsCreated',
+			'participantsPeakActive',
+			'participantsJoined',
+			'egressPeakActive',
+			'ingressPeakActive'
+		])
+	);
+	expect(metrics.filter((metric) => /^(roomsEnded|participantsAborted)$/.test(metric))).toEqual([]);
 
 	const exported = async (title: string) => {
 		const download = page.waitForEvent('download');
@@ -179,8 +218,12 @@ test('the Rooms and Participants cards draw and export the peaks', async ({ page
 		return api.requests.findLast((item) => item.path === 'analytics/export.csv')?.params.get('metrics');
 	};
 
-	expect(await exported('Rooms')).toBe('roomsPeakActive');
-	expect(await exported('Participants')).toBe('participantsPeakActive,connectionSuccessRate,uniqueIdentities');
+	expect(await exported('Rooms')).toBe('roomsPeakActive,roomsCreated');
+	expect(await exported('Participants')).toBe(
+		'participantsPeakActive,participantsJoined,connectionSuccessRate,uniqueIdentities'
+	);
+	expect(await exported('Egress')).toBe('egressPeakActive,egressStarted,egressEnded');
+	expect(await exported('Ingress')).toBe('ingressPeakActive,ingressSessions');
 });
 
 test.describe('a failed request', () => {
@@ -192,7 +235,7 @@ test.describe('a failed request', () => {
 		const clients = card(page, 'Client breakdowns');
 
 		await expect(clients.getByRole('alert')).toContainText('Request e2e-breakdowns');
-		await expect(card(page, 'Rooms').locator('ovd-time-series-chart')).toBeVisible();
+		await expect(card(page, 'Rooms').locator('ovd-time-series-chart').first()).toBeVisible();
 
 		api.options.analyticsFail = ['export.csv'];
 		await clients.getByRole('button', { name: 'Retry' }).click();

@@ -87,7 +87,10 @@ What it writes (`analytics_5min` stays empty without `--five-minute-rollups`):
   Every rollup gets `rooms.peakActive` and `participants.peakActive`, the most rooms and active STANDARD sessions
   at any minute of its bucket, as the server's aggregator samples them: every bucket of the range has a global
   document, with peaks of 0 and nothing else when no room was active, and a media node scope is sampled while one of
-  its servers is alive or it holds an active room or session.
+  its servers is alive or it holds an active room or session. The global documents also get `egress.peakActive` and,
+  in the hourly and daily ones, `ingress.peakActive`, from the generated egresses and ingress sessions. Egress and
+  ingress counters and peaks are written in the global scope only, never in a media node scope, and egresses and
+  ingress sessions carry no `mediaNode`, as the writer does.
 - `nodes`, with `rtcEngine` (`mediasoup` for the nodes of `--nodes-without-media-stats`), `ip` and the room counters
   `rooms.hosted` and `rooms.reconciled`: 3 nodes, or with `--media-nodes` five media nodes, one per state:
   - `-1` restarted: an earlier, stopped process hosts its older rooms;

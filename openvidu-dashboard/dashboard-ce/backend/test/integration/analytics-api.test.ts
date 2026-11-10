@@ -192,11 +192,53 @@ describe.skipIf(mongoUri === '')('analytics API', () => {
 			expect(values(response, 'participantsPeakActive').slice(2, 5)).toEqual([60, 40, 5]);
 		});
 
+		it('serves the egress peaks at five minutes and the ingress peaks from one hour', async () => {
+			const sampledFrom = hour - 3 * HOUR;
+			await seedRollups(ce, {
+				analytics_5min: Array.from({ length: 36 }, (_, index) =>
+					rollup(sampledFrom + index * 5 * MINUTE, { egress: { peakActive: index % 3 } })
+				),
+				analytics_hourly: [0, 1, 2].map((index) =>
+					rollup(sampledFrom + index * HOUR, {
+						egress: { started: 1, peakActive: 2 },
+						ingress: { sessionsStarted: 1, peakActive: index }
+					})
+				)
+			});
+
+			const range = `from=${iso(hour - DAY)}&to=${iso(hour)}`;
+			const fine = await json<AnalyticsSeriesResponse>(ce, `/analytics/series?metrics=egressPeakActive&${range}`);
+			const hourly = await json<AnalyticsSeriesResponse>(
+				ce,
+				`/analytics/series?metrics=egressPeakActive,ingressPeakActive,egressStarted,ingressSessions&granularity=1h&${range}`
+			);
+
+			expect(fine.granularity).toBe('5m');
+			expect(values(fine, 'egressPeakActive')).toHaveLength(288);
+			expect(values(fine, 'egressPeakActive').slice(251, 255)).toEqual([null, 0, 1, 2]);
+			expect(hourly.series.map((series) => [series.name, series.points.length])).toEqual([
+				['egressPeakActive', 24],
+				['ingressPeakActive', 24],
+				['egressStarted', 24],
+				['ingressSessions', 24]
+			]);
+			expect(values(hourly, 'ingressPeakActive').slice(-4)).toEqual([null, 0, 1, 2]);
+			expect(values(hourly, 'egressStarted').slice(-4)).toEqual([0, 1, 1, 1]);
+			expect(values(hourly, 'ingressSessions').slice(-4)).toEqual([0, 1, 1, 1]);
+		});
+
 		it('accepts every CE metric', async () => {
 			await seedRollups(ce, {});
 
-			expect(ANALYTICS_CE_METRICS).toHaveLength(20);
-			expect(ANALYTICS_CE_METRICS).toEqual(expect.arrayContaining(['roomsPeakActive', 'participantsPeakActive']));
+			expect(ANALYTICS_CE_METRICS).toHaveLength(22);
+			expect(ANALYTICS_CE_METRICS).toEqual(
+				expect.arrayContaining([
+					'roomsPeakActive',
+					'participantsPeakActive',
+					'egressPeakActive',
+					'ingressPeakActive'
+				])
+			);
 
 			for (const metric of ANALYTICS_CE_METRICS) {
 				const response = await get(ce, `/analytics/series?metrics=${metric}&granularity=1d&from=now-7d`);
@@ -212,6 +254,11 @@ describe.skipIf(mongoUri === '')('analytics API', () => {
 			['metrics=bytesUp&granularity=1h&from=now-60d', ['granularity'], 'limit of 1000 buckets'],
 			['metrics=uniqueIdentities', ['metrics'], 'uniqueIdentities requires granularity=1d'],
 			['metrics=egressStarted,egressEnded', ['metrics'], 'egressEnded requires a granularity of at least 1h'],
+			[
+				'metrics=ingressPeakActive&granularity=5m',
+				['metrics'],
+				'ingressPeakActive requires a granularity of at least 1h'
+			],
 			['metrics=bytesUp&scope=node:', ['scope'], 'must be global or node:<id>']
 		])('rejects %s', async (query, path, message) => {
 			expect(await issue(ce, `/analytics/series?${query}`)).toMatchObject({
@@ -440,9 +487,17 @@ describe.skipIf(mongoUri === '')('analytics API', () => {
 			);
 
 			for (const text of [document, exported]) {
-				expect(text).toContain('"roomsPeakActive"');
-				expect(text).toContain('"participantsPeakActive"');
+				for (const metric of [
+					'roomsPeakActive',
+					'participantsPeakActive',
+					'egressPeakActive',
+					'ingressPeakActive'
+				]) {
+					expect(text).toContain(`"${metric}"`);
+				}
 			}
+
+			expect(document).toContain('only available for the global scope');
 		});
 	});
 

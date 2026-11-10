@@ -1,4 +1,4 @@
-import { Component, computed, DOCUMENT, inject, input, signal } from '@angular/core';
+import { booleanAttribute, Component, computed, DOCUMENT, inject, input, signal } from '@angular/core';
 import { MatButton } from '@angular/material/button';
 import { NgxEchartsDirective } from 'ngx-echarts';
 
@@ -8,11 +8,16 @@ import { ChartColorsService } from './chart-colors.js';
 import { type BreakdownEntry, breakdownOption, formatValue, type ValueFormat } from './chart-options.js';
 import { bindChartOptions, injectEchartsReady, provideLazyEcharts } from './echarts-provider.js';
 
-/** A donut or horizontal bar with direct labels and a fixed colour per entity; more than eight fold into "Other". */
+/**
+ * A donut or horizontal bar with direct labels and a fixed colour per entity; more than eight fold into "Other". An
+ * unavailable breakdown keeps its heading, dims it and draws an empty ring or plot over hatching, without slices,
+ * labels, legend, tooltip or table.
+ */
 @Component({
 	selector: 'ovd-breakdown-chart',
 	imports: [InfoTip, MatButton, NgxEchartsDirective],
 	providers: [provideLazyEcharts()],
+	host: { '[class.dimmed]': 'unavailable()' },
 	template: `
 		<div class="chart-heading">
 			<h3 class="chart-title">{{ heading() }}</h3>
@@ -23,7 +28,7 @@ import { bindChartOptions, injectEchartsReady, provideLazyEcharts } from './echa
 		@if (note()) {
 			<p class="chart-note">{{ note() }}</p>
 		}
-		@if (showTable()) {
+		@if (showTable() && !unavailable()) {
 			<div class="table-wrap" [style.max-height.px]="height()">
 				<table>
 					<caption class="ovd-visually-hidden">
@@ -52,6 +57,7 @@ import { bindChartOptions, injectEchartsReady, provideLazyEcharts } from './echa
 		} @else if (ready()) {
 			<div
 				class="chart"
+				[class.unavailable]="unavailable()"
 				role="img"
 				tabindex="0"
 				[attr.aria-label]="summary()"
@@ -61,11 +67,20 @@ import { bindChartOptions, injectEchartsReady, provideLazyEcharts } from './echa
 				(chartInit)="chartOptions.attach($event)"
 			></div>
 		} @else {
-			<div class="chart" role="img" tabindex="0" [attr.aria-label]="summary()" [style.height.px]="height()"></div>
+			<div
+				class="chart"
+				[class.unavailable]="unavailable()"
+				role="img"
+				tabindex="0"
+				[attr.aria-label]="summary()"
+				[style.height.px]="height()"
+			></div>
 		}
-		<button matButton type="button" class="toggle" (click)="toggleTable()">
-			{{ showTable() ? 'Show chart' : 'Show table' }}
-		</button>
+		@if (!unavailable()) {
+			<button matButton type="button" class="toggle" (click)="toggleTable()">
+				{{ showTable() ? 'Show chart' : 'Show table' }}
+			</button>
+		}
 	`,
 	styleUrl: './chart.scss'
 })
@@ -83,6 +98,8 @@ export class BreakdownChart {
 	readonly height = input(240);
 	/** Shown under the heading, e.g. the unit or the bucket. */
 	readonly note = input<string>();
+	/** The breakdown reflects no data: dimmed, an empty ring or plot, no labels, legend, tooltip or table. */
+	readonly unavailable = input(false, { transform: booleanAttribute });
 
 	protected readonly ready = injectEchartsReady();
 	protected readonly showTable = signal(false);
@@ -92,7 +109,8 @@ export class BreakdownChart {
 			variant: this.variant(),
 			format: this.format(),
 			colors: this.palette.colors(),
-			animation: !this.reducedMotion
+			animation: !this.reducedMotion,
+			unavailable: this.unavailable()
 		})
 	);
 	protected readonly chartOptions = bindChartOptions(this.option);
@@ -108,11 +126,12 @@ export class BreakdownChart {
 				share: formatPercent(total > 0 ? entry.value / total : 0)
 			}));
 	});
-	protected readonly summary = computed(
-		() =>
-			`${this.heading()}: ${this.rows()
-				.map((row) => `${row.name} ${row.value}`)
-				.join(', ')}.`
+	protected readonly summary = computed(() =>
+		this.unavailable()
+			? `${this.heading()}: not available`
+			: `${this.heading()}: ${this.rows()
+					.map((row) => `${row.name} ${row.value}`)
+					.join(', ')}.`
 	);
 
 	protected toggleTable(): void {

@@ -94,6 +94,8 @@ export interface RollupEgress {
 	endedByStatus?: Counts<EgressStatus>;
 	/** Sum of `durationMs` of the egresses ended in the bucket. */
 	durationMs?: number;
+	/** Most egresses in progress at once in the bucket, sampled every minute by the server aggregator. */
+	peakActive?: number;
 }
 
 export interface RollupIngress {
@@ -103,6 +105,8 @@ export interface RollupIngress {
 	byInputType?: Counts<IngressInputType>;
 	/** Sum of `durationMs` of the sessions ended in the bucket. */
 	durationMs?: number;
+	/** Most ingress sessions publishing at once in the bucket, sampled every minute by the server aggregator. */
+	peakActive?: number;
 }
 
 /** API calls per Twirp method; keys are `<Service>_<Method>` (`RoomService_CreateRoom`). */
@@ -150,7 +154,7 @@ export interface FiveMinuteRollupParticipants {
 export interface FiveMinuteRollupDocument extends RollupBase {
 	rooms?: Pick<RollupRooms, 'created' | 'ended' | 'peakActive'>;
 	participants?: FiveMinuteRollupParticipants;
-	egress?: { started?: number; ended?: number };
+	egress?: Pick<RollupEgress, 'started' | 'peakActive'> & { ended?: number };
 	bytes?: RollupBytes;
 	quality?: RollupQuality;
 	internal?: WriterInternal;

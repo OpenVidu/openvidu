@@ -3,6 +3,7 @@ import { describe, expect, expectTypeOf, it } from 'vitest';
 import {
 	ANALYTICS_CE_DIMENSIONS,
 	ANALYTICS_CE_METRICS,
+	ANALYTICS_GLOBAL_ONLY_DIMENSIONS,
 	ANALYTICS_METRIC_INFO,
 	ANALYTICS_PRO_DIMENSIONS,
 	ANALYTICS_PRO_METRICS,
@@ -62,6 +63,28 @@ describe('API contract', () => {
 			const peak = metric.endsWith('PeakActive');
 			expect(info.empty).toBe(peak || ['percent', 'mos'].includes(info.unit) ? null : 0);
 		}
+	});
+
+	it('serves egress and ingress for the global scope only', () => {
+		const globalOnly = Object.entries(ANALYTICS_METRIC_INFO)
+			.filter(([, info]) => info.globalOnly === true)
+			.map(([metric]) => metric)
+			.sort();
+
+		expect(globalOnly).toEqual(
+			[
+				'egressStarted',
+				'egressEnded',
+				'egressDurationMs',
+				'egressPeakActive',
+				'ingressSessions',
+				'ingressDurationMs',
+				'ingressPeakActive'
+			].sort()
+		);
+		expect(ANALYTICS_GLOBAL_ONLY_DIMENSIONS).toEqual(['egressType', 'egressStatus', 'ingressInputType']);
+		expect(ANALYTICS_METRIC_INFO.ingressPeakActive?.hourlyOnly).toBe(true);
+		expect(ANALYTICS_METRIC_INFO.egressPeakActive?.hourlyOnly).toBeUndefined();
 	});
 
 	it('names analytics CSV files without colons', () => {

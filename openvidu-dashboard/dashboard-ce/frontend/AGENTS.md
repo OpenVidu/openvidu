@@ -43,11 +43,12 @@ together (badges, feedback, locks, search, tiles, zone) share a folder and its s
   their own.
 - An edition page that must not exist without its feature (rather than render the lock) sets
   `hiddenWithoutFeature` in its `NavigationMeta`.
-- Missing media statistics: the `warning` input of tiles, cards, charts and `TableColumn` with a `MEDIA_STATS_TEXTS`
-  text, plus `unavailable` on tiles and charts (and `ovd-unavailable` in cells) when there is no real data; never a
-  notice in their place.
+- Missing data: the `warning` input of tiles, cards, charts and `TableColumn` with a `MEDIA_STATS_TEXTS` text (or
+  `NODE_SCOPE_TEXTS` for egress and ingress in a node scope), plus `unavailable` on tiles, charts and breakdowns (and
+  `ovd-unavailable` in cells) when there is no real data; never a notice in their place.
 - Charts: bucket and zone in the `note` (`seriesNote()`), options merged into the kept instance (`bindChartOptions()`),
-  colours from `chartSlots()`, no zoom on wheel.
+  colours from `chartSlots()` (an Analytics section's series take its entity: `rooms`, `participants`, `egress` or
+  `ingress`), no zoom on wheel; several charts of a card go in `ovd-chart-grid`, never in a CSS grid of their own.
 - Identifiers appear once, with `ovd-copy-button` beside the visible value; navigation uses links, never row clicks.
 - Lists use `ovd-list-search` inside `.ovd-filter-bar`, `ovd-room-chip` for the room filter, ranked sorts from
   `rankedSortReasons()` and `ovd-data-table`.

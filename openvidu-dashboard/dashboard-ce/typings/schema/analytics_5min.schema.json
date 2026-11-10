@@ -52,8 +52,16 @@
 		},
 		"egress": {
 			"bsonType": "object",
-			"properties": { "started": { "bsonType": ["int", "long"] }, "ended": { "bsonType": ["int", "long"] } },
-			"additionalProperties": false
+			"properties": {
+				"started": { "bsonType": ["int", "long"] },
+				"ended": { "bsonType": ["int", "long"] },
+				"peakActive": {
+					"bsonType": ["int", "long"],
+					"description": "Most egresses in progress at once in the bucket, sampled every minute by the server aggregator"
+				}
+			},
+			"additionalProperties": false,
+			"description": "Global scope only"
 		},
 		"bytes": {
 			"bsonType": "object",

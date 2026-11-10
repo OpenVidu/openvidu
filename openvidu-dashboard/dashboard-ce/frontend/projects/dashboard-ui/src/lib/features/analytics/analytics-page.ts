@@ -1,6 +1,5 @@
 import { NgComponentOutlet } from '@angular/common';
 import { Component, computed, effect, forwardRef, inject, signal, type Type, untracked } from '@angular/core';
-import { MatButton } from '@angular/material/button';
 import { MatFormField, MatLabel } from '@angular/material/form-field';
 import { MatOption, MatSelect } from '@angular/material/select';
 import {
@@ -21,6 +20,7 @@ import {
 } from '@openvidu-dashboard/typings';
 
 import { BreakdownChart } from '../../charts/breakdown-chart.js';
+import { ChartGrid } from '../../charts/chart-grid.js';
 import { seriesNote } from '../../charts/chart-note.js';
 import type { BreakdownEntry, ChartSeries } from '../../charts/chart-options.js';
 import { TimeSeriesChart } from '../../charts/time-series-chart/time-series-chart.js';
@@ -45,6 +45,7 @@ import {
 	INGRESS_INPUT_LABELS,
 	OS_LABELS,
 	MEDIA_STATS_TEXTS,
+	NODE_SCOPE_TEXTS,
 	PARTICIPANT_KIND_LABELS,
 	SDK_LABELS
 } from '../../format/labels.js';
@@ -102,18 +103,22 @@ interface AnalyticsResult {
 /** Labels and colour entities of the series the page draws. */
 const SERIES_LABELS: Partial<Record<AnalyticsMetric, { label: string; entity: string }>> = {
 	roomsPeakActive: { label: 'Active rooms', entity: 'rooms' },
-	participantsPeakActive: { label: 'Active participants', entity: 'sessions' },
-	connectionSuccessRate: { label: 'Connection success', entity: 'sessions' },
-	uniqueIdentities: { label: 'Unique identities', entity: 'unique' },
+	roomsCreated: { label: 'Rooms created', entity: 'rooms' },
+	participantsPeakActive: { label: 'Active participants', entity: 'participants' },
+	participantsJoined: { label: 'Participant sessions', entity: 'participants' },
+	connectionSuccessRate: { label: 'Connection success', entity: 'success' },
+	uniqueIdentities: { label: 'Unique identities', entity: 'participants' },
 	bytesUp: { label: 'Up', entity: 'up' },
 	bytesDown: { label: 'Down', entity: 'down' },
-	egressStarted: { label: 'Started', entity: 'sessions' },
+	egressPeakActive: { label: 'Active egress', entity: 'egress' },
+	egressStarted: { label: 'Started', entity: 'egress' },
 	egressDurationMs: { label: 'Duration', entity: 'track' },
-	scoreAvg: { label: 'Average score', entity: 'sessions' },
+	scoreAvg: { label: 'Average score', entity: 'quality' },
 	poorSamples: { label: 'Poor samples', entity: 'web' },
 	lostSamples: { label: 'Lost samples', entity: 'failed' },
 	tracksSubscribeFailed: { label: 'Subscribe failures', entity: 'failed' },
-	ingressSessions: { label: 'Sessions', entity: 'sessions' }
+	ingressPeakActive: { label: 'Active ingress', entity: 'ingress' },
+	ingressSessions: { label: 'Sessions', entity: 'ingress' }
 };
 
 /** Labels of the breakdown keys of the CE dimensions, matched case-insensitively. */
@@ -159,8 +164,8 @@ function count(value: number | undefined): string | null {
 		AnalyticsCard,
 		BreakdownChart,
 		CardContent,
+		ChartGrid,
 		KpiTile,
-		MatButton,
 		MatFormField,
 		MatLabel,
 		MatOption,
@@ -269,6 +274,10 @@ export class AnalyticsPage implements AnalyticsPageContext {
 		}
 	});
 
+	/** Egress and ingress are counted for the whole deployment only: a node scope shows them unavailable. */
+	protected readonly egressIngressUnavailable = computed(() => this.scope() !== 'global');
+	protected readonly nodeScopeTexts = NODE_SCOPE_TEXTS;
+
 	/** "Analytics", or "Analytics · <media node label>" for a node scope. */
 	protected readonly title = computed(() =>
 		this.scope() === 'global' ? 'Analytics' : `Analytics · ${this.scope().replace(/^node:/, '')}`
@@ -285,12 +294,16 @@ export class AnalyticsPage implements AnalyticsPageContext {
 
 		return {
 			rooms: this.chart(['roomsPeakActive']),
+			roomsCreated: this.chart(['roomsCreated']),
 			participants: this.chart(['participantsPeakActive']),
+			sessions: this.chart(['participantsJoined']),
 			success: this.chart(['connectionSuccessRate']),
 			identities: this.chart(['uniqueIdentities']),
 			bytes: this.chart(['bytesUp', 'bytesDown']),
+			egressActive: this.chart(['egressPeakActive']),
 			egressStarted: this.chart(['egressStarted']),
 			egressEnded: this.chart(['egressEnded']),
+			ingressActive: this.chart(['ingressPeakActive']),
 			ingress: this.chart(['ingressSessions'])
 		};
 	});
@@ -534,16 +547,6 @@ export class AnalyticsPage implements AnalyticsPageContext {
 				values.every((value) => value === null || value === 0) &&
 				(!dimensionValues || totals.every((total) => total === 0))
 		};
-	}
-
-	/**
-	 * The Rooms card: empty only when no room was active at a sample and none was created, so the tiles of a range
-	 * sampled before the peaks existed still show.
-	 */
-	roomsView(): AnalyticsCardView {
-		const view = this.view(['roomsPeakActive']);
-
-		return { ...view, empty: view.empty && (this.summary()?.roomsCreated ?? 0) === 0 };
 	}
 
 	// Actions

@@ -48,6 +48,8 @@ export interface TimeSeriesOptions {
 	colors: ChartColors;
 	animation: boolean;
 	yRange?: { min: number; max: number };
+	/** A percentage axis fitted to the data instead of 0–100 %, unless `yRange` is given. */
+	fitted?: boolean;
 	bands?: readonly QualityBand[];
 }
 
@@ -60,21 +62,26 @@ export interface QualityBand {
 
 /** Fixed colour slot (1–8) of known entities; a colour follows the entity, never its rank. */
 const ENTITY_SLOTS: Readonly<Record<string, number>> = {
+	// The sections of the Analytics page: each draws its own series, and the slice of its main kind, in its slot.
+	rooms: 1,
+	participants: 7,
+	egress: 2,
+	ingress: 6,
+	success: 3,
+	quality: 1,
 	upstream: 1,
 	publish: 1,
 	up: 1,
-	rooms: 1,
 	sessions: 1,
 	js: 1,
 	udp: 1,
-	room_composite: 1,
+	track_composite: 1,
 	downstream: 2,
 	subscribe: 2,
 	down: 2,
-	unique: 2,
 	swift: 2,
 	tcp: 2,
-	track_composite: 2,
+	room_composite: 2,
 	android: 3,
 	turn: 3,
 	track: 3,
@@ -87,11 +94,9 @@ const ENTITY_SLOTS: Readonly<Record<string, number>> = {
 	aborted: 8,
 	failed: 8,
 	python: 8,
-	// Participant kinds share one chart, so each gets its own slot.
-	standard: 1,
-	egress: 2,
-	ingress: 3,
-	agent: 7,
+	// Participant kinds share one chart, so each gets its own slot; Egress and Ingress take those of their sections.
+	standard: 7,
+	agent: 5,
 	// Egress end statuses (`egress_<status>`) share one chart: complete green, aborted yellow, limit reached violet,
 	// failed red.
 	egress_complete: 3,
@@ -99,7 +104,7 @@ const ENTITY_SLOTS: Readonly<Record<string, number>> = {
 	egress_limit_reached: 7,
 	egress_failed: 8,
 	// Ingress input types.
-	rtmp: 1,
+	rtmp: 6,
 	whip: 2,
 	url: 3
 };
@@ -278,6 +283,23 @@ function seriesData(series: ChartSeries, kind: SeriesKind, to: number): [number,
 	return data;
 }
 
+/**
+ * Y range of a percentage chart fitted to its values (fractions of 1): from the highest multiple of 10 % at least 5
+ * points below the lowest value, never below 0 %, to 100 %; 0–100 % without values.
+ */
+export function fittedPercentRange(series: readonly ChartSeries[]): { min: number; max: number } {
+	const values = series.flatMap((item) => item.points.flatMap(([, value]) => (value === null ? [] : [value])));
+
+	if (values.length === 0) {
+		return { min: 0, max: 1 };
+	}
+
+	// Whole percentage points avoid the float error of 0.962 − 0.05.
+	const lowest = Math.round(Math.min(...values) * 1000) / 10;
+
+	return { min: Math.max(0, Math.floor((lowest - 5) / 10) * 10) / 100, max: 1 };
+}
+
 /** ECharts option of a time series fixed to `from`–`to`, with gaps for missing buckets and no zoom. */
 export function timeSeriesOption(options: TimeSeriesOptions): EChartsCoreOption {
 	const from = new Date(options.from).getTime();
@@ -314,7 +336,7 @@ export function timeSeriesOption(options: TimeSeriesOptions): EChartsCoreOption 
 		yAxis: {
 			type: 'value',
 			...(integerSeries(options.series) ? { minInterval: 1 } : {}),
-			...(options.yRange ?? {}),
+			...(options.yRange ?? (options.fitted === true ? fittedPercentRange(options.series) : {})),
 			axisLabel: { color: colors.text, formatter: (value: number) => formatValue(value, options.format) },
 			splitLine: { lineStyle: { color: colors.grid } }
 		},
@@ -395,10 +417,16 @@ export interface BreakdownOptions {
 	format: ValueFormat;
 	colors: ChartColors;
 	animation: boolean;
+	/** The breakdown reflects no data: an empty ring or plot, without slices, labels or legend. */
+	unavailable?: boolean;
 }
 
 /** Donut or horizontal bar of a breakdown with direct labels (value and share) and a fixed colour per entity. */
 export function breakdownOption(options: BreakdownOptions): EChartsCoreOption {
+	if (options.unavailable === true) {
+		return unavailableBreakdownOption(options);
+	}
+
 	const entries = foldBreakdown(options.entries);
 	const total = entries.reduce((sum, entry) => sum + entry.value, 0);
 	const { colors } = options;
@@ -457,6 +485,34 @@ export function breakdownOption(options: BreakdownOptions): EChartsCoreOption {
 					value: entry.value,
 					itemStyle: { color: color(entity(entry)) }
 				}))
+			}
+		]
+	};
+}
+
+/** An empty ring, or an empty plot for the bar variant, drawn without interaction. */
+function unavailableBreakdownOption(options: BreakdownOptions): EChartsCoreOption {
+	if (options.variant === 'bar') {
+		return {
+			animation: false,
+			grid: { left: 8, right: 48, top: 8, bottom: 8, containLabel: true },
+			xAxis: { type: 'value', show: false },
+			yAxis: { type: 'category', show: false, data: [] },
+			series: [{ type: 'bar', data: [] }]
+		};
+	}
+
+	return {
+		animation: false,
+		series: [
+			{
+				type: 'pie',
+				radius: ['50%', '75%'],
+				center: ['50%', '45%'],
+				silent: true,
+				label: { show: false },
+				itemStyle: { color: options.colors.grid },
+				data: [{ name: '', value: 1 }]
 			}
 		]
 	};

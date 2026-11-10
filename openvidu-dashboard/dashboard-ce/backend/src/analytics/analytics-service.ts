@@ -1,6 +1,7 @@
 import type { Db } from 'mongodb';
 
 import {
+	ANALYTICS_GLOBAL_SCOPE,
 	type AnalyticsBreakdown,
 	type AnalyticsBreakdownsResponse,
 	type AnalyticsMediaStatsCoverage,
@@ -27,7 +28,7 @@ import {
 } from './analytics-catalogue.js';
 import { type BucketCounters, foldRows, mapEntries, mergeCounters, totalCounters } from './analytics-counters.js';
 import { breakdownsCsv, seriesCsv } from './analytics-csv.js';
-import type { AnalyticsFeatureGate } from './analytics-gate.js';
+import { type AnalyticsFeatureGate, checkGlobalOnly } from './analytics-gate.js';
 import {
 	type BucketGrid,
 	gridStarts,
@@ -111,6 +112,7 @@ export class AnalyticsService {
 
 	async series(query: AnalyticsSeriesParams): Promise<AnalyticsSeriesResponse> {
 		this.options.gate.check({ metrics: query.metrics, scope: query.scope });
+		checkGlobalOnly({ metrics: query.metrics, scope: query.scope }, this.options.catalogue.info);
 
 		const now = this.options.now();
 		const plan = planSeries({
@@ -198,6 +200,7 @@ export class AnalyticsService {
 
 	async breakdowns(query: AnalyticsBreakdownsParams): Promise<AnalyticsBreakdownsResponse> {
 		this.options.gate.check({ dimensions: query.dimensions, scope: query.scope });
+		checkGlobalOnly({ dimensions: query.dimensions, scope: query.scope }, this.options.catalogue.info);
 
 		const range = snapRange(query.from, query.to);
 		const fields = query.dimensions.flatMap((dimension) => {
@@ -287,6 +290,8 @@ export class AnalyticsService {
 		});
 		const joined = value(counters, 'participants.joined');
 		const calls = value(counters, 'apiCalls.total');
+		// Egress and ingress are counted in the global scope only.
+		const global = query.scope === ANALYTICS_GLOBAL_SCOPE;
 
 		return compact<AnalyticsSummary>({
 			from: range.from.toISOString(),
@@ -309,10 +314,10 @@ export class AnalyticsService {
 			avgRoomDurationMs: roomAverage(counters, 'rooms.durationMsSum', 'integer'),
 			bytesUp: value(counters, 'bytes.up'),
 			bytesDown: value(counters, 'bytes.down'),
-			egressStarted: value(counters, 'egress.started'),
-			egressDurationMs: value(counters, 'egress.durationMs'),
-			ingressSessions: value(counters, 'ingress.sessionsStarted'),
-			ingressDurationMs: value(counters, 'ingress.durationMs'),
+			egressStarted: global ? value(counters, 'egress.started') : undefined,
+			egressDurationMs: global ? value(counters, 'egress.durationMs') : undefined,
+			ingressSessions: global ? value(counters, 'ingress.sessionsStarted') : undefined,
+			ingressDurationMs: global ? value(counters, 'ingress.durationMs') : undefined,
 			apiCalls: calls,
 			apiErrorRate: share(value(counters, 'apiErrors.total'), calls),
 			mediaStats

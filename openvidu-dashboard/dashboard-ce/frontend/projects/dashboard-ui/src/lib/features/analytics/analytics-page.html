@@ -56,18 +56,22 @@
 		label="Egress"
 		[value]="tile(summary()?.egressStarted)"
 		[hint]="totalHint(summary()?.egressDurationMs)"
+		[warning]="egressIngressUnavailable() ? nodeScopeTexts.egressIngress : undefined"
+		[unavailable]="egressIngressUnavailable()"
 		[loading]="summary() === null"
 	/>
 	<ovd-kpi-tile
 		label="Ingress"
 		[value]="tile(summary()?.ingressSessions)"
 		[hint]="totalHint(summary()?.ingressDurationMs)"
+		[warning]="egressIngressUnavailable() ? nodeScopeTexts.egressIngress : undefined"
+		[unavailable]="egressIngressUnavailable()"
 		[loading]="summary() === null"
 	/>
 </ovd-tile-row>
 
 <div class="sections">
-	@let rooms = roomsView();
+	@let rooms = view(['roomsPeakActive', 'roomsCreated']);
 	<ovd-analytics-card
 		heading="Rooms"
 		sectionId="rooms"
@@ -75,7 +79,7 @@
 		[error]="rooms.error"
 		[empty]="rooms.empty"
 		[exporting]="isExporting('rooms')"
-		(exportCsv)="exportCsv('rooms', { metrics: ['roomsPeakActive'] })"
+		(exportCsv)="exportCsv('rooms', { metrics: ['roomsPeakActive', 'roomsCreated'] })"
 		(retry)="retry()"
 		(widen)="widenRange()"
 	>
@@ -92,20 +96,32 @@
 					[hint]="roomAverageHint(summary()?.avgRoomDurationMs)"
 				/>
 			</ovd-tile-row>
-			<ovd-time-series-chart
-				heading="Active rooms"
-				kind="step"
-				[info]="infoTexts.activeRoomsChart"
-				[series]="charts().rooms"
-				[from]="chartRange('roomsPeakActive').from"
-				[to]="chartRange('roomsPeakActive').to"
-				[tz]="tz()"
-				[note]="note('roomsPeakActive')"
-			/>
+			<ovd-chart-grid>
+				<ovd-time-series-chart
+					heading="Active rooms"
+					kind="area"
+					[info]="infoTexts.activeRoomsChart"
+					[series]="charts().rooms"
+					[from]="chartRange('roomsPeakActive').from"
+					[to]="chartRange('roomsPeakActive').to"
+					[tz]="tz()"
+					[note]="note('roomsPeakActive')"
+				/>
+				<ovd-time-series-chart
+					heading="Rooms created"
+					kind="bar"
+					[series]="charts().roomsCreated"
+					[from]="chartRange('roomsCreated').from"
+					[to]="chartRange('roomsCreated').to"
+					[tz]="tz()"
+					[note]="note('roomsCreated')"
+				/>
+			</ovd-chart-grid>
 		</ng-template>
 	</ovd-analytics-card>
 
-	@let participants = view(['participantsPeakActive', 'connectionSuccessRate'], ['kind']);
+	@let participants =
+		view(['participantsPeakActive', 'participantsJoined', 'connectionSuccessRate', 'uniqueIdentities'], ['kind']);
 	<ovd-analytics-card
 		heading="Participants"
 		sectionId="participants"
@@ -115,17 +131,17 @@
 		[exporting]="isExporting('participants')"
 		(exportCsv)="
 			exportCsv('participants', {
-				metrics: ['participantsPeakActive', 'connectionSuccessRate', 'uniqueIdentities']
+				metrics: ['participantsPeakActive', 'participantsJoined', 'connectionSuccessRate', 'uniqueIdentities']
 			})
 		"
 		(retry)="retry()"
 		(widen)="widenRange()"
 	>
 		<ng-template ovdCardContent>
-			<div class="grid">
+			<ovd-chart-grid>
 				<ovd-time-series-chart
 					heading="Active participants"
-					kind="step"
+					kind="area"
 					[info]="infoTexts.activeParticipantsChart"
 					[series]="charts().participants"
 					[from]="chartRange('participantsPeakActive').from"
@@ -134,8 +150,19 @@
 					[note]="note('participantsPeakActive')"
 				/>
 				<ovd-time-series-chart
+					heading="Participant sessions"
+					kind="bar"
+					[info]="infoTexts.participantSessions"
+					[series]="charts().sessions"
+					[from]="chartRange('participantsJoined').from"
+					[to]="chartRange('participantsJoined').to"
+					[tz]="tz()"
+					[note]="note('participantsJoined')"
+				/>
+				<ovd-time-series-chart
 					heading="Connection success"
 					format="percent"
+					fitted
 					[series]="charts().success"
 					[from]="chartRange('connectionSuccessRate').from"
 					[to]="chartRange('connectionSuccessRate').to"
@@ -147,27 +174,16 @@
 					[info]="infoTexts.participantKind"
 					[entries]="breakdowns().kind"
 				/>
-				@if (effective() === '1d') {
-					<ovd-time-series-chart
-						heading="Unique identities"
-						kind="bar"
-						note="per UTC day"
-						[series]="charts().identities"
-						[from]="chartRange('uniqueIdentities').from"
-						[to]="chartRange('uniqueIdentities').to"
-						tz="UTC"
-					/>
-				} @else {
-					<div class="identities-hint">
-						<p>Unique identities are available at daily granularity</p>
-						@if (options().includes('1d')) {
-							<button matButton="outlined" type="button" (click)="setGranularity('1d')">
-								Switch to 1 d
-							</button>
-						}
-					</div>
-				}
-			</div>
+				<ovd-time-series-chart
+					heading="Unique identities"
+					kind="bar"
+					note="per UTC day"
+					[series]="charts().identities"
+					[from]="chartRange('uniqueIdentities').from"
+					[to]="chartRange('uniqueIdentities').to"
+					tz="UTC"
+				/>
+			</ovd-chart-grid>
 		</ng-template>
 	</ovd-analytics-card>
 
@@ -184,12 +200,12 @@
 		(widen)="widenRange()"
 	>
 		<ng-template ovdCardContent>
-			<div class="grid">
+			<ovd-chart-grid>
 				<ovd-breakdown-chart heading="SDK" [info]="infoTexts.sdk" [entries]="breakdowns().sdk" />
 				<ovd-breakdown-chart heading="OS" [entries]="breakdowns().os" />
 				<ovd-breakdown-chart heading="Browser" [entries]="breakdowns().browser" />
 				<ovd-breakdown-chart heading="Connection type" [entries]="breakdowns().connectionType" />
-			</div>
+			</ovd-chart-grid>
 		</ng-template>
 	</ovd-analytics-card>
 
@@ -236,24 +252,42 @@
 		</ng-template>
 	</ovd-analytics-card>
 
-	@let egress = view(['egressStarted', 'egressEnded'], ['egressType']);
+	@let byNode = egressIngressUnavailable();
+	@let egress = view(['egressPeakActive', 'egressStarted', 'egressEnded'], ['egressType']);
 	<ovd-analytics-card
 		heading="Egress"
 		sectionId="egress"
+		[warning]="byNode ? nodeScopeTexts.egressIngress : undefined"
 		[loading]="egress.loading"
 		[error]="egress.error"
-		[empty]="egress.empty"
+		[empty]="egress.empty && !byNode"
 		[exporting]="isExporting('egress')"
-		(exportCsv)="exportCsv('egress', { metrics: ['egressStarted', 'egressEnded'] })"
+		[exportDisabled]="byNode"
+		(exportCsv)="exportCsv('egress', { metrics: ['egressPeakActive', 'egressStarted', 'egressEnded'] })"
 		(retry)="retry()"
 		(widen)="widenRange()"
 	>
 		<ng-template ovdCardContent>
 			<ovd-tile-row class="card-tiles">
-				<ovd-kpi-tile label="Total egress" [value]="tile(summary()?.egressStarted)" />
-				<ovd-kpi-tile label="Total duration" [value]="durationTile(summary()?.egressDurationMs)" />
+				<ovd-kpi-tile label="Total egress" [value]="tile(summary()?.egressStarted)" [unavailable]="byNode" />
+				<ovd-kpi-tile
+					label="Total duration"
+					[value]="durationTile(summary()?.egressDurationMs)"
+					[unavailable]="byNode"
+				/>
 			</ovd-tile-row>
-			<div class="grid">
+			<ovd-chart-grid>
+				<ovd-time-series-chart
+					heading="Active egress"
+					kind="area"
+					[info]="infoTexts.activeEgressChart"
+					[series]="charts().egressActive"
+					[from]="chartRange('egressPeakActive').from"
+					[to]="chartRange('egressPeakActive').to"
+					[tz]="tz()"
+					[note]="note('egressPeakActive')"
+					[unavailable]="byNode"
+				/>
 				<ovd-time-series-chart
 					heading="Egress started"
 					kind="bar"
@@ -262,8 +296,8 @@
 					[to]="chartRange('egressStarted').to"
 					[tz]="tz()"
 					[note]="note('egressStarted')"
+					[unavailable]="byNode"
 				/>
-				<ovd-breakdown-chart heading="Egress type" [entries]="breakdowns().egressType" />
 				<ovd-time-series-chart
 					heading="Egress ended by status"
 					kind="bar"
@@ -273,29 +307,52 @@
 					[to]="chartRange('egressEnded').to"
 					[tz]="tz()"
 					[note]="note('egressEnded')"
+					[unavailable]="byNode"
 				/>
-			</div>
+				<ovd-breakdown-chart heading="Egress type" [entries]="breakdowns().egressType" [unavailable]="byNode" />
+			</ovd-chart-grid>
 		</ng-template>
 	</ovd-analytics-card>
 
-	@let ingress = view(['ingressSessions'], ['ingressInputType']);
+	@let ingress = view(['ingressPeakActive', 'ingressSessions'], ['ingressInputType']);
 	<ovd-analytics-card
 		heading="Ingress"
 		sectionId="ingress"
+		[warning]="byNode ? nodeScopeTexts.egressIngress : undefined"
 		[loading]="ingress.loading"
 		[error]="ingress.error"
-		[empty]="ingress.empty"
+		[empty]="ingress.empty && !byNode"
 		[exporting]="isExporting('ingress')"
-		(exportCsv)="exportCsv('ingress', { metrics: ['ingressSessions'] })"
+		[exportDisabled]="byNode"
+		(exportCsv)="exportCsv('ingress', { metrics: ['ingressPeakActive', 'ingressSessions'] })"
 		(retry)="retry()"
 		(widen)="widenRange()"
 	>
 		<ng-template ovdCardContent>
 			<ovd-tile-row class="card-tiles">
-				<ovd-kpi-tile label="Total sessions" [value]="tile(summary()?.ingressSessions)" />
-				<ovd-kpi-tile label="Total duration" [value]="durationTile(summary()?.ingressDurationMs)" />
+				<ovd-kpi-tile
+					label="Total sessions"
+					[value]="tile(summary()?.ingressSessions)"
+					[unavailable]="byNode"
+				/>
+				<ovd-kpi-tile
+					label="Total duration"
+					[value]="durationTile(summary()?.ingressDurationMs)"
+					[unavailable]="byNode"
+				/>
 			</ovd-tile-row>
-			<div class="grid">
+			<ovd-chart-grid>
+				<ovd-time-series-chart
+					heading="Active ingress"
+					kind="area"
+					[info]="infoTexts.activeIngressChart"
+					[series]="charts().ingressActive"
+					[from]="chartRange('ingressPeakActive').from"
+					[to]="chartRange('ingressPeakActive').to"
+					[tz]="tz()"
+					[note]="note('ingressPeakActive')"
+					[unavailable]="byNode"
+				/>
 				<ovd-time-series-chart
 					heading="Ingress sessions"
 					kind="bar"
@@ -304,9 +361,14 @@
 					[to]="chartRange('ingressSessions').to"
 					[tz]="tz()"
 					[note]="note('ingressSessions')"
+					[unavailable]="byNode"
 				/>
-				<ovd-breakdown-chart heading="Ingress input type" [entries]="breakdowns().ingressInputType" />
-			</div>
+				<ovd-breakdown-chart
+					heading="Ingress input type"
+					[entries]="breakdowns().ingressInputType"
+					[unavailable]="byNode"
+				/>
+			</ovd-chart-grid>
 		</ng-template>
 	</ovd-analytics-card>
 

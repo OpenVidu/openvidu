@@ -27,6 +27,8 @@ export const INFO_TEXTS = {
 	connectionSuccess:
 		'Share of participant sessions that finished connecting; the rest were aborted before becoming active.',
 	activeRoomsChart: 'The most rooms open at the same time in each bucket, sampled every minute.',
+	activeEgressChart: 'The most egress in progress at the same time in each bucket, sampled every minute.',
+	activeIngressChart: 'The most ingress sessions publishing at the same time in each bucket, sampled every minute.',
 	activeParticipantsChart:
 		'The most participants connected at the same time in each bucket, sampled every minute. Only regular participants count.',
 	participantKind: 'Every participant session by kind, services included.',

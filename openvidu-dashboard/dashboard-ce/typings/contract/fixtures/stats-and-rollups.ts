@@ -89,10 +89,13 @@ function rollupId(scope: string, bucket: Date): string {
 
 /**
  * The server's aggregator sampled the deployment once, at 10:34:20: the active room and Dave's session on node beta,
- * and node alpha alive with nothing active.
+ * the streaming egress and the publishing ingress session, and node alpha alive with nothing active. Egress and
+ * ingress peaks go to the global scope only.
  */
 const sampled = { rooms: { peakActive: 1 }, participants: { peakActive: 1 } };
 const idleNodeSample = { rooms: { peakActive: 0 }, participants: { peakActive: 0 } };
+const egressSampled = { peakActive: 1 };
+const ingressSampled = { peakActive: 1 };
 
 const fiveMinBucket = at('10:30:00');
 const fiveMinCounters: Omit<FiveMinuteRollupDocument, '_id' | 'scope' | 'bucket'> = {
@@ -109,6 +112,7 @@ export const analytics5min: FiveMinuteRollupDocument[] = [
 		scope: 'global',
 		bucket: fiveMinBucket,
 		...fiveMinCounters,
+		egress: egressSampled,
 		internal: { connectedSids: [P.dave, P.ingress2, P.egressStreamer] }
 	},
 	{
@@ -138,7 +142,8 @@ const closedRoomMinutes = minutes([
 ]);
 
 const hourBucket = at('09:00:00');
-const closedRoomHour: Omit<HourlyRollupDocument, '_id' | 'scope' | 'bucket'> = {
+/** The counters of the closed room's hour in its node scope, which egress and ingress never reach. */
+const closedRoomNodeHour: Omit<HourlyRollupDocument, '_id' | 'scope' | 'bucket'> = {
 	mediaStats: { reported: true },
 	rooms: { created: 1, ended: 1, endedByReason: { API_DELETE: 1 }, durationMsSum: 2_700_000, participantsSum: 4 },
 	participants: {
@@ -162,12 +167,6 @@ const closedRoomHour: Omit<HourlyRollupDocument, '_id' | 'scope' | 'bucket'> = {
 		minutes: closedRoomMinutes
 	},
 	tracks: { published: 2, subscribed: 2, subscribeFailed: 1 },
-	egress: {
-		started: 2,
-		byType: { room_composite: 1, track: 1 },
-		endedByStatus: { complete: 1, failed: 1 },
-		durationMs: 2_340_000
-	},
 	bytes: { up: 385_000_000, down: 888_000_000 },
 	quality: { scoreSum: 1267, scoreCount: 320, poor: 6 },
 	apiCalls: {
@@ -181,6 +180,15 @@ const closedRoomHour: Omit<HourlyRollupDocument, '_id' | 'scope' | 'bucket'> = {
 		}
 	},
 	apiErrors: { total: 1, byMethod: { RoomService_ListParticipants: 1 } }
+};
+const closedRoomHour: Omit<HourlyRollupDocument, '_id' | 'scope' | 'bucket'> = {
+	...closedRoomNodeHour,
+	egress: {
+		started: 2,
+		byType: { room_composite: 1, track: 1 },
+		endedByStatus: { complete: 1, failed: 1 },
+		durationMs: 2_340_000
+	}
 };
 
 export const analyticsHourly: HourlyRollupDocument[] = [
@@ -199,7 +207,7 @@ export const analyticsHourly: HourlyRollupDocument[] = [
 		_id: rollupId(`node:${MEDIA_NODE_ALPHA}`, hourBucket),
 		scope: `node:${MEDIA_NODE_ALPHA}`,
 		bucket: hourBucket,
-		...closedRoomHour
+		...closedRoomNodeHour
 	}
 ];
 
@@ -245,9 +253,16 @@ export const analyticsDaily: DailyRollupDocument[] = [
 			started: 3,
 			byType: { room_composite: 2, track: 1 },
 			endedByStatus: { complete: 1, failed: 1 },
-			durationMs: 2_340_000
+			durationMs: 2_340_000,
+			...egressSampled
 		},
-		ingress: { sessionsStarted: 2, sessionsEnded: 1, byInputType: { rtmp: 2 }, durationMs: 1_190_000 },
+		ingress: {
+			sessionsStarted: 2,
+			sessionsEnded: 1,
+			byInputType: { rtmp: 2 },
+			durationMs: 1_190_000,
+			...ingressSampled
+		},
 		bytes: { up: 483_800_000, down: 987_120_000 },
 		quality: { scoreSum: 1753, scoreCount: 440, poor: 6 },
 		apiCalls: {
@@ -268,9 +283,9 @@ export const analyticsDaily: DailyRollupDocument[] = [
 		_id: rollupId(`node:${MEDIA_NODE_ALPHA}`, dayBucket),
 		scope: `node:${MEDIA_NODE_ALPHA}`,
 		bucket: dayBucket,
-		...closedRoomHour,
-		rooms: { ...closedRoomHour.rooms, ...idleNodeSample.rooms },
-		participants: { ...closedRoomHour.participants, ...idleNodeSample.participants },
+		...closedRoomNodeHour,
+		rooms: { ...closedRoomNodeHour.rooms, ...idleNodeSample.rooms },
+		participants: { ...closedRoomNodeHour.participants, ...idleNodeSample.participants },
 		uniqueIdentities: 3
 	}
 ];

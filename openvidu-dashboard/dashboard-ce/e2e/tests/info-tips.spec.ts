@@ -76,7 +76,18 @@ test('Analytics explains its terms and has no PRO divider', async ({ page }) => 
 		'The most participants connected at the same time in each bucket, sampled every minute. Only regular participants count.'
 	);
 	await page.keyboard.press('Escape');
-	await expect(page.getByRole('button', { name: 'About Participant sessions' })).toHaveCount(1);
+	await page.getByRole('button', { name: 'About Active egress' }).click();
+	await expect(tooltip(page)).toHaveText(
+		'The most egress in progress at the same time in each bucket, sampled every minute.'
+	);
+	await page.keyboard.press('Escape');
+	await page.getByRole('button', { name: 'About Active ingress' }).click();
+	await expect(tooltip(page)).toHaveText(
+		'The most ingress sessions publishing at the same time in each bucket, sampled every minute.'
+	);
+	await page.keyboard.press('Escape');
+	// The summary tile and the chart of the Participants section.
+	await expect(page.getByRole('button', { name: 'About Participant sessions' })).toHaveCount(2);
 });
 
 test.describe('touch', () => {

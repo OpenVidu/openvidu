@@ -17,8 +17,10 @@ export const AnalyticsMetric = {
 	EGRESS_STARTED: 'egressStarted',
 	EGRESS_ENDED: 'egressEnded',
 	EGRESS_DURATION_MS: 'egressDurationMs',
+	EGRESS_PEAK_ACTIVE: 'egressPeakActive',
 	INGRESS_SESSIONS: 'ingressSessions',
 	INGRESS_DURATION_MS: 'ingressDurationMs',
+	INGRESS_PEAK_ACTIVE: 'ingressPeakActive',
 	BYTES_UP: 'bytesUp',
 	BYTES_DOWN: 'bytesDown',
 	SCORE_AVG: 'scoreAvg',
@@ -37,6 +39,8 @@ export interface AnalyticsMetricInfo {
 	hourlyOnly?: true;
 	/** Served at `1d` only: written per UTC day. */
 	dailyOnly?: true;
+	/** Served for the global scope only: egress and ingress run on a media node their events do not name. */
+	globalOnly?: true;
 }
 
 /** Unit, empty value and granularity rules of the CE metrics; the PRO edition adds those of its own. */
@@ -52,11 +56,13 @@ export const ANALYTICS_METRIC_INFO: Readonly<Partial<Record<AnalyticsMetric, Ana
 	uniqueIdentities: { unit: 'count', empty: 0, dailyOnly: true },
 	participantMinutes: { unit: 'minutes', empty: 0, hourlyOnly: true },
 	tracksPublished: { unit: 'count', empty: 0, hourlyOnly: true },
-	egressStarted: { unit: 'count', empty: 0 },
-	egressEnded: { unit: 'count', empty: 0, hourlyOnly: true },
-	egressDurationMs: { unit: 'ms', empty: 0, hourlyOnly: true },
-	ingressSessions: { unit: 'count', empty: 0, hourlyOnly: true },
-	ingressDurationMs: { unit: 'ms', empty: 0, hourlyOnly: true },
+	egressStarted: { unit: 'count', empty: 0, globalOnly: true },
+	egressEnded: { unit: 'count', empty: 0, hourlyOnly: true, globalOnly: true },
+	egressDurationMs: { unit: 'ms', empty: 0, hourlyOnly: true, globalOnly: true },
+	egressPeakActive: { unit: 'count', empty: null, globalOnly: true },
+	ingressSessions: { unit: 'count', empty: 0, hourlyOnly: true, globalOnly: true },
+	ingressDurationMs: { unit: 'ms', empty: 0, hourlyOnly: true, globalOnly: true },
+	ingressPeakActive: { unit: 'count', empty: null, hourlyOnly: true, globalOnly: true },
 	bytesUp: { unit: 'bytes', empty: 0 },
 	bytesDown: { unit: 'bytes', empty: 0 },
 	apiCalls: { unit: 'count', empty: 0, hourlyOnly: true },
@@ -93,8 +99,10 @@ export const ANALYTICS_CE_METRICS: readonly AnalyticsMetric[] = [
 	'egressStarted',
 	'egressEnded',
 	'egressDurationMs',
+	'egressPeakActive',
 	'ingressSessions',
 	'ingressDurationMs',
+	'ingressPeakActive',
 	'bytesUp',
 	'bytesDown',
 	'apiCalls',
@@ -113,6 +121,13 @@ export const ANALYTICS_CE_DIMENSIONS: readonly AnalyticsDimension[] = [
 	'browser',
 	'connectionType',
 	'kind',
+	'egressType',
+	'egressStatus',
+	'ingressInputType'
+];
+
+/** Dimensions served for the global scope only, as the egress and ingress metrics. */
+export const ANALYTICS_GLOBAL_ONLY_DIMENSIONS: readonly AnalyticsDimension[] = [
 	'egressType',
 	'egressStatus',
 	'ingressInputType'
@@ -233,12 +248,13 @@ export interface AnalyticsSummary {
 	avgRoomDurationMs?: number;
 	bytesUp: number;
 	bytesDown: number;
-	egressStarted: number;
-	egressDurationMs: number;
+	/** Egress started in the range; absent in a node scope, as the other egress and ingress values. */
+	egressStarted?: number;
+	egressDurationMs?: number;
 	/** Ingress sessions started in the range. */
-	ingressSessions: number;
+	ingressSessions?: number;
 	/** Duration of the ingress sessions ended in the range. */
-	ingressDurationMs: number;
+	ingressDurationMs?: number;
 	apiCalls: number;
 	/** Percentage, one decimal. */
 	apiErrorRate?: number;

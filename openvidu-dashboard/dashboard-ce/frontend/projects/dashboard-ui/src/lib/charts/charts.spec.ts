@@ -11,12 +11,14 @@ import { routeElement } from '../../testing/harness.js';
 import { BreakdownChart } from './breakdown-chart.js';
 import type { ChartColors } from './chart-colors.js';
 import {
+	breakdownOption,
 	brushRange,
 	chartMarkers,
 	chartSlots,
 	chartSummary,
 	entityColor,
 	entitySlot,
+	fittedPercentRange,
 	foldBreakdown,
 	MAX_MARKERS,
 	OTHER,
@@ -224,6 +226,68 @@ describe('chart options', () => {
 		expect(colors.at(-1)).toBe('#e34948');
 	});
 
+	it('gives the Analytics sections their slots and their main kinds the same ones', () => {
+		expect(['rooms', 'participants', 'egress', 'ingress', 'success'].map(entitySlot)).toEqual([1, 7, 2, 6, 3]);
+		expect(['STANDARD', 'EGRESS', 'INGRESS'].map(entitySlot)).toEqual([7, 2, 6]);
+		expect(['room_composite', 'rtmp'].map(entitySlot)).toEqual([2, 6]);
+	});
+
+	it('keeps the kinds, egress types and input types of one chart distinct', () => {
+		const kinds = chartSlots(['STANDARD', 'EGRESS', 'INGRESS', 'AGENT']);
+		const types = chartSlots(['room_composite', 'web', 'participant', 'track_composite', 'track']);
+		const inputs = chartSlots(['rtmp', 'whip', 'url']);
+
+		expect(new Set(kinds.values()).size).toBe(4);
+		expect([7, 2, 6]).not.toContain(kinds.get('AGENT'));
+		expect(new Set(types.values()).size).toBe(5);
+		expect(new Set(inputs.values()).size).toBe(3);
+	});
+
+	it('fits a percentage axis to its lowest value, by tens, up to 100 %', () => {
+		const rates = (...values: (number | null)[]) => [
+			{
+				name: 'Connection success',
+				points: values.map((value, i): [string, number | null] => [String(i), value])
+			}
+		];
+
+		expect(fittedPercentRange(rates(0.962, 0.99, null))).toEqual({ min: 0.9, max: 1 });
+		expect(fittedPercentRange(rates(0.62, 0.98))).toEqual({ min: 0.5, max: 1 });
+		expect(fittedPercentRange(rates(0.03))).toEqual({ min: 0, max: 1 });
+		expect(fittedPercentRange(rates(null, null))).toEqual({ min: 0, max: 1 });
+		expect(fittedPercentRange(rates(0.95))).toEqual({ min: 0.9, max: 1 });
+
+		const option = timeSeriesOption({
+			series: rates(0.962),
+			from: '2026-10-13T00:00:00.000Z',
+			to: '2026-10-14T00:00:00.000Z',
+			tz: 'UTC',
+			format: 'percent',
+			kind: 'line',
+			fitted: true,
+			colors: COLORS,
+			animation: false
+		}) as { yAxis: { min: number; max: number } };
+
+		expect([option.yAxis.min, option.yAxis.max]).toEqual([0.9, 1]);
+	});
+
+	it('draws an unavailable breakdown as an empty ring without labels or legend', () => {
+		const option = breakdownOption({
+			entries: [{ name: 'room_composite', value: 5 }],
+			variant: 'donut',
+			format: 'number',
+			colors: COLORS,
+			animation: false,
+			unavailable: true
+		}) as { legend?: unknown; series: { label: { show: boolean }; data: { value: number }[]; silent: boolean }[] };
+
+		expect(option.legend).toBeUndefined();
+		expect(option.series[0]?.label.show).toBe(false);
+		expect(option.series[0]?.silent).toBe(true);
+		expect(option.series[0]?.data).toEqual([{ name: '', value: 1 }]);
+	});
+
 	it('moves an entity whose hashed slot is taken in its chart to the next free one', () => {
 		const clash = Array.from({ length: 200 }, (_, i) => `entity-${String(i)}`).find(
 			(name) => entitySlot(name) === 1
@@ -362,7 +426,32 @@ class BreakdownHost {
 	);
 }
 
+@Component({
+	selector: 'ovd-unavailable-breakdown-host',
+	imports: [BreakdownChart],
+	template: `<ovd-breakdown-chart heading="Egress type" [entries]="entries" unavailable />`
+})
+class UnavailableBreakdownHost {
+	readonly entries = [{ name: 'Room composite', value: 5, entity: 'room_composite' }];
+}
+
 describe('BreakdownChart', () => {
+	it('keeps an unavailable breakdown dimmed, without table toggle and with a not available summary', async () => {
+		TestBed.overrideComponent(BreakdownChart, { set: { providers: [NEVER_LOADED] } });
+
+		const fixture = TestBed.createComponent(UnavailableBreakdownHost);
+
+		await fixture.whenStable();
+
+		const element = fixture.nativeElement as HTMLElement;
+
+		expect(element.querySelector('ovd-breakdown-chart')?.classList).toContain('dimmed');
+		expect(element.querySelector('.chart.unavailable')?.getAttribute('aria-label')).toBe(
+			'Egress type: not available'
+		);
+		expect(element.querySelector('.toggle')).toBeNull();
+	});
+
 	it('lists every entry in the table toggle, unfolded', async () => {
 		TestBed.overrideComponent(BreakdownChart, { set: { providers: [NEVER_LOADED] } });
 

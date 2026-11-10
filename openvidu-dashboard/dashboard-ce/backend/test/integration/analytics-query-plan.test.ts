@@ -151,6 +151,15 @@ describe.skipIf(mongoUri === '')(`analytics query plan at scenario ${scenario}`,
 		expect(
 			await explainSeries({ metrics, from: 'now-400d', granularity: '1d' }, 'analytics_daily')
 		).toBeGreaterThan(0);
+		expect(
+			await explainSeries({ metrics: 'egressPeakActive', from: 'now-24h', granularity: '5m' }, 'analytics_5min')
+		).toBeGreaterThan(0);
+		expect(
+			await explainSeries(
+				{ metrics: 'egressPeakActive,ingressPeakActive', from: 'now-7d', granularity: '1h' },
+				'analytics_hourly'
+			)
+		).toBeGreaterThan(0);
 	});
 
 	it('summary: the media statistics coverage reads the rollup marks on scope_bucket', async () => {

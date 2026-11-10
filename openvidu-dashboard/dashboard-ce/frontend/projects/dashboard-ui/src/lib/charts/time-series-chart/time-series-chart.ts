@@ -63,6 +63,8 @@ export class TimeSeriesChart {
 	readonly brush = input(false, { transform: booleanAttribute });
 	readonly height = input(280);
 	readonly yRange = input<{ min: number; max: number }>();
+	/** A percentage y axis fitted to the data instead of 0–100 %. */
+	readonly fitted = input(false, { transform: booleanAttribute });
 	readonly bands = input<readonly QualityBand[]>();
 	/** Shown under the heading, e.g. the bucket ("Hourly") or the unit ("per UTC day"). */
 	readonly note = input<string>();
@@ -89,6 +91,7 @@ export class TimeSeriesChart {
 			stacked: this.stacked(),
 			markers: unavailable ? [] : this.markers(),
 			brush: this.brush() && !unavailable,
+			fitted: this.fitted(),
 			colors: this.palette.colors(),
 			animation: !this.reducedMotion,
 			...(yRange === undefined ? {} : { yRange }),

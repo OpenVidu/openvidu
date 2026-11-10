@@ -36,12 +36,14 @@ const scopeParam = z
 	});
 
 const metricsParam = csvParam(enumValues(AnalyticsMetric), { strict: true }).meta({
-	description: 'Metrics to compute, each at most once',
+	description:
+		'Metrics to compute, each at most once; the egress and ingress metrics are only available for the global scope',
 	param: { example: ['roomsCreated', 'bytesUp'] }
 });
 
 const dimensionsParam = csvParam(enumValues(AnalyticsDimension), { strict: true }).meta({
-	description: 'Dimensions to break down, each at most once',
+	description:
+		'Dimensions to break down, each at most once; `egressType`, `egressStatus` and `ingressInputType` are only available for the global scope',
 	param: { example: ['sdk', 'os'] }
 });
 

@@ -662,10 +662,12 @@ interface MediaStatsMarks {
 	missing?: true;
 }
 
-/** Most rooms and STANDARD sessions active at once in a bucket, as the server's aggregator samples them. */
+/** Most entities active at once in a bucket, as the server's aggregator samples them. */
 interface Peaks {
 	peakActive?: number;
 }
+
+const GLOBAL = 'global';
 
 interface Bucket {
 	mediaStats: MediaStatsMarks;
@@ -692,8 +694,8 @@ interface Bucket {
 		minutes: number;
 	};
 	tracks: { published: number; subscribed: number; subscribeFailed: number };
-	egress: { started: number; endedByStatus: Counter; byType: Counter; durationMs: number };
-	ingress: { sessionsStarted: number; sessionsEnded: number; byInputType: Counter; durationMs: number };
+	egress: Peaks & { started: number; endedByStatus: Counter; byType: Counter; durationMs: number };
+	ingress: Peaks & { sessionsStarted: number; sessionsEnded: number; byInputType: Counter; durationMs: number };
 	bytes: { up: number; down: number };
 	quality: { scoreSum: number; scoreCount: number; poor: number; lost: number };
 	identities?: Set<string>;
@@ -703,7 +705,7 @@ interface FiveMinuteBucket {
 	mediaStats: MediaStatsMarks;
 	rooms: Peaks & { created: number; ended: number };
 	participants: Peaks & { connected: number; joined: number; active: number; left: number; aborted: number };
-	egress: { started: number; ended: number };
+	egress: Peaks & { started: number; ended: number };
 	bytes: { up: number; down: number };
 	quality: { scoreSum: number; scoreCount: number; poor: number; lost: number };
 }
@@ -715,6 +717,10 @@ export interface SampledRollupDoc {
 	bucket: Date;
 	rooms: Peaks;
 	participants: Peaks;
+	/** Global documents only, as every egress and ingress figure. */
+	egress?: Peaks;
+	/** Global hourly and daily documents only. */
+	ingress?: Peaks;
 	uniqueIdentities?: number;
 }
 
@@ -727,18 +733,21 @@ export interface CountedRollupDoc {
 	rooms: Bucket['rooms'];
 	participants: Bucket['participants'];
 	tracks: Bucket['tracks'];
-	egress: Bucket['egress'];
-	ingress: Bucket['ingress'];
+	/** Global documents only: the events do not name the media node that runs an egress or ingress session. */
+	egress?: Bucket['egress'];
+	ingress?: Bucket['ingress'];
 	bytes: { up: Long; down: Long };
 	quality: Bucket['quality'];
 	mediaStats: MediaStatsMarks;
 	uniqueIdentities?: number;
 }
 
-export interface FiveMinuteRollupDoc extends Omit<FiveMinuteBucket, 'bytes'> {
+export interface FiveMinuteRollupDoc extends Omit<FiveMinuteBucket, 'bytes' | 'egress'> {
 	_id: string;
 	scope: string;
 	bucket: Date;
+	/** Global documents only. */
+	egress?: FiveMinuteBucket['egress'];
 	bytes: { up: Long; down: Long };
 }
 
@@ -785,9 +794,32 @@ function activeCounter(spans: Spans | undefined): (time: number) => number {
 	};
 }
 
-function keepPeaks(bucket: { rooms: Peaks; participants: Peaks }, rooms: number, sessions: number): void {
-	bucket.rooms.peakActive = Math.max(bucket.rooms.peakActive ?? 0, rooms);
-	bucket.participants.peakActive = Math.max(bucket.participants.peakActive ?? 0, sessions);
+/** Entities active at once at a sample; egress and ingress are only sampled in the global scope. */
+interface Sample {
+	rooms: number;
+	sessions: number;
+	egress?: number;
+	ingress?: number;
+}
+
+function keepPeak(peaks: Peaks, value: number): void {
+	peaks.peakActive = Math.max(peaks.peakActive ?? 0, value);
+}
+
+function keepPeaks(
+	bucket: { rooms: Peaks; participants: Peaks; egress: Peaks; ingress?: Peaks },
+	sample: Sample
+): void {
+	keepPeak(bucket.rooms, sample.rooms);
+	keepPeak(bucket.participants, sample.sessions);
+
+	if (sample.egress !== undefined) {
+		keepPeak(bucket.egress, sample.egress);
+	}
+
+	if (sample.ingress !== undefined && bucket.ingress !== undefined) {
+		keepPeak(bucket.ingress, sample.ingress);
+	}
 }
 
 /** Accumulates the hourly, daily and (optionally) five-minute rollups of every bundle it receives. */
@@ -797,7 +829,9 @@ export class Rollups {
 	private readonly fiveMinute = new Map<string, FiveMinuteBucket>();
 	private readonly activeRooms = new Map<string, Spans>();
 	private readonly activeSessions = new Map<string, Spans>();
-	private scopes: string[] = ['global'];
+	private readonly activeEgress: Spans = { starts: [], ends: [] };
+	private readonly activeIngress: Spans = { starts: [], ends: [] };
+	private scopes: string[] = [GLOBAL];
 	/** Mark of the bundle being added: its room's server reports media statistics or not. */
 	private mark: keyof MediaStatsMarks = 'reported';
 	private fiveMinuteFrom = Number.POSITIVE_INFINITY;
@@ -808,7 +842,7 @@ export class Rollups {
 		const { room } = bundle;
 
 		this.scopes =
-			this.options.nodes && room.mediaNode !== undefined ? ['global', `node:${room.mediaNode}`] : ['global'];
+			this.options.nodes && room.mediaNode !== undefined ? [GLOBAL, `node:${room.mediaNode}`] : [GLOBAL];
 		this.mark = room.mediaStats === false ? 'missing' : 'reported';
 		this.fiveMinuteFrom = windows.fiveMinuteFrom;
 		this.span(this.activeRooms, room.mediaNode, room.createdAt, room.endedAt);
@@ -857,7 +891,13 @@ export class Rollups {
 			});
 		}
 
+		// Egress and ingress are counted in the global scope only, as the writer does.
+		const roomScopes = this.scopes;
+
+		this.scopes = [GLOBAL];
+
 		for (const e of bundle.egresses) {
+			addSpan(this.activeEgress, e.startedAt, e.endedAt);
 			this.at(
 				e.startedAt,
 				(b) => {
@@ -881,6 +921,7 @@ export class Rollups {
 		}
 
 		for (const s of bundle.ingressSessions) {
+			addSpan(this.activeIngress, s.startedAt, s.endedAt);
 			this.at(s.startedAt, (b) => {
 				b.ingress.sessionsStarted += 1;
 				inc(b.ingress.byInputType, s.inputType);
@@ -890,20 +931,23 @@ export class Rollups {
 				b.ingress.durationMs += s.durationMs ?? 0;
 			});
 		}
+
+		this.scopes = roomScopes;
 	}
 
 	/**
-	 * Samples every minute from `from` to `windows.now` the rooms and STANDARD sessions active in each scope and keeps
-	 * the largest of each bucket as its peaks, as the server's aggregator does: in the global documents of every bucket,
-	 * and in those of a media node label while it holds an active entity or one of its `alive` spans covers the minute.
-	 * Documents of a node scope without any sample get peaks of 0.
+	 * Samples every minute from `from` to `windows.now` the rooms and STANDARD sessions active in each scope, and the
+	 * egresses and ingress sessions in the global one, and keeps the largest of each bucket as its peaks, as the
+	 * server's aggregator does: in the global documents of every bucket, and in those of a media node label while it
+	 * holds an active room or session or one of its `alive` spans covers the minute. Documents without a sample get
+	 * peaks of 0.
 	 */
 	samplePeaks(
 		windows: DeriveWindows,
 		from: number,
 		alive: ReadonlyMap<string, readonly (readonly [number, number])[]>
 	): void {
-		const scopes = new Set(['global', ...this.activeRooms.keys(), ...this.activeSessions.keys()]);
+		const scopes = new Set([GLOBAL, ...this.activeRooms.keys(), ...this.activeSessions.keys()]);
 
 		if (this.options.nodes) {
 			for (const label of alive.keys()) {
@@ -912,17 +956,25 @@ export class Rollups {
 		}
 
 		for (const scope of scopes) {
+			const global = scope === GLOBAL;
 			const rooms = activeCounter(this.activeRooms.get(scope));
 			const sessions = activeCounter(this.activeSessions.get(scope));
-			const spans = scope.startsWith('node:') ? (alive.get(scope.slice('node:'.length)) ?? []) : undefined;
+			const egress = activeCounter(global ? this.activeEgress : undefined);
+			const ingress = activeCounter(global ? this.activeIngress : undefined);
+			const spans = global ? undefined : (alive.get(scope.slice('node:'.length)) ?? []);
 
 			for (let time = Math.ceil(from / MINUTE) * MINUTE; time <= windows.now; time += MINUTE) {
-				const activeRooms = rooms(time);
-				const activeSessions = sessions(time);
+				const sample: Sample = { rooms: rooms(time), sessions: sessions(time) };
+
+				if (global) {
+					sample.egress = egress(time);
+					sample.ingress = ingress(time);
+				}
+
 				const sampled =
 					spans === undefined ||
-					activeRooms > 0 ||
-					activeSessions > 0 ||
+					sample.rooms > 0 ||
+					sample.sessions > 0 ||
 					spans.some(([start, end]) => start <= time && time <= end);
 
 				if (!sampled) {
@@ -931,27 +983,22 @@ export class Rollups {
 
 				keepPeaks(
 					getOrCreate(this.hourly, scope, Math.floor(time / HOUR) * HOUR, this.options.roomSums),
-					activeRooms,
-					activeSessions
+					sample
 				);
-				keepPeaks(
-					getOrCreate(this.daily, scope, Math.floor(time / DAY) * DAY, this.options.roomSums),
-					activeRooms,
-					activeSessions
-				);
+				keepPeaks(getOrCreate(this.daily, scope, Math.floor(time / DAY) * DAY, this.options.roomSums), sample);
 
 				if (this.options.fiveMinute && time >= windows.fiveMinuteFrom) {
-					keepPeaks(
-						this.fiveMinuteBucket(scope, Math.floor(time / FIVE_MINUTES) * FIVE_MINUTES),
-						activeRooms,
-						activeSessions
-					);
+					keepPeaks(this.fiveMinuteBucket(scope, Math.floor(time / FIVE_MINUTES) * FIVE_MINUTES), sample);
 				}
 			}
 		}
 
-		for (const bucket of [...this.hourly.values(), ...this.daily.values(), ...this.fiveMinute.values()]) {
-			keepPeaks(bucket, 0, 0);
+		for (const map of [this.hourly, this.daily, this.fiveMinute]) {
+			for (const [key, bucket] of map) {
+				const zero = key.startsWith(`${GLOBAL}|`) ? { egress: 0, ingress: 0 } : {};
+
+				keepPeaks(bucket, { rooms: 0, sessions: 0, ...zero });
+			}
 		}
 	}
 
@@ -969,14 +1016,17 @@ export class Rollups {
 			const _id = `${scope}:${date.toISOString().replace('.000Z', 'Z')}`;
 
 			if (sampledOnly(b)) {
-				return { _id, scope, bucket: date, ...peaksOf(b) };
+				return { _id, scope, bucket: date, ...peaksOf(scope, b) };
 			}
+
+			const { egress, ...counters } = b;
 
 			return {
 				_id,
 				scope,
 				bucket: date,
-				...b,
+				...counters,
+				...(scope === GLOBAL ? { egress } : {}),
 				bytes: { up: int64(b.bytes.up), down: int64(b.bytes.down) },
 				quality: { ...b.quality, scoreSum: round2(b.quality.scoreSum) }
 			};
@@ -985,7 +1035,7 @@ export class Rollups {
 
 	/** Records an entity active from `start` until `end` (open without one) in the global and `mediaNode` scopes. */
 	private span(target: Map<string, Spans>, mediaNode: string | undefined, start: Date, end: Date | null): void {
-		const scopes = this.options.nodes && mediaNode !== undefined ? ['global', `node:${mediaNode}`] : ['global'];
+		const scopes = this.options.nodes && mediaNode !== undefined ? [GLOBAL, `node:${mediaNode}`] : [GLOBAL];
 
 		for (const scope of scopes) {
 			let spans = target.get(scope);
@@ -995,8 +1045,7 @@ export class Rollups {
 				target.set(scope, spans);
 			}
 
-			spans.starts.push(start.getTime());
-			spans.ends.push(end?.getTime() ?? Number.POSITIVE_INFINITY);
+			addSpan(spans, start, end);
 		}
 	}
 
@@ -1176,6 +1225,12 @@ export class Rollups {
 	}
 }
 
+/** Adds an entity active from `start` until `end`, open without one. */
+function addSpan(spans: Spans, start: Date, end: Date | null): void {
+	spans.starts.push(start.getTime());
+	spans.ends.push(end?.getTime() ?? Number.POSITIVE_INFINITY);
+}
+
 /** `[scope, bucket, value]` of a map keyed by `<scope>|<bucket>`, by scope then bucket. */
 function sortedEntries<T>(map: Map<string, T>): [string, number, T][] {
 	return [...map.entries()]
@@ -1232,10 +1287,18 @@ function sampledOnly(bucket: { mediaStats: MediaStatsMarks }): boolean {
 	return Object.keys(bucket.mediaStats).length === 0;
 }
 
-function peaksOf(bucket: { rooms: Peaks; participants: Peaks }): { rooms: Peaks; participants: Peaks } {
+/** Peaks of a sample-only document: egress in the global documents, ingress in the global hourly and daily ones. */
+function peaksOf(
+	scope: string,
+	bucket: { rooms: Peaks; participants: Peaks; egress: Peaks; ingress?: Peaks }
+): Pick<SampledRollupDoc, 'rooms' | 'participants' | 'egress' | 'ingress'> {
+	const global = scope === GLOBAL;
+
 	return {
 		rooms: { peakActive: bucket.rooms.peakActive ?? 0 },
-		participants: { peakActive: bucket.participants.peakActive ?? 0 }
+		participants: { peakActive: bucket.participants.peakActive ?? 0 },
+		...(global ? { egress: { peakActive: bucket.egress.peakActive ?? 0 } } : {}),
+		...(global && bucket.ingress !== undefined ? { ingress: { peakActive: bucket.ingress.peakActive ?? 0 } } : {})
 	};
 }
 
@@ -1245,7 +1308,7 @@ function toDoc(scope: string, bucket: number, b: Bucket, daily: boolean): Rollup
 	const identities = daily ? { uniqueIdentities: b.identities?.size ?? 0 } : {};
 
 	if (sampledOnly(b)) {
-		return { _id, scope, bucket: date, ...peaksOf(b), ...identities };
+		return { _id, scope, bucket: date, ...peaksOf(scope, b), ...identities };
 	}
 
 	return {
@@ -1255,8 +1318,7 @@ function toDoc(scope: string, bucket: number, b: Bucket, daily: boolean): Rollup
 		rooms: b.rooms,
 		participants: { ...b.participants, minutes: round2(b.participants.minutes) },
 		tracks: b.tracks,
-		egress: b.egress,
-		ingress: b.ingress,
+		...(scope === GLOBAL ? { egress: b.egress, ingress: b.ingress } : {}),
 		bytes: { up: int64(b.bytes.up), down: int64(b.bytes.down) },
 		quality: { ...b.quality, scoreSum: round2(b.quality.scoreSum) },
 		mediaStats: b.mediaStats,

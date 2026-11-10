@@ -428,6 +428,10 @@ const rollupQuality = obj({ scoreSum: double(), scoreCount: int(), poor: int(), 
 
 const apiCalls = obj({ total: int(), byMethod: patternCounts(API_METHOD_PATTERN) });
 
+/** Egress and ingress run on a media node the events do not name, so their rollups exist in the global scope only. */
+const GLOBAL_ONLY = 'Global scope only';
+const EGRESS_PEAK = 'Most egresses in progress at once in the bucket, sampled every minute by the server aggregator';
+
 const hourlyFields = {
 	...rollupBase,
 	rooms: obj({
@@ -457,18 +461,28 @@ const hourlyFields = {
 		)
 	}),
 	tracks: obj({ published: int(), subscribed: int(), subscribeFailed: int() }),
-	egress: obj({
-		started: int(),
-		byType: counts(EgressType),
-		endedByStatus: counts(EgressStatus),
-		durationMs: long()
-	}),
-	ingress: obj({
-		sessionsStarted: int(),
-		sessionsEnded: int(),
-		byInputType: counts(IngressInputType, 'Sessions started by input type'),
-		durationMs: long()
-	}),
+	egress: obj(
+		{
+			started: int(),
+			byType: counts(EgressType),
+			endedByStatus: counts(EgressStatus),
+			durationMs: long(),
+			peakActive: int(EGRESS_PEAK)
+		},
+		{ description: GLOBAL_ONLY }
+	),
+	ingress: obj(
+		{
+			sessionsStarted: int(),
+			sessionsEnded: int(),
+			byInputType: counts(IngressInputType, 'Sessions started by input type'),
+			durationMs: long(),
+			peakActive: int(
+				'Most ingress sessions publishing at once in the bucket, sampled every minute by the server aggregator'
+			)
+		},
+		{ description: GLOBAL_ONLY }
+	),
 	bytes: rollupBytes,
 	quality: rollupQuality,
 	apiCalls,
@@ -499,7 +513,7 @@ const analytics5min = obj({
 			'Most STANDARD sessions active at once in the bucket, sampled every minute by the server aggregator'
 		)
 	}),
-	egress: obj({ started: int(), ended: int() }),
+	egress: obj({ started: int(), ended: int(), peakActive: int(EGRESS_PEAK) }, { description: GLOBAL_ONLY }),
 	bytes: rollupBytes,
 	quality: rollupQuality,
 	internal

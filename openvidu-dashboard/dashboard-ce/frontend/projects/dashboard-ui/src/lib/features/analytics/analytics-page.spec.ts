@@ -76,22 +76,26 @@ describe('analytics plan', () => {
 		scope: 'global' as const
 	};
 
-	it('leaves the PRO items out on CE and splits the hourly-only metrics below an hour', () => {
+	it('leaves the PRO items out on CE and splits the hourly-only metrics and unique identities off', () => {
 		const plan = analyticsPlan(state, new Set());
 
 		expect(plan.series).toEqual([
 			{
 				metrics: [
 					'roomsPeakActive',
+					'roomsCreated',
 					'participantsPeakActive',
+					'participantsJoined',
 					'connectionSuccessRate',
 					'bytesUp',
 					'bytesDown',
+					'egressPeakActive',
 					'egressStarted'
 				],
 				granularity: 'auto'
 			},
-			{ metrics: ['egressEnded', 'ingressSessions'], granularity: '1h' }
+			{ metrics: ['egressEnded', 'ingressPeakActive', 'ingressSessions'], granularity: '1h' },
+			{ metrics: ['uniqueIdentities'], granularity: '1d' }
 		]);
 		expect(plan.dimensions).toEqual([
 			'kind',
@@ -124,6 +128,27 @@ describe('analytics plan', () => {
 		expect(locked.series[0]?.metrics).not.toContain('scoreAvg');
 		expect(locked.dimensions).not.toContain('apiMethod');
 	});
+
+	it('asks for unique identities at one day whatever the page granularity', () => {
+		const weekly = analyticsPlan(
+			{ ...state, range: { ...state.range, from: 'now-7d' }, effective: '1h' },
+			new Set()
+		);
+
+		expect(weekly.series.at(-1)).toEqual({ metrics: ['uniqueIdentities'], granularity: '1d' });
+		expect(weekly.series[0]?.metrics).not.toContain('uniqueIdentities');
+	});
+
+	it('leaves egress and ingress out of a node scope', () => {
+		const plan = analyticsPlan({ ...state, scope: 'node:mn-a' }, new Set(ALL_FEATURES));
+		const metrics = plan.series.flatMap((request) => request.metrics);
+
+		expect(metrics.filter((metric) => /^(egress|ingress)/.test(metric))).toEqual([]);
+		expect(metrics).toEqual(expect.arrayContaining(['roomsPeakActive', 'participantsJoined', 'uniqueIdentities']));
+		expect(plan.dimensions).not.toEqual(expect.arrayContaining(['egressType']));
+		expect(plan.dimensions.filter((dimension) => /^(egress|ingress)/.test(dimension))).toEqual([]);
+		expect(plan.dimensions).toContain('kind');
+	});
 });
 
 describe('AnalyticsPage', () => {
@@ -136,7 +161,12 @@ describe('AnalyticsPage', () => {
 		const { requests, element } = await open('/analytics?from=now-7d&to=now&tz=UTC&granularity=1h');
 		const paths = requests.map((request) => request.request.url).sort();
 
-		expect(paths).toEqual(['api/v1/analytics/breakdowns', 'api/v1/analytics/series', 'api/v1/analytics/summary']);
+		expect(paths).toEqual([
+			'api/v1/analytics/breakdowns',
+			'api/v1/analytics/series',
+			'api/v1/analytics/series',
+			'api/v1/analytics/summary'
+		]);
 
 		for (const request of requests) {
 			expect(request.request.params.get('tz')).toBe('UTC');
@@ -164,42 +194,79 @@ describe('AnalyticsPage', () => {
 			'About Connection success'
 		]);
 		expect(tips(card(element, 'Rooms'))).toEqual(['About Active rooms']);
-		expect(tips(card(element, 'Participants'))).toEqual(['About Active participants', 'About Participant kind']);
+		expect(tips(card(element, 'Participants'))).toEqual([
+			'About Active participants',
+			'About Participant sessions',
+			'About Participant kind'
+		]);
 		expect(tips(card(element, 'Client breakdowns'))).toEqual(['About SDK']);
+		expect(tips(card(element, 'Egress'))).toEqual(['About Active egress']);
+		expect(tips(card(element, 'Ingress'))).toEqual(['About Active ingress']);
 	});
 
-	it('draws the active rooms as one step line beside the room averages', async () => {
+	it('draws each section with its peak as an area beside its volume as bars, in its section colour', async () => {
 		const { element, harness, requests } = await open('/analytics?from=now-24h&to=now&tz=UTC');
 		const metrics = seriesRequests(requests).flatMap((request) => request.metrics);
 		const charts = (harness.routeDebugElement?.queryAll(By.directive(TimeSeriesChart)) ?? []).map(
 			(chart) => chart.componentInstance as TimeSeriesChart
 		);
 		const chart = (heading: string) => charts.find((item) => item.heading() === heading);
+		const drawn = (heading: string) => {
+			const item = chart(heading);
+
+			return [item?.kind(), item?.series().map(({ name, entity }) => [name, entity])];
+		};
 		const rooms = card(element, 'Rooms');
 
-		expect(metrics).toEqual(expect.arrayContaining(['roomsPeakActive', 'participantsPeakActive']));
-		expect(metrics).not.toEqual(expect.arrayContaining(['roomsCreated']));
-		expect(
-			metrics.filter((metric) => ['roomsEnded', 'participantsJoined', 'participantsAborted'].includes(metric))
-		).toEqual([]);
+		expect(metrics).toEqual(
+			expect.arrayContaining([
+				'roomsPeakActive',
+				'roomsCreated',
+				'participantsPeakActive',
+				'participantsJoined',
+				'egressPeakActive',
+				'egressStarted',
+				'ingressPeakActive',
+				'ingressSessions'
+			])
+		);
+		expect(metrics.filter((metric) => ['roomsEnded', 'participantsAborted'].includes(metric))).toEqual([]);
 		expect([...(rooms?.querySelectorAll('ovd-kpi-tile') ?? [])].map(text)).toEqual([
 			'Average room size 4 participants',
 			'Average room duration 6 m 00 s'
 		]);
-		expect(chart('Active rooms')?.kind()).toBe('step');
-		expect(
-			chart('Active rooms')
-				?.series()
-				.map(({ name, entity }) => [name, entity])
-		).toEqual([['Active rooms', 'rooms']]);
-		expect(chart('Active participants')?.kind()).toBe('step');
-		expect(
-			chart('Active participants')
-				?.series()
-				.map(({ name }) => name)
-		).toEqual(['Active participants']);
-		expect(chart('Participant sessions')).toBeUndefined();
-		expect(chart('Rooms created and ended')).toBeUndefined();
+		expect(drawn('Active rooms')).toEqual(['area', [['Active rooms', 'rooms']]]);
+		expect(drawn('Rooms created')).toEqual(['bar', [['Rooms created', 'rooms']]]);
+		expect(drawn('Active participants')).toEqual(['area', [['Active participants', 'participants']]]);
+		expect(drawn('Participant sessions')).toEqual(['bar', [['Participant sessions', 'participants']]]);
+		expect(drawn('Unique identities')).toEqual(['bar', [['Unique identities', 'participants']]]);
+		expect(drawn('Connection success')).toEqual(['line', [['Connection success', 'success']]]);
+		expect(chart('Connection success')?.fitted()).toBe(true);
+		expect(drawn('Active egress')).toEqual(['area', [['Active egress', 'egress']]]);
+		expect(drawn('Egress started')).toEqual(['bar', [['Started', 'egress']]]);
+		expect(drawn('Active ingress')).toEqual(['area', [['Active ingress', 'ingress']]]);
+		expect(drawn('Ingress sessions')).toEqual(['bar', [['Sessions', 'ingress']]]);
+	});
+
+	it('lays out each card in a chart grid that starts with its peak and volume pair', async () => {
+		const { element } = await open('/analytics?from=now-24h&to=now&tz=UTC');
+		const grid = (heading: string) =>
+			[...(card(element, heading)?.querySelector('ovd-chart-grid')?.children ?? [])].map((chart) =>
+				text(chart.querySelector('.chart-title'))
+			);
+
+		expect(grid('Rooms')).toEqual(['Active rooms', 'Rooms created']);
+		expect(grid('Participants')).toEqual([
+			'Active participants',
+			'Participant sessions',
+			'Connection success',
+			'Participant kind',
+			'Unique identities'
+		]);
+		expect(grid('Client breakdowns')).toEqual(['SDK', 'OS', 'Browser', 'Connection type']);
+		expect(grid('Egress')).toEqual(['Active egress', 'Egress started', 'Egress ended by status', 'Egress type']);
+		expect(grid('Ingress')).toEqual(['Active ingress', 'Ingress sessions', 'Ingress input type']);
+		expect(element.querySelector('.identities-hint')).toBeNull();
 	});
 
 	it('keeps the Rooms card of a range sampled only in part, with a gap where no sample exists', async () => {
@@ -228,6 +295,10 @@ describe('AnalyticsPage', () => {
 			points: {
 				roomsPeakActive: [
 					['2026-10-13T10:00:00.000Z', null],
+					['2026-10-13T11:00:00.000Z', 0]
+				],
+				roomsCreated: [
+					['2026-10-13T10:00:00.000Z', 0],
 					['2026-10-13T11:00:00.000Z', 0]
 				]
 			},
@@ -275,12 +346,15 @@ describe('AnalyticsPage', () => {
 		expect(text(element.querySelector('.granularity-select .mat-mdc-select-value'))).toBe('auto (5 min)');
 		expect(seriesRequests(requests)).toEqual([
 			expect.objectContaining({ granularity: 'auto' }),
-			{ metrics: ['egressEnded', 'ingressSessions'], granularity: '1h' }
+			{ metrics: ['egressEnded', 'ingressPeakActive', 'ingressSessions'], granularity: '1h' },
+			{ metrics: ['uniqueIdentities'], granularity: '1d' }
 		]);
 		expect(seriesRequests(requests)[0]?.metrics).not.toContain('egressEnded');
-		const notes = [...(card(element, 'Egress')?.querySelectorAll('.chart-heading + .chart-note') ?? [])].map(text);
+		const notes = (heading: string) =>
+			[...(card(element, heading)?.querySelectorAll('.chart-heading + .chart-note') ?? [])].map(text);
 
-		expect(notes).toEqual(['Five-minute buckets · UTC', 'Hourly · UTC']);
+		expect(notes('Egress')).toEqual(['Five-minute buckets · UTC', 'Five-minute buckets · UTC', 'Hourly · UTC']);
+		expect(notes('Ingress')).toEqual(['Hourly · UTC', 'Hourly · UTC']);
 		expect(card(element, 'Egress')?.querySelector('p.note')).toBeNull();
 		expect(text(card(element, 'Rooms')?.querySelector('.chart-note'))).toBe('Five-minute buckets · UTC');
 		expect([...(card(element, 'Egress')?.querySelectorAll('.chart-title') ?? [])].map(text)).not.toContain(
@@ -483,28 +557,68 @@ describe('AnalyticsPage', () => {
 		expect(bandwidth?.querySelector('.heading-row ovd-info-tip')).toBeNull();
 	});
 
-	it('hides unique identities below a day and shows them per UTC day at one day', async () => {
+	it('draws unique identities per UTC day at every granularity', async () => {
 		const weekly = await open('/analytics?from=now-7d&to=now&tz=UTC');
-
-		expect(seriesRequests(weekly.requests).flatMap((request) => request.metrics)).not.toContain('uniqueIdentities');
-		expect(text(card(weekly.element, 'Participants'))).toContain(
-			'Unique identities are available at daily granularity'
-		);
-		expect(text(card(weekly.element, 'Participants'))).toContain('Switch to 1 d');
-
-		weekly.element.querySelector<HTMLButtonElement>('.identities-hint button')?.click();
-		await settle();
-		expect(TestBed.inject(Router).url).toContain('granularity=1d');
-
-		const daily = await refresh(weekly.http, weekly.harness);
-
-		expect(seriesRequests(daily)[0]?.metrics).toContain('uniqueIdentities');
-
+		const requests = seriesRequests(weekly.requests);
 		const identities = [
 			...(card(weekly.element, 'Participants')?.querySelectorAll('ovd-time-series-chart') ?? [])
 		].find((chart) => text(chart.querySelector('.chart-title')) === 'Unique identities');
 
+		expect(requests[0]?.metrics).not.toContain('uniqueIdentities');
+		expect(requests).toContainEqual({ metrics: ['uniqueIdentities'], granularity: '1d' });
 		expect(text(identities?.querySelector('.chart-heading + .chart-note'))).toBe('per UTC day');
+		expect(text(card(weekly.element, 'Participants'))).not.toContain('Switch to 1 d');
+
+		await TestBed.inject(Router).navigateByUrl('/analytics?from=now-7d&to=now&tz=UTC&granularity=1d');
+
+		const daily = seriesRequests(await refresh(weekly.http, weekly.harness));
+
+		expect(daily[0]?.metrics).toContain('uniqueIdentities');
+		expect(daily.filter((request) => request.granularity === '1d')).toHaveLength(1);
+	});
+
+	it('shows egress and ingress unavailable in a node scope, with a warning and without requests', async () => {
+		const { element, requests, http, harness } = await open(
+			'/analytics?from=now-24h&to=now&tz=UTC&scope=node:media-node-10-0-0-2',
+			['per-node-breakdown']
+		);
+		const tile = (label: string) =>
+			[...element.querySelectorAll('.tiles ovd-kpi-tile')].find((item) => text(item).startsWith(label));
+		const metrics = seriesRequests(requests).flatMap((request) => request.metrics);
+		const dimensions = requests
+			.find((request) => request.request.url.endsWith('breakdowns'))
+			?.request.params.get('dimensions');
+
+		expect(metrics.filter((metric) => /^(egress|ingress)/.test(metric))).toEqual([]);
+		expect(dimensions).not.toMatch(/egress|ingress/);
+
+		for (const heading of ['Egress', 'Ingress']) {
+			const section = card(element, heading);
+			const exportButton = [...(section?.querySelectorAll<HTMLButtonElement>('button') ?? [])].find((button) =>
+				text(button).includes('Export CSV')
+			);
+
+			expect(section?.querySelector('ovd-empty-state')).toBeNull();
+			expect(section?.querySelector('ovd-media-stats-warning')).not.toBeNull();
+			expect(section?.querySelectorAll('.chart.unavailable').length).toBe(heading === 'Egress' ? 4 : 3);
+			expect(
+				section?.querySelectorAll('ovd-kpi-tile.unavailable, ovd-kpi-tile .unavailable').length
+			).toBeGreaterThan(0);
+			expect(exportButton?.disabled).toBe(true);
+			expect(tile(heading)?.querySelector('ovd-media-stats-warning')).not.toBeNull();
+		}
+
+		const page = harness.routeDebugElement?.componentInstance as { entries(dimension: string): { name: string }[] };
+
+		expect(page.entries('kind').map((entry) => entry.name)).toContain('Egress');
+		expect(card(element, 'Participants')?.querySelector('.chart.unavailable')).toBeNull();
+
+		await TestBed.inject(Router).navigateByUrl('/analytics?from=now-24h&to=now&tz=UTC');
+		const global = await refresh(http, harness);
+
+		expect(seriesRequests(global).flatMap((request) => request.metrics)).toEqual(
+			expect.arrayContaining(['egressPeakActive', 'ingressSessions'])
+		);
 	});
 
 	it('names a node scope in the title by its media node label', async () => {
@@ -586,7 +700,7 @@ describe('AnalyticsPage', () => {
 		expect(exportButton()?.disabled).toBe(false);
 	});
 
-	it('exports the peaks in the CSV of the Rooms and Participants cards', async () => {
+	it('exports the series of the charts in the CSV of each entity card', async () => {
 		const { element, http } = await open('/analytics?from=now-7d&to=now&tz=UTC&granularity=1d');
 
 		URL.createObjectURL = vi.fn(() => 'blob:csv');
@@ -607,8 +721,12 @@ describe('AnalyticsPage', () => {
 			return metrics;
 		};
 
-		expect(await exported('Rooms')).toBe('roomsPeakActive');
-		expect(await exported('Participants')).toBe('participantsPeakActive,connectionSuccessRate,uniqueIdentities');
+		expect(await exported('Rooms')).toBe('roomsPeakActive,roomsCreated');
+		expect(await exported('Participants')).toBe(
+			'participantsPeakActive,participantsJoined,connectionSuccessRate,uniqueIdentities'
+		);
+		expect(await exported('Egress')).toBe('egressPeakActive,egressStarted,egressEnded');
+		expect(await exported('Ingress')).toBe('ingressPeakActive,ingressSessions');
 	});
 
 	it('never refreshes by itself and reloads on the manual refresh', async () => {

@@ -100,6 +100,13 @@ $mono-family: 'JetBrains Mono Variable', 'JetBrains Mono', ui-monospace, monospa
 		margin-bottom: 8px;
 	}
 
+	// The charts of an `ovd-chart-grid`, whose measured columns set the basis; a shorter last row grows to share its
+	// width. Until measured they wrap at the minimum width.
+	ovd-chart-grid > * {
+		flex: 1 1 var(--ovd-chart-basis, min(100%, 420px));
+		min-width: 0;
+	}
+
 	// A control shorter than a form field (toggle group, chips) centred on the height of the fields beside it.
 	.ovd-filter-slot {
 		display: flex;

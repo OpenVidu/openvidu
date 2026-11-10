@@ -62,13 +62,15 @@
 			"started": { "$numberInt": "3" },
 			"byType": { "room_composite": { "$numberInt": "2" }, "track": { "$numberInt": "1" } },
 			"endedByStatus": { "complete": { "$numberInt": "1" }, "failed": { "$numberInt": "1" } },
-			"durationMs": { "$numberLong": "2340000" }
+			"durationMs": { "$numberLong": "2340000" },
+			"peakActive": { "$numberInt": "1" }
 		},
 		"ingress": {
 			"sessionsStarted": { "$numberInt": "2" },
 			"sessionsEnded": { "$numberInt": "1" },
 			"byInputType": { "rtmp": { "$numberInt": "2" } },
-			"durationMs": { "$numberLong": "1190000" }
+			"durationMs": { "$numberLong": "1190000" },
+			"peakActive": { "$numberInt": "1" }
 		},
 		"bytes": { "up": { "$numberLong": "483800000" }, "down": { "$numberLong": "987120000" } },
 		"quality": {
@@ -140,12 +142,6 @@
 			"published": { "$numberInt": "2" },
 			"subscribed": { "$numberInt": "2" },
 			"subscribeFailed": { "$numberInt": "1" }
-		},
-		"egress": {
-			"started": { "$numberInt": "2" },
-			"byType": { "room_composite": { "$numberInt": "1" }, "track": { "$numberInt": "1" } },
-			"endedByStatus": { "complete": { "$numberInt": "1" }, "failed": { "$numberInt": "1" } },
-			"durationMs": { "$numberLong": "2340000" }
 		},
 		"bytes": { "up": { "$numberLong": "385000000" }, "down": { "$numberLong": "888000000" } },
 		"quality": {

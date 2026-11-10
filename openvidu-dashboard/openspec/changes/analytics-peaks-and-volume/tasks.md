@@ -2,16 +2,16 @@
 
 ## 1. Contract and typings
 
-- [ ] 1.1 Add `egress.peakActive` (int, optional) to the hourly, daily and 5-minute rollup schemas of
+- [x] 1.1 Add `egress.peakActive` (int, optional) to the hourly, daily and 5-minute rollup schemas of
       `typings/contract/schemas.ts`, and `ingress.peakActive` to the hourly and daily ones, described as sampled
       every minute by the server aggregator in the global scope. Update the fixtures in
       `fixtures/stats-and-rollups.ts`:
       - the 10:34:20 sample counts the open egresses and ingress sessions of the scenario into the global documents;
       - the node documents lose their egress and ingress counters.
       Regenerate the contract artifacts. Verify: `pnpm --filter @openvidu-dashboard/typings test`.
-- [ ] 1.2 Add `peakActive?` to the egress and ingress rollup types and the 5-minute egress type in
+- [x] 1.2 Add `peakActive?` to the egress and ingress rollup types and the 5-minute egress type in
       `typings/src/data-model`. Verify: `./dashboard.sh check` typecheck.
-- [ ] 1.3 Add `egressPeakActive` (`unit: 'count'`, `empty: null`) and `ingressPeakActive` (`unit: 'count'`,
+- [x] 1.3 Add `egressPeakActive` (`unit: 'count'`, `empty: null`) and `ingressPeakActive` (`unit: 'count'`,
       `empty: null`, `hourlyOnly: true`) to `AnalyticsMetric`, `ANALYTICS_METRIC_INFO` and `ANALYTICS_CE_METRICS`
       (22 metrics). Mark the egress and ingress metrics `globalOnly`, and export the global-only dimensions
       (`egressType`, `egressStatus`, `ingressInputType`). Verify: `api-contract.test.ts` with the peak `null` rule and
@@ -19,34 +19,34 @@
 
 ## 2. Writer (openvidu-livekit `openvidu/analytics`)
 
-- [ ] 2.1 Vendor the updated contract. Add `PeakActive *int32` to `RollupEgress`, `FiveMinuteEgress` and
+- [x] 2.1 Vendor the updated contract. Add `PeakActive *int32` to `RollupEgress`, `FiveMinuteEgress` and
       `RollupIngress`. Verify: `writer-check.sh` against the branch, and the contract fixture test.
-- [ ] 2.2 Write the egress and ingress rollup counters (5-minute, hourly and daily) through global-only increments.
+- [x] 2.2 Write the egress and ingress rollup counters (5-minute, hourly and daily) through global-only increments.
       Rooms, participants and the other counters keep their node scope. Verify: projection unit tests for "Egress
       counted globally" and "Ingress counted globally", asserting no `node:` increment carries an `egress` or
       `ingress` path; the existing rollup tests updated.
-- [ ] 2.3 Add the store counts `ActiveEgress` (status `starting`, `active`, `ending`, hint `status_startedAt`) and
+- [x] 2.3 Add the store counts `ActiveEgress` (status `starting`, `active`, `ending`, hint `status_startedAt`) and
       `ActiveIngressSessions` (status `buffering`, `publishing`, hint `status`). Verify: integration test "What
       counts as active" and `explain()` showing both indexes without `COLLSCAN`.
-- [ ] 2.4 Extend the aggregator:
+- [x] 2.4 Extend the aggregator:
       - `samplePeaks` runs the four counts;
       - `PeakIncrements` takes `Peaks{Rooms, Participants, Egress, Ingress}`: global increments with all four
         (ingress hourly and daily only), node increments with rooms and participants only.
       Verify: aggregator unit tests "Busy minute", "Idle deployment", "No ingress in the 5-minute rollups", "Two media
       nodes", "Egress and ingress stay global", "Idle live node" and "Server without a label"; `rollup_test.go` for
       the increments; the integration test of the peaks in the rollups.
-- [ ] 2.5 Benchmark: add 500 open egresses and 200 publishing ingress sessions, among 50 000 closed egresses and
+- [x] 2.5 Benchmark: add 500 open egresses and 200 publishing ingress sessions, among 50 000 closed egresses and
       20 000 closed ingress sessions, to `TestAggregatorPerformanceBudget`, keeping 200 ms at p95. Verify: the
       benchmark result, recorded in the commit body.
-- [ ] 2.6 Run the whole writer suite (`go test ./openvidu/...`, plus the integration suites with Redis and MongoDB)
+- [x] 2.6 Run the whole writer suite (`go test ./openvidu/...`, plus the integration suites with Redis and MongoDB)
       and `golangci-lint` with the Go toolchain of the Dockerfile.
 
 ## 3. Dashboard backend
 
-- [ ] 3.1 Map `egressPeakActive` to `peak('egress.peakActive')` and `ingressPeakActive` to
+- [x] 3.1 Map `egressPeakActive` to `peak('egress.peakActive')` and `ingressPeakActive` to
       `peak('ingress.peakActive')` in the analytics catalogue. Verify: unit tests of the catalogue values and of
       `maximumPaths`.
-- [ ] 3.2 Node scope:
+- [x] 3.2 Node scope:
       - the series, breakdowns and both CSV kinds reject the global-only metrics and dimensions with `400
         VALIDATION_ERROR` ("… is only available for the global scope"), after the PRO gate;
       - the summary omits `egressStarted`, `egressDurationMs`, `ingressSessions` and `ingressDurationMs`;
@@ -54,47 +54,47 @@
       Verify: unit tests of the validation and the summary with an `AnalyticsFeatureGate` that enables
       `per-node-breakdown`; the CE integration test "Global scope"; the node-scope scenarios run in the PRO
       integration suite (6.2), since CE answers `403` to any node scope.
-- [ ] 3.3 Integration tests on the series and CSV endpoints:
+- [x] 3.3 Integration tests on the series and CSV endpoints:
       - "Egress and ingress peaks";
       - "Ingress peak at five minutes" (`400`);
       - "CE metrics" with the 22 metrics;
       - the OpenAPI `metrics` enum;
       - a CSV with `null` peaks as empty cells.
       Verify: `./dashboard.sh test-integration`.
-- [ ] 3.4 Query plan: add `egressPeakActive` at `5m` and `ingressPeakActive` at `1h` to
+- [x] 3.4 Query plan: add `egressPeakActive` at `5m` and `ingressPeakActive` at `1h` to
       `analytics-query-plan.test.ts`. Verify: `explain()` reports the `{ scope, bucket }` index with no extra keys
       examined.
 
 ## 4. Data generator
 
-- [ ] 4.1 Extend the peaks sweep in `derive.ts` with global egress and ingress session spans: `egress.peakActive`
+- [x] 4.1 Extend the peaks sweep in `derive.ts` with global egress and ingress session spans: `egress.peakActive`
       into the three collections, `ingress.peakActive` into hourly and daily only, and idle buckets at `0`. Verify:
       `data-generator-peaks.test.ts` "Generated egress and ingress peaks" and "Idle generated hour", and
       `data-generator.test.ts` against the contract.
-- [ ] 4.2 Keep the egress and ingress counters out of the node scopes (`--node-rollups`). Verify:
+- [x] 4.2 Keep the egress and ingress counters out of the node scopes (`--node-rollups`). Verify:
       `data-generator.test.ts` "Labelled generated database" of "Generated egress and ingress rollups stay global".
-- [ ] 4.3 Update `tools/data-generator/README.md` with the egress and ingress peaks and the global-only egress and
+- [x] 4.3 Update `tools/data-generator/README.md` with the egress and ingress peaks and the global-only egress and
       ingress rollups. Verify: read-through.
 
 ## 5. Dashboard frontend (CE)
 
-- [ ] 5.1 Chart palette:
+- [x] 5.1 Chart palette:
       - `ENTITY_SLOTS` follows the colour table of design.md;
       - new keys `participants`, `success` and `quality`;
       - `STANDARD` → 7, `AGENT` → 5, `INGRESS`/`ingress` → 6, `room_composite` → 2, `track_composite` → 1, `rtmp` → 6.
       Verify: `charts.spec.ts` "Entity slots" and "Kinds of one chart stay distinct", and the existing palette tests.
-- [ ] 5.2 Add `ovd-chart-grid` to the UI library, exported for the editions:
+- [x] 5.2 Add `ovd-chart-grid` to the UI library, exported for the editions:
       - columns from `balancedColumns(count, width, 420, 16)`;
       - a flex-wrap layout whose shorter last row shares its width;
       - laid out before first paint, then on resize and when its content changes.
       Verify: component tests for every `Balanced chart grid` scenario, and the public API test of the library
       exports.
-- [ ] 5.3 Fitted y-axis: a `fitted` input on the time-series chart, a `fitted` option in `timeSeriesOption` for
+- [x] 5.3 Fitted y-axis: a `fitted` input on the time-series chart, a `fitted` option in `timeSeriesOption` for
       percentage series. Verify: `charts.spec.ts` "High rates", "One low bucket", "Very low rate" and "No values".
-- [ ] 5.4 Breakdown chart `unavailable` input: an empty ring or plot over hatching, dimmed, with no slices, labels,
+- [x] 5.4 Breakdown chart `unavailable` input: an empty ring or plot over hatching, dimmed, with no slices, labels,
       legend, tooltip or table toggle. Verify: `charts.spec.ts` "Unavailable donut" and an axe check of the
       unavailable state.
-- [ ] 5.5 Analytics page data:
+- [x] 5.5 Analytics page data:
       - `PAGE_METRICS` with `roomsCreated`, `participantsJoined`, `egressPeakActive` and `ingressPeakActive`;
       - `uniqueIdentities` in its own `1d` request at every granularity;
       - in a node scope, the plan drops the global-only metrics and dimensions;
@@ -104,7 +104,7 @@
         case removed.
       Verify: `analytics-page.spec.ts` plan tests (requests per granularity, `ingressPeakActive` hourly,
       `uniqueIdentities` at `1d` from `auto` over 24 h and 7 d, a node scope without egress or ingress items).
-- [ ] 5.6 Template:
+- [x] 5.6 Template:
       - each entity card has its tiles, then `ovd-chart-grid` with the peak (area) and volume (bar) pair first;
       - Connection success is `fitted`;
       - Unique identities is always the fifth Participants chart, and the hint and the "Switch to 1 d" action go;
@@ -112,15 +112,15 @@
       - the page `.grid` and `.identities-hint` styles are removed.
       Verify: `analytics-page.spec.ts` for the Rooms, Participants, Egress and Ingress section scenarios and "Analytics
       section colours".
-- [ ] 5.7 Node scope: the Egress and Ingress KPI tiles and cards render unavailable with the warning "Egress and
+- [x] 5.7 Node scope: the Egress and Ingress KPI tiles and cards render unavailable with the warning "Egress and
       ingress are not attributed to media nodes. Select All nodes in Scope to see them." (shared texts module), and
       their Export CSV is off; Participant kind keeps its Egress and Ingress slices. Verify: `analytics-page.spec.ts`
       "Node scope", "Participant kind of a node" and "Back to all nodes".
-- [ ] 5.8 CSV exports per card as in "Entity section exports". Verify: `analytics-page.spec.ts` export test at `auto`
+- [x] 5.8 CSV exports per card as in "Entity section exports". Verify: `analytics-page.spec.ts` export test at `auto`
       and at `1d`.
-- [ ] 5.9 `INFO_TEXTS`: `activeEgressChart` and `activeIngressChart` with the texts of `ui-info-tips`. The
+- [x] 5.9 `INFO_TEXTS`: `activeEgressChart` and `activeIngressChart` with the texts of `ui-info-tips`. The
       Participant sessions chart uses `participantSessions`. Verify: `analytics-page.spec.ts` info tip test.
-- [ ] 5.10 e2e:
+- [x] 5.10 e2e:
       - egress and ingress peak series and a daily unique identities series in the analytics fixtures;
       - `analytics.spec.ts`: headings, notes, the CSV metrics, the Participants rows at 1920 px, one chart per row
         on a phone;
@@ -141,21 +141,21 @@
 
 ## 7. Documentation and CHANGELOG
 
-- [ ] 7.1 openvidu-livekit `README-openvidu.md`:
+- [x] 7.1 openvidu-livekit `README-openvidu.md`:
       - the Aggregator section gains the egress and ingress counts, their statuses and the global-only peaks
         (`ingress.peakActive` hourly and daily only);
       - the rollups section says the egress and ingress counters are global-only.
       Verify: read-through.
-- [ ] 7.2 openvidu-livekit `CHANGELOG-openvidu.md`: the **Analytics aggregator** and **New analytics data model** lines
+- [x] 7.2 openvidu-livekit `CHANGELOG-openvidu.md`: the **Analytics aggregator** and **New analytics data model** lines
       of the proposal. Verify: read-through.
-- [ ] 7.3 Dashboard `CHANGELOG.md`: amend the 3.10.0 Analytics line as the proposal says. Verify: read-through.
-- [ ] 7.4 Update the `AGENTS.md` files whose notes name the analytics page layout, the chart palette, the node scopes
+- [x] 7.3 Dashboard `CHANGELOG.md`: amend the 3.10.0 Analytics line as the proposal says. Verify: read-through.
+- [x] 7.4 Update the `AGENTS.md` files whose notes name the analytics page layout, the chart palette, the node scopes
       or the generator outputs, if any. Verify: `./dashboard.sh check` and a grep for `.identities-hint`, `kind="step"`
       in the Analytics page and `sessions` series entities.
 
 ## 8. Final verification
 
-- [ ] 8.1 CE: `./dashboard.sh check`, `./dashboard.sh test-integration`, `./dashboard.sh e2e` and
+- [x] 8.1 CE: `./dashboard.sh check`, `./dashboard.sh test-integration`, `./dashboard.sh e2e` and
       `./dashboard.sh contract-check` against the writer branch, all green; `openspec validate
       analytics-peaks-and-volume --strict` green.
 - [ ] 8.2 Manual check on `./dashboard.sh demo both`:

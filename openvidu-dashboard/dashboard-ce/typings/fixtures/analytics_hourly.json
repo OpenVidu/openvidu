@@ -45,12 +45,6 @@
 			"subscribed": { "$numberInt": "2" },
 			"subscribeFailed": { "$numberInt": "1" }
 		},
-		"egress": {
-			"started": { "$numberInt": "2" },
-			"byType": { "room_composite": { "$numberInt": "1" }, "track": { "$numberInt": "1" } },
-			"endedByStatus": { "complete": { "$numberInt": "1" }, "failed": { "$numberInt": "1" } },
-			"durationMs": { "$numberLong": "2340000" }
-		},
 		"bytes": { "up": { "$numberLong": "385000000" }, "down": { "$numberLong": "888000000" } },
 		"quality": {
 			"scoreSum": { "$numberDouble": "1267.0" },
@@ -71,6 +65,12 @@
 		"apiErrors": {
 			"total": { "$numberInt": "1" },
 			"byMethod": { "RoomService_ListParticipants": { "$numberInt": "1" } }
+		},
+		"egress": {
+			"started": { "$numberInt": "2" },
+			"byType": { "room_composite": { "$numberInt": "1" }, "track": { "$numberInt": "1" } },
+			"endedByStatus": { "complete": { "$numberInt": "1" }, "failed": { "$numberInt": "1" } },
+			"durationMs": { "$numberLong": "2340000" }
 		}
 	},
 	{
@@ -118,12 +118,6 @@
 			"published": { "$numberInt": "2" },
 			"subscribed": { "$numberInt": "2" },
 			"subscribeFailed": { "$numberInt": "1" }
-		},
-		"egress": {
-			"started": { "$numberInt": "2" },
-			"byType": { "room_composite": { "$numberInt": "1" }, "track": { "$numberInt": "1" } },
-			"endedByStatus": { "complete": { "$numberInt": "1" }, "failed": { "$numberInt": "1" } },
-			"durationMs": { "$numberLong": "2340000" }
 		},
 		"bytes": { "up": { "$numberLong": "385000000" }, "down": { "$numberLong": "888000000" } },
 		"quality": {

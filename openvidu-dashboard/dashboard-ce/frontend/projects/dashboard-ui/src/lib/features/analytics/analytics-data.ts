@@ -1,5 +1,6 @@
 import { DOCUMENT, inject, Service } from '@angular/core';
 import {
+	ANALYTICS_GLOBAL_ONLY_DIMENSIONS,
 	ANALYTICS_METRIC_INFO,
 	type AnalyticsBreakdownsResponse,
 	type AnalyticsBucketGranularity,
@@ -25,13 +26,17 @@ import type { AnalyticsProCard } from './analytics-seams.js';
 /** Metrics of the CE cards, asked for on every refresh. */
 export const PAGE_METRICS: readonly AnalyticsMetric[] = [
 	'roomsPeakActive',
+	'roomsCreated',
 	'participantsPeakActive',
+	'participantsJoined',
 	'connectionSuccessRate',
 	'uniqueIdentities',
 	'bytesUp',
 	'bytesDown',
+	'egressPeakActive',
 	'egressStarted',
 	'egressEnded',
+	'ingressPeakActive',
 	'ingressSessions'
 ];
 
@@ -63,7 +68,10 @@ export interface SeriesRequest {
 
 /** The combined requests of one refresh. */
 export interface AnalyticsPlan {
-	/** Metrics at the page granularity, then the hourly-only ones at one hour when the page is finer. */
+	/**
+	 * Metrics at the page granularity, then the hourly-only ones at one hour when the page is finer, and the unique
+	 * identities at one day when the page is not daily.
+	 */
 	series: SeriesRequest[];
 	dimensions: AnalyticsDimension[];
 }
@@ -85,32 +93,40 @@ function allowed(feature: FeatureKey | undefined, features: ReadonlySet<FeatureK
 
 /**
  * The combined requests of a refresh: the CE metrics and dimensions plus those of the PRO cards, PRO items only when
- * their feature is enabled, unique identities only at one day, hourly-only metrics in a second series request while the
- * page granularity is below an hour.
+ * their feature is enabled, hourly-only metrics in a second series request while the page granularity is below an hour,
+ * unique identities in a daily one while it is not daily, and no egress or ingress item in a node scope, where they are
+ * not counted.
  */
 export function analyticsPlan(
 	state: AnalyticsState,
 	features: ReadonlySet<FeatureKey>,
 	cards: readonly AnalyticsProCard[] = []
 ): AnalyticsPlan {
+	const global = state.scope === 'global';
 	const metrics = [...PAGE_METRICS, ...cards.flatMap((card) => card.metrics ?? [])].filter(
 		(metric) =>
 			allowed(analyticsMetricFeature(metric), features) &&
-			(metric !== 'uniqueIdentities' || state.effective === '1d')
+			(global || metricInfo(metric, cards)?.globalOnly !== true)
 	);
+	const daily = state.effective === '1d';
+	const identities = !daily && metrics.includes('uniqueIdentities');
 	const hourly = hourlyGranularity(state.effective);
 	const split = hourly !== state.effective;
 	const hourlyOnly = (metric: AnalyticsMetric) => metricInfo(metric, cards)?.hourlyOnly === true;
-	const main = split ? metrics.filter((metric) => !hourlyOnly(metric)) : metrics;
-	const hourlyMetrics = split ? metrics.filter(hourlyOnly) : [];
+	const rest = metrics.filter((metric) => daily || metric !== 'uniqueIdentities');
+	const main = split ? rest.filter((metric) => !hourlyOnly(metric)) : rest;
+	const hourlyMetrics = split ? rest.filter(hourlyOnly) : [];
 
 	return {
 		series: [
 			{ metrics: main, granularity: state.granularity },
-			...(hourlyMetrics.length > 0 ? [{ metrics: hourlyMetrics, granularity: hourly }] : [])
+			...(hourlyMetrics.length > 0 ? [{ metrics: hourlyMetrics, granularity: hourly }] : []),
+			...(identities ? [{ metrics: ['uniqueIdentities' as const], granularity: '1d' as const }] : [])
 		],
-		dimensions: [...PAGE_DIMENSIONS, ...cards.flatMap((card) => card.dimensions ?? [])].filter((dimension) =>
-			allowed(analyticsDimensionFeature(dimension), features)
+		dimensions: [...PAGE_DIMENSIONS, ...cards.flatMap((card) => card.dimensions ?? [])].filter(
+			(dimension) =>
+				allowed(analyticsDimensionFeature(dimension), features) &&
+				(global || !ANALYTICS_GLOBAL_ONLY_DIMENSIONS.includes(dimension))
 		)
 	};
 }

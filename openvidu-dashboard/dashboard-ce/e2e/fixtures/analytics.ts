@@ -114,6 +114,10 @@ export function analyticsSeries(params: URLSearchParams, fixtures: AnalyticsFixt
 				return [{ name, points: points((index) => (index < 4 ? null : 3 + (index % 5))) }];
 			case 'participantsPeakActive':
 				return [{ name, points: points((index) => (index < 4 ? null : 12 + 2 * (index % 6))) }];
+			case 'egressPeakActive':
+				return [{ name, points: points((index) => (index < 4 ? null : 1 + (index % 3))) }];
+			case 'ingressPeakActive':
+				return [{ name, points: points((index) => (index < 4 ? null : index % 2)) }];
 			case 'egressEnded':
 				return [
 					{ name: 'egressEnded.complete', points: points((index) => (index % 3) + 1) },

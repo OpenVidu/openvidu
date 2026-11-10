@@ -47,7 +47,7 @@ export class CardContent {
 					ovdSectionActions
 					matButton
 					type="button"
-					[disabled]="locked() || exporting()"
+					[disabled]="locked() || exporting() || exportDisabled()"
 					(click)="exportCsv.emit()"
 				>
 					<mat-icon svgIcon="download" />
@@ -102,6 +102,8 @@ export class AnalyticsCard {
 	readonly empty = input(false, { transform: booleanAttribute });
 	readonly exportable = input(true, { transform: booleanAttribute });
 	readonly exporting = input(false, { transform: booleanAttribute });
+	/** Keeps "Export CSV" disabled, as for data the current scope does not have. */
+	readonly exportDisabled = input(false, { transform: booleanAttribute });
 	/** Height of the real content, kept by the skeleton and the empty state. */
 	readonly height = input(280);
 	readonly exportCsv = output();
