@@ -10,7 +10,7 @@ FROM bluenviron/mediamtx:1.21.0-ffmpeg AS mediamtx
 # Network impairments (NetworkConditioner). Pumba 1.x installs netem at reserved handles
 # that NetworkConditioner.PUMBA_NETEM_QDISC hard-codes: run the connection quality tests
 # on a pull request that bumps it
-FROM gaiaadm/pumba:1.2.1 AS pumba
+FROM gaiaadm/pumba:1.6.0 AS pumba
 
 # tc and iptables, run by Pumba. The image has no version tags: Dependabot updates the
 # digest to the one of "latest"
