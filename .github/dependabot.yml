@@ -11,6 +11,14 @@ multi-ecosystem-groups:
       interval: "weekly"
     commit-message:
       prefix: "openvidu-test-e2e"
+  # One weekly pull request for OpenViduAndroidE2eTest (app, emulator image, Appium client). Test it
+  # with openvidu-pro's "OpenVidu Pro E2E Android tests" workflow; push the image (create_image.sh)
+  # once merged. The image's API and CMDLINE_TOOLS arguments are bumped by hand.
+  android-test-environment:
+    schedule:
+      interval: "weekly"
+    commit-message:
+      prefix: "openvidu-test-e2e"
 
 updates:
   - package-ecosystem: "github-actions"
@@ -61,3 +69,28 @@ updates:
     patterns: ["Livekit.Rtc.Dotnet"]
     allow:
       - dependency-name: "Livekit.Rtc.Dotnet"
+  - package-ecosystem: "gradle"
+    directory: "/openvidu-test-e2e/src/test/resources/android-app"
+    multi-ecosystem-group: "android-test-environment"
+    patterns: ["*"]
+  - package-ecosystem: "docker"
+    directory: "/openvidu-test-e2e/docker/openvidu-test-e2e-android"
+    multi-ecosystem-group: "android-test-environment"
+    patterns: ["*"]
+    # No Node.js major is ignored: from Node.js 27 on there is one a year, and every one
+    # becomes LTS six months after its release
+    ignore:
+      # Ubuntu LTS releases only (YY.04 of even years). Extend the list before 32.10
+      - dependency-name: "ubuntu"
+        versions:
+          [">= 26.10, < 28.04", ">= 28.10, < 30.04", ">= 30.10, < 32.04"]
+  - package-ecosystem: "npm"
+    directory: "/openvidu-test-e2e/docker/openvidu-test-e2e-android/appium"
+    multi-ecosystem-group: "android-test-environment"
+    patterns: ["*"]
+  - package-ecosystem: "maven"
+    directory: "/openvidu-test-browsers"
+    multi-ecosystem-group: "android-test-environment"
+    patterns: ["io.appium:java-client"]
+    allow:
+      - dependency-name: "io.appium:java-client"

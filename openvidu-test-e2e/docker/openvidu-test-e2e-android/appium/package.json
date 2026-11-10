@@ -1,0 +1,9 @@
+{
+  "name": "openvidu-test-e2e-android-appium",
+  "private": true,
+  "description": "The Appium server and driver of the image openvidu/openvidu-test-e2e-android, installed with npm ci so that Dependabot keeps them up to date",
+  "dependencies": {
+    "appium": "3.9.0",
+    "appium-uiautomator2-driver": "8.7.3"
+  }
+}

@@ -520,6 +520,16 @@ public class AbstractOpenViduTestappE2eTest extends OpenViduTestE2e {
 	// MIN_FRAMES_DECODED_FPS or more, averaged over a window of at least
 	// MIN_FRAMES_DECODED_WINDOW_MILLIS
 	protected void waitUntilSubscriberFramesDecodedIncrease(OpenViduTestappUser user, WebElement videoElement) {
+		this.waitUntilSubscriberFramesDecodedIncrease(user, videoElement, MIN_FRAMES_DECODED_FPS);
+	}
+
+	/**
+	 * Same, with another minimum frame rate: for publishers that cannot sustain
+	 * MIN_FRAMES_DECODED_FPS, such as an Android emulator, whose camera gives a few
+	 * frames per second
+	 */
+	protected void waitUntilSubscriberFramesDecodedIncrease(OpenViduTestappUser user, WebElement videoElement,
+			final long minFps) {
 		final long initialFramesDecoded = this.getSubscriberVideoFramesDecoded(user, videoElement);
 		final long initialFramesReceived = this.getSubscriberVideoFramesReceived(user, videoElement);
 		final long windowStart = System.currentTimeMillis();
@@ -544,7 +554,7 @@ public class AbstractOpenViduTestappE2eTest extends OpenViduTestE2e {
 			// frame every now and then falls further behind the required rate
 			// instead of eventually satisfying it
 			return windowMillis >= MIN_FRAMES_DECODED_WINDOW_MILLIS
-					&& lastFramesDecoded.get() * 1000 >= MIN_FRAMES_DECODED_FPS * windowMillis;
+					&& lastFramesDecoded.get() * 1000 >= minFps * windowMillis;
 		}, () -> {
 			long framesDecoded = lastFramesDecoded.get();
 			long framesReceived = lastFramesReceived.get();
@@ -568,7 +578,7 @@ public class AbstractOpenViduTestappE2eTest extends OpenViduTestE2e {
 			return "Timeout waiting for subscriber track to decode video at a sustained frame rate: only "
 					+ framesDecoded + " frame(s) decoded in " + windowMillis + " ms ("
 					+ String.format("%.2f", framesDecoded * 1000d / Math.max(1, windowMillis))
-					+ " fps), while at least " + MIN_FRAMES_DECODED_FPS
+					+ " fps), while at least " + minFps
 					+ " fps are required. Such a subscriber video is a frozen video. " + diagnosis;
 		});
 	}

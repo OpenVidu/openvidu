@@ -39,10 +39,12 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.tuple.Triple;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Assumptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.DockerClientFactory;
 import org.testcontainers.containers.BindMode;
+import org.testcontainers.containers.Container.ExecResult;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.Network;
 import org.testcontainers.containers.startupcheck.OneShotStartupCheckStrategy;
@@ -50,15 +52,19 @@ import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.containers.wait.strategy.WaitStrategy;
 import org.testcontainers.utility.DockerImageName;
 
+import com.github.dockerjava.api.command.CreateContainerCmd;
+import com.github.dockerjava.api.model.Device;
 import com.github.dockerjava.api.model.Mount;
 import com.github.dockerjava.api.model.MountType;
 
+import io.appium.java_client.android.options.UiAutomator2Options;
 import io.livekit.server.AccessToken;
 import io.livekit.server.CanPublish;
 import io.livekit.server.IngressServiceClient;
 import io.livekit.server.RoomJoin;
 import io.livekit.server.RoomName;
 import io.livekit.server.RoomServiceClient;
+import io.openvidu.test.browsers.AndroidAppUser;
 import io.openvidu.test.browsers.BrowserUser;
 import io.openvidu.test.browsers.ChromeUser;
 import io.openvidu.test.browsers.EdgeUser;
@@ -77,6 +83,11 @@ public class OpenViduTestE2e {
 	private final static WaitStrategy waitBrowser = Wait.forLogMessage("^.*Started Selenium Standalone.*$", 1);
 
 	protected static String RTSP_SERVER_IMAGE = "bluenviron/mediamtx:1.21.0-ffmpeg";
+
+	// Android emulator with an Appium server (docker/openvidu-test-e2e-android), which
+	// also builds the Android app of src/test/resources/android-app
+	protected static String ANDROID_IMAGE = "openvidu/openvidu-test-e2e-android:16";
+	protected static final String ANDROID_APP_PACKAGE = "io.openvidu.test.android";
 
 	// Key is the common name of the video codec. It must match the output log of
 	// the RTSP server when receiving it.
@@ -627,18 +638,21 @@ public class OpenViduTestE2e {
 		return new GenericContainer<>(DockerImageName.parse(image))
 				.withCreateContainerCmdModifier(
 						cmd -> cmd.withName(sdk + "-" + role + "-" + (int) (Math.random() * 100000)))
-				// Not withFileSystemBind: it resolves its first argument as a host path
-				.withCreateContainerCmdModifier(cmd -> {
-					List<Mount> mounts = new ArrayList<>();
-					if (cmd.getHostConfig().getMounts() != null) {
-						mounts.addAll(cmd.getHostConfig().getMounts());
-					}
-					mounts.add(new Mount().withType(MountType.VOLUME).withSource(cacheVolume).withTarget("/cache"));
-					cmd.getHostConfig().withMounts(mounts);
-				})
+				.withCreateContainerCmdModifier(cmd -> mountVolume(cmd, cacheVolume, "/cache", false))
 				.withNetworkMode("host").withFileSystemBind(programDir, "/app", BindMode.READ_ONLY).withEnv(env)
 				.withCommand("sh", "-c", "mkdir -p /work && cp -r /app/. /work && cd /work && " + command)
 				.withLogConsumer(frame -> log.info("[{}-{}] {}", sdk, role, frame.getUtf8String().stripTrailing()));
+	}
+
+	// Mounts a Docker volume in the container. Not withFileSystemBind: it resolves
+	// its first argument as a host path
+	private static void mountVolume(CreateContainerCmd cmd, String volume, String target, boolean readOnly) {
+		List<Mount> mounts = new ArrayList<>();
+		if (cmd.getHostConfig().getMounts() != null) {
+			mounts.addAll(cmd.getHostConfig().getMounts());
+		}
+		mounts.add(new Mount().withType(MountType.VOLUME).withSource(volume).withTarget(target).withReadOnly(readOnly));
+		cmd.getHostConfig().withMounts(mounts);
 	}
 
 	// Server SDKs whose publisher program is already prepared in this JVM
@@ -761,6 +775,260 @@ public class OpenViduTestE2e {
 
 		publisherContainer.start();
 		containers.add(publisherContainer);
+	}
+
+	// The APK as the build leaves it in the "android" cache volume, mounted at /cache
+	private static final String ANDROID_APP_APK = "/cache/android-app/app-debug.apk";
+	// The address at which the emulator reaches the loopback interface of its host
+	private static final String ANDROID_EMULATOR_HOST_LOOPBACK = "10.0.2.2";
+	private static final int APPIUM_PORT = 4723;
+	private static final Object ANDROID_APP_BUILD_LOCK = new Object();
+	private static boolean androidAppBuilt = false;
+
+	// The Android emulator, shared by the tests of the JVM (see setupAndroidApp)
+	private static GenericContainer<?> androidEmulator;
+	// Whether the next test may use it: not from the start of a test until its app
+	// is open, nor after a test that failed with it
+	private static volatile boolean androidEmulatorReusable = false;
+
+	/**
+	 * Whether this host can run the Android emulator, which needs KVM: without it,
+	 * booting would take tens of minutes. The device only has to exist: the
+	 * emulator runs as root in its container, which Docker gives the device, so the
+	 * user running the tests needs no access to it (a CI runner's user may not be in
+	 * the kvm group)
+	 */
+	protected static boolean isAndroidEmulatorSupported() {
+		return Files.exists(Paths.get("/dev/kvm"));
+	}
+
+	/**
+	 * Queues in the background the pull of {@link #ANDROID_IMAGE} (about 4.3 GB), on
+	 * hosts that can run the emulator only. Call it after
+	 * {@link #loadEnvironmentVariables()}, which may override the image.
+	 */
+	protected static void prePullAndroidImage() {
+		if (isAndroidEmulatorSupported()) {
+			DockerImages.prePull(ANDROID_IMAGE);
+		}
+	}
+
+	/**
+	 * Builds the APK of the Android app (src/test/resources/android-app) with Gradle
+	 * in a container of {@link #ANDROID_IMAGE}, once per JVM. Like the server SDK
+	 * publishers, the program is mounted read-only at /app and built in /work, and
+	 * the "android" cache volume (see {@link #sdkCacheVolume}) keeps Gradle's
+	 * downloads and the APK for the rest of the run. The first build downloads
+	 * Gradle, the Android Gradle plugin and the LiveKit SDK, which takes minutes:
+	 * {@link #setupAndroidApp()} calls it before any Room exists.
+	 */
+	protected void prepareAndroidApp() {
+		synchronized (ANDROID_APP_BUILD_LOCK) {
+			if (androidAppBuilt) {
+				return;
+			}
+			DockerImages.await(ANDROID_IMAGE);
+			String appDir = Paths.get("src/test/resources/android-app").toAbsolutePath().toString();
+			String cacheVolume = sdkCacheVolume("android");
+			// Without the output and the SDK path of a build made on the developer's machine
+			String build = "mkdir -p /work " + Paths.get(ANDROID_APP_APK).getParent()
+					+ " && cp -r /app/. /work && cd /work && rm -rf .gradle build app/build local.properties"
+					+ " && sh gradlew --no-daemon --console=plain assembleDebug"
+					+ " && cp app/build/outputs/apk/debug/app-debug.apk " + ANDROID_APP_APK;
+			long start = System.currentTimeMillis();
+			try (GenericContainer<?> builder = new GenericContainer<>(DockerImageName.parse(ANDROID_IMAGE))
+					.withCreateContainerCmdModifier(
+							cmd -> cmd.withName("android-app-build-" + (int) (Math.random() * 100000)))
+					.withCreateContainerCmdModifier(cmd -> mountVolume(cmd, cacheVolume, "/cache", false))
+					.withNetworkMode("host").withFileSystemBind(appDir, "/app", BindMode.READ_ONLY)
+					.withEnv("GRADLE_USER_HOME", "/cache/gradle").withCommand("bash", "-c", build)
+					.withLogConsumer(
+							frame -> log.info("[android-app-build] {}", frame.getUtf8String().stripTrailing()))
+					.withStartupCheckStrategy(new OneShotStartupCheckStrategy().withTimeout(Duration.ofMinutes(20)))) {
+				builder.start();
+			}
+			log.info("Android app built in {} s", (System.currentTimeMillis() - start) / 1000);
+			androidAppBuilt = true;
+		}
+	}
+
+	/**
+	 * Opens the Android app through Appium, in the Android emulator that the tests
+	 * of this JVM share ({@link #ANDROID_IMAGE}, with an Appium server). The first
+	 * test boots it, which takes about a minute, and installs the app with every
+	 * permission granted. Every later test gets the app as the first one did: its
+	 * process is killed and Appium opens it again, so it starts with no Room and
+	 * with the switches of its layout, the emulator's network is on (the
+	 * reconnection test turns it off and on) and its logcat is empty. An emulator
+	 * that stopped answering, or that a failed test was using (see
+	 * {@link #discardAndroidEmulator()}), is replaced by a new one, whatever state
+	 * it was left in. {@link #stopAndroidEmulator()} stops it after the tests. The
+	 * test is skipped (not failed) on a host without KVM, where the emulator would
+	 * need tens of minutes to boot.
+	 *
+	 * Like the browsers, the emulator shares the host's network: the app reaches
+	 * the host's localhost at 10.0.2.2 (see {@link #livekitUrlForAndroidEmulator()}),
+	 * and the WebRTC media leaves through the emulator's NAT towards the candidates
+	 * the server advertises.
+	 */
+	protected AndroidAppUser setupAndroidApp() throws Exception {
+		Assumptions.assumeTrue(isAndroidEmulatorSupported(),
+				"The Android emulator needs KVM, and /dev/kvm is missing on this host");
+		prepareAndroidApp();
+
+		boolean reuse = androidEmulatorReusable && isAndroidEmulatorHealthy();
+		androidEmulatorReusable = false;
+		if (reuse) {
+			androidShell("am", "force-stop", ANDROID_APP_PACKAGE);
+			androidShell("cmd", "connectivity", "airplane-mode", "disable");
+			androidShell("logcat", "-c");
+			log.info("Android emulator reused: app stopped, network on, logcat cleared");
+		} else {
+			stopAndroidEmulator();
+			startAndroidEmulator();
+		}
+
+		UiAutomator2Options options = new UiAutomator2Options().setAppPackage(ANDROID_APP_PACKAGE)
+				.setAppActivity(".MainActivity").setNoReset(true).setNewCommandTimeout(Duration.ofMinutes(10))
+				// On a new emulator, Appium installs its UiAutomator2 server first
+				.setUiautomator2ServerInstallTimeout(Duration.ofMinutes(2))
+				.setUiautomator2ServerLaunchTimeout(Duration.ofMinutes(2)).setAdbExecTimeout(Duration.ofMinutes(1));
+		// The app keeps drawing video and its status, so it is never idle: by default
+		// UiAutomator2 would wait up to 10 s for it before every command
+		options.setCapability("appium:settings[waitForIdleTimeout]", 0);
+		AndroidAppUser user = new AndroidAppUser("AndroidUser", 50,
+				URI.create("http://localhost:" + APPIUM_PORT).toURL(), options);
+		this.browserUsers.add(user);
+		androidEmulatorReusable = true;
+		return user;
+	}
+
+	/**
+	 * Boots the shared Android emulator and installs the Android app in it. Not in
+	 * {@link #containers}, which the dispose of every test stops
+	 */
+	private static void startAndroidEmulator() throws Exception {
+		String cacheVolume = sdkCacheVolume("android");
+		GenericContainer<?> emulator = new GenericContainer<>(DockerImageName.parse(ANDROID_IMAGE))
+				.withCreateContainerCmdModifier(
+						cmd -> cmd.withName("openvidu-test-android-" + (int) (Math.random() * 100000)))
+				.withCreateContainerCmdModifier(cmd -> {
+					mountVolume(cmd, cacheVolume, "/cache", true);
+					cmd.getHostConfig().withDevices(Device.parse("/dev/kvm"));
+				}).withNetworkMode("host")
+				// The image's health check: booted, animations off and Appium answering
+				.waitingFor(Wait.forHealthcheck().withStartupTimeout(Duration.ofMinutes(10)));
+		androidEmulator = emulator;
+		long start = System.currentTimeMillis();
+		emulator.start();
+		log.info("Android emulator ready in {} s", (System.currentTimeMillis() - start) / 1000);
+
+		ExecResult install = emulator.execInContainer("adb", "install", "-r", "-g", ANDROID_APP_APK);
+		if (install.getExitCode() != 0 || !install.getStdout().contains("Success")) {
+			Assertions.fail("Could not install the Android app (exit code " + install.getExitCode() + "): "
+					+ install.getStdout() + install.getStderr());
+		}
+	}
+
+	// Running, and its health check passes: booted and Appium answering
+	private static boolean isAndroidEmulatorHealthy() {
+		try {
+			return androidEmulator != null && androidEmulator.isRunning() && androidEmulator.isHealthy();
+		} catch (Exception e) {
+			log.warn("Could not check the Android emulator: {}", e.toString());
+			return false;
+		}
+	}
+
+	/**
+	 * Has the next test boot a new Android emulator instead of reusing this one:
+	 * for a test that failed while using it, which may have left it in any state
+	 */
+	protected static void discardAndroidEmulator() {
+		androidEmulatorReusable = false;
+	}
+
+	/** Stops the shared Android emulator, if any: in the AfterAll of its tests */
+	protected static void stopAndroidEmulator() {
+		androidEmulatorReusable = false;
+		if (androidEmulator != null) {
+			try {
+				androidEmulator.stop();
+			} catch (Exception e) {
+				log.warn("Could not stop the Android emulator: {}", e.toString());
+			}
+			androidEmulator = null;
+		}
+	}
+
+	/**
+	 * Runs a shell command in the shared Android emulator (adb shell)
+	 * and returns its output, failing if it does not exit with 0
+	 */
+	protected String androidShell(String... command) throws Exception {
+		String[] adbShell = new String[command.length + 2];
+		adbShell[0] = "adb";
+		adbShell[1] = "shell";
+		System.arraycopy(command, 0, adbShell, 2, command.length);
+		ExecResult result = androidEmulator.execInContainer(adbShell);
+		if (result.getExitCode() != 0) {
+			Assertions.fail("adb shell " + String.join(" ", command) + " exited with " + result.getExitCode() + ": "
+					+ result.getStdout() + result.getStderr());
+		}
+		return result.getStdout();
+	}
+
+	/**
+	 * {@link #LIVEKIT_URL} as the Android emulator reaches it: inside the emulator
+	 * "localhost" is the emulator itself, and the host's localhost is 10.0.2.2.
+	 */
+	protected static String livekitUrlForAndroidEmulator() {
+		URI uri = URI.create(LIVEKIT_URL);
+		String host = uri.getHost();
+		if (!"localhost".equals(host) && !host.startsWith("127.")) {
+			return LIVEKIT_URL;
+		}
+		try {
+			return new URI(uri.getScheme(), uri.getUserInfo(), ANDROID_EMULATOR_HOST_LOOPBACK, uri.getPort(),
+					uri.getPath(), uri.getQuery(), uri.getFragment()).toString();
+		} catch (URISyntaxException e) {
+			throw new IllegalArgumentException("Wrong LIVEKIT_URL " + LIVEKIT_URL, e);
+		}
+	}
+
+	/**
+	 * The last lines of the emulator's logcat (the app and the LiveKit SDK log
+	 * there) and of the container's own output (emulator and Appium), to explain a
+	 * failure of an Android test.
+	 */
+	protected String androidDiagnostics() {
+		if (androidEmulator == null || !androidEmulator.isRunning()) {
+			return "No Android emulator running";
+		}
+		StringBuilder diagnostics = new StringBuilder();
+		try {
+			ExecResult logcat = androidEmulator.execInContainer("adb", "logcat", "-d", "-t", "2000", "*:I");
+			// Without the guest's audio HAL, which logs every read of the emulator's
+			// microphone that fails, as most do without host audio, and without the
+			// warning WebRTC logs for every frame of a video stream with no sink, only
+			// counted
+			final String noSink = "VideoReceiveStreamInterface not connected to a VideoSink";
+			List<String> all = logcat.getStdout().lines().filter(line -> !line.contains("impl.ranchu")).toList();
+			List<String> lines = all.stream().filter(line -> !line.contains(noSink)).toList();
+			diagnostics.append("logcat:\n")
+					.append(String.join("\n", lines.subList(Math.max(0, lines.size() - 400), lines.size())))
+					.append('\n').append(logcat.getStderr());
+			if (all.size() > lines.size()) {
+				diagnostics.append("(").append(all.size() - lines.size()).append(" lines \"").append(noSink)
+						.append("\" left out)\n");
+			}
+		} catch (Exception e) {
+			diagnostics.append("Could not read the logcat: ").append(e).append('\n');
+		}
+		List<String> lines = androidEmulator.getLogs().lines().toList();
+		diagnostics.append("Emulator and Appium output:\n")
+				.append(String.join("\n", lines.subList(Math.max(0, lines.size() - 100), lines.size())));
+		return diagnostics.toString();
 	}
 
 	private void waitUntilLog(GenericContainer<?> container, String regex, int secondsTimeout) {
@@ -998,6 +1266,11 @@ public class OpenViduTestE2e {
 			EDGE_VERSION = edgeVersion;
 		}
 		log.info("Using Edge {}", EDGE_VERSION);
+
+		String androidImage = System.getProperty("ANDROID_IMAGE");
+		if (androidImage != null && !androidImage.isBlank()) {
+			ANDROID_IMAGE = androidImage;
+		}
 
 		String openviduProLicense = System.getProperty("OPENVIDU_PRO_LICENSE");
 		if (openviduProLicense != null) {

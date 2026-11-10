@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fitsSystemWindows="true"
+    android:orientation="vertical"
+    android:padding="8dp">
+
+    <EditText
+        android:id="@+id/url"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="LiveKit URL"
+        android:importantForAutofill="no"
+        android:inputType="textUri"
+        android:singleLine="true" />
+
+    <EditText
+        android:id="@+id/token"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Access token"
+        android:importantForAutofill="no"
+        android:inputType="text"
+        android:singleLine="true" />
+
+    <!-- Publishing options, applied when connecting -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <EditText
+            android:id="@+id/codec"
+            android:layout_width="120dp"
+            android:layout_height="wrap_content"
+            android:hint="Codec (vp8)"
+            android:importantForAutofill="no"
+            android:inputType="text"
+            android:singleLine="true" />
+
+        <Switch
+            android:id="@+id/simulcast"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:checked="true"
+            android:text="Simulcast" />
+
+        <!-- Like the fake microphone of a browser: an emulator's microphone records silence -->
+        <Switch
+            android:id="@+id/test_tone"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:text="Test tone" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/connect"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Connect" />
+
+        <Button
+            android:id="@+id/disconnect"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Disconnect" />
+
+        <TextView
+            android:id="@+id/state"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+    <!-- While connected -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <Switch
+            android:id="@+id/camera"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:checked="true"
+            android:text="Camera" />
+
+        <Switch
+            android:id="@+id/microphone"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:checked="true"
+            android:text="Mic" />
+
+        <Button
+            android:id="@+id/send_data"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:text="Send data" />
+    </LinearLayout>
+
+    <!-- With adaptive stream, the size and the visibility of the remote video views
+         decide the layer the server sends, and whether it sends any -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <Switch
+            android:id="@+id/large_videos"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Large videos" />
+
+        <Switch
+            android:id="@+id/show_videos"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:checked="true"
+            android:text="Show videos" />
+    </LinearLayout>
+
+    <!-- The local video (the camera captures in portrait), then one 16:9 view per
+         subscribed remote video: 90dp high gets the 360p layer of a 1080p simulcast -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:orientation="horizontal">
+
+        <io.livekit.android.renderer.TextureViewRenderer
+            android:id="@+id/local_video"
+            android:layout_width="72dp"
+            android:layout_height="128dp"
+            android:contentDescription="local-video" />
+
+        <LinearLayout
+            android:id="@+id/remote_videos"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="4dp"
+            android:orientation="horizontal" />
+    </LinearLayout>
+
+    <!-- Everything the e2e test asserts, as JSON (see MainActivity.showStatus). Not
+         wrap_content: its text changes twice a second, and a wrap_content TextView would
+         lay the window out again each time, which keeps LiveKit's adaptive stream from
+         ever seeing the remote videos as visible (it waits for 2 s without layouts) -->
+    <TextView
+        android:id="@+id/status"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginTop="4dp"
+        android:layout_weight="1"
+        android:fontFamily="monospace"
+        android:textSize="8sp" />
+
+</LinearLayout>
