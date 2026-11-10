@@ -54,7 +54,7 @@ card or column of its own.
 ### Requirement: Analytics info tips
 Edition: CE. The Analytics page SHALL carry info tips on the tiles Participant sessions, Unique identities, Connection
 success and Data up / down, on the Total up and Total down tiles of the Data transferred card, and on the charts
-Participant sessions, Participant kind, SDK and Data up / down.
+Active rooms, Active participants, Participant kind, SDK and Data up / down.
 
 #### Scenario: Analytics tiles
 - **WHEN** the user opens the info tips of the tiles Participant sessions, Unique identities, Connection success and Data up / down
@@ -65,8 +65,8 @@ Participant sessions, Participant kind, SDK and Data up / down.
 - **THEN** they read the shared Total up, Total down and Data up / down texts, and the card heading carries no info tip
 
 #### Scenario: Analytics charts
-- **WHEN** the user opens the info tips of the charts Participant sessions, Participant kind and SDK
-- **THEN** they read "Participant sessions that started in each bucket, and those aborted before becoming active. Only regular participants count.", "Every participant session by kind, services included." and the shared SDK text
+- **WHEN** the user opens the info tips of the charts Active rooms, Active participants, Participant kind and SDK
+- **THEN** they read "The most rooms open at the same time in each bucket, sampled every minute.", "The most participants connected at the same time in each bucket, sampled every minute. Only regular participants count.", "Every participant session by kind, services included." and the shared SDK text
 
 ### Requirement: Rooms list info tips
 Edition: CE. The Rooms page SHALL carry info tips on the Sessions in range tile and on the Unique identities, Active,

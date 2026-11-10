@@ -37,9 +37,10 @@ SHALL be rejected with `400`.
 
 ### Requirement: Metric catalogue and fill values
 
-Edition: CE. The CE metrics SHALL be the eighteen of the "CE metrics" scenario; counters and sums fill empty buckets with
-`0`, rates and averages with `null`. Participant figures count STANDARD sessions only, except the `kind` breakdown.
-`ingressSessions` SHALL sum the rollups' `ingress.sessionsStarted` and `ingressDurationMs` their `ingress.durationMs`.
+Edition: CE. The CE metrics SHALL be the twenty of the "CE metrics" scenario; counters and sums fill empty buckets with
+`0`, rates and averages with `null`, and peaks with `null` in a bucket without a sample. Participant figures count
+STANDARD sessions only, except the `kind` breakdown. `ingressSessions` SHALL sum the rollups' `ingress.sessionsStarted`
+and `ingressDurationMs` their `ingress.durationMs`.
 
 #### Scenario: Connection success rate
 
@@ -70,10 +71,18 @@ Edition: CE. The CE metrics SHALL be the eighteen of the "CE metrics" scenario; 
 #### Scenario: CE metrics
 
 - **WHEN** a CE client requests analytics series
-- **THEN** the metrics it can request are `roomsCreated`, `roomsEnded`, `participantsJoined`, `participantsActive`,
-  `participantsAborted`, `connectionSuccessRate`, `uniqueIdentities`, `participantMinutes`, `tracksPublished`,
-  `egressStarted`, `egressEnded`, `egressDurationMs`, `ingressSessions`, `ingressDurationMs`, `bytesUp`, `bytesDown`,
-  `apiCalls` and `apiErrors`
+- **THEN** the metrics it can request are `roomsCreated`, `roomsEnded`, `roomsPeakActive`, `participantsJoined`,
+  `participantsActive`, `participantsAborted`, `participantsPeakActive`, `connectionSuccessRate`, `uniqueIdentities`,
+  `participantMinutes`, `tracksPublished`, `egressStarted`, `egressEnded`, `egressDurationMs`, `ingressSessions`,
+  `ingressDurationMs`, `bytesUp`, `bytesDown`, `apiCalls` and `apiErrors`
+
+#### Scenario: Peaks at five minutes
+
+- **GIVEN** the last 24 h, whose 5-minute documents carry `rooms.peakActive` and `participants.peakActive` from 09:00
+  UTC on, and a 5-minute document of 08:00 UTC with `rooms.created: 2` and no peak
+- **WHEN** `metrics=roomsPeakActive,participantsPeakActive` is requested with `granularity=auto`
+- **THEN** the response is `200` at `5m` with 288 points per series, the buckets from 09:00 hold the stored
+  `rooms.peakActive` and `participants.peakActive` (`0` included) and the earlier ones, 08:00 among them, hold `null`
 
 ### Requirement: Granularity and source collection
 
@@ -158,8 +167,9 @@ day, marked `basis: "utcDay"` on the series.
 ### Requirement: Dense series and bucket aggregation
 
 Edition: CE. Every series SHALL contain exactly one point per bucket from `from` floored to the bucket start up to
-and including the bucket containing `to`; when a bucket spans several rollup documents, counters SHALL be summed and
-`connectionSuccessRate` SHALL be computed from the summed numerators and denominators.
+and including the bucket containing `to`; when a bucket spans several rollup documents, counters SHALL be summed,
+peaks SHALL take the maximum of the documents that have one and `connectionSuccessRate` SHALL be computed from the
+summed numerators and denominators.
 
 #### Scenario: Sparse documents in a day
 
@@ -174,6 +184,20 @@ and including the bucket containing `to`; when a bucket spans several rollup doc
   `participants.joined` 2, 2 and 1
 - **WHEN** `granularity=15m` is requested with `metrics=connectionSuccessRate,participantsJoined`
 - **THEN** the bucket holds `connectionSuccessRate: 60` (3 / 5, one decimal) and `participantsJoined: 5`
+
+#### Scenario: Fifteen-minute peak
+
+- **GIVEN** three consecutive 5-minute documents with `rooms.peakActive` 3, 5 and 2, and a fourth 15-minute bucket
+  whose documents have no `rooms.peakActive`
+- **WHEN** `granularity=15m` is requested with `metrics=roomsPeakActive`
+- **THEN** the first bucket holds `5` and the fourth holds `null`
+
+#### Scenario: Daily peak in a time zone
+
+- **GIVEN** `tz=Europe/Madrid`, `granularity=1d` over 7 days inside the hourly retention, and the hourly documents of
+  one local day whose highest `participants.peakActive` is 40
+- **WHEN** `metrics=participantsPeakActive` is requested
+- **THEN** that local day holds `40`, not the sum of its hourly peaks
 
 ### Requirement: Unique identities only at daily granularity
 

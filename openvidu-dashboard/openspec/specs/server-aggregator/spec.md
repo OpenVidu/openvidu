@@ -1,9 +1,10 @@
-## Purpose
+# server-aggregator Specification
 
+## Purpose
 Writes the analytics values that no single server's writer can compute from its own events: the peaks of rooms and
 participants active at once, and the daily unique identities, from one node at a time.
 
-## ADDED Requirements
+## Requirements
 
 ### Requirement: Leader-only periodic runs
 Edition: CE and PRO servers. Whenever analytics is enabled, aggregator runs SHALL execute on one node at a time, chosen

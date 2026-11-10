@@ -264,7 +264,12 @@ every kind.
 
 #### Scenario: Fields of the rollup documents
 - **WHEN** hourly or daily rollup documents are read
-- **THEN** they have counters for rooms (created, ended, by end reason, `durationMsSum`, `participantsSum`), participants (joined, active, aborted, left, by kind, SDK, OS, browser, connection type, disconnect reason, connect time, minutes), tracks, egress (started, by type, by end status, duration), ingress sessions (started, ended, started by input type, duration), bytes, quality (score sum/count, poor, lost), API calls and API errors (total and by method), and daily documents also `uniqueIdentities` (set by the server's reconciler once the UTC day has closed); 5-minute documents have bytes, quality, `participants.connected` (distinct participants with stats), the `PARTICIPANT_ACTIVE` count and the lifecycle counters (rooms created/ended, participants joined/left/aborted, egress started/ended)
+- **THEN** they have counters for rooms (created, ended, by end reason, `durationMsSum`, `participantsSum`), participants (joined, active, aborted, left, by kind, SDK, OS, browser, connection type, disconnect reason, connect time, minutes), tracks, egress (started, by type, by end status, duration), ingress sessions (started, ended, started by input type, duration), bytes, quality (score sum/count, poor, lost), API calls and API errors (total and by method), and daily documents also `uniqueIdentities` (set by the server's aggregator once the UTC day has closed); 5-minute documents have bytes, quality, `participants.connected` (distinct participants with stats), the `PARTICIPANT_ACTIVE` count and the lifecycle counters (rooms created/ended, participants joined/left/aborted, egress started/ended); documents of the three collections may also have `rooms.peakActive` and `participants.peakActive` (int32, written by the server's aggregator)
+
+#### Scenario: Peaks of active rooms and participants
+- **GIVEN** the server's aggregator counted 4 active rooms and 11 active STANDARD sessions at 10:01 UTC and 6 and 9 at 10:40 UTC, no more at any other minute of that hour, and no server wrote any other counter in it
+- **WHEN** `analytics_5min` and `analytics_hourly` are read for the `global` scope
+- **THEN** the 5-minute document of `…T10:00:00Z` has `rooms.peakActive: 4` and `participants.peakActive: 11`, the one of `…T10:40:00Z` has 6 and 9, and the hourly document of `…T10:00:00Z` has `rooms.peakActive: 6` and `participants.peakActive: 11` and no other counter
 
 #### Scenario: Five-minute bandwidth
 - **GIVEN** stats flushed between 10:00 and 10:05 UTC
@@ -537,3 +542,19 @@ writer does, from the `mediaStats` of the node of each room or session it counts
 - **GIVEN** a database generated without `--nodes-without-media-stats`
 - **WHEN** the rollups are read
 - **THEN** every document with counters has `mediaStats.reported: true` and none has `mediaStats.missing`
+
+### Requirement: Generated active peaks
+Edition: CE and PRO. The data generator SHALL write `rooms.peakActive` and `participants.peakActive` on every rollup
+document it writes, from the generated rooms and STANDARD sessions active at each minute of the bucket counted as the
+server's aggregator counts them, and SHALL write the global documents of the buckets without activity with both peaks
+at `0`.
+
+#### Scenario: Generated peaks
+- **GIVEN** a database generated with `--five-minute-rollups` whose rooms `A` (10:00–10:20 UTC) and `B` (10:10–10:30 UTC) are the only ones that day, each with one STANDARD session for its whole life
+- **WHEN** `analytics_5min` and `analytics_hourly` are read for the `global` scope
+- **THEN** the 5-minute documents of `…T10:10:00Z` and `…T10:15:00Z` have `rooms.peakActive: 2` and `participants.peakActive: 2`, the one of `…T10:25:00Z` has 1 and 1, and the hourly document of `…T10:00:00Z` has 2 and 2
+
+#### Scenario: Idle generated hour
+- **GIVEN** a generated range with an hour without any room
+- **WHEN** `analytics_hourly` is read for that hour and the `global` scope
+- **THEN** the document exists with `rooms.peakActive: 0` and `participants.peakActive: 0`

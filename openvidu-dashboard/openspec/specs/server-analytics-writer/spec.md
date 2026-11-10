@@ -478,13 +478,13 @@ version.
 ### Requirement: Writer collections and Redis keys
 Edition: CE and PRO. The writer SHALL write only the collections of the `data-model` contract, never the legacy
 `stats`, `active_entities` or `last_alive` collections, and its only analytics keys in Redis SHALL be the locks of
-the reconciler (`analytics-reconciler-lock`) and of the legacy migration (`analytics-migration-lock`); events and
-stats SHALL NOT be published to Redis.
+the reconciler (`analytics-reconciler-lock`), of the aggregator (`analytics-aggregator-lock`) and of the legacy
+migration (`analytics-migration-lock`); events and stats SHALL NOT be published to Redis.
 
 #### Scenario: Collections after a run
 - **GIVEN** a server started against an empty database
 - **WHEN** it has processed traffic for several minutes
-- **THEN** no `stats`, `active_entities` or `last_alive` collection exists and `analytics-reconciler-lock` is the only analytics key in Redis
+- **THEN** no `stats`, `active_entities` or `last_alive` collection exists and `analytics-reconciler-lock` and `analytics-aggregator-lock` are the only analytics keys in Redis
 
 ### Requirement: Standard participant counters
 Edition: CE and PRO servers. The writer SHALL count only STANDARD sessions in the room participant counters
@@ -510,7 +510,7 @@ NOT depend on these counters.
 
 #### Scenario: Daily unique identities
 - **GIVEN** a closed UTC day with the STANDARD identities `alice` and `bob` and the INGRESS identity `cam-1`
-- **WHEN** the reconciler writes the day's `uniqueIdentities`
+- **WHEN** the aggregator writes the day's `uniqueIdentities`
 - **THEN** the daily rollup has `uniqueIdentities: 2`
 
 #### Scenario: Service keeps the room open

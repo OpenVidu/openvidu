@@ -237,8 +237,8 @@ Edition: CE. Every list endpoint SHALL respond `200` with `{ items, nextCursor, 
 Edition: CE. Every time-series endpoint SHALL respond `200` with
 `{ granularity, from, to, series: [{ name, points: [[ts, value]] }] }` where `from`/`to` are the resolved
 range in UTC, `granularity` is the applied bucket size, `ts` is the bucket start as an ISO 8601 UTC string and
-every series is dense over the range (a bucket without data holds `0` for counters and `null` for averages; a UTC day
-whose `uniqueIdentities` the reconciler has not computed yet holds `null`).
+every series is dense over the range (a bucket without data holds `0` for counters and `null` for averages and peaks;
+a UTC day whose `uniqueIdentities` the aggregator has not computed yet holds `null`).
 
 #### Scenario: Dense series
 

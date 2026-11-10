@@ -100,16 +100,17 @@ formatters, show "n/a" with a hint for a value the summary omits and keep the la
 
 ### Requirement: Rooms section
 
-Edition: CE. The Rooms section SHALL show a bar chart of `roomsCreated` and `roomsEnded` per bucket and the tiles
-Average room size (rounded to a whole number of participants) and Average room duration (in the shared duration
-format) from the summary; with `roomsEnded: 0` both tiles read "n/a" with the hint "No room ended in this range".
+Edition: CE. The Rooms section SHALL show `roomsPeakActive` as the step chart "Active rooms" and the tiles Average room
+size (rounded to a whole number of participants) and Average room duration (in the shared duration format) from the
+summary; with `roomsEnded: 0` both tiles read "n/a" with the hint "No room ended in this range". The card SHALL read
+"No data in this range" only when no peak is above 0 and the summary has no room created.
 
 #### Scenario: Rooms over 24 hours
 
 - **GIVEN** the default range at `auto` and a summary with `avgRoomSize: 4.4` and `avgRoomDurationMs: 360000`
 - **WHEN** the section renders
-- **THEN** the chart shows 288 five-minute buckets with two bar series in fixed colours and the tiles read
-  "4 participants" and "6 m 00 s"
+- **THEN** the chart "Active rooms" shows 288 five-minute buckets as one step line, the tiles read "4 participants"
+  and "6 m 00 s", and no `roomsCreated` or `roomsEnded` series is drawn
 
 #### Scenario: No room ended yet
 
@@ -117,12 +118,33 @@ format) from the summary; with `roomsEnded: 0` both tiles read "n/a" with the hi
 - **WHEN** the section renders
 - **THEN** both tiles read "n/a" with the hint "No room ended in this range"
 
+#### Scenario: Range partly before the samples
+
+- **GIVEN** a 7-day range whose `roomsPeakActive` points are `null` for the first 5 days, and a summary with
+  `roomsCreated: 40`
+- **WHEN** the section renders
+- **THEN** the tiles and the chart are shown, and the chart has a gap over the first 5 days instead of a line at 0
+
+#### Scenario: Range without rooms
+
+- **GIVEN** a range whose `roomsPeakActive` points are all `0` or `null` and a summary with `roomsCreated: 0`
+- **WHEN** the section renders
+- **THEN** the card shows "No data in this range" with "Widen range"
+
 ### Requirement: Participants section
 
-Edition: CE. The Participants section SHALL show `participantsJoined` and `participantsAborted` as lines,
+Edition: CE. The Participants section SHALL show `participantsPeakActive` as the step chart "Active participants",
 `connectionSuccessRate` as a percentage line in its own chart, a participant kind breakdown without SIP, CONNECTOR and
 BRIDGE in which every kind has a distinct colour, and `uniqueIdentities` as bars per UTC day only when the effective
 granularity is `1d`, otherwise a hint that unique identities are available at daily granularity.
+
+#### Scenario: Active participants over 24 hours
+
+- **GIVEN** the default range at `auto`
+- **WHEN** the section renders
+- **THEN** the chart "Active participants" shows one step line over 288 five-minute buckets beside "Connection
+  success", no "Participant sessions" chart is drawn and neither `participantsJoined` nor `participantsAborted` is
+  requested
 
 #### Scenario: Weekly range hides unique identities
 
@@ -354,7 +376,7 @@ and the time zone of its time axis; the unique identities chart names UTC and ke
 
 - **GIVEN** the default 24 h range at `auto` with `tz=Europe/Madrid`
 - **WHEN** the charts render
-- **THEN** the note of "Rooms created and ended" names the five-minute bucket and Europe/Madrid, and the note of
+- **THEN** the note of "Active rooms" names the five-minute bucket and Europe/Madrid, and the note of
   "Egress ended by status" reads "Hourly" with Europe/Madrid
 
 #### Scenario: Daily unique identities
