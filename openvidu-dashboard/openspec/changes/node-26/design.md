@@ -6,7 +6,7 @@ The workspace pins Node in five places:
 - `.node-version` (24), read by every CI job through `actions/setup-node`;
 - the root `engines` (`^24.15.0`);
 - the catalog's `@types/node` (24.19.2);
-- the Dockerfile's `NODE_VERSION` (24.22.2), used by the build stages and the runtime stage;
+- the Dockerfile's `NODE_VERSION` argument (24.22.2), from which both `FROM` lines built the tag;
 - the docs.
 
 The image build enables pnpm with `corepack enable` after `npm safe-chain-verify`, and the runtime stage deletes npm,
@@ -15,7 +15,7 @@ npx, corepack and yarn. Node 25 removed Corepack from the distribution, so on No
 ## Goals / Non-Goals
 
 **Goals:**
-- One source for each version: Node in `.node-version` (plus the exact tag in the Dockerfile), pnpm in
+- One source for each version: Node in `.node-version` (plus the exact tag in the Dockerfile's `FROM` lines), pnpm in
   `packageManager`.
 - The next Node major is a version bump with no spec change.
 
@@ -54,13 +54,14 @@ npm install -g --ignore-scripts "$(node -p "require('./package.json').packageMan
 ### D3. Version-agnostic requirements
 
 - The packaging and ci requirements name "the major in `.node-version`" instead of a number.
-- The Dockerfile's exact tag remains the reproducibility pin required by "Reproducible dependency installation".
+- The exact tag in the Dockerfile's `FROM` lines remains the reproducibility pin required by "Reproducible dependency
+  installation".
 
 ### D4. `@types/node` 26 and the Dependabot ignore
 
 - The catalog moves to the latest 26.x (26.6.6).
 - The ignore of `@types/node` majors stays, so its types never get ahead of the runtime.
-- Only the comment in `.github/dependabot.yml` changes.
+- The comment of that ignore names the `.node-version` major.
 
 ### D5. The Node rule in `AGENTS.md`
 
@@ -73,6 +74,15 @@ npm install -g --ignore-scripts "$(node -p "require('./package.json').packageMan
 - The README and the `dashboard.sh` hint tell developers to install the `packageManager` pnpm themselves, with the
   standalone installer or `npm install -g pnpm@<version>`.
 - pnpm then follows `packageManager` on its own.
+
+### D7. The image's Node tag, named in full and watched by Dependabot
+
+- Both `FROM` lines name `node:26.13.0-trixie-slim` literally: Dependabot cannot resolve an `ARG` in a `FROM`, so with
+  the old `NODE_VERSION` argument it never saw the image.
+- A weekly Docker entry for `dashboard-ce/docker` bumps the minors and patches of both lines in one pull request and
+  ignores Node majors, which move by hand with `.node-version`. Dependabot never changes a tag's suffix: the next Debian
+  release is also a manual change.
+- Rejected: keeping the `ARG` and bumping by hand. Base image patches then lag behind the security fixes.
 
 ## Risks / Trade-offs
 

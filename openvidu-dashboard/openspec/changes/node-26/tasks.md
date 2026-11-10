@@ -11,7 +11,7 @@
 ## 2. Image
 
 - [x] 2.1 In `dashboard-ce/docker/Dockerfile`:
-      - set `NODE_VERSION=26.13.0`;
+      - name `node:26.13.0-trixie-slim` in full in both `FROM` lines, with no `ARG` (design D7);
       - replace `corepack enable` with `npm install -g --ignore-scripts` of `packageManager`, after `package.json` is
         copied (design D1).
       Verify: `./dashboard.sh build-image ce` succeeds; the safe-chain step runs before any install;
@@ -34,6 +34,9 @@
 - [x] 3.4 `.github/dependabot.yml`: the comment on the `@types/node` ignore names the `.node-version` major instead of
       "Node.js 24 until 26 is LTS". Verify: the YAML parses (`python3 -c 'import yaml…'`), and the ignore rule itself is
       unchanged in `git diff`.
+- [x] 3.5 `.github/dependabot.yml`: a weekly Docker entry for `/openvidu-dashboard/dashboard-ce/docker` that ignores
+      Node majors (design D7), and `dashboard-ce/docker/AGENTS.md` notes the literal `FROM` lines. Verify: the YAML
+      parses and both `FROM` lines name the same tag.
 
 ## 4. CHANGELOG
 

@@ -13,7 +13,8 @@ still on 24, kept the dashboard on the older line for no technical reason.
   - `.node-version` is 26, which CI already reads;
   - the root `engines` becomes `^26.13.0`;
   - the catalog's `@types/node` moves to 26;
-  - the image's `NODE_VERSION` becomes `26.13.0`.
+  - both `FROM` lines of the image name `node:26.13.0-trixie-slim` in full, with no `ARG`, so Dependabot reads
+    them.
 - Node 25 and later no longer ship Corepack. The image build installs the `packageManager` pnpm with
   `npm install -g --ignore-scripts` instead of `corepack enable`:
   - safe-chain checks it like any other package;
@@ -21,6 +22,8 @@ still on 24, kept the dashboard on the older line for no technical reason.
 - `dashboard.sh` and the README stop pointing developers to `corepack enable`.
 - The packaging and CI requirements name the Node major of `.node-version` instead of 24, so the next major needs no
   spec change.
+- Dependabot watches the image's Node.js tag weekly and proposes its minors and patches; Node majors are adopted by
+  hand.
 - `AGENTS.md` drops "Node stays on 24 until OpenVidu Meet moves to 26". The new rule: a new Node major is adopted once
   it is LTS and the toolchain declares support.
 
@@ -51,7 +54,8 @@ None.
   - "Reproducible dependency installation" uses a base image of the `.node-version` major instead of Node 24;
   - "CE runtime is a plain Node image without private dependencies" runs on an official image of that major.
 - `ci`: "Dependency update automation" ignores `@types/node` majors while the dashboard runs on the `.node-version`
-  major, not Node 24.
+  major, not Node 24; a new requirement, "Node image updates", has Dependabot watch the image's Node.js tag weekly,
+  without Node majors.
 
 ## Impact
 
@@ -59,7 +63,7 @@ None.
   - `.node-version`, `package.json` (`engines`), `pnpm-workspace.yaml` (`@types/node`) and `pnpm-lock.yaml`;
   - `dashboard-ce/docker/Dockerfile` and `dashboard.sh`;
   - `README.md`, `AGENTS.md`, `dashboard-ce/docker/AGENTS.md`, `CHANGELOG.md`;
-  - `.github/dependabot.yml` (comment only).
+  - `.github/dependabot.yml`: the `@types/node` comment and the Docker entry of `dashboard-ce/docker`.
 - **CI:** no workflow change; `actions/setup-node` reads `.node-version`.
 - **Developers:** need Node 26, and pnpm from its standalone installer or `npm install -g` (Corepack is gone from
   Node 26).
