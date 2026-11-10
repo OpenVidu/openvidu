@@ -14,4 +14,4 @@ FROM gaiaadm/pumba:1.6.0 AS pumba
 
 # tc and iptables, run by Pumba. The image has no version tags: Dependabot updates the
 # digest to the one of "latest"
-FROM ghcr.io/alexei-led/pumba-alpine-nettools:latest@sha256:bdcfacdd0c42f64cd280319d6dd5d3911f33425ce4a5168bb1b7de9570b72cd1 AS pumba-nettools
+FROM ghcr.io/alexei-led/pumba-alpine-nettools:latest@sha256:02a82ce2d64796dbf08fd1277c223eae5b9c9610337ddcb8417da01038cb43a6 AS pumba-nettools
