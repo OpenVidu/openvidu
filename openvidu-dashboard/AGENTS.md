@@ -54,7 +54,8 @@ servers against openvidu-local-deployment; README "Development") and `demo ce`: 
 (http://localhost:4200, `admin` / `admin`; MongoDB container `openvidu-dashboard-demo-mongo` on port 27018;
 `DASHBOARD_DEMO_KEEP_DATA=true` reuses the data of a running container).
 
-Node 24 and pnpm through Corepack. Node stays on 24 until OpenVidu Meet moves to 26; TypeScript stays on 6 until the
+Node 26 and the pnpm of `packageManager` (Node no longer ships Corepack). A new Node major is adopted once it is LTS and
+the toolchain (Angular, vitest, testcontainers) declares it in its engines; TypeScript stays on 6 until the
 Angular toolchain supports 7. Prettier: tabs, width 120, single quotes, no trailing commas; ESLint fails on warnings.
 
 CI (`.github/workflows/openvidu-dashboard-ci.yml` of the `openvidu` repository, jobs `checks`, `unit`, `integration`,

@@ -60,7 +60,9 @@ EOF
 
 require_pnpm() {
 	if ! command -v pnpm >/dev/null 2>&1; then
-		echo "pnpm not found. Enable it with: corepack enable" >&2
+		local spec
+		spec="$(sed -n 's/.*"packageManager": "\(pnpm@[^"]*\)".*/\1/p' package.json)"
+		echo "pnpm not found. Install ${spec:-pnpm} (Node no longer ships Corepack): npm install -g ${spec:-pnpm}, or https://pnpm.io/installation" >&2
 		exit 1
 	fi
 }

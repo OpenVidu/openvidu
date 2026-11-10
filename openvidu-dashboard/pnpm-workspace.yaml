@@ -31,7 +31,7 @@ catalog:
   '@fission-ai/openspec': 1.16.1
   '@types/cookie-parser': 1.4.10
   '@types/express': 5.0.6
-  '@types/node': 24.19.2
+  '@types/node': 26.6.6
   '@types/supertest': 7.2.1
   ajv: 8.20.0
   angular-eslint: 22.6.0

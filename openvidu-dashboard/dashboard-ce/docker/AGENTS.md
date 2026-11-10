@@ -9,7 +9,10 @@
   with `--base-href "$BASE_HREF"` (default `/`, deployments use `/dashboard/`). Images purge tzdata, run as uid 1000 and
   declare a `HEALTHCHECK` through the entry's `healthcheck` argument, which uses `node:http` because `fetch` refuses
   ports such as 6000.
-- Runtime: `pnpm deploy --prod` of the backend on `node:<24.x.y>-trixie-slim`, without npm, npx and corepack.
+- The build stage installs the pnpm of `packageManager` with `npm install -g --ignore-scripts`, so safe-chain checks it
+  (Node no longer ships Corepack).
+- Runtime: `pnpm deploy --prod` of the backend on `node:<26.x.y>-trixie-slim`, the major of `.node-version`, without npm,
+  npx and corepack.
 - `smoke-test.sh <image> <budget-mb> [docker run options...]` (`./dashboard.sh smoke-image ce`, 300 MB) checks
   `MONGO_ENABLED=false`, health, `GET /api/healthcheck`, `HEAD /`, uid 1000, `SERVER_PORT`, `docker stop` and the
   uncompressed size budget; the options reach every container, e.g. what an image built on this one needs to start.

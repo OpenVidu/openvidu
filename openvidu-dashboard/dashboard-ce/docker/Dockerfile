@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 # OpenVidu Dashboard CE. Build context: the workspace root (openvidu-dashboard/).
-ARG NODE_VERSION=24.22.2
+ARG NODE_VERSION=26.13.0
 ARG DEBIAN_RELEASE=trixie
 ARG SAFE_CHAIN_VERSION=1.5.27
 
@@ -15,9 +15,12 @@ RUN apt-get update \
 ENV PATH=/root/.safe-chain/shims:/root/.safe-chain/bin:$PATH
 # Only packages flagged as malicious fail the build; a minimum age would fail it for a day after every bump.
 ENV SAFE_CHAIN_MINIMUM_PACKAGE_AGE_HOURS=0
-RUN npm safe-chain-verify && corepack enable
+RUN npm safe-chain-verify
 WORKDIR /workspace
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig.base.json ./
+# Node no longer ships Corepack: the pnpm of packageManager, checked by safe-chain and, as Corepack did, without its
+# install scripts (they only swap in the native binary).
+RUN npm install -g --ignore-scripts "$(node -p "require('./package.json').packageManager")"
 COPY dashboard-ce/typings/package.json dashboard-ce/typings/
 COPY dashboard-ce/backend/package.json dashboard-ce/backend/
 COPY dashboard-ce/frontend/package.json dashboard-ce/frontend/

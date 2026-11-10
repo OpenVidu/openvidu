@@ -143,3 +143,7 @@ queried) and `Deployment` (running the service). One line per observable change,
   records when it stopped.
 - Credentials are never stored in the analytics database; metadata is stored only with `store_metadata`, and client
   IP addresses are left out unless `anonymize_ip: false`.
+
+#### Deployment
+
+- The image runs on Node.js 26 (LTS).

@@ -20,9 +20,9 @@ built on these packages, whose features CE shows locked.
 
 ## Requirements
 
-- Node.js 24 (see `.node-version`)
-- pnpm, enabled through Corepack (`corepack enable`); the version is pinned by `packageManager` in
-  `package.json`
+- Node.js 26 (see `.node-version`)
+- pnpm at the version pinned by `packageManager` in `package.json`, from its
+  [standalone installer](https://pnpm.io/installation) or `npm install -g pnpm@<version>`
 
 ## Browser support
 
@@ -65,7 +65,7 @@ reloading on changes: http://localhost:4200, `admin` / `admin`. Ctrl+C stops bot
 
 ## Container image
 
-`openvidu/openvidu-dashboard`, built from `dashboard-ce/docker/Dockerfile` on `node:24-trixie-slim`
+`openvidu/openvidu-dashboard`, built from `dashboard-ce/docker/Dockerfile` on `node:26-trixie-slim`
 (`node dist/server.js`).
 
 - The build context is this directory. `IMAGE_TAG` (default `dev`) and `BASE_HREF` (default `/`; deployments use

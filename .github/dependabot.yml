@@ -30,7 +30,7 @@ updates:
     schedule:
       interval: "weekly"
     ignore:
-      # Node.js 24 until 26 is LTS: its types follow the runtime.
+      # The types follow the Node.js major of .node-version.
       - dependency-name: "@types/node"
         update-types:
           - "version-update:semver-major"
