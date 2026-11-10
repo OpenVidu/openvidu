@@ -46,7 +46,7 @@ catalog:
   globals: 17.14.0
   inversify: 8.2.4
   jose: 6.2.15
-  jsdom: 30.1.3
+  jsdom: 31.0.0
   mongodb: 7.8.0
   ng-packagr: 22.2.6
   ngx-echarts: 22.0.0
