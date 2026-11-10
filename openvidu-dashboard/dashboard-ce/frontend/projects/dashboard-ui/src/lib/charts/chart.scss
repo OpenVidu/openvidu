@@ -9,9 +9,16 @@
 	display: flex;
 	align-items: center;
 	margin: 0 0 4px;
+	font: var(--mat-sys-title-small);
 
 	.chart-title {
 		margin: 0;
+	}
+
+	/* The 24 px info tip and warning kept inside the title line, so a chart with one stays level with the others. */
+	ovd-info-tip,
+	ovd-media-stats-warning {
+		margin-block: calc((1lh - 24px) / 2);
 	}
 }
 

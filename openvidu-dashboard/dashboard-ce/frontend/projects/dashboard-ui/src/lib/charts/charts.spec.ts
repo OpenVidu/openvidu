@@ -224,6 +224,12 @@ describe('chart options', () => {
 		expect([...chartSlots(statuses).values()]).toEqual([3, 4, 7, 8]);
 		expect(new Set(colors).size).toBe(4);
 		expect(colors.at(-1)).toBe('#e34948');
+		// A border in the surface colour would cover the narrow bars of many buckets.
+		expect(
+			(option as { series: { itemStyle: { borderWidth?: number } }[] }).series.every(
+				(series) => (series.itemStyle.borderWidth ?? 0) === 0
+			)
+		).toBe(true);
 	});
 
 	it('gives the Analytics sections their slots and their main kinds the same ones', () => {

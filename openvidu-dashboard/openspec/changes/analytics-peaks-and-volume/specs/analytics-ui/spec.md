@@ -74,6 +74,12 @@ Edition: CE. The Egress section SHALL show the tiles Total egress and Total dura
 - **WHEN** the "Egress ended by status" chart renders
 - **THEN** failed statuses are drawn in red and every status in its own distinguishable colour
 
+#### Scenario: Legend names
+
+- **WHEN** the Egress and Ingress sections render
+- **THEN** the legends of "Egress started" and "Ingress sessions" read "Egress started" and "Ingress sessions", their
+  chart names, as those of "Rooms created" and "Participant sessions" do
+
 #### Scenario: Range before the egress samples
 
 - **GIVEN** a 7-day range whose `egressPeakActive` points are `null` for the first 5 days and whose `egressStarted`

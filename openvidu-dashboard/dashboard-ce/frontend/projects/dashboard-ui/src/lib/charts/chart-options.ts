@@ -366,7 +366,8 @@ export function timeSeriesOption(options: TimeSeriesOptions): EChartsCoreOption 
 				step: options.kind === 'step' ? 'end' : false,
 				...(options.stacked === true ? { stack: 'total' } : {}),
 				lineStyle: { width: 2, color },
-				itemStyle: { color, borderColor: colors.surface, borderWidth: options.stacked === true ? 2 : 0 },
+				// No border between stacked segments: on the narrow bars of many buckets it would cover their colour.
+				itemStyle: { color },
 				...(options.kind === 'area' ? { areaStyle: { opacity: 0.2, color } } : {}),
 				...(index === 0 && markers.shown.length > 0
 					? {

@@ -171,6 +171,17 @@
       server writes no `egress` or `ingress` field into its `node:` rollups. Verify: the fork's analytics unit and
       integration tests.
 
+## 9. Review adjustments
+
+- [x] 9.1 The legends of "Egress started" and "Ingress sessions" read their chart names, as Rooms created and
+      Participant sessions. Verify: `analytics-page.spec.ts` section test, scenario "Legend names".
+- [x] 9.2 Stacked bars without the 2 px surface-coloured border, which covered the narrow bars of many buckets
+      ("Egress ended by status" over 7 days at `1h`). Verify: `charts.spec.ts` egress statuses test, scenario "Dense
+      stacked bars", and the demo in light and dark.
+- [x] 9.3 Chart headings keep the 24 px info tip and warning inside the title line (`margin-block: calc((1lh - 24px) /
+      2)`, as the PRO facts lists), so charts with and without one start level. Verify: e2e "charts with and without an
+      info tip start level", failing without the rule and passing with it.
+
 ## Workflow follow-up
 
 - Owner review of the change, then archive it when asked: sync the specs, delete the change folder, commit "archive

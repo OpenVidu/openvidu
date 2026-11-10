@@ -123,6 +123,28 @@ test('unique identities show per UTC day at any granularity', async ({ page, api
 		.toBe(true);
 });
 
+test('charts with and without an info tip start level', async ({ page }) => {
+	await page.setViewportSize({ width: 1920, height: 1080 });
+	await page.goto('/analytics?from=now-24h&to=now&tz=UTC');
+
+	for (const [title, tipped, plain] of [
+		['Rooms', 'Active rooms', 'Rooms created'],
+		['Egress', 'Active egress', 'Egress started']
+	] as const) {
+		const top = async (heading: string) =>
+			(
+				await card(page, title)
+					.locator('ovd-time-series-chart')
+					.filter({ hasText: heading })
+					.locator('.chart')
+					.boundingBox()
+			)?.y;
+
+		await expect(card(page, title).getByRole('button', { name: `About ${tipped}` })).toBeVisible();
+		expect(await top(tipped)).toBe(await top(plain));
+	}
+});
+
 test('the charts of a card share its rows evenly', async ({ page }) => {
 	const rows = async (title: string) => {
 		const tops = await card(page, title)

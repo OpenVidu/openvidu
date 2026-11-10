@@ -111,14 +111,14 @@ const SERIES_LABELS: Partial<Record<AnalyticsMetric, { label: string; entity: st
 	bytesUp: { label: 'Up', entity: 'up' },
 	bytesDown: { label: 'Down', entity: 'down' },
 	egressPeakActive: { label: 'Active egress', entity: 'egress' },
-	egressStarted: { label: 'Started', entity: 'egress' },
+	egressStarted: { label: 'Egress started', entity: 'egress' },
 	egressDurationMs: { label: 'Duration', entity: 'track' },
 	scoreAvg: { label: 'Average score', entity: 'quality' },
 	poorSamples: { label: 'Poor samples', entity: 'web' },
 	lostSamples: { label: 'Lost samples', entity: 'failed' },
 	tracksSubscribeFailed: { label: 'Subscribe failures', entity: 'failed' },
 	ingressPeakActive: { label: 'Active ingress', entity: 'ingress' },
-	ingressSessions: { label: 'Sessions', entity: 'ingress' }
+	ingressSessions: { label: 'Ingress sessions', entity: 'ingress' }
 };
 
 /** Labels of the breakdown keys of the CE dimensions, matched case-insensitively. */

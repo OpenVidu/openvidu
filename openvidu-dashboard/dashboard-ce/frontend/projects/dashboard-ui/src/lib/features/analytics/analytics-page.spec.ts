@@ -243,9 +243,9 @@ describe('AnalyticsPage', () => {
 		expect(drawn('Connection success')).toEqual(['line', [['Connection success', 'success']]]);
 		expect(chart('Connection success')?.fitted()).toBe(true);
 		expect(drawn('Active egress')).toEqual(['area', [['Active egress', 'egress']]]);
-		expect(drawn('Egress started')).toEqual(['bar', [['Started', 'egress']]]);
+		expect(drawn('Egress started')).toEqual(['bar', [['Egress started', 'egress']]]);
 		expect(drawn('Active ingress')).toEqual(['area', [['Active ingress', 'ingress']]]);
-		expect(drawn('Ingress sessions')).toEqual(['bar', [['Sessions', 'ingress']]]);
+		expect(drawn('Ingress sessions')).toEqual(['bar', [['Ingress sessions', 'ingress']]]);
 	});
 
 	it('lays out each card in a chart grid that starts with its peak and volume pair', async () => {

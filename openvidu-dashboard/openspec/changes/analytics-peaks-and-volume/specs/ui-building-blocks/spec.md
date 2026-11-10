@@ -28,10 +28,58 @@ shares its slot, and two other entities of one chart never share a slot.
   the `EGRESS` kind and the `room_composite` type `--ovd-chart-2` (orange), and ingress, the `INGRESS` kind and the
   `rtmp` input type `--ovd-chart-6` (blue), and success rates `--ovd-chart-3` (green)
 
+#### Scenario: Dense stacked bars
+- **GIVEN** a stacked bar chart of 168 hourly buckets, such as "Egress ended by status" over 7 days at `1h`
+- **WHEN** it renders in the light or the dark theme
+- **THEN** every segment shows the colour of its slot, with no border in the background colour covering the narrow
+  bars
+
 #### Scenario: Kinds of one chart stay distinct
 - **WHEN** the participant kinds, the egress types or the ingress input types render in one chart
 - **THEN** every value has its own slot: `AGENT` is neither violet, orange nor blue, and no egress type or input type
   shares the slot of another in its chart
+
+### Requirement: Info tips
+Edition: CE. An info tip SHALL be an info icon button right after a label or heading, named "About <label>" for
+assistive technology, that shows its text as a tooltip on hover, keyboard focus or tap and hides it on Escape, blur or a
+second tap. KPI tiles, section and Analytics cards, charts, data table column headers (table and card layouts) and
+entity facts take one from their definition; the label then carries no hover text of its own.
+
+#### Scenario: Hover
+- **GIVEN** a KPI tile "Unique identities" with an info tip
+- **WHEN** the pointer rests on its info icon
+- **THEN** the tooltip shows the explanation, and resting on the label or the value shows nothing
+
+#### Scenario: Keyboard
+- **GIVEN** a section card heading with an info tip
+- **WHEN** the user tabs to its info icon and then presses Escape
+- **THEN** the icon is announced as "About <heading>" with the explanation as its description, the tooltip shows on focus and hides on Escape
+
+#### Scenario: Touch
+- **GIVEN** a phone and a chart heading with an info tip
+- **WHEN** the user taps the info icon and then taps it again
+- **THEN** the first tap shows the tooltip and the second hides it, without a long press
+
+#### Scenario: Sortable column header
+- **GIVEN** a sortable column header with an info tip
+- **WHEN** the user activates the info icon
+- **THEN** the tooltip shows and the sort does not change; activating the header label sorts
+
+#### Scenario: Tile that links to a list
+- **GIVEN** an Overview live tile that opens a filtered list and has an info tip
+- **WHEN** the user activates the info icon
+- **THEN** the tooltip shows and the list does not open; activating the rest of the tile opens it
+
+#### Scenario: Card layout
+- **GIVEN** an XSmall viewport and a table column with an info tip
+- **WHEN** the rows render as cards
+- **THEN** that column's label in each card carries the info icon
+
+#### Scenario: Level chart headings
+- **GIVEN** two charts side by side, one with an info tip or a warning after its title and one without
+- **WHEN** they render
+- **THEN** their titles and their plots start at the same height
+
 
 ## ADDED Requirements
 
