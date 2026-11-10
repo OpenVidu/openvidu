@@ -130,19 +130,22 @@ export class Header {
 
 		afterNextRender(() => {
 			const row = this.brandRow().nativeElement;
-			let width = row.clientWidth;
+			// Width the row needed for the full picker when it last overflowed, always above the width it failed at, so a
+			// row that keeps its width never flips between the full and the compact picker.
+			let needed = Number.POSITIVE_INFINITY;
 			let frame = 0;
-			// Measured in an animation frame, after the controls took their size, so the observers never loop.
+			// Measured in an animation frame, after the controls took their size.
 			const fit = () => {
 				cancelAnimationFrame(frame);
 				frame = requestAnimationFrame(() => {
-					if (row.clientWidth > width) {
+					if (this.pickerDisplay() === 'full') {
+						if (row.scrollWidth > row.clientWidth) {
+							needed = Math.max(row.scrollWidth, row.clientWidth + 1);
+							this.fullPickerFits.set(false);
+						}
+					} else if (row.clientWidth >= needed) {
 						this.fullPickerFits.set(true);
-					} else if (row.scrollWidth > row.clientWidth && this.pickerDisplay() === 'full') {
-						this.fullPickerFits.set(false);
 					}
-
-					width = row.clientWidth;
 				});
 			};
 

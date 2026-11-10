@@ -5,6 +5,8 @@
 	z-index: 3;
 	background: var(--mat-sys-surface-container);
 	border-bottom: 1px solid var(--mat-sys-outline-variant);
+	/* A full range picker being tried never scrolls the page, whose scrollbars would change the width it is tried at. */
+	overflow-x: clip;
 }
 
 .row {
