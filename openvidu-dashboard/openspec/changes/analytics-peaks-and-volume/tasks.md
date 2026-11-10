@@ -129,10 +129,10 @@
 
 ## 6. PRO edition
 
-- [ ] 6.1 Move `ce.ref` to the CE commit of this change. The Diagnostics card uses `ovd-chart-grid` instead of its
+- [x] 6.1 Move `ce.ref` to the CE commit of this change. The Diagnostics card uses `ovd-chart-grid` instead of its
       local grid, and the Quality card wraps its two charts in it. Verify: PRO `./dashboard.sh check` and the PRO
       analytics card tests.
-- [ ] 6.2 Node-scope e2e of `dashboard-pro/e2e/tests/analytics.spec.ts`:
+- [x] 6.2 Node-scope e2e of `dashboard-pro/e2e/tests/analytics.spec.ts`:
       - no node-scope request names an egress or ingress metric or dimension;
       - the Egress card shows the warning and its unavailable charts;
       - All nodes brings them back.
@@ -158,16 +158,16 @@
 - [x] 8.1 CE: `./dashboard.sh check`, `./dashboard.sh test-integration`, `./dashboard.sh e2e` and
       `./dashboard.sh contract-check` against the writer branch, all green; `openspec validate
       analytics-peaks-and-volume --strict` green.
-- [ ] 8.2 Manual check on `./dashboard.sh demo both`:
+- [x] 8.2 Manual check on `./dashboard.sh demo both`:
       - CE and PRO over 24 h, 7 d at 6 h and 30 d at 1 d, in light and dark, at 1440 px and 1920 px;
       - the pairs, the section colours, the balanced rows, the fitted Connection success, Unique identities at every
         granularity;
       - the CSV of the four entity cards;
       - a PRO node scope with Egress and Ingress unavailable and their warning.
-- [ ] 8.3 Manual check against a local CE server built from the writer branch: start an egress and an ingress
+- [x] 8.3 Manual check against a local CE server built from the writer branch: start an egress and an ingress
       session, see `egress.peakActive` and `ingress.peakActive` in the global rollups within a minute and see them
       stay after they end.
-- [ ] 8.4 PRO fork (openvidu-pro-livekit), after merging the writer change: its analytics tests pass, and a labelled
+- [x] 8.4 PRO fork (openvidu-pro-livekit), after merging the writer change: its analytics tests pass, and a labelled
       server writes no `egress` or `ingress` field into its `node:` rollups. Verify: the fork's analytics unit and
       integration tests.
 
