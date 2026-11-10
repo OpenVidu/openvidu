@@ -228,7 +228,7 @@ describe.skipIf(mongoUri === '')('info', () => {
 							createdAt: new Date(Date.UTC(2026, 9, 1 + i))
 						})) as never[]
 					);
-					await db.collection('rooms').createIndex({ createdAt: -1 });
+					await db.collection('rooms').createIndexes([{ key: { createdAt: -1 } }]);
 				}
 			}
 		);
