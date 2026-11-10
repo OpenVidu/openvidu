@@ -141,7 +141,14 @@ test('charts with and without an info tip start level', async ({ page }) => {
 			)?.y;
 
 		await expect(card(page, title).getByRole('button', { name: `About ${tipped}` })).toBeVisible();
-		expect(await top(tipped)).toBe(await top(plain));
+		// The plot swaps its placeholder for the chart once ECharts loads: measure once both are in place.
+		await expect
+			.poll(async () => {
+				const [withTip, without] = [await top(tipped), await top(plain)];
+
+				return withTip !== undefined && withTip === without;
+			})
+			.toBe(true);
 	}
 });
 
