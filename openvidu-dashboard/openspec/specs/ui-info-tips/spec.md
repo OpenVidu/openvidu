@@ -54,7 +54,8 @@ card or column of its own.
 ### Requirement: Analytics info tips
 Edition: CE. The Analytics page SHALL carry info tips on the tiles Participant sessions, Unique identities, Connection
 success and Data up / down, on the Total up and Total down tiles of the Data transferred card, and on the charts
-Active rooms, Active participants, Participant kind, SDK and Data up / down.
+Active rooms, Active participants, Participant sessions, Active egress, Active ingress, Participant kind, SDK and
+Data up / down.
 
 #### Scenario: Analytics tiles
 - **WHEN** the user opens the info tips of the tiles Participant sessions, Unique identities, Connection success and Data up / down
@@ -67,6 +68,14 @@ Active rooms, Active participants, Participant kind, SDK and Data up / down.
 #### Scenario: Analytics charts
 - **WHEN** the user opens the info tips of the charts Active rooms, Active participants, Participant kind and SDK
 - **THEN** they read "The most rooms open at the same time in each bucket, sampled every minute.", "The most participants connected at the same time in each bucket, sampled every minute. Only regular participants count.", "Every participant session by kind, services included." and the shared SDK text
+
+#### Scenario: Volume and egress and ingress peaks
+- **WHEN** the user opens the info tips of the charts Participant sessions, Active egress and Active ingress
+- **THEN** Participant sessions reads the shared Participant sessions text, Active egress reads "The most egress in progress at the same time in each bucket, sampled every minute." and Active ingress reads "The most ingress sessions publishing at the same time in each bucket, sampled every minute."
+
+#### Scenario: Self-explanatory volume charts
+- **WHEN** the charts Rooms created, Egress started and Ingress sessions render
+- **THEN** none of them carries an info tip
 
 ### Requirement: Rooms list info tips
 Edition: CE. The Rooms page SHALL carry info tips on the Sessions in range tile and on the Unique identities, Active,
