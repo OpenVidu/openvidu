@@ -131,6 +131,28 @@ $mono-family: 'JetBrains Mono Variable', 'JetBrains Mono', ui-monospace, monospa
 		font-variant-numeric: tabular-nums;
 	}
 
+	// One box for every tag of a row (status, live, kind and the chips an edition adds), so they line up. The
+	// transparent border keeps the size when a state draws an outline.
+	.ovd-tag {
+		display: inline-flex;
+		align-items: center;
+		box-sizing: border-box;
+		block-size: 24px;
+		padding-inline: 8px;
+		gap: 4px;
+		border: 1px solid transparent;
+		border-radius: 8px;
+		font: var(--mat-sys-label-medium);
+		white-space: nowrap;
+		vertical-align: middle;
+
+		mat-icon {
+			flex: none;
+			width: 16px;
+			height: 16px;
+		}
+	}
+
 	// A loading placeholder stays invisible for its first 300 ms, so a fast response never flashes it.
 	.ovd-skeleton-reveal {
 		animation: ovd-skeleton-reveal 150ms ease-in 300ms both;

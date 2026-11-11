@@ -76,14 +76,15 @@ export function statusLabel(status: string, domain?: string): string {
 
 /**
  * Icon and label of a status in its domain; `estimated` marks a status set by the reconciler, `stale` an active entity
- * without recent stats, and `hint` explains the status (an end reason, a disconnect reason) in a tooltip.
+ * without recent stats, and `hint` explains the status (an end reason, a disconnect reason) in a tooltip, after the
+ * `subject` that names what the badge shows when the page gives one.
  */
 @Component({
 	selector: 'ovd-status-badge',
 	imports: [MatIcon, MatTooltip],
 	template: `
 		<span
-			class="badge"
+			class="badge ovd-tag"
 			[class]="'family-' + style().family"
 			[class.estimated]="estimated()"
 			[matTooltip]="tooltip() ?? ''"
@@ -91,7 +92,7 @@ export function statusLabel(status: string, domain?: string): string {
 			[attr.tabindex]="tooltip() === null ? null : 0"
 			[attr.aria-label]="tooltip() === null ? null : label() + ', ' + tooltip()"
 		>
-			<mat-icon [svgIcon]="style().icon" aria-hidden="true" />
+			<mat-icon [svgIcon]="icon() ?? style().icon" aria-hidden="true" />
 			{{ label() }}
 			@if (stale()) {
 				<mat-icon class="stale" svgIcon="schedule" aria-hidden="true" />
@@ -104,19 +105,7 @@ export function statusLabel(status: string, domain?: string): string {
 		}
 
 		.badge {
-			display: inline-flex;
-			align-items: center;
-			gap: 4px;
-			padding: 2px 8px 2px 6px;
-			border: 1px solid transparent;
-			border-radius: 8px;
-			font: var(--mat-sys-label-medium);
-			white-space: nowrap;
-
-			mat-icon {
-				width: 16px;
-				height: 16px;
-			}
+			padding-inline-start: 6px;
 		}
 
 		.estimated {
@@ -147,14 +136,21 @@ export class StatusBadge {
 	readonly stale = input(false, { transform: booleanAttribute });
 	/** Tooltip of a status that is not estimated. */
 	readonly hint = input<string>();
+	/** What the badge shows, such as "Room status": the tooltip starts with it. */
+	readonly subject = input<string>();
+	/** Icon of the status in place of its style's, for a status whose meaning depends on the entity. */
+	readonly icon = input<string>();
 
 	protected readonly style = computed(() => this.styles[this.domain()]?.[this.status()] ?? NEUTRAL);
 	protected readonly label = computed(() => statusLabel(this.status(), this.domain()));
 	protected readonly tooltip = computed(() => {
-		if (this.estimated()) {
-			return this.estimatedHint() ?? RECONCILER_ESTIMATE;
+		const detail = this.estimated() ? (this.estimatedHint() ?? RECONCILER_ESTIMATE) : (this.hint() ?? null);
+		const subject = this.subject();
+
+		if (subject === undefined) {
+			return detail;
 		}
 
-		return this.hint() ?? null;
+		return detail === null ? subject : `${subject} · ${detail}`;
 	});
 }

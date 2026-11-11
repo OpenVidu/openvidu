@@ -34,6 +34,30 @@ test('lists the egresses with tiles, links, badges, outputs and error markers', 
 	await expectNoViolations(page);
 });
 
+test('the status and type badges of the rows share one tag height, as a table and as cards', async ({ page }) => {
+	for (const width of [1440, 375]) {
+		await page.setViewportSize({ width, height: 900 });
+		await page.goto('/egress?from=now-24h&to=now&tz=UTC');
+
+		// A card shows the type among the metrics under "More".
+		if (width < 600) {
+			await page.getByRole('button', { name: 'More', exact: true }).first().click();
+		}
+
+		await expect(page.locator('ovd-kind-badge').first()).toBeVisible();
+
+		const heights = await page
+			.locator('ovd-status-badge .ovd-tag:visible, ovd-kind-badge .ovd-tag:visible')
+			.evaluateAll((tags) => tags.map((tag) => tag.getBoundingClientRect().height));
+
+		expect(heights.length, String(width)).toBeGreaterThan(5);
+		expect(new Set(heights), String(width)).toEqual(new Set([24]));
+		await expect(page.locator('ovd-kind-badge .ovd-tag[tabindex]')).toHaveCount(0);
+	}
+
+	await expectNoViolations(page);
+});
+
 test('the status and type selects write the URL and the search hints its modes', async ({ page }) => {
 	await page.goto('/egress?from=now-24h&to=now&tz=UTC&cursor=abc');
 

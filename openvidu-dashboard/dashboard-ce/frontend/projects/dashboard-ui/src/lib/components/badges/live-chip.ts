@@ -15,7 +15,7 @@ import { formatTimestamp } from '../../format/formatters.js';
 	imports: [MatIcon, MatTooltip],
 	template: `
 		<span
-			class="chip"
+			class="chip ovd-tag"
 			[class.stale]="state() === 'stale'"
 			[class.paused]="state() === 'paused'"
 			[matTooltip]="tooltip()"
@@ -42,39 +42,25 @@ import { formatTimestamp } from '../../format/formatters.js';
 	styles: `
 		/* One width for "LIVE", "paused" and "stale", so a change of state never moves what follows. */
 		.chip {
-			display: inline-flex;
-			align-items: center;
 			justify-content: center;
 			min-inline-size: 84px;
-			box-sizing: border-box;
 			gap: 6px;
-			padding: 2px 10px;
-			border-radius: 8px;
+			padding-inline: 10px;
 			background: var(--mat-sys-tertiary-container);
 			color: var(--mat-sys-on-tertiary-container);
-			font: var(--mat-sys-label-medium);
 			font-weight: 600;
 		}
 
 		.paused {
 			background: var(--mat-sys-surface-container-high);
 			color: var(--mat-sys-on-surface-variant);
-
-			mat-icon {
-				width: 16px;
-				height: 16px;
-			}
 		}
 
 		.stale {
 			background: var(--ovd-status-warning-bg);
 			color: var(--ovd-status-warning-fg);
-			border: 1px dotted currentColor;
-
-			mat-icon {
-				width: 16px;
-				height: 16px;
-			}
+			border-style: dotted;
+			border-color: currentColor;
 		}
 
 		.dot {

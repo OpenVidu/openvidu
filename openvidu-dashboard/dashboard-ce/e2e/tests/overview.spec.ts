@@ -142,6 +142,10 @@ test('the live chip reads paused once the auto-refresh is off, while the status 
 	await page.getByRole('button', { name: /^Auto-refresh:/ }).click();
 	await page.getByRole('menuitemradio', { name: 'Off' }).click();
 	await expect(page.locator('.page-header ovd-live-chip')).toHaveText('paused');
+	// The tag height of every state, as a status badge beside it.
+	expect(
+		await page.locator('.page-header ovd-live-chip .ovd-tag').evaluate((tag) => tag.getBoundingClientRect().height)
+	).toBe(24);
 	expect(api.calls()).toContain('GET status');
 	await expectNoViolations(page);
 });
