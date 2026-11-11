@@ -64,31 +64,48 @@ test('tiles, the six sections, the breakdown table and the page scroll over a ch
 		'Active rooms',
 		'Rooms created',
 		'Room topology',
-		'Recorded rooms',
-		'Room size by topology'
+		'Room size',
+		'Recorded rooms'
 	]);
 	await expect(card(page, 'Rooms').locator('.chart-heading + .chart-note')).toHaveText([
 		'Five-minute buckets · UTC',
 		'Five-minute buckets · UTC',
-		'Hourly · UTC',
 		'Hourly · UTC'
 	]);
 
-	const sizes = card(page, 'Rooms').locator('ovd-stacked-category-chart');
+	const breakdown = (heading: string) =>
+		card(page, 'Rooms')
+			.locator('ovd-breakdown-chart')
+			.filter({ has: page.getByRole('heading', { name: heading, exact: true }) });
 
-	await sizes.getByRole('button', { name: 'Show table' }).click();
-	await expect(sizes.locator('tbody tr')).toHaveCount(6);
-	await expect(sizes.locator('tbody tr').nth(2)).toHaveText(/11-25\s*0\s*6\s*2\s*8/);
+	for (const [heading, rows] of [
+		['Room topology', ['N:M 62 77.5 %', '1:N 4 5.0 %', '1:1 14 17.5 %', 'Single participant 0 0.0 %']],
+		['Room size', ['0-5 40 80.0 %', '6-10 0 0.0 %', '11-25 8 16.0 %', '26-50 0 0.0 %']]
+	] as const) {
+		await breakdown(heading).getByRole('button', { name: 'Show table' }).click();
+		await expect(breakdown(heading).locator('tbody tr')).toHaveCount(6);
+
+		for (const [index, row] of rows.entries()) {
+			await expect(breakdown(heading).locator('tbody tr').nth(index)).toHaveText(
+				new RegExp(row.split(' ').join('\\s*'))
+			);
+		}
+	}
+
 	await expectNoViolations(page);
-	await sizes.getByRole('button', { name: 'Show chart' }).click();
-	await expect(sizes.getByRole('img')).toBeVisible();
+
+	for (const heading of ['Room topology', 'Room size']) {
+		await breakdown(heading).getByRole('button', { name: 'Show chart' }).click();
+		await expect(breakdown(heading).getByRole('img')).toBeVisible();
+	}
+
 	await expectNoViolations(page);
 	await expect(card(page, 'Participants').locator('.chart-heading')).toContainText([
 		'Active participants',
 		'Participant sessions',
-		'Connection success',
+		'Unique identities',
 		'Participant kind',
-		'Unique identities'
+		'Connection success'
 	]);
 	await expect(card(page, 'Egress').locator('.chart-heading + .chart-note')).toHaveText([
 		'Five-minute buckets · UTC',
@@ -208,8 +225,8 @@ test('the charts of a card share its rows evenly', async ({ page }) => {
 	await expect(card(page, 'Egress').locator('ovd-time-series-chart').first()).toBeVisible();
 	await expect.poll(() => rows('Egress')).toEqual([2, 2]);
 	expect(await rows('Client breakdowns')).toEqual([2, 2]);
-	expect(await rows('Participants')).toEqual([3, 2]);
-	expect(await rows('Rooms')).toEqual([3, 2]);
+	expect(await rows('Participants')).toEqual([2, 3]);
+	expect(await rows('Rooms')).toEqual([2, 3]);
 
 	await page.setViewportSize({ width: 375, height: 800 });
 	await expect.poll(() => rows('Egress')).toEqual([1, 1, 1, 1]);
@@ -289,7 +306,7 @@ test('the entity cards draw their peak and volume and export them', async ({ pag
 		return api.requests.findLast((item) => item.path === 'analytics/export.csv')?.params.get('metrics');
 	};
 
-	expect(await exported('Rooms')).toBe('roomsPeakActive,roomsCreated,roomsByTopology,recordedRoomsRate');
+	expect(await exported('Rooms')).toBe('roomsPeakActive,roomsCreated,recordedRoomsRate');
 	expect(await exported('Participants')).toBe(
 		'participantsPeakActive,participantsJoined,connectionSuccessRate,uniqueIdentities'
 	);

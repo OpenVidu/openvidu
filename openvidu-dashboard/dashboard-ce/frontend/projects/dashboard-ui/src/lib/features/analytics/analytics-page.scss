@@ -30,3 +30,8 @@
 	flex-direction: column;
 	gap: 16px;
 }
+
+/* The peak and volume pair of an entity section takes a row of its own, above its other charts. */
+ovd-chart-grid + ovd-chart-grid {
+	margin-top: 16px;
+}

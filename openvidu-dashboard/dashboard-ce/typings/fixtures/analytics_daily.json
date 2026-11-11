@@ -12,6 +12,7 @@
 			"participantsSum": { "$numberInt": "4" },
 			"byTopology": { "one_to_one": { "$numberInt": "1" } },
 			"recorded": { "$numberInt": "1" },
+			"bySize": { "0-5": { "$numberInt": "1" } },
 			"peakActive": { "$numberInt": "1" }
 		},
 		"participants": {
@@ -110,6 +111,7 @@
 			"participantsSum": { "$numberInt": "4" },
 			"byTopology": { "one_to_one": { "$numberInt": "1" } },
 			"recorded": { "$numberInt": "1" },
+			"bySize": { "0-5": { "$numberInt": "1" } },
 			"peakActive": { "$numberInt": "0" }
 		},
 		"participants": {

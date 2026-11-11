@@ -5,7 +5,6 @@ export * from './lib/charts/chart-colors.js';
 export * from './lib/charts/chart-grid.js';
 export * from './lib/charts/chart-note.js';
 export * from './lib/charts/chart-options.js';
-export * from './lib/charts/stacked-category-chart.js';
 export * from './lib/charts/time-series-chart/time-series-chart.js';
 export * from './lib/shell/breadcrumbs.js';
 export * from './lib/components/copy-button/copy-button.js';

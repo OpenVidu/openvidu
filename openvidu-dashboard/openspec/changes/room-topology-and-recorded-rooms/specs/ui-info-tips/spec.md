@@ -5,7 +5,7 @@
 ### Requirement: Analytics info tips
 Edition: CE. The Analytics page SHALL carry info tips on the tiles Recorded rooms, Participant sessions, Unique
 identities, Connection success and Data up / down, on the Total up and Total down tiles of the Data transferred card, and on the charts
-Active rooms, Room topology, Recorded rooms, Room size by topology, Active participants, Participant sessions, Active egress, Active ingress, Participant kind, SDK and
+Active rooms, Room topology, Room size, Recorded rooms, Active participants, Participant sessions, Active egress, Active ingress, Participant kind, SDK and
 Data up / down.
 
 #### Scenario: Analytics tiles
@@ -29,5 +29,5 @@ Data up / down.
 - **THEN** none of them carries an info tip
 
 #### Scenario: Topology and recording
-- **WHEN** the user opens the info tips of the Recorded rooms tile and of the charts Room topology, Recorded rooms and Room size by topology
-- **THEN** the tile reads "Share of the rooms ended in the range that were recorded: an egress with a file or HLS output started recording. Live streams and images alone do not count.", Room topology reads "Rooms ended in each bucket by their shape, from the most regular participants connected at once (N) and the most of them sending audio or video at once (P): Empty (N = 0), Single participant (N = 1), No publishers (P = 0), 1:1 (N = 2), 1:N (one sender, N ≥ 3) and N:M (several senders, N ≥ 3). A muted track counts once unmuted; agents, ingress and SIP participants do not count.", Recorded rooms reads "Share of the rooms ended in each bucket that were recorded: an egress with a file or HLS output started recording. Live streams and images alone do not count." and Room size by topology reads "Rooms ended in the range with several participants, by the most regular participants connected at once."
+- **WHEN** the user opens the info tips of the Recorded rooms tile and of the charts Room topology, Room size and Recorded rooms
+- **THEN** the tile reads "Share of the rooms ended in the range that were recorded: an egress with a file or HLS output started recording. Live streams and images alone do not count.", Room topology reads "Rooms ended in the range by their shape, from the most regular participants connected at once (N) and the most of them sending audio or video at once (P): Empty (N = 0), Single participant (N = 1), No publishers (P = 0), 1:1 (N = 2), 1:N (one sender, N ≥ 3) and N:M (several senders, N ≥ 3). A muted track counts once unmuted; agents, ingress and SIP participants do not count.", Room size reads "Rooms ended in the range by the most regular participants connected at once.", Recorded rooms reads "Share of the rooms ended in each bucket that were recorded: an egress with a file or HLS output started recording. Live streams and images alone do not count."

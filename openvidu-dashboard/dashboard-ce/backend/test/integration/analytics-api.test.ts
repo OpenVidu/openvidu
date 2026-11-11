@@ -227,7 +227,7 @@ describe.skipIf(mongoUri === '')('analytics API', () => {
 			expect(values(hourly, 'ingressSessions').slice(-4)).toEqual([0, 1, 1, 1]);
 		});
 
-		it('serves the room topology classes and the recorded share hourly', async () => {
+		it('serves the recorded share hourly, over the rooms with a topology', async () => {
 			await seedRollups(ce, {
 				analytics_hourly: [
 					rollup(hour - 3 * HOUR, {
@@ -240,31 +240,87 @@ describe.skipIf(mongoUri === '')('analytics API', () => {
 
 			const response = await json<AnalyticsSeriesResponse>(
 				ce,
-				`/analytics/series?metrics=roomsByTopology,recordedRoomsRate&granularity=1h&from=${iso(hour - DAY)}&to=${iso(hour)}`
+				`/analytics/series?metrics=recordedRoomsRate&granularity=1h&from=${iso(hour - DAY)}&to=${iso(hour)}`
 			);
 
 			expect(analyticsSeriesResponse.parse(response)).toEqual(response);
 			expect(response.series.map((series) => [series.name, series.points.length])).toEqual([
-				['roomsByTopology.many_to_many', 24],
-				['roomsByTopology.one_to_one', 24],
 				['recordedRoomsRate', 24]
 			]);
-			expect(values(response, 'roomsByTopology.many_to_many').slice(-3)).toEqual([1, 2, 0]);
-			expect(values(response, 'roomsByTopology.one_to_one').slice(-3)).toEqual([3, 0, 0]);
 			expect(values(response, 'recordedRoomsRate').slice(-4)).toEqual([null, 25, 0, null]);
+		});
+
+		it('breaks the classified rooms of the range down by topology and size', async () => {
+			await seedRollups(ce, {
+				analytics_hourly: [
+					rollup(hour - 3 * HOUR, {
+						rooms: {
+							ended: 60,
+							byTopology: { many_to_many: 40, one_to_one: 10 },
+							bySize: { '0-5': 30, '11-25': 6 }
+						}
+					}),
+					rollup(hour - 2 * HOUR, {
+						rooms: {
+							ended: 30,
+							byTopology: { many_to_many: 22, one_to_one: 4, one_to_many: 4 },
+							bySize: { '0-5': 10, '11-25': 2, '101+': 2 }
+						}
+					})
+				]
+			});
+
+			const response = await json<AnalyticsBreakdownsResponse>(
+				ce,
+				`/analytics/breakdowns?dimensions=roomTopology,roomSize&from=${iso(hour - DAY)}&to=${iso(hour)}`
+			);
+
+			expect(response.breakdowns).toEqual([
+				{
+					dimension: 'roomTopology',
+					total: 80,
+					items: [
+						{ key: 'many_to_many', count: 62, percent: 77.5 },
+						{ key: 'one_to_one', count: 14, percent: 17.5 },
+						{ key: 'one_to_many', count: 4, percent: 5 }
+					]
+				},
+				{
+					dimension: 'roomSize',
+					total: 50,
+					items: [
+						{ key: '0-5', count: 40, percent: 80 },
+						{ key: '11-25', count: 8, percent: 16 },
+						{ key: '101+', count: 2, percent: 4 }
+					]
+				}
+			]);
+		});
+
+		it('answers empty room topology and size breakdowns for rooms of an earlier writer', async () => {
+			await seedRollups(ce, { analytics_hourly: [rollup(hour - 2 * HOUR, { rooms: { ended: 30 } })] });
+
+			const response = await json<AnalyticsBreakdownsResponse>(
+				ce,
+				`/analytics/breakdowns?dimensions=roomTopology,roomSize&from=${iso(hour - DAY)}&to=${iso(hour)}`
+			);
+
+			expect(response.breakdowns).toEqual([
+				{ dimension: 'roomTopology', total: 0, items: [] },
+				{ dimension: 'roomSize', total: 0, items: [] }
+			]);
 		});
 
 		it('accepts every CE metric', async () => {
 			await seedRollups(ce, {});
 
-			expect(ANALYTICS_CE_METRICS).toHaveLength(24);
+			expect(ANALYTICS_CE_METRICS).toHaveLength(23);
 			expect(ANALYTICS_CE_METRICS).toEqual(
 				expect.arrayContaining([
 					'roomsPeakActive',
 					'participantsPeakActive',
 					'egressPeakActive',
 					'ingressPeakActive',
-					'roomsByTopology',
 					'recordedRoomsRate'
 				])
 			);
@@ -289,9 +345,9 @@ describe.skipIf(mongoUri === '')('analytics API', () => {
 				'ingressPeakActive requires a granularity of at least 1h'
 			],
 			[
-				'metrics=roomsPeakActive,roomsByTopology',
+				'metrics=roomsPeakActive,recordedRoomsRate',
 				['metrics'],
-				'roomsByTopology requires a granularity of at least 1h'
+				'recordedRoomsRate requires a granularity of at least 1h'
 			],
 			['metrics=bytesUp&scope=node:', ['scope'], 'must be global or node:<id>']
 		])('rejects %s', async (query, path, message) => {
@@ -537,14 +593,14 @@ describe.skipIf(mongoUri === '')('analytics API', () => {
 					'participantsPeakActive',
 					'egressPeakActive',
 					'ingressPeakActive',
-					'roomsByTopology',
 					'recordedRoomsRate'
 				]) {
 					expect(text).toContain(`"${metric}"`);
 				}
 			}
 
-			expect(exported).toContain('"roomSizeOneToMany"');
+			expect(exported).toContain('"roomTopology"');
+			expect(exported).toContain('"roomSize"');
 
 			expect(document).toContain('only available for the global scope');
 		});
@@ -582,35 +638,41 @@ describe.skipIf(mongoUri === '')('analytics API', () => {
 			expect(lines.at(-3)).toBe(`${iso(hour - 2 * HOUR)},300,0`);
 		});
 
-		it('exports one column per stored room topology and the room size breakdowns', async () => {
+		it('exports the recorded share and the room topology and size breakdowns', async () => {
 			await seedRollups(ce, {
 				analytics_hourly: [
 					rollup(hour - 2 * HOUR, {
 						rooms: {
 							byTopology: { one_to_one: 2, one_to_many: 1 },
 							recorded: 1,
-							sizeByTopology: { one_to_many: { '26-50': 1 } }
+							bySize: { '0-5': 2, '26-50': 1 }
 						}
 					})
 				]
 			});
 
-			const query = `metrics=roomsByTopology,recordedRoomsRate&granularity=1h&from=${iso(hour - DAY)}&to=${iso(hour)}`;
+			const query = `metrics=recordedRoomsRate&granularity=1h&from=${iso(hour - DAY)}&to=${iso(hour)}`;
 			const series = (await (await get(ce, `/analytics/export.csv?kind=series&${query}`)).text()).split('\r\n');
 
-			expect(series[0]).toBe('bucket,roomsByTopology.one_to_many,roomsByTopology.one_to_one,recordedRoomsRate');
-			expect(series.at(-3)).toBe(`${iso(hour - 2 * HOUR)},1,2,33.3`);
+			expect(series[0]).toBe('bucket,recordedRoomsRate');
+			expect(series.at(-3)).toBe(`${iso(hour - 2 * HOUR)},33.3`);
 
 			const breakdowns = (
 				await (
 					await get(
 						ce,
-						`/analytics/export.csv?kind=breakdowns&dimensions=roomSizeOneToMany,roomSizeManyToMany&from=${iso(hour - DAY)}&to=${iso(hour)}`
+						`/analytics/export.csv?kind=breakdowns&dimensions=roomTopology,roomSize&from=${iso(hour - DAY)}&to=${iso(hour)}`
 					)
 				).text()
 			).split('\r\n');
 
-			expect(breakdowns.slice(0, 2)).toEqual(['dimension,key,count,percent', 'roomSizeOneToMany,26-50,1,100']);
+			expect(breakdowns.slice(0, 5)).toEqual([
+				'dimension,key,count,percent',
+				'roomTopology,one_to_one,2,66.7',
+				'roomTopology,one_to_many,1,33.3',
+				'roomSize,0-5,2,66.7',
+				'roomSize,26-50,1,33.3'
+			]);
 		});
 
 		it('exports a missing peak as an empty cell', async () => {

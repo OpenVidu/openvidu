@@ -8,7 +8,6 @@ import type { AnalyticsSummary, InfoRetention } from '@openvidu-dashboard/typing
 import { NGX_ECHARTS_CONFIG } from 'ngx-echarts';
 
 import { BreakdownChart } from '../lib/charts/breakdown-chart.js';
-import { StackedCategoryChart } from '../lib/charts/stacked-category-chart.js';
 import { TimeSeriesChart } from '../lib/charts/time-series-chart/time-series-chart.js';
 import { InfoService } from '../lib/core/info.js';
 import { AnalyticsPage } from '../lib/features/analytics/analytics-page.js';
@@ -85,12 +84,6 @@ function seriesBody(params: HttpParams, named: AnalyticsAnswers['points'] = {}) 
 						{ name: 'egressEnded.complete', points },
 						{ name: 'egressEnded.failed', points }
 					];
-				// Stored classes, as the API sorts them: by name, not in the chart order.
-				case 'roomsByTopology':
-					return ['many_to_many', 'one_to_many', 'one_to_one'].map((topology) => ({
-						name: `roomsByTopology.${topology}`,
-						points: named[`roomsByTopology.${topology}`] ?? points
-					}));
 				default:
 					return [{ name, points: named[name] ?? points }];
 			}
@@ -119,15 +112,19 @@ function breakdownItems(dimension: string) {
 				{ key: 'EGRESS', count: 40, percent: 5.3 },
 				{ key: 'SIP', count: 10, percent: 1.3 }
 			];
-		case 'roomSizeOneToMany':
-			return [{ key: '11-25', count: 6, percent: 100 }];
-		case 'roomSizeManyToMany':
+		// Classes and ranges with rooms, as the API sorts them: by count, not in the chart order.
+		case 'roomTopology':
 			return [
-				{ key: '2-5', count: 40, percent: 95.2 },
-				{ key: '11-25', count: 2, percent: 4.8 }
+				{ key: 'many_to_many', count: 62, percent: 77.5 },
+				{ key: 'one_to_one', count: 14, percent: 17.5 },
+				{ key: 'one_to_many', count: 4, percent: 5 }
 			];
-		case 'roomSizeNoPublishers':
-			return [];
+		case 'roomSize':
+			return [
+				{ key: '0-5', count: 40, percent: 80 },
+				{ key: '11-25', count: 8, percent: 16 },
+				{ key: '101+', count: 2, percent: 4 }
+			];
 		default:
 			return [
 				{ key: 'CLIENT_INITIATED', count: 700, percent: 93.3, errors: 7 },
@@ -231,7 +228,6 @@ export async function openAnalytics(
 	});
 	TestBed.overrideComponent(TimeSeriesChart, { set: { providers: [NEVER_LOADED] } });
 	TestBed.overrideComponent(BreakdownChart, { set: { providers: [NEVER_LOADED] } });
-	TestBed.overrideComponent(StackedCategoryChart, { set: { providers: [NEVER_LOADED] } });
 
 	const http = TestBed.inject(HttpTestingController);
 	const load = TestBed.inject(InfoService).load();

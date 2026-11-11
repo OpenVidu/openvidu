@@ -293,15 +293,15 @@ describe('analytics schemas', () => {
 describe('analytics catalogue', () => {
 	it('defines every CE metric and dimension', () => {
 		expect(Object.keys(CE_ANALYTICS_CATALOGUE.metrics).sort()).toEqual(
-			ANALYTICS_CE_METRICS.filter((metric) => metric !== 'egressEnded' && metric !== 'roomsByTopology').sort()
+			ANALYTICS_CE_METRICS.filter((metric) => metric !== 'egressEnded').sort()
 		);
 		expect(Object.keys(CE_ANALYTICS_CATALOGUE.dimensions).sort()).toEqual([...ANALYTICS_CE_DIMENSIONS].sort());
 	});
 
 	it('projects a map once when a metric reads some of its keys', () => {
-		expect(metricFields(CE_ANALYTICS_CATALOGUE, ['roomsByTopology', 'recordedRoomsRate'])).toEqual([
-			'rooms.byTopology',
-			'rooms.recorded'
+		expect(metricFields(CE_ANALYTICS_CATALOGUE, ['egressEnded', 'egressStarted'])).toEqual([
+			'egress.endedByStatus',
+			'egress.started'
 		]);
 		expect(metricFields(CE_ANALYTICS_CATALOGUE, ['recordedRoomsRate'])).toContain('rooms.byTopology.one_to_one');
 	});
@@ -529,27 +529,6 @@ describe('analytics series', () => {
 			'egressEnded.EGRESS_FAILED'
 		]);
 		expect(response.series[1]?.points.at(-2)).toEqual(['2026-10-13T10:00:00.000Z', 1]);
-	});
-
-	it('expands roomsByTopology into the classes present in the range', async () => {
-		const db = fakeDb({
-			analytics_hourly: [
-				{ scope: 'global', bucket: at('2026-10-13T09:00:00Z'), rooms: { byTopology: { one_to_one: 3 } } },
-				{
-					scope: 'global',
-					bucket: at('2026-10-13T10:00:00Z'),
-					rooms: { byTopology: { one_to_one: 1, many_to_many: 2 } }
-				}
-			]
-		});
-		const response = await service(db).series(series({ metrics: 'roomsByTopology', granularity: '1h' }));
-
-		expect(response.series.map((item) => item.name)).toEqual([
-			'roomsByTopology.many_to_many',
-			'roomsByTopology.one_to_one'
-		]);
-		expect(response.series[1]?.points.slice(-4, -1).map(([, value]) => value)).toEqual([0, 3, 1]);
-		expect(response.series[0]?.points.at(-2)).toEqual(['2026-10-13T10:00:00.000Z', 2]);
 	});
 
 	it('computes the recorded rooms rate over the rooms ended with a topology', async () => {
@@ -796,39 +775,48 @@ describe('analytics summary and breakdowns', () => {
 		expect(summary.roomsEnded).toBe(30);
 	});
 
-	it('breaks the 1:N rooms down by size range', async () => {
+	it('breaks the classified rooms down by topology and size range', async () => {
 		const db = fakeDb({
 			analytics_hourly: [
 				{
 					scope: 'global',
 					bucket: at('2026-10-13T09:00:00Z'),
-					rooms: { sizeByTopology: { one_to_many: { '11-25': 4, '26-50': 3 }, many_to_many: { '2-5': 9 } } }
+					rooms: { byTopology: { many_to_many: 40, one_to_one: 10 }, bySize: { '0-5': 30, '11-25': 6 } }
 				},
 				{
 					scope: 'global',
 					bucket: at('2026-10-13T10:00:00Z'),
-					rooms: { sizeByTopology: { one_to_many: { '11-25': 2, '101+': 1 } } }
-				}
+					rooms: {
+						byTopology: { many_to_many: 22, one_to_one: 4, one_to_many: 4 },
+						bySize: { '0-5': 10, '11-25': 2, '101+': 2 }
+					}
+				},
+				{ scope: 'global', bucket: at('2026-10-13T11:00:00Z'), rooms: { ended: 30 } }
 			]
 		});
 		const response = await service(db).breakdowns(
-			analyticsBreakdownsQuery(() => NOW).parse({
-				dimensions: 'roomSizeOneToMany,roomSizeNoPublishers',
-				from: 'now-3h'
-			})
+			analyticsBreakdownsQuery(() => NOW).parse({ dimensions: 'roomTopology,roomSize', from: 'now-3h' })
 		);
 
 		expect(response.breakdowns).toEqual([
 			{
-				dimension: 'roomSizeOneToMany',
-				total: 10,
+				dimension: 'roomTopology',
+				total: 80,
 				items: [
-					{ key: '11-25', count: 6, percent: 60 },
-					{ key: '26-50', count: 3, percent: 30 },
-					{ key: '101+', count: 1, percent: 10 }
+					{ key: 'many_to_many', count: 62, percent: 77.5 },
+					{ key: 'one_to_one', count: 14, percent: 17.5 },
+					{ key: 'one_to_many', count: 4, percent: 5 }
 				]
 			},
-			{ dimension: 'roomSizeNoPublishers', total: 0, items: [] }
+			{
+				dimension: 'roomSize',
+				total: 50,
+				items: [
+					{ key: '0-5', count: 40, percent: 80 },
+					{ key: '11-25', count: 8, percent: 16 },
+					{ key: '101+', count: 2, percent: 4 }
+				]
+			}
 		]);
 	});
 

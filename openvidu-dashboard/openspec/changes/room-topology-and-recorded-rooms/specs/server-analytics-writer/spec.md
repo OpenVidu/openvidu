@@ -62,15 +62,15 @@ egress with only `stream` or `images` outputs SHALL NOT make a room recorded.
 ### Requirement: Room class counters at room end
 Edition: CE and PRO servers. When the writer projects the `ROOM_ENDED` of a room with a `topology`, it SHALL add to the
 hourly and daily rollups of the end bucket, in each scope of the room's server: 1 to `rooms.byTopology.<class>`; 1 to
-`rooms.recorded` when `features.recording` is `true`; and 1 to `rooms.sizeByTopology.<class>.<range>` for a class
-with a size range. It SHALL read them from the room document once the batch that closes it is applied.
+`rooms.recorded` when `features.recording` is `true`; and 1 to `rooms.bySize.<range>`, the size range of its
+`participants.peakActive`. It SHALL read them from the room document once the batch that closes it is applied.
 
 #### Scenario: Ended rooms
 - **GIVEN** a server with the media node label `mn-a` on which a recorded `many_to_many` room with N = 12 and a
   `one_to_one` room end between 10:00 and 11:00 UTC
 - **WHEN** their `ROOM_ENDED` are projected
 - **THEN** the hourly and daily documents of `global` and `node:mn-a` add 1 to `rooms.byTopology.many_to_many`, 1 to
-  `rooms.byTopology.one_to_one`, 1 to `rooms.recorded` and 1 to `rooms.sizeByTopology.many_to_many.11-25`
+  `rooms.byTopology.one_to_one`, 1 to `rooms.recorded`, 1 to `rooms.bySize.11-25` and 1 to `rooms.bySize.0-5`
 
 #### Scenario: Events of the last batch
 - **GIVEN** a batch in which a third STANDARD participant of a room sends media and the room then ends
@@ -80,4 +80,4 @@ with a size range. It SHALL read them from the room document once the batch that
 #### Scenario: Replayed batch
 - **GIVEN** a batch whose `ROOM_ENDED` was already counted by a previous process
 - **WHEN** the batch is processed again
-- **THEN** `rooms.byTopology`, `rooms.recorded` and `rooms.sizeByTopology` are unchanged
+- **THEN** `rooms.byTopology`, `rooms.recorded` and `rooms.bySize` are unchanged

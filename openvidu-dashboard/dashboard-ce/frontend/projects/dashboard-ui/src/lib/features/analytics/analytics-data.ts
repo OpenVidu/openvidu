@@ -27,7 +27,6 @@ import type { AnalyticsProCard } from './analytics-seams.js';
 export const PAGE_METRICS: readonly AnalyticsMetric[] = [
 	'roomsPeakActive',
 	'roomsCreated',
-	'roomsByTopology',
 	'recordedRoomsRate',
 	'participantsPeakActive',
 	'participantsJoined',
@@ -50,9 +49,8 @@ export const PAGE_DIMENSIONS: readonly AnalyticsDimension[] = [
 	'connectionType',
 	'egressType',
 	'ingressInputType',
-	'roomSizeNoPublishers',
-	'roomSizeOneToMany',
-	'roomSizeManyToMany'
+	'roomTopology',
+	'roomSize'
 ];
 
 /** The URL state of the page. */

@@ -11,7 +11,8 @@
 			"durationMsSum": { "$numberLong": "2700000" },
 			"participantsSum": { "$numberInt": "4" },
 			"byTopology": { "one_to_one": { "$numberInt": "1" } },
-			"recorded": { "$numberInt": "1" }
+			"recorded": { "$numberInt": "1" },
+			"bySize": { "0-5": { "$numberInt": "1" } }
 		},
 		"participants": {
 			"joined": { "$numberInt": "4" },
@@ -87,7 +88,8 @@
 			"durationMsSum": { "$numberLong": "2700000" },
 			"participantsSum": { "$numberInt": "4" },
 			"byTopology": { "one_to_one": { "$numberInt": "1" } },
-			"recorded": { "$numberInt": "1" }
+			"recorded": { "$numberInt": "1" },
+			"bySize": { "0-5": { "$numberInt": "1" } }
 		},
 		"participants": {
 			"joined": { "$numberInt": "4" },

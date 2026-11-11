@@ -78,15 +78,15 @@ const BREAKDOWN_KEYS: Partial<Record<AnalyticsDimension, BreakdownKey[]>> = {
 		['whip', 8],
 		['url', 2]
 	],
-	roomSizeNoPublishers: [['2-5', 3]],
-	roomSizeOneToMany: [
-		['11-25', 6],
-		['101+', 1]
+	roomTopology: [
+		['many_to_many', 62],
+		['one_to_one', 14],
+		['one_to_many', 4]
 	],
-	roomSizeManyToMany: [
-		['2-5', 40],
-		['6-10', 12],
-		['11-25', 2]
+	roomSize: [
+		['0-5', 40],
+		['11-25', 8],
+		['101+', 2]
 	]
 };
 
@@ -134,13 +134,6 @@ export function analyticsSeries(params: URLSearchParams, fixtures: AnalyticsFixt
 				return [
 					{ name: 'egressEnded.complete', points: points((index) => (index % 3) + 1) },
 					{ name: 'egressEnded.failed', points: points((index) => index % 2) }
-				];
-			// The stored classes, sorted by name as the API sorts them.
-			case 'roomsByTopology':
-				return [
-					{ name: 'roomsByTopology.many_to_many', points: points((index) => (index % 4) + 2) },
-					{ name: 'roomsByTopology.one_to_many', points: points((index) => index % 2) },
-					{ name: 'roomsByTopology.one_to_one', points: points((index) => (index % 3) + 1) }
 				];
 			case 'recordedRoomsRate':
 				return [{ name, points: points((index) => 20 + (index % 4) * 5) }];

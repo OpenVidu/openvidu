@@ -3,7 +3,6 @@ import {
 	type AnalyticsDimension,
 	type AnalyticsMetric,
 	type AnalyticsMetricInfo,
-	ROOM_SIZE_DIMENSIONS,
 	RoomTopology
 } from '@openvidu-dashboard/typings';
 
@@ -15,8 +14,7 @@ export const DOCUMENTS = '#documents';
 
 /** Metrics that expand into one series per key of a map counter, named `<metric>.<key>`. */
 export const EXPANDED_METRICS = {
-	egressEnded: 'egress.endedByStatus',
-	roomsByTopology: 'rooms.byTopology'
+	egressEnded: 'egress.endedByStatus'
 } as const satisfies Partial<Record<AnalyticsMetric, string>>;
 export type ExpandedMetric = keyof typeof EXPANDED_METRICS;
 
@@ -25,7 +23,7 @@ export function isExpandedMetric(metric: AnalyticsMetric): metric is ExpandedMet
 }
 
 /** Counters of the rooms ended with a topology, one per class: their sum is the number of classified rooms. */
-const TOPOLOGY_PATHS = Object.values(RoomTopology).map((topology) => `${EXPANDED_METRICS.roomsByTopology}.${topology}`);
+const TOPOLOGY_PATHS = Object.values(RoomTopology).map((topology) => `rooms.byTopology.${topology}`);
 
 /** Rooms ended in the counters with a topology; rooms of an earlier writer have none. */
 export function classifiedRooms(counters: Counters | undefined): number {
@@ -136,9 +134,8 @@ const CE_DIMENSIONS = {
 	egressType: { path: 'egress.byType' },
 	egressStatus: { path: 'egress.endedByStatus' },
 	ingressInputType: { path: 'ingress.byInputType' },
-	[ROOM_SIZE_DIMENSIONS.no_publishers]: { path: 'rooms.sizeByTopology.no_publishers' },
-	[ROOM_SIZE_DIMENSIONS.one_to_many]: { path: 'rooms.sizeByTopology.one_to_many' },
-	[ROOM_SIZE_DIMENSIONS.many_to_many]: { path: 'rooms.sizeByTopology.many_to_many' }
+	roomTopology: { path: 'rooms.byTopology' },
+	roomSize: { path: 'rooms.bySize' }
 } satisfies AnalyticsCatalogue['dimensions'];
 
 /** The CE catalogue; the gate rejects the PRO metrics and dimensions before it is read. */

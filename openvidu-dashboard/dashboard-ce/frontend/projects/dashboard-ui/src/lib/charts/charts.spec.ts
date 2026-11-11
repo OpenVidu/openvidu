@@ -22,11 +22,9 @@ import {
 	foldBreakdown,
 	MAX_MARKERS,
 	OTHER,
-	stackedCategoryOption,
 	timeSeriesOption
 } from './chart-options.js';
 import { bindChartOptions } from './echarts-provider.js';
-import { StackedCategoryChart } from './stacked-category-chart.js';
 import { TimeSeriesChart } from './time-series-chart/time-series-chart.js';
 
 const COLORS: ChartColors = {
@@ -505,91 +503,94 @@ describe('BreakdownChart', () => {
 });
 
 @Component({
-	selector: 'ovd-stacked-category-host',
-	imports: [StackedCategoryChart],
-	template: `<ovd-stacked-category-chart
-		heading="Room size by topology"
-		keyHeading="Participants"
-		[keys]="keys"
-		[series]="series()"
-	/>`
+	selector: 'ovd-ordered-breakdown-host',
+	imports: [BreakdownChart],
+	template: `<ovd-breakdown-chart heading="Room size" variant="bar" ordered [entries]="entries()" />`
 })
-class StackedCategoryHost {
-	readonly keys = ['2-5', '6-10', '11-25'];
-	readonly series = signal([
-		{ name: '1:N', entity: 'topology_one_to_many', values: [0, 0, 6] },
-		{ name: 'N:M', entity: 'topology_many_to_many', values: [40, 0, 2] }
+class OrderedBreakdownHost {
+	readonly entries = signal([
+		{ name: '0-5', value: 40, entity: 'rooms' },
+		{ name: '6-10', value: 0, entity: 'rooms' },
+		{ name: '11-25', value: 8, entity: 'rooms' }
 	]);
 }
 
-describe('StackedCategoryChart', () => {
-	it('stacks the series over every key in order and adds up each bar in the tooltip', () => {
-		const option = stackedCategoryOption({
-			keys: ['2-5', '6-10', '11-25'],
-			series: [
-				{ name: '1:N', entity: 'topology_one_to_many', values: [0, 0, 6] },
-				{ name: 'N:M', entity: 'topology_many_to_many', values: [40, 0, 2] }
+describe('ordered BreakdownChart', () => {
+	it('keeps the order, shows the entries at 0 and labels each bar with its count and share', () => {
+		const option = breakdownOption({
+			entries: [
+				{ name: '0-5', value: 40, entity: 'rooms' },
+				{ name: '6-10', value: 0, entity: 'rooms' },
+				{ name: '11-25', value: 8, entity: 'rooms' }
 			],
+			variant: 'bar',
 			format: 'number',
 			colors: COLORS,
-			animation: false
+			animation: false,
+			ordered: true
 		}) as {
-			xAxis: { data: string[] };
-			series: { stack: string; data: number[]; itemStyle: { color: string } }[];
-			tooltip: { formatter: (params: unknown[]) => string };
+			yAxis: { data: string[] };
+			series: {
+				data: { value: number; itemStyle: { color: string } }[];
+				label: { formatter: (params: { value: number }) => string };
+			}[];
 		};
-		const tooltip = option.tooltip.formatter([
-			{ axisValue: '11-25', seriesName: '1:N', value: 6, marker: '' },
-			{ axisValue: '11-25', seriesName: 'N:M', value: 2, marker: '' }
-		]);
+		const [series] = option.series;
 
-		expect(option.xAxis.data).toEqual(['2-5', '6-10', '11-25']);
-		expect(option.series.map((series) => [series.stack, series.data])).toEqual([
-			['total', [0, 0, 6]],
-			['total', [40, 0, 2]]
+		expect(option.yAxis.data).toEqual(['0-5', '6-10', '11-25']);
+		expect(series?.data.map((item) => item.itemStyle.color)).toEqual(['#0088aa', '#0088aa', '#0088aa']);
+		expect(series?.data.map((item) => series.label.formatter({ value: item.value }))).toEqual([
+			'40 (83.3 %)',
+			'0 (0.0 %)',
+			'8 (16.7 %)'
 		]);
-		expect(option.series.map((series) => series.itemStyle.color)).toEqual(['#2f4b7c', '#0088aa']);
-		expect(tooltip).toBe('11-25<br>1:N: 6<br>N:M: 2<br>Total: 8');
 	});
 
-	it('lists one row per key with a column per series and the total', async () => {
-		TestBed.overrideComponent(StackedCategoryChart, { set: { providers: [NEVER_LOADED] } });
+	it('never folds more than eight ordered entries into Other', () => {
+		const option = breakdownOption({
+			entries: Array.from({ length: 10 }, (_, i) => ({ name: `k${String(i)}`, value: i })),
+			variant: 'bar',
+			format: 'number',
+			colors: COLORS,
+			animation: false,
+			ordered: true
+		}) as { yAxis: { data: string[] } };
 
-		const fixture = TestBed.createComponent(StackedCategoryHost);
+		expect(option.yAxis.data).toEqual(['k0', 'k1', 'k2', 'k3', 'k4', 'k5', 'k6', 'k7', 'k8', 'k9']);
+	});
+
+	it('lists the rows of the table in order', async () => {
+		TestBed.overrideComponent(BreakdownChart, { set: { providers: [NEVER_LOADED] } });
+
+		const fixture = TestBed.createComponent(OrderedBreakdownHost);
 
 		await fixture.whenStable();
 
 		const element = fixture.nativeElement as HTMLElement;
 
-		expect(element.querySelector('.chart')?.getAttribute('aria-label')).toBe(
-			'Room size by topology: 2-5 40, 6-10 0, 11-25 8.'
-		);
 		element.querySelector<HTMLButtonElement>('.toggle')?.click();
 		await fixture.whenStable();
 
-		expect([...element.querySelectorAll('thead th')].map((cell) => cell.textContent.trim())).toEqual([
-			'Participants',
-			'1:N',
-			'N:M',
-			'Total'
-		]);
 		expect(
 			[...element.querySelectorAll('tbody tr')].map((row) =>
 				[...row.querySelectorAll('th, td')].map((cell) => cell.textContent.trim())
 			)
 		).toEqual([
-			['2-5', '0', '40', '40'],
-			['6-10', '0', '0', '0'],
-			['11-25', '6', '2', '8']
+			['0-5', '40', '83.3 %'],
+			['6-10', '0', '0.0 %'],
+			['11-25', '8', '16.7 %']
 		]);
 	});
 
 	it('reads "No data in this range" when every value is 0', async () => {
-		TestBed.overrideComponent(StackedCategoryChart, { set: { providers: [NEVER_LOADED] } });
+		TestBed.overrideComponent(BreakdownChart, { set: { providers: [NEVER_LOADED] } });
 
-		const fixture = TestBed.createComponent(StackedCategoryHost);
+		const fixture = TestBed.createComponent(OrderedBreakdownHost);
 
-		fixture.componentInstance.series.set([{ name: 'N:M', entity: 'topology_many_to_many', values: [0, 0, 0] }]);
+		fixture.componentInstance.entries.set([
+			{ name: '0-5', value: 0, entity: 'rooms' },
+			{ name: '6-10', value: 0, entity: 'rooms' }
+		]);
 		await fixture.whenStable();
 
 		const element = fixture.nativeElement as HTMLElement;

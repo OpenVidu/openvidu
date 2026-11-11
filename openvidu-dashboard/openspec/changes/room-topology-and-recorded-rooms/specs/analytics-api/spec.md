@@ -4,7 +4,7 @@
 
 ### Requirement: Metric catalogue and fill values
 
-Edition: CE. The CE metrics SHALL be the twenty-four of the "CE metrics" scenario; counters and sums fill empty buckets
+Edition: CE. The CE metrics SHALL be the twenty-three of the "CE metrics" scenario; counters and sums fill empty buckets
 with `0`, rates and averages with `null`, and peaks with `null` in a bucket without a sample. Participant figures
 count STANDARD sessions only, except the `kind` breakdown. `ingressSessions` SHALL sum the rollups'
 `ingress.sessionsStarted` and `ingressDurationMs` their `ingress.durationMs`.
@@ -41,7 +41,7 @@ count STANDARD sessions only, except the `kind` breakdown. `ingressSessions` SHA
 - **THEN** the metrics it can request are `roomsCreated`, `roomsEnded`, `roomsPeakActive`, `participantsJoined`,
   `participantsActive`, `participantsAborted`, `participantsPeakActive`, `connectionSuccessRate`, `uniqueIdentities`,
   `participantMinutes`, `tracksPublished`, `egressStarted`, `egressEnded`, `egressDurationMs`, `egressPeakActive`,
-  `ingressSessions`, `ingressDurationMs`, `ingressPeakActive`, `roomsByTopology`, `recordedRoomsRate`, `bytesUp`,
+  `ingressSessions`, `ingressDurationMs`, `ingressPeakActive`, `recordedRoomsRate`, `bytesUp`,
   `bytesDown`, `apiCalls` and `apiErrors`
 
 #### Scenario: Peaks at five minutes
@@ -64,7 +64,7 @@ count STANDARD sessions only, except the `kind` breakdown. `ingressSessions` SHA
 ### Requirement: Hourly-only metrics
 
 Edition: CE. `participantMinutes`, `tracksPublished`, `egressEnded`, `egressDurationMs`, `ingressSessions`,
-`ingressDurationMs`, `ingressPeakActive`, `roomsByTopology`, `recordedRoomsRate`, `apiCalls` and `apiErrors` SHALL
+`ingressDurationMs`, `ingressPeakActive`, `recordedRoomsRate`, `apiCalls` and `apiErrors` SHALL
 be served only at `1h` or coarser; a request
 for any of them with an explicit or resolved granularity below `1h` SHALL be rejected with `400` naming the metric and
 the granularity.
@@ -80,10 +80,10 @@ the granularity.
 - **WHEN** the client requests `metrics=ingressPeakActive` with `granularity=5m`
 - **THEN** the response is `400` with code `VALIDATION_ERROR` naming `ingressPeakActive` and `5m`
 
-#### Scenario: Room topology at five minutes
+#### Scenario: Recorded rooms rate at five minutes
 
-- **WHEN** the client requests `metrics=roomsPeakActive,roomsByTopology` with `granularity=auto` over 24 h
-- **THEN** the response is `400` with code `VALIDATION_ERROR` naming `roomsByTopology` and `5m`
+- **WHEN** the client requests `metrics=roomsPeakActive,recordedRoomsRate` with `granularity=auto` over 24 h
+- **THEN** the response is `400` with code `VALIDATION_ERROR` naming `recordedRoomsRate` and `5m`
 
 ### Requirement: Summary endpoint
 
@@ -156,19 +156,6 @@ without ingress activity.
 
 ## ADDED Requirements
 
-### Requirement: Room topology series
-
-Edition: CE. The series endpoint SHALL expand `roomsByTopology` into one series per topology class stored in the range,
-named `roomsByTopology.<class>` (`roomsByTopology.one_to_one`), whose points are the rooms of that class ended in each
-bucket, `0` without one.
-
-#### Scenario: Room topology classes
-
-- **GIVEN** rooms that ended in the range as `one_to_one` and `many_to_many`, and none of another class
-- **WHEN** the client requests `metrics=roomsByTopology&granularity=1h`
-- **THEN** the response has the series `roomsByTopology.one_to_one` and `roomsByTopology.many_to_many`, each bucket
-  holding the rooms of that class that ended in it and `0` without one, and no series for the other classes
-
 ### Requirement: Recorded rooms rate
 
 Edition: CE. `recordedRoomsRate` SHALL be `rooms.recorded` over the sum of `rooms.byTopology` of the bucket, or of the
@@ -189,21 +176,35 @@ rooms ended without a class, by an earlier writer, count in neither part.
 - **WHEN** `metrics=recordedRoomsRate&granularity=1h` is requested
 - **THEN** the point is `25.0`
 
-### Requirement: Room size dimensions
+### Requirement: Room topology and size dimensions
 
-Edition: CE. The breakdowns endpoint SHALL accept the dimensions `roomSizeNoPublishers`, `roomSizeOneToMany` and
-`roomSizeManyToMany`, which sum `rooms.sizeByTopology.no_publishers`, `one_to_many` and `many_to_many` of the hourly
-and daily rollups in range under the size range keys `2-5`, `6-10`, `11-25`, `26-50`, `51-100` and `101+`. They are
-not gated by any feature and are served in every scope.
+Edition: CE. The breakdowns endpoint SHALL accept the dimensions `roomTopology`, which sums `rooms.byTopology` of the
+hourly and daily rollups in range under the class keys, and `roomSize`, which sums `rooms.bySize` under the size range
+keys `0-5`, `6-10`, `11-25`, `26-50`, `51-100` and `101+`. Both count the rooms ended in the range that have a class,
+and only the keys with rooms. They are not gated by any feature and are served in every scope.
 
-#### Scenario: Sizes of the 1:N rooms
+#### Scenario: Classes of the range
 
-- **GIVEN** rollups in range with `rooms.sizeByTopology.one_to_many` summing to `11-25: 6`, `26-50: 3` and `101+: 1`
-- **WHEN** `dimensions=roomSizeOneToMany` is requested on CE
-- **THEN** the breakdown has `total: 10` and items `11-25` 6 / 60.0, `26-50` 3 / 30.0 and `101+` 1 / 10.0
+- **GIVEN** rollups in range with `rooms.byTopology` summing to `many_to_many: 62`, `one_to_one: 14` and
+  `one_to_many: 4`
+- **WHEN** `dimensions=roomTopology` is requested on CE
+- **THEN** the breakdown has `total: 80` and items `many_to_many` 62 / 77.5, `one_to_one` 14 / 17.5 and `one_to_many`
+  4 / 5.0
+
+#### Scenario: Sizes of the range
+
+- **GIVEN** rollups in range with `rooms.bySize` summing to `0-5: 40`, `11-25: 8` and `101+: 2`
+- **WHEN** `dimensions=roomSize` is requested on CE
+- **THEN** the breakdown has `total: 50` and items `0-5` 40 / 80.0, `11-25` 8 / 16.0 and `101+` 2 / 4.0
+
+#### Scenario: Range before the writer classified rooms
+
+- **GIVEN** rollups in range with `rooms.ended: 30` and neither `rooms.byTopology` nor `rooms.bySize`
+- **WHEN** `dimensions=roomTopology,roomSize` is requested
+- **THEN** both breakdowns have `total: 0` and no items
 
 #### Scenario: Node scope
 
-- **GIVEN** the `per-node-breakdown` feature and rollups of `node:mn-a` with `rooms.sizeByTopology.many_to_many`
-- **WHEN** `dimensions=roomSizeManyToMany&scope=node:mn-a` is requested
-- **THEN** the response is `200` with the breakdown of `node:mn-a`
+- **GIVEN** the `per-node-breakdown` feature and rollups of `node:mn-a` with `rooms.byTopology` and `rooms.bySize`
+- **WHEN** `dimensions=roomTopology,roomSize&scope=node:mn-a` is requested
+- **THEN** the response is `200` with the breakdowns of `node:mn-a`

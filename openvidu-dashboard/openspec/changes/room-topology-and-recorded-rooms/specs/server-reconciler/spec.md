@@ -12,15 +12,15 @@ nothing to them.
 - **GIVEN** a recorded `one_to_many` room with N = 8 on a node that stopped without ending it
 - **WHEN** the reconciler closes it at 10:20 UTC
 - **THEN** the hourly and daily rollups of its bucket and scopes add 1 to `rooms.byTopology.one_to_many`, 1 to
-  `rooms.recorded` and 1 to `rooms.sizeByTopology.one_to_many.6-10`
+  `rooms.recorded` and 1 to `rooms.bySize.6-10`
 
 #### Scenario: Late real end
 - **GIVEN** a room closed by the reconciler and already counted
 - **WHEN** its real `ROOM_ENDED` is projected later
-- **THEN** `rooms.byTopology`, `rooms.recorded` and `rooms.sizeByTopology` are unchanged
+- **THEN** `rooms.byTopology`, `rooms.recorded` and `rooms.bySize` are unchanged
 
 #### Scenario: Room of an earlier writer
 - **GIVEN** a room document without `topology`, written by an earlier writer on a node that stopped without ending it
 - **WHEN** the reconciler closes it
 - **THEN** its `rooms.participantsSum` is counted, it gets no `topology`, and nothing is added to `rooms.byTopology`,
-  `rooms.recorded` or `rooms.sizeByTopology`
+  `rooms.recorded` or `rooms.bySize`

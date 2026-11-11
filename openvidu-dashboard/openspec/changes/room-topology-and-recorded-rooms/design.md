@@ -129,7 +129,7 @@ Rejected alternatives:
   - and, when `topology` is set:
     - `rooms.byTopology.<class>: 1`;
     - `rooms.recorded: 1` when recorded;
-    - `rooms.sizeByTopology.<class>.<range>: 1` for the three classes with a range.
+    - `rooms.bySize.<range>: 1`, the range of its `participants.peakActive`.
 - `batch.go` and `reconciler_close.go` call it unchanged otherwise, so replays and late real ends inherit the
   existing idempotence.
 - The range comes from a small Go function with the bounds 5, 10, 25, 50 and 100.
@@ -145,8 +145,8 @@ The new counters go only to `analytics_hourly` and `analytics_daily`, like `room
 - the 5-minute rollups hold only what the default view draws per five minutes;
 - a topology or a recorded share per five minutes is mostly empty buckets and 0 % / 100 % noise.
 
-The two metrics are hourly-only, and the page requests their charts at `1h` with the note "Hourly", as it does for
-`egressEnded`.
+`recordedRoomsRate` is hourly-only, and the page requests its chart at `1h` with the note "Hourly", as it does for
+`egressEnded`. The class and size breakdowns cover the whole range, so they have no bucket.
 
 ### D7. The rate over classified rooms
 
@@ -160,34 +160,43 @@ classes up. The summary adds the same paths to `SUMMARY_FIELDS`.
 
 Rejected alternative: a `rooms.classified` counter, which would be redundant with the sum of the classes.
 
-### D8. Map metrics generalised
+### D8. Map metrics as a table
 
-The `egressEnded` special case becomes a table of expanded metrics: `{ egressEnded: 'egress.endedByStatus',
-roomsByTopology: 'rooms.byTopology' }`.
-- `metricFields`, the series expansion and the CSV columns read the table.
-- `AnalyticsCatalogue.metrics` excludes both keys.
-- The OpenAPI description of a series name lists both forms.
+The `egressEnded` special case becomes a table of expanded metrics, today `{ egressEnded: 'egress.endedByStatus' }`.
+`metricFields`, the series expansion and the CSV columns read the table, and `AnalyticsCatalogue.metrics` excludes its
+keys. Classes per bucket are not served: the page draws them over the range (D10).
 
-### D9. Three size dimensions, not a composite key
+### D9. Two dimensions over the stored maps (owner, 2026-11-11)
 
-`roomSizeNoPublishers`, `roomSizeOneToMany` and `roomSizeManyToMany` are ordinary dimensions over the nested paths
-`rooms.sizeByTopology.<class>`. The chart requests the three in one breakdowns call, and the CSV exports them as three
-breakdowns.
+`roomTopology` and `roomSize` are ordinary dimensions over `rooms.byTopology` and `rooms.bySize`, whose keys are the
+stored keys. The writer counts every classified room once in `rooms.bySize`, whatever its class, so the size chart
+needs no sum across classes.
 
 Rejected alternatives:
-- **One `roomSize` dimension with keys such as `one_to_many:6-10`.** The keys would no longer be the stored keys.
-- **A class parameter on breakdowns.** That would be a new API shape for one chart.
+- **Sizes per class (`rooms.sizeByTopology.<class>.<range>`, three dimensions).** Drawn as bars stacked by class, it
+  read as confusing in the review of the demo, and the owner preferred one distribution of every room by size.
+- **Summing per-class sizes in the API.** It would keep a stored shape nothing draws, and 1:1, Empty and Single
+  participant rooms would need special cases.
 
-### D10. A stacked category chart, separate from the breakdown chart
+### D10. Range breakdowns as ordered horizontal bars (owner, 2026-11-11)
 
-`ovd-stacked-category-chart` (ECharts `bar` with a category x-axis and `stack`) takes:
-- `keys`: the fixed order of the x-axis;
-- `series`: name, entity and value per key.
+"Room topology" and "Room size" draw the range as `ovd-breakdown-chart` horizontal bars, labelled with count and
+share like "Disconnect reasons". The chart gains an ordered mode:
+- the entries keep the given order in the chart and the table;
+- every entry is shown, 0 included;
+- no folding into "Other";
+- the shared empty state when every value is 0.
 
-It follows the time-series chart's accessibility summary, data table toggle and empty state.
+The page passes the six classes in the order N:M, 1:N, 1:1, Single participant, No publishers, Empty (owner), each with
+its class entity, and the six ranges in their order, all with the `rooms` entity.
 
-Rejected alternative: extending `ovd-breakdown-chart`. Its contract (one dimension, sorted by count, folding into
-"Other", donut or horizontal bars) does not fit several breakdowns over an ordered axis.
+Rejected alternatives:
+- **Classes stacked per bucket.** The owner wants the share of the range, as the other breakdowns show it.
+- **A donut.** Six classes, some under 5 %, read worse than bars with count and share.
+- **Bars sorted by count.** A class would move between ranges and scopes.
+- **Vertical columns for the sizes.** At a third of the card the "count (share)" labels overlap.
+- **A separate stacked category chart.** Nothing needs bars stacked over an ordered axis any more, so the
+  `ovd-stacked-category-chart` of the first version of this change is removed.
 
 ### D11. Vocabulary, labels and colours
 
@@ -196,7 +205,8 @@ Rejected alternative: extending `ovd-breakdown-chart`. Its contract (one dimensi
   - In Go, they are constants in `projection/vocabulary.go`.
   - In the UI, they are labelled through the shared enum labels: Empty, Single participant, No publishers, 1:1, 1:N,
     N:M.
-- **Size range keys:** `2-5`, `6-10`, `11-25`, `26-50`, `51-100`, `101+`. Valid MongoDB field names.
+- **Size range keys:** `0-5`, `6-10`, `11-25`, `26-50`, `51-100`, `101+`. Valid MongoDB field names. `0-5` takes the
+  Empty and Single participant rooms too.
 - **Colours:** `ENTITY_SLOTS` gains `topology_<class>`, following the egress-status precedent:
 
   | Class              | Slot | Colour               |
@@ -208,7 +218,7 @@ Rejected alternative: extending `ovd-breakdown-chart`. Its contract (one dimensi
   | single_participant | 5    | pink                 |
   | empty              | 2    | orange               |
 
-  Red (8) stays for failures. "Recorded rooms" uses the `rooms` entity.
+  Red (8) stays for failures. "Room size" and "Recorded rooms" use the `rooms` entity.
 
 ### D12. Data generator
 
@@ -230,6 +240,15 @@ Rejected alternative: extending `ovd-breakdown-chart`. Its contract (one dimensi
 - Scenario `S` over 7 days gives about 61 % N:M, 14 % 1:1, 9 % Single participant, 8 % 1:N, 5 % No publishers and 3 %
   Empty.
 
+### D13. Peak and volume pair alone in the first row (owner, 2026-11-11)
+
+The Rooms and Participants cards hold their peak and volume pair in one `ovd-chart-grid` and their other three charts in
+a second one below. Each grid balances on its own, so the pair always shares the first row, and the other three take a
+row of three, or two and one when only two fit. Egress and Ingress keep one grid.
+
+Rejected alternative: a "row break" in one grid. The balanced grid lays out its children as one set, and a second grid
+says the same with no new contract.
+
 ## Data model
 
 | Collection                  | Field                                    | Type                                | Notes                                    |
@@ -241,7 +260,7 @@ Rejected alternative: extending `ovd-breakdown-chart`. Its contract (one dimensi
 | `rooms`                     | `internal.recordingEgressIds`            | string[]                            | writer bookkeeping                       |
 | `analytics_hourly`, `_daily`| `rooms.byTopology.<class>`               | int32 per class                     | map of the six class keys                |
 | `analytics_hourly`, `_daily`| `rooms.recorded`                         | int32                               |                                          |
-| `analytics_hourly`, `_daily`| `rooms.sizeByTopology.<class>.<range>`   | int32                               | classes `no_publishers`, `one_to_many`, `many_to_many` |
+| `analytics_hourly`, `_daily`| `rooms.bySize.<range>`                   | int32 per range                     | map of the six range keys                |
 
 - **Indexes:** none new. The rollups are read through `{ scope, bucket }` as today; no query filters rooms on the new
   fields.
@@ -257,23 +276,17 @@ Rejected alternative: extending `ovd-breakdown-chart`. Its contract (one dimensi
 
 ## API
 
-- `GET /api/v1/analytics/series`:
-  - `metrics` accepts `roomsByTopology` and `recordedRoomsRate`, both hourly-only;
-  - series names include `roomsByTopology.<class>`;
-  - `recordedRoomsRate` is a percent, `null` when empty;
-  - `roomsByTopology.<class>` is a count, `0` when empty.
-- `GET /api/v1/analytics/breakdowns`: `dimensions` accepts `roomSizeNoPublishers`, `roomSizeOneToMany` and
-  `roomSizeManyToMany`. The response shape is unchanged, with keys among the six ranges.
+- `GET /api/v1/analytics/series`: `metrics` accepts `recordedRoomsRate`, hourly-only, a percent, `null` when empty.
+- `GET /api/v1/analytics/breakdowns`: `dimensions` accepts `roomTopology`, with keys among the six classes, and
+  `roomSize`, with keys among the six ranges. The response shape is unchanged.
 - `GET /api/v1/analytics/summary`: optional `roomsRecorded` (integer) and `recordedRoomsRate` (number, one decimal).
   Both are absent when no room of the range has a class.
-- `GET /api/v1/analytics/export.csv`: the same parameters. Series columns are named as the series, for example
-  `roomsByTopology.one_to_one`.
+- `GET /api/v1/analytics/export.csv`: the same parameters.
 - **Index backing:** the existing `{ scope, bucket }` index scans of `analytics_hourly` and `analytics_daily`. The
   new paths are extra projected fields of the same documents.
 - **Typings:**
-  - `AnalyticsMetric` and `AnalyticsDimension` gain the new members;
-  - `ANALYTICS_METRIC_INFO` gains `roomsByTopology` (`count`, `0`, `hourlyOnly`) and `recordedRoomsRate` (`percent`,
-    `null`, `hourlyOnly`);
+  - `AnalyticsMetric` gains `recordedRoomsRate`, and `AnalyticsDimension` gains `roomTopology` and `roomSize`;
+  - `ANALYTICS_METRIC_INFO` gains `recordedRoomsRate` (`percent`, `null`, `hourlyOnly`);
   - `ANALYTICS_CE_METRICS` and `ANALYTICS_CE_DIMENSIONS` grow;
   - the summary type gains the two optional values;
   - nothing is global-only.
@@ -302,8 +315,9 @@ Rejected alternative: extending `ovd-breakdown-chart`. Its contract (one dimensi
   chosen semantics: "has sent media".
 - **[Lost track events]** A dropped `TRACK_UNMUTED` underestimates P. → The same exposure as every event-driven
   counter. The bounded queues report drops in metrics.
-- **[Topology chart below "Rooms created" right after an upgrade]** Only classified rooms are stacked. → The info tip
-  says "rooms ended", and the gap closes once every node runs the new writer.
+- **[Topology and size charts right after an upgrade]** Only classified rooms are counted, so they show fewer rooms
+  than "Rooms created". → The shares are over classified rooms, the info tips say "rooms ended", and the difference
+  closes once every node runs the new writer.
 - **[Class of a room as counted versus as stored]** The rollup counts what the room reads after its closing batch.
   Peaks cannot rise after close (D2), so both agree.
 

@@ -681,7 +681,7 @@ interface Bucket {
 		durationMsSum?: number;
 		byTopology?: Counter;
 		recorded?: number;
-		sizeByTopology?: Record<string, Counter>;
+		bySize?: Counter;
 	};
 	participants: Peaks & {
 		joined: number;
@@ -1348,7 +1348,7 @@ function browserKey(browser: string): string {
 	return BROWSER_KEYS.has(key) ? key : 'other';
 }
 
-/** Counts a closed room in its topology, its recording and, for the topologies counted by size, its size range. */
+/** Counts a closed room in its topology, its recording and its size range. */
 function countRoomClass(b: Bucket, room: RoomDoc): void {
 	inc((b.rooms.byTopology ??= {}), room.topology);
 
@@ -1356,12 +1356,8 @@ function countRoomClass(b: Bucket, room: RoomDoc): void {
 		b.rooms.recorded = (b.rooms.recorded ?? 0) + 1;
 	}
 
-	if (SIZED_TOPOLOGIES.has(room.topology)) {
-		inc(((b.rooms.sizeByTopology ??= {})[room.topology] ??= {}), roomSizeRange(room.participants.peakActive));
-	}
+	inc((b.rooms.bySize ??= {}), roomSizeRange(room.participants.peakActive));
 }
-
-const SIZED_TOPOLOGIES: ReadonlySet<string> = new Set(['no_publishers', 'one_to_many', 'many_to_many']);
 
 function inc(counter: Counter, key: string): void {
 	counter[key] = (counter[key] ?? 0) + 1;

@@ -427,6 +427,8 @@ export interface BreakdownOptions {
 	animation: boolean;
 	/** The breakdown reflects no data: an empty ring or plot, without slices, labels or legend. */
 	unavailable?: boolean;
+	/** Keep the entries in their order, every one shown, none folded into "Other". */
+	ordered?: boolean;
 }
 
 /** Donut or horizontal bar of a breakdown with direct labels (value and share) and a fixed colour per entity. */
@@ -435,7 +437,7 @@ export function breakdownOption(options: BreakdownOptions): EChartsCoreOption {
 		return unavailableBreakdownOption(options);
 	}
 
-	const entries = foldBreakdown(options.entries);
+	const entries = options.ordered === true ? [...options.entries] : foldBreakdown(options.entries);
 	const total = entries.reduce((sum, entry) => sum + entry.value, 0);
 	const { colors } = options;
 	const entity = (entry: BreakdownEntry): string => entry.entity ?? entry.name;
@@ -495,73 +497,6 @@ export function breakdownOption(options: BreakdownOptions): EChartsCoreOption {
 				}))
 			}
 		]
-	};
-}
-
-/** One stacked segment of every bar of a category chart: its value per key, in the order of the keys. */
-export interface CategorySeries {
-	name: string;
-	/** The entity its colour follows. */
-	entity: string;
-	values: readonly number[];
-}
-
-export interface StackedCategoryOptions {
-	/** The categories of the x axis, in order. */
-	keys: readonly string[];
-	series: readonly CategorySeries[];
-	format: ValueFormat;
-	colors: ChartColors;
-	animation: boolean;
-}
-
-/** One vertical bar per key, stacked by series in their fixed colours; the tooltip adds up the bar. */
-export function stackedCategoryOption(options: StackedCategoryOptions): EChartsCoreOption {
-	const { colors } = options;
-	const color = chartColors(
-		options.series.map((series) => series.entity),
-		colors
-	);
-
-	return {
-		animation: options.animation,
-		aria: { enabled: false },
-		grid: { left: 8, right: 16, top: 32, bottom: 8, outerBoundsMode: 'same', outerBoundsContain: 'axisLabel' },
-		// The legend of the time series, so that a card's charts name their series alike.
-		legend: { top: 0, left: 0, textStyle: { color: colors.text }, icon: 'roundRect', itemHeight: 4 },
-		tooltip: {
-			trigger: 'axis',
-			axisPointer: { type: 'shadow' },
-			formatter: (params: { axisValue: string; seriesName: string; value: number; marker: string }[]) => {
-				const total = params.reduce((sum, item) => sum + item.value, 0);
-				const rows = params.map(
-					(item) => `${item.marker}${item.seriesName}: ${formatValue(item.value, options.format)}`
-				);
-
-				return [params[0]?.axisValue ?? '', ...rows, `Total: ${formatValue(total, options.format)}`].join(
-					'<br>'
-				);
-			}
-		},
-		xAxis: {
-			type: 'category',
-			data: [...options.keys],
-			axisLabel: { color: colors.text },
-			axisLine: { lineStyle: { color: colors.grid } }
-		},
-		yAxis: {
-			type: 'value',
-			minInterval: 1,
-			axisLabel: { color: colors.text, formatter: (value: number) => formatValue(value, options.format) },
-			splitLine: { lineStyle: { color: colors.grid } }
-		},
-		series: options.series.map((series) => ({
-			name: series.name,
-			type: 'bar',
-			stack: 'total',
-			data: [...series.values],
-			itemStyle: { color: color(series.entity) }
-		}))
 	};
 }
 

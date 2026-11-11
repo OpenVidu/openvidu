@@ -40,27 +40,27 @@ unmuted, and which egress writes files.
     both scopes, gain three counters:
     - `rooms.byTopology.<class>` (+1);
     - `rooms.recorded` (+1 when recorded);
-    - for No publishers, 1:N and N:M, `rooms.sizeByTopology.<class>.<range>` (+1). The range of N is one of `2-5`,
-      `6-10`, `11-25`, `26-50`, `51-100` and `101+`.
+    - `rooms.bySize.<range>` (+1). The range of N is one of `0-5`, `6-10`, `11-25`, `26-50`, `51-100` and `101+`.
   - A room written by an earlier writer has no class and is left out of these counters.
 - **Analytics API:**
-  - Two new hourly-only CE metrics:
-    - `roomsByTopology`, which expands into one series per stored class, as `egressEnded` does;
-    - `recordedRoomsRate`: recorded rooms over classified rooms, as a percentage.
-  - Three new CE dimensions: `roomSizeNoPublishers`, `roomSizeOneToMany` and `roomSizeManyToMany`.
+  - A new hourly-only CE metric, `recordedRoomsRate`: recorded rooms over classified rooms, as a percentage.
+  - Two new CE dimensions: `roomTopology` (rooms by class) and `roomSize` (rooms by size range).
   - The summary gains `roomsRecorded` and `recordedRoomsRate`. Both are left out when no room of the range has a class.
   - All of them are allowed in a node scope, like the other room counters.
 - **Analytics page, Rooms section:**
   - The tile "Recorded rooms" joins Average room size and Average room duration.
-  - Three charts follow "Active rooms" and "Rooms created", in a grid of five:
-    - "Room topology": rooms ended per bucket, stacked by class;
-    - "Recorded rooms": the recorded share per bucket, as a percentage line;
-    - "Room size by topology": rooms ended in the range per size range, stacked by No publishers, 1:N and N:M.
-  - "Room topology" and "Recorded rooms" are requested at `1h` while the page granularity is finer.
-  - The section's CSV adds the two new series.
-  - Info tips explain the classes and what counts as recorded.
+  - "Active rooms" and "Rooms created" take the first row. Below them, in a balanced grid:
+    - "Room topology": the rooms ended in the range by class, as horizontal bars with count and share, in the fixed
+      order N:M, 1:N, 1:1, Single participant, No publishers, Empty;
+    - "Room size": the rooms ended in the range by size range, as horizontal bars from `0-5` to `101+`;
+    - "Recorded rooms": the recorded share per bucket, as a percentage line, requested at `1h` while the page
+      granularity is finer.
+  - The section's CSV adds `recordedRoomsRate`.
+  - Info tips explain the classes, the size and what counts as recorded.
+- **Analytics page, Participants section:** "Active participants" and "Participant sessions" take the first row, and
+  "Unique identities", "Participant kind" and "Connection success" follow in a balanced grid, as in Rooms.
 - **UI building blocks:**
-  - a stacked category chart: bars over a fixed key order, one stacked segment per breakdown;
+  - the breakdown chart gains an ordered mode: the given order, every entry shown, no "Other";
   - fixed colour slots for the topology classes.
 - **Data generator:** rooms of every class in a realistic mix, recording egresses, and the room fields and rollup
   counters written as the writer writes them.
@@ -103,25 +103,25 @@ None.
 
 - `data-model`:
   - the room document gains `participants.peakPublishers`, `topology` and `features.recording`;
-  - the hourly and daily rollups gain `rooms.byTopology`, `rooms.recorded` and `rooms.sizeByTopology`;
+  - the hourly and daily rollups gain `rooms.byTopology`, `rooms.recorded` and `rooms.bySize`;
   - new requirements define the topology classes and size ranges, recorded rooms, and the generated topologies and
     recordings.
 - `server-analytics-writer`: the writer evaluates the publisher peak and the recording flag from events, and counts
   the class, size range and recording of a room when it ends.
-- `server-reconciler`: a room the reconciler closes is counted in the class and recording counters once, as its
+- `server-reconciler`: a room the reconciler closes is counted in the class, size and recording counters once, as its
   `participantsSum` is.
 - `analytics-api`:
-  - the catalogue gains `roomsByTopology` (expanded per class) and `recordedRoomsRate`, now 24 CE metrics, both
-    hourly-only;
-  - three room size dimensions;
+  - the catalogue gains `recordedRoomsRate`, now 23 CE metrics, hourly-only;
+  - the room topology and room size dimensions;
   - two summary values.
 - `analytics-ui`:
-  - the Rooms section gains the Recorded rooms tile and the three charts;
-  - its CSV export follows the new series.
+  - the Rooms section gains the Recorded rooms tile and the three charts, under its peak and volume pair;
+  - the Participants section puts its peak and volume pair alone in the first row;
+  - the Rooms CSV export adds the rate.
 - `ui-building-blocks`:
-  - the stacked category chart;
+  - the ordered breakdown chart;
   - the topology classes in the chart palette.
-- `ui-info-tips`: the Analytics tips add Room topology, Recorded rooms (tile and chart) and Room size by topology.
+- `ui-info-tips`: the Analytics tips add Room topology, Room size and Recorded rooms (tile and chart).
 
 ## Impact
 
@@ -137,12 +137,12 @@ None.
   - a dashboard reading an older writer shows "Not provided by this server version" for the new values.
 - **Dashboard backend:**
   - catalogue entries;
-  - the expansion of `egressEnded` generalised to map metrics;
-  - the three dimensions and the two summary values.
+  - the expansion of `egressEnded` as a table of map metrics;
+  - the two dimensions and the two summary values.
 - **Dashboard frontend library:**
-  - the Rooms section template and plan;
-  - series labels and colours;
-  - the stacked category chart;
+  - the Rooms and Participants section templates and the Rooms plan;
+  - labels and colours;
+  - the ordered mode of the breakdown chart;
   - the info texts;
   - the CSV export.
 - **Data generator and demo:** topology mix, recording egresses, room fields and rollup counters.

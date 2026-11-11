@@ -16,18 +16,15 @@ import {
 	type FeatureKey,
 	formatRetentionLength,
 	type ParticipantKind,
-	ROOM_SIZE_DIMENSIONS,
 	RoomSizeRange,
-	type RoomTopology,
-	SIZED_ROOM_TOPOLOGIES,
+	RoomTopology,
 	VISIBLE_PARTICIPANT_KINDS
 } from '@openvidu-dashboard/typings';
 
 import { BreakdownChart } from '../../charts/breakdown-chart.js';
 import { ChartGrid } from '../../charts/chart-grid.js';
 import { seriesNote } from '../../charts/chart-note.js';
-import type { BreakdownEntry, CategorySeries, ChartSeries } from '../../charts/chart-options.js';
-import { StackedCategoryChart } from '../../charts/stacked-category-chart.js';
+import type { BreakdownEntry, ChartSeries } from '../../charts/chart-options.js';
 import { TimeSeriesChart } from '../../charts/time-series-chart/time-series-chart.js';
 import { RangePickerService } from '../../components/date-time-range-picker/date-time-range-picker.js';
 import { errorMessage } from '../../components/feedback/error-banner.js';
@@ -158,8 +155,18 @@ function settle<T>(promise: Promise<T>): Promise<Settled<T>> {
 /** Metrics drawn as a share: the API gives a percentage, the charts take a fraction. */
 const PERCENT_METRICS: ReadonlySet<AnalyticsMetric> = new Set(['connectionSuccessRate', 'recordedRoomsRate']);
 
-/** Size ranges in their axis order. */
-const ROOM_SIZE_RANGES: readonly string[] = Object.values(RoomSizeRange);
+/** Topology classes in the order of the Room topology chart, the most participative first. */
+const TOPOLOGY_ORDER: readonly RoomTopology[] = [
+	RoomTopology.MANY_TO_MANY,
+	RoomTopology.ONE_TO_MANY,
+	RoomTopology.ONE_TO_ONE,
+	RoomTopology.SINGLE_PARTICIPANT,
+	RoomTopology.NO_PUBLISHERS,
+	RoomTopology.EMPTY
+];
+
+/** Size ranges, smallest first. */
+const ROOM_SIZE_RANGES: readonly RoomSizeRange[] = Object.values(RoomSizeRange);
 
 function count(value: number | undefined): string | null {
 	return value === undefined ? null : formatNumber(value);
@@ -185,7 +192,6 @@ function count(value: number | undefined): string | null {
 		MatSelect,
 		NgComponentOutlet,
 		Notice,
-		StackedCategoryChart,
 		TileRow,
 		TimeSeriesChart
 	],
@@ -309,7 +315,6 @@ export class AnalyticsPage implements AnalyticsPageContext {
 		return {
 			rooms: this.chart(['roomsPeakActive']),
 			roomsCreated: this.chart(['roomsCreated']),
-			topology: this.chart(['roomsByTopology']),
 			recorded: this.chart(['recordedRoomsRate']),
 			participants: this.chart(['participantsPeakActive']),
 			sessions: this.chart(['participantsJoined']),
@@ -335,10 +340,20 @@ export class AnalyticsPage implements AnalyticsPageContext {
 			connectionType: this.entries('connectionType'),
 			egressType: this.entries('egressType'),
 			ingressInputType: this.entries('ingressInputType'),
-			roomSizes: this.roomSizes()
+			roomTopology: this.ordered(
+				'roomTopology',
+				TOPOLOGY_ORDER.map((topology) => ({
+					key: topology,
+					name: ROOM_TOPOLOGY_LABELS[topology],
+					entity: `topology_${topology}`
+				}))
+			),
+			roomSize: this.ordered(
+				'roomSize',
+				ROOM_SIZE_RANGES.map((range) => ({ key: range, name: range, entity: 'rooms' }))
+			)
 		};
 	});
-	protected readonly roomSizeRanges = ROOM_SIZE_RANGES;
 	protected readonly retentionBanner = computed(() => {
 		const retention = this.retention();
 		const context = this.context();
@@ -469,7 +484,7 @@ export class AnalyticsPage implements AnalyticsPageContext {
 
 	// Series and breakdowns
 
-	/** The series of `metrics` (and the expansions of `egressEnded` and `roomsByTopology`) from the request that holds them. */
+	/** The series of `metrics` (and the expansion of `egressEnded`) from the request that holds them. */
 	chart(metrics: readonly AnalyticsMetric[]): ChartSeries[] {
 		return metrics.flatMap((metric) => {
 			const response = this.responseOf(metric)?.value;
@@ -490,22 +505,6 @@ export class AnalyticsPage implements AnalyticsPageContext {
 							entity: `egress_${status.toLowerCase()}`
 						};
 					});
-			}
-
-			if (metric === 'roomsByTopology') {
-				return (Object.keys(ROOM_TOPOLOGY_LABELS) as RoomTopology[]).flatMap((topology) => {
-					const series = response.series.find((item) => item.name === `roomsByTopology.${topology}`);
-
-					return series === undefined
-						? []
-						: [
-								{
-									name: ROOM_TOPOLOGY_LABELS[topology],
-									points: series.points,
-									entity: `topology_${topology}`
-								}
-							];
-				});
 			}
 
 			const series = response.series.find((item) => item.name === metric);
@@ -562,17 +561,18 @@ export class AnalyticsPage implements AnalyticsPageContext {
 		}));
 	}
 
-	/** Rooms ended in the range by size range, one stacked series per topology counted by size. */
-	private roomSizes(): CategorySeries[] {
-		return SIZED_ROOM_TOPOLOGIES.map((topology) => {
-			const items = this.breakdown(ROOM_SIZE_DIMENSIONS[topology])?.items ?? [];
+	/** One entry per key of a dimension, in the given order, 0 for a key without rooms. */
+	private ordered(
+		dimension: AnalyticsDimension,
+		keys: readonly { key: string; name: string; entity: string }[]
+	): BreakdownEntry[] {
+		const items = this.breakdown(dimension)?.items ?? [];
 
-			return {
-				name: ROOM_TOPOLOGY_LABELS[topology],
-				entity: `topology_${topology}`,
-				values: ROOM_SIZE_RANGES.map((range) => items.find((item) => item.key === range)?.count ?? 0)
-			};
-		});
+		return keys.map(({ key, name, entity }) => ({
+			name,
+			value: items.find((item) => item.key === key)?.count ?? 0,
+			entity
+		}));
 	}
 
 	/** The note of a time-series chart: "Hourly" for an hourly-only metric below an hour, else the page bucket; the zone. */

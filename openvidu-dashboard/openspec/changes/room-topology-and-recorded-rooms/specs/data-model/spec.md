@@ -42,7 +42,7 @@ every kind.
 
 #### Scenario: Fields of the rollup documents
 - **WHEN** hourly or daily rollup documents are read
-- **THEN** they have counters for rooms (created, ended, by end reason, `durationMsSum`, `participantsSum`, `byTopology`, `recorded`, `sizeByTopology`), participants (joined, active, aborted, left, by kind, SDK, OS, browser, connection type, disconnect reason, connect time, minutes), tracks, egress (started, by type, by end status, duration), ingress sessions (started, ended, started by input type, duration), bytes, quality (score sum/count, poor, lost), API calls and API errors (total and by method), and daily documents also `uniqueIdentities` (set by the server's aggregator once the UTC day has closed); 5-minute documents have bytes, quality, `participants.connected` (distinct participants with stats), the `PARTICIPANT_ACTIVE` count and the lifecycle counters (rooms created/ended, participants joined/left/aborted, egress started/ended); documents of the three collections may also have `rooms.peakActive`, `participants.peakActive` and `egress.peakActive`, and hourly and daily documents `ingress.peakActive` (int32, written by the server's aggregator)
+- **THEN** they have counters for rooms (created, ended, by end reason, `durationMsSum`, `participantsSum`, `byTopology`, `recorded`, `bySize`), participants (joined, active, aborted, left, by kind, SDK, OS, browser, connection type, disconnect reason, connect time, minutes), tracks, egress (started, by type, by end status, duration), ingress sessions (started, ended, started by input type, duration), bytes, quality (score sum/count, poor, lost), API calls and API errors (total and by method), and daily documents also `uniqueIdentities` (set by the server's aggregator once the UTC day has closed); 5-minute documents have bytes, quality, `participants.connected` (distinct participants with stats), the `PARTICIPANT_ACTIVE` count and the lifecycle counters (rooms created/ended, participants joined/left/aborted, egress started/ended); documents of the three collections may also have `rooms.peakActive`, `participants.peakActive` and `egress.peakActive`, and hourly and daily documents `ingress.peakActive` (int32, written by the server's aggregator)
 
 #### Scenario: Peaks of active rooms and participants
 - **GIVEN** the server's aggregator counted 4 active rooms and 11 active STANDARD sessions at 10:01 UTC and 6 and 9 at 10:40 UTC, no more at any other minute of that hour, and no server wrote any other counter in it
@@ -84,8 +84,7 @@ every kind.
   a 1:N room with N = 30 ends and an N:M room with N = 4 ends
 - **WHEN** `analytics_hourly` is read for `global:…T10:00:00Z` and `node:mn-a:…T10:00:00Z`
 - **THEN** both have `rooms.byTopology: { one_to_one: 1, one_to_many: 1, many_to_many: 1 }`, `rooms.recorded: 1` and
-  `rooms.sizeByTopology: { one_to_many: { "26-50": 1 }, many_to_many: { "2-5": 1 } }`, and no `analytics_5min`
-  document has any of the three
+  `rooms.bySize: { "0-5": 2, "26-50": 1 }`, and no `analytics_5min` document has any of the three
 
 ## ADDED Requirements
 
@@ -107,23 +106,18 @@ room's counters while the room is active and keep the value it has when the room
 - **THEN** `topology` reads `one_to_one`, then `one_to_many` after the join, then `many_to_many` after the unmute
 
 ### Requirement: Room size ranges
-Edition: CE and PRO. The size range of a room SHALL be the range of its N among `2-5`, `6-10`, `11-25`, `26-50`,
-`51-100` and `101+`; only the classes `no_publishers`, `one_to_many` and `many_to_many` have one.
+Edition: CE and PRO. The size range of a room with a `topology` SHALL be the range of its N among `0-5`, `6-10`,
+`11-25`, `26-50`, `51-100` and `101+`, whatever its class.
 
 #### Scenario: Range bounds
-- **GIVEN** `one_to_many` rooms with N of 3, 5, 6, 100 and 101
+- **GIVEN** rooms with N of 0, 1, 2, 5, 6, 100 and 101
 - **WHEN** their size ranges are taken
-- **THEN** they are `2-5`, `2-5`, `6-10`, `51-100` and `101+`
-
-#### Scenario: Classes without a range
-- **GIVEN** an `empty`, a `single_participant` and a `one_to_one` room
-- **WHEN** they close
-- **THEN** none of them is counted in `rooms.sizeByTopology`
+- **THEN** they are `0-5`, `0-5`, `0-5`, `0-5`, `6-10`, `51-100` and `101+`
 
 ### Requirement: Generated topologies and recordings
 Edition: CE and PRO. The data generator SHALL give its rooms every topology class in a mix that resembles real use,
 derive `participants.peakPublishers`, `topology` and `features.recording` from its sessions, tracks and egresses as the
-writer does, and, with `--room-sums`, write `rooms.byTopology`, `rooms.recorded` and `rooms.sizeByTopology` in the
+writer does, and, with `--room-sums`, write `rooms.byTopology`, `rooms.recorded` and `rooms.bySize` in the
 hourly and daily rollups of each room's end bucket, in its scopes.
 
 #### Scenario: Generated classes
@@ -135,5 +129,5 @@ hourly and daily rollups of each room's end bucket, in its scopes.
 #### Scenario: Generated rollups match the rooms
 - **GIVEN** a database generated with `--room-sums` and `--node-rollups`
 - **WHEN** the hourly `global` documents of a day are summed, and the `node:` documents of each node apart
-- **THEN** their `rooms.byTopology`, `rooms.recorded` and `rooms.sizeByTopology` equal the counts, by class, recording
+- **THEN** their `rooms.byTopology`, `rooms.recorded` and `rooms.bySize` equal the counts, by class, recording
   and size range, of the rooms that ended that day, and of those of each node

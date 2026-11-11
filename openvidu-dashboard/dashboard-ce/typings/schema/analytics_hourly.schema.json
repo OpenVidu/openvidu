@@ -61,48 +61,18 @@
 					"bsonType": ["int", "long"],
 					"description": "Rooms counted in byTopology that were recorded"
 				},
-				"sizeByTopology": {
+				"bySize": {
 					"bsonType": "object",
 					"properties": {
-						"no_publishers": {
-							"bsonType": "object",
-							"properties": {
-								"2-5": { "bsonType": ["int", "long"] },
-								"6-10": { "bsonType": ["int", "long"] },
-								"11-25": { "bsonType": ["int", "long"] },
-								"26-50": { "bsonType": ["int", "long"] },
-								"51-100": { "bsonType": ["int", "long"] },
-								"101+": { "bsonType": ["int", "long"] }
-							},
-							"additionalProperties": false
-						},
-						"one_to_many": {
-							"bsonType": "object",
-							"properties": {
-								"2-5": { "bsonType": ["int", "long"] },
-								"6-10": { "bsonType": ["int", "long"] },
-								"11-25": { "bsonType": ["int", "long"] },
-								"26-50": { "bsonType": ["int", "long"] },
-								"51-100": { "bsonType": ["int", "long"] },
-								"101+": { "bsonType": ["int", "long"] }
-							},
-							"additionalProperties": false
-						},
-						"many_to_many": {
-							"bsonType": "object",
-							"properties": {
-								"2-5": { "bsonType": ["int", "long"] },
-								"6-10": { "bsonType": ["int", "long"] },
-								"11-25": { "bsonType": ["int", "long"] },
-								"26-50": { "bsonType": ["int", "long"] },
-								"51-100": { "bsonType": ["int", "long"] },
-								"101+": { "bsonType": ["int", "long"] }
-							},
-							"additionalProperties": false
-						}
+						"0-5": { "bsonType": ["int", "long"] },
+						"6-10": { "bsonType": ["int", "long"] },
+						"11-25": { "bsonType": ["int", "long"] },
+						"26-50": { "bsonType": ["int", "long"] },
+						"51-100": { "bsonType": ["int", "long"] },
+						"101+": { "bsonType": ["int", "long"] }
 					},
 					"additionalProperties": false,
-					"description": "Rooms ended in the bucket by the size range of their most STANDARD sessions active at once"
+					"description": "Rooms counted in byTopology by the size range of their most STANDARD sessions active at once"
 				}
 			},
 			"additionalProperties": false

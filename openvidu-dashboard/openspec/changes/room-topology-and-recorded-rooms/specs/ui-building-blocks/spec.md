@@ -2,6 +2,28 @@
 
 ## MODIFIED Requirements
 
+### Requirement: Breakdown chart
+Edition: CE. The breakdown chart SHALL render a donut or horizontal bar with a legend, direct labels, a fixed colour per
+entity and a toggle to a table of the same data; more than eight entries fold into "Other" (outline grey). An ordered
+breakdown SHALL keep the order of its entries in the chart and the table, show every entry even at 0, never fold into
+"Other", and show the shared empty state, "No data in this range", when every value is 0.
+
+#### Scenario: Nine SDKs
+- **GIVEN** nine SDK entries
+- **WHEN** the donut renders
+- **THEN** eight slices are shown plus "Other", and the table toggle lists all nine
+
+#### Scenario: Ordered bars
+- **GIVEN** an ordered breakdown with the entries `0-5: 40`, `6-10: 0` and `11-25: 8`, in that order
+- **WHEN** the horizontal bars render
+- **THEN** three bars are shown from top to bottom `0-5` "40 (83.3 %)", `6-10` "0 (0.0 %)" and `11-25` "8
+  (16.7 %)", and the table lists the three rows in that order
+
+#### Scenario: Ordered breakdown without data
+- **GIVEN** an ordered breakdown whose entries are all 0
+- **WHEN** it renders
+- **THEN** it shows "No data in this range" and no "Show table" action
+
 ### Requirement: Chart palette and quality bands
 
 Edition: CE. Series colours SHALL follow the entity, never the rank, from eight palette slots with light and dark values
@@ -46,29 +68,3 @@ shares its slot, and two other entities of one chart never share a slot.
 - **THEN** N:M takes `--ovd-chart-1` (teal, the rooms colour), 1:N `--ovd-chart-6` (blue), 1:1 `--ovd-chart-7`
   (violet), No publishers `--ovd-chart-4` (yellow), Single participant `--ovd-chart-5` (pink) and Empty
   `--ovd-chart-2` (orange), and none takes the red of failures
-
-## ADDED Requirements
-
-### Requirement: Stacked category chart
-Edition: CE. The stacked category chart SHALL draw one vertical bar per key of a given order, every key shown even
-without data, each bar stacked by series in their fixed colours, with a legend, a tooltip naming each segment and the
-bar's total, the chart accessibility summary and data table toggle, and the shared empty state when every value is 0.
-
-#### Scenario: Keys in order
-- **GIVEN** the keys `2-5`, `6-10` and `11-25` and two series with values only for `2-5` and `11-25`
-- **WHEN** the chart renders
-- **THEN** it shows three bars in that order, `6-10` empty, and the legend names both series
-
-#### Scenario: Tooltip
-- **GIVEN** a bar whose segments are 6 and 2
-- **WHEN** the user hovers it
-- **THEN** the tooltip names the key, each series with its value and the total 8
-
-#### Scenario: Data table
-- **WHEN** the user toggles the data table
-- **THEN** a table lists one row per key, in order, with one column per series and a total column
-
-#### Scenario: No data
-- **GIVEN** series whose values are all 0
-- **WHEN** the chart renders
-- **THEN** it shows the shared empty state, "No data in this range"

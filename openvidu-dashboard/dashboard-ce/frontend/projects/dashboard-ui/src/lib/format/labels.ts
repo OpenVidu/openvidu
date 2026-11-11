@@ -44,7 +44,7 @@ export const EGRESS_TYPE_LABELS: Readonly<Record<EgressType, string>> = {
 	track: 'Track'
 };
 
-/** Room topologies, in their chart order, from the emptiest to the most participative. */
+/** Room topologies, from the emptiest to the most participative. */
 export const ROOM_TOPOLOGY_LABELS: Readonly<Record<RoomTopology, string>> = {
 	empty: 'Empty',
 	single_participant: 'Single participant',

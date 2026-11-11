@@ -17,8 +17,7 @@ export const analyticsSeriesResponse = z
 		series: z.array(
 			z.object({
 				name: z.string().meta({
-					description:
-						'The metric, `egressEnded.<status>` with a stored egress status such as `complete`, or `roomsByTopology.<topology>` with a stored room topology such as `one_to_one`'
+					description: 'The metric, or `egressEnded.<status>` with a stored egress status such as `complete`'
 				}),
 				points: z.array(z.tuple([isoDate, z.number().nullable()])),
 				basis: z.literal('utcDay').optional().meta({ description: 'One value per UTC day whatever `tz`' })

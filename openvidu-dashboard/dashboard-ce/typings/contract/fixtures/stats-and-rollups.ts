@@ -152,7 +152,8 @@ const closedRoomNodeHour: Omit<HourlyRollupDocument, '_id' | 'scope' | 'bucket'>
 		durationMsSum: 2_700_000,
 		participantsSum: 4,
 		byTopology: { one_to_one: 1 },
-		recorded: 1
+		recorded: 1,
+		bySize: { '0-5': 1 }
 	},
 	participants: {
 		joined: 4,
@@ -235,6 +236,7 @@ export const analyticsDaily: DailyRollupDocument[] = [
 			participantsSum: 4,
 			byTopology: { one_to_one: 1 },
 			recorded: 1,
+			bySize: { '0-5': 1 },
 			...sampled.rooms
 		},
 		participants: {

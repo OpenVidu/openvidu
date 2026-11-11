@@ -10,8 +10,9 @@ import { bindChartOptions, injectEchartsReady, provideLazyEcharts } from './echa
 
 /**
  * A donut or horizontal bar with direct labels and a fixed colour per entity; more than eight fold into "Other". An
- * unavailable breakdown keeps its heading, dims it and draws an empty ring or plot over hatching, without slices,
- * labels, legend, tooltip or table.
+ * ordered breakdown keeps its entries in order, every one shown and none folded, and reads "No data in this range" when
+ * every value is 0. An unavailable breakdown keeps its heading, dims it and draws an empty ring or plot over hatching,
+ * without slices, labels, legend, tooltip or table.
  */
 @Component({
 	selector: 'ovd-breakdown-chart',
@@ -28,7 +29,9 @@ import { bindChartOptions, injectEchartsReady, provideLazyEcharts } from './echa
 		@if (note()) {
 			<p class="chart-note">{{ note() }}</p>
 		}
-		@if (showTable() && !unavailable()) {
+		@if (empty()) {
+			<p class="chart-empty" [style.height.px]="height()">No data in this range</p>
+		} @else if (showTable() && !unavailable()) {
 			<div class="table-wrap" [style.max-height.px]="height()">
 				<table>
 					<caption class="ovd-visually-hidden">
@@ -76,13 +79,23 @@ import { bindChartOptions, injectEchartsReady, provideLazyEcharts } from './echa
 				[style.height.px]="height()"
 			></div>
 		}
-		@if (!unavailable()) {
+		@if (!unavailable() && !empty()) {
 			<button matButton type="button" class="toggle" (click)="toggleTable()">
 				{{ showTable() ? 'Show chart' : 'Show table' }}
 			</button>
 		}
 	`,
-	styleUrl: './chart.scss'
+	styleUrl: './chart.scss',
+	styles: `
+		.chart-empty {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			margin: 0;
+			color: var(--mat-sys-on-surface-variant);
+			font: var(--mat-sys-body-medium);
+		}
+	`
 })
 export class BreakdownChart {
 	private readonly palette = inject(ChartColorsService);
@@ -100,9 +113,14 @@ export class BreakdownChart {
 	readonly note = input<string>();
 	/** The breakdown reflects no data: dimmed, an empty ring or plot, no labels, legend, tooltip or table. */
 	readonly unavailable = input(false, { transform: booleanAttribute });
+	/** Keep the entries in their order, every one shown, none folded into "Other"; empty when every value is 0. */
+	readonly ordered = input(false, { transform: booleanAttribute });
 
 	protected readonly ready = injectEchartsReady();
 	protected readonly showTable = signal(false);
+	protected readonly empty = computed(
+		() => this.ordered() && !this.unavailable() && this.entries().every((entry) => entry.value === 0)
+	);
 	protected readonly option = computed(() =>
 		breakdownOption({
 			entries: this.entries(),
@@ -110,7 +128,8 @@ export class BreakdownChart {
 			format: this.format(),
 			colors: this.palette.colors(),
 			animation: !this.reducedMotion,
-			unavailable: this.unavailable()
+			unavailable: this.unavailable(),
+			ordered: this.ordered()
 		})
 	);
 	protected readonly chartOptions = bindChartOptions(this.option);
@@ -118,13 +137,13 @@ export class BreakdownChart {
 	protected readonly rows = computed(() => {
 		const total = this.entries().reduce((sum, entry) => sum + entry.value, 0);
 
-		return [...this.entries()]
-			.sort((a, b) => b.value - a.value)
-			.map((entry) => ({
-				name: entry.name,
-				value: formatValue(entry.value, this.format()),
-				share: formatPercent(total > 0 ? entry.value / total : 0)
-			}));
+		const entries = this.ordered() ? [...this.entries()] : [...this.entries()].sort((a, b) => b.value - a.value);
+
+		return entries.map((entry) => ({
+			name: entry.name,
+			value: formatValue(entry.value, this.format()),
+			share: formatPercent(total > 0 ? entry.value / total : 0)
+		}));
 	});
 	protected readonly summary = computed(() =>
 		this.unavailable()

@@ -86,7 +86,7 @@ What it writes (`analytics_5min` stays empty without `--five-minute-rollups`):
 - `analytics_hourly` and `analytics_daily` (global scope, plus one scope per media node label with
   `--media-nodes --node-rollups`) aggregated from the generated entities; bytes and quality are spread over the
   hours each session was connected. `--room-sums` adds the room size and duration sums and, at each room's end,
-  `rooms.byTopology`, `rooms.recorded` and `rooms.sizeByTopology`; `--five-minute-rollups`
+  `rooms.byTopology`, `rooms.recorded` and `rooms.bySize`; `--five-minute-rollups`
   adds `analytics_5min` (lifecycle counters, the `participants.connected` gauge, bytes and quality per five minutes)
   inside the 5-minute rollup window. `analytics_daily` gets no TTL index: daily rollups are kept forever.
   `generate()` takes the same switches as `rollups: { fiveMinute, nodes, roomSums }` and `mediaNodes`.

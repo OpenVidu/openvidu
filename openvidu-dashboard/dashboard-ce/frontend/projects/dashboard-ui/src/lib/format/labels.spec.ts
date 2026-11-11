@@ -19,7 +19,7 @@ describe('enumLabel', () => {
 });
 
 describe('room topology labels', () => {
-	it('labels every topology in chart order', () => {
+	it('labels every topology from the emptiest to the most participative', () => {
 		expect(Object.values(ROOM_TOPOLOGY_LABELS)).toEqual([
 			'Empty',
 			'Single participant',

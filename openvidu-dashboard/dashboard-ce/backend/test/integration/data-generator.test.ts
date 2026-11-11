@@ -541,11 +541,8 @@ describe.skipIf(mongoUri === '')('data generator', () => {
 
 					counted.recorded += hour.rooms?.recorded ?? 0;
 
-					for (const [topology, ranges] of Object.entries(hour.rooms?.sizeByTopology ?? {})) {
-						for (const [range, count] of Object.entries(ranges)) {
-							counted.sizes[`${topology}.${range}`] =
-								(counted.sizes[`${topology}.${range}`] ?? 0) + count;
-						}
+					for (const [range, count] of Object.entries(hour.rooms?.bySize ?? {})) {
+						counted.sizes[range] = (counted.sizes[range] ?? 0) + count;
 					}
 				}
 
@@ -560,10 +557,8 @@ describe.skipIf(mongoUri === '')('data generator', () => {
 					expected.byTopology[topology] = (expected.byTopology[topology] ?? 0) + 1;
 					expected.recorded += room.features.recording === true ? 1 : 0;
 
-					if (['no_publishers', 'one_to_many', 'many_to_many'].includes(topology)) {
-						const key = `${topology}.${sizeRange(room.participants.peakActive)}`;
-						expected.sizes[key] = (expected.sizes[key] ?? 0) + 1;
-					}
+					const range = sizeRange(room.participants.peakActive);
+					expected.sizes[range] = (expected.sizes[range] ?? 0) + 1;
 				}
 
 				expect(counted, scope).toEqual(expected);
@@ -594,7 +589,7 @@ describe.skipIf(mongoUri === '')('data generator', () => {
 						$or: [
 							{ 'rooms.byTopology': { $exists: true } },
 							{ 'rooms.recorded': { $exists: true } },
-							{ 'rooms.sizeByTopology': { $exists: true } }
+							{ 'rooms.bySize': { $exists: true } }
 						]
 					}),
 					collection
@@ -662,10 +657,10 @@ function expectedTopology(peakActive: number, peakPublishers: number): string {
 	return peakPublishers === 1 ? 'one_to_many' : 'many_to_many';
 }
 
-/** The size range of a room counted by size. */
+/** The size range of a classified room. */
 function sizeRange(peakActive: number): string {
 	const bounds: [number, string][] = [
-		[5, '2-5'],
+		[5, '0-5'],
 		[10, '6-10'],
 		[25, '11-25'],
 		[50, '26-50'],

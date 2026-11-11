@@ -695,10 +695,10 @@ export function roomTopology(peakActive: number, peakPublishers: number): RoomTo
 	return peakPublishers === 1 ? 'one_to_many' : 'many_to_many';
 }
 
-/** Size range of a room counted by size, from its most STANDARD sessions active at once. */
+/** Size range of a classified room, from its most STANDARD sessions active at once. */
 export function roomSizeRange(peakActive: number): string {
 	const ranges: readonly (readonly [number, string])[] = [
-		[5, '2-5'],
+		[5, '0-5'],
 		[10, '6-10'],
 		[25, '11-25'],
 		[50, '26-50'],

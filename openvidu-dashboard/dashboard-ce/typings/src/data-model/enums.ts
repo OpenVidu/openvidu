@@ -50,17 +50,9 @@ export const RoomTopology = {
 } as const;
 export type RoomTopology = ValueOf<typeof RoomTopology>;
 
-/** Topologies whose rooms are counted by size range. */
-export const SIZED_ROOM_TOPOLOGIES = [
-	RoomTopology.NO_PUBLISHERS,
-	RoomTopology.ONE_TO_MANY,
-	RoomTopology.MANY_TO_MANY
-] as const;
-export type SizedRoomTopology = (typeof SIZED_ROOM_TOPOLOGIES)[number];
-
-/** Range of the most STANDARD sessions active at once of a room, for the sized topologies. */
+/** Range of the most STANDARD sessions active at once of a classified room. */
 export const RoomSizeRange = {
-	R2_5: '2-5',
+	R0_5: '0-5',
 	R6_10: '6-10',
 	R11_25: '11-25',
 	R26_50: '26-50',

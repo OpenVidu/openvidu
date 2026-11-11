@@ -155,17 +155,12 @@ describe('schema files', () => {
 		const rooms = (hourly as { rooms: Record<string, unknown> }).rooms;
 		const withRooms = (counters: Record<string, unknown>) => ({ ...hourly, rooms: { ...rooms, ...counters } });
 		expect(validate(Collection.ANALYTICS_HOURLY, withRooms({ byTopology: { one_to_two: 1 } }))).not.toBeNull();
+		expect(validate(Collection.ANALYTICS_HOURLY, withRooms({ bySize: { '2-5': 1 } }))).not.toBeNull();
 		expect(
-			validate(Collection.ANALYTICS_HOURLY, withRooms({ sizeByTopology: { one_to_one: { '2-5': 1 } } }))
+			validate(Collection.ANALYTICS_HOURLY, withRooms({ bySize: { one_to_many: { '101+': 1 } } }))
 		).not.toBeNull();
 		expect(
-			validate(Collection.ANALYTICS_HOURLY, withRooms({ sizeByTopology: { one_to_many: { '3-5': 1 } } }))
-		).not.toBeNull();
-		expect(
-			validate(
-				Collection.ANALYTICS_HOURLY,
-				withRooms({ sizeByTopology: { one_to_many: { '101+': new Int32(1) } } })
-			)
+			validate(Collection.ANALYTICS_HOURLY, withRooms({ bySize: { '0-5': new Int32(1), '101+': new Int32(1) } }))
 		).toBeNull();
 	});
 

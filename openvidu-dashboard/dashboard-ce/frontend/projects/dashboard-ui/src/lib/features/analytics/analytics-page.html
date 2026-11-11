@@ -72,7 +72,7 @@
 
 <div class="sections">
 	@let rooms = view(['roomsPeakActive', 'roomsCreated']);
-	@let roomClasses = view(['roomsByTopology', 'recordedRoomsRate'], ['roomSizeOneToMany']);
+	@let roomClasses = view(['recordedRoomsRate'], ['roomTopology']);
 	<ovd-analytics-card
 		heading="Rooms"
 		sectionId="rooms"
@@ -80,9 +80,7 @@
 		[error]="rooms.error ?? roomClasses.error"
 		[empty]="rooms.empty"
 		[exporting]="isExporting('rooms')"
-		(exportCsv)="
-			exportCsv('rooms', { metrics: ['roomsPeakActive', 'roomsCreated', 'roomsByTopology', 'recordedRoomsRate'] })
-		"
+		(exportCsv)="exportCsv('rooms', { metrics: ['roomsPeakActive', 'roomsCreated', 'recordedRoomsRate'] })"
 		(retry)="retry()"
 		(widen)="widenRange()"
 	>
@@ -125,16 +123,21 @@
 					[tz]="tz()"
 					[note]="note('roomsCreated')"
 				/>
-				<ovd-time-series-chart
+			</ovd-chart-grid>
+			<ovd-chart-grid>
+				<ovd-breakdown-chart
 					heading="Room topology"
-					kind="bar"
-					stacked
+					variant="bar"
+					ordered
 					[info]="infoTexts.roomTopologyChart"
-					[series]="charts().topology"
-					[from]="chartRange('roomsByTopology').from"
-					[to]="chartRange('roomsByTopology').to"
-					[tz]="tz()"
-					[note]="note('roomsByTopology')"
+					[entries]="breakdowns().roomTopology"
+				/>
+				<ovd-breakdown-chart
+					heading="Room size"
+					variant="bar"
+					ordered
+					[info]="infoTexts.roomSizeChart"
+					[entries]="breakdowns().roomSize"
 				/>
 				<ovd-time-series-chart
 					heading="Recorded rooms"
@@ -146,13 +149,6 @@
 					[to]="chartRange('recordedRoomsRate').to"
 					[tz]="tz()"
 					[note]="note('recordedRoomsRate')"
-				/>
-				<ovd-stacked-category-chart
-					heading="Room size by topology"
-					keyHeading="Participants"
-					[info]="infoTexts.roomSizeChart"
-					[keys]="roomSizeRanges"
-					[series]="breakdowns().roomSizes"
 				/>
 			</ovd-chart-grid>
 		</ng-template>
@@ -197,6 +193,22 @@
 					[tz]="tz()"
 					[note]="note('participantsJoined')"
 				/>
+			</ovd-chart-grid>
+			<ovd-chart-grid>
+				<ovd-time-series-chart
+					heading="Unique identities"
+					kind="bar"
+					note="per UTC day"
+					[series]="charts().identities"
+					[from]="chartRange('uniqueIdentities').from"
+					[to]="chartRange('uniqueIdentities').to"
+					tz="UTC"
+				/>
+				<ovd-breakdown-chart
+					heading="Participant kind"
+					[info]="infoTexts.participantKind"
+					[entries]="breakdowns().kind"
+				/>
 				<ovd-time-series-chart
 					heading="Connection success"
 					format="percent"
@@ -206,20 +218,6 @@
 					[to]="chartRange('connectionSuccessRate').to"
 					[tz]="tz()"
 					[note]="note('connectionSuccessRate')"
-				/>
-				<ovd-breakdown-chart
-					heading="Participant kind"
-					[info]="infoTexts.participantKind"
-					[entries]="breakdowns().kind"
-				/>
-				<ovd-time-series-chart
-					heading="Unique identities"
-					kind="bar"
-					note="per UTC day"
-					[series]="charts().identities"
-					[from]="chartRange('uniqueIdentities').from"
-					[to]="chartRange('uniqueIdentities').to"
-					tz="UTC"
 				/>
 			</ovd-chart-grid>
 		</ng-template>

@@ -24,7 +24,6 @@ import {
 	RoomStatus,
 	RoomTopology,
 	RtcEngine,
-	SIZED_ROOM_TOPOLOGIES,
 	StatsDetail,
 	StatsDirection,
 	StoredEventType,
@@ -460,12 +459,9 @@ const hourlyFields = {
 		peakActive: int('Most rooms active at once in the bucket, sampled every minute by the server aggregator'),
 		byTopology: counts(RoomTopology, 'Rooms ended in the bucket by topology'),
 		recorded: int('Rooms counted in byTopology that were recorded'),
-		sizeByTopology: obj(
-			Object.fromEntries(SIZED_ROOM_TOPOLOGIES.map((topology) => [topology, counts(RoomSizeRange)])),
-			{
-				description:
-					'Rooms ended in the bucket by the size range of their most STANDARD sessions active at once'
-			}
+		bySize: counts(
+			RoomSizeRange,
+			'Rooms counted in byTopology by the size range of their most STANDARD sessions active at once'
 		)
 	}),
 	participants: obj({
