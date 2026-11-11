@@ -9,7 +9,10 @@ import type {
 	IngressInputType,
 	OsFamily,
 	ParticipantKind,
-	RoomEndReason
+	RoomEndReason,
+	RoomSizeRange,
+	RoomTopology,
+	SizedRoomTopology
 } from './enums.js';
 
 type Counts<K extends string> = Partial<Record<K, number>>;
@@ -59,6 +62,12 @@ export interface RollupRooms {
 	participantsSum?: number;
 	/** Most rooms active at once in the bucket, sampled every minute by the server's aggregator. */
 	peakActive?: number;
+	/** Rooms ended in the bucket by topology; rooms without a class, from an earlier writer, are not counted. */
+	byTopology?: Counts<RoomTopology>;
+	/** Rooms ended in the bucket that were recorded, among those counted in `byTopology`. */
+	recorded?: number;
+	/** Rooms ended in the bucket by size range, for the topologies counted by size. */
+	sizeByTopology?: Partial<Record<SizedRoomTopology, Counts<RoomSizeRange>>>;
 }
 
 /** Counters of STANDARD sessions; `byKind` counts the sessions of every kind that joined. */

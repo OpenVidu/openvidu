@@ -36,7 +36,8 @@ const HOUR = 3_600_000;
 const DAY = 24 * HOUR;
 const GENERATION_TIMEOUT_MS = scenario === 'S' ? 600_000 : 3_600_000;
 const SERIES_METRICS = 'roomsCreated,participantsJoined,connectionSuccessRate,bytesUp,bytesDown';
-const BREAKDOWNS = 'sdk,os,browser,connectionType,kind,egressType,egressStatus';
+const BREAKDOWNS =
+	'sdk,os,browser,connectionType,kind,egressType,egressStatus,roomSizeNoPublishers,roomSizeOneToMany,roomSizeManyToMany';
 
 describe.skipIf(mongoUri === '')(`analytics query plan at scenario ${scenario}`, () => {
 	let client: MongoClient;
@@ -159,6 +160,20 @@ describe.skipIf(mongoUri === '')(`analytics query plan at scenario ${scenario}`,
 				{ metrics: 'egressPeakActive,ingressPeakActive', from: 'now-7d', granularity: '1h' },
 				'analytics_hourly'
 			)
+		).toBeGreaterThan(0);
+	});
+
+	it('series: the room topology and the recorded share read bounded scans hourly and daily', async () => {
+		const metrics = 'roomsByTopology,recordedRoomsRate';
+
+		expect(await explainSeries({ metrics, from: 'now-7d', granularity: '1h' }, 'analytics_hourly')).toBeGreaterThan(
+			0
+		);
+		expect(
+			await explainSeries({ metrics, from: 'now-7d', granularity: '1h', scope: node }, 'analytics_hourly')
+		).toBeGreaterThan(0);
+		expect(
+			await explainSeries({ metrics, from: 'now-400d', granularity: '1d' }, 'analytics_daily')
 		).toBeGreaterThan(0);
 	});
 

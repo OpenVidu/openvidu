@@ -145,7 +145,15 @@ const hourBucket = at('09:00:00');
 /** The counters of the closed room's hour in its node scope, which egress and ingress never reach. */
 const closedRoomNodeHour: Omit<HourlyRollupDocument, '_id' | 'scope' | 'bucket'> = {
 	mediaStats: { reported: true },
-	rooms: { created: 1, ended: 1, endedByReason: { API_DELETE: 1 }, durationMsSum: 2_700_000, participantsSum: 4 },
+	rooms: {
+		created: 1,
+		ended: 1,
+		endedByReason: { API_DELETE: 1 },
+		durationMsSum: 2_700_000,
+		participantsSum: 4,
+		byTopology: { one_to_one: 1 },
+		recorded: 1
+	},
 	participants: {
 		joined: 4,
 		active: 3,
@@ -225,6 +233,8 @@ export const analyticsDaily: DailyRollupDocument[] = [
 			endedByReason: { API_DELETE: 1 },
 			durationMsSum: 2_700_000,
 			participantsSum: 4,
+			byTopology: { one_to_one: 1 },
+			recorded: 1,
 			...sampled.rooms
 		},
 		participants: {

@@ -6,7 +6,8 @@ import {
 	EGRESS_TYPE_LABELS,
 	enumLabel,
 	INGRESS_INPUT_LABELS,
-	MEDIA_STATS_TEXTS
+	MEDIA_STATS_TEXTS,
+	ROOM_TOPOLOGY_LABELS
 } from './labels.js';
 
 describe('enumLabel', () => {
@@ -14,6 +15,19 @@ describe('enumLabel', () => {
 		expect(enumLabel(EGRESS_TYPE_LABELS, 'room_composite')).toBe('Room composite');
 		expect(enumLabel(INGRESS_INPUT_LABELS, 'NEW_INPUT')).toBe('NEW_INPUT');
 		expect(enumLabel(EGRESS_TYPE_LABELS, undefined)).toBe('—');
+	});
+});
+
+describe('room topology labels', () => {
+	it('labels every topology in chart order', () => {
+		expect(Object.values(ROOM_TOPOLOGY_LABELS)).toEqual([
+			'Empty',
+			'Single participant',
+			'No publishers',
+			'1:1',
+			'1:N',
+			'N:M'
+		]);
 	});
 });
 

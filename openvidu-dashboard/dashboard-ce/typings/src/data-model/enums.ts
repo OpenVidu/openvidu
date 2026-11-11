@@ -30,6 +30,45 @@ export const RoomEndReason = {
 } as const;
 export type RoomEndReason = ValueOf<typeof RoomEndReason>;
 
+/**
+ * Shape of a room, from the most STANDARD sessions active at once (N) and the most of them that have sent media at once
+ * (P).
+ */
+export const RoomTopology = {
+	/** N = 0. */
+	EMPTY: 'empty',
+	/** N = 1. */
+	SINGLE_PARTICIPANT: 'single_participant',
+	/** N ≥ 2 and P = 0. */
+	NO_PUBLISHERS: 'no_publishers',
+	/** N = 2 and P ≥ 1. */
+	ONE_TO_ONE: 'one_to_one',
+	/** N ≥ 3 and P = 1. */
+	ONE_TO_MANY: 'one_to_many',
+	/** N ≥ 3 and P ≥ 2. */
+	MANY_TO_MANY: 'many_to_many'
+} as const;
+export type RoomTopology = ValueOf<typeof RoomTopology>;
+
+/** Topologies whose rooms are counted by size range. */
+export const SIZED_ROOM_TOPOLOGIES = [
+	RoomTopology.NO_PUBLISHERS,
+	RoomTopology.ONE_TO_MANY,
+	RoomTopology.MANY_TO_MANY
+] as const;
+export type SizedRoomTopology = (typeof SIZED_ROOM_TOPOLOGIES)[number];
+
+/** Range of the most STANDARD sessions active at once of a room, for the sized topologies. */
+export const RoomSizeRange = {
+	R2_5: '2-5',
+	R6_10: '6-10',
+	R11_25: '11-25',
+	R26_50: '26-50',
+	R51_100: '51-100',
+	R101_PLUS: '101+'
+} as const;
+export type RoomSizeRange = ValueOf<typeof RoomSizeRange>;
+
 /** Who closed an entity: its own end event or the writer's reconciler (estimated end time). */
 export const ClosedBy = {
 	EVENT: 'event',

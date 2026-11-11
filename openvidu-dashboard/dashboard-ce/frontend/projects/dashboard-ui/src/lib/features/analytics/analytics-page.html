@@ -72,14 +72,17 @@
 
 <div class="sections">
 	@let rooms = view(['roomsPeakActive', 'roomsCreated']);
+	@let roomClasses = view(['roomsByTopology', 'recordedRoomsRate'], ['roomSizeOneToMany']);
 	<ovd-analytics-card
 		heading="Rooms"
 		sectionId="rooms"
 		[loading]="rooms.loading"
-		[error]="rooms.error"
+		[error]="rooms.error ?? roomClasses.error"
 		[empty]="rooms.empty"
 		[exporting]="isExporting('rooms')"
-		(exportCsv)="exportCsv('rooms', { metrics: ['roomsPeakActive', 'roomsCreated'] })"
+		(exportCsv)="
+			exportCsv('rooms', { metrics: ['roomsPeakActive', 'roomsCreated', 'roomsByTopology', 'recordedRoomsRate'] })
+		"
 		(retry)="retry()"
 		(widen)="widenRange()"
 	>
@@ -94,6 +97,12 @@
 					label="Average room duration"
 					[value]="avgRoomDuration()"
 					[hint]="roomAverageHint(summary()?.avgRoomDurationMs)"
+				/>
+				<ovd-kpi-tile
+					label="Recorded rooms"
+					[info]="infoTexts.recordedRoomsTile"
+					[value]="recordedRooms()"
+					[hint]="recordedRoomsHint()"
 				/>
 			</ovd-tile-row>
 			<ovd-chart-grid>
@@ -115,6 +124,35 @@
 					[to]="chartRange('roomsCreated').to"
 					[tz]="tz()"
 					[note]="note('roomsCreated')"
+				/>
+				<ovd-time-series-chart
+					heading="Room topology"
+					kind="bar"
+					stacked
+					[info]="infoTexts.roomTopologyChart"
+					[series]="charts().topology"
+					[from]="chartRange('roomsByTopology').from"
+					[to]="chartRange('roomsByTopology').to"
+					[tz]="tz()"
+					[note]="note('roomsByTopology')"
+				/>
+				<ovd-time-series-chart
+					heading="Recorded rooms"
+					format="percent"
+					fitted
+					[info]="infoTexts.recordedRoomsChart"
+					[series]="charts().recorded"
+					[from]="chartRange('recordedRoomsRate').from"
+					[to]="chartRange('recordedRoomsRate').to"
+					[tz]="tz()"
+					[note]="note('recordedRoomsRate')"
+				/>
+				<ovd-stacked-category-chart
+					heading="Room size by topology"
+					keyHeading="Participants"
+					[info]="infoTexts.roomSizeChart"
+					[keys]="roomSizeRanges"
+					[series]="breakdowns().roomSizes"
 				/>
 			</ovd-chart-grid>
 		</ng-template>

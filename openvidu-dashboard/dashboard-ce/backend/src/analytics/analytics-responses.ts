@@ -17,7 +17,8 @@ export const analyticsSeriesResponse = z
 		series: z.array(
 			z.object({
 				name: z.string().meta({
-					description: 'The metric, or `egressEnded.<status>` with a stored egress status such as `complete`'
+					description:
+						'The metric, `egressEnded.<status>` with a stored egress status such as `complete`, or `roomsByTopology.<topology>` with a stored room topology such as `one_to_one`'
 				}),
 				points: z.array(z.tuple([isoDate, z.number().nullable()])),
 				basis: z.literal('utcDay').optional().meta({ description: 'One value per UTC day whatever `tz`' })
@@ -63,6 +64,13 @@ export const analyticsSummaryResponse = z
 		connectionSuccessRate: z.number().optional(),
 		avgRoomSize: z.number().optional(),
 		avgRoomDurationMs: count.optional(),
+		roomsRecorded: count.optional().meta({
+			description: 'Rooms ended in the range that were recorded; absent when no room of the range has a topology'
+		}),
+		recordedRoomsRate: z.number().optional().meta({
+			description:
+				'Recorded rooms over the rooms ended with a topology, as a percentage; absent when no room of the range has one'
+		}),
 		bytesUp: count,
 		bytesDown: count,
 		egressStarted: count

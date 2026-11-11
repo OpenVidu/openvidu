@@ -16,13 +16,18 @@ import {
 	type FeatureKey,
 	formatRetentionLength,
 	type ParticipantKind,
+	ROOM_SIZE_DIMENSIONS,
+	RoomSizeRange,
+	type RoomTopology,
+	SIZED_ROOM_TOPOLOGIES,
 	VISIBLE_PARTICIPANT_KINDS
 } from '@openvidu-dashboard/typings';
 
 import { BreakdownChart } from '../../charts/breakdown-chart.js';
 import { ChartGrid } from '../../charts/chart-grid.js';
 import { seriesNote } from '../../charts/chart-note.js';
-import type { BreakdownEntry, ChartSeries } from '../../charts/chart-options.js';
+import type { BreakdownEntry, CategorySeries, ChartSeries } from '../../charts/chart-options.js';
+import { StackedCategoryChart } from '../../charts/stacked-category-chart.js';
 import { TimeSeriesChart } from '../../charts/time-series-chart/time-series-chart.js';
 import { RangePickerService } from '../../components/date-time-range-picker/date-time-range-picker.js';
 import { errorMessage } from '../../components/feedback/error-banner.js';
@@ -47,6 +52,7 @@ import {
 	MEDIA_STATS_TEXTS,
 	NODE_SCOPE_TEXTS,
 	PARTICIPANT_KIND_LABELS,
+	ROOM_TOPOLOGY_LABELS,
 	SDK_LABELS
 } from '../../format/labels.js';
 import { bandwidthLines } from '../rooms/room-display.js';
@@ -104,6 +110,7 @@ interface AnalyticsResult {
 const SERIES_LABELS: Partial<Record<AnalyticsMetric, { label: string; entity: string }>> = {
 	roomsPeakActive: { label: 'Active rooms', entity: 'rooms' },
 	roomsCreated: { label: 'Rooms created', entity: 'rooms' },
+	recordedRoomsRate: { label: 'Recorded rooms', entity: 'rooms' },
 	participantsPeakActive: { label: 'Active participants', entity: 'participants' },
 	participantsJoined: { label: 'Participant sessions', entity: 'participants' },
 	connectionSuccessRate: { label: 'Connection success', entity: 'success' },
@@ -148,6 +155,12 @@ function settle<T>(promise: Promise<T>): Promise<Settled<T>> {
 	);
 }
 
+/** Metrics drawn as a share: the API gives a percentage, the charts take a fraction. */
+const PERCENT_METRICS: ReadonlySet<AnalyticsMetric> = new Set(['connectionSuccessRate', 'recordedRoomsRate']);
+
+/** Size ranges in their axis order. */
+const ROOM_SIZE_RANGES: readonly string[] = Object.values(RoomSizeRange);
+
 function count(value: number | undefined): string | null {
 	return value === undefined ? null : formatNumber(value);
 }
@@ -172,6 +185,7 @@ function count(value: number | undefined): string | null {
 		MatSelect,
 		NgComponentOutlet,
 		Notice,
+		StackedCategoryChart,
 		TileRow,
 		TimeSeriesChart
 	],
@@ -295,6 +309,8 @@ export class AnalyticsPage implements AnalyticsPageContext {
 		return {
 			rooms: this.chart(['roomsPeakActive']),
 			roomsCreated: this.chart(['roomsCreated']),
+			topology: this.chart(['roomsByTopology']),
+			recorded: this.chart(['recordedRoomsRate']),
 			participants: this.chart(['participantsPeakActive']),
 			sessions: this.chart(['participantsJoined']),
 			success: this.chart(['connectionSuccessRate']),
@@ -318,9 +334,11 @@ export class AnalyticsPage implements AnalyticsPageContext {
 			browser: this.entries('browser'),
 			connectionType: this.entries('connectionType'),
 			egressType: this.entries('egressType'),
-			ingressInputType: this.entries('ingressInputType')
+			ingressInputType: this.entries('ingressInputType'),
+			roomSizes: this.roomSizes()
 		};
 	});
+	protected readonly roomSizeRanges = ROOM_SIZE_RANGES;
 	protected readonly retentionBanner = computed(() => {
 		const retention = this.retention();
 		const context = this.context();
@@ -431,6 +449,19 @@ export class AnalyticsPage implements AnalyticsPageContext {
 		return this.summary() !== null && value === undefined ? hint : undefined;
 	}
 
+	/** The share of recorded rooms, or "n/a" when no room of the range has a topology. */
+	protected recordedRooms(): string | null {
+		return this.percentTile(this.summary()?.recordedRoomsRate);
+	}
+
+	protected recordedRoomsHint(): string | undefined {
+		const recorded = this.summary()?.roomsRecorded;
+
+		return recorded === undefined
+			? this.roomAverageHint(undefined)
+			: `${formatNumber(recorded)} room${recorded === 1 ? '' : 's'} recorded`;
+	}
+
 	/** Why a room average is missing: no room ended in the range, or a server version that does not provide it. */
 	protected roomAverageHint(value: number | undefined): string | undefined {
 		return this.missingHint(value, this.summary()?.roomsEnded === 0 ? NO_ROOM_ENDED : NOT_PROVIDED);
@@ -438,7 +469,7 @@ export class AnalyticsPage implements AnalyticsPageContext {
 
 	// Series and breakdowns
 
-	/** The series of `metrics` (and the expansions of `egressEnded`) from the request that holds them. */
+	/** The series of `metrics` (and the expansions of `egressEnded` and `roomsByTopology`) from the request that holds them. */
 	chart(metrics: readonly AnalyticsMetric[]): ChartSeries[] {
 		return metrics.flatMap((metric) => {
 			const response = this.responseOf(metric)?.value;
@@ -461,6 +492,22 @@ export class AnalyticsPage implements AnalyticsPageContext {
 					});
 			}
 
+			if (metric === 'roomsByTopology') {
+				return (Object.keys(ROOM_TOPOLOGY_LABELS) as RoomTopology[]).flatMap((topology) => {
+					const series = response.series.find((item) => item.name === `roomsByTopology.${topology}`);
+
+					return series === undefined
+						? []
+						: [
+								{
+									name: ROOM_TOPOLOGY_LABELS[topology],
+									points: series.points,
+									entity: `topology_${topology}`
+								}
+							];
+				});
+			}
+
 			const series = response.series.find((item) => item.name === metric);
 			const label = SERIES_LABELS[metric];
 
@@ -472,10 +519,9 @@ export class AnalyticsPage implements AnalyticsPageContext {
 				{
 					name: label?.label ?? metric,
 					entity: label?.entity ?? metric,
-					points:
-						metric === 'connectionSuccessRate'
-							? series.points.map(([ts, value]) => [ts, value === null ? null : value / 100])
-							: series.points
+					points: PERCENT_METRICS.has(metric)
+						? series.points.map(([ts, value]) => [ts, value === null ? null : value / 100])
+						: series.points
 				}
 			];
 		});
@@ -514,6 +560,19 @@ export class AnalyticsPage implements AnalyticsPageContext {
 			value: item.count,
 			entity: item.key
 		}));
+	}
+
+	/** Rooms ended in the range by size range, one stacked series per topology counted by size. */
+	private roomSizes(): CategorySeries[] {
+		return SIZED_ROOM_TOPOLOGIES.map((topology) => {
+			const items = this.breakdown(ROOM_SIZE_DIMENSIONS[topology])?.items ?? [];
+
+			return {
+				name: ROOM_TOPOLOGY_LABELS[topology],
+				entity: `topology_${topology}`,
+				values: ROOM_SIZE_RANGES.map((range) => items.find((item) => item.key === range)?.count ?? 0)
+			};
+		});
 	}
 
 	/** The note of a time-series chart: "Hourly" for an hourly-only metric below an hour, else the page bucket; the zone. */

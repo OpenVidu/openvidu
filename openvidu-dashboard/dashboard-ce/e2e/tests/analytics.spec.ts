@@ -57,11 +57,32 @@ test('tiles, the six sections, the breakdown table and the page scroll over a ch
 	}
 
 	await expect(card(page, 'Rooms')).toContainText('4 participants');
-	await expect(card(page, 'Rooms').locator('.chart-heading')).toContainText(['Active rooms', 'Rooms created']);
+	await expect(card(page, 'Rooms').locator('ovd-kpi-tile').nth(2)).toContainText('Recorded rooms');
+	await expect(card(page, 'Rooms').locator('ovd-kpi-tile').nth(2)).toContainText('25.0 %');
+	await expect(card(page, 'Rooms').locator('ovd-kpi-tile').nth(2)).toContainText('49 rooms recorded');
+	await expect(card(page, 'Rooms').locator('.chart-heading')).toContainText([
+		'Active rooms',
+		'Rooms created',
+		'Room topology',
+		'Recorded rooms',
+		'Room size by topology'
+	]);
 	await expect(card(page, 'Rooms').locator('.chart-heading + .chart-note')).toHaveText([
 		'Five-minute buckets · UTC',
-		'Five-minute buckets · UTC'
+		'Five-minute buckets · UTC',
+		'Hourly · UTC',
+		'Hourly · UTC'
 	]);
+
+	const sizes = card(page, 'Rooms').locator('ovd-stacked-category-chart');
+
+	await sizes.getByRole('button', { name: 'Show table' }).click();
+	await expect(sizes.locator('tbody tr')).toHaveCount(6);
+	await expect(sizes.locator('tbody tr').nth(2)).toHaveText(/11-25\s*0\s*6\s*2\s*8/);
+	await expectNoViolations(page);
+	await sizes.getByRole('button', { name: 'Show chart' }).click();
+	await expect(sizes.getByRole('img')).toBeVisible();
+	await expectNoViolations(page);
 	await expect(card(page, 'Participants').locator('.chart-heading')).toContainText([
 		'Active participants',
 		'Participant sessions',
@@ -188,7 +209,7 @@ test('the charts of a card share its rows evenly', async ({ page }) => {
 	await expect.poll(() => rows('Egress')).toEqual([2, 2]);
 	expect(await rows('Client breakdowns')).toEqual([2, 2]);
 	expect(await rows('Participants')).toEqual([3, 2]);
-	expect(await rows('Rooms')).toEqual([2]);
+	expect(await rows('Rooms')).toEqual([3, 2]);
 
 	await page.setViewportSize({ width: 375, height: 800 });
 	await expect.poll(() => rows('Egress')).toEqual([1, 1, 1, 1]);
@@ -268,7 +289,7 @@ test('the entity cards draw their peak and volume and export them', async ({ pag
 		return api.requests.findLast((item) => item.path === 'analytics/export.csv')?.params.get('metrics');
 	};
 
-	expect(await exported('Rooms')).toBe('roomsPeakActive,roomsCreated');
+	expect(await exported('Rooms')).toBe('roomsPeakActive,roomsCreated,roomsByTopology,recordedRoomsRate');
 	expect(await exported('Participants')).toBe(
 		'participantsPeakActive,participantsJoined,connectionSuccessRate,uniqueIdentities'
 	);

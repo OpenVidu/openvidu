@@ -18,8 +18,10 @@ import type { AnalyticsCache } from './analytics-cache.js';
 import {
 	type Counters,
 	type AnalyticsCatalogue,
+	classifiedRooms,
 	dimensionDefinition,
-	EGRESS_ENDED_PATH,
+	EXPANDED_METRICS,
+	isExpandedMetric,
 	maximumPaths,
 	metricDefinition,
 	metricFields,
@@ -86,6 +88,14 @@ function roomAverage(counters: Counters, path: string, digits: 'one' | 'integer'
 	const average = value(counters, path) / ended;
 
 	return digits === 'one' ? round1(average) : Math.round(average);
+}
+
+/** Recorded rooms of the range and their share of the rooms ended with a topology; absent without such a room. */
+function recordedRooms(counters: Counters): Pick<AnalyticsSummary, 'roomsRecorded' | 'recordedRoomsRate'> {
+	const classified = classifiedRooms(counters);
+	const recorded = value(counters, 'rooms.recorded');
+
+	return classified > 0 ? { roomsRecorded: recorded, recordedRoomsRate: round1((recorded / classified) * 100) } : {};
 }
 
 /** Coverage of the media statistics of a range from its rollup marks: absent unless some bucket lacks them. */
@@ -164,18 +174,13 @@ export class AnalyticsService {
 				];
 			}
 
-			if (metric === 'egressEnded') {
-				const statuses = new Set(
-					[...main.values()].flatMap((counters) => [...mapEntries(counters, EGRESS_ENDED_PATH).keys()])
-				);
+			if (isExpandedMetric(metric)) {
+				const path = EXPANDED_METRICS[metric];
+				const keys = new Set([...main.values()].flatMap((counters) => [...mapEntries(counters, path).keys()]));
 
-				return [...statuses].sort().map((status) => ({
-					name: `egressEnded.${status}`,
-					...this.points(
-						plan.starts,
-						main,
-						(counters) => counters?.get(`${EGRESS_ENDED_PATH}.${status}`) ?? 0
-					)
+				return [...keys].sort().map((key) => ({
+					name: `${metric}.${key}`,
+					...this.points(plan.starts, main, (counters) => counters?.get(`${path}.${key}`) ?? 0)
 				}));
 			}
 
@@ -312,6 +317,7 @@ export class AnalyticsService {
 				joined > 0 ? Math.min(100, share(value(counters, 'participants.active'), joined) ?? 0) : undefined,
 			avgRoomSize: roomAverage(counters, 'rooms.participantsSum', 'one'),
 			avgRoomDurationMs: roomAverage(counters, 'rooms.durationMsSum', 'integer'),
+			...recordedRooms(counters),
 			bytesUp: value(counters, 'bytes.up'),
 			bytesDown: value(counters, 'bytes.down'),
 			egressStarted: global ? value(counters, 'egress.started') : undefined,

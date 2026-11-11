@@ -16,7 +16,9 @@ import {
 	type OverviewResponse,
 	type EgressListItem,
 	type ParticipantListItem,
+	ROOM_SIZE_DIMENSIONS,
 	type RoomListItem,
+	SIZED_ROOM_TOPOLOGIES,
 	STATS_GRANULARITIES,
 	type StatusResponse
 } from '../src/index.js';
@@ -85,6 +87,17 @@ describe('API contract', () => {
 		expect(ANALYTICS_GLOBAL_ONLY_DIMENSIONS).toEqual(['egressType', 'egressStatus', 'ingressInputType']);
 		expect(ANALYTICS_METRIC_INFO.ingressPeakActive?.hourlyOnly).toBe(true);
 		expect(ANALYTICS_METRIC_INFO.egressPeakActive?.hourlyOnly).toBeUndefined();
+	});
+
+	it('serves the room topology and recording metrics hourly, in every scope', () => {
+		expect(ANALYTICS_CE_METRICS).toHaveLength(24);
+		expect(ANALYTICS_METRIC_INFO.roomsByTopology).toEqual({ unit: 'count', empty: 0, hourlyOnly: true });
+		expect(ANALYTICS_METRIC_INFO.recordedRoomsRate).toEqual({ unit: 'percent', empty: null, hourlyOnly: true });
+		expect(
+			Object.values(ROOM_SIZE_DIMENSIONS).every((dimension) => ANALYTICS_CE_DIMENSIONS.includes(dimension))
+		).toBe(true);
+		expect(Object.keys(ROOM_SIZE_DIMENSIONS)).toEqual([...SIZED_ROOM_TOPOLOGIES]);
+		expect(ANALYTICS_GLOBAL_ONLY_DIMENSIONS).not.toContain('roomSizeOneToMany');
 	});
 
 	it('names analytics CSV files without colons', () => {

@@ -39,6 +39,7 @@ export const rooms: RoomDocument[] = [
 			unique: 3,
 			active: 0,
 			peakActive: 2,
+			peakPublishers: 1,
 			aborted: 1,
 			byKind: { STANDARD: 4, EGRESS: 1, AGENT: 1, SIP: 1 }
 		},
@@ -47,7 +48,8 @@ export const rooms: RoomDocument[] = [
 		ingress: { sessions: 0, active: 0 },
 		bytes: { up: 385_000_000, down: 888_000_000 },
 		quality: { scoreSum: 1267, scoreCount: 320, minScore: 1.8, poor: 6, lost: 0 },
-		features: { egress: true, ingress: false, agent: true, sip: true },
+		topology: 'one_to_one',
+		features: { egress: true, ingress: false, agent: true, sip: true, recording: true },
 		lastEventAt: closedEndedAt,
 		lastStatsAt: at('09:44:30'),
 		internal: {
@@ -74,6 +76,7 @@ export const rooms: RoomDocument[] = [
 			unique: 2,
 			active: 1,
 			peakActive: 1,
+			peakPublishers: 1,
 			aborted: 0,
 			byKind: { STANDARD: 2, INGRESS: 2, EGRESS: 1 }
 		},
@@ -82,7 +85,8 @@ export const rooms: RoomDocument[] = [
 		ingress: { sessions: 2, active: 1 },
 		bytes: { up: 98_800_000, down: 99_120_000 },
 		quality: { scoreSum: 486, scoreCount: 120, minScore: 3.6, poor: 0, lost: 0 },
-		features: { egress: true, ingress: true, agent: false, sip: false },
+		topology: 'single_participant',
+		features: { egress: true, ingress: true, agent: false, sip: false, recording: true },
 		lastEventAt: at('10:31:00'),
 		lastStatsAt: at('10:35:00'),
 		internal: {

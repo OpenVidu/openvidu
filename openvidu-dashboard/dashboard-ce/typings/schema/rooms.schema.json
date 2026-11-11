@@ -61,6 +61,10 @@
 					"bsonType": ["int", "long"],
 					"description": "Excludes dependent kinds (EGRESS, AGENT)"
 				},
+				"peakPublishers": {
+					"bsonType": ["int", "long"],
+					"description": "Most STANDARD sessions active at once that have sent media; absent on rooms of an earlier writer"
+				},
 				"aborted": { "bsonType": ["int", "long"] },
 				"byKind": {
 					"bsonType": "object",
@@ -77,6 +81,11 @@
 				}
 			},
 			"additionalProperties": false
+		},
+		"topology": {
+			"bsonType": "string",
+			"enum": ["empty", "single_participant", "no_publishers", "one_to_one", "one_to_many", "many_to_many"],
+			"description": "From peakActive and peakPublishers; absent on rooms of an earlier writer"
 		},
 		"tracks": {
 			"bsonType": "object",
@@ -148,7 +157,11 @@
 				"egress": { "bsonType": "bool" },
 				"ingress": { "bsonType": "bool" },
 				"agent": { "bsonType": "bool" },
-				"sip": { "bsonType": "bool" }
+				"sip": { "bsonType": "bool" },
+				"recording": {
+					"bsonType": "bool",
+					"description": "An egress with a file or segments output reached active; absent on rooms of an earlier writer"
+				}
 			},
 			"additionalProperties": false
 		},

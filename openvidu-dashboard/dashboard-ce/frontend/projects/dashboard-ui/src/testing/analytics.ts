@@ -8,6 +8,7 @@ import type { AnalyticsSummary, InfoRetention } from '@openvidu-dashboard/typing
 import { NGX_ECHARTS_CONFIG } from 'ngx-echarts';
 
 import { BreakdownChart } from '../lib/charts/breakdown-chart.js';
+import { StackedCategoryChart } from '../lib/charts/stacked-category-chart.js';
 import { TimeSeriesChart } from '../lib/charts/time-series-chart/time-series-chart.js';
 import { InfoService } from '../lib/core/info.js';
 import { AnalyticsPage } from '../lib/features/analytics/analytics-page.js';
@@ -41,6 +42,8 @@ export const ANALYTICS_SUMMARY: AnalyticsSummary = {
 	connectionSuccessRate: 97.8,
 	avgRoomSize: 4.4,
 	avgRoomDurationMs: 360_000,
+	roomsRecorded: 49,
+	recordedRoomsRate: 25,
 	bytesUp: 1_200_000_000_000,
 	bytesDown: 300_000_000_000,
 	egressStarted: 12,
@@ -75,14 +78,23 @@ function seriesBody(params: HttpParams, named: AnalyticsAnswers['points'] = {}) 
 		from: params.get('from'),
 		to: params.get('to'),
 		scope: params.get('scope') ?? 'global',
-		series: metrics.flatMap((name) =>
-			name === 'egressEnded'
-				? [
+		series: metrics.flatMap((name) => {
+			switch (name) {
+				case 'egressEnded':
+					return [
 						{ name: 'egressEnded.complete', points },
 						{ name: 'egressEnded.failed', points }
-					]
-				: [{ name, points: named[name] ?? points }]
-		)
+					];
+				// Stored classes, as the API sorts them: by name, not in the chart order.
+				case 'roomsByTopology':
+					return ['many_to_many', 'one_to_many', 'one_to_one'].map((topology) => ({
+						name: `roomsByTopology.${topology}`,
+						points: named[`roomsByTopology.${topology}`] ?? points
+					}));
+				default:
+					return [{ name, points: named[name] ?? points }];
+			}
+		})
 	};
 }
 
@@ -94,19 +106,34 @@ function breakdownsBody(params: HttpParams) {
 		breakdowns: (params.get('dimensions') ?? '').split(',').map((dimension) => ({
 			dimension,
 			total: 750,
-			items:
-				dimension === 'kind'
-					? [
-							{ key: 'STANDARD', count: 700, percent: 93.3 },
-							{ key: 'EGRESS', count: 40, percent: 5.3 },
-							{ key: 'SIP', count: 10, percent: 1.3 }
-						]
-					: [
-							{ key: 'CLIENT_INITIATED', count: 700, percent: 93.3, errors: 7 },
-							{ key: 'SIGNAL_CLOSE', count: 50, percent: 6.7, errors: 0 }
-						]
+			items: breakdownItems(dimension)
 		}))
 	};
+}
+
+function breakdownItems(dimension: string) {
+	switch (dimension) {
+		case 'kind':
+			return [
+				{ key: 'STANDARD', count: 700, percent: 93.3 },
+				{ key: 'EGRESS', count: 40, percent: 5.3 },
+				{ key: 'SIP', count: 10, percent: 1.3 }
+			];
+		case 'roomSizeOneToMany':
+			return [{ key: '11-25', count: 6, percent: 100 }];
+		case 'roomSizeManyToMany':
+			return [
+				{ key: '2-5', count: 40, percent: 95.2 },
+				{ key: '11-25', count: 2, percent: 4.8 }
+			];
+		case 'roomSizeNoPublishers':
+			return [];
+		default:
+			return [
+				{ key: 'CLIENT_INITIATED', count: 700, percent: 93.3, errors: 7 },
+				{ key: 'SIGNAL_CLOSE', count: 50, percent: 6.7, errors: 0 }
+			];
+	}
 }
 
 /** Answers every pending analytics request but the CSV export. */
@@ -204,6 +231,7 @@ export async function openAnalytics(
 	});
 	TestBed.overrideComponent(TimeSeriesChart, { set: { providers: [NEVER_LOADED] } });
 	TestBed.overrideComponent(BreakdownChart, { set: { providers: [NEVER_LOADED] } });
+	TestBed.overrideComponent(StackedCategoryChart, { set: { providers: [NEVER_LOADED] } });
 
 	const http = TestBed.inject(HttpTestingController);
 	const load = TestBed.inject(InfoService).load();

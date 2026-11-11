@@ -268,6 +268,7 @@ export async function generate(db: Db, options: GenerateOptions): Promise<Genera
 	);
 	const ctx: GeneratorContext = {
 		rng,
+		shapeRng: new Rng(options.seed + 3_000_017),
 		scenario,
 		now,
 		nodeIds,

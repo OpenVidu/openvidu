@@ -18,6 +18,7 @@ import type {
 	ParticipantStatus,
 	RoomEndReason,
 	RoomStatus,
+	RoomTopology,
 	SubscriptionStatus,
 	TrackSource,
 	TrackStatus,
@@ -46,6 +47,11 @@ export interface RoomParticipantCounters {
 	active: number;
 	/** Maximum of `active` over the room's life. */
 	peakActive: number;
+	/**
+	 * Most sessions active at once that have sent media: an unmuted track, from its publication or a later unmute. Absent
+	 * on rooms written before the writer classified rooms.
+	 */
+	peakPublishers?: number;
 	aborted: number;
 	byKind: CountByParticipantKind;
 }
@@ -71,6 +77,11 @@ export interface RoomFeatures {
 	ingress: boolean;
 	agent: boolean;
 	sip: boolean;
+	/**
+	 * An egress with a file or segments output reached `active`. Absent on rooms written before the writer classified
+	 * rooms.
+	 */
+	recording?: boolean;
 }
 
 /** `rooms`: one document per room session. `_id` is the room SID (`RM_…`). */
@@ -93,6 +104,8 @@ export interface RoomDocument extends EntityBase {
 	bytes: ByteTotals;
 	quality: QualityTotals;
 	features: RoomFeatures;
+	/** Class from `participants.peakActive` and `participants.peakPublishers`; absent on rooms of an earlier writer. */
+	topology?: RoomTopology;
 	lastEventAt: Date;
 	lastStatsAt?: Date;
 	/** `false` when the node that created it does not report media statistics; absent otherwise. */

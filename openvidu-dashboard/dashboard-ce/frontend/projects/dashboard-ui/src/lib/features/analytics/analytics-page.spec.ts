@@ -94,7 +94,16 @@ describe('analytics plan', () => {
 				],
 				granularity: 'auto'
 			},
-			{ metrics: ['egressEnded', 'ingressPeakActive', 'ingressSessions'], granularity: '1h' },
+			{
+				metrics: [
+					'roomsByTopology',
+					'recordedRoomsRate',
+					'egressEnded',
+					'ingressPeakActive',
+					'ingressSessions'
+				],
+				granularity: '1h'
+			},
 			{ metrics: ['uniqueIdentities'], granularity: '1d' }
 		]);
 		expect(plan.dimensions).toEqual([
@@ -104,7 +113,10 @@ describe('analytics plan', () => {
 			'browser',
 			'connectionType',
 			'egressType',
-			'ingressInputType'
+			'ingressInputType',
+			'roomSizeNoPublishers',
+			'roomSizeOneToMany',
+			'roomSizeManyToMany'
 		]);
 	});
 
@@ -144,7 +156,16 @@ describe('analytics plan', () => {
 		const metrics = plan.series.flatMap((request) => request.metrics);
 
 		expect(metrics.filter((metric) => /^(egress|ingress)/.test(metric))).toEqual([]);
-		expect(metrics).toEqual(expect.arrayContaining(['roomsPeakActive', 'participantsJoined', 'uniqueIdentities']));
+		expect(metrics).toEqual(
+			expect.arrayContaining([
+				'roomsPeakActive',
+				'participantsJoined',
+				'uniqueIdentities',
+				'roomsByTopology',
+				'recordedRoomsRate'
+			])
+		);
+		expect(plan.dimensions).toContain('roomSizeOneToMany');
 		expect(plan.dimensions).not.toEqual(expect.arrayContaining(['egressType']));
 		expect(plan.dimensions.filter((dimension) => /^(egress|ingress)/.test(dimension))).toEqual([]);
 		expect(plan.dimensions).toContain('kind');
@@ -193,7 +214,13 @@ describe('AnalyticsPage', () => {
 			'About Data up / down',
 			'About Connection success'
 		]);
-		expect(tips(card(element, 'Rooms'))).toEqual(['About Active rooms']);
+		expect(tips(card(element, 'Rooms'))).toEqual([
+			'About Recorded rooms',
+			'About Active rooms',
+			'About Room topology',
+			'About Recorded rooms',
+			'About Room size by topology'
+		]);
 		expect(tips(card(element, 'Participants'))).toEqual([
 			'About Active participants',
 			'About Participant sessions',
@@ -233,10 +260,24 @@ describe('AnalyticsPage', () => {
 		expect(metrics.filter((metric) => ['roomsEnded', 'participantsAborted'].includes(metric))).toEqual([]);
 		expect([...(rooms?.querySelectorAll('ovd-kpi-tile') ?? [])].map(text)).toEqual([
 			'Average room size 4 participants',
-			'Average room duration 6 m 00 s'
+			'Average room duration 6 m 00 s',
+			expect.stringMatching(/^Recorded rooms.*25(\.0)? %.*49 rooms recorded$/)
 		]);
 		expect(drawn('Active rooms')).toEqual(['area', [['Active rooms', 'rooms']]]);
 		expect(drawn('Rooms created')).toEqual(['bar', [['Rooms created', 'rooms']]]);
+		expect(drawn('Room topology')).toEqual([
+			'bar',
+			[
+				['1:1', 'topology_one_to_one'],
+				['1:N', 'topology_one_to_many'],
+				['N:M', 'topology_many_to_many']
+			]
+		]);
+		expect(chart('Room topology')?.stacked()).toBe(true);
+		expect(drawn('Recorded rooms')).toEqual(['line', [['Recorded rooms', 'rooms']]]);
+		expect(chart('Recorded rooms')?.format()).toBe('percent');
+		expect(chart('Recorded rooms')?.fitted()).toBe(true);
+		expect(chart('Recorded rooms')?.series()[0]?.points[0]).toEqual(['2026-10-13T10:00:00.000Z', 0.03]);
 		expect(drawn('Active participants')).toEqual(['area', [['Active participants', 'participants']]]);
 		expect(drawn('Participant sessions')).toEqual(['bar', [['Participant sessions', 'participants']]]);
 		expect(drawn('Unique identities')).toEqual(['bar', [['Unique identities', 'participants']]]);
@@ -255,7 +296,13 @@ describe('AnalyticsPage', () => {
 				text(chart.querySelector('.chart-title'))
 			);
 
-		expect(grid('Rooms')).toEqual(['Active rooms', 'Rooms created']);
+		expect(grid('Rooms')).toEqual([
+			'Active rooms',
+			'Rooms created',
+			'Room topology',
+			'Recorded rooms',
+			'Room size by topology'
+		]);
 		expect(grid('Participants')).toEqual([
 			'Active participants',
 			'Participant sessions',
@@ -286,7 +333,7 @@ describe('AnalyticsPage', () => {
 
 		expect(rooms?.querySelector('ovd-empty-state')).toBeNull();
 		expect(rooms?.querySelector('ovd-time-series-chart')).not.toBeNull();
-		expect(rooms?.querySelectorAll('ovd-kpi-tile')).toHaveLength(2);
+		expect(rooms?.querySelectorAll('ovd-kpi-tile')).toHaveLength(3);
 		expect(page.chart(['roomsPeakActive'])[0]?.points).toEqual(points);
 	});
 
@@ -346,7 +393,16 @@ describe('AnalyticsPage', () => {
 		expect(text(element.querySelector('.granularity-select .mat-mdc-select-value'))).toBe('auto (5 min)');
 		expect(seriesRequests(requests)).toEqual([
 			expect.objectContaining({ granularity: 'auto' }),
-			{ metrics: ['egressEnded', 'ingressPeakActive', 'ingressSessions'], granularity: '1h' },
+			{
+				metrics: [
+					'roomsByTopology',
+					'recordedRoomsRate',
+					'egressEnded',
+					'ingressPeakActive',
+					'ingressSessions'
+				],
+				granularity: '1h'
+			},
 			{ metrics: ['uniqueIdentities'], granularity: '1d' }
 		]);
 		expect(seriesRequests(requests)[0]?.metrics).not.toContain('egressEnded');
@@ -356,7 +412,12 @@ describe('AnalyticsPage', () => {
 		expect(notes('Egress')).toEqual(['Five-minute buckets · UTC', 'Five-minute buckets · UTC', 'Hourly · UTC']);
 		expect(notes('Ingress')).toEqual(['Hourly · UTC', 'Hourly · UTC']);
 		expect(card(element, 'Egress')?.querySelector('p.note')).toBeNull();
-		expect(text(card(element, 'Rooms')?.querySelector('.chart-note'))).toBe('Five-minute buckets · UTC');
+		expect(notes('Rooms')).toEqual([
+			'Five-minute buckets · UTC',
+			'Five-minute buckets · UTC',
+			'Hourly · UTC',
+			'Hourly · UTC'
+		]);
 		expect([...(card(element, 'Egress')?.querySelectorAll('.chart-title') ?? [])].map(text)).not.toContain(
 			'Egress duration'
 		);
@@ -474,6 +535,42 @@ describe('AnalyticsPage', () => {
 		expect(rooms?.querySelector('ovd-skeleton')).toBeNull();
 	});
 
+	it('reads the recorded rooms n/a for rooms ended by a server version that does not classify them', async () => {
+		const { roomsRecorded: _recorded, recordedRoomsRate: _rate, ...withoutRecordings } = SUMMARY;
+		const { element } = await open('/analytics?from=now-7d&to=now&tz=UTC', [], { summary: withoutRecordings });
+		const recorded = [...(card(element, 'Rooms')?.querySelectorAll('ovd-kpi-tile') ?? [])].map(text)[2];
+
+		expect(recorded).toContain('Recorded rooms');
+		expect(recorded).toContain('n/a');
+		expect(recorded).toContain('Not provided by this server version');
+	});
+
+	it('draws the rooms of the range by size range, stacked by topology over every range in order', async () => {
+		const { element } = await open('/analytics?from=now-7d&to=now&tz=UTC');
+		const sizes = card(element, 'Rooms')?.querySelector('ovd-stacked-category-chart');
+
+		[...(sizes?.querySelectorAll<HTMLButtonElement>('.toggle') ?? [])].at(0)?.click();
+		await settle();
+
+		expect([...(sizes?.querySelectorAll('thead th') ?? [])].map(text)).toEqual([
+			'Participants',
+			'No publishers',
+			'1:N',
+			'N:M',
+			'Total'
+		]);
+		expect(
+			[...(sizes?.querySelectorAll('tbody tr') ?? [])].map((row) => [...row.querySelectorAll('th, td')].map(text))
+		).toEqual([
+			['2-5', '0', '0', '40', '40'],
+			['6-10', '0', '0', '0', '0'],
+			['11-25', '0', '6', '2', '8'],
+			['26-50', '0', '0', '0', '0'],
+			['51-100', '0', '0', '0', '0'],
+			['101+', '0', '0', '0', '0']
+		]);
+	});
+
 	it('reads n/a with a hint for a value the summary omits', async () => {
 		const { avgRoomSize: _size, ...withoutSize } = SUMMARY;
 		const { element } = await open('/analytics?from=now-7d&to=now&tz=UTC', [], { summary: withoutSize });
@@ -484,13 +581,19 @@ describe('AnalyticsPage', () => {
 	});
 
 	it('says no room ended in the range when the room averages are missing for that reason', async () => {
-		const { avgRoomSize: _size, avgRoomDurationMs: _duration, ...withoutAverages } = SUMMARY;
+		const {
+			avgRoomSize: _size,
+			avgRoomDurationMs: _duration,
+			roomsRecorded: _recorded,
+			recordedRoomsRate: _rate,
+			...withoutAverages
+		} = SUMMARY;
 		const { element } = await open('/analytics?from=now-7d&to=now&tz=UTC', [], {
 			summary: { ...withoutAverages, roomsCreated: 2, roomsEnded: 0 }
 		});
 		const tiles = [...(card(element, 'Rooms')?.querySelectorAll('ovd-kpi-tile') ?? [])].map(text);
 
-		expect(tiles).toHaveLength(2);
+		expect(tiles).toHaveLength(3);
 
 		for (const tile of tiles) {
 			expect(tile).toContain('n/a');
@@ -656,8 +759,10 @@ describe('AnalyticsPage', () => {
 		expect(clients?.querySelector('ovd-error-banner')).not.toBeNull();
 		expect(text(clients)).toContain('Retry');
 		expect(text(clients)).toContain('req-42');
-		expect(card(element, 'Rooms')?.querySelector('ovd-error-banner')).toBeNull();
-		expect(card(element, 'Rooms')?.querySelector('ovd-time-series-chart')).not.toBeNull();
+		// The Rooms card draws the room sizes from the breakdowns too; the Data transferred card draws none.
+		expect(card(element, 'Rooms')?.querySelector('ovd-error-banner')).not.toBeNull();
+		expect(card(element, 'Data transferred')?.querySelector('ovd-error-banner')).toBeNull();
+		expect(card(element, 'Data transferred')?.querySelector('ovd-time-series-chart')).not.toBeNull();
 	});
 
 	it('downloads the CSV of a card under the server name and toasts a failure', async () => {
@@ -721,7 +826,7 @@ describe('AnalyticsPage', () => {
 			return metrics;
 		};
 
-		expect(await exported('Rooms')).toBe('roomsPeakActive,roomsCreated');
+		expect(await exported('Rooms')).toBe('roomsPeakActive,roomsCreated,roomsByTopology,recordedRoomsRate');
 		expect(await exported('Participants')).toBe(
 			'participantsPeakActive,participantsJoined,connectionSuccessRate,uniqueIdentities'
 		);

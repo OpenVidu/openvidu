@@ -20,8 +20,11 @@ import {
 	ParticipantKindDetail,
 	ParticipantStatus,
 	RoomEndReason,
+	RoomSizeRange,
 	RoomStatus,
+	RoomTopology,
 	RtcEngine,
+	SIZED_ROOM_TOPOLOGIES,
 	StatsDetail,
 	StatsDirection,
 	StoredEventType,
@@ -119,16 +122,30 @@ const rooms = obj({
 			unique: req(int()),
 			active: req(int('Excludes dependent kinds (EGRESS, AGENT)')),
 			peakActive: req(int('Excludes dependent kinds (EGRESS, AGENT)')),
+			peakPublishers: int(
+				'Most STANDARD sessions active at once that have sent media; absent on rooms of an earlier writer'
+			),
 			aborted: req(int()),
 			byKind: req(counts(ParticipantKind))
 		})
 	),
+	topology: oneOfValues(RoomTopology, 'From peakActive and peakPublishers; absent on rooms of an earlier writer'),
 	tracks: req(obj({ published: req(int()), bySource: req(counts(TrackSource)) })),
 	egress: req(obj({ total: req(int()), active: req(int()), byType: req(counts(EgressType)) })),
 	ingress: req(obj({ sessions: req(int()), active: req(int()) })),
 	bytes: req(bytes),
 	quality: req(quality),
-	features: req(obj({ egress: req(bool()), ingress: req(bool()), agent: req(bool()), sip: req(bool()) })),
+	features: req(
+		obj({
+			egress: req(bool()),
+			ingress: req(bool()),
+			agent: req(bool()),
+			sip: req(bool()),
+			recording: bool(
+				'An egress with a file or segments output reached active; absent on rooms of an earlier writer'
+			)
+		})
+	),
 	lastEventAt: req(date()),
 	lastStatsAt: date(),
 	mediaStats: mediaStatsMark,
@@ -440,7 +457,16 @@ const hourlyFields = {
 		endedByReason: counts(RoomEndReason),
 		durationMsSum: long(),
 		participantsSum: int(),
-		peakActive: int('Most rooms active at once in the bucket, sampled every minute by the server aggregator')
+		peakActive: int('Most rooms active at once in the bucket, sampled every minute by the server aggregator'),
+		byTopology: counts(RoomTopology, 'Rooms ended in the bucket by topology'),
+		recorded: int('Rooms counted in byTopology that were recorded'),
+		sizeByTopology: obj(
+			Object.fromEntries(SIZED_ROOM_TOPOLOGIES.map((topology) => [topology, counts(RoomSizeRange)])),
+			{
+				description:
+					'Rooms ended in the bucket by the size range of their most STANDARD sessions active at once'
+			}
+		)
 	}),
 	participants: obj({
 		joined: int(),

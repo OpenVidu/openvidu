@@ -11,7 +11,7 @@ import {
 } from '@openvidu-dashboard/typings';
 
 import { AnalyticsCache } from '../../src/analytics/analytics-cache.js';
-import { CE_ANALYTICS_CATALOGUE, maximumPaths } from '../../src/analytics/analytics-catalogue.js';
+import { CE_ANALYTICS_CATALOGUE, maximumPaths, metricFields } from '../../src/analytics/analytics-catalogue.js';
 import { foldRows, mergeCounters } from '../../src/analytics/analytics-counters.js';
 import { breakdownsCsv, seriesCsv, toCsv } from '../../src/analytics/analytics-csv.js';
 import { AnalyticsFeatureGate, checkGlobalOnly } from '../../src/analytics/analytics-gate.js';
@@ -293,9 +293,17 @@ describe('analytics schemas', () => {
 describe('analytics catalogue', () => {
 	it('defines every CE metric and dimension', () => {
 		expect(Object.keys(CE_ANALYTICS_CATALOGUE.metrics).sort()).toEqual(
-			ANALYTICS_CE_METRICS.filter((metric) => metric !== 'egressEnded').sort()
+			ANALYTICS_CE_METRICS.filter((metric) => metric !== 'egressEnded' && metric !== 'roomsByTopology').sort()
 		);
 		expect(Object.keys(CE_ANALYTICS_CATALOGUE.dimensions).sort()).toEqual([...ANALYTICS_CE_DIMENSIONS].sort());
+	});
+
+	it('projects a map once when a metric reads some of its keys', () => {
+		expect(metricFields(CE_ANALYTICS_CATALOGUE, ['roomsByTopology', 'recordedRoomsRate'])).toEqual([
+			'rooms.byTopology',
+			'rooms.recorded'
+		]);
+		expect(metricFields(CE_ANALYTICS_CATALOGUE, ['recordedRoomsRate'])).toContain('rooms.byTopology.one_to_one');
 	});
 
 	it('reads a peak as the stored maximum, or null without a sample', () => {
@@ -523,6 +531,50 @@ describe('analytics series', () => {
 		expect(response.series[1]?.points.at(-2)).toEqual(['2026-10-13T10:00:00.000Z', 1]);
 	});
 
+	it('expands roomsByTopology into the classes present in the range', async () => {
+		const db = fakeDb({
+			analytics_hourly: [
+				{ scope: 'global', bucket: at('2026-10-13T09:00:00Z'), rooms: { byTopology: { one_to_one: 3 } } },
+				{
+					scope: 'global',
+					bucket: at('2026-10-13T10:00:00Z'),
+					rooms: { byTopology: { one_to_one: 1, many_to_many: 2 } }
+				}
+			]
+		});
+		const response = await service(db).series(series({ metrics: 'roomsByTopology', granularity: '1h' }));
+
+		expect(response.series.map((item) => item.name)).toEqual([
+			'roomsByTopology.many_to_many',
+			'roomsByTopology.one_to_one'
+		]);
+		expect(response.series[1]?.points.slice(-4, -1).map(([, value]) => value)).toEqual([0, 3, 1]);
+		expect(response.series[0]?.points.at(-2)).toEqual(['2026-10-13T10:00:00.000Z', 2]);
+	});
+
+	it('computes the recorded rooms rate over the rooms ended with a topology', async () => {
+		const db = fakeDb({
+			analytics_hourly: [
+				{
+					scope: 'global',
+					bucket: at('2026-10-13T07:00:00Z'),
+					rooms: { ended: 8, byTopology: { one_to_one: 5, many_to_many: 3 }, recorded: 2 }
+				},
+				{ scope: 'global', bucket: at('2026-10-13T08:00:00Z'), rooms: { ended: 5, byTopology: { empty: 5 } } },
+				{ scope: 'global', bucket: at('2026-10-13T09:00:00Z'), rooms: { created: 2 } },
+				// The hour of the upgrade: 6 of its 10 rooms were ended by an earlier writer, without a topology.
+				{
+					scope: 'global',
+					bucket: at('2026-10-13T10:00:00Z'),
+					rooms: { ended: 10, byTopology: { one_to_many: 4 }, recorded: 1 }
+				}
+			]
+		});
+		const response = await service(db).series(series({ metrics: 'recordedRoomsRate', granularity: '1h' }));
+
+		expect(response.series[0]?.points.slice(-5).map(([, value]) => value)).toEqual([25, 0, null, 25, null]);
+	});
+
 	it('sums hourly documents per local day and keeps unique identities on UTC days', async () => {
 		const from = at('2026-10-28T04:00:00Z');
 		const to = at('2026-11-04T05:00:00Z');
@@ -715,6 +767,69 @@ describe('analytics summary and breakdowns', () => {
 		expect(summary).not.toHaveProperty('avgRoomDurationMs');
 		expect(summary).not.toHaveProperty('uniqueIdentities');
 		expect(summary).toMatchObject({ roomsCreated: 3, roomsEnded: 2, bytesUp: 0 });
+	});
+
+	it('reports the recorded rooms only when the range has rooms with a topology', async () => {
+		const classified = fakeDb({
+			analytics_hourly: [
+				{
+					scope: 'global',
+					bucket: at('2026-10-13T09:00:00Z'),
+					rooms: { ended: 200, byTopology: { one_to_one: 120, many_to_many: 70, empty: 6 }, recorded: 49 }
+				}
+			]
+		});
+		expect(await service(classified).summary(summaryQuery.parse({}))).toMatchObject({
+			roomsEnded: 200,
+			roomsRecorded: 49,
+			recordedRoomsRate: 25
+		});
+
+		const earlier = fakeDb({
+			analytics_hourly: [
+				{ scope: 'global', bucket: at('2026-10-13T09:00:00Z'), rooms: { created: 30, ended: 30 } }
+			]
+		});
+		const summary = await service(earlier).summary(summaryQuery.parse({}));
+		expect(summary).not.toHaveProperty('roomsRecorded');
+		expect(summary).not.toHaveProperty('recordedRoomsRate');
+		expect(summary.roomsEnded).toBe(30);
+	});
+
+	it('breaks the 1:N rooms down by size range', async () => {
+		const db = fakeDb({
+			analytics_hourly: [
+				{
+					scope: 'global',
+					bucket: at('2026-10-13T09:00:00Z'),
+					rooms: { sizeByTopology: { one_to_many: { '11-25': 4, '26-50': 3 }, many_to_many: { '2-5': 9 } } }
+				},
+				{
+					scope: 'global',
+					bucket: at('2026-10-13T10:00:00Z'),
+					rooms: { sizeByTopology: { one_to_many: { '11-25': 2, '101+': 1 } } }
+				}
+			]
+		});
+		const response = await service(db).breakdowns(
+			analyticsBreakdownsQuery(() => NOW).parse({
+				dimensions: 'roomSizeOneToMany,roomSizeNoPublishers',
+				from: 'now-3h'
+			})
+		);
+
+		expect(response.breakdowns).toEqual([
+			{
+				dimension: 'roomSizeOneToMany',
+				total: 10,
+				items: [
+					{ key: '11-25', count: 6, percent: 60 },
+					{ key: '26-50', count: 3, percent: 30 },
+					{ key: '101+', count: 1, percent: 10 }
+				]
+			},
+			{ dimension: 'roomSizeNoPublishers', total: 0, items: [] }
+		]);
 	});
 
 	it('sorts breakdown keys by count with percentages of the dimension total', async () => {

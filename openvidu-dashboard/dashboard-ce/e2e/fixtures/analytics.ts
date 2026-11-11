@@ -21,6 +21,8 @@ export const ANALYTICS_SUMMARY: AnalyticsSummary = {
 	connectionSuccessRate: 97.8,
 	avgRoomSize: 4,
 	avgRoomDurationMs: 360_000,
+	roomsRecorded: 49,
+	recordedRoomsRate: 25,
 	bytesUp: 1_200_000_000_000,
 	bytesDown: 300_000_000_000,
 	egressStarted: 12,
@@ -75,6 +77,16 @@ const BREAKDOWN_KEYS: Partial<Record<AnalyticsDimension, BreakdownKey[]>> = {
 		['rtmp', 20],
 		['whip', 8],
 		['url', 2]
+	],
+	roomSizeNoPublishers: [['2-5', 3]],
+	roomSizeOneToMany: [
+		['11-25', 6],
+		['101+', 1]
+	],
+	roomSizeManyToMany: [
+		['2-5', 40],
+		['6-10', 12],
+		['11-25', 2]
 	]
 };
 
@@ -123,6 +135,15 @@ export function analyticsSeries(params: URLSearchParams, fixtures: AnalyticsFixt
 					{ name: 'egressEnded.complete', points: points((index) => (index % 3) + 1) },
 					{ name: 'egressEnded.failed', points: points((index) => index % 2) }
 				];
+			// The stored classes, sorted by name as the API sorts them.
+			case 'roomsByTopology':
+				return [
+					{ name: 'roomsByTopology.many_to_many', points: points((index) => (index % 4) + 2) },
+					{ name: 'roomsByTopology.one_to_many', points: points((index) => index % 2) },
+					{ name: 'roomsByTopology.one_to_one', points: points((index) => (index % 3) + 1) }
+				];
+			case 'recordedRoomsRate':
+				return [{ name, points: points((index) => 20 + (index % 4) * 5) }];
 			case 'connectionSuccessRate':
 				return [{ name, points: points((index) => 95 + (index % 5)) }];
 			case 'bytesUp':

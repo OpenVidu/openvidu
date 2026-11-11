@@ -10,6 +10,8 @@
 			"endedByReason": { "API_DELETE": { "$numberInt": "1" } },
 			"durationMsSum": { "$numberLong": "2700000" },
 			"participantsSum": { "$numberInt": "4" },
+			"byTopology": { "one_to_one": { "$numberInt": "1" } },
+			"recorded": { "$numberInt": "1" },
 			"peakActive": { "$numberInt": "1" }
 		},
 		"participants": {
@@ -106,6 +108,8 @@
 			"endedByReason": { "API_DELETE": { "$numberInt": "1" } },
 			"durationMsSum": { "$numberLong": "2700000" },
 			"participantsSum": { "$numberInt": "4" },
+			"byTopology": { "one_to_one": { "$numberInt": "1" } },
+			"recorded": { "$numberInt": "1" },
 			"peakActive": { "$numberInt": "0" }
 		},
 		"participants": {

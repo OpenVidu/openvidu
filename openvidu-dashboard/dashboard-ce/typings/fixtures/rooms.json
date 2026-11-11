@@ -21,6 +21,7 @@
 			"unique": { "$numberInt": "3" },
 			"active": { "$numberInt": "0" },
 			"peakActive": { "$numberInt": "2" },
+			"peakPublishers": { "$numberInt": "1" },
 			"aborted": { "$numberInt": "1" },
 			"byKind": {
 				"STANDARD": { "$numberInt": "4" },
@@ -47,7 +48,8 @@
 			"poor": { "$numberInt": "6" },
 			"lost": { "$numberInt": "0" }
 		},
-		"features": { "egress": true, "ingress": false, "agent": true, "sip": true },
+		"topology": "one_to_one",
+		"features": { "egress": true, "ingress": false, "agent": true, "sip": true, "recording": true },
 		"lastEventAt": { "$date": "2026-10-12T09:45:00.000Z" },
 		"lastStatsAt": { "$date": "2026-10-12T09:44:30.000Z" },
 		"internal": {
@@ -86,6 +88,7 @@
 			"unique": { "$numberInt": "2" },
 			"active": { "$numberInt": "1" },
 			"peakActive": { "$numberInt": "1" },
+			"peakPublishers": { "$numberInt": "1" },
 			"aborted": { "$numberInt": "0" },
 			"byKind": {
 				"STANDARD": { "$numberInt": "2" },
@@ -111,7 +114,8 @@
 			"poor": { "$numberInt": "0" },
 			"lost": { "$numberInt": "0" }
 		},
-		"features": { "egress": true, "ingress": true, "agent": false, "sip": false },
+		"topology": "single_participant",
+		"features": { "egress": true, "ingress": true, "agent": false, "sip": false, "recording": true },
 		"lastEventAt": { "$date": "2026-10-12T10:31:00.000Z" },
 		"lastStatsAt": { "$date": "2026-10-12T10:35:00.000Z" },
 		"internal": {

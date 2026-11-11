@@ -7,7 +7,8 @@ import type {
 	IngressInputType,
 	IngressStatus,
 	OsFamily,
-	ParticipantKind
+	ParticipantKind,
+	RoomTopology
 } from '@openvidu-dashboard/typings';
 
 /**
@@ -41,6 +42,16 @@ export const EGRESS_TYPE_LABELS: Readonly<Record<EgressType, string>> = {
 	participant: 'Participant',
 	track_composite: 'Track composite',
 	track: 'Track'
+};
+
+/** Room topologies, in their chart order, from the emptiest to the most participative. */
+export const ROOM_TOPOLOGY_LABELS: Readonly<Record<RoomTopology, string>> = {
+	empty: 'Empty',
+	single_participant: 'Single participant',
+	no_publishers: 'No publishers',
+	one_to_one: '1:1',
+	one_to_many: '1:N',
+	many_to_many: 'N:M'
 };
 
 /** Egress statuses outside the status badge, such as the status history. */

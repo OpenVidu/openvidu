@@ -147,6 +147,28 @@ describe('schema files', () => {
 		expect(validate(Collection.EVENTS, { ...event, type: 'API_CALL' })).not.toBeNull();
 	});
 
+	it('rejects a room topology or size range outside the vocabulary', () => {
+		const [room] = readFixtures(Collection.ROOMS);
+		expect(validate(Collection.ROOMS, { ...room, topology: 'one_to_two' })).toContain('/topology');
+
+		const [hourly] = readFixtures(Collection.ANALYTICS_HOURLY);
+		const rooms = (hourly as { rooms: Record<string, unknown> }).rooms;
+		const withRooms = (counters: Record<string, unknown>) => ({ ...hourly, rooms: { ...rooms, ...counters } });
+		expect(validate(Collection.ANALYTICS_HOURLY, withRooms({ byTopology: { one_to_two: 1 } }))).not.toBeNull();
+		expect(
+			validate(Collection.ANALYTICS_HOURLY, withRooms({ sizeByTopology: { one_to_one: { '2-5': 1 } } }))
+		).not.toBeNull();
+		expect(
+			validate(Collection.ANALYTICS_HOURLY, withRooms({ sizeByTopology: { one_to_many: { '3-5': 1 } } }))
+		).not.toBeNull();
+		expect(
+			validate(
+				Collection.ANALYTICS_HOURLY,
+				withRooms({ sizeByTopology: { one_to_many: { '101+': new Int32(1) } } })
+			)
+		).toBeNull();
+	});
+
 	it('rejects rollup counters keyed by free text', () => {
 		const [hourly] = readFixtures(Collection.ANALYTICS_HOURLY);
 		const participants = (hourly as { participants: Record<string, unknown> }).participants;

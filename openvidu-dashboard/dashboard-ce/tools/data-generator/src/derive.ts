@@ -1,6 +1,7 @@
 import { type Long } from 'mongodb';
 import {
 	int64,
+	roomSizeRange,
 	subscriptionBitrate,
 	trackBitrate,
 	type EgressDoc,
@@ -8,6 +9,7 @@ import {
 	type IngressSessionDoc,
 	type ParticipantDoc,
 	type RoomBundle,
+	type RoomDoc,
 	type SubscriptionDoc,
 	type TrackDoc
 } from './model.js';
@@ -677,6 +679,9 @@ interface Bucket {
 		endedByReason: Counter;
 		participantsSum?: number;
 		durationMsSum?: number;
+		byTopology?: Counter;
+		recorded?: number;
+		sizeByTopology?: Record<string, Counter>;
 	};
 	participants: Peaks & {
 		joined: number;
@@ -757,7 +762,10 @@ export interface RollupOptions {
 	fiveMinute: boolean;
 	/** `node:<media node label>` documents beside `global` in every rollup collection (needs labelled nodes). */
 	nodes: boolean;
-	/** `rooms.participantsSum` and `rooms.durationMsSum` at room end. */
+	/**
+	 * `rooms.participantsSum` and `rooms.durationMsSum` at room end, and the topology, recording and size range counters
+	 * of the room.
+	 */
 	roomSums: boolean;
 }
 
@@ -864,6 +872,7 @@ export class Rollups {
 				if (this.options.roomSums) {
 					b.rooms.participantsSum = (b.rooms.participantsSum ?? 0) + bundle.room.participants.sessions;
 					b.rooms.durationMsSum = (b.rooms.durationMsSum ?? 0) + (room.durationMs ?? 0);
+					countRoomClass(b, room);
 				}
 			},
 			(f) => {
@@ -1338,6 +1347,21 @@ function browserKey(browser: string): string {
 
 	return BROWSER_KEYS.has(key) ? key : 'other';
 }
+
+/** Counts a closed room in its topology, its recording and, for the topologies counted by size, its size range. */
+function countRoomClass(b: Bucket, room: RoomDoc): void {
+	inc((b.rooms.byTopology ??= {}), room.topology);
+
+	if (room.features.recording) {
+		b.rooms.recorded = (b.rooms.recorded ?? 0) + 1;
+	}
+
+	if (SIZED_TOPOLOGIES.has(room.topology)) {
+		inc(((b.rooms.sizeByTopology ??= {})[room.topology] ??= {}), roomSizeRange(room.participants.peakActive));
+	}
+}
+
+const SIZED_TOPOLOGIES: ReadonlySet<string> = new Set(['no_publishers', 'one_to_many', 'many_to_many']);
 
 function inc(counter: Counter, key: string): void {
 	counter[key] = (counter[key] ?? 0) + 1;

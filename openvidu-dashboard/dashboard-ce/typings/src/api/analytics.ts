@@ -1,3 +1,4 @@
+import type { SizedRoomTopology } from '../data-model/enums.js';
 import { FeatureKey } from './features.js';
 import type { BucketGranularity, TimeSeriesPoint, TimeSeriesResponse } from './time-series.js';
 
@@ -5,6 +6,8 @@ export const AnalyticsMetric = {
 	ROOMS_CREATED: 'roomsCreated',
 	ROOMS_ENDED: 'roomsEnded',
 	ROOMS_PEAK_ACTIVE: 'roomsPeakActive',
+	ROOMS_BY_TOPOLOGY: 'roomsByTopology',
+	RECORDED_ROOMS_RATE: 'recordedRoomsRate',
 	PARTICIPANTS_JOINED: 'participantsJoined',
 	PARTICIPANTS_ACTIVE: 'participantsActive',
 	PARTICIPANTS_ABORTED: 'participantsAborted',
@@ -48,6 +51,8 @@ export const ANALYTICS_METRIC_INFO: Readonly<Partial<Record<AnalyticsMetric, Ana
 	roomsCreated: { unit: 'count', empty: 0 },
 	roomsEnded: { unit: 'count', empty: 0 },
 	roomsPeakActive: { unit: 'count', empty: null },
+	roomsByTopology: { unit: 'count', empty: 0, hourlyOnly: true },
+	recordedRoomsRate: { unit: 'percent', empty: null, hourlyOnly: true },
 	participantsJoined: { unit: 'count', empty: 0 },
 	participantsActive: { unit: 'count', empty: 0 },
 	participantsAborted: { unit: 'count', empty: 0 },
@@ -80,6 +85,9 @@ export const AnalyticsDimension = {
 	EGRESS_TYPE: 'egressType',
 	EGRESS_STATUS: 'egressStatus',
 	INGRESS_INPUT_TYPE: 'ingressInputType',
+	ROOM_SIZE_NO_PUBLISHERS: 'roomSizeNoPublishers',
+	ROOM_SIZE_ONE_TO_MANY: 'roomSizeOneToMany',
+	ROOM_SIZE_MANY_TO_MANY: 'roomSizeManyToMany',
 	API_METHOD: 'apiMethod'
 } as const;
 export type AnalyticsDimension = (typeof AnalyticsDimension)[keyof typeof AnalyticsDimension];
@@ -103,6 +111,8 @@ export const ANALYTICS_CE_METRICS: readonly AnalyticsMetric[] = [
 	'ingressSessions',
 	'ingressDurationMs',
 	'ingressPeakActive',
+	'roomsByTopology',
+	'recordedRoomsRate',
 	'bytesUp',
 	'bytesDown',
 	'apiCalls',
@@ -123,8 +133,18 @@ export const ANALYTICS_CE_DIMENSIONS: readonly AnalyticsDimension[] = [
 	'kind',
 	'egressType',
 	'egressStatus',
-	'ingressInputType'
+	'ingressInputType',
+	'roomSizeNoPublishers',
+	'roomSizeOneToMany',
+	'roomSizeManyToMany'
 ];
+
+/** The size range dimension of each topology counted by size. */
+export const ROOM_SIZE_DIMENSIONS = {
+	no_publishers: 'roomSizeNoPublishers',
+	one_to_many: 'roomSizeOneToMany',
+	many_to_many: 'roomSizeManyToMany'
+} as const satisfies Readonly<Record<SizedRoomTopology, AnalyticsDimension>>;
 
 /** Dimensions served for the global scope only, as the egress and ingress metrics. */
 export const ANALYTICS_GLOBAL_ONLY_DIMENSIONS: readonly AnalyticsDimension[] = [
@@ -182,7 +202,10 @@ export interface AnalyticsSeriesQuery extends AnalyticsRangeQuery {
 }
 
 export interface AnalyticsSeries {
-	/** The metric, or `egressEnded.<status>` with a stored egress status such as `complete`. */
+	/**
+	 * The metric, `egressEnded.<status>` with a stored egress status such as `complete`, or `roomsByTopology.<topology>`
+	 * with a stored room topology such as `one_to_one`.
+	 */
 	name: string;
 	points: TimeSeriesPoint[];
 	/** `utcDay`: one value per UTC day whatever `tz` (`uniqueIdentities`). */
@@ -246,6 +269,10 @@ export interface AnalyticsSummary {
 	/** One decimal. */
 	avgRoomSize?: number;
 	avgRoomDurationMs?: number;
+	/** Rooms ended in the range that were recorded; absent when no room of the range has a topology. */
+	roomsRecorded?: number;
+	/** Recorded rooms over the rooms ended with a topology, percentage with one decimal; absent as `roomsRecorded`. */
+	recordedRoomsRate?: number;
 	bytesUp: number;
 	bytesDown: number;
 	/** Egress started in the range; absent in a node scope, as the other egress and ingress values. */

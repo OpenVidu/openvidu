@@ -42,7 +42,7 @@ pnpm generate --uri "$MONGO_URI" --db ov_data_l --scenario L --days 1 --drop --s
 | `--plain-stats`                     | off           | Force the plain-collection fallback for `track_stats`                                                                     |
 | `--five-minute-rollups`             | off           | Write `analytics_5min` inside the 5-minute rollup window                                                                  |
 | `--node-rollups`                    | off           | With `--media-nodes`: write the `node:<label>` scope beside `global` in every rollup                                      |
-| `--room-sums`                       | off           | Write `rooms.participantsSum` and `rooms.durationMsSum` at room end                                                       |
+| `--room-sums`                       | off           | At room end, write the room sums and the topology, recording and size range counters                                      |
 | `--active-window <minutes>`         | off           | Rooms created in the last minutes stay active (two of three); without it, the most recent 10 % of the rooms are active    |
 | `--min-active-rooms <n>`            | 0             | With `--active-window`: rooms added to the window when the hour of day leaves fewer than `n` active rooms                 |
 | `--nodes-without-media-stats <n>`   | 0             | The last `n` of the three nodes report no media statistics: `mediaStats: false`, no media `track_stats`, bytes or quality |
@@ -57,10 +57,14 @@ pnpm generate --uri "$MONGO_URI" --db ov_data_l --scenario L --days 1 --drop --s
 What it writes (`analytics_5min` stays empty without `--five-minute-rollups`):
 
 - `rooms`: created over the days with a diurnal curve (office-hours peak); the most recent 10 % are
-  `active`, the rest `closed` with `endReason` and `closedBy`. Id arrays and counters (`participantSids`,
-  `activeParticipantSids`, `identities`, `participants.*`, `trackSids`, `egressIds`, `ingressSessionIds`,
-  `features`) are derived from the generated entities; participant counters count STANDARD sessions and `byKind`
-  every kind, as the writer does (also in the rollups).
+  `active`, the rest `closed` with `endReason` and `closedBy`; 3 % of the closed ones were never joined. Id arrays
+  and counters (`participantSids`, `activeParticipantSids`, `identities`, `participants.*`, `trackSids`, `egressIds`,
+  `ingressSessionIds`, `features`) are derived from the generated entities; participant counters count STANDARD
+  sessions and `byKind` every kind, as the writer does (also in the rollups). `participants.peakPublishers`,
+  `topology` and `features.recording` follow the writer's rules: a separate seeded stream picks, by the size of the
+  room, which participants send media (an unmuted track) and which publish nothing or tracks muted for good, as
+  OpenVidu Meet does; scenario S over 7 days gives about 61 % N:M, 14 % 1:1, 9 % single participant, 8 % 1:N, 5 % no
+  publishers and 3 % empty rooms.
 - `participants`: unique identities per room follow a Poisson distribution around the scenario average;
   the difference between sessions/day and rooms/day × average size is produced as reconnects
   (`DUPLICATE_IDENTITY` leave plus a new session of the same identity). Sessions last ~20 min, 3 % are
@@ -70,8 +74,9 @@ What it writes (`analytics_5min` stays empty without `--five-minute-rollups`):
 - `tracks` (CAMERA video + MICROPHONE audio per publishing participant, with simulcast layers and final
   publish stats) and `track_subscriptions` (every participant subscribes to the tracks of the other
   identities present at the same time; 1 % failed).
-- `egresses` (10 % of rooms; mostly `room_composite`; `complete`/`failed`/`aborted`, `active` in active
-  rooms), `ingresses` and `ingress_sessions` (2 % of rooms).
+- `egresses` (30 % of rooms; mostly `room_composite`; 70 % file, 20 % stream and 10 % segments outputs, so about a
+  quarter of the rooms are recorded; `complete`/`failed`/`aborted`, `active` in active rooms), `ingresses` and
+  `ingress_sessions` (2 % of rooms).
 - `events`: lifecycle events of rooms, participants, tracks, subscriptions, egresses and ingresses with
   small payloads, only inside the events retention window.
 - `track_stats`: one document per 30 s per participant and direction (`participant` mode) or per track and
@@ -80,7 +85,8 @@ What it writes (`analytics_5min` stays empty without `--five-minute-rollups`):
   `expireAfterSeconds`; plain collection with a TTL index on `ts` when the server rejects time-series.
 - `analytics_hourly` and `analytics_daily` (global scope, plus one scope per media node label with
   `--media-nodes --node-rollups`) aggregated from the generated entities; bytes and quality are spread over the
-  hours each session was connected. `--room-sums` adds the room size and duration sums; `--five-minute-rollups`
+  hours each session was connected. `--room-sums` adds the room size and duration sums and, at each room's end,
+  `rooms.byTopology`, `rooms.recorded` and `rooms.sizeByTopology`; `--five-minute-rollups`
   adds `analytics_5min` (lifecycle counters, the `participants.connected` gauge, bytes and quality per five minutes)
   inside the 5-minute rollup window. `analytics_daily` gets no TTL index: daily rollups are kept forever.
   `generate()` takes the same switches as `rollups: { fiveMinute, nodes, roomSums }` and `mediaNodes`.

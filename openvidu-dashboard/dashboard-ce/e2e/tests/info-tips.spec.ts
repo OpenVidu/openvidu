@@ -88,6 +88,33 @@ test('Analytics explains its terms and has no PRO divider', async ({ page }) => 
 	await page.keyboard.press('Escape');
 	// The summary tile and the chart of the Participants section.
 	await expect(page.getByRole('button', { name: 'About Participant sessions' })).toHaveCount(2);
+
+	const rooms = page
+		.locator('ovd-analytics-card')
+		.filter({ has: page.getByRole('heading', { level: 2, name: 'Rooms', exact: true }) });
+
+	await rooms.getByRole('button', { name: 'About Room topology' }).click();
+	await expect(tooltip(page)).toHaveText(
+		'Rooms ended in each bucket by their shape, from the most regular participants connected at once (N) and the most of them sending audio or video at once (P): Empty (N = 0), Single participant (N = 1), No publishers (P = 0), 1:1 (N = 2), 1:N (one sender, N ≥ 3) and N:M (several senders, N ≥ 3). A muted track counts once unmuted; agents, ingress and SIP participants do not count.'
+	);
+	await page.keyboard.press('Escape');
+	// The tile and the chart.
+	await expect(rooms.getByRole('button', { name: 'About Recorded rooms' })).toHaveCount(2);
+	await rooms.getByRole('button', { name: 'About Recorded rooms' }).first().click();
+	await expect(tooltip(page)).toHaveText(
+		'Share of the rooms ended in the range that were recorded: an egress with a file or HLS output started recording. Live streams and images alone do not count.'
+	);
+	await page.keyboard.press('Escape');
+	await rooms.getByRole('button', { name: 'About Recorded rooms' }).last().click();
+	await expect(tooltip(page)).toHaveText(
+		'Share of the rooms ended in each bucket that were recorded: an egress with a file or HLS output started recording. Live streams and images alone do not count.'
+	);
+	await page.keyboard.press('Escape');
+	await rooms.getByRole('button', { name: 'About Room size by topology' }).click();
+	await expect(tooltip(page)).toHaveText(
+		'Rooms ended in the range with several participants, by the most regular participants connected at once.'
+	);
+	await page.keyboard.press('Escape');
 });
 
 test.describe('touch', () => {

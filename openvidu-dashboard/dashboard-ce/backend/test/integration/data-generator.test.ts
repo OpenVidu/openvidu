@@ -1,12 +1,14 @@
 import { CONTRACT_SCHEMAS } from '@openvidu-dashboard/data-generator/contract';
 import { generate } from '@openvidu-dashboard/data-generator/generator';
 import { COLLECTION_NAMES, keepLive } from '@openvidu-dashboard/data-generator/schema';
-import type {
-	EgressDocument,
-	EventDocument,
-	HourlyRollupDocument,
-	IngressSessionDocument,
-	NodeDocument
+import {
+	type EgressDocument,
+	type EventDocument,
+	type HourlyRollupDocument,
+	type IngressSessionDocument,
+	type NodeDocument,
+	type RoomDocument,
+	RoomTopology
 } from '@openvidu-dashboard/typings';
 import { type Document, type Filter, MongoClient } from 'mongodb';
 import { afterAll, beforeAll, describe, expect, inject, it } from 'vitest';
@@ -471,6 +473,140 @@ describe.skipIf(mongoUri === '')('data generator', () => {
 		}
 	});
 
+	it('generates every room topology and counts it at room end with the room sums', async () => {
+		const db = client.db('dashboard_test_generator_topology');
+		await db.dropDatabase();
+
+		try {
+			await generate(db, {
+				scenario: 'S',
+				days: 7,
+				statsMode: 'participant',
+				seed: 1,
+				retentionDays: { events: 1, stats: 1, tracks: 7, entities: 90 },
+				timeseries: true,
+				rollups: { fiveMinute: false, nodes: true, roomSums: true },
+				mediaNodes: true
+			});
+
+			const rooms = await db.collection<RoomDocument>('rooms').find({ status: 'closed' }).toArray();
+			const byTopology = new Map<string, number>();
+
+			for (const room of rooms) {
+				const topology = room.topology ?? 'missing';
+				byTopology.set(topology, (byTopology.get(topology) ?? 0) + 1);
+				expect(topology, room._id).toBe(
+					expectedTopology(room.participants.peakActive, room.participants.peakPublishers ?? -1)
+				);
+			}
+
+			const ranked = [...byTopology.entries()].sort((a, b) => b[1] - a[1]).map(([topology]) => topology);
+
+			expect([...byTopology.keys()].sort()).toEqual(Object.values(RoomTopology).sort());
+			expect(ranked.slice(0, 2).sort()).toEqual(['many_to_many', 'one_to_one']);
+
+			// A room is recorded when one of its egresses has a file or segments output, all of which went active.
+			const recordingRooms = new Set(
+				(
+					(await db
+						.collection('egresses')
+						.distinct('roomSid', { 'outputs.kind': { $in: ['file', 'segments'] } })) as string[]
+				).filter(Boolean)
+			);
+			const allRooms = await db.collection<RoomDocument>('rooms').find().toArray();
+
+			for (const room of allRooms) {
+				expect(room.features.recording, room._id).toBe(recordingRooms.has(room._id));
+			}
+
+			for (const scope of [
+				'global',
+				...new Set(rooms.flatMap((room) => (room.mediaNode ? [room.mediaNode] : [])))
+			]) {
+				const ended = scope === 'global' ? rooms : rooms.filter((room) => room.mediaNode === scope);
+				const hours = await db
+					.collection<HourlyRollupDocument>('analytics_hourly')
+					.find({ scope: scope === 'global' ? 'global' : `node:${scope}` })
+					.toArray();
+				const counted = {
+					byTopology: {} as Record<string, number>,
+					recorded: 0,
+					sizes: {} as Record<string, number>
+				};
+
+				for (const hour of hours) {
+					for (const [topology, count] of Object.entries(hour.rooms?.byTopology ?? {})) {
+						counted.byTopology[topology] = (counted.byTopology[topology] ?? 0) + count;
+					}
+
+					counted.recorded += hour.rooms?.recorded ?? 0;
+
+					for (const [topology, ranges] of Object.entries(hour.rooms?.sizeByTopology ?? {})) {
+						for (const [range, count] of Object.entries(ranges)) {
+							counted.sizes[`${topology}.${range}`] =
+								(counted.sizes[`${topology}.${range}`] ?? 0) + count;
+						}
+					}
+				}
+
+				const expected = {
+					byTopology: {} as Record<string, number>,
+					recorded: 0,
+					sizes: {} as Record<string, number>
+				};
+
+				for (const room of ended) {
+					const topology = room.topology ?? 'missing';
+					expected.byTopology[topology] = (expected.byTopology[topology] ?? 0) + 1;
+					expected.recorded += room.features.recording === true ? 1 : 0;
+
+					if (['no_publishers', 'one_to_many', 'many_to_many'].includes(topology)) {
+						const key = `${topology}.${sizeRange(room.participants.peakActive)}`;
+						expected.sizes[key] = (expected.sizes[key] ?? 0) + 1;
+					}
+				}
+
+				expect(counted, scope).toEqual(expected);
+			}
+		} finally {
+			await db.dropDatabase();
+		}
+	});
+
+	it('leaves the topology counters out of the rollups without the room sums', async () => {
+		const db = client.db('dashboard_test_generator_no_room_sums');
+		await db.dropDatabase();
+
+		try {
+			await generate(db, {
+				scenario: 'S',
+				days: 1,
+				statsMode: 'participant',
+				seed: 7,
+				retentionDays: { events: 1, stats: 1, tracks: 7, entities: 90 },
+				timeseries: true,
+				rollups: { fiveMinute: false, nodes: false, roomSums: false }
+			});
+
+			for (const collection of ['analytics_hourly', 'analytics_daily']) {
+				expect(
+					await db.collection(collection).countDocuments({
+						$or: [
+							{ 'rooms.byTopology': { $exists: true } },
+							{ 'rooms.recorded': { $exists: true } },
+							{ 'rooms.sizeByTopology': { $exists: true } }
+						]
+					}),
+					collection
+				).toBe(0);
+			}
+
+			expect(await db.collection('rooms').countDocuments({ topology: { $exists: false } })).toBe(0);
+		} finally {
+			await db.dropDatabase();
+		}
+	});
+
 	it('marks every rollup as reported when every node reports media statistics', async () => {
 		const db = client.db('dashboard_test_generator_media_stats_reported');
 		await db.dropDatabase();
@@ -504,6 +640,40 @@ describe.skipIf(mongoUri === '')('data generator', () => {
 		}
 	});
 });
+
+/** The topology the writer gives a room of these peaks. */
+function expectedTopology(peakActive: number, peakPublishers: number): string {
+	if (peakActive === 0) {
+		return 'empty';
+	}
+
+	if (peakActive === 1) {
+		return 'single_participant';
+	}
+
+	if (peakPublishers === 0) {
+		return 'no_publishers';
+	}
+
+	if (peakActive === 2) {
+		return 'one_to_one';
+	}
+
+	return peakPublishers === 1 ? 'one_to_many' : 'many_to_many';
+}
+
+/** The size range of a room counted by size. */
+function sizeRange(peakActive: number): string {
+	const bounds: [number, string][] = [
+		[5, '2-5'],
+		[10, '6-10'],
+		[25, '11-25'],
+		[50, '26-50'],
+		[100, '51-100']
+	];
+
+	return bounds.find(([max]) => peakActive <= max)?.[1] ?? '101+';
+}
 
 /** Every key of a payload at any depth; BSON values such as `Long` are leaves. */
 function payloadKeys(value: unknown): string[] {

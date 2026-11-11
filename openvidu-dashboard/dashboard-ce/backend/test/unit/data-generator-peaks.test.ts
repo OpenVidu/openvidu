@@ -26,7 +26,9 @@ function room(sid: string, start: Date, end: Date, mediaNode?: string): Bundle {
 			endedAt: end,
 			durationMs: end.getTime() - start.getTime(),
 			endReason: 'API_DELETE',
-			participants: { sessions: 1 },
+			participants: { sessions: 1, peakActive: 1, peakPublishers: 0 },
+			topology: 'single_participant',
+			features: { recording: false },
 			...node
 		},
 		participants: [

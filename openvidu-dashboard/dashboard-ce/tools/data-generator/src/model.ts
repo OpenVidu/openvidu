@@ -18,6 +18,8 @@ export const SCENARIOS: Readonly<Record<ScenarioName, Scenario>> = {
 };
 
 export type ParticipantKind = 'STANDARD' | 'EGRESS' | 'INGRESS' | 'SIP' | 'AGENT';
+export type RoomTopology =
+	'empty' | 'single_participant' | 'no_publishers' | 'one_to_one' | 'one_to_many' | 'many_to_many';
 export type TrackSource = 'CAMERA' | 'MICROPHONE' | 'SCREEN_SHARE' | 'SCREEN_SHARE_AUDIO';
 export type EgressType = 'room_composite' | 'web' | 'participant' | 'track_composite' | 'track';
 export type EgressStatus = 'starting' | 'active' | 'ending' | 'complete' | 'failed' | 'aborted' | 'limit_reached';
@@ -43,9 +45,11 @@ export interface RoomDoc {
 		unique: number;
 		active: number;
 		peakActive: number;
+		peakPublishers: number;
 		aborted: number;
 		byKind: Record<ParticipantKind, number>;
 	};
+	topology: RoomTopology;
 	trackSids: string[];
 	tracks: { published: number; bySource: Partial<Record<TrackSource, number>> };
 	egressIds: string[];
@@ -54,7 +58,7 @@ export interface RoomDoc {
 	ingress: { sessions: number; active: number };
 	bytes: { up: Long; down: Long };
 	quality: { scoreSum: number; scoreCount: number; minScore: number | null; poor: number; lost: number };
-	features: { egress: boolean; ingress: boolean; agent: boolean; sip: boolean };
+	features: { egress: boolean; ingress: boolean; agent: boolean; sip: boolean; recording: boolean };
 	lastEventAt: Date;
 	lastStatsAt: Date | null;
 	/** Only `false`, on the rooms of a node without media statistics. */
@@ -283,6 +287,8 @@ export interface RoomBundle {
 
 export interface GeneratorContext {
 	rng: Rng;
+	/** Draws of the room shapes (empty rooms, media senders), apart from `rng` so that they leave the rest unchanged. */
+	shapeRng: Rng;
 	scenario: Scenario;
 	/** Generation instant (ms); nothing is dated after it. */
 	now: number;
@@ -306,6 +312,7 @@ export interface RoomPlan {
 
 const MINUTE = 60_000;
 const DEPARTURE_TIMEOUT_MS = 20_000;
+const EMPTY_TIMEOUT_MS = 300_000;
 const FLUSH_MS = 30_000;
 /** Score thresholds of the poor and lost quality samples (data model contract). */
 const POOR_SCORE = 2.06;
@@ -418,10 +425,12 @@ export function generateRoom(ctx: GeneratorContext, plan: RoomPlan): RoomBundle 
 	const nodeId =
 		picked === ctx.restart?.nodeId && plan.createdAt < ctx.restart.at ? ctx.restart.previousNodeId : picked;
 	const mediaNode = ctx.mediaNodes.get(nodeId);
-	const hasEgress = rng.chance(0.1);
-	const hasIngress = rng.chance(0.02);
-	const hasAgent = rng.chance(0.05);
-	const hasSip = rng.chance(0.01);
+	// Rooms created and never joined, as an application that prepares its rooms ahead does.
+	const empty = !plan.active && ctx.shapeRng.chance(0.03);
+	const hasEgress = rng.chance(0.3) && !empty;
+	const hasIngress = rng.chance(0.02) && !empty;
+	const hasAgent = rng.chance(0.05) && !empty;
+	const hasSip = rng.chance(0.01) && !empty;
 	const endReason = plan.active ? null : pickEndReason(rng);
 	const closedBy: 'event' | 'reconciler' | null = plan.active
 		? null
@@ -431,13 +440,14 @@ export function generateRoom(ctx: GeneratorContext, plan: RoomPlan): RoomBundle 
 
 	const base: RoomBase = { roomSid, roomName: name, nodeId, mediaNode, createdAt: plan.createdAt };
 	const sessions: Session[] = [];
-	const identityCount = Math.min(60, Math.max(1, rng.poisson(ctx.scenario.avgRoomSize)));
+	const drawnIdentities = Math.min(60, Math.max(1, rng.poisson(ctx.scenario.avgRoomSize)));
+	const identityCount = empty ? 0 : drawnIdentities;
 	const reconnects = rng.poisson(
 		Math.max(0, ctx.scenario.sessionsPerDay / ctx.scenario.roomsPerDay - ctx.scenario.avgRoomSize)
 	);
 	const reconnectsByIdentity = new Map<number, number>();
 
-	for (let i = 0; i < reconnects; i += 1) {
+	for (let i = 0; i < reconnects && identityCount > 0; i += 1) {
 		const target = rng.int(0, identityCount - 1);
 		reconnectsByIdentity.set(target, (reconnectsByIdentity.get(target) ?? 0) + 1);
 	}
@@ -520,8 +530,10 @@ export function generateRoom(ctx: GeneratorContext, plan: RoomPlan): RoomBundle 
 		);
 	}
 
-	// Natural end: the last participant leaves; API deletions and reconciliation move it.
-	const naturalEnd = Math.max(...sessions.map((s) => s.leftAt ?? now));
+	// Natural end: the last participant leaves, or the empty timeout of a room nobody joined; API deletions and
+	// reconciliation move it.
+	const naturalEnd =
+		sessions.length === 0 ? plan.createdAt + EMPTY_TIMEOUT_MS : Math.max(...sessions.map((s) => s.leftAt ?? now));
 	let endedAt: number | null = null;
 
 	if (!plan.active) {
@@ -553,6 +565,7 @@ export function generateRoom(ctx: GeneratorContext, plan: RoomPlan): RoomBundle 
 		);
 	}
 
+	const peakPublishers = pickSenders(ctx, sessions);
 	const tracks = sessions.flatMap((s) => s.tracks);
 	const subscriptions = buildSubscriptions(ctx, roomSid, sessions);
 	finalizeSessions(ctx, sessions);
@@ -592,7 +605,11 @@ export function generateRoom(ctx: GeneratorContext, plan: RoomPlan): RoomBundle 
 		byType[e.type] = (byType[e.type] ?? 0) + 1;
 	}
 
-	const lastEventAt = Math.max(endedAt ?? 0, ...sessions.map((s) => s.leftAt ?? s.doc.joinedAt.getTime()));
+	const lastEventAt = Math.max(
+		endedAt ?? plan.createdAt,
+		...sessions.map((s) => s.leftAt ?? s.doc.joinedAt.getTime())
+	);
+	const peakActive = peakConcurrency(sessions.filter((s) => s.doc.kind === 'STANDARD'));
 	const withoutMediaStats = ctx.withoutMediaStats.has(nodeId);
 	// Signal statistics keep flowing on a node without media statistics.
 	const flushed = scoreCount > 0 || (withoutMediaStats && sessions.some((s) => s.doc.status !== 'aborted'));
@@ -617,10 +634,12 @@ export function generateRoom(ctx: GeneratorContext, plan: RoomPlan): RoomBundle 
 			sessions: standard.length,
 			unique: new Set(standard.map((p) => p.identity)).size,
 			active: activeStandard.length,
-			peakActive: peakConcurrency(sessions.filter((s) => s.doc.kind === 'STANDARD')),
+			peakActive,
+			peakPublishers,
 			aborted: standard.filter((p) => p.status === 'aborted').length,
 			byKind
 		},
+		topology: roomTopology(peakActive, peakPublishers),
 		trackSids: tracks.map((t) => t._id),
 		tracks: { published: tracks.length, bySource },
 		egressIds: egresses.map((e) => e._id),
@@ -629,7 +648,13 @@ export function generateRoom(ctx: GeneratorContext, plan: RoomPlan): RoomBundle 
 		ingress: { sessions: ingressSessions.length, active: ingressSessions.filter((s) => s.endedAt === null).length },
 		bytes: { up: int64(up), down: int64(down) },
 		quality: { scoreSum: round2(scoreSum), scoreCount, minScore, poor, lost },
-		features: { egress: hasEgress, ingress: hasIngress, agent: hasAgent, sip: hasSip },
+		features: {
+			egress: hasEgress,
+			ingress: hasIngress,
+			agent: hasAgent,
+			sip: hasSip,
+			recording: egresses.some(isRecording)
+		},
 		lastEventAt: new Date(lastEventAt),
 		lastStatsAt: lastStatsAt === null ? null : new Date(lastStatsAt),
 		...(withoutMediaStats ? { mediaStats: false as const } : {}),
@@ -647,6 +672,111 @@ export function generateRoom(ctx: GeneratorContext, plan: RoomPlan): RoomBundle 
 		ingressSessions,
 		meanScores: new Map(sessions.map((s) => [s.doc._id, s.meanScore]))
 	};
+}
+
+/** Class of a room from its most STANDARD sessions active at once and the most of them sending media at once. */
+export function roomTopology(peakActive: number, peakPublishers: number): RoomTopology {
+	if (peakActive === 0) {
+		return 'empty';
+	}
+
+	if (peakActive === 1) {
+		return 'single_participant';
+	}
+
+	if (peakPublishers === 0) {
+		return 'no_publishers';
+	}
+
+	if (peakActive === 2) {
+		return 'one_to_one';
+	}
+
+	return peakPublishers === 1 ? 'one_to_many' : 'many_to_many';
+}
+
+/** Size range of a room counted by size, from its most STANDARD sessions active at once. */
+export function roomSizeRange(peakActive: number): string {
+	const ranges: readonly (readonly [number, string])[] = [
+		[5, '2-5'],
+		[10, '6-10'],
+		[25, '11-25'],
+		[50, '26-50'],
+		[100, '51-100']
+	];
+
+	return ranges.find(([max]) => peakActive <= max)?.[1] ?? '101+';
+}
+
+/** An egress with a file or segments output that went active, as every generated egress does. */
+function isRecording(egress: EgressDoc): boolean {
+	return (
+		egress.outputs.some((output) => output.kind === 'file' || output.kind === 'segments') &&
+		egress.statusHistory.some((entry) => entry.status === 'active')
+	);
+}
+
+/**
+ * Picks which STANDARD participants send media, by the shape the room's size allows, as the writer reads them: a
+ * sender publishes at least one unmuted track, any other publishes nothing or tracks muted for good, as OpenVidu Meet
+ * does with the devices turned off. Returns the most senders active at once.
+ */
+function pickSenders(ctx: GeneratorContext, sessions: readonly Session[]): number {
+	const { shapeRng } = ctx;
+	const standard = sessions.filter((s) => s.doc.kind === 'STANDARD' && s.doc.status !== 'aborted');
+	const publishing = [...new Set(standard.filter((s) => s.tracks.length > 0).map((s) => s.doc.identity))];
+	const [host, ...others] = publishing;
+	const size = peakConcurrency(standard);
+	const senders = new Set<string>();
+	const shape = shapeRng.next();
+
+	if (host !== undefined && (size <= 1 ? shape < 0.85 : shape >= 0.05)) {
+		senders.add(host);
+
+		// 1:1 rooms with two senders, and N:M rooms beside the 1:N ones.
+		if (size === 2 || shape >= 0.12) {
+			for (const identity of others) {
+				if (shapeRng.chance(0.7)) {
+					senders.add(identity);
+				}
+			}
+		}
+	}
+
+	const intervals: [number, number][] = [];
+
+	for (const session of standard) {
+		const sends = senders.has(session.doc.identity);
+
+		for (const [index, track] of session.tracks.entries()) {
+			track.muted = sends ? index > 0 && track.muted : true;
+		}
+
+		if (sends && session.tracks[0] !== undefined) {
+			intervals.push([session.tracks[0].publishedAt.getTime(), session.leftAt ?? Number.MAX_SAFE_INTEGER]);
+		}
+	}
+
+	return peakOf(intervals);
+}
+
+/** Most intervals open at once. */
+function peakOf(intervals: readonly [number, number][]): number {
+	const edges = intervals.flatMap(([start, end]): [number, number][] => [
+		[start, 1],
+		[end, -1]
+	]);
+
+	edges.sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+	let current = 0;
+	let peak = 0;
+
+	for (const [, delta] of edges) {
+		current += delta;
+		peak = Math.max(peak, current);
+	}
+
+	return peak;
 }
 
 export function isEgressActive(status: EgressStatus): boolean {

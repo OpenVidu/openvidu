@@ -227,16 +227,45 @@ describe.skipIf(mongoUri === '')('analytics API', () => {
 			expect(values(hourly, 'ingressSessions').slice(-4)).toEqual([0, 1, 1, 1]);
 		});
 
+		it('serves the room topology classes and the recorded share hourly', async () => {
+			await seedRollups(ce, {
+				analytics_hourly: [
+					rollup(hour - 3 * HOUR, {
+						rooms: { ended: 4, byTopology: { one_to_one: 3, many_to_many: 1 }, recorded: 1 }
+					}),
+					rollup(hour - 2 * HOUR, { rooms: { ended: 2, byTopology: { many_to_many: 2 } } }),
+					rollup(hour - HOUR, { rooms: { ended: 3 } })
+				]
+			});
+
+			const response = await json<AnalyticsSeriesResponse>(
+				ce,
+				`/analytics/series?metrics=roomsByTopology,recordedRoomsRate&granularity=1h&from=${iso(hour - DAY)}&to=${iso(hour)}`
+			);
+
+			expect(analyticsSeriesResponse.parse(response)).toEqual(response);
+			expect(response.series.map((series) => [series.name, series.points.length])).toEqual([
+				['roomsByTopology.many_to_many', 24],
+				['roomsByTopology.one_to_one', 24],
+				['recordedRoomsRate', 24]
+			]);
+			expect(values(response, 'roomsByTopology.many_to_many').slice(-3)).toEqual([1, 2, 0]);
+			expect(values(response, 'roomsByTopology.one_to_one').slice(-3)).toEqual([3, 0, 0]);
+			expect(values(response, 'recordedRoomsRate').slice(-4)).toEqual([null, 25, 0, null]);
+		});
+
 		it('accepts every CE metric', async () => {
 			await seedRollups(ce, {});
 
-			expect(ANALYTICS_CE_METRICS).toHaveLength(22);
+			expect(ANALYTICS_CE_METRICS).toHaveLength(24);
 			expect(ANALYTICS_CE_METRICS).toEqual(
 				expect.arrayContaining([
 					'roomsPeakActive',
 					'participantsPeakActive',
 					'egressPeakActive',
-					'ingressPeakActive'
+					'ingressPeakActive',
+					'roomsByTopology',
+					'recordedRoomsRate'
 				])
 			);
 
@@ -258,6 +287,11 @@ describe.skipIf(mongoUri === '')('analytics API', () => {
 				'metrics=ingressPeakActive&granularity=5m',
 				['metrics'],
 				'ingressPeakActive requires a granularity of at least 1h'
+			],
+			[
+				'metrics=roomsPeakActive,roomsByTopology',
+				['metrics'],
+				'roomsByTopology requires a granularity of at least 1h'
 			],
 			['metrics=bytesUp&scope=node:', ['scope'], 'must be global or node:<id>']
 		])('rejects %s', async (query, path, message) => {
@@ -306,7 +340,14 @@ describe.skipIf(mongoUri === '')('analytics API', () => {
 			await seedRollups(ce, {
 				analytics_hourly: [
 					rollup(hour - 2 * HOUR, {
-						rooms: { created: 120, ended: 110, participantsSum: 440, durationMsSum: 39_600_000 },
+						rooms: {
+							created: 120,
+							ended: 110,
+							participantsSum: 440,
+							durationMsSum: 39_600_000,
+							byTopology: { one_to_one: 50, many_to_many: 30, one_to_many: 10, single_participant: 8 },
+							recorded: 49
+						},
 						participants: { joined: 900, active: 880 },
 						ingress: {
 							sessionsStarted: 12,
@@ -336,6 +377,8 @@ describe.skipIf(mongoUri === '')('analytics API', () => {
 				apiErrorRate: 1,
 				avgRoomSize: 4,
 				avgRoomDurationMs: 360_000,
+				roomsRecorded: 49,
+				recordedRoomsRate: 50,
 				uniqueIdentities: { value: 310, basis: 'utcDays', days: 3 },
 				ingressSessions: 12,
 				ingressDurationMs: 21_600_000
@@ -382,6 +425,8 @@ describe.skipIf(mongoUri === '')('analytics API', () => {
 			expect(summary.from).toMatch(/T00:00:00\.000Z$/);
 			expect(summary).not.toHaveProperty('avgRoomSize');
 			expect(summary).not.toHaveProperty('avgRoomDurationMs');
+			expect(summary).not.toHaveProperty('roomsRecorded');
+			expect(summary).not.toHaveProperty('recordedRoomsRate');
 		});
 	});
 
@@ -491,11 +536,15 @@ describe.skipIf(mongoUri === '')('analytics API', () => {
 					'roomsPeakActive',
 					'participantsPeakActive',
 					'egressPeakActive',
-					'ingressPeakActive'
+					'ingressPeakActive',
+					'roomsByTopology',
+					'recordedRoomsRate'
 				]) {
 					expect(text).toContain(`"${metric}"`);
 				}
 			}
+
+			expect(exported).toContain('"roomSizeOneToMany"');
 
 			expect(document).toContain('only available for the global scope');
 		});
@@ -531,6 +580,37 @@ describe.skipIf(mongoUri === '')('analytics API', () => {
 			);
 			expect(lines.at(-4)).toBe(`${iso(hour - 3 * HOUR)},1200,2`);
 			expect(lines.at(-3)).toBe(`${iso(hour - 2 * HOUR)},300,0`);
+		});
+
+		it('exports one column per stored room topology and the room size breakdowns', async () => {
+			await seedRollups(ce, {
+				analytics_hourly: [
+					rollup(hour - 2 * HOUR, {
+						rooms: {
+							byTopology: { one_to_one: 2, one_to_many: 1 },
+							recorded: 1,
+							sizeByTopology: { one_to_many: { '26-50': 1 } }
+						}
+					})
+				]
+			});
+
+			const query = `metrics=roomsByTopology,recordedRoomsRate&granularity=1h&from=${iso(hour - DAY)}&to=${iso(hour)}`;
+			const series = (await (await get(ce, `/analytics/export.csv?kind=series&${query}`)).text()).split('\r\n');
+
+			expect(series[0]).toBe('bucket,roomsByTopology.one_to_many,roomsByTopology.one_to_one,recordedRoomsRate');
+			expect(series.at(-3)).toBe(`${iso(hour - 2 * HOUR)},1,2,33.3`);
+
+			const breakdowns = (
+				await (
+					await get(
+						ce,
+						`/analytics/export.csv?kind=breakdowns&dimensions=roomSizeOneToMany,roomSizeManyToMany&from=${iso(hour - DAY)}&to=${iso(hour)}`
+					)
+				).text()
+			).split('\r\n');
+
+			expect(breakdowns.slice(0, 2)).toEqual(['dimension,key,count,percent', 'roomSizeOneToMany,26-50,1,100']);
 		});
 
 		it('exports a missing peak as an empty cell', async () => {
