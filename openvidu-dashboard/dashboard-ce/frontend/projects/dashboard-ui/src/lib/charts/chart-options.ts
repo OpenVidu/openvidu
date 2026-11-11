@@ -444,9 +444,21 @@ export function breakdownOption(options: BreakdownOptions): EChartsCoreOption {
 	const color = chartColors(entries.map(entity), colors);
 
 	if (options.variant === 'bar') {
+		const label = (value: number): string =>
+			`${formatValue(value, options.format)} (${formatPercent(total > 0 ? value / total : 0)})`;
+		// Room on the right for the longest direct label: about 7 px per character of the 12 px label font.
+		const labelWidth = Math.max(0, ...entries.map((entry) => label(entry.value).length)) * 7;
+
 		return {
 			animation: options.animation,
-			grid: { left: 8, right: 48, top: 8, bottom: 8, outerBoundsMode: 'same', outerBoundsContain: 'axisLabel' },
+			grid: {
+				left: 8,
+				right: Math.max(48, labelWidth + 8),
+				top: 8,
+				bottom: 8,
+				outerBoundsMode: 'same',
+				outerBoundsContain: 'axisLabel'
+			},
 			tooltip: {
 				trigger: 'item',
 				valueFormatter: (value: unknown) => formatValue(Number(value), options.format)
@@ -466,8 +478,7 @@ export function breakdownOption(options: BreakdownOptions): EChartsCoreOption {
 						show: true,
 						position: 'right',
 						color: colors.text,
-						formatter: (params: { value: number }) =>
-							`${formatValue(params.value, options.format)} (${formatPercent(total > 0 ? params.value / total : 0)})`
+						formatter: (params: { value: number }) => label(params.value)
 					}
 				}
 			]

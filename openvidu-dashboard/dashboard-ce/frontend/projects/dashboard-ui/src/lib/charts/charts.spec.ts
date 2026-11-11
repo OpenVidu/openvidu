@@ -529,6 +529,7 @@ describe('ordered BreakdownChart', () => {
 			animation: false,
 			ordered: true
 		}) as {
+			grid: { right: number };
 			yAxis: { data: string[] };
 			series: {
 				data: { value: number; itemStyle: { color: string } }[];
@@ -538,6 +539,8 @@ describe('ordered BreakdownChart', () => {
 		const [series] = option.series;
 
 		expect(option.yAxis.data).toEqual(['0-5', '6-10', '11-25']);
+		// "40 (83.3 %)" is 11 characters: the plot stops short of it.
+		expect(option.grid.right).toBe(85);
 		expect(series?.data.map((item) => item.itemStyle.color)).toEqual(['#0088aa', '#0088aa', '#0088aa']);
 		expect(series?.data.map((item) => series.label.formatter({ value: item.value }))).toEqual([
 			'40 (83.3 %)',

@@ -145,9 +145,9 @@
 
 ## 6. PRO edition
 
-- [ ] 6.1 Move `ce.ref` to the CE commit of this change. Verify: PRO `./dashboard.sh check`, and the PRO Analytics
+- [x] 6.1 Move `ce.ref` to the CE commit of this change. Verify: PRO `./dashboard.sh check`, and the PRO Analytics
       card tests with the Rooms section of five charts in two grids.
-- [ ] 6.2 PRO integration test for the "Node scope" scenario of the room topology and size dimensions, and the
+- [x] 6.2 PRO integration test for the "Node scope" scenario of the room topology and size dimensions, and the
       node-scope series of `recordedRoomsRate`. Verify: PRO `./dashboard.sh test-integration` and
       `./dashboard.sh e2e`.
 
