@@ -527,7 +527,8 @@ export function stackedCategoryOption(options: StackedCategoryOptions): EChartsC
 		animation: options.animation,
 		aria: { enabled: false },
 		grid: { left: 8, right: 16, top: 32, bottom: 8, outerBoundsMode: 'same', outerBoundsContain: 'axisLabel' },
-		legend: { top: 0, left: 0, textStyle: { color: colors.text } },
+		// The legend of the time series, so that a card's charts name their series alike.
+		legend: { top: 0, left: 0, textStyle: { color: colors.text }, icon: 'roundRect', itemHeight: 4 },
 		tooltip: {
 			trigger: 'axis',
 			axisPointer: { type: 'shadow' },

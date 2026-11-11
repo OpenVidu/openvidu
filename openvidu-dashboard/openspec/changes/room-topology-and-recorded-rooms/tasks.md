@@ -145,28 +145,28 @@
 
 ## 6. PRO edition
 
-- [ ] 6.1 Move `ce.ref` to the CE commit of this change. Verify: PRO `./dashboard.sh check`, and the PRO Analytics
+- [x] 6.1 Move `ce.ref` to the CE commit of this change. Verify: PRO `./dashboard.sh check`, and the PRO Analytics
       card tests with the Rooms section of five charts.
-- [ ] 6.2 PRO integration test for the "Node scope" scenario of the size dimensions, and the node-scope series of
+- [x] 6.2 PRO integration test for the "Node scope" scenario of the size dimensions, and the node-scope series of
       `roomsByTopology` and `recordedRoomsRate`. Verify: PRO `./dashboard.sh test-integration` and
       `./dashboard.sh e2e`.
 
 ## 7. Final verification
 
-- [ ] 7.1 CE: `./dashboard.sh check`, `./dashboard.sh test-integration`, `./dashboard.sh e2e` and
+- [x] 7.1 CE: `./dashboard.sh check`, `./dashboard.sh test-integration`, `./dashboard.sh e2e` and
       `./dashboard.sh contract-check` against the writer branch, all green; `openspec validate
       room-topology-and-recorded-rooms --strict` green.
-- [ ] 7.2 Manual check on `./dashboard.sh demo both`:
+- [x] 7.2 Manual check on `./dashboard.sh demo both`:
       - CE and PRO over 24 h, 7 d at 6 h and 30 d at 1 d, in light and dark, at 1440 px and 1920 px;
       - the Recorded rooms tile, the three charts, their colours and notes;
       - the CSV of the Rooms card;
       - a PRO node scope.
-- [ ] 7.3 Manual check against a local CE server built from the writer branch:
+- [x] 7.3 Manual check against a local CE server built from the writer branch:
       - an OpenVidu Meet meeting of three in which one speaks reads 1:N;
       - once a second participant unmutes, it reads N:M;
       - after ending it with a recording, the hourly rollup counts it once as recorded;
       - a room left without a recording is not counted as recorded.
-- [ ] 7.4 PRO fork (openvidu-pro-livekit), after merging the writer change: its analytics tests pass. Verify: the
+- [x] 7.4 PRO fork (openvidu-pro-livekit), after merging the writer change: its analytics tests pass. Verify: the
       fork's analytics unit and integration tests.
 
 ## Workflow follow-up
