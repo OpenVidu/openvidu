@@ -7,11 +7,13 @@
 
 ## 2. Badges
 
-- [x] 2.1 `KindBadge` (D2): the dot in `entityColor(kind)`, the neutral background and the optional `tooltip` and
+- [x] 2.1 `KindBadge` (D2): the dot in `entityColor(kind)`, the outline with no fill and the optional `tooltip` and
       `label`. Verify: `badges.spec.ts` "Agent participant", "Main kinds", "Unknown kind", "Named kind" and "Label given
       by the page".
 - [x] 2.2 `StatusBadge` (D3): the optional `subject` and `icon`. Verify: `badges.spec.ts` "Reconciler-closed room",
       "Named status", "Named estimated status" and "Icon given by the page".
+- [x] 2.3 The light neutral status container (D4). Verify: `tokens.spec.ts` "sets the neutral status container apart
+      from a hovered row" in both schemes.
 
 ## 3. Lists and e2e
 

@@ -127,8 +127,8 @@ queried) and `Deployment` (running the service). One line per observable change,
   their rows while they refresh and show skeletons only before their first data.
 - Enum values read as friendly labels, durations count up live and charts update in place; every time-series chart
   names its bucket and time zone.
-- Status, live and kind tags share one height, and the kind, type and input tags of the lists carry the colour of
-  their Analytics charts.
+- Status, live and kind tags share one height and stand out on a hovered row, and the kind, type and input tags of the
+  lists carry the colour of their Analytics charts.
 - Light and dark themes meet WCAG AA, with self-hosted fonts and icons.
 - The list tiles say which figures are current ("active now") and which follow the range ("in range"), current ones
   first.

@@ -23,7 +23,7 @@ See proposal.md for the motivation. Current state of `projects/dashboard-ui/src/
 - The kind colours of Analytics wherever a kind, type or input type is shown.
 
 **Non-Goals:**
-- Changing the status colours or icons of the CE domains.
+- Changing the status families or icons of the CE domains.
 - Tooltips in lists.
 
 ## Decisions
@@ -48,8 +48,10 @@ Rejected alternatives:
 ### D2. Kind badge colour
 
 - The badge computes `entityColor(kind, colors)` from `ChartColorsService`, the key the Analytics breakdowns use.
-- It draws an 8 px dot before the label, on the neutral `surface-container-high` background with the `on-surface`
-  text, so the text contrast does not depend on the palette.
+- It draws an 8 px dot before the label, with the `on-surface` text, so the text contrast does not depend on the
+  palette.
+- It has no fill and a 1 px `outline-variant` border: a hovered table row takes `surface-container-high`, the grey a
+  filled tag would use, and the border keeps the tag's shape on that row as on a card or a page header.
 - A key the Analytics charts move to a free slot (an unknown one) can differ from its chart: unknown keys are rare and
   keep their label.
 - A `tooltip` input sets a Material tooltip and makes the badge focusable, with the tooltip in its accessible name.
@@ -61,6 +63,17 @@ Rejected alternatives:
 - `subject` (optional): the tooltip is `subject`, or `subject · <estimate or hint>`. Without a subject the tooltip is
   unchanged.
 - `icon` (optional): replaces the icon of the status style.
+
+### D4. Neutral status container
+
+- The light neutral container (`--ovd-status-neutral-bg`) goes from `#e0e5e8` to `#d0d8dc`, a step darker than the
+  hovered row (`#e0e7ea`); its text keeps 6.5:1. The dark one (`#30383b` on `#252b2e`) already stands apart.
+- The theme token test checks a minimum luminance ratio of 1.1 between the neutral container and
+  `surface-container-high` in both themes. The coloured families stand apart by hue and need no such check.
+
+Rejected alternatives:
+- **Another row hover colour.** Any grey between the surface and the tags' greys leaves one of them too close, and the
+  hover is shared by every table.
 
 ## Risks / Trade-offs
 

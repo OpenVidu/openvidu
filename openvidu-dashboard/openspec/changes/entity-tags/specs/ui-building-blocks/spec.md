@@ -9,7 +9,7 @@ red, aborted orange, starting/pending blue, idle neutral. The label keeps the lo
 `estimated` flag adds a dotted outline and the tooltip "Closed by the reconciler: the end time is estimated". Colour is
 never the only cue. A page MAY name what the badge shows: its tooltip then starts with that name, followed by the
 estimate or the hint after " · " when there is one. A page MAY give a status its own icon where its meaning depends on
-the entity.
+the entity. The neutral container SHALL stand apart from the grey of a hovered list row in both themes.
 
 #### Scenario: Reconciler-closed room
 - **GIVEN** a room with status closed and `closedBy=reconciler`
@@ -20,6 +20,11 @@ the entity.
 - **GIVEN** an ingress with status `inactive`
 - **WHEN** the badge renders
 - **THEN** it reads "idle" in the neutral colours
+
+#### Scenario: Closed room on a hovered row
+- **GIVEN** a closed room in the Rooms list, in the light theme
+- **WHEN** the user hovers its row
+- **THEN** the status badge keeps a container darker than the row
 
 #### Scenario: Named status
 - **GIVEN** a badge of an active room named "Room status", without hint
@@ -37,8 +42,8 @@ the entity.
 - **THEN** it shows `mic_off` in the colours of its status
 
 ### Requirement: Kind badge
-Edition: CE. The kind badge SHALL render participant kinds, egress types and ingress input types as tags with a dot in
-the value's colour of the Analytics charts and the label in text: the value's friendly label, such as "Agent", "Room
+Edition: CE. The kind badge SHALL render participant kinds, egress types and ingress input types as outlined tags with
+no fill, a dot in the value's colour of the Analytics charts and the label in text: the value's friendly label, such as "Agent", "Room
 composite" or "RTMP", or the raw value when the dashboard has no label for it. Colour is never the only cue. A page MAY
 give it a more precise label of the same value and a tooltip naming what it shows; lists give neither.
 
@@ -51,6 +56,11 @@ give it a more precise label of the same value and a tooltip naming what it show
 - **GIVEN** a `STANDARD` participant, a `room_composite` egress and an `rtmp` ingress in their lists
 - **WHEN** their badges render
 - **THEN** their dots take the Participants, Egress and Ingress section colours, and none of them has a tooltip
+
+#### Scenario: Kind on a hovered row
+- **GIVEN** an egress row of the Egress list with the type Room composite
+- **WHEN** the user hovers the row
+- **THEN** the type badge keeps its outline over the row's hover colour
 
 #### Scenario: Unknown kind
 - **GIVEN** an egress type `new_type` the dashboard has no label for

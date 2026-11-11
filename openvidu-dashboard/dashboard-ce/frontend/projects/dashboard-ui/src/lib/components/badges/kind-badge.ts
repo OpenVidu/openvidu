@@ -34,7 +34,7 @@ const KIND_LABELS: Readonly<Record<string, string>> = {
 
 		.kind {
 			gap: 6px;
-			background: var(--mat-sys-surface-container-high);
+			border-color: var(--mat-sys-outline-variant);
 			color: var(--mat-sys-on-surface);
 		}
 

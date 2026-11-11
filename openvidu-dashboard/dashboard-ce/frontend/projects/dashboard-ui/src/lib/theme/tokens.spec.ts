@@ -21,6 +21,8 @@ type Scheme = 'light' | 'dark';
 
 const TEXT = 4.5;
 const UI = 3;
+/** Smallest step that keeps a grey tag visible on a grey row; the coloured families differ by hue. */
+const GREY_ON_GREY = 1.1;
 
 /** Foreground, background and minimum ratio of every pair the theme promises. */
 const PAIRS: [string, string, number][] = [
@@ -101,6 +103,16 @@ describe('theme tokens', () => {
 
 		expect(failures).toEqual([]);
 	});
+
+	it.each(['light', 'dark'] as const)(
+		'sets the neutral status container apart from a hovered row in the %s scheme',
+		(scheme) => {
+			const neutral = tokens.get('--ovd-status-neutral-bg')?.[scheme] ?? '';
+			const hover = tokens.get('--mat-sys-surface-container-high')?.[scheme] ?? '';
+
+			expect(contrast(neutral, hover)).toBeGreaterThanOrEqual(GREY_ON_GREY);
+		}
+	);
 
 	it('uses the OpenVidu palette values for the key tokens', () => {
 		expect(tokens.get('--mat-sys-primary')).toEqual({ light: '#006b86', dark: '#5fd4fb' });
