@@ -148,20 +148,70 @@ never the only cue.
 - **WHEN** the badge renders
 - **THEN** it reads "idle" in the neutral colours
 
+### Requirement: Status badge name and icon
+Edition: CE. The status badge SHALL take from its page an optional name of what it shows, which then starts its tooltip,
+followed by the estimate or the hint after " · " when there is one, and an optional icon for a status whose meaning
+depends on the entity.
+
+#### Scenario: Named status
+- **GIVEN** a badge of an active room named "Room status", without hint
+- **WHEN** the user hovers or focuses it
+- **THEN** the tooltip reads "Room status"
+
+#### Scenario: Named estimated status
+- **GIVEN** a badge named "Room status" of a room closed by the reconciler
+- **WHEN** the user hovers or focuses it
+- **THEN** the tooltip reads "Room status · Closed by the reconciler: the end time is estimated"
+
+#### Scenario: Icon given by the page
+- **GIVEN** a status badge whose page gives it the icon `mic_off`
+- **WHEN** it renders
+- **THEN** it shows `mic_off` in the colours of its status
+
+### Requirement: Neutral status container
+Edition: CE. The neutral container of the status badge SHALL stand apart from the grey of a hovered list row in both
+themes.
+
+#### Scenario: Closed room on a hovered row
+- **GIVEN** a closed room in the Rooms list, in the light theme
+- **WHEN** the user hovers its row
+- **THEN** the status badge keeps a container darker than the row
+
 ### Requirement: Kind badge
-Edition: CE. The kind badge SHALL render participant kinds, egress types and ingress input types as outlined chips with
-neutral colours and the label in text: the value's friendly label, such as "Agent", "Room composite" or "RTMP", or the
-raw value when the dashboard has no label for it.
+Edition: CE. The kind badge SHALL render participant kinds, egress types and ingress input types as outlined tags with
+no fill, a dot in the value's colour of the Analytics charts and the label in text: the value's friendly label, such as "Agent", "Room
+composite" or "RTMP", or the raw value when the dashboard has no label for it. Colour is never the only cue. A page MAY
+give it a more precise label of the same value and a tooltip naming what it shows; lists give neither.
 
 #### Scenario: Agent participant
 - **GIVEN** a participant of kind `AGENT`
 - **WHEN** the badge renders
-- **THEN** it reads "Agent" as an outlined chip
+- **THEN** it reads "Agent" with a dot in the colour of Agent in the Participant kind chart
+
+#### Scenario: Main kinds
+- **GIVEN** a `STANDARD` participant, a `room_composite` egress and an `rtmp` ingress in their lists
+- **WHEN** their badges render
+- **THEN** their dots take the Participants, Egress and Ingress section colours, and none of them has a tooltip
+
+#### Scenario: Kind on a hovered row
+- **GIVEN** an egress row of the Egress list with the type Room composite
+- **WHEN** the user hovers the row
+- **THEN** the type badge keeps its outline over the row's hover colour
 
 #### Scenario: Unknown kind
 - **GIVEN** an egress type `new_type` the dashboard has no label for
 - **WHEN** the badge renders
-- **THEN** it reads `new_type`
+- **THEN** it reads `new_type` with a dot in a palette colour
+
+#### Scenario: Named kind
+- **GIVEN** a kind badge of an `AGENT` participant named "Participant kind"
+- **WHEN** the user hovers or focuses it
+- **THEN** the tooltip reads "Participant kind"
+
+#### Scenario: Label given by the page
+- **GIVEN** a kind badge of a `url` ingress whose page gives it the label "URL (RTSP)"
+- **WHEN** it renders
+- **THEN** it reads "URL (RTSP)" with the dot of `url`
 
 ### Requirement: KPI tile
 
@@ -1102,3 +1152,22 @@ tooltip or "Show table" action.
 - **WHEN** it renders
 - **THEN** its heading is dimmed within the text contrast minimum, an empty ring is drawn over hatching, and it shows no
   slice, legend, label, tooltip on hover or "Show table" action
+
+### Requirement: Tags
+Edition: CE. The status badge, the live chip, the kind badge and the chips an edition shows beside them SHALL share one
+tag style: 24 px high, the content centred, one corner radius and the label font, in every state, so that tags side by
+side line up whatever they hold.
+
+#### Scenario: List row
+- **GIVEN** an egress row of the Egress list with the status "active" and the type Room composite
+- **WHEN** the row renders in the table or as a card
+- **THEN** the status badge and the type badge are 24 px high
+
+#### Scenario: Live chip states
+- **WHEN** the live chip reads "LIVE", "paused" or "stale"
+- **THEN** it is 24 px high, as a status badge beside it
+
+#### Scenario: Chip of an edition
+- **GIVEN** an edition chip styled as a tag, with an icon and a label
+- **WHEN** it renders beside a status badge
+- **THEN** both are 24 px high and their labels share one baseline
