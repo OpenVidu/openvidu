@@ -209,3 +209,15 @@ URL asking for one of them SHALL fall back silently to Joined descending. Joined
 - **GIVEN** `/participants?sort=duration&from=now-7d&to=now`
 - **WHEN** the page loads
 - **THEN** no error is shown, the list request carries `sort=joinedAt` and the table is sorted by Joined descending
+
+### Requirement: Participants CSV export
+
+Edition: CE. The Participants table SHALL offer "Export CSV", which downloads `GET /api/v1/participants/export.csv`
+with the parameters of the list request it shows (range, `q`, `kind`, `status`, `room`, `publisher`, `sort` and
+`order`), without `cursor` and `limit`, and saves `participants-<from>-<to>.csv`.
+
+#### Scenario: Default kind
+
+- **GIVEN** `/participants?status=left&room=RM_abc` without `kind`
+- **WHEN** the user clicks "Export CSV"
+- **THEN** the request carries `kind=STANDARD`, `status=left` and `room=RM_abc`, as the list request does

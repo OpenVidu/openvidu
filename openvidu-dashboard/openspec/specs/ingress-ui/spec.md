@@ -342,3 +342,15 @@ sort by <column>"; Created SHALL stay sortable for any range.
 - **WHEN** the user hovers or focuses the Sessions header
 - **THEN** the header is disabled and its tooltip reads "Narrow the range to <n> to sort by Sessions", with <n>
   naming the 7-day limit, while the Created header toggles the order
+
+### Requirement: Ingress CSV export
+
+Edition: CE. The Ingress table SHALL offer "Export CSV", which downloads `GET /api/v1/ingresses/export.csv` with the
+parameters of the list request it shows (range, `status`, `inputType`, `q`, `sort` and `order`), without `cursor` and
+`limit`, and saves `ingresses-<from>-<to>.csv`.
+
+#### Scenario: Ingresses by sessions
+
+- **GIVEN** `/ingress?inputType=whip&sort=sessions`
+- **WHEN** the user clicks "Export CSV"
+- **THEN** the request carries `inputType=whip` and `sort=sessions`, and neither `cursor` nor `limit`
