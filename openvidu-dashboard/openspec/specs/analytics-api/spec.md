@@ -37,7 +37,7 @@ SHALL be rejected with `400`.
 
 ### Requirement: Metric catalogue and fill values
 
-Edition: CE. The CE metrics SHALL be the twenty-two of the "CE metrics" scenario; counters and sums fill empty buckets
+Edition: CE. The CE metrics SHALL be the twenty-three of the "CE metrics" scenario; counters and sums fill empty buckets
 with `0`, rates and averages with `null`, and peaks with `null` in a bucket without a sample. Participant figures
 count STANDARD sessions only, except the `kind` breakdown. `ingressSessions` SHALL sum the rollups'
 `ingress.sessionsStarted` and `ingressDurationMs` their `ingress.durationMs`.
@@ -74,7 +74,8 @@ count STANDARD sessions only, except the `kind` breakdown. `ingressSessions` SHA
 - **THEN** the metrics it can request are `roomsCreated`, `roomsEnded`, `roomsPeakActive`, `participantsJoined`,
   `participantsActive`, `participantsAborted`, `participantsPeakActive`, `connectionSuccessRate`, `uniqueIdentities`,
   `participantMinutes`, `tracksPublished`, `egressStarted`, `egressEnded`, `egressDurationMs`, `egressPeakActive`,
-  `ingressSessions`, `ingressDurationMs`, `ingressPeakActive`, `bytesUp`, `bytesDown`, `apiCalls` and `apiErrors`
+  `ingressSessions`, `ingressDurationMs`, `ingressPeakActive`, `recordedRoomsRate`, `bytesUp`,
+  `bytesDown`, `apiCalls` and `apiErrors`
 
 #### Scenario: Peaks at five minutes
 
@@ -142,7 +143,8 @@ inside the 5-minute rollup retention. `auto` SHALL resolve to `5m` (≤ 24 h ins
 ### Requirement: Hourly-only metrics
 
 Edition: CE. `participantMinutes`, `tracksPublished`, `egressEnded`, `egressDurationMs`, `ingressSessions`,
-`ingressDurationMs`, `ingressPeakActive`, `apiCalls` and `apiErrors` SHALL be served only at `1h` or coarser; a request
+`ingressDurationMs`, `ingressPeakActive`, `recordedRoomsRate`, `apiCalls` and `apiErrors` SHALL
+be served only at `1h` or coarser; a request
 for any of them with an explicit or resolved granularity below `1h` SHALL be rejected with `400` naming the metric and
 the granularity.
 
@@ -156,6 +158,11 @@ the granularity.
 
 - **WHEN** the client requests `metrics=ingressPeakActive` with `granularity=5m`
 - **THEN** the response is `400` with code `VALIDATION_ERROR` naming `ingressPeakActive` and `5m`
+
+#### Scenario: Recorded rooms rate at five minutes
+
+- **WHEN** the client requests `metrics=roomsPeakActive,recordedRoomsRate` with `granularity=auto` over 24 h
+- **THEN** the response is `400` with code `VALIDATION_ERROR` naming `recordedRoomsRate` and `5m`
 
 ### Requirement: Timezone-aware buckets
 
@@ -263,7 +270,7 @@ report the snapped range. Entity and stats collections SHALL never be read by th
 
 ### Requirement: Summary endpoint
 
-Edition: CE. `GET /api/v1/analytics/summary` SHALL accept `from`, `to`, `tz` and `scope` and answer the fifteen KPI
+Edition: CE. `GET /api/v1/analytics/summary` SHALL accept `from`, `to`, `tz` and `scope` and answer the seventeen KPI
 values of the "KPI keys" scenario, omitting any value the stored documents cannot derive. `ingressSessions` and
 `ingressDurationMs` SHALL be the sums of `ingress.sessionsStarted` and `ingress.durationMs` over the snapped range, `0`
 without ingress activity.
@@ -289,6 +296,19 @@ without ingress activity.
 - **WHEN** the summary is requested
 - **THEN** `avgRoomSize` and `avgRoomDurationMs` are absent from the body and the other values are present
 
+#### Scenario: Recorded rooms
+
+- **GIVEN** hourly documents in range summing to `rooms.ended: 200`, `rooms.byTopology` 196 rooms over its classes and
+  `rooms.recorded: 49`
+- **WHEN** the summary is requested
+- **THEN** the body has `roomsRecorded: 49` and `recordedRoomsRate: 25.0`
+
+#### Scenario: No classified room in the range
+
+- **GIVEN** hourly documents in range with `rooms.ended: 30` and no `rooms.byTopology`, written by an earlier writer
+- **WHEN** the summary is requested
+- **THEN** `roomsRecorded` and `recordedRoomsRate` are absent from the body and `roomsEnded` is `30`
+
 #### Scenario: Unique identities over several days
 
 - **GIVEN** `analytics_daily` documents for the three UTC days overlapping the range with `uniqueIdentities` 100, 120
@@ -313,8 +333,9 @@ without ingress activity.
 
 - **WHEN** the client requests `GET /api/v1/analytics/summary` over a range whose stored documents derive every value
 - **THEN** the response carries the KPI values `roomsCreated`, `roomsEnded`, `participantSessions`, `uniqueIdentities`,
-  `connectionSuccessRate`, `avgRoomSize`, `avgRoomDurationMs`, `bytesUp`, `bytesDown`, `egressStarted`,
-  `egressDurationMs`, `ingressSessions`, `ingressDurationMs`, `apiCalls` and `apiErrorRate`
+  `connectionSuccessRate`, `avgRoomSize`, `avgRoomDurationMs`, `roomsRecorded`, `recordedRoomsRate`, `bytesUp`,
+  `bytesDown`, `egressStarted`, `egressDurationMs`, `ingressSessions`, `ingressDurationMs`, `apiCalls` and
+  `apiErrorRate`
 
 ### Requirement: PRO metrics, dimensions and scopes
 
@@ -487,3 +508,56 @@ Edition: CE. With a `node:<label>` scope, the series, breakdowns and CSV export 
 
 - **WHEN** the client requests `metrics=egressStarted,ingressSessions&granularity=1h` without a scope
 - **THEN** the response is `200` with both series, read from the `global` documents
+
+### Requirement: Recorded rooms rate
+
+Edition: CE. `recordedRoomsRate` SHALL be `rooms.recorded` over the sum of `rooms.byTopology` of the bucket, or of the
+summary's range, as a percentage with one decimal, and `null`, or absent from the summary, when that sum is `0`:
+rooms ended without a class, by an earlier writer, count in neither part.
+
+#### Scenario: Rate per bucket
+
+- **GIVEN** an hour whose documents hold `rooms.byTopology` summing to 8 and `rooms.recorded: 2`, an hour with
+  `rooms.byTopology` summing to 5 and no `rooms.recorded`, and an hour without ended rooms
+- **WHEN** `metrics=recordedRoomsRate&granularity=1h` is requested
+- **THEN** the points are `25.0`, `0.0` and `null`
+
+#### Scenario: Hour of the upgrade
+
+- **GIVEN** an hour with `rooms.ended: 10`, of which 4 rooms were ended by the new writer, with `rooms.byTopology`
+  summing to 4 and `rooms.recorded: 1`
+- **WHEN** `metrics=recordedRoomsRate&granularity=1h` is requested
+- **THEN** the point is `25.0`
+
+### Requirement: Room topology and size dimensions
+
+Edition: CE. The breakdowns endpoint SHALL accept the dimensions `roomTopology`, which sums `rooms.byTopology` of the
+hourly and daily rollups in range under the class keys, and `roomSize`, which sums `rooms.bySize` under the size range
+keys `0-5`, `6-10`, `11-25`, `26-50`, `51-100` and `101+`. Both count the rooms ended in the range that have a class,
+and only the keys with rooms. They are not gated by any feature and are served in every scope.
+
+#### Scenario: Classes of the range
+
+- **GIVEN** rollups in range with `rooms.byTopology` summing to `many_to_many: 62`, `one_to_one: 14` and
+  `one_to_many: 4`
+- **WHEN** `dimensions=roomTopology` is requested on CE
+- **THEN** the breakdown has `total: 80` and items `many_to_many` 62 / 77.5, `one_to_one` 14 / 17.5 and `one_to_many`
+  4 / 5.0
+
+#### Scenario: Sizes of the range
+
+- **GIVEN** rollups in range with `rooms.bySize` summing to `0-5: 40`, `11-25: 8` and `101+: 2`
+- **WHEN** `dimensions=roomSize` is requested on CE
+- **THEN** the breakdown has `total: 50` and items `0-5` 40 / 80.0, `11-25` 8 / 16.0 and `101+` 2 / 4.0
+
+#### Scenario: Range before the writer classified rooms
+
+- **GIVEN** rollups in range with `rooms.ended: 30` and neither `rooms.byTopology` nor `rooms.bySize`
+- **WHEN** `dimensions=roomTopology,roomSize` is requested
+- **THEN** both breakdowns have `total: 0` and no items
+
+#### Scenario: Node scope
+
+- **GIVEN** the `per-node-breakdown` feature and rollups of `node:mn-a` with `rooms.byTopology` and `rooms.bySize`
+- **WHEN** `dimensions=roomTopology,roomSize&scope=node:mn-a` is requested
+- **THEN** the response is `200` with the breakdowns of `node:mn-a`
