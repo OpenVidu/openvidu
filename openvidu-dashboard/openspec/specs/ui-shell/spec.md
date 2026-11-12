@@ -407,7 +407,7 @@ not answered within 30 s; the page or section that sent it keeps its last data u
 too long to answer; the data shown may be out of date." and a later refresh sends a new request.
 
 #### Scenario: Slow CSV download
-- **GIVEN** an Analytics CSV export that the server needs 45 s to send
+- **GIVEN** a Rooms list CSV export that the server needs 45 s to send
 - **WHEN** the download completes
 - **THEN** the file is saved and no timeout error is shown
 

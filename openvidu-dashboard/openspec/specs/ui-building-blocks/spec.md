@@ -571,7 +571,7 @@ filters and the Columns button of its table.
 
 - **GIVEN** the Rooms card of the Analytics page
 - **WHEN** it renders
-- **THEN** its Export CSV button is in the section header, after the title
+- **THEN** its Export XLSX button is in the section header, after the title
 
 ### Requirement: Copy button
 
