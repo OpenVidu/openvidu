@@ -264,6 +264,33 @@ test('an empty list disables Export CSV', async ({ page }) => {
 	await expect(page.getByRole('button', { name: 'Export CSV' })).toBeDisabled();
 });
 
+test('the icon of a button with text sits on the centre of the button', async ({ page }) => {
+	await page.goto('/rooms?from=now-7d&to=now&tz=UTC');
+	await expect(table(page).getByRole('row').nth(1)).toBeVisible();
+
+	const offsets = await page
+		.locator('.mat-mdc-button-base:not(.mat-mdc-icon-button):visible > mat-icon')
+		.evaluateAll((icons) =>
+			icons.map((icon) => {
+				const middle = (box: DOMRect | undefined) => (box === undefined ? NaN : box.top + box.height / 2);
+
+				return {
+					button: icon.parentElement?.textContent.trim(),
+					offset: Math.abs(
+						middle(icon.querySelector('svg')?.getBoundingClientRect()) -
+							middle(icon.parentElement?.getBoundingClientRect())
+					)
+				};
+			})
+		);
+
+	expect(offsets.map((item) => item.button)).toEqual(expect.arrayContaining(['Columns', 'Export CSV']));
+
+	for (const { button, offset } of offsets) {
+		expect(offset, button).toBeLessThanOrEqual(0.5);
+	}
+});
+
 test.describe('a cut export', () => {
 	test.use({ apiOptions: { rooms: ROOMS, roomSummary: ROOM_SUMMARY, listExportTruncated: true } });
 

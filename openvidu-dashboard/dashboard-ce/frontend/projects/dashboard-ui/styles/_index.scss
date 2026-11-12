@@ -72,6 +72,12 @@ $mono-family: 'JetBrains Mono Variable', 'JetBrains Mono', ui-monospace, monospa
 		color: var(--mat-sys-primary);
 	}
 
+	// The icon of a button with text: an inline SVG sits on the text baseline, so Material's `min-height: fit-content`
+	// grows the icon to the line box and draws the glyph 2px above the centre.
+	.mat-mdc-button-base:not(.mat-mdc-icon-button) > .mat-icon > svg {
+		display: block;
+	}
+
 	h1,
 	.ovd-page-title {
 		margin: 0;
