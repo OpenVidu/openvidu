@@ -1,4 +1,4 @@
-import { DOCUMENT, inject, Service } from '@angular/core';
+import { inject, Service } from '@angular/core';
 import {
 	ANALYTICS_GLOBAL_ONLY_DIMENSIONS,
 	ANALYTICS_METRIC_INFO,
@@ -6,7 +6,6 @@ import {
 	type AnalyticsBucketGranularity,
 	type AnalyticsDimension,
 	analyticsDimensionFeature,
-	type AnalyticsExportKind,
 	type AnalyticsGranularity,
 	type AnalyticsMetric,
 	analyticsMetricFeature,
@@ -17,7 +16,7 @@ import {
 	type FeatureKey
 } from '@openvidu-dashboard/typings';
 
-import { HttpService, saveDownload } from '../../core/http/http.js';
+import { HttpService } from '../../core/http/http.js';
 import type { RangeParams } from '../../core/state/query-state.js';
 import { apiRange } from '../rooms/rooms-data.js';
 import { hourlyGranularity } from './analytics-granularity.js';
@@ -139,11 +138,10 @@ function rangeParams(state: Pick<AnalyticsState, 'range' | 'scope'>): Record<str
 	return { ...apiRange(state.range), ...(state.scope === 'global' ? {} : { scope: state.scope }) };
 }
 
-/** Requests of the analytics API and the CSV download. */
+/** Requests of the analytics API. */
 @Service()
 export class AnalyticsDataService {
 	private readonly http = inject(HttpService);
-	private readonly document = inject(DOCUMENT);
 
 	series(state: AnalyticsState, request: SeriesRequest): Promise<AnalyticsSeriesResponse> {
 		return this.http.get('analytics/series', {
@@ -157,27 +155,5 @@ export class AnalyticsDataService {
 
 	summary(state: AnalyticsState): Promise<AnalyticsSummary> {
 		return this.http.get('analytics/summary', { params: rangeParams(state) });
-	}
-
-	/** Downloads the CSV of a card and saves it under the server's file name. */
-	async exportCsv(
-		state: AnalyticsState,
-		kind: AnalyticsExportKind,
-		items: {
-			metrics?: readonly AnalyticsMetric[];
-			dimensions?: readonly AnalyticsDimension[];
-			granularity?: AnalyticsGranularity;
-		}
-	): Promise<void> {
-		const download = await this.http.download('analytics/export.csv', {
-			params: {
-				kind,
-				...rangeParams(state),
-				...(kind === 'series'
-					? { metrics: items.metrics ?? [], granularity: items.granularity ?? state.granularity }
-					: { dimensions: items.dimensions ?? [] })
-			}
-		});
-		saveDownload(this.document, download, `analytics-${kind}.csv`);
 	}
 }

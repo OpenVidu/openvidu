@@ -6,11 +6,13 @@ import { provideRouter } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 import type { AnalyticsSummary, InfoRetention } from '@openvidu-dashboard/typings';
 import { NGX_ECHARTS_CONFIG } from 'ngx-echarts';
+import { vi } from 'vitest';
 
 import { BreakdownChart } from '../lib/charts/breakdown-chart.js';
 import { TimeSeriesChart } from '../lib/charts/time-series-chart/time-series-chart.js';
 import { InfoService } from '../lib/core/info.js';
 import { AnalyticsPage } from '../lib/features/analytics/analytics-page.js';
+import { WORKBOOK_WRITER, type WorkbookSheet } from '../lib/features/analytics/analytics-workbook.js';
 import { infoResponse, settle } from './fixtures.js';
 import { routeElement } from './harness.js';
 
@@ -84,6 +86,9 @@ function seriesBody(params: HttpParams, named: AnalyticsAnswers['points'] = {}) 
 						{ name: 'egressEnded.complete', points },
 						{ name: 'egressEnded.failed', points }
 					];
+				// The API serves unique identities on UTC days whatever the zone.
+				case 'uniqueIdentities':
+					return [{ name, points: named[name] ?? points, basis: 'utcDay' }];
 				default:
 					return [{ name, points: named[name] ?? points }];
 			}
@@ -265,4 +270,54 @@ export function seriesRequests(requests: TestRequest[]) {
 			metrics: request.request.params.get('metrics')?.split(',') ?? [],
 			granularity: request.request.params.get('granularity')
 		}));
+}
+
+/** A workbook writer that records the sheets and zone of every export, and fails while `fail` is set. */
+export function workbookRecorder() {
+	const recorder = {
+		written: [] as { sheets: readonly WorkbookSheet[]; zone: string }[],
+		fail: false,
+		provider: {
+			provide: WORKBOOK_WRITER,
+			useValue: (sheets: readonly WorkbookSheet[], zone: string): Promise<Blob> => {
+				if (recorder.fail) {
+					return Promise.reject(new Error('The workbook could not be written'));
+				}
+
+				recorder.written.push({ sheets, zone });
+
+				return Promise.resolve(new Blob(['xlsx']));
+			}
+		} satisfies Provider
+	};
+
+	return recorder;
+}
+
+/** Clicks "Export XLSX" of the card titled `heading`, waits for the save and returns the names the browser saved. */
+export async function exportWorkbook(element: HTMLElement, heading: string): Promise<string[]> {
+	const saved: string[] = [];
+	const createObjectURL = URL.createObjectURL.bind(URL);
+	const revokeObjectURL = URL.revokeObjectURL.bind(URL);
+
+	URL.createObjectURL = () => 'blob:xlsx';
+	URL.revokeObjectURL = () => undefined;
+
+	const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function (this: HTMLAnchorElement) {
+		saved.push(this.download);
+	});
+
+	try {
+		[...(analyticsCard(element, heading)?.querySelectorAll<HTMLButtonElement>('button') ?? [])]
+			.find((button) => analyticsText(button).includes('Export XLSX'))
+			?.click();
+		await settle();
+		await settle();
+
+		return saved;
+	} finally {
+		click.mockRestore();
+		URL.createObjectURL = createObjectURL;
+		URL.revokeObjectURL = revokeObjectURL;
+	}
 }

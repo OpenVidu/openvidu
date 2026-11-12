@@ -32,7 +32,8 @@
 		"echarts": "catalog:",
 		"ngx-echarts": "catalog:",
 		"rxjs": "catalog:",
-		"tslib": "catalog:"
+		"tslib": "catalog:",
+		"write-excel-file": "catalog:"
 	},
 	"devDependencies": {
 		"@angular/build": "catalog:",

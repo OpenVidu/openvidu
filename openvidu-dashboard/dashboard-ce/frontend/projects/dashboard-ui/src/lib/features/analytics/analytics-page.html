@@ -80,7 +80,7 @@
 		[error]="rooms.error ?? roomClasses.error"
 		[empty]="rooms.empty"
 		[exporting]="isExporting('rooms')"
-		(exportCsv)="exportCsv('rooms', { metrics: ['roomsPeakActive', 'roomsCreated', 'recordedRoomsRate'] })"
+		(export)="exportSection('rooms')"
 		(retry)="retry()"
 		(widen)="widenRange()"
 	>
@@ -163,11 +163,7 @@
 		[error]="participants.error"
 		[empty]="participants.empty"
 		[exporting]="isExporting('participants')"
-		(exportCsv)="
-			exportCsv('participants', {
-				metrics: ['participantsPeakActive', 'participantsJoined', 'connectionSuccessRate', 'uniqueIdentities']
-			})
-		"
+		(export)="exportSection('participants')"
 		(retry)="retry()"
 		(widen)="widenRange()"
 	>
@@ -231,7 +227,7 @@
 		[error]="clients.error"
 		[empty]="clients.empty"
 		[exporting]="isExporting('clients')"
-		(exportCsv)="exportCsv('clients', { dimensions: ['sdk', 'os', 'browser', 'connectionType'] })"
+		(export)="exportSection('clients')"
 		(retry)="retry()"
 		(widen)="widenRange()"
 	>
@@ -254,7 +250,7 @@
 		[error]="bandwidth.error"
 		[empty]="bandwidth.empty && mediaStats() !== 'none'"
 		[exporting]="isExporting('bandwidth')"
-		(exportCsv)="exportCsv('bandwidth', { metrics: ['bytesUp', 'bytesDown'] })"
+		(export)="exportSection('bandwidth')"
 		(retry)="retry()"
 		(widen)="widenRange()"
 	>
@@ -299,7 +295,7 @@
 		[empty]="egress.empty && !byNode"
 		[exporting]="isExporting('egress')"
 		[exportDisabled]="byNode"
-		(exportCsv)="exportCsv('egress', { metrics: ['egressPeakActive', 'egressStarted', 'egressEnded'] })"
+		(export)="exportSection('egress')"
 		(retry)="retry()"
 		(widen)="widenRange()"
 	>
@@ -360,7 +356,7 @@
 		[empty]="ingress.empty && !byNode"
 		[exporting]="isExporting('ingress')"
 		[exportDisabled]="byNode"
-		(exportCsv)="exportCsv('ingress', { metrics: ['ingressPeakActive', 'ingressSessions'] })"
+		(export)="exportSection('ingress')"
 		(retry)="retry()"
 		(widen)="widenRange()"
 	>

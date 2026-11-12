@@ -1,7 +1,8 @@
 import { NgComponentOutlet } from '@angular/common';
-import { Component, computed, effect, forwardRef, inject, signal, type Type, untracked } from '@angular/core';
+import { Component, computed, DOCUMENT, effect, forwardRef, inject, signal, type Type, untracked } from '@angular/core';
 import { MatFormField, MatLabel } from '@angular/material/form-field';
 import { MatOption, MatSelect } from '@angular/material/select';
+import { TZDate } from '@date-fns/tz';
 import {
 	ANALYTICS_SCOPE_PATTERN,
 	type AnalyticsBreakdown,
@@ -18,8 +19,10 @@ import {
 	type ParticipantKind,
 	RoomSizeRange,
 	RoomTopology,
+	type TimeSeriesPoint,
 	VISIBLE_PARTICIPANT_KINDS
 } from '@openvidu-dashboard/typings';
+import { format } from 'date-fns';
 
 import { BreakdownChart } from '../../charts/breakdown-chart.js';
 import { ChartGrid } from '../../charts/chart-grid.js';
@@ -31,6 +34,7 @@ import { exportFailedMessage } from '../../components/export-button/export-butto
 import { Notice } from '../../components/feedback/notice.js';
 import { KpiTile } from '../../components/tiles/kpi-tile.js';
 import { TileRow } from '../../components/tiles/tile-row.js';
+import { saveDownload } from '../../core/http/http.js';
 import { InfoService } from '../../core/info.js';
 import { injectListLoader } from '../../core/refresh/list-loader.js';
 import { ListStateService } from '../../core/state/list-state.js';
@@ -75,11 +79,39 @@ import {
 	ANALYTICS_PRO_SLOTS,
 	ANALYTICS_SCOPE_SELECT,
 	type AnalyticsCardView,
-	type AnalyticsExportItems,
+	type AnalyticsExportSection,
 	AnalyticsPageContext,
 	type AnalyticsProSlot,
 	type AnalyticsProSlotFacts
 } from './analytics-seams.js';
+import {
+	breakdownSheet,
+	seriesKind,
+	type WorkbookColumnKind,
+	WORKBOOK_WRITER,
+	workbookFileName,
+	type WorkbookSeriesColumn,
+	type WorkbookSheet
+} from './analytics-workbook.js';
+
+/** The CE sections, by `sectionId`, and the headings their workbooks name. */
+const CE_SECTION_HEADINGS = {
+	rooms: 'Rooms',
+	participants: 'Participants',
+	clients: 'Client breakdowns',
+	bandwidth: 'Data transferred',
+	egress: 'Egress',
+	ingress: 'Ingress'
+} as const;
+
+type CeSection = keyof typeof CE_SECTION_HEADINGS;
+
+/** The series of one sheet of a workbook: one resolution in one zone. */
+interface SeriesSheetGroup {
+	name: string;
+	zone: string;
+	series: { header: string; kind: WorkbookColumnKind; points: readonly TimeSeriesPoint[] }[];
+}
 
 const NOT_PROVIDED = 'Not provided by this server version';
 const NO_ROOM_ENDED = 'No room ended in this range';
@@ -206,6 +238,8 @@ export class AnalyticsPage implements AnalyticsPageContext {
 	private readonly info = inject(InfoService);
 	private readonly rangePicker = inject(RangePickerService);
 	private readonly toast = inject(ToastService);
+	private readonly document = inject(DOCUMENT);
+	private readonly writeWorkbook = inject(WORKBOOK_WRITER);
 
 	readonly tz = this.query.tz;
 	protected readonly granularityLabels = GRANULARITY_LABELS;
@@ -625,32 +659,176 @@ export class AnalyticsPage implements AnalyticsPageContext {
 		void this.loader.scheduler.refresh();
 	}
 
-	/** Downloads the CSV of a card: its series at the coarsest granularity it draws, or its breakdowns. */
-	async exportCsv(card: string, items: AnalyticsExportItems): Promise<void> {
-		const state = this.state();
-		const metrics = (items.metrics ?? []).filter(
-			(metric) => metric !== 'uniqueIdentities' || state.effective === '1d'
-		);
-		const hourly = metrics.some((metric) => metricInfo(metric, this.cards)?.hourlyOnly === true);
+	/** The time series of `columns` in one sheet per resolution and zone, as their charts draw them. */
+	seriesSheets(columns: readonly WorkbookSeriesColumn[]): WorkbookSheet[] {
+		const zone = this.tz();
+		const groups = new Map<string, SeriesSheetGroup>();
+		const headings = columns.map((column) => column.heading);
 
-		this.exporting.update((cards) => new Set([...cards, card]));
+		for (const { metric, heading } of columns) {
+			const response = this.responseOf(metric)?.value;
+
+			if (response === null || response === undefined) {
+				continue;
+			}
+
+			const daily = response.series.some((series) => series.name === metric && series.basis === 'utcDay');
+			const granularity = daily ? '1d' : response.granularity;
+			const sheetZone = daily ? 'UTC' : zone;
+			const key = `${granularity}|${sheetZone}`;
+			const group = groups.get(key) ?? {
+				name: `${GRANULARITY_LABELS[granularity]}${sheetZone === zone ? '' : ' (UTC)'}`,
+				zone: sheetZone,
+				series: []
+			};
+			const kind = seriesKind(metricInfo(metric, this.cards));
+			const charted = this.chart([metric]);
+			// A chart drawing several series names each column after its legend entry too.
+			const several = charted.length > 1 || headings.filter((other) => other === heading).length > 1;
+
+			groups.set(key, group);
+
+			for (const series of charted) {
+				const header = several ? `${heading} · ${series.name}` : heading;
+
+				group.series.push({
+					header: kind === 'bytes' ? `${header} (bytes)` : header,
+					kind,
+					points: series.points
+				});
+			}
+		}
+
+		return [...groups.values()].map((group) => {
+			const buckets = [
+				...new Set(group.series.flatMap((series) => series.points.map(([bucket]) => bucket)))
+			].sort();
+			const values = group.series.map((series) => new Map(series.points));
+
+			return {
+				name: group.name,
+				zone: group.zone,
+				columns: [
+					{ header: `Bucket start (${group.zone})`, kind: 'date' as const },
+					...group.series.map((series) => ({ header: series.header, kind: series.kind }))
+				],
+				rows: buckets.map((bucket) => [bucket, ...values.map((points) => points.get(bucket) ?? null)])
+			};
+		});
+	}
+
+	/** Saves the `.xlsx` of a section, its Info sheet first; a failure is toasted. */
+	async exportWorkbook(section: AnalyticsExportSection, sheets: readonly WorkbookSheet[]): Promise<void> {
+		const context = this.context();
+		const zone = this.tz();
+
+		this.exporting.update((sections) => new Set([...sections, section.id]));
 
 		try {
-			await (metrics.length > 0
-				? this.data.exportCsv(state, 'series', {
-						metrics,
-						granularity: hourly ? hourlyGranularity(state.effective) : state.granularity
-					})
-				: this.data.exportCsv(state, 'breakdowns', { dimensions: items.dimensions ?? [] }));
+			const blob = await this.writeWorkbook([this.infoSheet(section.heading), ...sheets], zone);
+
+			saveDownload(
+				this.document,
+				{
+					blob,
+					fileName: workbookFileName(
+						section.id,
+						context?.from.toISOString() ?? '',
+						context?.to.toISOString() ?? ''
+					)
+				},
+				`analytics-${section.id}.xlsx`
+			);
 		} catch (error) {
 			this.toast.show(exportFailedMessage(error));
 		} finally {
-			this.exporting.update((cards) => new Set([...cards].filter((item) => item !== card)));
+			this.exporting.update((sections) => new Set([...sections].filter((item) => item !== section.id)));
 		}
 	}
 
-	isExporting(card: string): boolean {
-		return this.exporting().has(card);
+	/** Exports a CE section with the sheets of what its card draws. */
+	protected exportSection(id: CeSection): void {
+		const breakdowns = this.breakdowns();
+		const sheets: Record<CeSection, () => WorkbookSheet[]> = {
+			rooms: () => [
+				...this.seriesSheets([
+					{ metric: 'roomsPeakActive', heading: 'Active rooms' },
+					{ metric: 'roomsCreated', heading: 'Rooms created' },
+					{ metric: 'recordedRoomsRate', heading: 'Recorded rooms' }
+				]),
+				breakdownSheet('Room topology', breakdowns.roomTopology, true),
+				breakdownSheet('Room size', breakdowns.roomSize, true)
+			],
+			participants: () => [
+				...this.seriesSheets([
+					{ metric: 'participantsPeakActive', heading: 'Active participants' },
+					{ metric: 'participantsJoined', heading: 'Participant sessions' },
+					{ metric: 'uniqueIdentities', heading: 'Unique identities' },
+					{ metric: 'connectionSuccessRate', heading: 'Connection success' }
+				]),
+				breakdownSheet('Participant kind', breakdowns.kind)
+			],
+			clients: () => [
+				breakdownSheet('SDK', breakdowns.sdk),
+				breakdownSheet('OS', breakdowns.os),
+				breakdownSheet('Browser', breakdowns.browser),
+				breakdownSheet('Connection type', breakdowns.connectionType)
+			],
+			bandwidth: () =>
+				this.seriesSheets([
+					{ metric: 'bytesUp', heading: 'Data up / down' },
+					{ metric: 'bytesDown', heading: 'Data up / down' }
+				]),
+			egress: () => [
+				...this.seriesSheets([
+					{ metric: 'egressPeakActive', heading: 'Active egress' },
+					{ metric: 'egressStarted', heading: 'Egress started' },
+					{ metric: 'egressEnded', heading: 'Egress ended by status' }
+				]),
+				breakdownSheet('Egress type', breakdowns.egressType)
+			],
+			ingress: () => [
+				...this.seriesSheets([
+					{ metric: 'ingressPeakActive', heading: 'Active ingress' },
+					{ metric: 'ingressSessions', heading: 'Ingress sessions' }
+				]),
+				breakdownSheet('Ingress input type', breakdowns.ingressInputType)
+			]
+		};
+
+		void this.exportWorkbook({ id, heading: CE_SECTION_HEADINGS[id] }, sheets[id]());
+	}
+
+	/** Section, range, zone, scope (with the scope selector) and export time, as label and value rows. */
+	private infoSheet(heading: string): WorkbookSheet {
+		const zone = this.tz();
+		const context = this.context();
+		const scope = this.scope();
+		const local = (instant: Date) => format(new TZDate(instant.getTime(), zone), 'yyyy-MM-dd HH:mm');
+
+		return {
+			name: 'Info',
+			columns: [
+				{ header: 'Field', kind: 'text' },
+				{ header: 'Value', kind: 'text' }
+			],
+			rows: [
+				['Section', heading],
+				...(context === null
+					? []
+					: [
+							['From', local(context.from)],
+							['To', local(context.to)]
+						]),
+				['Time zone', zone],
+				...(this.perNode() ? [['Scope', scope === 'global' ? 'All nodes' : scope.slice('node:'.length)]] : []),
+				['Exported at', local(new Date())]
+			]
+		};
+	}
+
+	isExporting(section: string): boolean {
+		return this.exporting().has(section);
 	}
 
 	private responseOf(metric: AnalyticsMetric): Settled<AnalyticsSeriesResponse> | null {

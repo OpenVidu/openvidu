@@ -13,9 +13,11 @@ import {
 	analyticsCard as card,
 	analyticsText as text,
 	answerAnalytics as answer,
+	exportWorkbook,
 	openAnalytics,
 	refreshAnalytics,
-	seriesRequests
+	seriesRequests,
+	workbookRecorder
 } from '../../../testing/analytics.js';
 import { settle } from '../../../testing/fixtures.js';
 import { BreakdownChart } from '../../charts/breakdown-chart.js';
@@ -43,6 +45,12 @@ function open(
 
 function refresh(http: HttpTestingController, harness: RouterTestingHarness, answers: AnalyticsAnswers = {}) {
 	return refreshAnalytics(http, harness, answers);
+}
+
+function exportButton(element: HTMLElement, heading: string): HTMLButtonElement | undefined {
+	return [...(card(element, heading)?.querySelectorAll<HTMLButtonElement>('button') ?? [])].find((button) =>
+		text(button).includes('Export XLSX')
+	);
 }
 
 describe('analytics granularity', () => {
@@ -667,7 +675,7 @@ describe('AnalyticsPage', () => {
 		for (const heading of ['Egress', 'Ingress']) {
 			const section = card(element, heading);
 			const exportButton = [...(section?.querySelectorAll<HTMLButtonElement>('button') ?? [])].find((button) =>
-				text(button).includes('Export CSV')
+				text(button).includes('Export XLSX')
 			);
 
 			expect(section?.querySelector('ovd-empty-state')).toBeNull();
@@ -711,6 +719,9 @@ describe('AnalyticsPage', () => {
 			'Diagnostics',
 			'Top rooms'
 		]);
+		expect(
+			['Quality', 'Diagnostics', 'Top rooms'].map((heading) => exportButton(element, heading)?.disabled)
+		).toEqual([true, true, true]);
 		expect(requests.map((request) => request.request.url)).not.toContain('api/v1/analytics/top');
 		expect(requests.map((request) => request.request.url)).not.toContain('api/v1/analytics/scopes');
 		expect(seriesRequests(requests).flatMap((request) => request.metrics)).not.toContain('scoreAvg');
@@ -734,73 +745,108 @@ describe('AnalyticsPage', () => {
 		expect(card(element, 'Data transferred')?.querySelector('ovd-time-series-chart')).not.toBeNull();
 	});
 
-	it('downloads the CSV of a card under the server name and toasts a failure', async () => {
-		const { element, http } = await open('/analytics?from=now-7d&to=now&tz=UTC');
-		const saved: string[] = [];
-
-		URL.createObjectURL = vi.fn(() => 'blob:csv');
-		URL.revokeObjectURL = vi.fn();
-		vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function (this: HTMLAnchorElement) {
-			saved.push(this.download);
-		});
-
-		const exportButton = () =>
-			[...(card(element, 'Data transferred')?.querySelectorAll<HTMLButtonElement>('button') ?? [])].find(
-				(button) => text(button).includes('Export CSV')
-			);
-
-		exportButton()?.click();
-
-		const download = http.expectOne((req) => req.url === 'api/v1/analytics/export.csv');
-
-		expect(download.request.params.get('kind')).toBe('series');
-		expect(download.request.params.get('metrics')).toBe('bytesUp,bytesDown');
-		download.flush(new Blob(['bucket\r\n']), {
-			headers: { 'Content-Disposition': 'attachment; filename=analytics-series-a-b.csv' }
-		});
-		await settle();
-		expect(saved).toEqual(['analytics-series-a-b.csv']);
-
-		const toast = vi.spyOn(TestBed.inject(ToastService), 'show');
-
-		exportButton()?.click();
-		http.expectOne((req) => req.url === 'api/v1/analytics/export.csv').flush(
-			new Blob([JSON.stringify({ error: { code: 'INTERNAL_ERROR', message: 'boom' } })]),
-			{ status: 500, statusText: 'Server Error', headers: { 'X-Request-Id': 'req-7' } }
+	it('saves the workbook of the Rooms card, a sheet per resolution and per breakdown, without a request', async () => {
+		const recorder = workbookRecorder();
+		const { element, http } = await openAnalytics(
+			'/analytics?from=now-24h&to=now&tz=Europe/Madrid&granularity=15m',
+			{
+				providers: [recorder.provider]
+			}
 		);
-		await settle();
-		await settle();
-		expect(toast).toHaveBeenCalledWith(expect.stringContaining('req-7'));
-		expect(exportButton()?.disabled).toBe(false);
+		const saved = await exportWorkbook(element, 'Rooms');
+		const [written] = recorder.written;
+		const sheets = written?.sheets ?? [];
+		const sheet = (name: string) => sheets.find((item) => item.name === name);
+
+		expect(http.match(() => true)).toEqual([]);
+		expect(saved).toHaveLength(1);
+		expect(saved[0]).toMatch(/^analytics-rooms-\d{4}-\d\d-\d\dT\d{6}\.\d{3}Z-\d{4}-\d\d-\d\dT\d{6}\.\d{3}Z\.xlsx$/);
+		expect(written?.zone).toBe('Europe/Madrid');
+		expect(sheets.map((item) => item.name)).toEqual(['Info', '15 min', '1 h', 'Room topology', 'Room size']);
+		expect(sheet('Info')?.rows).toEqual(
+			expect.arrayContaining([
+				['Section', 'Rooms'],
+				['Time zone', 'Europe/Madrid']
+			])
+		);
+		expect(sheet('15 min')?.columns).toEqual([
+			{ header: 'Bucket start (Europe/Madrid)', kind: 'date' },
+			{ header: 'Active rooms', kind: 'count' },
+			{ header: 'Rooms created', kind: 'count' }
+		]);
+		expect(sheet('1 h')?.columns.map((column) => [column.header, column.kind])).toEqual([
+			['Bucket start (Europe/Madrid)', 'date'],
+			['Recorded rooms', 'percent']
+		]);
+		expect(sheet('1 h')?.rows[0]).toEqual(['2026-10-13T10:00:00.000Z', 0.03]);
+		expect(sheet('Room topology')?.rows.map((row) => row[0])).toEqual([
+			'N:M',
+			'1:N',
+			'1:1',
+			'Single participant',
+			'No publishers',
+			'Empty'
+		]);
+		expect(sheet('Room topology')?.rows.at(-1)?.[1]).toBe(0);
+		expect(sheet('Room size')?.columns.map((column) => column.header)).toEqual(['Room size', 'Count', 'Share']);
 	});
 
-	it('exports the series of the charts in the CSV of each entity card', async () => {
-		const { element, http } = await open('/analytics?from=now-7d&to=now&tz=UTC&granularity=1d');
+	it('puts unique identities on UTC days and the egress end statuses in columns of their own', async () => {
+		const recorder = workbookRecorder();
+		const { element } = await openAnalytics('/analytics?from=now-7d&to=now&tz=Europe/Madrid', {
+			providers: [recorder.provider]
+		});
 
-		URL.createObjectURL = vi.fn(() => 'blob:csv');
-		URL.revokeObjectURL = vi.fn();
-		vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => undefined);
+		await exportWorkbook(element, 'Participants');
+		await exportWorkbook(element, 'Egress');
+		await exportWorkbook(element, 'Data transferred');
+		await exportWorkbook(element, 'Client breakdowns');
 
-		const exported = async (heading: string) => {
-			[...(card(element, heading)?.querySelectorAll<HTMLButtonElement>('button') ?? [])]
-				.find((button) => text(button).includes('Export CSV'))
-				?.click();
+		const [participants, egress, bandwidth, clients] = recorder.written.map((written) => written.sheets);
+		const names = (sheets: readonly { name: string }[] | undefined) => sheets?.map((sheet) => sheet.name);
 
-			const download = http.expectOne((req) => req.url === 'api/v1/analytics/export.csv');
-			const metrics = download.request.params.get('metrics');
+		expect(names(participants)).toEqual(['Info', '1 h', '1 d (UTC)', 'Participant kind']);
+		expect(participants?.find((sheet) => sheet.name === '1 d (UTC)')).toMatchObject({
+			zone: 'UTC',
+			columns: [
+				{ header: 'Bucket start (UTC)', kind: 'date' },
+				{ header: 'Unique identities', kind: 'count' }
+			]
+		});
+		expect(names(egress)).toEqual(['Info', '1 h', 'Egress type']);
+		expect(egress?.[1]?.columns.map((column) => column.header)).toEqual([
+			'Bucket start (Europe/Madrid)',
+			'Active egress',
+			'Egress started',
+			'Egress ended by status · complete',
+			'Egress ended by status · failed'
+		]);
+		expect(bandwidth?.[1]?.columns.map((column) => [column.header, column.kind])).toEqual([
+			['Bucket start (Europe/Madrid)', 'date'],
+			['Data up / down · Up (bytes)', 'bytes'],
+			['Data up / down · Down (bytes)', 'bytes']
+		]);
+		expect(names(clients)).toEqual(['Info', 'SDK', 'OS', 'Browser', 'Connection type']);
+	});
 
-			download.flush(new Blob(['bucket\r\n']));
-			await settle();
+	it('toasts a workbook that cannot be written and keeps the card interactive', async () => {
+		const recorder = workbookRecorder();
+		const { element } = await openAnalytics('/analytics?from=now-7d&to=now&tz=UTC', {
+			providers: [recorder.provider]
+		});
+		const toast = vi.spyOn(TestBed.inject(ToastService), 'show');
 
-			return metrics;
-		};
+		recorder.fail = true;
 
-		expect(await exported('Rooms')).toBe('roomsPeakActive,roomsCreated,recordedRoomsRate');
-		expect(await exported('Participants')).toBe(
-			'participantsPeakActive,participantsJoined,connectionSuccessRate,uniqueIdentities'
-		);
-		expect(await exported('Egress')).toBe('egressPeakActive,egressStarted,egressEnded');
-		expect(await exported('Ingress')).toBe('ingressPeakActive,ingressSessions');
+		expect(await exportWorkbook(element, 'Data transferred')).toEqual([]);
+		expect(toast).toHaveBeenCalledWith('Export failed: The workbook could not be written');
+		expect(exportButton(element, 'Data transferred')?.disabled).toBe(false);
+	});
+
+	it('disables Export XLSX on a card without data', async () => {
+		const { element } = await open('/analytics?from=now-24h&to=now&tz=UTC', [], { empty: true });
+
+		expect(exportButton(element, 'Data transferred')?.disabled).toBe(true);
 	});
 
 	it('never refreshes by itself and reloads on the manual refresh', async () => {

@@ -17,7 +17,8 @@
 		"date-fns": "catalog:",
 		"echarts": "catalog:",
 		"ngx-echarts": "catalog:",
-		"rxjs": "catalog:"
+		"rxjs": "catalog:",
+		"write-excel-file": "catalog:"
 	},
 	"dependencies": {
 		"tslib": "catalog:"

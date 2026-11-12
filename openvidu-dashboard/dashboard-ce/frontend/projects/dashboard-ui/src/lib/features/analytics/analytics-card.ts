@@ -30,7 +30,7 @@ export class CardContent {
 /**
  * A section of the Analytics page: the compact lock of its PRO feature, a skeleton of its height until its first data,
  * "No data in this range" with "Widen range", or its content, under its error notice with retry when a request fails;
- * "Export CSV" in the header.
+ * "Export XLSX" in the header, disabled while the card has nothing to export.
  */
 @Component({
 	selector: 'ovd-analytics-card',
@@ -47,11 +47,11 @@ export class CardContent {
 					ovdSectionActions
 					matButton
 					type="button"
-					[disabled]="locked() || exporting() || exportDisabled()"
-					(click)="exportCsv.emit()"
+					[disabled]="locked() || exporting() || exportDisabled() || loading() || empty()"
+					(click)="export.emit()"
 				>
 					<mat-icon svgIcon="download" />
-					Export CSV
+					Export XLSX
 				</button>
 			}
 			@if (locked()) {
@@ -102,11 +102,11 @@ export class AnalyticsCard {
 	readonly empty = input(false, { transform: booleanAttribute });
 	readonly exportable = input(true, { transform: booleanAttribute });
 	readonly exporting = input(false, { transform: booleanAttribute });
-	/** Keeps "Export CSV" disabled, as for data the current scope does not have. */
+	/** Keeps "Export XLSX" disabled, as for data the current scope does not have. */
 	readonly exportDisabled = input(false, { transform: booleanAttribute });
 	/** Height of the real content, kept by the skeleton and the empty state. */
 	readonly height = input(280);
-	readonly exportCsv = output();
+	readonly export = output();
 	readonly retry = output();
 	readonly widen = output();
 

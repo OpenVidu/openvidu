@@ -18,7 +18,9 @@ together (badges, feedback, locks, search, tiles, zone) share a folder and its s
   `public-api.ts`, or the library build folds them into the initial chunk.
 - The library holds what CE renders, locks included. What only an extending edition renders lives in its own
   application: its pages replace the locked CE routes and its pieces of CE pages fill the extension points of the
-  library README. `features/analytics/` holds the Analytics page with the locks of its PRO strip.
+  library README. `features/analytics/` holds the Analytics page with the locks of its PRO strip; each of its cards
+  exports an Excel workbook built in the browser (`analytics-workbook.ts`, `write-excel-file` loaded on first use),
+  while lists export CSV from the server.
 
 ## State and data
 

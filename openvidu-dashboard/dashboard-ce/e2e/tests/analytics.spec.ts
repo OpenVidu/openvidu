@@ -1,5 +1,6 @@
 import { expect, type Page, test } from '../fixtures/api.js';
 import { expectNoViolations } from '../fixtures/axe.js';
+import { readXlsx } from '../fixtures/xlsx.js';
 
 function card(page: Page, title: string) {
 	return page
@@ -241,7 +242,8 @@ test('the PRO strip is locked on CE and sends no PRO request', async ({ page, ap
 	await expect(page.getByText('All nodes')).toHaveCount(0);
 	await expect(card(page, 'Quality')).toContainText('Quality analytics is available in OpenVidu PRO');
 	await expect(card(page, 'Top rooms')).toContainText('Top rooms is available in OpenVidu PRO');
-	await expect(card(page, 'Quality').getByRole('button', { name: 'Export CSV' })).toBeDisabled();
+	await expect(card(page, 'Quality').getByRole('button', { name: 'Export XLSX' })).toBeDisabled();
+	await expect(card(page, 'Top rooms').getByRole('button', { name: 'Export XLSX' })).toBeDisabled();
 	await expect(card(page, 'Rooms').locator('ovd-time-series-chart').first()).toBeVisible();
 	expect(api.calls()).not.toContain('GET analytics/top');
 	expect(api.calls()).not.toContain('GET analytics/scopes');
@@ -255,26 +257,24 @@ test('the PRO strip is locked on CE and sends no PRO request', async ({ page, ap
 	await expectNoViolations(page);
 });
 
-test('a card exports its CSV under the server file name', async ({ page, api }) => {
-	await page.goto('/analytics?from=now-7d&to=now&tz=UTC');
+test('a card saves its workbook under its section and range, without a request', async ({ page, api }) => {
+	await page.goto('/analytics?from=now-7d&to=now&tz=Europe/Madrid');
 	await expect(card(page, 'Data transferred').locator('ovd-time-series-chart')).toBeVisible();
 
+	const requests = api.requests.length;
 	const download = page.waitForEvent('download');
 
-	await card(page, 'Data transferred').getByRole('button', { name: 'Export CSV' }).click();
+	await card(page, 'Data transferred').getByRole('button', { name: 'Export XLSX' }).click();
 
 	const file = await download;
-	const request = api.requests.find((item) => item.path === 'analytics/export.csv');
+	const workbook = await readXlsx(await file.path());
 
-	expect(request?.params.get('kind')).toBe('series');
-	expect(request?.params.get('metrics')).toBe('bytesUp,bytesDown');
-	expect(request?.authorization).toMatch(/^Bearer /);
-	expect(file.suggestedFilename()).toBe(
-		`analytics-series-${request?.params.get('from') ?? ''}-${request?.params.get('to') ?? ''}.csv`.replaceAll(
-			':',
-			''
-		)
-	);
+	expect(file.suggestedFilename()).toMatch(/^analytics-bandwidth-\d{4}-\d\d-\d\dT\d{6}\.\d{3}Z-.+Z\.xlsx$/);
+	expect(api.requests.slice(requests).map((request) => request.path)).toEqual([]);
+	expect(workbook.sheets).toEqual(['Info', '1 h']);
+	expect(workbook.xml).toContain('Bucket start (Europe/Madrid)');
+	expect(workbook.xml).toContain('Data up / down · Up (bytes)');
+	expect(workbook.xml).toContain('formatCode="yyyy-mm-dd hh:mm"');
 });
 
 test('the entity cards draw their peak and volume and export them', async ({ page, api }) => {
@@ -300,24 +300,28 @@ test('the entity cards draw their peak and volume and export them', async ({ pag
 	const exported = async (title: string) => {
 		const download = page.waitForEvent('download');
 
-		await card(page, title).getByRole('button', { name: 'Export CSV' }).click();
-		await download;
+		await card(page, title).getByRole('button', { name: 'Export XLSX' }).click();
 
-		return api.requests.findLast((item) => item.path === 'analytics/export.csv')?.params.get('metrics');
+		const file = await download;
+
+		return { name: file.suggestedFilename(), ...(await readXlsx(await file.path())) };
 	};
 
-	expect(await exported('Rooms')).toBe('roomsPeakActive,roomsCreated,recordedRoomsRate');
-	expect(await exported('Participants')).toBe(
-		'participantsPeakActive,participantsJoined,connectionSuccessRate,uniqueIdentities'
-	);
-	expect(await exported('Egress')).toBe('egressPeakActive,egressStarted,egressEnded');
-	expect(await exported('Ingress')).toBe('ingressPeakActive,ingressSessions');
+	const rooms = await exported('Rooms');
+
+	expect(rooms.name).toMatch(/^analytics-rooms-.+\.xlsx$/);
+	expect(rooms.sheets).toEqual(expect.arrayContaining(['Info', '1 d', 'Room topology', 'Room size']));
+	expect(rooms.xml).toContain('formatCode="0.0%"');
+	expect((await exported('Participants')).sheets).toContain('Participant kind');
+	expect((await exported('Egress')).sheets).toContain('Egress type');
+	expect((await exported('Ingress')).sheets).toContain('Ingress input type');
+	expect(api.calls()).not.toContain('GET analytics/export.csv');
 });
 
 test.describe('a failed request', () => {
-	test.use({ apiOptions: { analyticsFail: ['breakdowns', 'export.csv'] } });
+	test.use({ apiOptions: { analyticsFail: ['breakdowns'] } });
 
-	test('fails its cards only, with retry, and an export failure toasts', async ({ page, api }) => {
+	test('fails its cards only, with retry', async ({ page, api }) => {
 		await page.goto('/analytics?from=now-24h&to=now&tz=UTC');
 
 		const clients = card(page, 'Client breakdowns');
@@ -325,13 +329,9 @@ test.describe('a failed request', () => {
 		await expect(clients.getByRole('alert')).toContainText('Request e2e-breakdowns');
 		await expect(card(page, 'Rooms').locator('ovd-time-series-chart').first()).toBeVisible();
 
-		api.options.analyticsFail = ['export.csv'];
+		api.options.analyticsFail = [];
 		await clients.getByRole('button', { name: 'Retry' }).click();
 		await expect(clients.locator('ovd-breakdown-chart').first()).toBeVisible();
-
-		await card(page, 'Rooms').getByRole('button', { name: 'Export CSV' }).click();
-		await expect(page.getByText(/Export failed: .*Request e2e-export\.csv/)).toBeVisible();
-		await expect(card(page, 'Rooms').getByRole('button', { name: 'Export CSV' })).toBeEnabled();
 	});
 });
 

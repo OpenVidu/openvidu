@@ -45,8 +45,9 @@ loadComponent: … }] }] }`. The locked `tracks/:trackSid` route, outside the si
   provides once it is enabled, loaded on first use:
   - `ANALYTICS_PRO_CARDS`: per slot of the Analytics PRO strip (`quality`, `diagnostics`, `topRooms`), a
     `loadComponent()` and the metrics and dimensions it adds to the page's combined requests. The card components
-    inject `AnalyticsPageContext` (state, zone, refresh count, series, breakdowns, chart ranges and notes, CSV export,
-    widen and retry) and render an `ovd-analytics-card` with `CardContent`.
+    inject `AnalyticsPageContext` (state, zone, refresh count, series, breakdowns, chart ranges and notes, the
+    workbook export, widen and retry) and render an `ovd-analytics-card` with `CardContent`; on its `(export)` a card
+    passes `exportWorkbook()` its sheets, built with `seriesSheets()` and `breakdownSheet()`.
   - `ANALYTICS_SCOPE_SELECT` (Analytics header) and `ROOMS_NODE_FILTER` (Rooms filter bar): loaders of the node
     selects, which send their own scopes requests; the Rooms one binds a media node label to the `node` URL parameter,
     sent to the list as `mediaNode`.

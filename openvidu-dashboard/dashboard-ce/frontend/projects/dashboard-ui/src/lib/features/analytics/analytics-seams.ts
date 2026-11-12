@@ -11,6 +11,7 @@ import type {
 
 import type { BreakdownEntry, ChartSeries } from '../../charts/chart-options.js';
 import type { AnalyticsState } from './analytics-data.js';
+import type { WorkbookSeriesColumn, WorkbookSheet } from './analytics-workbook.js';
 
 /** Slots of the PRO strip of the Analytics page, in page order. */
 export type AnalyticsProSlot = 'quality' | 'diagnostics' | 'topRooms';
@@ -38,7 +39,7 @@ export const ANALYTICS_PRO_SLOTS: readonly AnalyticsProSlotFacts[] = [
 		heading: 'Top rooms',
 		sectionId: 'top-rooms',
 		feature: 'analytics-top-rooms',
-		exportable: false
+		exportable: true
 	}
 ];
 
@@ -73,10 +74,10 @@ export interface AnalyticsCardView {
 	empty: boolean;
 }
 
-/** Metrics or dimensions of a CSV export. */
-export interface AnalyticsExportItems {
-	metrics?: readonly AnalyticsMetric[];
-	dimensions?: readonly AnalyticsDimension[];
+/** The section a workbook exports: the `sectionId` its file is named after and the heading its Info sheet names. */
+export interface AnalyticsExportSection {
+	id: string;
+	heading: string;
 }
 
 /** What the Analytics page shares with the components of its seams. */
@@ -101,9 +102,11 @@ export abstract class AnalyticsPageContext {
 	abstract entries(dimension: AnalyticsDimension, labels?: Readonly<Record<string, string>>): BreakdownEntry[];
 	/** Loading, error and empty state of a card drawing `metrics` and `dimensions`. */
 	abstract view(metrics: readonly AnalyticsMetric[], dimensions?: readonly AnalyticsDimension[]): AnalyticsCardView;
-	/** Downloads the CSV of a card; a failure is toasted. */
-	abstract exportCsv(card: string, items: AnalyticsExportItems): Promise<void>;
-	abstract isExporting(card: string): boolean;
+	/** The time series of `columns` in one sheet per resolution and zone, as their charts draw them. */
+	abstract seriesSheets(columns: readonly WorkbookSeriesColumn[]): WorkbookSheet[];
+	/** Saves the `.xlsx` of a section: its Info sheet, then `sheets`; a failure is toasted. */
+	abstract exportWorkbook(section: AnalyticsExportSection, sheets: readonly WorkbookSheet[]): Promise<void>;
+	abstract isExporting(section: string): boolean;
 	/** Opens the range picker. */
 	abstract widenRange(): void;
 	abstract retry(): void;

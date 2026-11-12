@@ -68,6 +68,7 @@ export * from './lib/core/ui/toast.js';
 export * from './lib/features/analytics/analytics-card.js';
 export * from './lib/features/analytics/analytics-data.js';
 export * from './lib/features/analytics/analytics-seams.js';
+export * from './lib/features/analytics/analytics-workbook.js';
 export * from './lib/features/egress/egress-data.js';
 export * from './lib/features/egress/egress-display.js';
 export * from './lib/features/egress/egress-outputs.js';
