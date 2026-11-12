@@ -7,3 +7,4 @@ export * from './ingress.js';
 export * from './overview.js';
 export * from './participants.js';
 export * from './rooms.js';
+export * from './xlsx.js';
