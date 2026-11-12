@@ -49,6 +49,7 @@ queried) and `Deployment` (running the service). One line per observable change,
   zone picked in the range picker or the header zone chip applies to every page of the session.
 - Global search, and one search box with hints on every list: an exact ID shows its entity whatever the range and
   filters, and Enter opens it. Empty lists offer Clear filters and Widen range, and an unknown ID says so.
+- Every list exports what it shows as CSV, across all its pages, up to 10,000 rows.
 - Server status banners on every page: no analytics data received, schema and migration progress; they follow the
   server even with auto-refresh off, and the connectivity and no-data banners appear only after two bad results in a
   row.
@@ -73,9 +74,10 @@ queried) and `Deployment` (running the service). One line per observable change,
   7 days, `entities` 90 days, `rollups_hourly` 400 days and `rollups_daily`, unlimited unless set), `stats_detail`,
   `anonymize_ip`, `store_metadata`, `events.store_types`, `queue` and `validation_action`.
 - Legacy analytics data is migrated to the new model automatically.
-- Versioned API under `/api/v1`: rooms, participants and agents, egress and ingress lists with their summaries, sorted
-  by metrics (durations, end times, counters) within a range limit reported by `GET /api/v1/info`; an exact ID always
-  finds its entity whatever the range and filters, and active rooms and participants carry a `stale` flag.
+- Versioned API under `/api/v1`: rooms, participants and agents, egress and ingress lists with their summaries and CSV
+  exports, sorted by metrics (durations, end times, counters) within a range limit reported by `GET /api/v1/info`; an
+  exact ID always finds its entity whatever the range and filters, and active rooms and participants carry a `stale`
+  flag.
 - Analytics API: `/api/v1/analytics/series`, `/breakdowns`, `/summary` and `/export.csv`, read from the rollup
   collections.
 - Overview API: `GET /api/v1/overview` with live counters, today's totals and recent rooms.

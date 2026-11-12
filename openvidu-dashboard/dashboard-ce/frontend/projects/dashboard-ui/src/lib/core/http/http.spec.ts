@@ -130,8 +130,18 @@ describe('HttpService', () => {
 			.expectOne('api/v1/analytics/export.csv?kind=series')
 			.flush(new Blob(['a,b\r\n']), { headers: { 'Content-Disposition': 'attachment; filename=x-1.csv' } });
 
-		expect((await download).fileName).toBe('x-1.csv');
+		expect(await download).toMatchObject({ fileName: 'x-1.csv', truncated: false });
 		expect(dispositionFileName('attachment; filename="report 2.csv"')).toBe('report 2.csv');
 		expect(dispositionFileName(null)).toBeNull();
+	});
+
+	it('reads the truncation header of a cut export', async () => {
+		const download = http.download('rooms/export.csv');
+
+		controller
+			.expectOne('api/v1/rooms/export.csv')
+			.flush(new Blob(['sid\r\n']), { headers: { 'X-Export-Truncated': 'true' } });
+
+		expect((await download).truncated).toBe(true);
 	});
 });

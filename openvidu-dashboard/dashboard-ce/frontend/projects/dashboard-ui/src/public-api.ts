@@ -14,6 +14,7 @@ export * from './lib/components/duration/duration.js';
 export * from './lib/components/date-time-range-picker/date-time-range-picker.js';
 export * from './lib/components/feedback/empty-state.js';
 export * from './lib/components/feedback/error-banner.js';
+export * from './lib/components/export-button/export-button.js';
 export * from './lib/components/external-link/external-link.js';
 export * from './lib/components/lock/feature-gate.js';
 export * from './lib/components/lock/features.js';

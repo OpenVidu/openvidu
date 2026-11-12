@@ -9,7 +9,7 @@ import type {
 	SortOrder
 } from '@openvidu-dashboard/typings';
 
-import { HttpService, type QueryValue } from '../../core/http/http.js';
+import { type Download, HttpService, type QueryValue } from '../../core/http/http.js';
 import type { RangeParams } from '../../core/state/query-state.js';
 import { apiRange } from '../rooms/rooms-data.js';
 
@@ -43,7 +43,11 @@ function listParams(request: AgentsListRequest): Record<string, QueryValue> {
 	};
 }
 
-/** Requests of the participants search list, its summary and the agents list. */
+function participantsParams(request: ParticipantsListRequest): Record<string, QueryValue> {
+	return { ...listParams(request), kind: request.kind, publisher: request.publisher ? 'true' : null };
+}
+
+/** Requests of the participants search list, the agents list, their CSV exports and the summary. */
 @Service()
 export class ParticipantsDataService {
 	private readonly http = inject(HttpService);
@@ -53,12 +57,24 @@ export class ParticipantsDataService {
 	}
 
 	list(request: ParticipantsListRequest): Promise<ListResponse<ParticipantListItem>> {
-		return this.http.get('participants', {
-			params: { ...listParams(request), kind: request.kind, publisher: request.publisher ? 'true' : null }
-		});
+		return this.http.get('participants', { params: participantsParams(request) });
 	}
 
 	agents(request: AgentsListRequest): Promise<ListResponse<ParticipantListItem>> {
 		return this.http.get('agents', { params: listParams(request) });
+	}
+
+	/** The CSV of every participant session the request selects. */
+	export(request: ParticipantsListRequest): Promise<Download> {
+		return this.http.download('participants/export.csv', {
+			params: { ...participantsParams(request), cursor: null, limit: null }
+		});
+	}
+
+	/** The CSV of every agent session the request selects. */
+	exportAgents(request: AgentsListRequest): Promise<Download> {
+		return this.http.download('agents/export.csv', {
+			params: { ...listParams(request), cursor: null, limit: null }
+		});
 	}
 }

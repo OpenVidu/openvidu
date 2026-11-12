@@ -14,6 +14,7 @@ import {
 import { buildPage, cursorOrThrow } from '../api/cursor.js';
 import { assertRankedRange, rankedPage } from '../api/ranked.js';
 import { rankedSortLimits } from '../api/ranked-limits.js';
+import type { ListOptions } from '../api/responses.js';
 import { markStale, type WriterFreshness } from '../status/freshness.js';
 import { toParticipantListItem } from './participants-mappers.js';
 import { PARTICIPANT_LIST_PROJECTION, type ParticipantsFilter, participantsListPlan } from './participants-query.js';
@@ -123,20 +124,22 @@ export class ParticipantsService {
 		return KINDS.map((kind) => ({ _id: kind, n: sums?.[kind] ?? 0 }));
 	}
 
-	list(params: ParticipantsListParams): Promise<ListResponse<ParticipantListItem>> {
-		return this.page(params, params);
+	list(params: ParticipantsListParams, options: ListOptions = {}): Promise<ListResponse<ParticipantListItem>> {
+		return this.page(params, params, options);
 	}
 
 	/** The participants list of kind `AGENT`. */
-	agents(params: AgentsListParams): Promise<ListResponse<ParticipantListItem>> {
-		return this.page(params, { ...params, kind: [ParticipantKind.AGENT] });
+	agents(params: AgentsListParams, options: ListOptions = {}): Promise<ListResponse<ParticipantListItem>> {
+		return this.page(params, { ...params, kind: [ParticipantKind.AGENT] }, options);
 	}
 
 	private async page(
 		params: { cursor?: string | undefined; limit: number; from: Date; to: Date; order: 'asc' | 'desc' },
-		filter: ParticipantsFilter
+		filter: ParticipantsFilter,
+		options: ListOptions
 	): Promise<ListResponse<ParticipantListItem>> {
 		const cursor = cursorOrThrow(params.cursor, filter.sort, params.order);
+		const counted = options.total !== false && this.exactRange(params.from, params.to);
 		const plan = participantsListPlan(filter, cursor);
 
 		if (plan.kind === 'sid') {
@@ -176,7 +179,7 @@ export class ParticipantsService {
 					limit: params.limit,
 					now: this.options.now()
 				}),
-				this.exactRange(params.from, params.to)
+				counted
 					? this.participants.countDocuments(plan.countFilter as Filter<ParticipantDocument>, hint)
 					: undefined,
 				this.options.freshness.staleContext()
@@ -191,7 +194,7 @@ export class ParticipantsService {
 
 		const [fetched, total, context] = await Promise.all([
 			this.find(plan.filter, plan.sort, params.limit + 1, plan.hint),
-			this.exactRange(params.from, params.to)
+			counted
 				? this.participants.countDocuments(plan.countFilter as Filter<ParticipantDocument>, hint)
 				: undefined,
 			this.options.freshness.staleContext()

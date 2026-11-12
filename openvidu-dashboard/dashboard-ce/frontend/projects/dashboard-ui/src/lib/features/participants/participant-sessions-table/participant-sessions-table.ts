@@ -9,6 +9,7 @@ import { StatusBadge } from '../../../components/badges/status-badge.js';
 import { CopyButton } from '../../../components/copy-button/copy-button.js';
 import { DataTable, type SortChange, TableCell, type TableColumn } from '../../../components/data-table/data-table.js';
 import { Duration } from '../../../components/duration/duration.js';
+import type { Download } from '../../../core/http/http.js';
 import { EmptyState } from '../../../components/feedback/empty-state.js';
 import { MediaNodeLabel } from '../../../components/media-node/media-node.js';
 
@@ -41,6 +42,8 @@ export class ParticipantSessionsTable {
 	readonly loading = input(false);
 	readonly error = input<unknown>(null);
 	readonly pageSize = input.required<number>();
+	/** Downloads the CSV of the list; with it the table shows Export CSV. */
+	readonly exportCsv = input<(() => Promise<Download>) | null>(null);
 	/** The exact participant SID searched for, which gets its own empty state. */
 	readonly exactId = input<string | null>(null);
 	/** What the list holds, for its empty state: "No participants match". */

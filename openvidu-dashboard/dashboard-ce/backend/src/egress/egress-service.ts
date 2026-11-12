@@ -5,6 +5,7 @@ import type { EgressDocument, EgressListItem, EgressSummary, ListResponse } from
 import { buildPage, type CursorPayload, cursorOrThrow, pageQuery } from '../api/cursor.js';
 import { indexOrderedPage } from '../api/keyset.js';
 import { assertRankedRange, rankedPage } from '../api/ranked.js';
+import type { ListOptions } from '../api/responses.js';
 import { EGRESS_LIST_PROJECTION, toEgressListItem } from './egress-mappers.js';
 import { egressesListPlan } from './egress-query.js';
 import { EgressRepository } from './egress-repository.js';
@@ -39,7 +40,7 @@ export class EgressService {
 		return to.getTime() - from.getTime() <= this.options.totalMaxRangeMs;
 	}
 
-	async list(params: EgressesListParams): Promise<ListResponse<EgressListItem>> {
+	async list(params: EgressesListParams, options: ListOptions = {}): Promise<ListResponse<EgressListItem>> {
 		const plan = egressesListPlan(params);
 
 		if (plan.kind === 'id') {
@@ -51,7 +52,10 @@ export class EgressService {
 		const cursor = cursorOrThrow(params.cursor, params.sort, params.order);
 		const { filter, hint } = plan;
 		const countFilter = { ...filter, startedAt: { $gte: params.from, $lt: params.to } };
-		const total = this.exactRange(params.from, params.to) ? this.repository.count(countFilter, hint) : undefined;
+		const total =
+			options.total !== false && this.exactRange(params.from, params.to)
+				? this.repository.count(countFilter, hint)
+				: undefined;
 
 		if (plan.kind === 'ranked') {
 			assertRankedRange(params, this.options.totalMaxRangeMs, params.sort);

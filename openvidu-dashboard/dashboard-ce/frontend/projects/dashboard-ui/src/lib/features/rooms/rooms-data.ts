@@ -9,7 +9,7 @@ import type {
 	SortOrder
 } from '@openvidu-dashboard/typings';
 
-import { HttpService, type QueryValue } from '../../core/http/http.js';
+import { type Download, HttpService, type QueryValue } from '../../core/http/http.js';
 import type { RangeParams } from '../../core/state/query-state.js';
 import { resolveRange } from '../../core/state/relative-time.js';
 
@@ -42,25 +42,34 @@ export function apiRange(range: RangeParams, now: Date = new Date()): Record<str
 		: { from: resolved.from.toISOString(), to: resolved.to.toISOString(), tz: range.tz };
 }
 
-/** Requests of the rooms list and its summary. */
+function roomsParams(request: RoomsListRequest): Record<string, QueryValue> {
+	return {
+		...apiRange(request.range),
+		status: request.status,
+		q: request.q,
+		features: request.features,
+		mediaNode: request.mediaNode,
+		sort: request.sort,
+		order: request.order,
+		cursor: request.cursor,
+		limit: request.limit
+	};
+}
+
+/** Requests of the rooms list, its CSV export and its summary. */
 @Service()
 export class RoomsDataService {
 	private readonly http = inject(HttpService);
 
 	list(request: RoomsListRequest): Promise<ListResponse<RoomListItem>> {
-		const params: Record<string, QueryValue> = {
-			...apiRange(request.range),
-			status: request.status,
-			q: request.q,
-			features: request.features,
-			mediaNode: request.mediaNode,
-			sort: request.sort,
-			order: request.order,
-			cursor: request.cursor,
-			limit: request.limit
-		};
+		return this.http.get('rooms', { params: roomsParams(request) });
+	}
 
-		return this.http.get('rooms', { params });
+	/** The CSV of every room the request selects. */
+	export(request: RoomsListRequest): Promise<Download> {
+		return this.http.download('rooms/export.csv', {
+			params: { ...roomsParams(request), cursor: null, limit: null }
+		});
 	}
 
 	summary(range: RangeParams): Promise<RoomSummary> {

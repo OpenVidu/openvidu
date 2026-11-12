@@ -94,6 +94,8 @@ export class AgentsPage {
 		}
 	});
 
+	/** Downloads the CSV of every row of the list as it is filtered and sorted now. */
+	protected readonly exportCsv = () => this.data.exportAgents(this.request());
 	protected readonly loading = this.loader.loading;
 	protected readonly error = this.loader.error;
 	protected readonly page = computed(() => this.loader.data()?.page ?? null);

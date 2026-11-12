@@ -77,6 +77,8 @@ export interface ApiOptions {
 	overviewFails?: boolean;
 	/** Body of `GET status`, built per request (a healthy writer by default). */
 	status?: () => StatusResponse;
+	/** The list CSV exports answer with `X-Export-Truncated: true`, as a cut file does. */
+	listExportTruncated?: boolean;
 }
 
 export interface RecordedRequest {
@@ -86,6 +88,11 @@ export interface RecordedRequest {
 	params: URLSearchParams;
 	authorization: string | null;
 }
+
+/** Paths of the list CSV exports the mock answers. */
+const LIST_EXPORTS = new Set(
+	['rooms', 'participants', 'agents', 'egresses', 'ingresses'].map((list) => `${list}/export.csv`)
+);
 
 export const DEFAULT_API: ApiOptions = {
 	signedIn: true,
@@ -258,6 +265,8 @@ export class MockApi {
 					await route.fulfill(error('PRO_FEATURE', 403));
 				} else if (handler !== undefined) {
 					await handler(route, url.searchParams);
+				} else if (method === 'GET' && LIST_EXPORTS.has(path)) {
+					await this.listExport(route, path, url.searchParams);
 				} else if (method === 'GET' && path === 'rooms') {
 					await this.rooms(route, new URL(request.url()).searchParams);
 				} else if (method === 'GET' && path === 'rooms/summary') {
@@ -284,6 +293,21 @@ export class MockApi {
 					await route.fulfill(error('NOT_FOUND', 404));
 				}
 		}
+	}
+
+	/** A one-line CSV under the file name of the list export, cut when `listExportTruncated` says so. */
+	private async listExport(route: Route, path: string, params: URLSearchParams): Promise<void> {
+		const list = path.slice(0, -'/export.csv'.length);
+		const fileName = `${list}-${params.get('from') ?? ''}-${params.get('to') ?? ''}.csv`.replaceAll(':', '');
+
+		await route.fulfill({
+			body: 'id\r\nx\r\n',
+			headers: {
+				'Content-Type': 'text/csv; charset=utf-8',
+				'Content-Disposition': `attachment; filename=${fileName}`,
+				...(this.options.listExportTruncated === true ? { 'X-Export-Truncated': 'true' } : {})
+			}
+		});
 	}
 
 	private async overview(route: Route): Promise<void> {

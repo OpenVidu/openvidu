@@ -2,6 +2,8 @@ import { HttpClient, type HttpContext, HttpErrorResponse, HttpParams } from '@an
 import { inject, Service } from '@angular/core';
 import { catchError, firstValueFrom, from, map, type Observable, of, switchMap, throwError, timeout } from 'rxjs';
 
+import { EXPORT_TRUNCATED_HEADER } from '@openvidu-dashboard/typings';
+
 import { ApiRequestError, toApiRequestError } from './api-error.js';
 
 /** Relative to the document base, so the dashboard works under any path prefix. */
@@ -28,10 +30,27 @@ export interface RequestOptions {
 /** Result of a conditional GET: the fresh body and its validator, or `304` when the validator still matches. */
 export type ConditionalResult<T> = { status: 200; body: T; etag: string | null } | { status: 304; etag: string };
 
-/** A downloaded file and the name of its `Content-Disposition`, when the server gives one. */
+/** A downloaded file, the name of its `Content-Disposition` when the server gives one, and whether the cap cut it. */
 export interface Download {
 	blob: Blob;
 	fileName: string | null;
+	/** The server left rows out (`X-Export-Truncated: true`). */
+	truncated: boolean;
+}
+
+/** Saves `download` in the browser under its file name, or `fallbackName` when the server gave none. */
+export function saveDownload(
+	document: Document,
+	download: Pick<Download, 'blob' | 'fileName'>,
+	fallbackName: string
+): void {
+	const url = URL.createObjectURL(download.blob);
+	const link = document.createElement('a');
+
+	link.href = url;
+	link.download = download.fileName ?? fallbackName;
+	link.click();
+	URL.revokeObjectURL(url);
 }
 
 /** `filename` of a `Content-Disposition` header, quoted or not. */
@@ -134,7 +153,8 @@ export class HttpService {
 				.pipe(
 					map((response): Download => ({
 						blob: response.body ?? new Blob(),
-						fileName: dispositionFileName(response.headers.get('Content-Disposition'))
+						fileName: dispositionFileName(response.headers.get('Content-Disposition')),
+						truncated: response.headers.get(EXPORT_TRUNCATED_HEADER) === 'true'
 					})),
 					catchError((error: unknown) =>
 						from(withJsonBody(error)).pipe(

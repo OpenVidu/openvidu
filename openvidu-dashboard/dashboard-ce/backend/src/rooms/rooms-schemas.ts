@@ -18,36 +18,43 @@ const roomSearch = qParam
 			'range and the other filters'
 	});
 
+const roomsShape = {
+	status: z
+		.enum(enumValues(RoomStatusFilter), { error: 'must be active, closed or all' })
+		.default(RoomStatusFilter.ALL)
+		.meta({ description: 'Rooms active now, closed, or both' }),
+	q: roomSearch,
+	features: csvParam(enumValues(RoomFeature))
+		.optional()
+		.meta({ description: 'Rooms that used any of these features' }),
+	mediaNode: z
+		.string()
+		.min(1)
+		.max(128)
+		.optional()
+		.meta({ description: 'Rooms hosted by the server with this media node label' }),
+	sort: z
+		.enum(enumValues(RoomSort), { error: 'must be createdAt, endedAt, duration, uniqueIdentities or active' })
+		.default(RoomSort.CREATED_AT)
+		.meta({
+			description:
+				'Sort key: createdAt in index order, the others ranked within the range limit of GET /api/v1/info'
+		}),
+	order: orderParam.default('desc')
+};
+
 export function roomsListQuery(now: () => Date) {
-	return rangedQuery(now, {
-		status: z
-			.enum(enumValues(RoomStatusFilter), { error: 'must be active, closed or all' })
-			.default(RoomStatusFilter.ALL)
-			.meta({ description: 'Rooms active now, closed, or both' }),
-		q: roomSearch,
-		features: csvParam(enumValues(RoomFeature))
-			.optional()
-			.meta({ description: 'Rooms that used any of these features' }),
-		mediaNode: z
-			.string()
-			.min(1)
-			.max(128)
-			.optional()
-			.meta({ description: 'Rooms hosted by the server with this media node label' }),
-		sort: z
-			.enum(enumValues(RoomSort), { error: 'must be createdAt, endedAt, duration, uniqueIdentities or active' })
-			.default(RoomSort.CREATED_AT)
-			.meta({
-				description:
-					'Sort key: createdAt in index order, the others ranked within the range limit of GET /api/v1/info'
-			}),
-		order: orderParam.default('desc'),
-		cursor: cursorParam,
-		limit: limitParam
-	});
+	return rangedQuery(now, { ...roomsShape, cursor: cursorParam, limit: limitParam });
 }
 
 export type RoomsListParams = z.output<ReturnType<typeof roomsListQuery>>;
+
+/** The rooms list query without `cursor` and `limit`: the export reads every page. */
+export function roomsExportQuery(now: () => Date) {
+	return rangedQuery(now, roomsShape);
+}
+
+export type RoomsExportParams = z.output<ReturnType<typeof roomsExportQuery>>;
 
 export function roomsSummaryQuery(now: () => Date) {
 	return rangedQuery(now, {});

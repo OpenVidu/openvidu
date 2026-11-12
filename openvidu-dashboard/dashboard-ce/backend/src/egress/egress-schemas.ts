@@ -51,32 +51,39 @@ const statusParam = z
 	.default('all')
 	.meta({ description: '`all`, or the egress statuses to keep' });
 
+const egressesShape = {
+	status: statusParam,
+	type: csvParam(enumValues(EgressType))
+		.optional()
+		.meta({ description: 'Egress types to keep; absent means every type' }),
+	room: z
+		.string()
+		.regex(ROOM_SID, { error: 'must be a room SID (RM_…)' })
+		.optional()
+		.meta({ description: 'Egresses of this room (exact room SID)' }),
+	q: egressSearch,
+	sort: z
+		.enum(enumValues(EgressSort), { error: 'must be startedAt, endedAt or duration' })
+		.default(EgressSort.STARTED_AT)
+		.meta({
+			description:
+				'Sort key: startedAt in index order, the others ranked within the range limit of GET /api/v1/info'
+		}),
+	order: orderParam.default('desc')
+};
+
 export function egressesListQuery(now: () => Date) {
-	return rangedQuery(now, {
-		status: statusParam,
-		type: csvParam(enumValues(EgressType))
-			.optional()
-			.meta({ description: 'Egress types to keep; absent means every type' }),
-		room: z
-			.string()
-			.regex(ROOM_SID, { error: 'must be a room SID (RM_…)' })
-			.optional()
-			.meta({ description: 'Egresses of this room (exact room SID)' }),
-		q: egressSearch,
-		sort: z
-			.enum(enumValues(EgressSort), { error: 'must be startedAt, endedAt or duration' })
-			.default(EgressSort.STARTED_AT)
-			.meta({
-				description:
-					'Sort key: startedAt in index order, the others ranked within the range limit of GET /api/v1/info'
-			}),
-		order: orderParam.default('desc'),
-		cursor: cursorParam,
-		limit: limitParam
-	});
+	return rangedQuery(now, { ...egressesShape, cursor: cursorParam, limit: limitParam });
 }
 
 export type EgressesListParams = z.output<ReturnType<typeof egressesListQuery>>;
+
+/** The egresses list query without `cursor` and `limit`: the export reads every page. */
+export function egressesExportQuery(now: () => Date) {
+	return rangedQuery(now, egressesShape);
+}
+
+export type EgressesExportParams = z.output<ReturnType<typeof egressesExportQuery>>;
 
 export function egressesSummaryQuery(now: () => Date) {
 	return rangedQuery(now, {});

@@ -5,12 +5,21 @@ import { queryContext, type QueryContext } from '@openvidu-dashboard/data-genera
 import { type Db, type Document, MongoClient } from 'mongodb';
 import { afterAll, beforeAll, describe, expect, inject, it } from 'vitest';
 
-import { Collection, ParticipantKind, type ParticipantDocument, ParticipantStatus } from '@openvidu-dashboard/typings';
+import {
+	Collection,
+	LIST_EXPORT_MAX_ROWS,
+	ParticipantKind,
+	type ParticipantDocument,
+	ParticipantStatus
+} from '@openvidu-dashboard/typings';
 
+import { columnsCsv } from '../../src/api/csv.js';
+import { listRows } from '../../src/api/csv-export.js';
 import { rankedPipeline } from '../../src/api/ranked.js';
 import { prefixRegex } from '../../src/api/search.js';
 import { PARTICIPANT_LIST_PROJECTION, participantsListPlan } from '../../src/participants/participants-query.js';
-import { participantsListQuery } from '../../src/participants/participants-schemas.js';
+import { participantCsvColumns } from '../../src/participants/participants-csv.js';
+import { participantsExportQuery, participantsListQuery } from '../../src/participants/participants-schemas.js';
 import { ParticipantsService } from '../../src/participants/participants-service.js';
 import { WriterFreshness } from '../../src/status/freshness.js';
 import { expectWithinBudgets } from '../support/latency-budget.js';
@@ -39,11 +48,32 @@ describe.skipIf(mongoUri === '')(`participants query plan at scenario ${scenario
 	const now = new Date();
 	const report: string[] = [];
 
-	const listParams = (query: Record<string, string>) =>
-		participantsListQuery(() => now).parse({ from: ctx.range.from.toISOString(), limit: String(LIMIT), ...query });
+	/** The list parameters of `query`; `limit` overrides the page size the schema caps at 100. */
+	const listParams = (query: Record<string, string>, limit?: number) => {
+		const params = participantsListQuery(() => now).parse({
+			from: ctx.range.from.toISOString(),
+			limit: String(LIMIT),
+			...query
+		});
 
-	const explainList = async (query: Record<string, string>, bound: number, pinnedKind?: ParticipantKind) => {
-		const params = listParams(query);
+		return limit === undefined ? params : { ...params, limit };
+	};
+
+	/** The CSV export of the list `query` selects, as its route builds it. */
+	const exportCsv = async (query: Record<string, string>) => {
+		const params = participantsExportQuery(() => now).parse({ from: ctx.range.from.toISOString(), ...query });
+		const rows = await listRows((input, options) => service.list(input, options), params);
+
+		return columnsCsv(participantCsvColumns(false), rows.items);
+	};
+
+	const explainList = async (
+		query: Record<string, string>,
+		bound: number,
+		pinnedKind?: ParticipantKind,
+		limit = LIMIT
+	) => {
+		const params = listParams(query, limit);
 		const plan = participantsListPlan(pinnedKind === undefined ? params : { ...params, kind: [pinnedKind] });
 
 		if (plan.kind === 'ranked') {
@@ -77,7 +107,7 @@ describe.skipIf(mongoUri === '')(`participants query plan at scenario ${scenario
 					...(plan.kind === 'page' && plan.hint !== undefined ? { hint: plan.hint } : {})
 				})
 				.sort(plan.kind === 'page' ? plan.sort : { _id: 1 })
-				.limit(LIMIT + 1),
+				.limit(limit + 1),
 			{ maxDocsExamined: bound }
 		);
 	};
@@ -137,6 +167,17 @@ describe.skipIf(mongoUri === '')(`participants query plan at scenario ${scenario
 
 			expectIndexes(plan, ['joinedAt_id']);
 			expect(plan.planStages).not.toContain('SORT');
+		});
+
+		it('export at the row cap: joinedAt_id, at most the cap and its ties or the sessions in range', async () => {
+			const lastDay = new Date(now.getTime() - DAY).toISOString();
+			const plan = await explainList({}, LIST_EXPORT_MAX_ROWS + 2, undefined, LIST_EXPORT_MAX_ROWS);
+
+			expectIndexes(plan, ['joinedAt_id']);
+			expect(plan.planStages).not.toContain('SORT');
+			expect(
+				(await explainList({ sort: 'duration', from: lastDay }, 0, undefined, LIST_EXPORT_MAX_ROWS)).collscan
+			).toBe(false);
 		});
 
 		it('room: roomSid_joinedAt_id without a sort', async () => {
@@ -264,6 +305,11 @@ describe.skipIf(mongoUri === '')(`participants query plan at scenario ${scenario
 				]);
 			}
 
+			rows.push(
+				['Export (up to 10,000 rows)', '2000 ms', () => exportCsv({})],
+				['Export, ranked by duration (24 h)', '2000 ms', () => exportCsv({ ...lastDay, sort: 'duration' })]
+			);
+
 			report.push('| Query | Budget | p95 |', '| --- | --- | --- |');
 
 			const overruns: string[] = [];
@@ -273,7 +319,10 @@ describe.skipIf(mongoUri === '')(`participants query plan at scenario ${scenario
 
 				report.push(`| ${name} | ${budget} | ${measured.toFixed(1)} ms |`);
 
-				if (name.startsWith('List, ranked') && measured > Number.parseFloat(budget)) {
+				if (
+					(name.startsWith('List, ranked') || name.startsWith('Export')) &&
+					measured > Number.parseFloat(budget)
+				) {
 					overruns.push(`${name}: ${measured.toFixed(1)} ms > ${budget}`);
 				}
 			}

@@ -27,11 +27,10 @@ import { seriesNote } from '../../charts/chart-note.js';
 import type { BreakdownEntry, ChartSeries } from '../../charts/chart-options.js';
 import { TimeSeriesChart } from '../../charts/time-series-chart/time-series-chart.js';
 import { RangePickerService } from '../../components/date-time-range-picker/date-time-range-picker.js';
-import { errorMessage } from '../../components/feedback/error-banner.js';
+import { exportFailedMessage } from '../../components/export-button/export-button.js';
 import { Notice } from '../../components/feedback/notice.js';
 import { KpiTile } from '../../components/tiles/kpi-tile.js';
 import { TileRow } from '../../components/tiles/tile-row.js';
-import { toApiRequestError } from '../../core/http/api-error.js';
 import { InfoService } from '../../core/info.js';
 import { injectListLoader } from '../../core/refresh/list-loader.js';
 import { ListStateService } from '../../core/state/list-state.js';
@@ -644,11 +643,7 @@ export class AnalyticsPage implements AnalyticsPageContext {
 					})
 				: this.data.exportCsv(state, 'breakdowns', { dimensions: items.dimensions ?? [] }));
 		} catch (error) {
-			const requestId = toApiRequestError(error).requestId;
-
-			this.toast.show(
-				`Export failed: ${errorMessage(error)}${requestId === undefined ? '' : ` Request ${requestId}`}`
-			);
+			this.toast.show(exportFailedMessage(error));
 		} finally {
 			this.exporting.update((cards) => new Set([...cards].filter((item) => item !== card)));
 		}

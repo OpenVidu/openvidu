@@ -55,6 +55,9 @@ together (badges, feedback, locks, search, tiles, zone) share a folder and its s
   row of its own (the peak and volume pair of an entity section) is a second `ovd-chart-grid` below the first.
   A time series is `ovd-time-series-chart` and one dimension `ovd-breakdown-chart`, `ordered` for a fixed set of keys
   (topology classes, size ranges) that keeps their order and shows the keys at 0.
+- A list exports CSV through the `exportCsv` input of `ovd-data-table` (a function returning the `Download` of its
+  `export.csv`, with the list request minus `cursor` and `limit`): the table renders `ovd-export-button` at the end of
+  its toolbar, or after Columns in the header of its section card. `saveDownload()` saves any download.
 - Identifiers appear once, with `ovd-copy-button` beside the visible value; navigation uses links, never row clicks.
 - Lists use `ovd-list-search` inside `.ovd-filter-bar`, `ovd-room-chip` for the room filter, ranked sorts from
   `rankedSortReasons()` and `ovd-data-table`.

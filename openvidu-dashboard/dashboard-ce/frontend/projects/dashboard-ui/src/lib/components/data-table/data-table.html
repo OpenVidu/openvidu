@@ -19,7 +19,13 @@
 	</mat-menu>
 </ng-template>
 
-@if ((cards() && sortable().length > 0) || columnsInToolbar()) {
+<ng-template #exportButton>
+	@if (exportCsv(); as run) {
+		<ovd-export-button [run]="run" [disabled]="rows().length === 0" />
+	}
+</ng-template>
+
+@if ((cards() && sortable().length > 0) || columnsInToolbar() || exportInToolbar()) {
 	<div class="toolbar">
 		@if (cards() && sortable().length > 0) {
 			<mat-form-field class="sort-select" subscriptSizing="dynamic">
@@ -52,6 +58,9 @@
 		<span class="spacer"></span>
 		@if (columnsInToolbar()) {
 			<ng-container [ngTemplateOutlet]="columnsButton" />
+		}
+		@if (exportInToolbar()) {
+			<ng-container [ngTemplateOutlet]="exportButton" />
 		}
 	</div>
 }

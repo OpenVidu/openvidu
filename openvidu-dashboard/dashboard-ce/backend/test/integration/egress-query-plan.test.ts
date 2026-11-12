@@ -5,14 +5,22 @@ import { queryContext, type QueryContext } from '@openvidu-dashboard/data-genera
 import { type Db, MongoClient } from 'mongodb';
 import { afterAll, beforeAll, describe, expect, inject, it } from 'vitest';
 
-import { Collection, EGRESS_IN_FLIGHT_STATUSES, type EgressDocument } from '@openvidu-dashboard/typings';
+import {
+	Collection,
+	EGRESS_IN_FLIGHT_STATUSES,
+	type EgressDocument,
+	LIST_EXPORT_MAX_ROWS
+} from '@openvidu-dashboard/typings';
 
+import { columnsCsv } from '../../src/api/csv.js';
+import { listRows } from '../../src/api/csv-export.js';
 import { pageQuery } from '../../src/api/cursor.js';
 import { rankedPipeline } from '../../src/api/ranked.js';
 import { prefixRegex } from '../../src/api/search.js';
 import { EGRESS_LIST_PROJECTION } from '../../src/egress/egress-mappers.js';
 import { egressesListPlan } from '../../src/egress/egress-query.js';
-import { egressesListQuery } from '../../src/egress/egress-schemas.js';
+import { EGRESS_CSV_COLUMNS } from '../../src/egress/egress-csv.js';
+import { egressesExportQuery, egressesListQuery } from '../../src/egress/egress-schemas.js';
 import { EgressService } from '../../src/egress/egress-service.js';
 import { expectIdLookup, expectIndexBacked, expectIndexes, p95 } from '../support/query-plan.js';
 import { expectWithinBudgets } from '../support/latency-budget.js';
@@ -43,13 +51,28 @@ describe.skipIf(mongoUri === '')(`egress query plan at scenario ${scenario}`, ()
 	const now = new Date();
 	const report: string[] = [];
 
-	const listParams = (query: Record<string, string>) =>
-		egressesListQuery(() => now).parse({ from: ctx.range.from.toISOString(), limit: String(LIMIT), ...query });
+	/** The list parameters of `query`; `limit` overrides the page size the schema caps at 100. */
+	const listParams = (query: Record<string, string>, limit?: number) => {
+		const params = egressesListQuery(() => now).parse({
+			from: ctx.range.from.toISOString(),
+			limit: String(LIMIT),
+			...query
+		});
+
+		return limit === undefined ? params : { ...params, limit };
+	};
+	/** The CSV export of the list `query` selects, as its route builds it. */
+	const exportCsv = async (query: Record<string, string>) => {
+		const params = egressesExportQuery(() => now).parse({ from: ctx.range.from.toISOString(), ...query });
+		const rows = await listRows((input, options) => service.list(input, options), params);
+
+		return columnsCsv(EGRESS_CSV_COLUMNS, rows.items);
+	};
 	const egresses = () => db.collection<EgressDocument>(Collection.EGRESSES);
 	const raw = () => db.collection(Collection.EGRESSES);
 	/** The first page of a list request as the service reads it on the index of its plan. */
-	const explainList = async (query: Record<string, string>, bound: number) => {
-		const params = listParams(query);
+	const explainList = async (query: Record<string, string>, bound: number, limit = LIMIT) => {
+		const params = listParams(query, limit);
 		const plan = egressesListPlan(params);
 
 		if (plan.kind === 'id') {
@@ -90,7 +113,7 @@ describe.skipIf(mongoUri === '')(`egress query plan at scenario ${scenario}`, ()
 			raw()
 				.find({ ...plan.filter, ...page.filter }, { projection: EGRESS_LIST_PROJECTION, hint: plan.hint })
 				.sort(sorted ? page.sort : { startedAt: direction })
-				.limit(LIMIT + 1),
+				.limit(limit + 1),
 			{ maxDocsExamined: bound }
 		);
 	};
@@ -149,6 +172,14 @@ describe.skipIf(mongoUri === '')(`egress query plan at scenario ${scenario}`, ()
 		expectIndexes(all, ['startedAt_id']);
 		expect(all.planStages).not.toContain('SORT');
 		expectIndexes(await explainList({ type: 'web' }, inRange), ['startedAt_id']);
+	});
+
+	it('export at the row cap: startedAt_id, at most the cap or the egresses in range', async () => {
+		const all = await explainList({}, LIST_EXPORT_MAX_ROWS + 1, LIST_EXPORT_MAX_ROWS);
+
+		expectIndexes(all, ['startedAt_id']);
+		expect(all.planStages).not.toContain('SORT');
+		expect((await explainList({ sort: 'duration' }, 0, LIST_EXPORT_MAX_ROWS)).collscan).toBe(false);
 	});
 
 	it('status set: status_startedAt merged in startedAt order', async () => {
@@ -231,6 +262,8 @@ describe.skipIf(mongoUri === '')(`egress query plan at scenario ${scenario}`, ()
 			[`List, room name prefix "${prefix}"`, 200, () => service.list(listParams({ q: prefix }))],
 			['List, ranked by endedAt', 200, () => service.list(listParams({ sort: 'endedAt' }))],
 			['List, ranked by duration', 200, () => service.list(listParams({ sort: 'duration' }))],
+			['Export, status all (up to 10,000 rows)', 2000, () => exportCsv({})],
+			['Export, ranked by duration', 2000, () => exportCsv({ sort: 'duration' })],
 			['Summary, exact (24 h)', 150, () => service.summary({ from: new Date(now.getTime() - DAY), to: now })],
 			[
 				'Summary, rollups (30 d)',

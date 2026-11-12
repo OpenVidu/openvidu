@@ -323,6 +323,7 @@ describe.skipIf(mongoUri === '')('rooms API', () => {
 		it.each([
 			'/rooms/RM_x',
 			'/rooms/RM_x/participants',
+			'/rooms/RM_x/participants/export.csv',
 			'/rooms/RM_x/egresses',
 			'/rooms/RM_x/ingress-sessions',
 			'/rooms/RM_x/events',

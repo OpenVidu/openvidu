@@ -1,14 +1,16 @@
-import { FeatureKey } from '@openvidu-dashboard/typings';
+import { FeatureKey, listCsvFileName } from '@openvidu-dashboard/typings';
 
+import { listRows, registerCsvExport } from '../api/csv-export.js';
 import type { RouteRegistry } from '../api/route-registry.js';
+import { EGRESS_CSV_COLUMNS } from './egress-csv.js';
 import { egressesListResponse, egressSummary } from './egress-responses.js';
-import { egressesListQuery, egressesSummaryQuery } from './egress-schemas.js';
+import { egressesExportQuery, egressesListQuery, egressesSummaryQuery } from './egress-schemas.js';
 import type { EgressService } from './egress-service.js';
 
 const TAGS = ['Egress'];
 
 /**
- * Egress routes: the list and the summary, and the locks of the `egress-detail` routes (the detail and its events).
+ * Egress routes: the list, its CSV export and the summary, and the locks of the `egress-detail` routes (the detail and its events).
  * `now` is read per request.
  */
 export function registerEgressRoutes(registry: RouteRegistry, egress: () => EgressService, now: () => Date): void {
@@ -24,6 +26,18 @@ export function registerEgressRoutes(registry: RouteRegistry, egress: () => Egre
 		request: { query: egressesListQuery(now) },
 		responses: { 200: { description: 'One page of egresses', schema: egressesListResponse } },
 		handler: ({ query }) => egress().list(query)
+	});
+	// Registered before /egresses/{id} so the literal segment wins.
+	registerCsvExport(registry, {
+		path: '/egresses/export.csv',
+		operationId: 'exportEgressesCsv',
+		edition: 'ce',
+		summary: 'Every egress of the list as CSV',
+		tags: TAGS,
+		request: { query: egressesExportQuery(now) },
+		columns: () => EGRESS_CSV_COLUMNS,
+		rows: ({ query }) => listRows((params, options) => egress().list(params, options), query),
+		fileName: ({ query }) => listCsvFileName('egresses', query.from.toISOString(), query.to.toISOString())
 	});
 	// Registered before /egresses/{id} so the literal segment wins.
 	registry.register({

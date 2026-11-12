@@ -8,7 +8,7 @@ import type { ListResponse, ParticipantListItem } from '@openvidu-dashboard/typi
 import { describe, expect, it } from 'vitest';
 
 import { infoResponse, settle } from '../../../testing/fixtures.js';
-import { routeElement } from '../../../testing/harness.js';
+import { exportCsv, routeElement } from '../../../testing/harness.js';
 import { InfoService } from '../../core/info.js';
 import { LiveCountersService } from '../../core/refresh/live-counters.js';
 import { AgentsPage } from './agents-page.js';
@@ -88,6 +88,24 @@ function text(element: Element | null | undefined): string {
 }
 
 describe('AgentsPage', () => {
+	it('exports the active agents as CSV', async () => {
+		const http = setup();
+		const info = TestBed.inject(InfoService).load();
+
+		http.expectOne('api/v1/info').flush(infoResponse());
+		await info;
+
+		const harness = await RouterTestingHarness.create('/agents?status=active&sort=duration');
+
+		await load(http, harness, page([agent()]));
+
+		const { params } = await exportCsv(http, routeElement(harness), 'agents/export.csv');
+
+		expect(params.get('status')).toBe('active');
+		expect(params.get('sort')).toBe('duration');
+		expect(params.has('cursor') || params.has('limit')).toBe(false);
+	});
+
 	it('renders an agent row with its links, live duration and published sources, and no SDK or Kind', async () => {
 		const http = setup();
 		const harness = await RouterTestingHarness.create('/agents');

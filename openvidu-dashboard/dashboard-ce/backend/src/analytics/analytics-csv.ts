@@ -1,23 +1,6 @@
 import type { AnalyticsBreakdownsResponse, AnalyticsSeriesResponse } from '@openvidu-dashboard/typings';
 
-type Cell = string | number | null | undefined;
-
-const CRLF = '\r\n';
-
-function cell(value: Cell): string {
-	if (value === null || value === undefined) {
-		return '';
-	}
-
-	const text = String(value);
-
-	return /[",\r\n]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text;
-}
-
-/** RFC 4180 text: a header row, then the rows, every line ended by CRLF; `null` is an empty cell. */
-export function toCsv(header: readonly string[], rows: readonly (readonly Cell[])[]): string {
-	return [header, ...rows].map((row) => row.map(cell).join(',') + CRLF).join('');
-}
+import { toCsv } from '../api/csv.js';
 
 /** One row per bucket start of any series, one column per series. */
 export function seriesCsv(response: AnalyticsSeriesResponse): string {

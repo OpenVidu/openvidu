@@ -8,7 +8,7 @@ import type { IngressListItem, IngressSummary, ListResponse } from '@openvidu-da
 import { describe, expect, it } from 'vitest';
 
 import { infoResponse, settle } from '../../../testing/fixtures.js';
-import { routeElement } from '../../../testing/harness.js';
+import { exportCsv, routeElement } from '../../../testing/harness.js';
 import { LIST_SEARCH_DEBOUNCE_MS } from '../../components/search/list-search.js';
 import { InfoService } from '../../core/info.js';
 import { IngressLockedPage } from './ingress-locked-page.js';
@@ -111,6 +111,15 @@ function text(element: Element | null | undefined): string {
 }
 
 describe('IngressPage', () => {
+	it('exports the list as CSV with its input type and sort', async () => {
+		const { element, http } = await open('/ingress?inputType=whip&sort=sessions');
+		const { params } = await exportCsv(http, element, 'ingresses/export.csv');
+
+		expect(params.get('inputType')).toBe('whip');
+		expect(params.get('sort')).toBe('sessions');
+		expect(params.has('cursor') || params.has('limit')).toBe(false);
+	});
+
 	it('reproduces a deep link in the controls and the request, and shows the tiles', async () => {
 		const { element, request } = await open(
 			'/ingress?status=publishing&inputType=rtmp&q=cam&from=now-7d&to=now&tz=UTC&order=asc&limit=50'

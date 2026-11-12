@@ -4,6 +4,7 @@ import { type ListResponse, type RoomListItem, type RoomSummary } from '@openvid
 
 import { buildPage, cursorOrThrow } from '../api/cursor.js';
 import { assertRankedRange } from '../api/ranked.js';
+import type { ListOptions } from '../api/responses.js';
 import { markStale, type WriterFreshness } from '../status/freshness.js';
 import { toRoomListItem } from './rooms-mappers.js';
 import { roomsListPlan } from './rooms-query.js';
@@ -40,7 +41,11 @@ export class RoomsService {
 		return to.getTime() - from.getTime() <= this.options.totalMaxRangeMs;
 	}
 
-	async list(params: RoomsListParams): Promise<ListResponse<RoomListItem>> {
+	private counted(range: { from: Date; to: Date }, options: ListOptions): boolean {
+		return options.total !== false && this.exactRange(range.from, range.to);
+	}
+
+	async list(params: RoomsListParams, options: ListOptions = {}): Promise<ListResponse<RoomListItem>> {
 		const cursor = cursorOrThrow(params.cursor, params.sort, params.order);
 		const plan = roomsListPlan(params, cursor);
 
@@ -71,7 +76,7 @@ export class RoomsService {
 					limit: params.limit,
 					now: this.options.now()
 				}),
-				this.exactRange(params.from, params.to) ? this.repository.count(plan.countFilter) : undefined,
+				this.counted(params, options) ? this.repository.count(plan.countFilter) : undefined,
 				this.options.freshness.staleContext()
 			]);
 
@@ -84,7 +89,7 @@ export class RoomsService {
 
 		const [fetched, total, context] = await Promise.all([
 			this.repository.list(plan.filter, plan.sort, params.limit + 1),
-			this.exactRange(params.from, params.to) ? this.repository.count(plan.countFilter) : undefined,
+			this.counted(params, options) ? this.repository.count(plan.countFilter) : undefined,
 			this.options.freshness.staleContext()
 		]);
 		const page = buildPage(

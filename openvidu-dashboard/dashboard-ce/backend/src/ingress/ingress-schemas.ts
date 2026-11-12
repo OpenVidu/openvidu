@@ -18,30 +18,37 @@ const ingressSearch = qParam
 			'the range and the other filters'
 	});
 
+const ingressesShape = {
+	status: z
+		.enum(['all', ...enumValues(IngressStatus)], {
+			error: `must be all or one of ${enumValues(IngressStatus).join(', ')}`
+		})
+		.default('all')
+		.meta({ description: 'Ingresses in this status, or all' }),
+	inputType: z
+		.enum(enumValues(IngressInputType), { error: `must be one of ${enumValues(IngressInputType).join(', ')}` })
+		.optional()
+		.meta({ description: 'Ingresses of this input type' }),
+	q: ingressSearch,
+	sort: z
+		.enum(enumValues(IngressSort), { error: 'must be createdAt, totalDuration, sessions or lastSession' })
+		.default(IngressSort.CREATED_AT)
+		.meta({ description: 'Sort key' }),
+	order: orderParam.default('desc')
+};
+
 export function ingressesListQuery(now: () => Date) {
-	return rangedQuery(now, {
-		status: z
-			.enum(['all', ...enumValues(IngressStatus)], {
-				error: `must be all or one of ${enumValues(IngressStatus).join(', ')}`
-			})
-			.default('all')
-			.meta({ description: 'Ingresses in this status, or all' }),
-		inputType: z
-			.enum(enumValues(IngressInputType), { error: `must be one of ${enumValues(IngressInputType).join(', ')}` })
-			.optional()
-			.meta({ description: 'Ingresses of this input type' }),
-		q: ingressSearch,
-		sort: z
-			.enum(enumValues(IngressSort), { error: 'must be createdAt, totalDuration, sessions or lastSession' })
-			.default(IngressSort.CREATED_AT)
-			.meta({ description: 'Sort key' }),
-		order: orderParam.default('desc'),
-		cursor: cursorParam,
-		limit: limitParam
-	});
+	return rangedQuery(now, { ...ingressesShape, cursor: cursorParam, limit: limitParam });
 }
 
 export type IngressesListParams = z.output<ReturnType<typeof ingressesListQuery>>;
+
+/** The ingresses list query without `cursor` and `limit`: the export reads every page. */
+export function ingressesExportQuery(now: () => Date) {
+	return rangedQuery(now, ingressesShape);
+}
+
+export type IngressesExportParams = z.output<ReturnType<typeof ingressesExportQuery>>;
 
 export function ingressesSummaryQuery(now: () => Date) {
 	return rangedQuery(now, {});

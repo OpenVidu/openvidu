@@ -21,8 +21,10 @@ import { MatOption, MatSelect } from '@angular/material/select';
 import { MatTooltip } from '@angular/material/tooltip';
 import type { SortOrder } from '@openvidu-dashboard/typings';
 
+import type { Download } from '../../core/http/http.js';
 import { PreferencesService } from '../../core/preferences/preferences.js';
 import { BreakpointService } from '../../core/ui/breakpoints.js';
+import { ExportButton } from '../export-button/export-button.js';
 import { ErrorBanner } from '../feedback/error-banner.js';
 import { Skeleton } from '../feedback/skeleton.js';
 import { InfoTip } from '../info-tip/info-tip.js';
@@ -68,7 +70,8 @@ export class TableCell {
 
 /**
  * A table that emits sort changes and never navigates: sticky header, `aria-sort`, a column menu stored as a viewer
- * preference (in the section header inside an `ovd-section-card`), skeleton rows until the first response and previous
+ * preference and an optional Export CSV after it (both in the section header inside an `ovd-section-card`), skeleton
+ * rows until the first response and previous
  * rows kept under an error. It shows every selected column and scrolls sideways when they do not fit; on XSmall
  * viewports its rows render as cards.
  */
@@ -88,6 +91,7 @@ export class TableCell {
 		MatSelect,
 		MatTooltip,
 		ErrorBanner,
+		ExportButton,
 		InfoTip,
 		MediaStatsWarning,
 		Skeleton
@@ -113,12 +117,15 @@ export class DataTable<T> {
 	readonly loading = input(false);
 	readonly error = input<unknown>(null);
 	readonly pageSize = input(25);
+	/** Downloads the CSV of every row the table's request selects; with it the table shows Export CSV. */
+	readonly exportCsv = input<(() => Promise<Download>) | null>(null);
 	readonly sortChange = output<SortChange>();
 	readonly retry = output();
 
 	protected readonly cells = contentChildren(TableCell);
 	protected readonly expanded = signal<ReadonlySet<string>>(new Set());
 	private readonly columnsButton = viewChild<TemplateRef<unknown>>('columnsButton');
+	private readonly exportButton = viewChild<TemplateRef<unknown>>('exportButton');
 
 	protected readonly templates = computed(() => {
 		const map = new Map<string, TemplateRef<{ $implicit: unknown }>>();
@@ -171,6 +178,8 @@ export class DataTable<T> {
 	protected readonly columnsInToolbar = computed(
 		() => this.sectionActions === null && !this.cards() && this.hideable().length > 0
 	);
+	/** Export CSV renders in the table toolbar, as a table and as cards, or in the section header inside a section card. */
+	protected readonly exportInToolbar = computed(() => this.sectionActions === null && this.exportCsv() !== null);
 
 	constructor() {
 		effect(() => {
@@ -182,16 +191,28 @@ export class DataTable<T> {
 		});
 
 		effect((onCleanup) => {
-			const template = this.columnsButton();
 			const actions = this.sectionActions;
 
-			if (actions === null || template === undefined || this.cards() || this.hideable().length === 0) {
+			if (actions === null) {
 				return;
 			}
 
-			actions.add(template);
+			const columns = this.columnsButton();
+			const exportButton = this.exportButton();
+			// Registered together so that Export CSV stays after Columns when the layout toggles.
+			const templates = [
+				...(columns !== undefined && !this.cards() && this.hideable().length > 0 ? [columns] : []),
+				...(exportButton !== undefined && this.exportCsv() !== null ? [exportButton] : [])
+			];
+
+			for (const template of templates) {
+				actions.add(template);
+			}
+
 			onCleanup(() => {
-				actions.remove(template);
+				for (const template of templates) {
+					actions.remove(template);
+				}
 			});
 		});
 	}

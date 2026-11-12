@@ -17,7 +17,7 @@ import {
 	type FeatureKey
 } from '@openvidu-dashboard/typings';
 
-import { HttpService } from '../../core/http/http.js';
+import { HttpService, saveDownload } from '../../core/http/http.js';
 import type { RangeParams } from '../../core/state/query-state.js';
 import { apiRange } from '../rooms/rooms-data.js';
 import { hourlyGranularity } from './analytics-granularity.js';
@@ -178,12 +178,6 @@ export class AnalyticsDataService {
 					: { dimensions: items.dimensions ?? [] })
 			}
 		});
-		const url = URL.createObjectURL(download.blob);
-		const link = this.document.createElement('a');
-
-		link.href = url;
-		link.download = download.fileName ?? `analytics-${kind}.csv`;
-		link.click();
-		URL.revokeObjectURL(url);
+		saveDownload(this.document, download, `analytics-${kind}.csv`);
 	}
 }

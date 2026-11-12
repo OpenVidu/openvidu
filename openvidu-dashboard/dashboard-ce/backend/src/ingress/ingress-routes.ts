@@ -1,14 +1,16 @@
-import { FeatureKey } from '@openvidu-dashboard/typings';
+import { FeatureKey, listCsvFileName } from '@openvidu-dashboard/typings';
 
+import { listRows, registerCsvExport } from '../api/csv-export.js';
 import type { RouteRegistry } from '../api/route-registry.js';
+import { INGRESS_CSV_COLUMNS } from './ingress-csv.js';
 import { ingressesListResponse, ingressSummary } from './ingress-responses.js';
-import { ingressesListQuery, ingressesSummaryQuery } from './ingress-schemas.js';
+import { ingressesExportQuery, ingressesListQuery, ingressesSummaryQuery } from './ingress-schemas.js';
 import type { IngressService } from './ingress-service.js';
 
 const TAGS = ['Ingress'];
 
 /**
- * Ingress routes: the list and the summary, and the locks of the `ingress-detail` routes (the detail, its sessions and
+ * Ingress routes: the list, its CSV export and the summary, and the locks of the `ingress-detail` routes (the detail, its sessions and
  * its events). `now` is read per request.
  */
 export function registerIngressRoutes(registry: RouteRegistry, ingress: () => IngressService, now: () => Date): void {
@@ -24,6 +26,18 @@ export function registerIngressRoutes(registry: RouteRegistry, ingress: () => In
 		request: { query: ingressesListQuery(now) },
 		responses: { 200: { description: 'One page of ingresses', schema: ingressesListResponse } },
 		handler: ({ query }) => ingress().list(query)
+	});
+	// Registered before /ingresses/{id} so the literal segment wins.
+	registerCsvExport(registry, {
+		path: '/ingresses/export.csv',
+		operationId: 'exportIngressesCsv',
+		edition: 'ce',
+		summary: 'Every ingress of the list as CSV',
+		tags: TAGS,
+		request: { query: ingressesExportQuery(now) },
+		columns: () => INGRESS_CSV_COLUMNS,
+		rows: ({ query }) => listRows((params, options) => ingress().list(params, options), query),
+		fileName: ({ query }) => listCsvFileName('ingresses', query.from.toISOString(), query.to.toISOString())
 	});
 	// Registered before /ingresses/{id} so the literal segment wins.
 	registry.register({

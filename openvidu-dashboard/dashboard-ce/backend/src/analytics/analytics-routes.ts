@@ -1,4 +1,4 @@
-import { ANALYTICS_CSV_CONTENT_TYPE, FeatureKey } from '@openvidu-dashboard/typings';
+import { CSV_CONTENT_TYPE, FeatureKey } from '@openvidu-dashboard/typings';
 
 import type { RouteRegistry } from '../api/route-registry.js';
 import {
@@ -75,13 +75,13 @@ export function registerAnalyticsRoutes(
 		summary: 'Series or breakdowns as CSV',
 		request: { query: analyticsExportQuery(now) },
 		responses: {
-			200: { description: 'CSV attachment', schema: analyticsCsv, contentType: ANALYTICS_CSV_CONTENT_TYPE },
+			200: { description: 'CSV attachment', schema: analyticsCsv, contentType: CSV_CONTENT_TYPE },
 			403: LOCKED_ITEM
 		},
 		handler: async ({ query, res }) => {
 			const csv = await analytics().export(query);
 
-			res.status(200).type(ANALYTICS_CSV_CONTENT_TYPE).attachment(csv.fileName).send(csv.body);
+			res.status(200).type(CSV_CONTENT_TYPE).attachment(csv.fileName).send(csv.body);
 		}
 	});
 	registry.lock({ method: 'get', path: '/analytics/top', feature: FeatureKey.ANALYTICS_TOP_ROOMS });

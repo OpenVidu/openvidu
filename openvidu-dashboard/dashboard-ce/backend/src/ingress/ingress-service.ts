@@ -11,6 +11,7 @@ import {
 
 import { cursorOrThrow } from '../api/cursor.js';
 import { assertRankedRange, rankedPage } from '../api/ranked.js';
+import type { ListOptions } from '../api/responses.js';
 import { INGRESS_LIST_PROJECTION, toIngressListItem } from './ingress-mappers.js';
 import { ingressesListPlan } from './ingress-query.js';
 import { IngressRepository } from './ingress-repository.js';
@@ -44,7 +45,7 @@ export class IngressService {
 		return to.getTime() - from.getTime() <= this.options.totalMaxRangeMs;
 	}
 
-	async list(params: IngressesListParams): Promise<ListResponse<IngressListItem>> {
+	async list(params: IngressesListParams, options: ListOptions = {}): Promise<ListResponse<IngressListItem>> {
 		const plan = ingressesListPlan(params);
 
 		if (plan.kind === 'id') {
@@ -69,7 +70,9 @@ export class IngressService {
 				limit: params.limit,
 				now: this.options.now()
 			}),
-			this.exactRange(params.from, params.to) ? this.repository.count(plan.match) : undefined
+			options.total !== false && this.exactRange(params.from, params.to)
+				? this.repository.count(plan.match)
+				: undefined
 		]);
 
 		return { ...page, items: page.items.map(toIngressListItem), ...(total === undefined ? {} : { total }) };

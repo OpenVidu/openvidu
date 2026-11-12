@@ -9,6 +9,7 @@ import { DataTable, type SortChange, TableCell, type TableColumn } from '../../.
 import { Duration } from '../../../components/duration/duration.js';
 import { UnavailableValue } from '../../../components/feedback/unavailable-value.js';
 import { MediaNodeLabel } from '../../../components/media-node/media-node.js';
+import type { Download } from '../../../core/http/http.js';
 import { injectTicker } from '../../../core/refresh/ticker.js';
 import { QueryStateService } from '../../../core/state/query-state.js';
 import { formatNumber, formatTimestamp, type TimestampOptions } from '../../../format/formatters.js';
@@ -104,6 +105,8 @@ export class RoomsTable {
 	readonly loading = input(false);
 	readonly error = input<unknown>(null);
 	readonly pageSize = input(25);
+	/** Downloads the CSV of the list; with it the table shows Export CSV. */
+	readonly exportCsv = input<(() => Promise<Download>) | null>(null);
 	/** Span of the list's range, which sets how much of a date the times show. */
 	readonly rangeMs = input<number>();
 

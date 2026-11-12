@@ -11,6 +11,10 @@ import {
 	analyticsCsvFileName,
 	AnalyticsMetric,
 	analyticsMetricFeature,
+	CSV_CONTENT_TYPE,
+	EXPORT_TRUNCATED_HEADER,
+	LIST_EXPORT_MAX_ROWS,
+	listCsvFileName,
 	freshnessWindows,
 	type OverviewRecentRoom,
 	type OverviewResponse,
@@ -99,6 +103,15 @@ describe('API contract', () => {
 		expect(analyticsCsvFileName('series', '2026-10-12T12:00:00.000Z', '2026-10-13T12:00:00.000Z')).toBe(
 			'analytics-series-2026-10-12T120000.000Z-2026-10-13T120000.000Z.csv'
 		);
+	});
+
+	it('names list CSV files without colons and caps them at 10,000 rows', () => {
+		expect(listCsvFileName('rooms', '2026-10-12T12:00:00.000Z', '2026-10-13T12:00:00.000Z')).toBe(
+			'rooms-2026-10-12T120000.000Z-2026-10-13T120000.000Z.csv'
+		);
+		expect(LIST_EXPORT_MAX_ROWS).toBe(10_000);
+		expect(EXPORT_TRUNCATED_HEADER).toBe('X-Export-Truncated');
+		expect(CSV_CONTENT_TYPE).toBe('text/csv; charset=utf-8');
 	});
 
 	it('keeps arrays out of the recent rooms of the overview', () => {

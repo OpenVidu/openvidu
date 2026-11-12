@@ -55,6 +55,14 @@ export {
 	type PageQuery,
 	type SortValue
 } from './api/cursor.js';
+export { columnsCsv, csvCell, type CsvCell, type CsvColumn, toCsv } from './api/csv.js';
+export {
+	type CsvExportInput,
+	type CsvExportRoute,
+	type CsvRows,
+	listRows,
+	registerCsvExport
+} from './api/csv-export.js';
 export { compareIds, compareValues, indexOrderedPage, type Page } from './api/keyset.js';
 export { iso } from './api/mapping.js';
 export {
@@ -68,7 +76,7 @@ export {
 	tzParam
 } from './api/query.js';
 export { ROLLUP_INDEX } from './analytics/analytics-repository.js';
-export { isoDate, listResponse, mediaStatsField, staleField } from './api/responses.js';
+export { isoDate, type ListOptions, listResponse, mediaStatsField, staleField } from './api/responses.js';
 export { prefixRegex } from './api/search.js';
 export { bucketStart, bucketStarts, MAX_BUCKETS } from './api/time-series.js';
 export { ifNoneMatchMatches } from './http/conditional.js';
@@ -78,12 +86,16 @@ export { compact, type Loose } from './util/compact.js';
 export { enumValues } from './util/enum-values.js';
 
 // CE resource pieces the PRO details extend.
+export { EGRESS_CSV_COLUMNS } from './egress/egress-csv.js';
 export { EGRESS_LIST_PROJECTION, toEgressListItem } from './egress/egress-mappers.js';
 export { egressesListResponse, egressListFields } from './egress/egress-responses.js';
+export { INGRESS_CSV_COLUMNS } from './ingress/ingress-csv.js';
 export { toIngressListItem } from './ingress/ingress-mappers.js';
 export { ingressListFields } from './ingress/ingress-responses.js';
+export { participantCsvColumns } from './participants/participants-csv.js';
 export { toParticipantListItem } from './participants/participants-mappers.js';
 export { PARTICIPANT_LIST_PROJECTION } from './participants/participants-query.js';
 export { participantClientSummary, participantListFields } from './participants/participants-responses.js';
+export { roomCsvColumns } from './rooms/rooms-csv.js';
 export { toRoomListItem } from './rooms/rooms-mappers.js';
 export { roomListFields } from './rooms/rooms-responses.js';

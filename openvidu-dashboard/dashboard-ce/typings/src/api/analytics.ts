@@ -281,8 +281,6 @@ export type AnalyticsExportKind = 'series' | 'breakdowns';
 export type AnalyticsExportQuery =
 	({ kind: 'series' } & AnalyticsSeriesQuery) | ({ kind: 'breakdowns' } & AnalyticsBreakdownsQuery);
 
-export const ANALYTICS_CSV_CONTENT_TYPE = 'text/csv; charset=utf-8';
-
 /** `analytics-<kind>-<from>-<to>.csv` with the colons of the ISO instants removed. */
 export function analyticsCsvFileName(kind: AnalyticsExportKind, from: string, to: string): string {
 	return `analytics-${kind}-${from}-${to}.csv`.replaceAll(':', '');

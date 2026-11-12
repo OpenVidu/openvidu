@@ -37,26 +37,35 @@ const listShape = {
 				'Sort key: joinedAt in index order, the others ranked within the range limit of GET /api/v1/info'
 		}),
 	order: orderParam.default('desc'),
-	cursor: cursorParam,
-	limit: limitParam
+	q: participantSearch
 };
 
+const participantsShape = {
+	...listShape,
+	kind: csvParam(enumValues(ParticipantKind))
+		.optional()
+		.meta({ description: 'Participant kinds to keep; absent means every kind' }),
+	publisher: z
+		.literal('true', { error: 'must be true' })
+		.transform(() => true as const)
+		.optional()
+		.meta({ description: 'true keeps only the sessions that published a track' })
+};
+
+const page = { cursor: cursorParam, limit: limitParam };
+
 export function participantsListQuery(now: () => Date) {
-	return rangedQuery(now, {
-		...listShape,
-		q: participantSearch,
-		kind: csvParam(enumValues(ParticipantKind))
-			.optional()
-			.meta({ description: 'Participant kinds to keep; absent means every kind' }),
-		publisher: z
-			.literal('true', { error: 'must be true' })
-			.transform(() => true as const)
-			.optional()
-			.meta({ description: 'true keeps only the sessions that published a track' })
-	});
+	return rangedQuery(now, { ...participantsShape, ...page });
 }
 
 export type ParticipantsListParams = z.output<ReturnType<typeof participantsListQuery>>;
+
+/** The participants list query without `cursor` and `limit`: the export reads every page. */
+export function participantsExportQuery(now: () => Date) {
+	return rangedQuery(now, participantsShape);
+}
+
+export type ParticipantsExportParams = z.output<ReturnType<typeof participantsExportQuery>>;
 
 export function participantsSummaryQuery(now: () => Date) {
 	return rangedQuery(now, {});
@@ -65,7 +74,14 @@ export function participantsSummaryQuery(now: () => Date) {
 export type ParticipantsSummaryParams = z.output<ReturnType<typeof participantsSummaryQuery>>;
 
 export function agentsListQuery(now: () => Date) {
-	return rangedQuery(now, { ...listShape, q: participantSearch });
+	return rangedQuery(now, { ...listShape, ...page });
 }
 
 export type AgentsListParams = z.output<ReturnType<typeof agentsListQuery>>;
+
+/** The agents list query without `cursor` and `limit`: the export reads every page. */
+export function agentsExportQuery(now: () => Date) {
+	return rangedQuery(now, listShape);
+}
+
+export type AgentsExportParams = z.output<ReturnType<typeof agentsExportQuery>>;

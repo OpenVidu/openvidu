@@ -8,7 +8,7 @@ import type { EgressListItem, EgressSummary, ListResponse } from '@openvidu-dash
 import { describe, expect, it } from 'vitest';
 
 import { infoResponse, settle } from '../../../testing/fixtures.js';
-import { routeElement } from '../../../testing/harness.js';
+import { exportCsv, routeElement } from '../../../testing/harness.js';
 import { LIST_SEARCH_DEBOUNCE_MS } from '../../components/search/list-search.js';
 import { InfoService } from '../../core/info.js';
 import { EntityPreviewService } from '../../core/state/entity-preview.js';
@@ -111,6 +111,15 @@ function text(element: Element | null | undefined): string {
 const debounce = () => new Promise((resolve) => setTimeout(resolve, LIST_SEARCH_DEBOUNCE_MS + 50));
 
 describe('EgressPage', () => {
+	it('exports the list as CSV with the statuses of its status filter', async () => {
+		const { element, http } = await open('/egress?status=starting,active,ending&type=room_composite');
+		const { params } = await exportCsv(http, element, 'egresses/export.csv');
+
+		expect(params.get('status')).toBe('starting,active,ending');
+		expect(params.get('type')).toBe('room_composite');
+		expect(params.has('cursor') || params.has('limit')).toBe(false);
+	});
+
 	it('reproduces a deep link in the controls and the request', async () => {
 		const { element, request } = await open(
 			'/egress?status=failed,aborted&type=room_composite&q=demo&from=now-7d&to=now&tz=UTC&order=asc&limit=50'

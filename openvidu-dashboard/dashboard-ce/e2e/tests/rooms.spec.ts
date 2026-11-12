@@ -232,3 +232,51 @@ test.describe('rooms on servers with and without media statistics', () => {
 		await expect(reported.getByRole('button', { name: 'About Data up / down' })).toBeAttached();
 	});
 });
+
+test('the list exports its filtered and sorted rows as CSV, every page', async ({ page, api }) => {
+	await page.goto('/rooms?status=closed&features=egress&from=now-7d&to=now&tz=UTC&sort=endedAt&order=asc&limit=50');
+	await expect(table(page).getByRole('row').nth(1)).toBeVisible();
+
+	const download = page.waitForEvent('download');
+
+	await page.getByRole('button', { name: 'Export CSV' }).click();
+
+	const file = await download;
+	const request = api.requests.find((item) => item.path === 'rooms/export.csv');
+
+	expect(request?.authorization).toMatch(/^Bearer /);
+	expect(request?.params.get('status')).toBe('closed');
+	expect(request?.params.get('features')).toBe('egress');
+	expect(request?.params.get('sort')).toBe('endedAt');
+	expect(request?.params.get('order')).toBe('asc');
+	expect(request?.params.has('cursor')).toBe(false);
+	expect(request?.params.has('limit')).toBe(false);
+	expect(file.suggestedFilename()).toBe(
+		`rooms-${request?.params.get('from') ?? ''}-${request?.params.get('to') ?? ''}.csv`.replaceAll(':', '')
+	);
+	await expect(page.getByText(/Exported the first/)).toHaveCount(0);
+	await expectNoViolations(page);
+});
+
+test('an empty list disables Export CSV', async ({ page }) => {
+	await page.goto('/rooms?status=active&q=zzz');
+	await expect(page.getByText('No rooms match')).toBeVisible();
+	await expect(page.getByRole('button', { name: 'Export CSV' })).toBeDisabled();
+});
+
+test.describe('a cut export', () => {
+	test.use({ apiOptions: { rooms: ROOMS, roomSummary: ROOM_SUMMARY, listExportTruncated: true } });
+
+	test('saves the file and says how to export the rest', async ({ page }) => {
+		await page.goto('/rooms?from=now-7d&to=now&tz=UTC');
+		await expect(table(page).getByRole('row').nth(1)).toBeVisible();
+
+		const download = page.waitForEvent('download');
+
+		await page.getByRole('button', { name: 'Export CSV' }).click();
+		await download;
+		await expect(
+			page.getByText('Exported the first 10,000 rows. Narrow the range or the filters to export the rest.')
+		).toBeVisible();
+	});
+});

@@ -5,6 +5,7 @@ import { RouterTestingHarness } from '@angular/router/testing';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { childComponent, routeElement } from '../../../testing/harness.js';
+import type { Download } from '../../core/http/http.js';
 import { PreferencesService } from '../../core/preferences/preferences.js';
 import { BreakpointService, type ScreenSize } from '../../core/ui/breakpoints.js';
 import { SectionCard } from '../tiles/section-card.js';
@@ -61,6 +62,7 @@ const ROWS: Room[] = [1, 2].map((n) => ({
 			[loading]="loading()"
 			[error]="error()"
 			[pageSize]="10"
+			[exportCsv]="exportCsv()"
 			(sortChange)="changes.push($event)"
 		>
 			@for (column of columns(); track column.key) {
@@ -76,6 +78,7 @@ class Host {
 	readonly sort = signal<string | null>('startedAt');
 	readonly loading = signal(false);
 	readonly error = signal<unknown>(null);
+	readonly exportCsv = signal<(() => Promise<Download>) | null>(null);
 	readonly changes: SortChange[] = [];
 	readonly track = (row: Room): string => row.sid;
 
@@ -95,6 +98,7 @@ class Host {
 				[columns]="columns"
 				[rows]="rows"
 				[trackBy]="track"
+				[exportCsv]="exportCsv"
 			>
 				@for (column of columns; track column.key) {
 					<ng-template [ovdCell]="column.key" let-row>{{ row.sid }}</ng-template>
@@ -106,6 +110,7 @@ class Host {
 class SectionHost {
 	readonly columns = COLUMNS;
 	readonly rows = ROWS;
+	readonly exportCsv = () => Promise.resolve<Download>({ blob: new Blob(), fileName: null, truncated: false });
 	readonly track = (row: Room): string => row.sid;
 }
 
@@ -238,6 +243,33 @@ describe('DataTable', () => {
 		await fixture.whenStable();
 		expect(element.querySelector('header .actions')?.textContent).toContain('Columns');
 		expect(element.querySelector('ovd-data-table .toolbar')).toBeNull();
+		expect(
+			[...element.querySelectorAll('header .actions button')].map((button) => button.textContent.trim())
+		).toEqual(['Columns', 'Export CSV']);
+	});
+
+	it('shows Export CSV at the end of its toolbar, as a table and as cards, disabled without rows', async () => {
+		const { host, element, stable } = await render();
+		const buttons = () =>
+			[...element.querySelectorAll<HTMLButtonElement>('.toolbar button')].map((button) =>
+				button.textContent.trim()
+			);
+
+		expect(element.querySelector('ovd-export-button')).toBeNull();
+
+		host.exportCsv.set(() => Promise.resolve({ blob: new Blob(), fileName: null, truncated: false }));
+		await stable();
+		expect(buttons().at(-1)).toBe('Export CSV');
+		expect(buttons()).toContain('Columns');
+
+		size.set('xsmall');
+		await stable();
+		expect(buttons().at(-1)).toBe('Export CSV');
+		expect(buttons()).not.toContain('Columns');
+
+		host.rows.set([]);
+		await stable();
+		expect(element.querySelector<HTMLButtonElement>('ovd-export-button button')?.disabled).toBe(true);
 	});
 
 	it('takes the card status from the Status column when no column claims the status slot', async () => {

@@ -5,12 +5,15 @@ import { queryContext, type QueryContext } from '@openvidu-dashboard/data-genera
 import { type Db, type Document, MongoClient } from 'mongodb';
 import { afterAll, beforeAll, describe, expect, inject, it } from 'vitest';
 
-import { Collection, type IngressDocument } from '@openvidu-dashboard/typings';
+import { Collection, type IngressDocument, LIST_EXPORT_MAX_ROWS } from '@openvidu-dashboard/typings';
 
+import { columnsCsv } from '../../src/api/csv.js';
+import { listRows } from '../../src/api/csv-export.js';
 import { rankedPipeline } from '../../src/api/ranked.js';
 import { INGRESS_LIST_PROJECTION } from '../../src/ingress/ingress-mappers.js';
 import { activityRange, ingressesListPlan } from '../../src/ingress/ingress-query.js';
-import { ingressesListQuery } from '../../src/ingress/ingress-schemas.js';
+import { INGRESS_CSV_COLUMNS } from '../../src/ingress/ingress-csv.js';
+import { ingressesExportQuery, ingressesListQuery } from '../../src/ingress/ingress-schemas.js';
 import { IngressService } from '../../src/ingress/ingress-service.js';
 import { expectIdLookup, expectIndexBacked, expectIndexes, p95 } from '../support/query-plan.js';
 import { expectWithinBudgets } from '../support/latency-budget.js';
@@ -40,8 +43,23 @@ describe.skipIf(mongoUri === '')(`ingress query plan at scenario ${scenario}`, (
 	const now = new Date();
 	const report: string[] = [];
 
-	const listParams = (query: Record<string, string>) =>
-		ingressesListQuery(() => now).parse({ from: ctx.range.from.toISOString(), limit: String(LIMIT), ...query });
+	/** The list parameters of `query`; `limit` overrides the page size the schema caps at 100. */
+	const listParams = (query: Record<string, string>, limit?: number) => {
+		const params = ingressesListQuery(() => now).parse({
+			from: ctx.range.from.toISOString(),
+			limit: String(LIMIT),
+			...query
+		});
+
+		return limit === undefined ? params : { ...params, limit };
+	};
+	/** The CSV export of the list `query` selects, as its route builds it. */
+	const exportCsv = async (query: Record<string, string>) => {
+		const params = ingressesExportQuery(() => now).parse({ from: ctx.range.from.toISOString(), ...query });
+		const rows = await listRows((input, options) => service.list(input, options), params);
+
+		return columnsCsv(INGRESS_CSV_COLUMNS, rows.items);
+	};
 	const raw = () => db.collection(Collection.INGRESSES);
 	const typed = () => db.collection<IngressDocument>(Collection.INGRESSES);
 	/**
@@ -49,8 +67,8 @@ describe.skipIf(mongoUri === '')(`ingress query plan at scenario ${scenario}`, (
 	 * activity range: every branch fetches its own matches, so an ingress in two branches is examined twice, and the
 	 * status, input type and name filters apply to the union.
 	 */
-	const explainList = async (query: Record<string, string>) => {
-		const params = listParams(query);
+	const explainList = async (query: Record<string, string>, limit = LIMIT) => {
+		const params = listParams(query, limit);
 		const plan = ingressesListPlan(params);
 
 		if (plan.kind !== 'ranked') {
@@ -129,6 +147,15 @@ describe.skipIf(mongoUri === '')(`ingress query plan at scenario ${scenario}`, (
 		}
 	});
 
+	it('export at the row cap: the three branches, at most the ingresses in the activity range', async () => {
+		expectIndexes(await explainList({}, LIST_EXPORT_MAX_ROWS), [
+			'createdAt_id',
+			'lastSessionAt_id',
+			'status_createdAt'
+		]);
+		expect((await explainList({ sort: 'totalDuration' }, LIST_EXPORT_MAX_ROWS)).collscan).toBe(false);
+	});
+
 	it('id, detail and summary: _id, status_createdAt and createdAt_id', async () => {
 		expectIdLookup(await expectIndexBacked(db, typed().find({ _id: sample._id }).limit(1), { maxDocsExamined: 1 }));
 		expect(ingressesListPlan(listParams({ q: sample._id }))).toEqual({ kind: 'id', filter: { _id: sample._id } });
@@ -178,7 +205,9 @@ describe.skipIf(mongoUri === '')(`ingress query plan at scenario ${scenario}`, (
 				200,
 				() => service.list(listParams({ from: new Date(now.getTime() - 30 * DAY).toISOString() }))
 			],
-			['Summary (24 h)', 100, () => service.summary({ from: new Date(now.getTime() - DAY), to: now })]
+			['Summary (24 h)', 100, () => service.summary({ from: new Date(now.getTime() - DAY), to: now })],
+			['Export, status all (up to 10,000 rows)', 2000, () => exportCsv({})],
+			['Export, ranked by total duration (7 d)', 2000, () => exportCsv({ sort: 'totalDuration', from: week })]
 		];
 
 		report.push('| Query | Budget | p95 |', '| --- | --- | --- |');

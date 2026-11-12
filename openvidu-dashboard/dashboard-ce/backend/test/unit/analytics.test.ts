@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest';
 import {
 	ANALYTICS_CE_DIMENSIONS,
 	ANALYTICS_CE_METRICS,
-	ANALYTICS_CSV_CONTENT_TYPE,
+	CSV_CONTENT_TYPE,
 	type AnalyticsMetric,
 	type FeatureKey
 } from '@openvidu-dashboard/typings';
@@ -13,7 +13,7 @@ import {
 import { AnalyticsCache } from '../../src/analytics/analytics-cache.js';
 import { CE_ANALYTICS_CATALOGUE, maximumPaths, metricFields } from '../../src/analytics/analytics-catalogue.js';
 import { foldRows, mergeCounters } from '../../src/analytics/analytics-counters.js';
-import { breakdownsCsv, seriesCsv, toCsv } from '../../src/analytics/analytics-csv.js';
+import { breakdownsCsv, seriesCsv } from '../../src/analytics/analytics-csv.js';
 import { AnalyticsFeatureGate, checkGlobalOnly } from '../../src/analytics/analytics-gate.js';
 import { planSeries, type SeriesPlanInput, snapRange } from '../../src/analytics/analytics-planner.js';
 import {
@@ -857,18 +857,6 @@ describe('analytics summary and breakdowns', () => {
 });
 
 describe('analytics CSV', () => {
-	it('quotes cells with separators, quotes or line breaks and ends every line with CRLF', () => {
-		expect(
-			toCsv(
-				['a', 'b'],
-				[
-					['x,y', 'say "hi"'],
-					[null, 3]
-				]
-			)
-		).toBe('a,b\r\n"x,y","say ""hi"""\r\n,3\r\n');
-	});
-
 	it('writes one row per bucket and one per breakdown key', () => {
 		const metrics: AnalyticsMetric[] = ['bytesUp', 'connectionSuccessRate'];
 
@@ -900,6 +888,14 @@ describe('analytics CSV', () => {
 				]
 			})
 		).toBe('dimension,key,count,percent\r\nsdk,JS,3,100\r\nos,linux,1,100\r\n');
-		expect(ANALYTICS_CSV_CONTENT_TYPE).toBe('text/csv; charset=utf-8');
+		expect(
+			breakdownsCsv({
+				from: '2026-10-13T10:00:00.000Z',
+				to: '2026-10-13T12:00:00.000Z',
+				scope: 'global',
+				breakdowns: [{ dimension: 'browser', total: 1, items: [{ key: '@cmd', count: 1, percent: 100 }] }]
+			})
+		).toBe("dimension,key,count,percent\r\nbrowser,'@cmd,1,100\r\n");
+		expect(CSV_CONTENT_TYPE).toBe('text/csv; charset=utf-8');
 	});
 });

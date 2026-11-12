@@ -39,6 +39,10 @@ Behaviour is specified in `openspec/specs/*-api`, `api-conventions`, `auth`, `st
   ending in `_id`, `indexOrderedPage()` when the index does not order by `_id`, and `rankedPage()` with
   `assertRankedRange()` (`src/api/ranked.ts`) for metric sorts ranked in memory at the cursor's `asOf`. Calendar math in
   a time zone uses date-fns and `@date-fns/tz`.
+- CSV: `src/api/csv.ts` encodes every CSV the API serves, Analytics included, and prefixes text a spreadsheet would read
+  as a formula. `registerCsvExport()` (`src/api/csv-export.ts`) registers an `…/export.csv` route; a list export reads
+  its rows with `listRows()` (one service call with the row cap as its page size, no `total`) and takes its columns
+  from `<resource>-csv.ts`, a `CsvColumn` list built from the list item, never from the document.
 - `src/stats/stats-mode.ts`: `StatsModeReader` reads the writer's `stats_detail` for `GET /info`.
 - `src/analytics/` answers from the rollup collections only: `analytics-planner.ts` picks the granularity, source
   collection and bucket grid, `analytics-counters.ts` folds the documents in process with the definitions of the
@@ -48,7 +52,8 @@ Behaviour is specified in `openspec/specs/*-api`, `api-conventions`, `auth`, `st
 - `src/status/freshness.ts` marks active rooms and participants `stale` with the backend clock, from the typings
   `freshnessWindows()`.
 - `src/index.ts` exports what an extending backend builds on: the startup, tokens and registry, the generic query,
-  cursor, response and freshness pieces, and the list pieces that entity details extend.
+  cursor, response, CSV and freshness pieces, and the list pieces (mappers, fields, CSV columns) that entity details
+  extend.
 - Exact identifiers (`RM_`, `PA_`, `EG_`, `IN_`, `TR_`) are matched with `ENTITY_ID_PATTERNS`, `isEntityId()` and
   `entityIdKind()` from typings.
 - Configuration variables are new `DASHBOARD_*`, or `DATABASE_*` for database connection settings; legacy names keep

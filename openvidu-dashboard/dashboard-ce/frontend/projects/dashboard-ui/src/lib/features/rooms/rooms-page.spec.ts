@@ -8,7 +8,7 @@ import type { ListResponse, RoomListItem, RoomSummary } from '@openvidu-dashboar
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { infoResponse, settle } from '../../../testing/fixtures.js';
-import { routeElement } from '../../../testing/harness.js';
+import { exportCsv, routeElement } from '../../../testing/harness.js';
 import { RangePickerService } from '../../components/date-time-range-picker/date-time-range-picker.js';
 import { LIST_SEARCH_DEBOUNCE_MS } from '../../components/search/list-search.js';
 import { InfoService } from '../../core/info.js';
@@ -121,6 +121,22 @@ function text(element: Element | null | undefined): string {
 }
 
 describe('RoomsPage', () => {
+	it('exports the filtered and sorted list as CSV, every page', async () => {
+		const { element, http } = await open(
+			'/rooms?status=closed&features=egress&sort=duration&order=asc&from=now-24h&to=now&tz=Europe/Madrid&limit=50'
+		);
+		const { params, saved } = await exportCsv(http, element, 'rooms/export.csv', 'rooms-a-b.csv');
+
+		expect(params.get('status')).toBe('closed');
+		expect(params.get('features')).toBe('egress');
+		expect(params.get('sort')).toBe('duration');
+		expect(params.get('order')).toBe('asc');
+		expect(params.get('tz')).toBe('Europe/Madrid');
+		expect(params.get('from')).toMatch(/Z$/);
+		expect(params.has('cursor') || params.has('limit')).toBe(false);
+		expect(saved).toEqual(['rooms-a-b.csv']);
+	});
+
 	afterEach(() => {
 		vi.useRealTimers();
 	});

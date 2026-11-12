@@ -1,17 +1,24 @@
-import { FeatureKey } from '@openvidu-dashboard/typings';
+import { FeatureKey, listCsvFileName } from '@openvidu-dashboard/typings';
 
+import { listRows, registerCsvExport } from '../api/csv-export.js';
 import type { RouteRegistry } from '../api/route-registry.js';
+import { roomCsvColumns } from './rooms-csv.js';
 import { roomsListResponse, roomSummary } from './rooms-responses.js';
-import { roomsListQuery, roomsSummaryQuery } from './rooms-schemas.js';
+import { roomsExportQuery, roomsListQuery, roomsSummaryQuery } from './rooms-schemas.js';
 import type { RoomsService } from './rooms-service.js';
 
 const TAGS = ['Rooms'];
 
 /**
- * Rooms routes: the list and the summary, and the locks of the `room-detail` routes (the detail, its children, events
- * and series). `now` is read per request.
+ * Rooms routes: the list, its CSV export and the summary, and the locks of the `room-detail` routes (the detail, its
+ * children and their export, events and series). `now` and `features` are read per request.
  */
-export function registerRoomsRoutes(registry: RouteRegistry, rooms: () => RoomsService, now: () => Date): void {
+export function registerRoomsRoutes(
+	registry: RouteRegistry,
+	rooms: () => RoomsService,
+	now: () => Date,
+	features: () => readonly FeatureKey[]
+): void {
 	registry.tag('Rooms', 'Room sessions');
 	registry.register({
 		method: 'get',
@@ -24,6 +31,18 @@ export function registerRoomsRoutes(registry: RouteRegistry, rooms: () => RoomsS
 		request: { query: roomsListQuery(now) },
 		responses: { 200: { description: 'One page of rooms', schema: roomsListResponse } },
 		handler: ({ query }) => rooms().list(query)
+	});
+	// Registered before /rooms/{sid} so the literal segment wins.
+	registerCsvExport(registry, {
+		path: '/rooms/export.csv',
+		operationId: 'exportRoomsCsv',
+		edition: 'ce',
+		summary: 'Every room of the list as CSV',
+		tags: TAGS,
+		request: { query: roomsExportQuery(now) },
+		columns: () => roomCsvColumns(features().includes(FeatureKey.PER_NODE_BREAKDOWN)),
+		rows: ({ query }) => listRows((params, options) => rooms().list(params, options), query),
+		fileName: ({ query }) => listCsvFileName('rooms', query.from.toISOString(), query.to.toISOString())
 	});
 	// Registered before /rooms/{sid} so the literal segment wins.
 	registry.register({
@@ -39,7 +58,15 @@ export function registerRoomsRoutes(registry: RouteRegistry, rooms: () => RoomsS
 		handler: ({ query }) => rooms().summary(query)
 	});
 
-	for (const path of ['', '/participants', '/egresses', '/ingress-sessions', '/events', '/series']) {
+	for (const path of [
+		'',
+		'/participants',
+		'/participants/export.csv',
+		'/egresses',
+		'/ingress-sessions',
+		'/events',
+		'/series'
+	]) {
 		registry.lock({ method: 'get', path: `/rooms/{sid}${path}`, feature: FeatureKey.ROOM_DETAIL });
 	}
 }

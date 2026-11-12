@@ -217,8 +217,15 @@ export function buildContainer(inputs: ContainerInputs): Container {
 		})
 	);
 	registerInfoRoute(registry, () => container.get<InfoService>(TOKENS.InfoService));
-	registerRoomsRoutes(registry, () => container.get<RoomsService>(TOKENS.RoomsService), now);
-	registerParticipantsRoutes(registry, () => container.get<ParticipantsService>(TOKENS.ParticipantsService), now);
+	const features = () => container.get<FeatureKey[]>(TOKENS.Features);
+
+	registerRoomsRoutes(registry, () => container.get<RoomsService>(TOKENS.RoomsService), now, features);
+	registerParticipantsRoutes(
+		registry,
+		() => container.get<ParticipantsService>(TOKENS.ParticipantsService),
+		now,
+		features
+	);
 	registerTracksRoutes(registry);
 	registerEgressRoutes(registry, () => container.get<EgressService>(TOKENS.EgressService), now);
 	registerIngressRoutes(registry, () => container.get<IngressService>(TOKENS.IngressService), now);

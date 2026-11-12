@@ -24,3 +24,9 @@ export function listResponse(item: z.ZodType, id: string) {
 		})
 		.meta({ id });
 }
+
+/** Options of a list service call. */
+export interface ListOptions {
+	/** `false` skips the `total` count, which a CSV export never reads. */
+	total?: boolean;
+}

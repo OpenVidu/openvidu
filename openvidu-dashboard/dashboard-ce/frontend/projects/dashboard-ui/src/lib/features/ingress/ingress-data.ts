@@ -9,7 +9,7 @@ import type {
 	SortOrder
 } from '@openvidu-dashboard/typings';
 
-import { HttpService } from '../../core/http/http.js';
+import { type Download, HttpService, type QueryValue } from '../../core/http/http.js';
 import type { RangeParams } from '../../core/state/query-state.js';
 import { apiRange } from '../rooms/rooms-data.js';
 
@@ -24,23 +24,32 @@ export interface IngressListRequest {
 	limit: number;
 }
 
-/** Requests of the ingress list and its summary. */
+function ingressParams(request: IngressListRequest): Record<string, QueryValue> {
+	return {
+		...apiRange(request.range),
+		status: request.status,
+		inputType: request.inputType,
+		q: request.q,
+		sort: request.sort,
+		order: request.order,
+		cursor: request.cursor,
+		limit: request.limit
+	};
+}
+
+/** Requests of the ingress list, its CSV export and its summary. */
 @Service()
 export class IngressDataService {
 	private readonly http = inject(HttpService);
 
 	list(request: IngressListRequest): Promise<ListResponse<IngressListItem>> {
-		return this.http.get('ingresses', {
-			params: {
-				...apiRange(request.range),
-				status: request.status,
-				inputType: request.inputType,
-				q: request.q,
-				sort: request.sort,
-				order: request.order,
-				cursor: request.cursor,
-				limit: request.limit
-			}
+		return this.http.get('ingresses', { params: ingressParams(request) });
+	}
+
+	/** The CSV of every ingress the request selects. */
+	export(request: IngressListRequest): Promise<Download> {
+		return this.http.download('ingresses/export.csv', {
+			params: { ...ingressParams(request), cursor: null, limit: null }
 		});
 	}
 

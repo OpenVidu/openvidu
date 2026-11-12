@@ -7,6 +7,7 @@ import { afterAll, beforeAll, describe, expect, inject, it } from 'vitest';
 
 import {
 	Collection,
+	LIST_EXPORT_MAX_ROWS,
 	ParticipantKind,
 	ParticipantStatus,
 	type RoomDocument,
@@ -18,7 +19,10 @@ import { rankedPipeline } from '../../src/api/ranked.js';
 import { prefixRegex } from '../../src/api/search.js';
 import { ROOM_LIST_PROJECTION, roomsListPlan } from '../../src/rooms/rooms-query.js';
 import { STANDARD_SESSIONS } from '../../src/rooms/rooms-repository.js';
-import { roomsListQuery } from '../../src/rooms/rooms-schemas.js';
+import { columnsCsv } from '../../src/api/csv.js';
+import { listRows } from '../../src/api/csv-export.js';
+import { roomCsvColumns } from '../../src/rooms/rooms-csv.js';
+import { roomsExportQuery, roomsListQuery } from '../../src/rooms/rooms-schemas.js';
 import { RoomsService } from '../../src/rooms/rooms-service.js';
 import { WriterFreshness } from '../../src/status/freshness.js';
 import { expectWithinBudgets } from '../support/latency-budget.js';
@@ -47,11 +51,27 @@ describe.skipIf(mongoUri === '')(`rooms query plan at scenario ${scenario}`, () 
 	const now = new Date();
 	const report: string[] = [];
 
-	const listParams = (query: Record<string, string>) =>
-		roomsListQuery(() => now).parse({ from: ctx.range.from.toISOString(), limit: String(LIMIT), ...query });
+	/** The list parameters of `query`; `limit` overrides the page size the schema caps at 100. */
+	const listParams = (query: Record<string, string>, limit?: number) => {
+		const params = roomsListQuery(() => now).parse({
+			from: ctx.range.from.toISOString(),
+			limit: String(LIMIT),
+			...query
+		});
 
-	const explainList = async (query: Record<string, string>, bound: (branches: number) => number) => {
-		const params = listParams(query);
+		return limit === undefined ? params : { ...params, limit };
+	};
+
+	/** The CSV export of the list `query` selects, as its route builds it. */
+	const exportCsv = async (query: Record<string, string>) => {
+		const params = roomsExportQuery(() => now).parse({ from: ctx.range.from.toISOString(), ...query });
+		const rows = await listRows((input, options) => service.list(input, options), params);
+
+		return columnsCsv(roomCsvColumns(false), rows.items);
+	};
+
+	const explainList = async (query: Record<string, string>, bound: (branches: number) => number, limit = LIMIT) => {
+		const params = listParams(query, limit);
 		const plan = roomsListPlan(params);
 
 		if (plan.kind === 'ranked') {
@@ -73,7 +93,7 @@ describe.skipIf(mongoUri === '')(`rooms query plan at scenario ${scenario}`, () 
 				.collection<RoomDocument>(Collection.ROOMS)
 				.find(plan.filter, { projection: ROOM_LIST_PROJECTION })
 				.sort(plan.kind === 'page' ? plan.sort : { _id: 1 })
-				.limit(LIMIT + 1),
+				.limit(limit + 1),
 			{ maxDocsExamined: bound(branches) }
 		);
 	};
@@ -123,6 +143,13 @@ describe.skipIf(mongoUri === '')(`rooms query plan at scenario ${scenario}`, () 
 
 		it('status all, sort createdAt: createdAt_id', async () => {
 			expectIndexes(await explainList({}, page), ['createdAt_id']);
+		});
+
+		it('export at the row cap: the list index, at most the cap and its ties or the rooms in range', async () => {
+			const cap = () => LIST_EXPORT_MAX_ROWS + 2;
+
+			expectIndexes(await explainList({}, cap, LIST_EXPORT_MAX_ROWS), ['createdAt_id']);
+			expectIndexes(await explainList({ sort: 'duration' }, cap, LIST_EXPORT_MAX_ROWS), ['createdAt_id']);
 		});
 
 		it.each(['endedAt', 'duration', 'uniqueIdentities', 'active'])(
@@ -304,6 +331,8 @@ describe.skipIf(mongoUri === '')(`rooms query plan at scenario ${scenario}`, () 
 					]
 				),
 				['List, two features', '150 ms', () => service.list(listParams({ features: 'egress,agent' }))],
+				['Export, status all (up to 10,000 rows)', '2000 ms', () => exportCsv({})],
+				['Export, ranked by duration', '2000 ms', () => exportCsv({ sort: 'duration' })],
 				['List, node', '150 ms', () => service.list(listParams({ mediaNode: biggest?.mediaNode ?? 'none' }))],
 				[`List, prefix "${common}"`, '150 ms', () => service.list(listParams({ q: common }))],
 				[
@@ -327,7 +356,10 @@ describe.skipIf(mongoUri === '')(`rooms query plan at scenario ${scenario}`, () 
 
 				report.push(`| ${name} | ${budget} | ${measured.toFixed(1)} ms |`);
 
-				if (name.startsWith('List, ranked') && measured > Number.parseFloat(budget)) {
+				if (
+					(name.startsWith('List, ranked') || name.startsWith('Export')) &&
+					measured > Number.parseFloat(budget)
+				) {
 					overruns.push(`${name}: ${measured.toFixed(1)} ms > ${budget}`);
 				}
 			}
