@@ -9,27 +9,17 @@ queried) and `Deployment` (running the service). One line per observable change,
 
 ### Upgrade notes
 
-- The first start after the upgrade migrates the existing analytics data in the background; the dashboard shows the
-  progress. Legacy `events` is renamed `legacy_events` and expires with its TTL; `active_entities` and `last_alive` are
-  removed.
+- The dashboard reads the analytics data model that OpenVidu Server 3.10 writes. While the server migrates the data
+  of previous versions in the background, the dashboard shows the progress.
 - `ADMIN_USERNAME` and `ADMIN_PASSWORD` are required: the dashboard no longer starts with built-in credentials.
 - `LOG_LEVEL` defaults to `info` instead of `debug`, and `SERVER_PORT` to `5000` (the port every installer sets)
   instead of `3000`.
 - The image runs as uid 1000: mounted configuration and certificate authority files must be readable by that user.
-- Client IP addresses are no longer stored by default; set `openvidu.analytics.anonymize_ip: false` to store them.
-- The analytics data and the dashboard require MongoDB: on Amazon DocumentDB the server starts with analytics disabled
-  and logs why.
+- The dashboard requires MongoDB: Amazon DocumentDB is not supported.
 
 ### Breaking changes
 
-- The server no longer writes the legacy `stats`, `active_entities` and `last_alive` collections nor events in the
-  legacy document shape, and its Redis analytics sink is removed.
 - The API moves to `/api/v1`; the unversioned routes and `POST /api/login` are removed.
-
-### Deprecated
-
-- `openvidu.analytics.expiration`: mapped to `retention.events` and `retention.stats`, which replace it.
-- `openvidu.analytics.fixer_interval`: replaced by `openvidu.analytics.reconciler.interval`.
 
 ### Added
 
@@ -59,21 +49,16 @@ queried) and `Deployment` (running the service). One line per observable change,
   unique identities; they open on hover, keyboard focus or a tap.
 - Data that servers running mediasoup do not generate shows a warning icon that explains why. Its tiles and charts stay
   in place, dimmed when the range or entity has no media statistics at all.
+- Rooms, participants, egress and ingress sessions that the server closed because their end never arrived read as
+  closed with an estimated end time.
 - Settings page with viewer preferences (any time zone as the default) and an About tab with the OpenVidu version, the
   migration progress while it runs, the retention per data class and the storage.
 - PRO features appear locked in CE with a short explanation and a link.
 
 #### Data
 
-- New analytics data model: one document per room session, participant session, published track, subscription,
-  egress, ingress and ingress session, plus raw events, statistics time series and 5-minute, hourly and daily rollups
-  (API calls by method, ingress sessions by input type), with a schema version that the server and the dashboard check
-  at startup.
-- The server writes the analytics model in idempotent per-node batches, with a retention per data class.
-- `openvidu.analytics` options `retention` (per data class, in days: `events`, `stats`, `tracks` and `rollups_5min`
-  7 days, `entities` 90 days, `rollups_hourly` 400 days and `rollups_daily`, unlimited unless set), `stats_detail`,
-  `anonymize_ip`, `store_metadata`, `events.store_types`, `queue` and `validation_action`.
-- Legacy analytics data is migrated to the new model automatically.
+- The dashboard reads the analytics data model of OpenVidu Server 3.10 (rooms, participant sessions, tracks, egress,
+  ingress, events, statistics and rollups), whose schema version it checks at startup.
 - Versioned API under `/api/v1`: rooms, participants and agents, egress and ingress lists with their summaries and CSV
   exports, sorted by metrics (durations, end times, counters) within a range limit reported by `GET /api/v1/info`; an
   exact ID always finds its entity whatever the range and filters, and active rooms and participants carry a `stale`
@@ -89,10 +74,6 @@ queried) and `Deployment` (running the service). One line per observable change,
 #### Deployment
 
 - The CE dashboard is open source, in `openvidu-dashboard/` of the OpenVidu repository, with its image build and tests.
-- `openvidu.analytics.migration.*` settings control the migration.
-- Analytics durations accept days (`7d`, `1d12h`), and the server refuses to start on a retention above the MongoDB TTL
-  limit, an entity retention under 2 days or a daily rollup retention shorter than the hourly one, naming the key.
-- The server logs a warning when a full analytics queue drops entries, at most once per queue and batch interval.
 - `DATABASE_TLS_CA_FILE` trusts a private certificate authority for external MongoDB services.
 - The dashboard refuses to start (exit code 3) against an OpenVidu server whose analytics schema is older than it
   supports, and reports a newer or uninitialized schema in `GET /api/v1/info`.
@@ -121,16 +102,15 @@ queried) and `Deployment` (running the service). One line per observable change,
   with a sheet per resolution and per breakdown, with rooms, participants, egress and ingress sections that draw both
   the most active at once and the volume per bucket, the topology of the ended rooms (1:1, 1:N, N:M…), their size and
   the share recorded, client and data transferred sections; every section has its own colour, the charts of a card share
-  its rows evenly, unique identities show per UTC day at any granularity, egress and ingress are counted for the whole
-  deployment only, and a section without data shrinks to its "No data in this range" message.
+  its rows evenly, unique identities show per UTC day at any granularity, and a section without data shrinks to its
+  "No data in this range" message.
 - Auto-refresh offers one interval for every live view; a page that cannot refresh now, such as an ended room, shows
   why on the disabled interval control.
-- Tables show every selected column and scroll sideways when they do not fit, turn into cards only on phones, keep
+- Tables let the viewer choose their columns, scroll sideways when they do not fit, turn into cards on phones, keep
   their rows while they refresh and show skeletons only before their first data.
 - Enum values read as friendly labels, durations count up live and charts update in place; every time-series chart
   names its bucket and time zone.
-- Status, live and kind tags share one height and stand out on a hovered row, and the kind, type and input tags of the
-  lists carry the colour of their Analytics charts.
+- The kind, type and input tags of the lists carry the colour of their Analytics charts.
 - Light and dark themes meet WCAG AA, with self-hosted fonts and icons.
 - The list tiles say which figures are current ("active now") and which follow the range ("in range"), current ones
   first.
@@ -140,14 +120,6 @@ queried) and `Deployment` (running the service). One line per observable change,
 
 - Participant counts, sessions, minutes, unique identities and client breakdowns count standard participants only;
   egress, ingress, agent and SIP sessions are counted apart, by kind.
-- Participants, tracks and subscriptions left by a crashed or stopped server node are closed within 2 minutes, and
-  their rooms with the last of their sessions once LiveKit's dead node cleanup released them, with an end time accurate
-  to 30 s (`openvidu.analytics.reconciler` options `enabled`, `interval` and `max_closures_per_run`); a recording lost
-  with its node is reported as failed.
-- Analytics events and statistics queued in a node are written before it stops on a graceful shutdown, and the node
-  records when it stopped.
-- Credentials are never stored in the analytics database; metadata is stored only with `store_metadata`, and client
-  IP addresses are left out unless `anonymize_ip: false`.
 
 #### Deployment
 
