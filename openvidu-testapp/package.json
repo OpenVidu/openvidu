@@ -36,7 +36,7 @@
     "crypto-browserify": "^3.12.1",
     "json-stringify-safe": "5.0.1",
     "livekit-client": "2.23.0",
-    "livekit-server-sdk": "^2.19.2",
+    "livekit-server-sdk": "^2.19.3",
     "rxjs": "~7.8.2",
     "stream-browserify": "^3.0.0",
     "tslib": "^2.9.1",
