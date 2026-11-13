@@ -28,7 +28,7 @@ catalog:
   '@fontsource-variable/jetbrains-mono': 5.3.0
   '@material-symbols/svg-400': 0.48.3
   '@playwright/test': 1.65.0
-  '@fission-ai/openspec': 1.16.1
+  '@fission-ai/openspec': 1.17.0
   '@types/cookie-parser': 1.4.10
   '@types/express': 5.0.6
   '@types/node': 26.6.6
@@ -42,10 +42,10 @@ catalog:
   eslint: 10.14.0
   eslint-config-prettier: 10.1.8
   express: 5.3.0
-  express-rate-limit: 8.7.3
+  express-rate-limit: 8.7.4
   globals: 17.14.0
-  inversify: 8.2.4
-  jose: 6.2.15
+  inversify: 8.3.0
+  jose: 6.2.17
   jsdom: 31.0.0
   mongodb: 7.8.0
   ng-packagr: 22.2.6
@@ -57,7 +57,7 @@ catalog:
   tslib: 2.9.1
   tsx: 4.23.15
   typescript: 6.0.3
-  typescript-eslint: 8.72.1
+  typescript-eslint: 8.72.2
   vitest: 5.1.0
   winston: 3.19.0
   write-excel-file: 4.1.1
