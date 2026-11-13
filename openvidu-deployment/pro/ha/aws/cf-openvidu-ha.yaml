@@ -1629,7 +1629,7 @@ Resources:
                 set -e
                 OPENVIDU_VERSION=main
                 DOMAIN=
-                YQ_VERSION=v4.54.2
+                YQ_VERSION=v4.54.3
 
                 # Install dependencies
                 apt-get update && apt-get install -y \
@@ -1640,7 +1640,7 @@ Resources:
                 wget https://github.com/mikefarah/yq/releases/download/${!YQ_VERSION}/yq_linux_$(dpkg --print-architecture).tar.gz -O - |\
                   tar xz && mv yq_linux_$(dpkg --print-architecture) /usr/bin/yq
 
-                AWS_CLI_VERSION=2.39.6
+                AWS_CLI_VERSION=2.39.7
                 # Install aws-cli if not already installed
                 if ! command -v aws &> /dev/null; then
                   curl "https://awscli.amazonaws.com/awscli-exe-linux-$(uname -m)-${!AWS_CLI_VERSION}.zip" -o "awscliv2.zip"
@@ -2702,7 +2702,7 @@ Resources:
               content: !Sub |
                 #!/bin/bash
                 set -e
-                YQ_VERSION=v4.54.2
+                YQ_VERSION=v4.54.3
 
                 # Install dependencies
                 apt-get update && apt-get install -y \
@@ -2713,7 +2713,7 @@ Resources:
                 wget https://github.com/mikefarah/yq/releases/download/${!YQ_VERSION}/yq_linux_$(dpkg --print-architecture).tar.gz -O - |\
                   tar xz && mv yq_linux_$(dpkg --print-architecture) /usr/bin/yq
 
-                AWS_CLI_VERSION=2.39.6
+                AWS_CLI_VERSION=2.39.7
                 # Install aws-cli if not already installed
                 if ! command -v aws &> /dev/null; then
                   curl "https://awscli.amazonaws.com/awscli-exe-linux-$(uname -m)-${!AWS_CLI_VERSION}.zip" -o "awscliv2.zip"
@@ -3260,7 +3260,7 @@ Resources:
 
             # aws-cli v2, hoisted from install.sh so the watchdog's replace script can call
             # the ASG API even if bootstrap hangs before install.sh runs
-            AWS_CLI_VERSION=2.39.6
+            AWS_CLI_VERSION=2.39.7
             if ! command -v aws &> /dev/null; then
               curl "https://awscli.amazonaws.com/awscli-exe-linux-$(uname -m)-${!AWS_CLI_VERSION}.zip" -o "awscliv2.zip"
               unzip -qq awscliv2.zip
