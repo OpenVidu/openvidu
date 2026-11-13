@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 # OpenVidu Dashboard CE. Build context: the workspace root (openvidu-dashboard/).
 # The Node.js images are named in full, never through an ARG, so that Dependabot (.github/dependabot.yml) updates them.
-ARG SAFE_CHAIN_VERSION=1.5.27
+ARG SAFE_CHAIN_VERSION=1.5.29
 
 # Workspace manifests and the lockfile, shared by the install stages. They run on the build platform, so no package is
 # installed, nor checked by safe-chain, under emulation; a --platform on a FROM that names a stage would be ignored.
