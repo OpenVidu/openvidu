@@ -2805,6 +2805,436 @@ public class OpenViduTestAppE2eEgressProTest extends AbstractOpenViduTestappE2eT
 	}
 
 	// ------------------------------------------------------------------------
+	// Auto Egress: every participant of a room recorded with Participant Passthrough
+	// ------------------------------------------------------------------------
+
+	// The filepath of an Auto Egress: a name of its own for every participant and
+	// recording
+	private static final String AUTO_FILEPATH = "passthrough/{room_name}/{publisher_identity}-{time}";
+	// A file name an Auto Egress gives, without the suffix of the screen file or of
+	// a single track's file
+	private static final String AUTO_FILE_NAME = "-\\d{4}-\\d{2}-\\d{2}T\\d{6}";
+
+	@Test
+	@DisplayName("Auto Egress records every participant who publishes")
+	void autoEgressRecordsEveryParticipantTest() throws Exception {
+		log.info("Participant Passthrough: Auto Egress records every participant who publishes");
+		String room = uniqueRoom("auto");
+		createRoomWithAutoPassthrough(room, AUTO_FILEPATH);
+		List<String> egresses = new ArrayList<>();
+
+		Publisher alice = joinPublisher("chrome", room, "alice", "vp8", true, true, true);
+		String aliceEgress = waitForAutoEgress(room, "alice", egresses);
+		// carol joins without publishing, and dave never publishes
+		Publisher carol = addPublisherInstance(alice.user, room, "carol", "vp8", true, false, false);
+		addPublisherInstance(alice.user, room, "dave", "vp8", true, false, false);
+		Thread.sleep(3000);
+		Publisher bob = addPublisherInstance(alice.user, room, "bob", "vp8", true, true, true);
+		long bobJoined = System.currentTimeMillis();
+		String bobEgress = waitForAutoEgress(room, "bob", egresses);
+		Thread.sleep(2000);
+		// a participant is recorded from their first track, not from joining
+		Assertions.assertEquals(List.of("alice", "bob"), recordedIdentities(room),
+				"Only the participants who publish are recorded: " + roomEgresses(room));
+		carol.addAudio();
+		String carolEgress = waitForAutoEgress(room, "carol", egresses);
+		Thread.sleep(6000);
+		// a recording ends when its participant leaves, the others when the room ends
+		bob.leave();
+		JsonObject bobInfo = waitUntilEgressStatus(bobEgress, "EGRESS_COMPLETE", 40);
+		long bobLeft = System.currentTimeMillis();
+		Assertions.assertEquals("EGRESS_ACTIVE", status(getEgress(aliceEgress)), "Alice's recording goes on");
+		Thread.sleep(3000);
+		deleteRoom(room);
+		JsonObject aliceInfo = waitUntilEgressStatus(aliceEgress, "EGRESS_COMPLETE", 40);
+		JsonObject carolInfo = waitUntilEgressStatus(carolEgress, "EGRESS_COMPLETE", 40);
+		Assertions.assertEquals(List.of("alice", "bob", "carol"), recordedIdentities(room),
+				"One recording per participant who published: " + roomEgresses(room));
+
+		Recordings aliceRecordings = autoRecordings(aliceInfo, room, "alice");
+		Recordings bobRecordings = autoRecordings(bobInfo, room, "bob");
+		Recordings carolRecordings = autoRecordings(carolInfo, room, "carol");
+		for (Recordings recordings : List.of(aliceRecordings, bobRecordings)) {
+			recordings.assertFiles("camera");
+			Recording camera = recordings.camera();
+			camera.assertFinalized();
+			camera.assertTracks("audio:opus", "video:vp8");
+			camera.assertHealthy();
+			camera.assertStartTogether();
+			camera.assertAvSync(5);
+		}
+		carolRecordings.assertFiles("camera");
+		Recording carolFile = carolRecordings.camera();
+		carolFile.assertFinalized();
+		carolFile.assertTracks("audio:opus");
+		carolFile.assertHealthy();
+		carolFile.audio(0).assertMarkers(5);
+
+		// bob's file lies inside alice's on the wall clock, from his joining to his
+		// leaving
+		double bobStart = bobRecordings.startOffset("camera", aliceRecordings, "camera");
+		double bobEnd = bobStart + bobRecordings.camera().duration;
+		double expectedEnd = bobStart + (bobLeft - bobJoined) / 1000.0;
+		Assertions.assertTrue(bobStart >= 2.5 && bobEnd <= aliceRecordings.camera().duration - 2, String.format(
+				Locale.ROOT, "Bob's file must start at least 2.5 s after alice's and end at least 2 s before it: %.2f s to"
+						+ " %.2f s of %.2f s",
+				bobStart, bobEnd, aliceRecordings.camera().duration));
+		Assertions.assertTrue(bobEnd <= expectedEnd + 1, String.format(Locale.ROOT,
+				"Bob's file must end when he leaves: at %.2f s, he left at %.2f s at the latest", bobEnd, expectedEnd));
+		// and every file lines up with the others: what each participant sent at the
+		// same instant is at the same instant of the room
+		Recordings.assertAvSyncAcross(aliceRecordings, "camera", bobRecordings, "camera", 5);
+		Recordings.assertAvSyncAcross(bobRecordings, "camera", aliceRecordings, "camera", 5);
+		Recordings.assertAvSyncAcross(carolRecordings, "camera", aliceRecordings, "camera", 5);
+		Recordings.assertAvSyncAcross(carolRecordings, "camera", bobRecordings, "camera", 3);
+	}
+
+	@Test
+	@DisplayName("Auto Egress records a participant who joins again in a new recording")
+	void autoEgressParticipantJoinsAgainTest() throws Exception {
+		log.info("Participant Passthrough: Auto Egress records a participant who joins again in a new recording");
+		String room = uniqueRoom("auto-again");
+		createRoomWithAutoPassthrough(room, AUTO_FILEPATH);
+		List<String> egresses = new ArrayList<>();
+
+		Publisher alice = joinPublisher("chrome", room, "alice", "vp8", true, true, true);
+		String aliceEgress = waitForAutoEgress(room, "alice", egresses);
+		Publisher bob = addPublisherInstance(alice.user, room, "bob", "vp8", true, true, true);
+		String firstEgress = waitForAutoEgress(room, "bob", egresses);
+		Thread.sleep(8000);
+		bob.leave();
+		JsonObject first = waitUntilEgressStatus(firstEgress, "EGRESS_COMPLETE", 40);
+		Thread.sleep(3000);
+		addPublisherInstance(alice.user, room, "bob", "vp8", true, true, true);
+		String secondEgress = waitForAutoEgress(room, "bob", egresses);
+		Thread.sleep(8000);
+		deleteRoom(room);
+		JsonObject aliceInfo = waitUntilEgressStatus(aliceEgress, "EGRESS_COMPLETE", 40);
+		JsonObject second = waitUntilEgressStatus(secondEgress, "EGRESS_COMPLETE", 40);
+		Assertions.assertEquals(List.of("alice", "bob", "bob"), recordedIdentities(room),
+				"Bob's two sessions must be two recordings: " + roomEgresses(room));
+
+		Recordings aliceRecordings = autoRecordings(aliceInfo, room, "alice");
+		Recordings firstRecordings = autoRecordings(first, room, "bob");
+		Recordings secondRecordings = autoRecordings(second, room, "bob");
+		for (Recordings recordings : List.of(aliceRecordings, firstRecordings, secondRecordings)) {
+			recordings.assertFiles("camera");
+			Recording camera = recordings.camera();
+			camera.assertFinalized();
+			camera.assertTracks("audio:opus", "video:vp8");
+			camera.assertHealthy();
+			camera.assertStartTogether();
+			// each of bob's 8 s sessions: the start gate may hold the first 2 s of an
+			// Opus/DTX track (see assertStartTogether)
+			camera.assertAvSync(recordings == aliceRecordings ? 5 : 4);
+		}
+		Assertions.assertTrue(Collections.disjoint(firstRecordings.keys, secondRecordings.keys),
+				"Each recording of bob must have files of its own: " + firstRecordings.keys + " and "
+						+ secondRecordings.keys);
+		// the second starts after the first ended, at least the 3 s bob was away
+		double gap = secondRecordings.startOffset("camera", firstRecordings, "camera")
+				- firstRecordings.camera().duration;
+		Assertions.assertTrue(gap >= 2.5, String.format(Locale.ROOT,
+				"Bob's second recording must start at least 2.5 s after the first ends, not %.2f s", gap));
+		Recordings.assertAvSyncAcross(aliceRecordings, "camera", firstRecordings, "camera", 4);
+		Recordings.assertAvSyncAcross(aliceRecordings, "camera", secondRecordings, "camera", 5);
+		Recordings.assertAvSyncAcross(secondRecordings, "camera", aliceRecordings, "camera", 5);
+	}
+
+	@Test
+	@DisplayName("Auto Egress keeps one recording of a participant across a full reconnection")
+	void autoEgressFullReconnectionTest() throws Exception {
+		log.info("Participant Passthrough: Auto Egress keeps one recording across a full reconnection");
+		String room = uniqueRoom("auto-reconnect");
+		createRoomWithAutoPassthrough(room, AUTO_FILEPATH);
+		List<String> egresses = new ArrayList<>();
+
+		Publisher alice = joinPublisher("chrome", room, "alice", "vp8", true, true, true);
+		String egressId = waitForAutoEgress(room, "alice", egresses);
+		Thread.sleep(5000);
+		// livekit-client leaves and joins again, under the same identity, and
+		// publishes its tracks again: the recording follows them, and no other one
+		// starts
+		alice.fullReconnect();
+		Thread.sleep(8000);
+		Assertions.assertEquals(List.of("alice"), recordedIdentities(room),
+				"A full reconnection must not start a second recording: " + roomEgresses(room));
+		Assertions.assertEquals("EGRESS_ACTIVE", status(getEgress(egressId)), "The recording goes on");
+		deleteRoom(room);
+
+		Recordings recordings = autoRecordings(waitUntilEgressStatus(egressId, "EGRESS_COMPLETE", 40), room, "alice");
+		recordings.assertFiles("camera");
+		Recording camera = recordings.camera();
+		camera.assertFinalized();
+		camera.assertTracks("audio:opus", "video:vp8");
+		camera.assertHealthy();
+		camera.assertAvSync(8);
+		for (String kind : List.of("audio", "video")) {
+			Assertions.assertEquals(2, trackIds(manifestTrack(recordings.manifest, "camera", kind)).size(),
+					"The " + kind + " track before and after the reconnection, in the camera file: "
+							+ recordings.manifest);
+		}
+	}
+
+	@Test
+	@DisplayName("Auto Egress without a file name names every file after its participant")
+	void autoEgressDefaultFileNamesTest() throws Exception {
+		log.info("Participant Passthrough: Auto Egress without a file name");
+		String room = uniqueRoom("auto-names");
+		// a directory: the egress names the files
+		String directory = "passthrough/" + room + "/";
+		createRoomWithAutoPassthrough(room, directory);
+		List<String> egresses = new ArrayList<>();
+
+		Publisher alice = joinPublisher("chrome", room, "alice", "vp8", true, true, true);
+		String aliceEgress = waitForAutoEgress(room, "alice", egresses);
+		addPublisherInstance(alice.user, room, "bob", "vp8", true, true, true);
+		String bobEgress = waitForAutoEgress(room, "bob", egresses);
+		// long enough for 4 A/V pairs after the start gate (see assertStartTogether)
+		Thread.sleep(8000);
+		deleteRoom(room);
+
+		Map<String, Recordings> recordings = new LinkedHashMap<>();
+		recordings.put("alice", getRecordings(waitUntilEgressStatus(aliceEgress, "EGRESS_COMPLETE", 40)));
+		recordings.put("bob", getRecordings(waitUntilEgressStatus(bobEgress, "EGRESS_COMPLETE", 40)));
+		for (Map.Entry<String, Recordings> entry : recordings.entrySet()) {
+			Recordings r = entry.getValue();
+			r.assertFiles("camera");
+			String key = r.keyOf.get("camera");
+			// "{publisher_identity}-{time}", as a transcoding Participant Egress names it:
+			// a name of the room alone would be the same for participants who start
+			// publishing in the same second
+			Assertions.assertTrue(
+					Pattern.matches(Pattern.quote(directory + entry.getKey()) + AUTO_FILE_NAME + "\\.webm", key),
+					"The file of " + entry.getKey() + " must be named after them, in the directory: " + key);
+			Assertions.assertEquals(entry.getKey(), r.manifest.get("publisher_identity").getAsString(),
+					"Manifest: " + r.manifest);
+			r.camera().assertFinalized();
+			r.camera().assertTracks("audio:opus", "video:vp8");
+			r.camera().assertAvSync(4);
+		}
+	}
+
+	@Test
+	@DisplayName("Auto Egress lines up participants in different browsers")
+	void autoEgressAcrossBrowsersTest() throws Exception {
+		log.info("Participant Passthrough: Auto Egress lines up participants in different browsers");
+		String room = uniqueRoom("auto-browsers");
+		createRoomWithAutoPassthrough(room, AUTO_FILEPATH);
+		List<String> egresses = new ArrayList<>();
+
+		// two browsers, two page clocks: they share the host's clock only
+		joinPublisher("chrome", room, "alice", "vp8", true, true, true);
+		String aliceEgress = waitForAutoEgress(room, "alice", egresses);
+		joinPublisher("firefox", room, "bob", "vp8", true, true, true);
+		String bobEgress = waitForAutoEgress(room, "bob", egresses);
+		Thread.sleep(10000);
+		deleteRoom(room);
+
+		Recordings alice = autoRecordings(waitUntilEgressStatus(aliceEgress, "EGRESS_COMPLETE", 40), room, "alice");
+		Recordings bob = autoRecordings(waitUntilEgressStatus(bobEgress, "EGRESS_COMPLETE", 40), room, "bob");
+		for (Recordings recordings : List.of(alice, bob)) {
+			recordings.assertFiles("camera");
+			recordings.camera().assertFinalized();
+			recordings.camera().assertTracks("audio:opus", "video:vp8");
+			recordings.camera().assertHealthy();
+			recordings.camera().assertAvSync(6);
+		}
+		Recordings.assertAvSyncAcross(alice, "camera", bob, "camera", 6);
+		Recordings.assertAvSyncAcross(bob, "camera", alice, "camera", 6);
+	}
+
+	@Test
+	@DisplayName("Auto Egress: the room rebuilt from the recordings of its participants")
+	void autoEgressRoomRebuiltTest() throws Exception {
+		log.info("Participant Passthrough: the room rebuilt from the Auto Egress recordings of its participants");
+		String room = uniqueRoom("auto-rebuilt");
+		createRoomWithAutoPassthrough(room, AUTO_FILEPATH);
+		List<String> egresses = new ArrayList<>();
+
+		// alice from the start; bob later, who shares his screen for a while and
+		// leaves; carol, with H.264 (a Matroska file), last
+		Publisher alice = joinPublisher("chrome", room, "alice", "vp8", true, true, true);
+		long aliceJoined = System.currentTimeMillis();
+		String aliceEgress = waitForAutoEgress(room, "alice", egresses);
+		Thread.sleep(3000);
+		Publisher bob = addPublisherInstance(alice.user, room, "bob", "vp8", true, true, true);
+		long bobJoined = System.currentTimeMillis();
+		String bobEgress = waitForAutoEgress(room, "bob", egresses);
+		Thread.sleep(3000);
+		bob.addScreen();
+		Thread.sleep(3000);
+		addPublisherInstance(alice.user, room, "carol", "h264", true, true, true);
+		long carolJoined = System.currentTimeMillis();
+		String carolEgress = waitForAutoEgress(room, "carol", egresses);
+		Thread.sleep(4000);
+		bob.unpublishScreen();
+		Thread.sleep(2000);
+		bob.leave();
+		Thread.sleep(4000);
+		deleteRoom(room);
+
+		Recordings aliceRecordings = autoRecordings(waitUntilEgressStatus(aliceEgress, "EGRESS_COMPLETE", 40), room,
+				"alice");
+		Recordings bobRecordings = autoRecordings(waitUntilEgressStatus(bobEgress, "EGRESS_COMPLETE", 40), room, "bob");
+		Recordings carolRecordings = autoRecordings(waitUntilEgressStatus(carolEgress, "EGRESS_COMPLETE", 40), room,
+				"carol");
+		aliceRecordings.assertFiles("camera");
+		bobRecordings.assertFiles("camera", "screen");
+		carolRecordings.assertFiles("camera");
+		for (Recording camera : List.of(aliceRecordings.camera(), bobRecordings.camera(), carolRecordings.camera())) {
+			camera.assertFinalized();
+			camera.assertHealthy();
+			camera.assertStartTogether();
+			camera.assertAvSync(4);
+		}
+		carolRecordings.camera().assertContainer("matroska");
+		carolRecordings.camera().assertTracks("audio:opus", "video:h264");
+		Recording screen = bobRecordings.screen();
+		screen.assertFinalized();
+		screen.assertTracks("video:vp8");
+		screen.assertHealthy();
+
+		// every file lines up with the others on the wall clock of the manifests
+		Recordings.assertAvSyncAcross(aliceRecordings, "camera", bobRecordings, "camera", 5);
+		Recordings.assertAvSyncAcross(bobRecordings, "camera", aliceRecordings, "camera", 5);
+		Recordings.assertAvSyncAcross(aliceRecordings, "camera", bobRecordings, "screen", 3);
+		Recordings.assertAvSyncAcross(aliceRecordings, "camera", carolRecordings, "camera", 4);
+		Recordings.assertAvSyncAcross(carolRecordings, "camera", aliceRecordings, "camera", 4);
+		Recordings.assertAvSyncAcross(carolRecordings, "camera", bobRecordings, "camera", 2);
+
+		// The room on one timeline: it starts with the first file
+		long roomStart = Math.min(aliceRecordings.fileStart("camera"),
+				Math.min(bobRecordings.fileStart("camera"), carolRecordings.fileStart("camera")));
+		RoomFile aliceCamera = roomFile(aliceRecordings, "camera", roomStart);
+		RoomFile bobCamera = roomFile(bobRecordings, "camera", roomStart);
+		RoomFile bobScreen = roomFile(bobRecordings, "screen", roomStart);
+		RoomFile carolCamera = roomFile(carolRecordings, "camera", roomStart);
+		List<RoomFile> cells = List.of(aliceCamera, bobCamera, bobScreen, carolCamera);
+		List<RoomFile> voices = List.of(aliceCamera, bobCamera, carolCamera);
+		double duration = cells.stream().mapToDouble(RoomFile::end).max().orElseThrow();
+		log.info("The room on one timeline ({} s): {}", String.format(Locale.ROOT, "%.3f", duration),
+				cells.stream().map(f -> String.format(Locale.ROOT, "%s %.3f-%.3f s", f.name(), f.start(), f.end()))
+						.collect(Collectors.joining(", ")));
+		// each participant joins when the test made them join, give or take the time
+		// the egress takes to start recording them
+		Assertions.assertEquals(0, aliceCamera.start(), 0.001, "Alice's file starts the room");
+		Assertions.assertEquals((bobJoined - aliceJoined) / 1000.0, bobCamera.start(), 3,
+				"Bob's file starts when he joined");
+		Assertions.assertEquals((carolJoined - aliceJoined) / 1000.0, carolCamera.start(), 3,
+				"Carol's file starts when she joined");
+
+		assertRoomRebuilt(cells, voices, duration);
+	}
+
+	/**
+	 * Rebuilds a room from the files of its participants (rebuildRoom) and checks
+	 * the result: it decodes without errors and lasts as long as the room, every
+	 * cell shows its file, frame by frame, where its manifest puts it and is black
+	 * outside it, and every cell is in sync with the voices of everyone.
+	 */
+	private void assertRoomRebuilt(List<RoomFile> cells, List<RoomFile> voices, double duration) throws Exception {
+		Path rebuilt = rebuildRoom(cells, voices, duration);
+		Recording whole = Recording.analyze(rebuilt);
+		whole.assertDecodesWithoutErrors();
+		Assertions.assertEquals(duration, whole.duration, 0.3, "The rebuilt room lasts as long as the room");
+		for (int i = 0; i < cells.size(); i++) {
+			RoomFile file = cells.get(i);
+			// the picture of each file in its cell, where its manifest puts it, and in
+			// sync with the voices of everyone
+			Recording cell = Recording.analyze(cellOf(rebuilt, i));
+			FileTrack video = cell.video(0);
+			FileTrack original = file.recording().video(0);
+			Assertions.assertFalse(video.bar.isEmpty(), "The " + file.name() + " cell shows nothing: " + video);
+			// every frame of the cell shows what the file shows at that instant of the
+			// room: its placement (time minus the page time it shows) is the file's plus
+			// where the file starts in the room. Placements are the lowest in the
+			// BAR_WINDOW_S around each frame, which leaves out how long the grid holds a
+			// frame (until the file's next one) and how late the page drew it
+			List<double[]> frames = original.steadyPlacements();
+			double from = file.start() + original.firstPacketTime() + BAR_WINDOW_S;
+			double to = file.start() + original.lastPacketTime() - BAR_WINDOW_S;
+			List<String> misplaced = new ArrayList<>();
+			int compared = 0;
+			double lowest = Double.MAX_VALUE;
+			double highest = -Double.MAX_VALUE;
+			int k = 0;
+			for (double[] shown : video.steadyPlacements()) {
+				double t = shown[0];
+				if (t < from || t > to) {
+					continue;
+				}
+				double u = t - file.start();
+				while (k + 1 < frames.size()
+						&& Math.abs(frames.get(k + 1)[0] - u) <= Math.abs(frames.get(k)[0] - u)) {
+					k++;
+				}
+				if (Math.abs(frames.get(k)[0] - u) > 0.1) {
+					continue; // a flash, or a hole in the file
+				}
+				compared++;
+				double offset = shown[1] - (file.start() * 1000 + frames.get(k)[1]);
+				lowest = Math.min(lowest, offset);
+				highest = Math.max(highest, offset);
+				if (Math.abs(offset) > ROOM_CELL_TOLERANCE_MS) {
+					misplaced.add(String.format(Locale.ROOT, "%.3f s: %+.0f ms", t, offset));
+				}
+			}
+			long expected = frames.stream().filter(f -> f[0] + file.start() >= from && f[0] + file.start() <= to)
+					.count();
+			Assertions.assertTrue(compared >= 0.6 * expected && compared >= 10 && misplaced.isEmpty(), String.format(
+					Locale.ROOT,
+					"The %s cell must show its file from %.2f s of the room, frame by frame: %d frames of the cell"
+							+ " compared (the file has %d), misplaced by more than %.0f ms: %s",
+					file.name(), file.start(), compared, expected, ROOM_CELL_TOLERANCE_MS, misplaced));
+			// from the file's first picture to its last one: ffmpeg rebuilds the filter
+			// graph whenever a file changes size (the layer the SFU forwards), and each
+			// cell lost its frames until then unless that is disabled (rebuildRoom)
+			double[] first = { video.bar.get(0)[0], file.start() + original.bar.get(0)[0] };
+			double[] last = { video.bar.get(video.bar.size() - 1)[0],
+					file.start() + original.bar.get(original.bar.size() - 1)[0] };
+			Assertions.assertTrue(Math.abs(first[0] - first[1]) <= 0.15 && Math.abs(last[0] - last[1]) <= 0.15,
+					String.format(Locale.ROOT,
+							"The %s cell must show its file from %.2f s to %.2f s of the room: it shows it from %.2f s to"
+									+ " %.2f s",
+							file.name(), first[1], last[1], first[0], last[0]));
+			// and nothing before the file starts or after it ends
+			for (double t : new double[] { file.start() - 0.5, file.end() + 0.5 }) {
+				if (t > 0.5 && t < duration - 0.5) {
+					Assertions.assertNull(video.pageTimeAt(t), String.format(Locale.ROOT,
+							"The %s cell must be black at %.2f s of the room, outside its file (%.2f s to %.2f s)",
+							file.name(), t, file.start(), file.end()));
+				}
+			}
+			log.info("Rebuilt room, the {} cell: {} frames in place, {} to {} ms from where its file puts them",
+					file.name(), compared, String.format(Locale.ROOT, "%+.0f", lowest),
+					String.format(Locale.ROOT, "%+.0f", highest));
+			List<double[]> pairs = cell.assertAvSync(3);
+			log.info("Rebuilt room, the {} cell against everyone's voices: {} A/V pairs", file.name(), pairs.size());
+		}
+	}
+
+	/**
+	 * The recordings of an egress started by Auto Egress, downloaded: the
+	 * manifest's, and their names, are those of the participant.
+	 */
+	private Recordings autoRecordings(JsonObject egressInfo, String room, String identity) throws Exception {
+		Recordings recordings = getRecordings(egressInfo);
+		Assertions.assertEquals(identity, recordings.manifest.get("publisher_identity").getAsString(),
+				"Manifest: " + recordings.manifest);
+		Assertions.assertEquals(room, recordings.manifest.get("room_name").getAsString(),
+				"Manifest: " + recordings.manifest);
+		for (String key : recordings.keys) {
+			Assertions.assertTrue(
+					Pattern.matches(
+							Pattern.quote("passthrough/" + room + "/" + identity) + AUTO_FILE_NAME + ".*\\.(webm|mkv)",
+							key),
+					"The files of " + identity + " must be named after the room's filepath: " + key);
+		}
+		return recordings;
+	}
+
+	// ------------------------------------------------------------------------
 	// AV1 Track Egress
 	// ------------------------------------------------------------------------
 
@@ -3959,6 +4389,82 @@ public class OpenViduTestAppE2eEgressProTest extends AbstractOpenViduTestappE2eT
 		}
 	}
 
+	/**
+	 * CreateRoom with an Auto Egress (RoomEgress) that records every participant
+	 * who publishes, from their first track, with Participant Passthrough (preset
+	 * PASSTHROUGH) into filepath.
+	 */
+	private void createRoomWithAutoPassthrough(String room, String filepath) throws IOException {
+		JsonObject participant = new JsonObject();
+		participant.addProperty("preset", "PASSTHROUGH");
+		JsonArray files = new JsonArray();
+		files.add(fileOutput(filepath));
+		participant.add("file_outputs", files);
+		JsonObject egress = new JsonObject();
+		egress.add("participant", participant);
+		JsonObject createRoom = new JsonObject();
+		createRoom.addProperty("name", room);
+		createRoom.add("egress", egress);
+		twirp("RoomService", "CreateRoom", createRoom);
+		log.info("Created room {} with Auto Egress {}", room, egress);
+	}
+
+	private void deleteRoom(String room) throws IOException {
+		JsonObject deleteRoom = new JsonObject();
+		deleteRoom.addProperty("room", room);
+		twirp("RoomService", "DeleteRoom", deleteRoom);
+	}
+
+	/** Every egress of a room, active or ended. */
+	private List<JsonObject> roomEgresses(String room) throws IOException {
+		JsonObject request = new JsonObject();
+		request.addProperty("room_name", room);
+		JsonArray items = egressApi("ListEgress", request).getAsJsonArray("items");
+		List<JsonObject> egresses = new ArrayList<>();
+		if (items != null) {
+			items.forEach(item -> egresses.add(item.getAsJsonObject()));
+		}
+		return egresses;
+	}
+
+	/** The participant a Participant egress records, null for another kind of egress. */
+	private static String recordedIdentity(JsonObject info) {
+		return info.has("participant") ? info.getAsJsonObject("participant").get("identity").getAsString() : null;
+	}
+
+	/** The participants the egresses of a room record, sorted: once per egress. */
+	private List<String> recordedIdentities(String room) throws IOException {
+		return roomEgresses(room).stream().map(OpenViduTestAppE2eEgressProTest::recordedIdentity).sorted()
+				.collect(Collectors.toList());
+	}
+
+	/**
+	 * Waits for Auto Egress to start recording identity in room, with an egress
+	 * not among known (which it is added to), and for that egress to be active:
+	 * returns its id. The request is the room's: a Participant Passthrough one.
+	 */
+	private String waitForAutoEgress(String room, String identity, List<String> known) throws Exception {
+		long deadline = System.currentTimeMillis() + 30000;
+		while (System.currentTimeMillis() < deadline) {
+			for (JsonObject info : roomEgresses(room)) {
+				String egressId = info.get("egress_id").getAsString();
+				if (identity.equals(recordedIdentity(info)) && !known.contains(egressId)) {
+					known.add(egressId);
+					JsonObject request = info.getAsJsonObject("participant");
+					Assertions.assertTrue(request.has("preset") && "PASSTHROUGH".equals(request.get("preset").getAsString()),
+							"Auto Egress must record " + identity + " with the room's PASSTHROUGH request: " + info);
+					waitUntilEgressStatus(egressId, "EGRESS_ACTIVE", 30);
+					log.info("Auto Egress {} records {} in room {}", egressId, identity, room);
+					return egressId;
+				}
+			}
+			Thread.sleep(250);
+		}
+		Assertions.fail("Auto Egress did not start recording " + identity + " in room " + room + ": "
+				+ roomEgresses(room));
+		return null;
+	}
+
 	// ------------------------------------------------------------------------
 	// Recordings
 	// ------------------------------------------------------------------------
@@ -4155,6 +4661,114 @@ public class OpenViduTestAppE2eEgressProTest extends AbstractOpenViduTestappE2eT
 				"GStreamer could not play the file being recorded: " + play.stdout + play.stderr);
 		Assertions.assertFalse((play.stdout + play.stderr).contains("ERROR"),
 				"GStreamer reported errors playing the file being recorded: " + play.stdout + play.stderr);
+	}
+
+	// ------------------------------------------------------------------------
+	// A room rebuilt from the recordings of its participants
+	// ------------------------------------------------------------------------
+
+	// The cells of a rebuilt room: the camera's size, which the screen (4:3 too) is
+	// scaled to
+	private static final int CELL_WIDTH = CAMERA_WIDTH;
+	private static final int CELL_HEIGHT = CAMERA_HEIGHT;
+	// How far the placement of a cell's frames may be from its file's, moved to where
+	// the file starts in the room: the grid shows a frame up to 33 ms after the file
+	// (30 fps), the bar is read on two encodings of the same picture, the screen
+	// scaled, and a low layer is 240 px wide (8 ms per pixel)
+	private static final double ROOM_CELL_TOLERANCE_MS = 50;
+
+	/**
+	 * A file of a participant of a room, and where it starts on the room's
+	 * timeline: its start on the wall clock its manifest gives (first_frame_at
+	 * minus start_ms) minus the room's, the first file's.
+	 */
+	private record RoomFile(String name, Recording recording, double start) {
+		double end() {
+			return start + recording.duration;
+		}
+	}
+
+	/** The file of a label of a recording, on the timeline of a room that starts at roomStart (unix ns). */
+	private static RoomFile roomFile(Recordings recordings, String label, long roomStart) {
+		return new RoomFile(recordings.name(label), recordings.file(label),
+				(recordings.fileStart(label) - roomStart) / 1e9);
+	}
+
+	/**
+	 * Rebuilds a room as one file, the way an application rebuilds it from the
+	 * recordings of its participants: the video of every cell file in a cell of a
+	 * two-column grid, black while that file has no picture, and the audio of
+	 * every audio file mixed, each file placed on the room's timeline where its
+	 * manifest puts it. H.264 and Opus in Matroska.
+	 */
+	private Path rebuildRoom(List<RoomFile> cells, List<RoomFile> audio, double duration) throws Exception {
+		Path out = newDownloadDir("room-rebuilt").resolve("room.mkv");
+		List<Path> inputs = new ArrayList<>();
+		for (RoomFile f : cells) {
+			if (!inputs.contains(f.recording().file)) {
+				inputs.add(f.recording().file);
+			}
+		}
+		for (RoomFile f : audio) {
+			if (!inputs.contains(f.recording().file)) {
+				inputs.add(f.recording().file);
+			}
+		}
+		int rows = (cells.size() + 1) / 2;
+		StringBuilder graph = new StringBuilder(String.format(Locale.ROOT, "color=c=black:s=%dx%d:r=30:d=%.3f[grid0];",
+				2 * CELL_WIDTH, rows * CELL_HEIGHT, duration));
+		for (int i = 0; i < cells.size(); i++) {
+			RoomFile f = cells.get(i);
+			// the file's own timestamps (-copyts), moved to where it starts in the room
+			graph.append(String.format(Locale.ROOT, "[%d:v:0]setpts=PTS+%.6f/TB,scale=%d:%d,setsar=1[cell%d];",
+					inputs.indexOf(f.recording().file), f.start(), CELL_WIDTH, CELL_HEIGHT, i));
+			graph.append(String.format(Locale.ROOT,
+					"[grid%d][cell%d]overlay=x=%d:y=%d:eof_action=pass:repeatlast=0[grid%d];", i, i,
+					(i % 2) * CELL_WIDTH, (i / 2) * CELL_HEIGHT, i + 1));
+		}
+		StringBuilder mix = new StringBuilder();
+		for (int i = 0; i < audio.size(); i++) {
+			RoomFile f = audio.get(i);
+			// silence from the room's start until the file's audio starts, and in its
+			// holes (async), so that every voice keeps its place in the mix
+			graph.append(String.format(Locale.ROOT, "[%d:a:0]asetpts=PTS+%.6f/TB,aresample=48000:async=1:first_pts=0[a%d];",
+					inputs.indexOf(f.recording().file), f.start(), i));
+			mix.append("[a").append(i).append("]");
+		}
+		graph.append(mix).append("amix=inputs=").append(audio.size())
+				.append(":duration=longest:dropout_transition=0:normalize=0[mix]");
+		List<String> command = new ArrayList<>(List.of("ffmpeg", "-nostdin", "-y", "-v", "error", "-copyts"));
+		for (Path input : inputs) {
+			// A file's picture changes size with the layer the SFU forwards (a
+			// simulcast camera starts on its lowest layer), and ffmpeg rebuilds the
+			// whole filter graph at each change by default: every cell lost the frames
+			// before it, and every voice was padded from the room's start again, which
+			// wrote seconds of audio at one timestamp. scale takes each size as it comes
+			command.addAll(List.of("-reinit_filter", "0", "-i", input.toString()));
+		}
+		command.addAll(List.of("-filter_complex", graph.toString(), "-map", "[grid" + cells.size() + "]", "-map",
+				"[mix]", "-c:v", "libx264", "-preset", "veryfast", "-crf", "18", "-pix_fmt", "yuv420p", "-c:a", "libopus",
+				"-b:a", "96k", "-t", String.format(Locale.ROOT, "%.3f", duration), out.toString()));
+		log.info("Rebuilding the room: {}", String.join(" ", command));
+		Exec rebuild = Exec.run(600, Ffmpeg.command(command));
+		Assertions.assertEquals(0, rebuild.exitCode, "ffmpeg could not rebuild the room: " + rebuild.stderr);
+		return out;
+	}
+
+	/**
+	 * One cell of a rebuilt room, with the room's mixed audio, as a file of its
+	 * own: Recording.analyze reads it like the file of a participant.
+	 */
+	private static Path cellOf(Path room, int cell) throws Exception {
+		Path out = room.resolveSibling("cell-" + cell + ".mkv");
+		Exec crop = Exec.run(600,
+				Ffmpeg.command("ffmpeg", "-nostdin", "-y", "-v", "error", "-i", room.toString(), "-map", "0:v:0", "-map",
+						"0:a:0", "-filter:v",
+						String.format(Locale.ROOT, "crop=%d:%d:%d:%d", CELL_WIDTH, CELL_HEIGHT, (cell % 2) * CELL_WIDTH,
+								(cell / 2) * CELL_HEIGHT),
+						"-c:v", "libx264", "-preset", "veryfast", "-crf", "18", "-c:a", "copy", out.toString()));
+		Assertions.assertEquals(0, crop.exitCode, "ffmpeg could not crop cell " + cell + ": " + crop.stderr);
+		return out;
 	}
 
 	// ------------------------------------------------------------------------
@@ -4651,10 +5265,24 @@ public class OpenViduTestAppE2eEgressProTest extends AbstractOpenViduTestappE2eT
 		 * of Recording.assertAvSync across two files. At least minPairs such beeps.
 		 */
 		List<double[]> assertAvSyncAcross(String audioLabel, String videoLabel, int minPairs) {
-			Recording audio = file(audioLabel);
-			Recording video = file(videoLabel);
+			return assertAvSyncAcross(this, audioLabel, this, videoLabel, minPairs);
+		}
+
+		/**
+		 * The same across the recordings of two egresses, the audio of one participant
+		 * against the video of another: each file placed on the wall clock its own
+		 * manifest gives, as an application places the files of the participants of a
+		 * room to rebuild it. The synthetic media of every publisher beeps and flashes
+		 * on the same whole seconds of the host's clock.
+		 */
+		static List<double[]> assertAvSyncAcross(Recordings audioOf, String audioLabel, Recordings videoOf,
+				String videoLabel, int minPairs) {
+			Recording audio = audioOf.file(audioLabel);
+			Recording video = videoOf.file(videoLabel);
+			String audioName = audioOf.name(audioLabel);
+			String videoName = videoOf.name(videoLabel);
 			// a time in the audio file is that much later in the video file
-			double shift = (fileStart(audioLabel) - fileStart(videoLabel)) / 1e9;
+			double shift = (audioOf.fileStart(audioLabel) - videoOf.fileStart(videoLabel)) / 1e9;
 			List<double[]> pairs = new ArrayList<>();
 			for (double beep : Recording.markersOf(audio.ofType("audio"))) {
 				for (FileTrack track : video.ofType("video")) {
@@ -4667,15 +5295,30 @@ public class OpenViduTestAppE2eEgressProTest extends AbstractOpenViduTestappE2eT
 			}
 			double worst = pairs.stream().mapToDouble(p -> Math.abs(p[1])).max().orElse(0);
 			String report = offsets(pairs);
-			log.info("A/V offsets (audio - video, ms) of the {} audio against the {} video: {}", audioLabel, videoLabel,
+			log.info("A/V offsets (audio - video, ms) of the {} audio against the {} video: {}", audioName, videoName,
 					report);
 			Assertions.assertTrue(pairs.size() >= minPairs, "Only " + pairs.size() + " A/V pairs found between the "
-					+ audioLabel + " audio and the " + videoLabel + " video (at least " + minPairs + " expected): " + report);
+					+ audioName + " audio and the " + videoName + " video (at least " + minPairs + " expected): " + report);
 			Assertions.assertTrue(worst <= AV_SYNC_TOLERANCE_MS,
-					"The " + audioLabel + " audio and the " + videoLabel + " video are out of sync on the manifest's"
+					"The " + audioName + " audio and the " + videoName + " video are out of sync on the manifests'"
 							+ " wall clock, worst offset " + worst + " ms (tolerance " + AV_SYNC_TOLERANCE_MS + " ms): "
 							+ report);
 			return pairs;
+		}
+
+		/** A file in messages: its label, after the participant the recording is of when the manifest says. */
+		String name(String label) {
+			return manifest != null && manifest.has("publisher_identity")
+					? manifest.get("publisher_identity").getAsString() + " " + label
+					: label;
+		}
+
+		/**
+		 * How long after the file of a group of another recording the file of a group
+		 * of this one starts, in seconds, each on the wall clock of its own manifest.
+		 */
+		double startOffset(String group, Recordings reference, String referenceGroup) {
+			return (fileStart(group) - reference.fileStart(referenceGroup)) / 1e9;
 		}
 
 		/** How long after the file of a reference group the file of a group starts, on the manifest's wall clock. */

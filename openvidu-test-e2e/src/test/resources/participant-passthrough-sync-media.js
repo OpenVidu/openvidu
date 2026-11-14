@@ -11,6 +11,8 @@
 //     seconds at 0 and half the width);
 //   - a WebAudio 1 kHz tone that sounds during the first 100 ms of every second
 //     of the same clock, and is silent otherwise.
+// The page clock keeps the phase of the wall clock (within BAR_PERIOD_MS), so
+// every page on the host flashes and beeps on the same whole seconds.
 // A recording keeps audio and video in sync when each white flash starts with
 // a beep, whenever each track was published.
 //
@@ -31,7 +33,11 @@
   var SCREEN_HEIGHT = 600;
   var MARKER_MS = 100;
   var BAR_PERIOD_MS = 2000; // a multiple of 1000: the bar also tells whole seconds
-  var origin = performance.now();
+  // The page clock starts within BAR_PERIOD_MS of the page's load, in phase with
+  // the wall clock: every page on the same host (the browsers of a test share its
+  // clock) flashes and beeps at the same instants, so that the recordings of
+  // participants in different browsers can be checked against each other
+  var origin = performance.now() - ((performance.timeOrigin + performance.now()) % BAR_PERIOD_MS);
   function clock() {
     return performance.now() - origin;
   }
