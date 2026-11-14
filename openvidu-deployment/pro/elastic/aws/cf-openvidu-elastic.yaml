@@ -1469,7 +1469,7 @@ Resources:
                 wget https://github.com/mikefarah/yq/releases/download/${!YQ_VERSION}/yq_linux_$(dpkg --print-architecture).tar.gz -O - |\
                   tar xz && mv yq_linux_$(dpkg --print-architecture) /usr/bin/yq
 
-                AWS_CLI_VERSION=2.39.7
+                AWS_CLI_VERSION=2.40.0
                 # Install aws-cli if not already installed
                 if ! command -v aws &> /dev/null; then
                   curl "https://awscli.amazonaws.com/awscli-exe-linux-$(uname -m)-${!AWS_CLI_VERSION}.zip" -o "awscliv2.zip"
@@ -2068,7 +2068,7 @@ Resources:
                 wget https://github.com/mikefarah/yq/releases/download/${!YQ_VERSION}/yq_linux_$(dpkg --print-architecture).tar.gz -O - |\
                   tar xz && mv yq_linux_$(dpkg --print-architecture) /usr/bin/yq
 
-                AWS_CLI_VERSION=2.39.7
+                AWS_CLI_VERSION=2.40.0
                 # Install aws-cli if not already installed
                 if ! command -v aws &> /dev/null; then
                   curl "https://awscli.amazonaws.com/awscli-exe-linux-$(uname -m)-${!AWS_CLI_VERSION}.zip" -o "awscliv2.zip"
@@ -2527,7 +2527,7 @@ Resources:
 
             # aws-cli v2, hoisted from install.sh so the watchdog's replace script can call
             # the ASG API even if bootstrap hangs before install.sh runs
-            AWS_CLI_VERSION=2.39.7
+            AWS_CLI_VERSION=2.40.0
             if ! command -v aws &> /dev/null; then
               curl "https://awscli.amazonaws.com/awscli-exe-linux-$(uname -m)-${!AWS_CLI_VERSION}.zip" -o "awscliv2.zip"
               unzip -qq awscliv2.zip

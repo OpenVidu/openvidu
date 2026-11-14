@@ -658,7 +658,7 @@ CONFIG_S3_EOF
   echo "DPkg::Lock::Timeout \"-1\";" > /etc/apt/apt.conf.d/99timeout
   apt-get update && apt-get install -y
   
-  GCLOUD_VERSION=592.0.0
+  GCLOUD_VERSION=593.0.0
   # Install google cli
   if ! command -v gcloud >/dev/null 2>&1; then
     curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | gpg --dearmor -o /usr/share/keyrings/cloud.google.gpg
