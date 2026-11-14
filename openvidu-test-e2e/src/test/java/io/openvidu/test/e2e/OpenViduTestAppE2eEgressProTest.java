@@ -2941,20 +2941,18 @@ public class OpenViduTestAppE2eEgressProTest extends AbstractOpenViduTestappE2eT
 		Recordings.assertAvSyncAcross(secondRecordings, "camera", aliceRecordings, "camera", 5);
 	}
 
-	@Test
-	@DisplayName("Auto Egress keeps one recording of a participant across a full reconnection")
-	void autoEgressFullReconnectionTest() throws Exception {
-		log.info("Participant Passthrough: Auto Egress keeps one recording across a full reconnection");
+	@ParameterizedTest(name = "Auto Egress {0} keeps one recording of a participant across a full reconnection")
+	@ValueSource(strings = { "PASSTHROUGH", "H264_720P_60" })
+	void autoEgressFullReconnectionTest(String preset) throws Exception {
+		log.info("Auto Egress {}: one recording of a participant across a full reconnection", preset);
 		String room = uniqueRoom("auto-reconnect");
-		createRoomWithAutoPassthrough(room, AUTO_FILEPATH);
-		List<String> egresses = new ArrayList<>();
+		createRoomWithAutoEgress(room, preset, AUTO_FILEPATH);
 
 		Publisher alice = joinPublisher("chrome", room, "alice", "vp8", true, true, true);
-		String egressId = waitForAutoEgress(room, "alice", egresses);
+		String egressId = waitForAutoEgress(room, "alice", new ArrayList<>(), preset);
 		Thread.sleep(5000);
-		// livekit-client leaves and joins again, under the same identity, and
-		// publishes its tracks again: the recording follows them, and no other one
-		// starts
+		// the new session used to start a second recording of alice while the first
+		// one went on recording her: she must be recorded once
 		alice.fullReconnect();
 		Thread.sleep(8000);
 		Assertions.assertEquals(List.of("alice"), recordedIdentities(room),
@@ -2962,17 +2960,29 @@ public class OpenViduTestAppE2eEgressProTest extends AbstractOpenViduTestappE2eT
 		Assertions.assertEquals("EGRESS_ACTIVE", status(getEgress(egressId)), "The recording goes on");
 		deleteRoom(room);
 
-		Recordings recordings = autoRecordings(waitUntilEgressStatus(egressId, "EGRESS_COMPLETE", 40), room, "alice");
-		recordings.assertFiles("camera");
-		Recording camera = recordings.camera();
-		camera.assertFinalized();
-		camera.assertTracks("audio:opus", "video:vp8");
-		camera.assertHealthy();
-		camera.assertAvSync(8);
-		for (String kind : List.of("audio", "video")) {
-			Assertions.assertEquals(2, trackIds(manifestTrack(recordings.manifest, "camera", kind)).size(),
-					"The " + kind + " track before and after the reconnection, in the camera file: "
-							+ recordings.manifest);
+		// the one recording follows alice to the end: flashes and beeps in its last 2.5 s
+		JsonObject info = waitUntilEgressStatus(egressId, "EGRESS_COMPLETE", 40);
+		Recording file = Recording.analyze(downloadRecording(info));
+		for (FileTrack track : List.of(file.video(0), file.audio(0))) {
+			double last = track.markers.isEmpty() ? -1 : track.markers.get(track.markers.size() - 1);
+			Assertions.assertTrue(last > file.duration - 2.5, String.format(Locale.ROOT,
+					"The %s of the recording (%.1f s) must have alice's markers until its end: %s", track.type,
+					file.duration, track.markers));
+		}
+		if ("PASSTHROUGH".equals(preset)) {
+			// the camera file goes on with the tracks of the new session
+			Recordings recordings = autoRecordings(info, room, "alice");
+			recordings.assertFiles("camera");
+			Recording camera = recordings.camera();
+			camera.assertFinalized();
+			camera.assertTracks("audio:opus", "video:vp8");
+			camera.assertHealthy();
+			camera.assertAvSync(8);
+			for (String kind : List.of("audio", "video")) {
+				Assertions.assertEquals(2, trackIds(manifestTrack(recordings.manifest, "camera", kind)).size(),
+						"The " + kind + " track before and after the reconnection, in the camera file: "
+								+ recordings.manifest);
+			}
 		}
 	}
 
@@ -4395,8 +4405,13 @@ public class OpenViduTestAppE2eEgressProTest extends AbstractOpenViduTestappE2eT
 	 * PASSTHROUGH) into filepath.
 	 */
 	private void createRoomWithAutoPassthrough(String room, String filepath) throws IOException {
+		createRoomWithAutoEgress(room, "PASSTHROUGH", filepath);
+	}
+
+	/** The same with any preset of a Participant Egress. */
+	private void createRoomWithAutoEgress(String room, String preset, String filepath) throws IOException {
 		JsonObject participant = new JsonObject();
-		participant.addProperty("preset", "PASSTHROUGH");
+		participant.addProperty("preset", preset);
 		JsonArray files = new JsonArray();
 		files.add(fileOutput(filepath));
 		participant.add("file_outputs", files);
@@ -4444,6 +4459,11 @@ public class OpenViduTestAppE2eEgressProTest extends AbstractOpenViduTestappE2eT
 	 * returns its id. The request is the room's: a Participant Passthrough one.
 	 */
 	private String waitForAutoEgress(String room, String identity, List<String> known) throws Exception {
+		return waitForAutoEgress(room, identity, known, "PASSTHROUGH");
+	}
+
+	/** The same for a room whose Auto Egress has another preset. */
+	private String waitForAutoEgress(String room, String identity, List<String> known, String preset) throws Exception {
 		long deadline = System.currentTimeMillis() + 30000;
 		while (System.currentTimeMillis() < deadline) {
 			for (JsonObject info : roomEgresses(room)) {
@@ -4451,8 +4471,8 @@ public class OpenViduTestAppE2eEgressProTest extends AbstractOpenViduTestappE2eT
 				if (identity.equals(recordedIdentity(info)) && !known.contains(egressId)) {
 					known.add(egressId);
 					JsonObject request = info.getAsJsonObject("participant");
-					Assertions.assertTrue(request.has("preset") && "PASSTHROUGH".equals(request.get("preset").getAsString()),
-							"Auto Egress must record " + identity + " with the room's PASSTHROUGH request: " + info);
+					Assertions.assertTrue(request.has("preset") && preset.equals(request.get("preset").getAsString()),
+							"Auto Egress must record " + identity + " with the room's " + preset + " request: " + info);
 					waitUntilEgressStatus(egressId, "EGRESS_ACTIVE", 30);
 					log.info("Auto Egress {} records {} in room {}", egressId, identity, room);
 					return egressId;
