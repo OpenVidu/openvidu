@@ -4,11 +4,11 @@ set -eu
 
 export INSTALL_PREFIX="${INSTALL_PREFIX:-/opt/openvidu}"
 export DOCKER_VERSION="${DOCKER_VERSION:-29.9.3}"
-export DOCKER_COMPOSE_VERSION="${DOCKER_COMPOSE_VERSION:-v5.7.0}"
+export DOCKER_COMPOSE_VERSION="${DOCKER_COMPOSE_VERSION:-v5.7.1}"
 export OPENVIDU_VERSION="${OPENVIDU_VERSION:-main}"
 export UPDATE_BASE_URL="${UPDATE_BASE_URL:-https://get.openvidu.io/update}"
 export UPDATER_IMAGE="${UPDATER_IMAGE:-docker.io/openvidu/openvidu-updater:${OPENVIDU_VERSION}}"
-export MINIO_SERVER_IMAGE="${MINIO_SERVER_IMAGE:-docker.io/openvidu/minio:RELEASE.2026-11-09T00-10-40Z-r0}"
+export MINIO_SERVER_IMAGE="${MINIO_SERVER_IMAGE:-docker.io/openvidu/minio:RELEASE.2026-11-09T00-10-40Z-r1}"
 export MINIO_CLIENT_IMAGE="${MINIO_CLIENT_IMAGE:-docker.io/openvidu/minio-client:RELEASE.2026-11-09T17-40-57Z}"
 export MONGO_SERVER_IMAGE="${MONGO_SERVER_IMAGE:-docker.io/openvidu/mongodb:8.0.34-compat-r1}"
 export REDIS_SERVER_IMAGE="${REDIS_SERVER_IMAGE:-docker.io/redis:8.10.3-alpine}"
@@ -32,7 +32,7 @@ export PROMTAIL_IMAGE="${PROMTAIL_IMAGE:-docker.io/grafana/promtail:3.6.11}"
 export ALLOY_IMAGE="${ALLOY_IMAGE:-docker.io/grafana/alloy:v1.21.3}"
 export LOKI_IMAGE="${LOKI_IMAGE:-docker.io/openvidu/grafana-loki:3.7.9-r1}"
 export MIMIR_IMAGE="${MIMIR_IMAGE:-docker.io/openvidu/grafana-mimir:3.2.4-r1}"
-export GRAFANA_IMAGE="${GRAFANA_IMAGE:-docker.io/grafana/grafana:12.4.14}"
+export GRAFANA_IMAGE="${GRAFANA_IMAGE:-docker.io/grafana/grafana:12.4.15}"
 
 get_next_version() {
   case "$1" in

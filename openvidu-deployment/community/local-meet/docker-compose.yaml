@@ -49,7 +49,7 @@ services:
         condition: service_completed_successfully
 
   minio:
-    image: docker.io/openvidu/minio:RELEASE.2026-11-09T00-10-40Z-r0
+    image: docker.io/openvidu/minio:RELEASE.2026-11-09T00-10-40Z-r1
     restart: unless-stopped
     ports:
       - 9000:9000
