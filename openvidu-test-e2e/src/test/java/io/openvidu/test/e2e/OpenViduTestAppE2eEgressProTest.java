@@ -13,6 +13,7 @@ import java.util.DoubleSummaryStatistics;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Locale;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
@@ -46,7 +47,10 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
 import io.livekit.server.AccessToken;
+import io.livekit.server.RoomAdmin;
 import io.livekit.server.RoomCreate;
+import io.livekit.server.RoomList;
+import io.livekit.server.RoomName;
 import io.livekit.server.RoomRecord;
 import io.minio.DownloadObjectArgs;
 import io.minio.MinioClient;
@@ -2388,6 +2392,13 @@ public class OpenViduTestAppE2eEgressProTest extends AbstractOpenViduTestappE2eT
 		waitUntilEgressStatus(egressId, "EGRESS_ACTIVE", 20);
 		Thread.sleep(5000);
 		alice.addScreen();
+		// the screen file is listed as soon as it has a frame, not only at the end
+		JsonObject live = waitForFiles(egressId,
+				names -> names.size() == 2 && names.get(1).startsWith("passthrough/" + room + "/alice-screen."),
+				"list the screen file while recording");
+		Assertions.assertEquals("EGRESS_ACTIVE", status(live), "Listed while recording: " + live);
+		// the camera file first, WebM for VP8 and Opus whatever the requested extension
+		Assertions.assertEquals(filepath(room, "alice", "webm"), fileNames(live).get(0), "The camera file first: " + live);
 		Thread.sleep(8000);
 		// the screen opens the screen file 5 s in; the camera file goes on
 		Recordings recordings = stopAndGetRecordings(egressId);
@@ -3222,6 +3233,704 @@ public class OpenViduTestAppE2eEgressProTest extends AbstractOpenViduTestappE2eT
 			List<double[]> pairs = cell.assertAvSync(3);
 			log.info("Rebuilt room, the {} cell against everyone's voices: {} A/V pairs", file.name(), pairs.size());
 		}
+	}
+
+	// ------------------------------------------------------------------------
+	// Room Composite with Participant Passthrough: StartRoomCompositeEgress with
+	// layout PARTICIPANT_PASSTHROUGH records the Room as Participant Passthrough
+	// files, one set per participant, instead of one composited file. It is one
+	// egress, as any Room Composite: the participants' recordings run inside it,
+	// are no egresses of their own and only show in its file_results and manifest
+	// ------------------------------------------------------------------------
+
+	private static final String ROOM_PASSTHROUGH_LAYOUT = "PARTICIPANT_PASSTHROUGH";
+
+	@Test
+	@DisplayName("Room Composite PARTICIPANT_PASSTHROUGH: the room must exist")
+	void roomCompositePassthroughRoomNotFoundTest() throws Exception {
+		log.info("Room Composite PARTICIPANT_PASSTHROUGH: the room must exist");
+		TwirpException e = Assertions.assertThrows(TwirpException.class,
+				() -> startRoomPassthrough(uniqueRoom("rcp-none"), AUTO_FILEPATH));
+		Assertions.assertEquals(404, e.httpStatus, "A room that does not exist: " + e.getMessage());
+	}
+
+	@Test
+	@DisplayName("Room Composite PARTICIPANT_PASSTHROUGH: what it cannot honour is refused")
+	void roomCompositePassthroughRejectsTest() throws Exception {
+		log.info("Room Composite PARTICIPANT_PASSTHROUGH: what it cannot honour is refused");
+		String room = uniqueRoom("rcp-rejects");
+		createRoom(room, 0);
+		String path = AUTO_FILEPATH;
+		String rtmp = "rtmp://localhost:1935/live/rcp";
+
+		JsonObject mp4 = roomPassthroughRequest(room, path);
+		mp4.getAsJsonArray("file_outputs").get(0).getAsJsonObject().addProperty("file_type", "MP4");
+		assertRejected("StartRoomCompositeEgress", mp4, "invalid field");
+
+		JsonObject twoFiles = roomPassthroughRequest(room, path);
+		twoFiles.getAsJsonArray("file_outputs").add(fileOutput("other/{publisher_identity}"));
+		assertRejected("StartRoomCompositeEgress", twoFiles, "invalid field");
+
+		JsonObject fileAndStream = roomPassthroughRequest(room, path);
+		fileAndStream.add("stream_outputs", streamOutputs(rtmp));
+		assertRejected("StartRoomCompositeEgress", fileAndStream, "invalid field");
+
+		JsonObject segments = roomPassthroughRequest(room, path);
+		segments.remove("file_outputs");
+		JsonObject segmentOutput = new JsonObject();
+		segmentOutput.addProperty("filename_prefix", "passthrough/" + room + "/{publisher_identity}");
+		JsonArray segmentOutputs = new JsonArray();
+		segmentOutputs.add(segmentOutput);
+		segments.add("segment_outputs", segmentOutputs);
+		assertRejected("StartRoomCompositeEgress", segments, "invalid field");
+
+		JsonObject images = roomPassthroughRequest(room, path);
+		JsonObject imageOutput = new JsonObject();
+		imageOutput.addProperty("capture_interval", 5);
+		imageOutput.addProperty("filename_prefix", "passthrough/" + room + "/{publisher_identity}");
+		JsonArray imageOutputs = new JsonArray();
+		imageOutputs.add(imageOutput);
+		images.add("image_outputs", imageOutputs);
+		assertRejected("StartRoomCompositeEgress", images, "invalid field");
+
+		for (String flag : List.of("audio_only", "video_only")) {
+			JsonObject request = roomPassthroughRequest(room, path);
+			request.addProperty(flag, true);
+			assertRejected("StartRoomCompositeEgress", request, "invalid field");
+		}
+
+		JsonObject customBaseUrl = roomPassthroughRequest(room, path);
+		customBaseUrl.addProperty("custom_base_url", "https://localhost/template");
+		assertRejected("StartRoomCompositeEgress", customBaseUrl, "invalid field");
+
+		JsonObject advanced = roomPassthroughRequest(room, path);
+		JsonObject encoding = new JsonObject();
+		encoding.addProperty("width", 640);
+		advanced.add("advanced", encoding);
+		assertRejected("StartRoomCompositeEgress", advanced, "invalid field");
+
+		// one file for everyone would be overwritten by each participant
+		assertRejected("StartRoomCompositeEgress", roomPassthroughRequest(room, "passthrough/" + room + "/room.webm"),
+				"invalid field");
+
+		// a preset other than PASSTHROUGH promises a transcoding that never happens
+		JsonObject preset = roomPassthroughRequest(room, path);
+		preset.addProperty("preset", "H264_720P_30");
+		assertRejected("StartRoomCompositeEgress", preset, "invalid field");
+		JsonObject templatePreset = roomPassthroughTemplateRequest(room, path);
+		templatePreset.addProperty("preset", "H264_1080P_30");
+		assertRejected("StartEgress", templatePreset, "invalid field");
+		JsonObject templateAdvanced = roomPassthroughTemplateRequest(room, path);
+		JsonObject templateEncoding = new JsonObject();
+		templateEncoding.addProperty("width", 640);
+		templateAdvanced.add("advanced", templateEncoding);
+		assertRejected("StartEgress", templateAdvanced, "invalid field");
+
+		JsonObject templateStream = roomPassthroughTemplateRequest(room, path);
+		JsonObject stream = new JsonObject();
+		stream.add("stream", streamOutputs(rtmp).get(0));
+		templateStream.add("outputs", new JsonArray());
+		templateStream.getAsJsonArray("outputs").add(stream);
+		assertRejected("StartEgress", templateStream, "invalid field");
+
+		Assertions.assertTrue(roomEgresses(room).isEmpty(), "No egress must have been started: " + roomEgresses(room));
+		deleteRoom(room);
+	}
+
+	@Test
+	@DisplayName("Room Composite PARTICIPANT_PASSTHROUGH waits for the first participant who publishes")
+	void roomCompositePassthroughWaitsForFirstPublisherTest() throws Exception {
+		log.info("Room Composite PARTICIPANT_PASSTHROUGH waits for the first participant who publishes");
+		String room = uniqueRoom("rcp-waits");
+		Publisher alice = joinPublisher("chrome", room, "alice", "vp8", true, false, false);
+		// the PASSTHROUGH preset is taken as no preset at all
+		JsonObject request = roomPassthroughRequest(room, AUTO_FILEPATH);
+		request.addProperty("preset", "PASSTHROUGH");
+		JsonObject response = egressApi("StartRoomCompositeEgress", request);
+		String egressId = response.get("egress_id").getAsString();
+		// the response: a Room Composite that is starting, with no files yet, as no
+		// participant has any, and no browser
+		Assertions.assertEquals("EGRESS_STARTING", status(response), "The response: " + response);
+		Assertions.assertTrue(fileNames(response).isEmpty(), "No files at the start: " + response);
+		Assertions.assertEquals(ROOM_PASSTHROUGH_LAYOUT,
+				response.getAsJsonObject("room_composite").get("layout").getAsString(), "The request: " + response);
+		Assertions.assertEquals("EGRESS_SOURCE_TYPE_SDK", response.get("source_type").getAsString(),
+				"No browser: " + response);
+		// starting, with no time limit, while there is nothing to record
+		Thread.sleep(6000);
+		JsonObject info = getEgress(egressId);
+		Assertions.assertEquals("EGRESS_STARTING", status(info), "Nobody publishes yet: " + info);
+		Assertions.assertTrue(fileNames(info).isEmpty(), "No files yet: " + info);
+		// the first file is the start signal
+		alice.addAudio();
+		waitForFiles(egressId, names -> names.stream().anyMatch(isFileOf(room, "alice")), "get alice's file");
+		waitUntilEgressStatus(egressId, "EGRESS_ACTIVE", 20);
+		Thread.sleep(3000);
+		deleteRoom(room);
+		waitUntilEgressStatus(egressId, "EGRESS_COMPLETE", 40);
+	}
+
+	@Test
+	@DisplayName("Room Composite PARTICIPANT_PASSTHROUGH records every participant who publishes, from then on")
+	void roomCompositePassthroughRecordsFromNowOnTest() throws Exception {
+		log.info("Room Composite PARTICIPANT_PASSTHROUGH records every participant who publishes, from then on");
+		String room = uniqueRoom("rcp");
+		Publisher alice = joinPublisher("chrome", room, "alice", "vp8", true, true, true);
+		Publisher bob = addPublisherInstance(alice.user, room, "bob", "vp8", true, false, false);
+		Thread.sleep(4000);
+		long requested = System.currentTimeMillis();
+		String egressId = startRoomPassthrough(room, AUTO_FILEPATH).get("egress_id").getAsString();
+
+		// alice at once, being already a publisher: her camera file
+		waitForFiles(egressId, names -> names.stream().anyMatch(isFileOf(room, "alice")), "get alice's file");
+		waitUntilEgressStatus(egressId, "EGRESS_ACTIVE", 20);
+		Thread.sleep(3000);
+		JsonObject info = getEgress(egressId);
+		Assertions.assertTrue(fileNames(info).stream().allMatch(isFileOf(room, "alice")),
+				"Only who publishes is recorded: " + fileNames(info));
+		assertOnlyEgress(room, egressId);
+		// bob from his first track, carol as soon as she joins and publishes, each
+		// added to the same egress's files as they are created
+		bob.addAudio();
+		waitForFiles(egressId, names -> names.stream().anyMatch(isFileOf(room, "bob")), "get bob's file");
+		addPublisherInstance(alice.user, room, "carol", "vp8", true, true, true);
+		waitForFiles(egressId, names -> names.stream().anyMatch(isFileOf(room, "carol")), "get carol's file");
+		// long enough for carol's file to have 4 beeps after its first 2 s (the start gate)
+		Thread.sleep(9000);
+		// one egress in the API: the participants' recordings are not egresses
+		assertOnlyEgress(room, egressId);
+		// the room ends it
+		deleteRoom(room);
+		info = waitUntilEgressStatus(egressId, "EGRESS_COMPLETE", 40);
+		assertFilesComplete(info);
+
+		Map<String, Recordings> recordings = roomRecordings(info);
+		Assertions.assertEquals(List.of("alice", "bob", "carol"), new ArrayList<>(recordings.keySet()),
+				"The participants recorded: " + fileNames(info));
+		for (String identity : List.of("alice", "carol")) {
+			Recordings r = recordings.get(identity);
+			r.assertFiles("camera");
+			r.camera().assertFinalized();
+			r.camera().assertTracks("audio:opus", "video:vp8");
+			r.camera().assertHealthy();
+			r.camera().assertAvSync(4);
+		}
+		recordings.get("bob").assertFiles("camera");
+		recordings.get("bob").camera().assertTracks("audio:opus");
+		// alice is recorded from the request on, not from when she started publishing
+		double afterRequest = (recordings.get("alice").fileStart("camera") / 1e6 - requested) / 1000.0;
+		Assertions.assertTrue(afterRequest > -0.5, String.format(Locale.ROOT,
+				"Alice's file must start with the request, not %.2f s before it", -afterRequest));
+		// one timeline: what each participant sent at the same instant is at the same
+		// instant of the room
+		Recordings.assertAvSyncAcross(recordings.get("alice"), "camera", recordings.get("carol"), "camera", 4);
+		Recordings.assertAvSyncAcross(recordings.get("bob"), "camera", recordings.get("alice"), "camera", 4);
+	}
+
+	@Test
+	@DisplayName("Room Composite PARTICIPANT_PASSTHROUGH updates its files in real time")
+	void roomCompositePassthroughFilesInRealTimeTest() throws Exception {
+		log.info("Room Composite PARTICIPANT_PASSTHROUGH updates its files in real time");
+		String room = uniqueRoom("rcp-files");
+		Publisher alice = joinPublisher("chrome", room, "alice", "vp8", true, true, true);
+		Publisher bob = addPublisherInstance(alice.user, room, "bob", "vp8", true, true, true);
+		String egressId = startRoomPassthrough(room, AUTO_FILEPATH).get("egress_id").getAsString();
+		waitForFiles(egressId, names -> names.size() == 2, "be alice's and bob's camera files");
+		Thread.sleep(3000);
+
+		// a screen share adds a file
+		bob.addScreen();
+		JsonObject info = waitForFiles(egressId,
+				names -> names.stream().anyMatch(n -> isFileOf(room, "bob").test(n) && n.contains("-screen.")),
+				"get bob's screen file");
+		Assertions.assertEquals(3, fileNames(info).size(), "Files: " + fileNames(info));
+		// a republished microphone continues alice's camera file: no new file
+		alice.unpublishAudio();
+		Thread.sleep(1500);
+		alice.addAudio();
+		Thread.sleep(3000);
+		Assertions.assertEquals(3, fileNames(getEgress(egressId)).size(),
+				"A republished track continues its file: " + fileNames(getEgress(egressId)));
+		// bob leaves: his files stay, completed, while the egress goes on
+		bob.leave();
+		long deadline = System.currentTimeMillis() + 30000;
+		while (!bobFilesComplete(getEgress(egressId), room) && System.currentTimeMillis() < deadline) {
+			Thread.sleep(500);
+		}
+		info = getEgress(egressId);
+		Assertions.assertTrue(bobFilesComplete(info, room), "Bob's files must be completed when he leaves: " + info);
+		Assertions.assertEquals("EGRESS_ACTIVE", status(info), "The egress goes on: " + info);
+		Assertions.assertEquals(3, fileNames(info).size(), "Files are never removed: " + fileNames(info));
+		// alice leaves and joins again: files of their own for her new stay
+		List<String> before = fileNames(info);
+		alice.leave();
+		Thread.sleep(2000);
+		addPublisherInstance(alice.user, room, "alice", "vp8", true, true, true);
+		info = waitForFiles(egressId, names -> names.size() == 4, "get alice's second stay");
+		Assertions.assertEquals(before, fileNames(info).subList(0, 3), "Files keep their order: " + fileNames(info));
+		Assertions.assertTrue(isFileOf(room, "alice").test(fileNames(info).get(3)),
+				"Alice's new file: " + fileNames(info));
+		Thread.sleep(3000);
+		deleteRoom(room);
+		info = waitUntilEgressStatus(egressId, "EGRESS_COMPLETE", 40);
+		Assertions.assertEquals(4, fileNames(info).size(), "Files: " + fileNames(info));
+		assertFilesComplete(info);
+	}
+
+	@Test
+	@DisplayName("Room Composite PARTICIPANT_PASSTHROUGH names the files after their participant")
+	void roomCompositePassthroughDefaultNamesTest() throws Exception {
+		log.info("Room Composite PARTICIPANT_PASSTHROUGH names the files after their participant");
+		String room = uniqueRoom("rcp-names");
+		Publisher alice = joinPublisher("chrome", room, "alice", "vp8", true, true, true);
+		addPublisherInstance(alice.user, room, "bob", "vp8", true, true, true);
+		// a directory: the egress names each participant's files
+		String directory = "passthrough/" + room + "/";
+		String egressId = startRoomPassthrough(room, directory).get("egress_id").getAsString();
+		waitForFiles(egressId, names -> names.size() == 2, "be alice's and bob's files");
+		Thread.sleep(4000);
+		stopEgress(egressId);
+		JsonObject info = waitUntilEgressStatus(egressId, "EGRESS_COMPLETE", 30);
+		for (String identity : List.of("alice", "bob")) {
+			Assertions.assertTrue(fileNames(info).stream().anyMatch(
+					name -> Pattern.matches(Pattern.quote(directory + identity) + AUTO_FILE_NAME + "\\.webm", name)),
+					"A file named after " + identity + ", in the directory: " + fileNames(info));
+		}
+		deleteRoom(room);
+	}
+
+	@Test
+	@DisplayName("Room Composite PARTICIPANT_PASSTHROUGH stopped before anyone publishes is aborted")
+	void roomCompositePassthroughAbortedTest() throws Exception {
+		log.info("Room Composite PARTICIPANT_PASSTHROUGH stopped before anyone publishes is aborted");
+		String room = uniqueRoom("rcp-aborted");
+		createRoom(room, 0);
+		String egressId = startRoomPassthrough(room, AUTO_FILEPATH).get("egress_id").getAsString();
+		Thread.sleep(4000);
+		stopEgress(egressId);
+		// as a Room Composite that never got anything to record
+		JsonObject info = waitUntilEgressStatus(egressId, "EGRESS_ABORTED", 30);
+		Assertions.assertEquals("Start signal not received", info.get("error").getAsString(), "The egress: " + info);
+		Assertions.assertTrue(fileNames(info).isEmpty(), "No files: " + info);
+		deleteRoom(room);
+	}
+
+	@Test
+	@DisplayName("Stopping a Room Composite PARTICIPANT_PASSTHROUGH finalizes every participant's files")
+	void roomCompositePassthroughStopTest() throws Exception {
+		log.info("Stopping a Room Composite PARTICIPANT_PASSTHROUGH finalizes every participant's files");
+		String room = uniqueRoom("rcp-stop");
+		Publisher alice = joinPublisher("chrome", room, "alice", "vp8", true, true, true);
+		Publisher bob = addPublisherInstance(alice.user, room, "bob", "vp8", true, true, true);
+		String egressId = startRoomPassthrough(room, AUTO_FILEPATH).get("egress_id").getAsString();
+		waitForFiles(egressId, names -> names.size() == 2, "be alice's and bob's files");
+		Thread.sleep(6000);
+		// the egress's own id, as any Room Composite
+		stopEgress(egressId);
+		JsonObject info = waitUntilEgressStatus(egressId, "EGRESS_COMPLETE", 30);
+		// every file is finalized and uploaded, while alice and bob stay in the room
+		assertFilesComplete(info);
+		Map<String, Recordings> recordings = roomRecordings(info);
+		for (String identity : List.of("alice", "bob")) {
+			recordings.get(identity).assertFiles("camera");
+			recordings.get(identity).camera().assertFinalized();
+			recordings.get(identity).camera().assertHealthy();
+		}
+		// and nothing more is recorded: neither a new participant nor a new track
+		addPublisherInstance(alice.user, room, "dave", "vp8", true, true, true);
+		bob.addScreen();
+		Thread.sleep(6000);
+		Assertions.assertEquals(fileNames(info), fileNames(getEgress(egressId)), "Nothing after the stop");
+		assertOnlyEgress(room, egressId);
+		// as any ended egress
+		TwirpException again = Assertions.assertThrows(TwirpException.class, () -> stopEgress(egressId));
+		Assertions.assertEquals(412, again.httpStatus, "An ended egress cannot be stopped: " + again.getMessage());
+		deleteRoom(room);
+	}
+
+	@Test
+	@DisplayName("Room Composite PARTICIPANT_PASSTHROUGH does not keep its room alive")
+	void roomCompositePassthroughDoesNotKeepRoomAliveTest() throws Exception {
+		log.info("Room Composite PARTICIPANT_PASSTHROUGH does not keep its room alive");
+		String room = uniqueRoom("rcp-alive");
+		createRoom(room, 2);
+		Publisher alice = joinPublisher("chrome", room, "alice", "vp8", true, true, true);
+		String egressId = startRoomPassthrough(room, AUTO_FILEPATH).get("egress_id").getAsString();
+		waitForFiles(egressId, names -> names.size() == 1, "be alice's file");
+		Thread.sleep(4000);
+		// alice leaves: the room, with nobody but the egress in it, closes after its
+		// departure timeout, which ends the egress
+		alice.leave();
+		JsonObject info = waitUntilEgressStatus(egressId, "EGRESS_COMPLETE", 40);
+		assertFilesComplete(info);
+		Assertions.assertFalse(roomExists(room), "The room must have closed");
+	}
+
+	@Test
+	@DisplayName("Room Composite PARTICIPANT_PASSTHROUGH continues a participant's files across a full reconnection")
+	void roomCompositePassthroughFullReconnectionTest() throws Exception {
+		log.info("Room Composite PARTICIPANT_PASSTHROUGH continues a participant's files across a full reconnection");
+		String room = uniqueRoom("rcp-reconnect");
+		Publisher alice = joinPublisher("chrome", room, "alice", "vp8", true, true, true);
+		String egressId = startRoomPassthrough(room, AUTO_FILEPATH).get("egress_id").getAsString();
+		waitForFiles(egressId, names -> names.size() == 1, "be alice's file");
+		Thread.sleep(5000);
+		alice.fullReconnect();
+		Thread.sleep(8000);
+		JsonObject info = getEgress(egressId);
+		Assertions.assertEquals(1, fileNames(info).size(), "The same file goes on: " + fileNames(info));
+		Assertions.assertEquals("EGRESS_ACTIVE", status(info), "The egress goes on: " + info);
+		deleteRoom(room);
+		info = waitUntilEgressStatus(egressId, "EGRESS_COMPLETE", 40);
+		Recordings recordings = roomRecordings(info).get("alice");
+		recordings.assertFiles("camera");
+		recordings.camera().assertFinalized();
+		recordings.camera().assertHealthy();
+		recordings.camera().assertAvSync(8);
+		for (String kind : List.of("audio", "video")) {
+			Assertions.assertEquals(2, trackIds(manifestTrack(recordings.manifest, "camera", kind)).size(),
+					"The " + kind + " track before and after the reconnection, in the camera file: "
+							+ recordings.manifest);
+		}
+	}
+
+	@Test
+	@DisplayName("Room Composite PARTICIPANT_PASSTHROUGH: no streams, and no layout to change")
+	void roomCompositePassthroughUpdatesTest() throws Exception {
+		log.info("Room Composite PARTICIPANT_PASSTHROUGH: no streams, and no layout to change");
+		String room = uniqueRoom("rcp-updates");
+		joinPublisher("chrome", room, "alice", "vp8", true, true, true);
+		String egressId = startRoomPassthrough(room, AUTO_FILEPATH).get("egress_id").getAsString();
+		waitForFiles(egressId, names -> names.size() == 1, "be alice's file");
+		waitUntilEgressStatus(egressId, "EGRESS_ACTIVE", 20);
+		// it has no streams to add
+		JsonObject updateStream = new JsonObject();
+		updateStream.addProperty("egress_id", egressId);
+		JsonArray urls = new JsonArray();
+		urls.add("rtmp://localhost:1935/live/rcp");
+		updateStream.add("add_output_urls", urls);
+		TwirpException e = Assertions.assertThrows(TwirpException.class, () -> egressApi("UpdateStream", updateStream));
+		Assertions.assertTrue(e.httpStatus >= 400 && e.httpStatus < 500, "Refused: " + e.getMessage());
+		// the server accepts a new layout, which only sets the egress participant's
+		// metadata: the egress ignores it
+		JsonObject updateLayout = new JsonObject();
+		updateLayout.addProperty("egress_id", egressId);
+		updateLayout.addProperty("layout", "grid");
+		egressApi("UpdateLayout", updateLayout);
+		Thread.sleep(4000);
+		JsonObject info = getEgress(egressId);
+		Assertions.assertEquals("EGRESS_ACTIVE", status(info), "The egress goes on: " + info);
+		Assertions.assertEquals(ROOM_PASSTHROUGH_LAYOUT, info.getAsJsonObject("room_composite").get("layout").getAsString(),
+				"The request is the same: " + info);
+		Assertions.assertEquals(1, fileNames(info).size(), "The same files: " + fileNames(info));
+		deleteRoom(room);
+		waitUntilEgressStatus(egressId, "EGRESS_COMPLETE", 40);
+	}
+
+	@Test
+	@DisplayName("Room Composite PARTICIPANT_PASSTHROUGH is independent of other egresses")
+	void roomCompositePassthroughIndependentEgressesTest() throws Exception {
+		log.info("Room Composite PARTICIPANT_PASSTHROUGH is independent of other egresses");
+		String room = uniqueRoom("rcp-independent");
+		Publisher alice = joinPublisher("chrome", room, "alice", "vp8", true, true, true);
+		// alice's own Participant Passthrough Egress, and two of these Room Composites
+		String own = startParticipantRecording(room, "alice", "passthrough/" + room + "/own/alice");
+		String first = startRoomPassthrough(room, AUTO_FILEPATH).get("egress_id").getAsString();
+		String second = startRoomPassthrough(room, "passthrough/{room_name}/second/{publisher_identity}-{time}")
+				.get("egress_id").getAsString();
+		waitUntilEgressStatus(own, "EGRESS_ACTIVE", 20);
+		waitForFiles(first, names -> names.size() == 1, "be alice's file");
+		waitForFiles(second, names -> names.size() == 1, "be alice's file");
+		Assertions.assertEquals(3, roomEgresses(room).size(), "Three egresses: " + roomEgresses(room));
+		Thread.sleep(3000);
+		// stopping one leaves the others recording
+		stopEgress(first);
+		waitUntilEgressStatus(first, "EGRESS_COMPLETE", 30);
+		Assertions.assertEquals("EGRESS_ACTIVE", status(getEgress(second)), "The second Room Composite goes on");
+		Assertions.assertEquals("EGRESS_ACTIVE", status(getEgress(own)), "Alice's own egress goes on");
+		// a newcomer is recorded by the one still active
+		addPublisherInstance(alice.user, room, "bob", "vp8", true, true, true);
+		waitForFiles(second, names -> names.stream().anyMatch(n -> n.contains("/second/bob-")), "get bob's file");
+		Thread.sleep(3000);
+		Assertions.assertEquals(1, fileNames(getEgress(first)).size(), "The stopped one records nobody more");
+		stopEgress(second);
+		stopEgress(own);
+		waitUntilEgressStatus(second, "EGRESS_COMPLETE", 30);
+		waitUntilEgressStatus(own, "EGRESS_COMPLETE", 30);
+		deleteRoom(room);
+	}
+
+	@Test
+	@DisplayName("Room Composite PARTICIPANT_PASSTHROUGH: the room rebuilt from its files")
+	void roomCompositePassthroughRoomRebuiltTest() throws Exception {
+		log.info("Room Composite PARTICIPANT_PASSTHROUGH: the room rebuilt from its files");
+		String room = uniqueRoom("rcp-rebuilt");
+		// the recording starts in the middle of the meeting...
+		Publisher alice = joinPublisher("chrome", room, "alice", "vp8", true, true, true);
+		Publisher bob = addPublisherInstance(alice.user, room, "bob", "vp8", true, true, true);
+		Thread.sleep(3000);
+		String egressId = startRoomPassthrough(room, AUTO_FILEPATH).get("egress_id").getAsString();
+		waitForFiles(egressId, names -> names.size() == 2, "be alice's and bob's files");
+		Thread.sleep(3000);
+		bob.addScreen();
+		Thread.sleep(3000);
+		addPublisherInstance(alice.user, room, "carol", "h264", true, true, true);
+		waitForFiles(egressId, names -> names.stream().anyMatch(isFileOf(room, "carol")), "get carol's file");
+		Thread.sleep(4000);
+		bob.unpublishScreen();
+		Thread.sleep(2000);
+		bob.leave();
+		Thread.sleep(3000);
+		// ...and stops before the meeting ends: its files and its manifest are all it
+		// takes to rebuild the room
+		stopEgress(egressId);
+		JsonObject info = waitUntilEgressStatus(egressId, "EGRESS_COMPLETE", 40);
+		deleteRoom(room);
+		Map<String, Recordings> recordings = roomRecordings(info);
+		recordings.get("bob").assertFiles("camera", "screen");
+		recordings.get("carol").camera().assertTracks("audio:opus", "video:h264");
+
+		long roomStart = Math.min(recordings.get("alice").fileStart("camera"),
+				Math.min(recordings.get("bob").fileStart("camera"), recordings.get("carol").fileStart("camera")));
+		RoomFile aliceCamera = roomFile(recordings.get("alice"), "camera", roomStart);
+		RoomFile bobCamera = roomFile(recordings.get("bob"), "camera", roomStart);
+		RoomFile carolCamera = roomFile(recordings.get("carol"), "camera", roomStart);
+		List<RoomFile> cells = List.of(aliceCamera, bobCamera, roomFile(recordings.get("bob"), "screen", roomStart),
+				carolCamera);
+		double duration = cells.stream().mapToDouble(RoomFile::end).max().orElseThrow();
+		// alice and bob, both publishing when it started, start the recording together
+		Assertions.assertEquals(aliceCamera.start(), bobCamera.start(), 1.5,
+				"Alice and bob are recorded from the start: " + aliceCamera + ", " + bobCamera);
+		assertRoomRebuilt(cells, List.of(aliceCamera, bobCamera, carolCamera), duration);
+	}
+
+	@Test
+	@DisplayName("Room Composite PARTICIPANT_PASSTHROUGH through StartEgress with a template")
+	void roomCompositePassthroughStartEgressTemplateTest() throws Exception {
+		log.info("Room Composite PARTICIPANT_PASSTHROUGH through StartEgress with a template");
+		String room = uniqueRoom("rcp-template");
+		Publisher alice = joinPublisher("chrome", room, "alice", "vp8", true, true, true);
+		String egressId = egressApi("StartEgress", roomPassthroughTemplateRequest(room, AUTO_FILEPATH))
+				.get("egress_id").getAsString();
+		waitForFiles(egressId, names -> names.stream().anyMatch(isFileOf(room, "alice")), "get alice's file");
+		waitUntilEgressStatus(egressId, "EGRESS_ACTIVE", 20);
+		addPublisherInstance(alice.user, room, "bob", "vp8", true, true, true);
+		waitForFiles(egressId, names -> names.stream().anyMatch(isFileOf(room, "bob")), "get bob's file");
+		assertOnlyEgress(room, egressId);
+		Thread.sleep(4000);
+		stopEgress(egressId);
+		JsonObject info = waitUntilEgressStatus(egressId, "EGRESS_COMPLETE", 30);
+		Assertions.assertEquals(2, fileNames(info).size(), "Files: " + fileNames(info));
+		assertFilesComplete(info);
+		deleteRoom(room);
+	}
+
+	@Test
+	@DisplayName("Room Composite PARTICIPANT_PASSTHROUGH: audio first, H.264 later, one file that becomes Matroska")
+	void roomCompositePassthroughAudioFirstThenH264Test() throws Exception {
+		log.info("Room Composite PARTICIPANT_PASSTHROUGH: audio first, H.264 later, one file that becomes Matroska");
+		String room = uniqueRoom("rcp-audio-first");
+		Publisher alice = joinPublisher("chrome", room, "alice", "h264", true, true, false);
+		String egressId = startRoomPassthrough(room, AUTO_FILEPATH).get("egress_id").getAsString();
+		JsonObject info = waitForFiles(egressId, names -> names.size() == 1, "be alice's camera file");
+		String webm = fileNames(info).get(0);
+		Assertions.assertTrue(webm.endsWith(".webm"), "Opus alone fits WebM: " + webm);
+		Thread.sleep(3000);
+		// H.264 has no place in WebM: the same entry, its extension changed
+		alice.addVideo();
+		info = waitForFiles(egressId, names -> names.stream().anyMatch(n -> n.endsWith(".mkv")),
+				"name alice's camera file .mkv");
+		String mkv = webm.substring(0, webm.length() - ".webm".length()) + ".mkv";
+		Assertions.assertEquals(List.of(mkv), fileNames(info), "The same entry, renamed: " + fileNames(info));
+		Thread.sleep(8000);
+		stopEgress(egressId);
+		info = waitUntilEgressStatus(egressId, "EGRESS_COMPLETE", 30);
+		Assertions.assertEquals(List.of(mkv), fileNames(info), "One file: " + fileNames(info));
+		assertFilesComplete(info);
+		Recordings recordings = roomRecordings(info).get("alice");
+		recordings.assertFiles("camera");
+		recordings.camera().assertFinalized();
+		recordings.camera().assertTracks("audio:opus", "video:h264");
+		recordings.camera().assertHealthy();
+		deleteRoom(room);
+	}
+
+	@Test
+	@DisplayName("Room Composite PARTICIPANT_PASSTHROUGH: a participant who only shares a screen")
+	void roomCompositePassthroughScreenOnlyTest() throws Exception {
+		log.info("Room Composite PARTICIPANT_PASSTHROUGH: a participant who only shares a screen");
+		String room = uniqueRoom("rcp-screen-only");
+		Publisher alice = joinPublisher("chrome", room, "alice", "vp8", true, false, false);
+		alice.addScreen(true);
+		String egressId = startRoomPassthrough(room, AUTO_FILEPATH).get("egress_id").getAsString();
+		waitForFiles(egressId, names -> !names.isEmpty(), "be alice's screen file");
+		waitUntilEgressStatus(egressId, "EGRESS_ACTIVE", 20);
+		Thread.sleep(8000);
+		// the screen file alone: never a camera file, not even an empty one
+		JsonObject info = getEgress(egressId);
+		Assertions.assertEquals(1, fileNames(info).size(), "Files: " + fileNames(info));
+		String screen = fileNames(info).get(0);
+		Assertions.assertTrue(isFileOf(room, "alice").test(screen) && screen.contains("-screen."),
+				"Alice's screen file: " + screen);
+		stopEgress(egressId);
+		info = waitUntilEgressStatus(egressId, "EGRESS_COMPLETE", 30);
+		Assertions.assertEquals(List.of(screen), fileNames(info), "Files: " + fileNames(info));
+		assertFilesComplete(info);
+		Recordings recordings = roomRecordings(info).get("alice");
+		recordings.assertFiles("screen");
+		recordings.screen().assertFinalized();
+		recordings.screen().assertTracks("audio:opus", "video:vp8");
+		recordings.screen().assertHealthy();
+		deleteRoom(room);
+	}
+
+	@Test
+	@DisplayName("Room Composite PARTICIPANT_PASSTHROUGH started with its room (RoomEgress.room)")
+	void roomCompositePassthroughRoomEgressTest() throws Exception {
+		log.info("Room Composite PARTICIPANT_PASSTHROUGH started with its room (RoomEgress.room)");
+		String room = uniqueRoom("rcp-room-egress");
+		createRoomWithRoomEgress(room, AUTO_FILEPATH);
+		// the server starts it with the room, which nobody has joined yet
+		long deadline = System.currentTimeMillis() + 20000;
+		while (roomEgresses(room).isEmpty() && System.currentTimeMillis() < deadline) {
+			Thread.sleep(250);
+		}
+		Assertions.assertEquals(1, roomEgresses(room).size(), "The room's egress: " + roomEgresses(room));
+		JsonObject egress = roomEgresses(room).get(0);
+		String egressId = egress.get("egress_id").getAsString();
+		Assertions.assertEquals(ROOM_PASSTHROUGH_LAYOUT, egress.getAsJsonObject("room_composite").get("layout").getAsString(),
+				"The room's egress: " + egress);
+		Assertions.assertEquals("EGRESS_STARTING", status(getEgress(egressId)), "Nobody publishes yet");
+		Publisher alice = joinPublisher("chrome", room, "alice", "vp8", true, true, true);
+		waitForFiles(egressId, names -> names.stream().anyMatch(isFileOf(room, "alice")), "get alice's file");
+		waitUntilEgressStatus(egressId, "EGRESS_ACTIVE", 20);
+		addPublisherInstance(alice.user, room, "bob", "vp8", true, true, true);
+		waitForFiles(egressId, names -> names.stream().anyMatch(isFileOf(room, "bob")), "get bob's file");
+		assertOnlyEgress(room, egressId);
+		Thread.sleep(4000);
+		deleteRoom(room);
+		JsonObject info = waitUntilEgressStatus(egressId, "EGRESS_COMPLETE", 40);
+		assertFilesComplete(info);
+		Assertions.assertEquals(List.of("alice", "bob"), new ArrayList<>(roomRecordings(info).keySet()),
+				"The participants recorded: " + fileNames(info));
+	}
+
+	@Test
+	@DisplayName("Room Composite PARTICIPANT_PASSTHROUGH: the manifest of whoever left, while it records")
+	void roomCompositePassthroughManifestWhileActiveTest() throws Exception {
+		log.info("Room Composite PARTICIPANT_PASSTHROUGH: the manifest of whoever left, while it records");
+		String room = uniqueRoom("rcp-manifest");
+		Publisher alice = joinPublisher("chrome", room, "alice", "vp8", true, true, true);
+		Publisher bob = addPublisherInstance(alice.user, room, "bob", "vp8", true, true, true);
+		String egressId = startRoomPassthrough(room, AUTO_FILEPATH).get("egress_id").getAsString();
+		waitForFiles(egressId, names -> names.size() == 2, "be alice's and bob's camera files");
+		Thread.sleep(5000);
+		// bob leaves: his stay is in the manifest, uploaded while the egress goes on
+		bob.leave();
+		long deadline = System.currentTimeMillis() + 30000;
+		JsonObject info = getEgress(egressId);
+		// the manifest is uploaded just after the stay's files are completed: wait for
+		// its location, which the info always has, empty until then
+		while (!(bobFilesComplete(info, room) && !manifestLocation(info).isEmpty())
+				&& System.currentTimeMillis() < deadline) {
+			Thread.sleep(500);
+			info = getEgress(egressId);
+		}
+		Assertions.assertFalse(manifestLocation(info).isEmpty(), "The manifest, once bob's stay ended: " + info);
+		Assertions.assertEquals("EGRESS_ACTIVE", status(info), "The egress goes on: " + info);
+		String location = info.get("manifest_location").getAsString();
+		JsonObject manifest = roomManifest(info);
+		Assertions.assertEquals(egressId, manifest.get("egress_id").getAsString(), "Manifest: " + manifest);
+		List<String> bobs = fileNames(info).stream().filter(isFileOf(room, "bob")).collect(Collectors.toList());
+		List<String> listed = new ArrayList<>();
+		for (JsonElement f : manifest.getAsJsonArray("files")) {
+			JsonObject file = f.getAsJsonObject();
+			Assertions.assertEquals("bob", file.get("publisher_identity").getAsString(),
+					"Only bob's stay has ended: " + manifest);
+			Assertions.assertFalse(file.get("location").getAsString().isEmpty(), "Uploaded: " + file);
+			listed.add(file.get("filename").getAsString());
+		}
+		Assertions.assertEquals(bobs, listed, "Bob's files: " + manifest);
+		JsonArray tracks = manifest.getAsJsonArray("tracks");
+		Assertions.assertEquals(2, tracks.size(), "Bob's audio and video: " + manifest);
+		for (JsonElement t : tracks) {
+			Assertions.assertEquals("bob", t.getAsJsonObject().get("publisher_identity").getAsString(),
+					"Manifest: " + manifest);
+		}
+		Assertions.assertFalse(manifest.has("errors"), "No failure: " + manifest);
+		// at the end, the same manifest with everyone
+		Thread.sleep(3000);
+		stopEgress(egressId);
+		info = waitUntilEgressStatus(egressId, "EGRESS_COMPLETE", 30);
+		Assertions.assertEquals(location, info.get("manifest_location").getAsString(), "The same manifest");
+		Map<String, Recordings> recordings = roomRecordings(info);
+		Assertions.assertEquals(List.of("alice", "bob"), new ArrayList<>(recordings.keySet()),
+				"Everyone in the final manifest: " + fileNames(info));
+		deleteRoom(room);
+	}
+
+	@Test
+	@DisplayName("Room Composite PARTICIPANT_PASSTHROUGH: one participant's recording removed from the room")
+	void roomCompositePassthroughRecordingRemovedTest() throws Exception {
+		log.info("Room Composite PARTICIPANT_PASSTHROUGH: one participant's recording removed from the room");
+		String room = uniqueRoom("rcp-removed");
+		Publisher alice = joinPublisher("chrome", room, "alice", "vp8", true, true, true);
+		String egressId = startRoomPassthrough(room, AUTO_FILEPATH).get("egress_id").getAsString();
+		waitForFiles(egressId, names -> names.size() == 1, "be alice's camera file");
+		// bob after alice: alice's recording is the egress's first, <egress id>_1
+		Publisher bob = addPublisherInstance(alice.user, room, "bob", "vp8", true, true, true);
+		waitForFiles(egressId, names -> names.stream().anyMatch(isFileOf(room, "bob")), "get bob's file");
+		Thread.sleep(4000);
+		// each recording is a hidden participant of the room: removed, alice's ends by
+		// itself, and only hers
+		removeParticipant(room, egressId + "_1");
+		long deadline = System.currentTimeMillis() + 30000;
+		JsonObject info = getEgress(egressId);
+		while (!fileComplete(info, 0) && System.currentTimeMillis() < deadline) {
+			Thread.sleep(500);
+			info = getEgress(egressId);
+		}
+		Assertions.assertTrue(fileComplete(info, 0), "Alice's file must be completed: " + info);
+		Assertions.assertTrue(isFileOf(room, "alice").test(fileNames(info).get(0)), "Alice's file: " + fileNames(info));
+		Assertions.assertEquals("EGRESS_ACTIVE", status(info), "The egress goes on: " + info);
+		Assertions.assertFalse(fileComplete(info, 1), "Bob's recording goes on: " + info);
+		// alice's next track starts a new stay, with files of its own
+		alice.addScreen();
+		info = waitForFiles(egressId, names -> names.stream().filter(isFileOf(room, "alice")).count() == 3,
+				"get the camera and screen files of alice's new stay");
+		Assertions.assertEquals(4, fileNames(info).size(), "Files: " + fileNames(info));
+		Thread.sleep(3000);
+		bob.leave();
+		stopEgress(egressId);
+		info = waitUntilEgressStatus(egressId, "EGRESS_COMPLETE", 30);
+		Assertions.assertEquals(4, fileNames(info).size(), "Files: " + fileNames(info));
+		assertFilesComplete(info);
+		deleteRoom(room);
+	}
+
+	@Test
+	@DisplayName("Room Composite PARTICIPANT_PASSTHROUGH: the egress itself removed from the room")
+	void roomCompositePassthroughRemovedFromRoomTest() throws Exception {
+		log.info("Room Composite PARTICIPANT_PASSTHROUGH: the egress itself removed from the room");
+		String room = uniqueRoom("rcp-egress-removed");
+		Publisher alice = joinPublisher("chrome", room, "alice", "vp8", true, true, true);
+		addPublisherInstance(alice.user, room, "bob", "vp8", true, true, true);
+		String egressId = startRoomPassthrough(room, AUTO_FILEPATH).get("egress_id").getAsString();
+		waitForFiles(egressId, names -> names.size() == 2, "be alice's and bob's files");
+		Thread.sleep(5000);
+		// its own connection, whose identity is the egress ID: as when the room ends
+		removeParticipant(room, egressId);
+		JsonObject info = waitUntilEgressStatus(egressId, "EGRESS_COMPLETE", 40);
+		Assertions.assertEquals("End reason: Source closed", info.get("details").getAsString(), "The egress: " + info);
+		Assertions.assertEquals(2, fileNames(info).size(), "Files: " + fileNames(info));
+		assertFilesComplete(info);
+		Map<String, Recordings> recordings = roomRecordings(info);
+		for (String identity : List.of("alice", "bob")) {
+			recordings.get(identity).assertFiles("camera");
+			recordings.get(identity).camera().assertFinalized();
+			recordings.get(identity).camera().assertHealthy();
+		}
+		deleteRoom(room);
 	}
 
 	/**
@@ -4207,7 +4916,11 @@ public class OpenViduTestAppE2eEgressProTest extends AbstractOpenViduTestappE2eT
 	private JsonObject twirp(String service, String method, JsonObject body) throws IOException {
 		AccessToken token = new AccessToken(LIVEKIT_API_KEY, LIVEKIT_API_SECRET);
 		token.setIdentity("participant-passthrough-e2e");
-		token.addGrants(new RoomRecord(true), new RoomCreate(true));
+		token.addGrants(new RoomRecord(true), new RoomCreate(true), new RoomList(true));
+		if (body.has("room")) {
+			// RemoveParticipant and the like: admin of that room
+			token.addGrants(new RoomAdmin(true), new RoomName(body.get("room").getAsString()));
+		}
 		Request request = new Request.Builder().url(LIVEKIT_HTTP_URL + "twirp/livekit." + service + "/" + method)
 				.header("Authorization", "Bearer " + token.toJwt()).post(RequestBody.create(body.toString(), JSON))
 				.build();
@@ -4424,10 +5137,225 @@ public class OpenViduTestAppE2eEgressProTest extends AbstractOpenViduTestappE2eT
 		log.info("Created room {} with Auto Egress {}", room, egress);
 	}
 
+	private void removeParticipant(String room, String identity) throws IOException {
+		JsonObject remove = new JsonObject();
+		remove.addProperty("room", room);
+		remove.addProperty("identity", identity);
+		twirp("RoomService", "RemoveParticipant", remove);
+		log.info("Removed {} from room {}", identity, room);
+	}
+
+	/** Whether the n-th file of an egress is finalized and uploaded. */
+	private static boolean fileComplete(JsonObject info, int n) {
+		JsonArray files = info.getAsJsonArray("file_results");
+		if (files == null || files.size() <= n) {
+			return false;
+		}
+		JsonObject file = files.get(n).getAsJsonObject();
+		return file.has("ended_at") && file.get("ended_at").getAsLong() > 0 && file.has("location")
+				&& !file.get("location").getAsString().isEmpty();
+	}
+
+	/** CreateRoom with a Room Composite PARTICIPANT_PASSTHROUGH started with it. */
+	private void createRoomWithRoomEgress(String room, String filepath) throws IOException {
+		JsonObject composite = new JsonObject();
+		composite.addProperty("layout", ROOM_PASSTHROUGH_LAYOUT);
+		JsonArray files = new JsonArray();
+		files.add(fileOutput(filepath));
+		composite.add("file_outputs", files);
+		JsonObject egress = new JsonObject();
+		egress.add("room", composite);
+		JsonObject createRoom = new JsonObject();
+		createRoom.addProperty("name", room);
+		createRoom.add("egress", egress);
+		twirp("RoomService", "CreateRoom", createRoom);
+		log.info("Created room {} with a Room Composite {}", room, egress);
+	}
+
+	/** CreateRoom, with a departure timeout in seconds when above 0. */
+	private void createRoom(String room, int departureTimeout) throws IOException {
+		JsonObject createRoom = new JsonObject();
+		createRoom.addProperty("name", room);
+		if (departureTimeout > 0) {
+			createRoom.addProperty("departure_timeout", departureTimeout);
+		}
+		twirp("RoomService", "CreateRoom", createRoom);
+	}
+
 	private void deleteRoom(String room) throws IOException {
 		JsonObject deleteRoom = new JsonObject();
 		deleteRoom.addProperty("room", room);
 		twirp("RoomService", "DeleteRoom", deleteRoom);
+	}
+
+	private boolean roomExists(String room) throws IOException {
+		JsonObject listRooms = new JsonObject();
+		JsonArray names = new JsonArray();
+		names.add(room);
+		listRooms.add("names", names);
+		JsonArray rooms = twirp("RoomService", "ListRooms", listRooms).getAsJsonArray("rooms");
+		return rooms != null && !rooms.isEmpty();
+	}
+
+	/** StartRoomCompositeEgress with the reserved layout PARTICIPANT_PASSTHROUGH. */
+	private static JsonObject roomPassthroughRequest(String room, String filepath) {
+		JsonObject request = new JsonObject();
+		request.addProperty("room_name", room);
+		request.addProperty("layout", ROOM_PASSTHROUGH_LAYOUT);
+		JsonArray files = new JsonArray();
+		files.add(fileOutput(filepath));
+		request.add("file_outputs", files);
+		return request;
+	}
+
+	/** The same through StartEgress, with a template source. */
+	private static JsonObject roomPassthroughTemplateRequest(String room, String filepath) {
+		JsonObject template = new JsonObject();
+		template.addProperty("layout", ROOM_PASSTHROUGH_LAYOUT);
+		JsonObject request = new JsonObject();
+		request.addProperty("room_name", room);
+		request.add("template", template);
+		JsonObject output = new JsonObject();
+		output.add("file", fileOutput(filepath));
+		JsonArray outputs = new JsonArray();
+		outputs.add(output);
+		request.add("outputs", outputs);
+		return request;
+	}
+
+	/**
+	 * Starts a Room Composite with layout PARTICIPANT_PASSTHROUGH: every participant
+	 * who publishes is recorded with Participant Passthrough into filepath. Returns
+	 * the call's response.
+	 */
+	private JsonObject startRoomPassthrough(String room, String filepath) throws IOException {
+		JsonObject info = egressApi("StartRoomCompositeEgress", roomPassthroughRequest(room, filepath));
+		log.info("Started Room Composite PARTICIPANT_PASSTHROUGH {} in room {}", info.get("egress_id").getAsString(),
+				room);
+		return info;
+	}
+
+	/** The names of the files of an egress, in its order. */
+	private static List<String> fileNames(JsonObject info) {
+		JsonArray files = info.getAsJsonArray("file_results");
+		List<String> names = new ArrayList<>();
+		if (files != null) {
+			files.forEach(f -> names.add(f.getAsJsonObject().get("filename").getAsString()));
+		}
+		return names;
+	}
+
+	/** A file of a participant, named after AUTO_FILEPATH. */
+	private static Predicate<String> isFileOf(String room, String identity) {
+		return name -> name.startsWith("passthrough/" + room + "/" + identity + "-");
+	}
+
+	/** Waits until the files of an egress satisfy a condition: returns its EgressInfo. */
+	private JsonObject waitForFiles(String egressId, Predicate<List<String>> condition, String what) throws Exception {
+		long deadline = System.currentTimeMillis() + 30000;
+		JsonObject info = getEgress(egressId);
+		while (!condition.test(fileNames(info))) {
+			Assertions.assertTrue(System.currentTimeMillis() < deadline,
+					"The files of " + egressId + " must " + what + ": " + fileNames(info) + " in " + info);
+			Thread.sleep(250);
+			info = getEgress(egressId);
+		}
+		return info;
+	}
+
+	/** Every file of an egress finalized and uploaded. */
+	private static void assertFilesComplete(JsonObject info) {
+		Assertions.assertFalse(fileNames(info).isEmpty(), "Files expected: " + info);
+		for (JsonElement f : info.getAsJsonArray("file_results")) {
+			JsonObject file = f.getAsJsonObject();
+			Assertions.assertTrue(file.has("ended_at") && file.get("ended_at").getAsLong() > 0,
+					"Finalized: " + file);
+			Assertions.assertTrue(file.has("location") && !file.get("location").getAsString().isEmpty(),
+					"Uploaded: " + file);
+		}
+	}
+
+	/** Whether bob's files of an egress are all finalized. */
+	private static boolean bobFilesComplete(JsonObject info, String room) {
+		for (JsonElement f : info.getAsJsonArray("file_results")) {
+			JsonObject file = f.getAsJsonObject();
+			if (isFileOf(room, "bob").test(file.get("filename").getAsString())
+					&& (!file.has("ended_at") || file.get("ended_at").getAsLong() == 0)) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	/** ListEgress of the room lists that egress alone. */
+	private void assertOnlyEgress(String room, String egressId) throws IOException {
+		List<JsonObject> egresses = roomEgresses(room);
+		Assertions.assertEquals(List.of(egressId),
+				egresses.stream().map(info -> info.get("egress_id").getAsString()).collect(Collectors.toList()),
+				"ListEgress must list the Room Composite alone: " + egresses);
+	}
+
+	/** The egress's manifest_location, empty until its first upload. */
+	private static String manifestLocation(JsonObject info) {
+		return info.has("manifest_location") ? info.get("manifest_location").getAsString() : "";
+	}
+
+	/**
+	 * The manifest of a Room Composite with layout PARTICIPANT_PASSTHROUGH, at its
+	 * manifest_location.
+	 */
+	private JsonObject roomManifest(JsonObject info) throws Exception {
+		String location = manifestLocation(info);
+		Assertions.assertFalse(location.isEmpty(), "The egress must give its manifest's location: " + info);
+		int bucket = location.indexOf(MINIO_BUCKET + "/");
+		String key = bucket >= 0 ? location.substring(bucket + MINIO_BUCKET.length() + 1) : location;
+		Path local = newDownloadDir("room-composite-passthrough")
+				.resolve(info.get("egress_id").getAsString() + ".json");
+		minio.downloadObject(DownloadObjectArgs.builder().bucket(MINIO_BUCKET).object(key).filename(local.toString())
+				.build());
+		return JsonParser.parseString(new String(Files.readAllBytes(local), StandardCharsets.UTF_8)).getAsJsonObject();
+	}
+
+	/**
+	 * The files of a Room Composite with layout PARTICIPANT_PASSTHROUGH, downloaded
+	 * and grouped by participant (one stay each), in name order: each with that
+	 * participant's part of the manifest, as their own Participant Passthrough
+	 * Egress would have it.
+	 */
+	private Map<String, Recordings> roomRecordings(JsonObject info) throws Exception {
+		JsonObject manifest = roomManifest(info);
+		Assertions.assertEquals(info.get("egress_id").getAsString(), manifest.get("egress_id").getAsString(),
+				"The manifest of the egress: " + manifest);
+		Map<String, String> participantOf = new LinkedHashMap<>();
+		for (JsonElement f : manifest.getAsJsonArray("files")) {
+			JsonObject file = f.getAsJsonObject();
+			participantOf.put(file.get("filename").getAsString(), file.get("publisher_identity").getAsString());
+		}
+		Assertions.assertEquals(new java.util.TreeSet<>(fileNames(info)), new java.util.TreeSet<>(participantOf.keySet()),
+				"The manifest must list every file of the egress: " + manifest);
+		Map<String, Recordings> recordings = new java.util.TreeMap<>();
+		Path dir = newDownloadDir("room-composite-passthrough");
+		for (String key : fileNames(info)) {
+			Path local = dir.resolve(Paths.get(key).getFileName());
+			minio.downloadObject(DownloadObjectArgs.builder().bucket(MINIO_BUCKET).object(key)
+					.filename(local.toString()).build());
+			recordings.computeIfAbsent(participantOf.get(key), identity -> new Recordings()).add(key,
+					Recording.analyze(local));
+		}
+		for (Map.Entry<String, Recordings> participant : recordings.entrySet()) {
+			JsonObject own = new JsonObject();
+			own.addProperty("publisher_identity", participant.getKey());
+			own.addProperty("room_name", manifest.get("room_name").getAsString());
+			JsonArray tracks = new JsonArray();
+			for (JsonElement track : manifest.getAsJsonArray("tracks")) {
+				if (participant.getKey().equals(track.getAsJsonObject().get("publisher_identity").getAsString())) {
+					tracks.add(track);
+				}
+			}
+			own.add("tracks", tracks);
+			participant.getValue().manifest = own;
+		}
+		return recordings;
 	}
 
 	/** Every egress of a room, active or ended. */
@@ -4447,10 +5375,10 @@ public class OpenViduTestAppE2eEgressProTest extends AbstractOpenViduTestappE2eT
 		return info.has("participant") ? info.getAsJsonObject("participant").get("identity").getAsString() : null;
 	}
 
-	/** The participants the egresses of a room record, sorted: once per egress. */
+	/** The participants the Participant egresses of a room record, sorted: once per egress. */
 	private List<String> recordedIdentities(String room) throws IOException {
-		return roomEgresses(room).stream().map(OpenViduTestAppE2eEgressProTest::recordedIdentity).sorted()
-				.collect(Collectors.toList());
+		return roomEgresses(room).stream().map(OpenViduTestAppE2eEgressProTest::recordedIdentity)
+				.filter(Objects::nonNull).sorted().collect(Collectors.toList());
 	}
 
 	/**
