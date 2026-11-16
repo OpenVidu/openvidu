@@ -128,14 +128,14 @@ Paths are relative to `dashboard-ce/`; `ui/` is `frontend/projects/dashboard-ui/
 
 ## 9. Revision after the review (implementer)
 
-- [ ] 9.1 In `features/settings/storage-classes.ts`, take `analytics_daily` out of the deployment clock (design
+- [x] 9.1 In `features/settings/storage-classes.ts`, take `analytics_daily` out of the deployment clock (design
       decision 4) and give no tip to a class without documents, except unlimited daily rollups, which always read
       "Grows without limit" (design decision 7). In `features/settings/storage-classes.spec.ts`, add `Class without
       documents`, `Daily bucket outside the deployment clock` and `Unlimited daily rollups without data` (no
       `analytics_daily` entry), and update `Stats and tracks on the deployment clock` (earliest date an hourly bucket)
       and `No estimate under one day of data` (tracks with documents) to their revised scenarios. Covers: those five
       scenarios. Verify: the unit tests pass.
-- [ ] 9.2 In the same file, pin the boundaries and the clock membership: `Span rounded down: exactly one day`
+- [x] 9.2 In the same file, pin the boundaries and the clock membership: `Span rounded down: exactly one day`
       ("1 of 7 days so far · …"), `Class at full retention: exactly 6 of 7 days` (no tip),
       `Entities clock ignores nodes and ingresses: <collection> earliest` for each of `rooms`, `participants`,
       `egresses` and `ingress_sessions`, and `Stats and tracks on the deployment clock: <collection> earliest` for each

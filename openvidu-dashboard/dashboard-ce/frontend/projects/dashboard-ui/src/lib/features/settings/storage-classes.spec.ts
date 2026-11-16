@@ -1,7 +1,7 @@
 import { COLLECTIONS, Collection, type InfoRetention, type InfoStorageEntry } from '@openvidu-dashboard/typings';
 import { describe, expect, it } from 'vitest';
 
-import { STORAGE_CLASSES, storageClasses } from './storage-classes.js';
+import { STORAGE_CLASSES, type StorageClassRow, storageClasses } from './storage-classes.js';
 
 const HOUR = 3_600_000;
 const DAY = 24 * HOUR;
@@ -27,11 +27,11 @@ function entry(bytes: number, ageMs?: number, documents = 1): InfoStorageEntry {
 	};
 }
 
-function tipOf(
+function rowOf(
 	label: string,
 	storage: Record<string, InfoStorageEntry>,
 	retention: Partial<InfoRetention> = {}
-): string | null {
+): StorageClassRow {
 	const row = storageClasses(storage, { ...DEFAULT_RETENTION, ...retention }, READ_AT).rows.find(
 		(candidate) => candidate.label === label
 	);
@@ -40,8 +40,19 @@ function tipOf(
 		throw new Error(`No row ${label}`);
 	}
 
-	return row.tip;
+	return row;
 }
+
+function tipOf(
+	label: string,
+	storage: Record<string, InfoStorageEntry>,
+	retention: Partial<InfoRetention> = {}
+): string | null {
+	return rowOf(label, storage, retention).tip;
+}
+
+const ENTITY_CLOCK = ['rooms', 'participants', 'egresses', 'ingress_sessions'] as const;
+const DEPLOYMENT_CLOCK = [...ENTITY_CLOCK, 'events', 'analytics_5min', 'analytics_hourly'] as const;
 
 describe('storageClasses', () => {
 	it('classifies every collection except schema_meta exactly once', () => {
@@ -104,8 +115,18 @@ describe('storageClasses', () => {
 		expect(tipOf('Events', { events: entry(1_000_000, 5 * DAY + 23 * HOUR) })).toMatch(/^5 of 7 days so far/);
 	});
 
+	it('Span rounded down: exactly one day', () => {
+		expect(tipOf('Events', { events: entry(1_000_000, DAY) })).toBe(
+			'1 of 7 days so far · ≈ 7 MB at full retention (estimate)'
+		);
+	});
+
 	it('Class at full retention', () => {
 		expect(tipOf('Events', { events: entry(1_000_000, 6 * DAY + 2 * HOUR) })).toBeNull();
+	});
+
+	it('Class at full retention: exactly 6 of 7 days', () => {
+		expect(tipOf('Events', { events: entry(1_000_000, 6 * DAY) })).toBeNull();
 	});
 
 	it('Full within a tenth of the retention', () => {
@@ -126,6 +147,12 @@ describe('storageClasses', () => {
 		expect(tipOf('Events', storage)).toBe('5 of 7 days so far · ≈ 98 MB at full retention (estimate)');
 	});
 
+	it('Class without documents', () => {
+		const stats = rowOf('Stats', { events: entry(10_000, 3 * DAY), rooms: entry(10_000, 2 * DAY) });
+
+		expect([stats.documents, stats.bytes, stats.tip]).toEqual([0, 0, null]);
+	});
+
 	it('Entities clock ignores nodes and ingresses', () => {
 		const storage = {
 			nodes: entry(1_000, 200 * DAY),
@@ -139,12 +166,25 @@ describe('storageClasses', () => {
 		expect(tipOf('Entities', storage)).toMatch(/^12 of 90 days so far/);
 	});
 
+	it.each(ENTITY_CLOCK)('Entities clock ignores nodes and ingresses: %s earliest', (earliest) => {
+		const storage: Record<string, InfoStorageEntry> = {
+			nodes: entry(1_000, 200 * DAY),
+			ingresses: entry(1_000, 300 * DAY)
+		};
+
+		for (const collection of ENTITY_CLOCK) {
+			storage[collection] = entry(1_000, collection === earliest ? 12 * DAY : 10 * DAY);
+		}
+
+		expect(tipOf('Entities', storage)).toMatch(/^12 of 90 days so far/);
+	});
+
 	it('Stats and tracks on the deployment clock', () => {
 		const storage = {
 			track_stats: entry(30_000_000),
 			tracks: entry(4_000_000),
 			track_subscriptions: entry(2_000_000),
-			analytics_daily: entry(10_000, 3 * DAY),
+			analytics_hourly: entry(10_000, 3 * DAY),
 			events: entry(10_000, 2 * DAY)
 		};
 
@@ -152,6 +192,32 @@ describe('storageClasses', () => {
 		expect(tipOf('Tracks and subscriptions', storage)).toBe(
 			'3 of 7 days so far · ≈ 14 MB at full retention (estimate)'
 		);
+	});
+
+	it.each(DEPLOYMENT_CLOCK)('Stats and tracks on the deployment clock: %s earliest', (earliest) => {
+		const storage: Record<string, InfoStorageEntry> = {
+			track_stats: entry(30_000_000),
+			tracks: entry(6_000_000)
+		};
+
+		for (const collection of DEPLOYMENT_CLOCK) {
+			storage[collection] = entry(10_000, collection === earliest ? 3 * DAY : 2 * DAY);
+		}
+
+		expect(tipOf('Stats', storage)).toBe('3 of 7 days so far · ≈ 70 MB at full retention (estimate)');
+		expect(tipOf('Tracks and subscriptions', storage)).toBe(
+			'3 of 7 days so far · ≈ 14 MB at full retention (estimate)'
+		);
+	});
+
+	it('Daily bucket outside the deployment clock', () => {
+		const storage = {
+			track_stats: entry(30_000_000),
+			analytics_daily: entry(10_000, DAY),
+			events: entry(10_000, 5 * HOUR)
+		};
+
+		expect(tipOf('Stats', storage)).toBe('Less than 1 day of 7 days so far');
 	});
 
 	it('Deployment older than the stats retention', () => {
@@ -174,12 +240,18 @@ describe('storageClasses', () => {
 		expect(
 			tipOf(
 				'Tracks and subscriptions',
-				{ tracks: entry(1_000_000), events: entry(1_000, 5 * HOUR) },
+				{ tracks: entry(1_000_000, undefined, 16), events: entry(1_000, 5 * HOUR) },
 				{
 					tracksMs: 36 * HOUR
 				}
 			)
 		).toBe('5 of 36 hours so far');
+	});
+
+	it('Unlimited daily rollups without data', () => {
+		const daily = rowOf('Daily rollups', { events: entry(10_000, 3 * DAY) });
+
+		expect([daily.documents, daily.tip]).toEqual([0, 'Grows without limit']);
 	});
 
 	it('Unlimited daily rollups without a day of data', () => {

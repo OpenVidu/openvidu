@@ -71,13 +71,15 @@ export const STORAGE_CLASSES: readonly StorageClass[] = [
 	}
 ];
 
-/** The collections that date the deployment as a whole, for the classes the info endpoint does not date. */
+/**
+ * The collections that date the deployment as a whole, for the classes the info endpoint does not date. Not
+ * `analytics_daily`: its `oldest` is the start of a UTC-day bucket, up to a day before the first data.
+ */
 const DEPLOYMENT_CLOCK: readonly Collection[] = [
 	...ENTITY_CLOCK,
 	Collection.EVENTS,
 	Collection.ANALYTICS_5MIN,
-	Collection.ANALYTICS_HOURLY,
-	Collection.ANALYTICS_DAILY
+	Collection.ANALYTICS_HOURLY
 ];
 
 export interface StorageCollectionEntry {
@@ -132,7 +134,8 @@ function progress(spanMs: number, retentionMs: number): string {
 }
 
 /**
- * The tip of a class, or `null` when it has reached its retention or has no clock. A class within one day or a tenth of
+ * The tip of a class, or `null` when it has reached its retention, has no clock or has no documents; unlimited daily
+ * rollups always have one. A class within one day or a tenth of
  * its retention, whichever is longer, counts as full: the oldest surviving document of a full class is always slightly
  * younger than the retention.
  */
@@ -145,7 +148,7 @@ function classTip(retentionMs: number | null, spanMs: number | null, documents: 
 			: 'Grows without limit';
 	}
 
-	if (spanMs === null || retentionMs - spanMs <= Math.max(DAY_MS, retentionMs / 10)) {
+	if (spanMs === null || documents === 0 || retentionMs - spanMs <= Math.max(DAY_MS, retentionMs / 10)) {
 		return null;
 	}
 
