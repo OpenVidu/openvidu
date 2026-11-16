@@ -124,22 +124,64 @@ Paths are relative to `dashboard-ce/`; `ui/` is `frontend/projects/dashboard-ui/
 
 - [x] 8.1 On `./dashboard.sh demo ce`, open Settings → Data and decide whether the expandable collection breakdown
       stays. Verify: the decision is recorded by the orchestrator; if it goes, the change is revised (the "Collection
-      breakdown" requirement and task group 3 are removed) and verified again before group 9.
+      breakdown" requirement and task group 3 are removed) and verified again before group 10.
 
-## 9. Publish (orchestrator)
+## 9. Revision after the review (implementer)
 
-- [ ] 9.1 After the full verification and the owner's review, with the change pushed to `master` of
+- [ ] 9.1 In `features/settings/storage-classes.ts`, take `analytics_daily` out of the deployment clock (design
+      decision 4) and give no tip to a class without documents, except unlimited daily rollups, which always read
+      "Grows without limit" (design decision 7). In `features/settings/storage-classes.spec.ts`, add `Class without
+      documents`, `Daily bucket outside the deployment clock` and `Unlimited daily rollups without data` (no
+      `analytics_daily` entry), and update `Stats and tracks on the deployment clock` (earliest date an hourly bucket)
+      and `No estimate under one day of data` (tracks with documents) to their revised scenarios. Covers: those five
+      scenarios. Verify: the unit tests pass.
+- [ ] 9.2 In the same file, pin the boundaries and the clock membership: `Span rounded down: exactly one day`
+      ("1 of 7 days so far · …"), `Class at full retention: exactly 6 of 7 days` (no tip),
+      `Entities clock ignores nodes and ingresses: <collection> earliest` for each of `rooms`, `participants`,
+      `egresses` and `ingress_sessions`, and `Stats and tracks on the deployment clock: <collection> earliest` for each
+      of the seven collections of the deployment clock (code review SUGGESTIONs 1 and 2). Covers: Span rounded down,
+      Class at full retention, Entities clock ignores nodes and ingresses, Stats and tracks on the deployment clock.
+      Verify: the unit tests pass, and each fails when its collection is dropped from its clock or when `<=` becomes
+      `<` in the full tolerance (tried and reverted).
+- [ ] 9.3 In `features/settings/data-tab.ts`, remove the `?? Date.now()` fallback, reading `readAt` with a type that
+      guarantees it beside the info document (code review SUGGESTION 5). In `features/settings/settings-page.spec.ts`,
+      add `Span ends at the read` with fake timers: the info document read, the clock advanced two days, then
+      `tab=data` opened (code review WARNING 2). Covers: Span ends at the read. Verify: the unit tests pass, and the
+      new test fails when the tab passes `Date.now()` instead of `readAt` (tried and reverted).
+- [ ] 9.4 Replace the two paragraphs under the Storage table with one `ovd-notice` with `variant="info"` holding the
+      text of "Retention configuration message" and its "Configuration reference" link, an `ovd-external-link` to a new
+      `EXTERNAL_LINKS` entry for
+      `https://openvidu.io/latest/docs/self-hosting/configuration/reference/#analytics-settings` (design decision 11).
+      In `features/settings/settings-page.spec.ts`, update `Where the retention is set` (text, role `status`, `href`,
+      new tab, no text under the table about the info icons or the estimates) and delete the `What the estimates
+      assume` test; in `e2e/tests/settings.spec.ts`, follow the new text. Covers: Where the retention is set. Verify:
+      the unit tests pass.
+- [ ] 9.5 In `features/settings/collection-breakdown.ts`, name the table with a visually hidden `<caption>`
+      "Collections of <class>", like the Storage table, instead of `aria-label` (verification SUGGESTION 2); if
+      Prettier breaks an interpolated caption into a name with stray whitespace, use a form whose accessible name is
+      exact. In `features/settings/settings-page.spec.ts`, make `Expand a class` assert the table name. Covers: Expand
+      a class. Verify: the unit tests pass and axe passes in 9.6.
+- [ ] 9.6 Run `./dashboard.sh scenarios settings-data-tab`, `./dashboard.sh check` and `./dashboard.sh e2e`; regenerate
+      with `--update-snapshots=all` only the theme baselines that change, and check them by eye. Verify: each of the 52
+      scenarios lists a test and none reads "NO TEST"; `check` and `e2e` pass, with axe in both themes.
+- [ ] 9.7 Refactor review of the files touched by this group; apply a small one here or record that none is needed.
+      Verify: the outcome is written in the implementation report.
+
+## 10. Publish (orchestrator)
+
+- [ ] 10.1 After the full verification and the owner's review, with the change pushed to `master` of
       `OpenVidu/openvidu`, confirm that the CI run of that commit is green (`checks`, `unit`, `integration`,
       `contract`, `e2e`). Verify: the run's conclusion is success.
 
-## 10. Documentation (orchestrator)
+## 11. Documentation (orchestrator)
 
-- [ ] 10.1 In `openvidu.io`, on the branch of the 3.10 dashboard page
+- [ ] 11.1 In `openvidu.io`, on the branch of the 3.10 dashboard page
       (`docs/docs/self-hosting/production-ready/observability/openvidu-dashboard.md`), rewrite the Settings bullet
       "About" as "Data" (storage and retention per class of data and per collection, the estimate at full retention,
       the migration progress) and add to "Retention" that the Data tab estimates the size of each class and that a new
-      `entities` or `tracks` retention applies to what closes after the restart. Verify: the page builds without
-      broken links.
-- [ ] 10.2 Replace `settings-about-light.png` and `settings-about-dark.png` with `settings-data-light.png` and
+      `entities` or `tracks` retention applies to what closes after the restart. Confirm that the configuration
+      reference of the same draft (pull request #160) keeps the "Analytics settings" section at `#analytics-settings`,
+      the target of the Data tab's message. Verify: the page builds without broken links and the anchor resolves.
+- [ ] 11.2 Replace `settings-about-light.png` and `settings-about-dark.png` with `settings-data-light.png` and
       `settings-data-dark.png`, taken on the demo with a class still filling, and update their references. Verify:
       the page shows both images and no file named `settings-about-*` remains.

@@ -63,8 +63,8 @@ OpenAPI change; `editions-info` keeps its contract.
    | Hourly rollups           | `rollupsHourlyMs` | `analytics_hourly`                                                        | `analytics_hourly`                                       |
    | Daily rollups            | `rollupsDailyMs`  | `analytics_daily`                                                         | `analytics_daily`                                        |
 
-   The deployment clock is the earliest `oldest` of `rooms`, `participants`, `egresses`, `ingress_sessions`, `events`
-   and the three rollup collections.
+   The deployment clock is the earliest `oldest` of `rooms`, `participants`, `egresses`, `ingress_sessions`, `events`,
+   `analytics_5min` and `analytics_hourly` (decision 4).
 
 3. **Each class by its own oldest data (owner's decision).** It shows a retention that was just raised on Events,
    Entities and the rollups. Its cost is stated in the specs ("Idle period reads as filling") and in Risks. Rejected by
@@ -74,7 +74,10 @@ OpenAPI change; `editions-info` keeps its contract.
    `track_stats` needs a sort on the time field of a time series without an index on it (`ts_ttl` exists only in the
    plain-collection fallback), whose plan is unproven, and dating tracks needs a writer index, a contract change.
    Both stay out; a later change may add `oldest` to `track_stats` without touching this design, since the clock of a
-   class is one entry of the table above.
+   class is one entry of the table above. `analytics_daily` is left out of the deployment clock (owner's decision on
+   the code review): its `oldest` is the start of a UTC-day bucket, up to 24 hours before the first data, so on a young
+   deployment it gave Stats and Tracks a span of a day after minutes of data and bypassed the one-day floor of the
+   estimate. The hourly bucket start errs by at most an hour and stays. The daily rollups keep their own clock.
 
 5. **Entities are dated by creation and without `nodes` and `ingresses`.** Entities expire `retention` after they
    close, but the info document only dates their creation; a session lasts minutes or hours against a retention of
@@ -93,11 +96,15 @@ OpenAPI change; `editions-info` keeps its contract.
 7. **Estimate: size × retention ÷ span, from one day of data.** Size is `storageBytes + indexBytes` of the class. Below
    one day the multiplier (up to 400 for hourly rollups) would amplify a few hours of activity, so only the progress
    shows. Unlimited daily rollups use size × 365 days ÷ span. The Total row has no estimate (owner's decision).
+   A class without documents carries no tip at all (owner's decision): on the deployment clock, Stats would otherwise
+   read "3 of 7 days so far" on servers that write no media statistics. Unlimited daily rollups are the exception and
+   always read "Grows without limit", with or without data or a clock (owner's decision).
 
 8. **"Now" is the moment the info document was read.** `InfoService` records it with the document (`readAt`), and the
-   module takes it as an argument: sizes and spans then describe the same instant, and tests pass a fixed time
-   instead of faking the clock. Rejected: `Date.now()` at render, which would age the spans of a document whose sizes
-   stay those of the read.
+   module takes it as an argument: sizes and spans then describe the same instant, and the module tests pass a fixed
+   time. The Data tab passes `readAt` without a fallback (it is set with every full document), and one tab test with
+   fake timers renders days after the read to pin that wiring ("Span ends at the read"). Rejected: `Date.now()` at
+   render, which would age the spans of a document whose sizes stay those of the read.
 
 9. **Progress and estimate in the shared info tip (owner's decision).** `ovd-info-tip` after the retention value, with
    `subject` "<class> retention" (announced "About <class> retention") and the text of the specs; a class without
@@ -109,15 +116,21 @@ OpenAPI change; `editions-info` keeps its contract.
     template that renders the nested table of one class from its entries; the Data tab keeps a set of expanded class
     labels in a signal and renders, per class row, a native `<button>` (`aria-expanded`, `aria-controls`, the listed
     `keyboard_arrow_down` / `keyboard_arrow_up` icons) and, when expanded, a following row whose single cell spans the
-    table and hosts the component. Dropping it means deleting the component, the button, the signal, the
+    table and hosts the component. The nested table is named by a visually hidden `<caption>`, "Collections of
+    <class>", like the Storage table. Dropping it means deleting the component, the button, the signal, the
     "Collection breakdown" requirement and its four tests. Rejected: `mat-expansion-panel` or `MatTable` detail rows
     (a second table structure for a feature that may go), collection rows inlined among the class rows (their Oldest
     column has no place in the class table).
 
 11. **Layout.** The class table keeps the current plain `<table>` inside its `overflow-x: auto` wrapper, so the page
     never scrolls sideways; the first column may wrap so that the Retention cell and its icon stay in view at 375 px.
-    The message and the estimate note are two muted paragraphs under the table; the Documentation link is
-    `ovd-external-link` to `EXTERNAL_LINKS.documentation + '#retention'`.
+    The retention message is one `ovd-notice` with `variant="info"` (role `status`) under the table, after the muted
+    "Retention not reported by the server yet" when it shows; its "Configuration reference" link is
+    `ovd-external-link` to a new `EXTERNAL_LINKS` entry,
+    `https://openvidu.io/latest/docs/self-hosting/configuration/reference/#analytics-settings`.
+    That section exists in the 3.10 documentation draft (openvidu.io pull request #160) and goes live with the
+    release, like the dashboard page the sidenav already links. Rejected: listing the seven retention keys in the
+    message (the reference lists them) and a note on what the estimates assume (both dropped by the owner).
 
 12. **Names.** Files `data-tab.{ts,html,scss}`, class `DataTab`, selector `ovd-data-tab`; `SETTINGS_TABS` becomes
     `['preferences', 'data']`. `tab=about` needs no code: `oneOf()` already falls back to Preferences and leaves the
@@ -147,8 +160,8 @@ Unit tests are Vitest (`ng test dashboard-ui`), e2e are Playwright against the m
 
 | Scenarios | Test file | Level |
 | --- | --- | --- |
-| Collections of each class, Class that sums several collections, Span rounded down, Class at full retention, Full within a tenth of the retention, Less than one unit of data, Idle period reads as filling, Entities clock ignores nodes and ingresses, Stats and tracks on the deployment clock, Deployment older than the stats retention, Class without a clock, Linear estimate, No estimate under one day of data, Unlimited daily rollups without a day of data, Daily rollups with a limit | `features/settings/storage-classes.spec.ts` | unit |
-| Deep link to Data, Former About value, Migration running on the Data tab, Completed before the page opened, Completed while watching, Backend down, Info in flight, Info arrives, Class rows, Retention that is not a whole number of days, Retention not reported, Storage total without schema_meta, Class still filling, Unlimited daily rollups, Total without an estimate, Progress only in the tip, Breakdown collapsed by default, Expand a class, Collapse a class, Collection without an oldest date, Where the retention is set, What the estimates assume, Migration ends | `features/settings/settings-page.spec.ts` | unit |
+| Collections of each class, Class that sums several collections, Span rounded down, Class at full retention, Full within a tenth of the retention, Less than one unit of data, Idle period reads as filling, Class without documents, Entities clock ignores nodes and ingresses, Stats and tracks on the deployment clock, Daily bucket outside the deployment clock, Deployment older than the stats retention, Class without a clock, Unlimited daily rollups without data, Linear estimate, No estimate under one day of data, Unlimited daily rollups without a day of data, Daily rollups with a limit | `features/settings/storage-classes.spec.ts` | unit |
+| Deep link to Data, Former About value, Migration running on the Data tab, Completed before the page opened, Completed while watching, Backend down, Info in flight, Info arrives, Class rows, Retention that is not a whole number of days, Retention not reported, Storage total without schema_meta, Class still filling, Span ends at the read, Unlimited daily rollups, Total without an estimate, Progress only in the tip, Breakdown collapsed by default, Expand a class, Collapse a class, Collection without an oldest date, Where the retention is set, Migration ends | `features/settings/settings-page.spec.ts` | unit |
 | Steady server | `core/refresh/server-status.spec.ts` | unit |
 | Healthy card, Server stopped, Server silent without a stop, Migration running, Auto-refresh off, Before the first status, Slow writer batches, Storage and retention link | `features/overview/overview-page.spec.ts` | unit |
 | Retention tip by keyboard, Retention tip on a phone | `e2e/tests/settings.spec.ts` | e2e |
@@ -160,8 +173,8 @@ document gains the storage entries and `oldest` dates that make one class still 
 ## Risks / Trade-offs
 
 - [A class reads as still filling after an idle period, with an estimate above its real steady size] → accepted by
-  the owner; specified ("Idle period reads as filling"), softened by the tolerance of decision 6, and the note under
-  the table says what the estimates assume.
+  the owner; specified ("Idle period reads as filling") and softened by the tolerance of decision 6. The tab does not
+  explain it: the owner dropped the note on what the estimates assume, and each tip still says "(estimate)".
 - [A raised `stats` or `tracks` retention shows no tip on a deployment older than the new value] → accepted; decision
   4 leaves the door open to dating `track_stats`.
 - [Estimates overstate small databases: WiredTiger sizes include allocation that does not scale with the data and do
@@ -170,6 +183,13 @@ document gains the storage entries and `oldest` dates that make one class still 
   restart] → the documentation task states it; the tab message stays short.
 - [The figures are those of the last info read, which a long session does not refresh] → unchanged behaviour; spans
   use the same instant (decision 8).
+- [Spans use the browser clock (`readAt`) against server dates (`oldest`): a browser clock a day behind turns a full
+  Events class into "5 of 7 days so far", one ahead hides tips] → accepted by the owner as a known limit; the
+  one-day tolerance absorbs skews of hours. A server-side "now" (the `Date` header of the info response or the
+  `generatedAt` of the last status) is left for a later change.
+- [The configuration reference section the message links, `#analytics-settings`, exists only in the 3.10
+  documentation draft (openvidu.io pull request #160)] → it goes live with the release, before any 3.10 deployment
+  shows the link; the documentation group checks the anchor.
 - [Fifteen scenarios of unchanged behaviour (Server status card, info re-read, migration, unavailable, loading) enter
   the titled-test rule because their requirements are modified or replaced] → their tests exist and are retitled or split; no new
   behaviour is tested twice.

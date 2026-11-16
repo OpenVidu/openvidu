@@ -114,11 +114,11 @@ shared retention length wording. `schema_meta` belongs to no class and is neithe
   "Retention not reported by the server yet" shows under the table
 
 ### Requirement: Retention progress
-Edition: CE. A class whose data spans less than its retention SHALL carry an info tip after its retention value, named
-"About <class> retention", that reads "<n> of <retention> so far", n in the unit of the retention and rounded down, or
-"Less than 1 <unit> of <retention> so far". The span runs from the clock of the class to the moment the dashboard read
-the info document. A class within one day or 10 % of its retention, whichever is longer, counts as full and carries no
-tip.
+Edition: CE. A class with documents whose data spans less than its retention SHALL carry an info tip after its
+retention value, named "About <class> retention", that reads "<n> of <retention> so far", n in the unit of the
+retention rounded down, or "Less than 1 <unit> of <retention> so far". The span runs from the clock of the class to the
+moment the dashboard read the info document. A class within one day or 10 % of its retention, whichever is longer, is
+full and carries no tip.
 
 #### Scenario: Class still filling
 - **GIVEN** an entities retention of 90 days, an Entities row of 560 MB and the oldest room created 12 days before the
@@ -131,6 +131,11 @@ tip.
 - **GIVEN** an events retention of 7 days and the oldest event 5 days and 23 hours old
 - **WHEN** Data renders
 - **THEN** the tip of the Events row starts with "5 of 7 days so far"
+
+#### Scenario: Span ends at the read
+- **GIVEN** an entities retention of 90 days and the oldest room created 12 days before the info document was read
+- **WHEN** Data first renders two days after that read, with no new info document
+- **THEN** the tip of the Entities row starts with "12 of 90 days so far"
 
 #### Scenario: Class at full retention
 - **GIVEN** an events retention of 7 days and the oldest event 6 days and 2 hours old
@@ -153,12 +158,18 @@ tip.
 - **WHEN** Data renders
 - **THEN** the tip of the Events row reads "5 of 7 days so far · ≈ 98 MB at full retention (estimate)"
 
+#### Scenario: Class without documents
+- **GIVEN** the default retention, no `track_stats` entry, as on a deployment without media statistics, and the
+  earliest `oldest` of the deployment 3 days old
+- **WHEN** Data renders
+- **THEN** the Stats row reads "0" documents and "0 B" and carries no info tip
+
 ### Requirement: Clock of each data class
 Edition: CE. The clock of Events and of each rollup class SHALL be the `oldest` of its collection; that of Entities the
 earliest `oldest` of `rooms`, `participants`, `egresses` and `ingress_sessions`, never `nodes` or `ingresses`. Stats
-and Tracks and subscriptions, whose collections carry no `oldest`, SHALL use the deployment clock: the earliest
-`oldest` of those four entity collections, `events` and the three rollup collections. A class without a clock carries
-no tip.
+and Tracks and subscriptions SHALL use the deployment clock: the earliest `oldest` of those four, `events`,
+`analytics_5min` and `analytics_hourly` (not `analytics_daily`, dated by its UTC day). A class without a clock has no
+tip, except unlimited Daily rollups.
 
 #### Scenario: Entities clock ignores nodes and ingresses
 - **GIVEN** an entities retention of 90 days, `nodes` with `oldest` 200 days ago, `ingresses` 300 days ago, and
@@ -168,11 +179,17 @@ no tip.
 
 #### Scenario: Stats and tracks on the deployment clock
 - **GIVEN** the default retention, `track_stats`, `tracks` and `track_subscriptions` without `oldest`, a Stats row of
-  30 MB, a Tracks and subscriptions row of 6 MB, and the earliest `oldest` of the deployment, a daily bucket, 3 days
-  old
+  30 MB, a Tracks and subscriptions row of 6 MB, and the earliest `oldest` of the deployment, an hourly bucket, 3
+  days old
 - **WHEN** Data renders
 - **THEN** the tip of Stats reads "3 of 7 days so far · ≈ 70 MB at full retention (estimate)" and that of Tracks and
   subscriptions "3 of 7 days so far · ≈ 14 MB at full retention (estimate)"
+
+#### Scenario: Daily bucket outside the deployment clock
+- **GIVEN** the default retention, a Stats row with documents, the oldest daily bucket 1 day old and the oldest event,
+  the earliest of the other collections of the deployment clock, 5 hours old
+- **WHEN** Data renders
+- **THEN** the tip of Stats reads "Less than 1 day of 7 days so far", with no estimate
 
 #### Scenario: Deployment older than the stats retention
 - **GIVEN** a stats retention of 30 days and the earliest `oldest` of the deployment 200 days ago
@@ -183,6 +200,11 @@ no tip.
 - **GIVEN** an `events` entry with 0 documents and no `oldest`
 - **WHEN** Data renders
 - **THEN** the Events row carries no info tip
+
+#### Scenario: Unlimited daily rollups without data
+- **GIVEN** `retention.rollupsDailyMs` `null` and no `analytics_daily` entry
+- **WHEN** Data renders
+- **THEN** the Daily rollups row reads "0" documents and carries an info tip that reads "Grows without limit"
 
 ### Requirement: Size estimate at full retention
 Edition: CE. The tip of a class that is still filling SHALL end with " · ≈ <size> at full retention (estimate)", its
@@ -198,7 +220,8 @@ tip.
 - **THEN** the tip of Hourly rollups reads "30 of 400 days so far · ≈ 40 MB at full retention (estimate)"
 
 #### Scenario: No estimate under one day of data
-- **GIVEN** a tracks retention of 36 hours and the earliest `oldest` of the deployment 5 hours ago
+- **GIVEN** a tracks retention of 36 hours, a Tracks and subscriptions row with documents and the earliest `oldest` of
+  the deployment 5 hours ago
 - **WHEN** Data renders
 - **THEN** the tip of Tracks and subscriptions reads "5 of 36 hours so far", with no estimate
 
@@ -248,9 +271,10 @@ On a 375 px viewport the page SHALL NOT scroll sideways and every tip SHALL open
 
 ### Requirement: Collection breakdown
 Edition: CE. Each class row SHALL have a button that expands it, collapsed by default and independent of the other
-rows, into a table of its collections with collection, documents, size and oldest document as the info endpoint
-reports them, the oldest in the session zone; the state is not kept in the URL. A collection the endpoint never dates
-reads "—" with the tooltip "Not shown: no index starts with this collection's time field".
+rows, into a table named "Collections of <class>" of its collections with collection, documents, size and oldest
+document as the info endpoint reports them, the oldest in the session zone; the state is not kept in the URL. A
+collection the endpoint never dates reads "—" with the tooltip "Not shown: no index starts with this collection's time
+field".
 
 #### Scenario: Breakdown collapsed by default
 - **GIVEN** storage entries for every analytics collection
@@ -261,9 +285,10 @@ reads "—" with the tooltip "Not shown: no index starts with this collection's 
 - **GIVEN** storage entries for the six collections of Entities, `rooms` with 1,203 documents, 1.47 MB with indexes
   and `oldest` `2026-09-01T00:00:00Z`, in a session in UTC
 - **WHEN** the user activates "Show collections of Entities"
-- **THEN** a table under the Entities row lists `rooms`, `participants`, `egresses`, `ingresses`, `ingress_sessions`
-  and `nodes`, the `rooms` row reads "1,203", "1.47 MB" and "2026-09-01 00:00:00 UTC", the button is expanded and named
-  "Hide collections of Entities", the URL does not change and the other rows stay collapsed
+- **THEN** a table named "Collections of Entities" under the Entities row lists `rooms`, `participants`, `egresses`,
+  `ingresses`, `ingress_sessions` and `nodes`, the `rooms` row reads "1,203", "1.47 MB" and "2026-09-01 00:00:00 UTC",
+  the button is expanded and named "Hide collections of Entities", the URL does not change and the other rows stay
+  collapsed
 
 #### Scenario: Collapse a class
 - **GIVEN** the Entities row expanded
@@ -277,23 +302,18 @@ reads "—" with the tooltip "Not shown: no index starts with this collection's 
   time field"
 
 ### Requirement: Retention configuration message
-Edition: CE. Under the Storage table Data SHALL tell where the retention is changed, naming
-`openvidu.analytics.retention` of the OpenVidu server configuration (`livekit.yaml`), its seven keys and that it
-applies when the server restarts, with a Documentation link to the Retention section of the dashboard documentation
-page, and SHALL state what the estimates assume.
+Edition: CE. Under the Storage table Data SHALL show an info notice telling that the retention is set in
+`openvidu.analytics.retention` of the OpenVidu Server configuration (`livekit.yaml`) and applies when the server
+restarts, with a "Configuration reference" link to the "Analytics settings" section of the configuration reference.
+Nothing else under the table explains the info icons or the estimates.
 
 #### Scenario: Where the retention is set
 - **WHEN** Data renders with an info document
-- **THEN** under the Storage table it reads "Retention is set in `openvidu.analytics.retention` of the OpenVidu server
-  configuration (`livekit.yaml`): `events`, `stats`, `tracks`, `entities`, `rollups_5min`, `rollups_hourly` and
-  `rollups_daily`. It applies when the server restarts.", followed by a Documentation link that opens
-  `https://openvidu.io/latest/docs/self-hosting/production-ready/observability/openvidu-dashboard/#retention` in a new
-  tab
-
-#### Scenario: What the estimates assume
-- **WHEN** Data renders with an info document
-- **THEN** under the Storage table it reads "The info icons mark the classes that have not reached their retention yet
-  and estimate their size, assuming the activity so far continues."
+- **THEN** under the Storage table an info notice with the role `status` reads "Retention is set in
+  `openvidu.analytics.retention` of the OpenVidu Server configuration (`livekit.yaml`) and applies when the server
+  restarts.", followed by a "Configuration reference" link that opens
+  `https://openvidu.io/latest/docs/self-hosting/configuration/reference/#analytics-settings` in a new tab, and no text
+  under the table names the info icons or the estimates
 
 ## REMOVED Requirements
 

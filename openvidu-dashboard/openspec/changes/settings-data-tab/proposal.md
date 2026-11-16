@@ -20,21 +20,26 @@ openvidu-deployment are untouched.
   Tracks and subscriptions, Entities, 5-minute, hourly and daily rollups) with its retention, the documents and the
   size summed over its collections, and a Total row. The retention column is titled "Retention". `schema_meta`
   belongs to no class and is neither shown nor counted.
-- A class whose data spans less than its retention carries an info tip after its retention, "12 of 90 days so far",
-  with a linear estimate of its size at full retention when it holds a day of data: "· ≈ 4.2 GB at full retention
-  (estimate)". Daily rollups without a limit read "Grows without limit · ≈ 1.3 MB per year (estimate)".
+- A class with documents whose data spans less than its retention carries an info tip after its retention, "12 of 90
+  days so far", with a linear estimate of its size at full retention when it holds a day of data: "· ≈ 4.2 GB at full
+  retention (estimate)". A class without documents (Stats on servers without media statistics) carries none. Daily
+  rollups without a limit always read "Grows without limit", followed by "· ≈ 1.3 MB per year (estimate)" from a day
+  of data.
 - Each class is judged by its own oldest data; Stats and Tracks and subscriptions, which the info endpoint does not
-  date, by the oldest data of the deployment. The Entities clock ignores `nodes` and `ingresses`.
+  date, by the oldest data of the deployment, which leaves out the daily rollups (their oldest date is the start of a
+  UTC day, up to 24 hours before the first data). The Entities clock ignores `nodes` and `ingresses`.
 - Each class row expands to the collections behind it (collection, documents, size, oldest), collapsed by default.
   The owner reviews it on the demo and may drop it, so it is specified and built as a removable unit.
-- A message under the table tells where the retention is changed (`openvidu.analytics.retention` of `livekit.yaml`,
-  its seven keys, applied when the server restarts), links the documentation and states what the estimates assume.
+- An info notice under the table tells that the retention is set in `openvidu.analytics.retention` of the OpenVidu
+  Server configuration (`livekit.yaml`) and applies when the server restarts, and links the "Analytics settings"
+  section of the configuration reference (in the 3.10 documentation, published with the release).
 - The "Storage and retention" link of the Overview's Data pipeline card targets `/settings?tab=data`.
 
 Known limit, accepted by the owner: a class judged by its own oldest data reads as still filling after an idle
 period (an idle weekend gives "5 of 7 days so far" on the 7-day classes), because the oldest surviving document is
 then younger than the retention. Stats and Tracks and subscriptions do not show a retention raised on a deployment
-older than the new value.
+older than the new value. Spans are measured with the browser clock against server dates, so a browser clock a day off
+can show a full class as still filling, or hide a tip.
 
 Not in scope:
 
@@ -79,5 +84,6 @@ None.
   session suite and the info document of the API mock.
 - `CHANGELOG.md`. No `README.md` or `AGENTS.md` text names the tab.
 - No new or upgraded dependency, no API, schema or configuration change, no upgrade step.
-- Documentation, in `openvidu.io` (pull request of the 3.10 dashboard page): the Settings section, its two
-  screenshots and the Retention section.
+- Documentation, in `openvidu.io` (pull request #160, the 3.10 dashboard page): the Settings section, its two
+  screenshots and the Retention section. The Data tab links the "Analytics settings" section of the configuration
+  reference in the same draft (`#analytics-settings`), which goes live with the 3.10 release.
