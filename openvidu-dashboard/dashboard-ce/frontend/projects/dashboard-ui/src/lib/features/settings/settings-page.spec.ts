@@ -388,6 +388,27 @@ describe('SettingsPage', () => {
 		});
 	});
 
+	it('Span ends at the read', async () => {
+		vi.useFakeTimers({ toFake: ['Date'] });
+
+		try {
+			const http = setup();
+
+			await signIn(TestBed.inject(AuthService), http);
+			await loadInfo(
+				http,
+				infoResponse({ retention: DEFAULT_RETENTION, storage: { rooms: entry(560_000_000, 12 * DAY) } })
+			);
+			vi.setSystemTime(Date.now() + 2 * DAY);
+
+			const harness = await RouterTestingHarness.create('/settings?tab=data');
+
+			expect(tipOf(harness, 'Entities')?.text).toMatch(/^12 of 90 days so far/);
+		} finally {
+			vi.useRealTimers();
+		}
+	});
+
 	it('Unlimited daily rollups', async () => {
 		const { harness, element } = await settings(
 			'/settings?tab=data',

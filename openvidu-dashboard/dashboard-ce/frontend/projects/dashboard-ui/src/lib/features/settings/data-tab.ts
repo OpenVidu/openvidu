@@ -77,13 +77,14 @@ export class DataTab {
 			: 0;
 	});
 	protected readonly classes = computed(() => {
-		const info = this.info();
+		const read = this.service.read();
 
-		if (info === null) {
+		if (read === null) {
 			return null;
 		}
 
-		const { rows, total } = storageClasses(info.storage, info.retention, this.service.readAt() ?? Date.now());
+		const { info, readAt } = read;
+		const { rows, total } = storageClasses(info.storage, info.retention, readAt);
 
 		return {
 			rows: rows.map((row) => ({

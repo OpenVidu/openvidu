@@ -11,6 +11,12 @@ function isFullInfo(info: InfoResponse | InfoPublicResponse): info is InfoRespon
 	return 'features' in info;
 }
 
+/** A full info document and when it arrived (epoch ms): the instant its storage figures describe. */
+export interface InfoRead {
+	info: InfoResponse;
+	readAt: number;
+}
+
 /**
  * `GET /api/v1/info`, read at startup and after sign-in: edition, versions, schema, migration and features as signals.
  * Without a session the endpoint answers the public subset (edition and dashboard version).
@@ -19,22 +25,21 @@ function isFullInfo(info: InfoResponse | InfoPublicResponse): info is InfoRespon
 export class InfoService {
 	private readonly http = inject(HttpService);
 	private readonly auth = inject(AuthService);
-	private readonly fullInfo = signal<InfoResponse | null>(null);
+	private readonly fullRead = signal<InfoRead | null>(null);
 	private readonly publicInfo = signal<InfoPublicResponse | null>(null);
 	private readonly failure = signal<ApiRequestError | null>(null);
-	private readonly fullInfoReadAt = signal<number | null>(null);
 
 	/** The full document; `null` before sign-in or when the last read failed without a previous one. */
-	readonly info = this.fullInfo.asReadonly();
+	readonly info = computed(() => this.fullRead()?.info ?? null);
 	readonly error = this.failure.asReadonly();
-	/** When the full document arrived (epoch ms): the instant its storage figures describe. */
-	readonly readAt = this.fullInfoReadAt.asReadonly();
-	readonly edition = computed(() => this.fullInfo()?.edition ?? this.publicInfo()?.edition ?? null);
+	/** The full document with the time it arrived; `null` like `info`. */
+	readonly read = this.fullRead.asReadonly();
+	readonly edition = computed(() => this.info()?.edition ?? this.publicInfo()?.edition ?? null);
 	readonly dashboardVersion = computed(
-		() => this.fullInfo()?.versions.dashboard ?? this.publicInfo()?.versions.dashboard ?? null
+		() => this.info()?.versions.dashboard ?? this.publicInfo()?.versions.dashboard ?? null
 	);
-	readonly migration = computed(() => this.fullInfo()?.migration ?? null);
-	readonly features = computed<ReadonlySet<FeatureKey>>(() => new Set(this.fullInfo()?.features ?? []));
+	readonly migration = computed(() => this.info()?.migration ?? null);
+	readonly features = computed<ReadonlySet<FeatureKey>>(() => new Set(this.info()?.features ?? []));
 
 	/**
 	 * Reads the info document; keeps the previous one and records the error when the request fails. The server status
@@ -47,13 +52,12 @@ export class InfoService {
 			this.failure.set(null);
 
 			if (isFullInfo(info)) {
-				this.fullInfoReadAt.set(Date.now());
-				this.fullInfo.set(info);
+				this.fullRead.set({ info, readAt: Date.now() });
 			} else {
 				this.publicInfo.set(info);
 
 				if (!this.auth.authenticated()) {
-					this.fullInfo.set(null);
+					this.fullRead.set(null);
 				}
 			}
 		} catch (error) {

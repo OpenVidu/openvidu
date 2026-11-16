@@ -47,10 +47,10 @@ describe('InfoService', () => {
 	it('records when the full document arrives, not the public subset', async () => {
 		vi.setSystemTime(Date.parse('2026-11-16T12:00:00.000Z'));
 		await answer({ edition: 'ce', versions: { dashboard: '3.10.0' } });
-		expect(info.readAt()).toBeNull();
+		expect(info.read()).toBeNull();
 
 		await answer(infoResponse());
-		expect(info.readAt()).toBe(Date.parse('2026-11-16T12:00:00.000Z'));
+		expect(info.read()?.readAt).toBe(Date.parse('2026-11-16T12:00:00.000Z'));
 	});
 
 	it('never polls, even while the migration runs or the schema is uninitialized', async () => {

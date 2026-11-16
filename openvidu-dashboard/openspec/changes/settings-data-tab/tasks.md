@@ -143,7 +143,7 @@ Paths are relative to `dashboard-ce/`; `ui/` is `frontend/projects/dashboard-ui/
       Class at full retention, Entities clock ignores nodes and ingresses, Stats and tracks on the deployment clock.
       Verify: the unit tests pass, and each fails when its collection is dropped from its clock or when `<=` becomes
       `<` in the full tolerance (tried and reverted).
-- [ ] 9.3 In `features/settings/data-tab.ts`, remove the `?? Date.now()` fallback, reading `readAt` with a type that
+- [x] 9.3 In `features/settings/data-tab.ts`, remove the `?? Date.now()` fallback, reading `readAt` with a type that
       guarantees it beside the info document (code review SUGGESTION 5). In `features/settings/settings-page.spec.ts`,
       add `Span ends at the read` with fake timers: the info document read, the clock advanced two days, then
       `tab=data` opened (code review WARNING 2). Covers: Span ends at the read. Verify: the unit tests pass, and the
