@@ -16,6 +16,21 @@ export type ParticipantClientSummary = Pick<
 	'sdk' | 'version' | 'os' | 'osVersion' | 'browser' | 'browserVersion'
 >;
 
+/** Origin filter of the agents list: agents with a non-empty `openvidu.agent` attribute, or every other agent. */
+export const AgentOrigin = {
+	OPENVIDU: 'openvidu',
+	THIRD_PARTY: 'third-party'
+} as const;
+export type AgentOrigin = (typeof AgentOrigin)[keyof typeof AgentOrigin];
+
+/** Agent facts of a session of kind `AGENT`; empty attribute values are omitted. */
+export interface ParticipantAgent {
+	/** Name the agent's worker registered (`lk.agent_name`). */
+	name?: string;
+	/** OpenVidu agent type (`openvidu.agent`), present on agents that declare themselves OpenVidu agents. */
+	openvidu?: string;
+}
+
 /** A participant session as the participants and agents lists show it; dates are ISO 8601. */
 export interface ParticipantListItem {
 	sid: string;
@@ -36,6 +51,8 @@ export interface ParticipantListItem {
 	/** Track sources with at least one publication, in `TrackSource` order. */
 	publishedSources: TrackSource[];
 	client?: ParticipantClientSummary;
+	/** Only on sessions of kind `AGENT`, absent when no agent fact is known. */
+	agent?: ParticipantAgent;
 	/** `true` for an active entity whose last stats flush is older than the stale window; absent otherwise. */
 	stale?: true;
 }
@@ -54,7 +71,9 @@ export interface ParticipantsListQuery extends RangeQuery {
 	limit?: number;
 }
 
-export type AgentsListQuery = Omit<ParticipantsListQuery, 'kind' | 'publisher'>;
+export interface AgentsListQuery extends Omit<ParticipantsListQuery, 'kind' | 'publisher'> {
+	origin?: AgentOrigin;
+}
 
 export type ParticipantsSummaryQuery = RangeQuery;
 

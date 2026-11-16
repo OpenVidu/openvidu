@@ -150,6 +150,12 @@ export interface ParticipantQuality extends QualityTotals {
 	lastScoreAt?: Date;
 }
 
+/** Attribute with the name the agent's worker registered; the server stamps it, empty for automatic dispatch. */
+export const AGENT_NAME_ATTRIBUTE = 'lk.agent_name';
+
+/** Attribute that OpenVidu agents set to their agent type; a non-empty value marks an OpenVidu agent. */
+export const OPENVIDU_AGENT_ATTRIBUTE = 'openvidu.agent';
+
 /** `participants`: one document per participant session. `_id` is the participant SID (`PA_…`). */
 export interface ParticipantDocument extends EntityBase {
 	_id: string;
@@ -177,7 +183,10 @@ export interface ParticipantDocument extends EntityBase {
 	isPublisher: boolean;
 	/** Stored only when the writer's `store_metadata` is enabled. */
 	metadata?: string;
-	/** Stored only when the writer's `store_metadata` is enabled. */
+	/**
+	 * Every attribute when the writer's `store_metadata` is enabled; without it, only `lk.agent_name`, `openvidu.agent`
+	 * and `openvidu.agent.*` of a session of kind `AGENT`. Keys contain dots: read them with `$getField`.
+	 */
 	attributes?: Record<string, string>;
 	tracks: ParticipantTrackCounters;
 	bytes: ByteTotals;
