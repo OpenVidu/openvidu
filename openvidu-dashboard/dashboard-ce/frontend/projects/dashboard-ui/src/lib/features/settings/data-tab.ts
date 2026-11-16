@@ -1,4 +1,5 @@
 import { Component, computed, effect, inject, signal } from '@angular/core';
+import { MatIcon } from '@angular/material/icon';
 import { MatProgressBar } from '@angular/material/progress-bar';
 import type { InfoMigration } from '@openvidu-dashboard/typings';
 
@@ -11,6 +12,7 @@ import { EXTERNAL_LINKS } from '../../core/links.js';
 import { ServerStatusService } from '../../core/refresh/server-status.js';
 import { QueryStateService } from '../../core/state/query-state.js';
 import { formatBytes, formatNumber, formatTimestamp } from '../../format/formatters.js';
+import { CollectionBreakdown } from './collection-breakdown.js';
 import { storageClasses } from './storage-classes.js';
 
 /** The progress of a running migration, or the outcome of one that ended; `null` for none or pending. */
@@ -33,11 +35,11 @@ export function migrationLine(migration: InfoMigration, tz: string): string | nu
 
 /**
  * The legacy migration while it runs (and its outcome when it ends while the tab is open), the storage and retention
- * per data class, and where the retention is configured.
+ * per data class with the collections behind each class, and where the retention is configured.
  */
 @Component({
 	selector: 'ovd-data-tab',
-	imports: [ExternalLink, InfoTip, MatProgressBar, Notice, Skeleton],
+	imports: [CollectionBreakdown, ExternalLink, InfoTip, MatIcon, MatProgressBar, Notice, Skeleton],
 	templateUrl: './data-tab.html',
 	styleUrl: './data-tab.scss'
 })
@@ -47,6 +49,8 @@ export class DataTab {
 	private readonly tz = inject(QueryStateService).tz;
 	/** A migration seen running in this tab; its outcome stays visible until the tab is left. */
 	private readonly seenRunning = signal(false);
+	/** Labels of the classes whose collections show; kept out of the URL. */
+	protected readonly expanded = signal<ReadonlySet<string>>(new Set());
 
 	protected readonly documentation = `${EXTERNAL_LINKS.documentation}#retention`;
 	protected readonly info = this.service.info;
@@ -97,6 +101,18 @@ export class DataTab {
 			if (this.running()) {
 				this.seenRunning.set(true);
 			}
+		});
+	}
+
+	protected toggle(label: string): void {
+		this.expanded.update((expanded) => {
+			const next = new Set(expanded);
+
+			if (!next.delete(label)) {
+				next.add(label);
+			}
+
+			return next;
 		});
 	}
 

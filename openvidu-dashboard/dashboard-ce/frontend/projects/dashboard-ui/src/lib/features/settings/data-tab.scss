@@ -42,6 +42,40 @@ td {
 	white-space: normal;
 }
 
+.expand {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 24px;
+	height: 24px;
+	margin-inline-end: 4px;
+	padding: 0;
+	border: 0;
+	border-radius: 50%;
+	background: none;
+	color: var(--mat-sys-on-surface-variant);
+	vertical-align: middle;
+	cursor: pointer;
+
+	&:hover {
+		color: var(--mat-sys-primary);
+	}
+
+	&:focus-visible {
+		outline: 2px solid var(--mat-sys-primary);
+		outline-offset: 1px;
+	}
+
+	mat-icon {
+		width: 20px;
+		height: 20px;
+	}
+}
+
+.breakdown > td {
+	padding: 0;
+}
+
 .end {
 	text-align: end;
 }

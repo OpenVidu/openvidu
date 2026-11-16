@@ -1,6 +1,7 @@
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
+import { MatTooltip } from '@angular/material/tooltip';
 import { By } from '@angular/platform-browser';
 import { provideRouter, Router } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
@@ -422,6 +423,121 @@ describe('SettingsPage', () => {
 			[...element.querySelectorAll('ovd-data-tab .table-wrap ~ p')].map((paragraph) => text(paragraph))
 		).toContain(
 			'The info icons mark the classes that have not reached their retention yet and estimate their size, assuming the activity so far continues.'
+		);
+	});
+
+	function expandButton(element: HTMLElement, label: string): HTMLButtonElement | null | undefined {
+		return classRow(element, label)?.querySelector<HTMLButtonElement>('button.expand');
+	}
+
+	const EVERY_COLLECTION = {
+		events: entry(1_000, DAY),
+		track_stats: entry(1_000),
+		tracks: entry(1_000),
+		track_subscriptions: entry(1_000),
+		rooms: { documents: 1_203, storageBytes: 1_200_000, indexBytes: 270_000, oldest: '2026-09-01T00:00:00Z' },
+		participants: entry(1_000, DAY),
+		egresses: entry(1_000, DAY),
+		ingresses: entry(1_000, DAY),
+		ingress_sessions: entry(1_000, DAY),
+		nodes: entry(1_000, DAY),
+		analytics_5min: entry(1_000, DAY),
+		analytics_hourly: entry(1_000, DAY),
+		analytics_daily: entry(1_000, DAY)
+	};
+
+	it('Breakdown collapsed by default', async () => {
+		const { element } = await settings(
+			'/settings?tab=data',
+			infoResponse({ retention: DEFAULT_RETENTION, storage: EVERY_COLLECTION })
+		);
+
+		for (const row of classRows(element)) {
+			const button = row.querySelector('button.expand');
+
+			expect(button?.getAttribute('aria-label')).toBe(`Show collections of ${text(row.querySelector('th'))}`);
+			expect(button?.getAttribute('aria-expanded')).toBe('false');
+		}
+
+		expect(data(element)?.querySelector('ovd-collection-breakdown')).toBeNull();
+		expect(text(data(element))).not.toContain('ingress_sessions');
+	});
+
+	it('Expand a class', async () => {
+		const { harness, element } = await settings(
+			'/settings?tab=data',
+			infoResponse({ retention: DEFAULT_RETENTION, storage: EVERY_COLLECTION })
+		);
+
+		TestBed.inject(SessionZoneService).set('UTC');
+
+		const before = url();
+
+		expandButton(element, 'Entities')?.click();
+		await harness.fixture.whenStable();
+
+		const button = expandButton(element, 'Entities');
+		const breakdown = element.querySelector(`#${button?.getAttribute('aria-controls') ?? 'none'}`);
+		const rows = [...(breakdown?.querySelectorAll('ovd-collection-breakdown tbody tr') ?? [])];
+
+		expect(classRow(element, 'Entities')?.nextElementSibling).toBe(breakdown);
+		expect(rows.map((row) => text(row.querySelector('th')))).toEqual([
+			'rooms',
+			'participants',
+			'egresses',
+			'ingresses',
+			'ingress_sessions',
+			'nodes'
+		]);
+		expect(cells(rows[0])).toEqual(['rooms', '1,203', '1.47 MB', '2026-09-01 00:00:00 UTC']);
+		expect(button?.getAttribute('aria-expanded')).toBe('true');
+		expect(button?.getAttribute('aria-label')).toBe('Hide collections of Entities');
+		expect(url()).toBe(before);
+		expect(
+			classRows(element)
+				.filter((row) => text(row.querySelector('th')) !== 'Entities')
+				.map((row) => row.querySelector('button.expand')?.getAttribute('aria-expanded'))
+		).toEqual(Array(6).fill('false'));
+		expect(element.querySelectorAll('ovd-collection-breakdown')).toHaveLength(1);
+	});
+
+	it('Collapse a class', async () => {
+		const { harness, element } = await settings(
+			'/settings?tab=data',
+			infoResponse({ retention: DEFAULT_RETENTION, storage: EVERY_COLLECTION })
+		);
+
+		expandButton(element, 'Entities')?.click();
+		await harness.fixture.whenStable();
+		expect(element.querySelector('ovd-collection-breakdown')).not.toBeNull();
+
+		expandButton(element, 'Entities')?.click();
+		await harness.fixture.whenStable();
+		expect(element.querySelector('ovd-collection-breakdown')).toBeNull();
+		expect(text(data(element))).not.toContain('ingress_sessions');
+		expect(expandButton(element, 'Entities')?.getAttribute('aria-expanded')).toBe('false');
+	});
+
+	it('Collection without an oldest date', async () => {
+		const { harness, element } = await settings(
+			'/settings?tab=data',
+			infoResponse({ retention: DEFAULT_RETENTION, storage: EVERY_COLLECTION })
+		);
+
+		expandButton(element, 'Tracks and subscriptions')?.click();
+		await harness.fixture.whenStable();
+
+		const tracks = [...element.querySelectorAll('ovd-collection-breakdown tbody tr')].find(
+			(row) => text(row.querySelector('th')) === 'tracks'
+		);
+		const oldest = tracks?.querySelector('td:last-child span');
+		const tooltip = harness.fixture.debugElement
+			.queryAll(By.directive(MatTooltip))
+			.find((candidate) => candidate.nativeElement === oldest);
+
+		expect(cells(tracks)[3]).toBe('—');
+		expect(tooltip?.injector.get(MatTooltip).message).toBe(
+			"Not shown: no index starts with this collection's time field"
 		);
 	});
 

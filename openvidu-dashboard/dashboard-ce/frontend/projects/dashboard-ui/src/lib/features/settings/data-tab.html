@@ -28,9 +28,25 @@
 				</tr>
 			</thead>
 			<tbody>
-				@for (row of classes.rows; track row.label) {
+				@for (row of classes.rows; track row.label; let index = $index) {
+					@let open = expanded().has(row.label);
 					<tr>
-						<th scope="row" class="label">{{ row.label }}</th>
+						<th scope="row" class="label">
+							<button
+								type="button"
+								class="expand"
+								[attr.aria-label]="(open ? 'Hide' : 'Show') + ' collections of ' + row.label"
+								[attr.aria-expanded]="open"
+								[attr.aria-controls]="'ovd-collections-' + index"
+								(click)="toggle(row.label)"
+							>
+								<mat-icon
+									[svgIcon]="open ? 'keyboard_arrow_up' : 'keyboard_arrow_down'"
+									aria-hidden="true"
+								/>
+							</button>
+							{{ row.label }}
+						</th>
 						<td class="ovd-tabular">
 							{{ row.retention }}
 							@if (row.tip; as tip) {
@@ -40,6 +56,13 @@
 						<td class="end ovd-tabular">{{ row.documentsText }}</td>
 						<td class="end ovd-tabular">{{ row.size }}</td>
 					</tr>
+					@if (open) {
+						<tr class="breakdown" [id]="'ovd-collections-' + index">
+							<td colspan="4">
+								<ovd-collection-breakdown [label]="row.label" [collections]="row.collections" />
+							</td>
+						</tr>
+					}
 				}
 			</tbody>
 			<tfoot>

@@ -55,14 +55,14 @@ Paths are relative to `dashboard-ce/`; `ui/` is `frontend/projects/dashboard-ui/
 
 ## 3. Frontend: collection breakdown (implementer)
 
-- [ ] 3.1 Create `features/settings/collection-breakdown.ts` (inline template): the table of the collections of one
+- [x] 3.1 Create `features/settings/collection-breakdown.ts` (inline template): the table of the collections of one
       class with Collection, Documents, Size and Oldest, the oldest in the session zone and the undated tooltip moved
       from the former storage table. Verify: the tests of 3.3 pass.
-- [ ] 3.2 In the Data tab, add to each class row a native button named "Show collections of <class>" / "Hide
+- [x] 3.2 In the Data tab, add to each class row a native button named "Show collections of <class>" / "Hide
       collections of <class>" with `aria-expanded` and `aria-controls`, and render the breakdown in a row under an
       expanded class; keep the expanded classes in a signal, not in the URL (design decision 10). Verify: the tests of
       3.3 pass.
-- [ ] 3.3 In `features/settings/settings-page.spec.ts`, add `Breakdown collapsed by default`, `Expand a class`,
+- [x] 3.3 In `features/settings/settings-page.spec.ts`, add `Breakdown collapsed by default`, `Expand a class`,
       `Collapse a class` and `Collection without an oldest date`. Covers: those four scenarios. Verify: the unit tests
       pass.
 
