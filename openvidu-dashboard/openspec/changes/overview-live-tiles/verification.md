@@ -1,141 +1,160 @@
 # Verification Report: overview-live-tiles
 
 - Date: 2026-11-16
-- Mode: full
-- Verified commit: `575ccc5ccacfa4d3824da475d1a530394b33fba4` (`29ba28dac..HEAD`, four commits, clean working tree)
+- Mode: incremental, from `575ccc5ccacfa4d3824da475d1a530394b33fba4` (last verified commit)
+- Verified commit: `ec7c05ea56e8d9f8935baa911de4a53dba52b32c` (`575ccc5cc..HEAD`: the reports commit, `3afd2c8b8`
+  revision, `dedf6dae6` and `a5249589f` task group 5, `ec7c05ea5` operations record); no uncommitted work in the change
+  (`openspec/changes/settings-data-tab/` is another change and was not looked at)
+- Supersedes the previous `verification.md` and `code-review.md` (both on `575ccc5cc`).
 - Guard: the guard hook could not be activated in this session; by decision of the owner the probe was skipped and
-  its limits were kept by hand (reads, the checks below and this file only).
+  its limits were kept by hand (reads, the checks below and this file).
 
 ## Summary
 
-| Dimension    | Status                                                                                    |
-| ------------ | ----------------------------------------------------------------------------------------- |
-| Completeness | 13/14 tasks (5.1 pending, orchestrator, after this verification); 3/3 requirements found   |
-| Correctness  | 3/3 requirements implemented as specified; 10/10 scenarios covered by a passing test       |
-| Coherence    | 6/6 design decisions followed; code patterns consistent                                    |
+| Dimension    | Status                                                                                                      |
+| ------------ | ----------------------------------------------------------------------------------------------------------- |
+| Completeness | 22/23 tasks (6.1 pending, orchestrator, after this verification); 4/4 requirements found                    |
+| Correctness  | 4/4 requirements implemented as specified; 13/13 scenarios covered by a passing test that asserts them      |
+| Coherence    | 8/8 design decisions followed; code patterns consistent                                                     |
 
-Issues: 0 CRITICAL, 0 WARNING, 0 SUGGESTION.
+Issues: 0 CRITICAL, 0 WARNING, 1 SUGGESTION.
 
 ## Checks run
 
-| Command                                    | Result                                                                                              |
-| ------------------------------------------ | --------------------------------------------------------------------------------------------------- |
-| `./dashboard.sh check`                     | Pass (exit 0): lint, format, typecheck, `openspec validate --all --strict` 32/32, tooling 115, typings 109, backend unit 240, dashboard-ui 548, frontend 1 |
-| `./dashboard.sh scenarios overview-live-tiles` | Pass (exit 0): 10 scenarios, 0 without a test                                                   |
-| `./dashboard.sh e2e`                       | Pass (exit 0): 122/122 mocked, 6/6 real backend (Docker available); axe in light and dark on the Overview, light and dark baselines |
-| `./dashboard.sh test-integration`          | Not applicable: no backend file in the diff                                                         |
+| Command                                        | Result                                                                                                  |
+| ---------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| `./dashboard.sh check`                         | Pass (exit 0): lint, format, typecheck, `openspec validate --all --strict` (the change valid), backend unit 240, dashboard-ui 548, frontend 1 |
+| `./dashboard.sh scenarios overview-live-tiles` | Pass (exit 0): 13 scenarios, 0 without a test                                                           |
+| `./dashboard.sh e2e`                           | Pass (exit 0): 125/125 mocked (122 + the three new layout tests), 6/6 real backend; axe and the light and dark baselines included; no baseline screenshot changed |
+| `./dashboard.sh test-integration`              | Not applicable: no backend file in the diff                                                             |
 
-Not checked here: the CI run of the push (task 5.1, pending; no `operations.md` yet).
+Recorded, not checked: the owner's review of the tile rows on `./dashboard.sh demo ce` at 1280 and 1440 px and the
+refactor review outcomes (`operations.md`). The CI run of the push is task 6.1, pending.
+
+## Earlier findings
+
+`verification.md` on `575ccc5cc` had no finding. `code-review.md` on `575ccc5cc`:
+
+| Finding | Status | Evidence |
+| ------- | ------ | -------- |
+| W1. Longer labels wrap on desktop widths and the values of the live row stop lining up | Accepted by the owner (labels may wrap, `design.md` Risks) and resolved for its consequence by the revision: values level in every tile row | New requirement "KPI tile values level in a row", decision 7; `components/tiles/kpi-tile.ts:105-134`, `components/tiles/tile-row.ts:84-86`; `e2e/tests/overview.spec.ts:71` passes at 1280 px with "Active participants" on two lines |
+| S1. `.tiles ovd-skeleton` could not fail | Resolved | `features/overview/overview-page.spec.ts:265` asserts `.tiles .skeleton`, the class of the tile's own skeleton (`kpi-tile.ts:55`) |
+| S2. "On no other tile, card or column" held only for named sections | Resolved | `features/overview/overview-page.spec.ts:400` asserts 7 info tips on the page (3 live, 2 Today, Data pipeline, Unique identities); the By node line is gone |
+| S3. The comment of `egressQueryParams` called query parameters a URL | Resolved | `features/overview/overview-page.ts:73` names the `status` the Active option writes |
+
+Paths: `components/` and `features/` are under `dashboard-ce/frontend/projects/dashboard-ui/src/lib/`; `e2e/` is
+`dashboard-ce/e2e/`.
 
 ## Completeness
 
-### Tasks
+`openspec instructions apply`: 22 of 23 complete; only 6.1 (publish, orchestrator, after the verification) is open,
+which is not a finding.
 
-`openspec instructions apply`: 13 of 14 complete.
+| Task | Evidence |
+| ---- | -------- |
+| 5.1  | `kpi-tile.ts:105-134` (subgrid of four tracks inside `ovd-tile-row` only, value and skeleton in track 2 at its end, 12 px tile margin), `tile-row.ts:84-86` (row gap 0, 4 px row margin); both doc comments updated and true (`kpi-tile.ts:29-30`, `tile-row.ts:73-74`); `kpi-tile.spec.ts` and `tile-row.spec.ts` unchanged and passing |
+| 5.2  | `e2e/tests/overview.spec.ts:71` |
+| 5.3  | `e2e/tests/egress.spec.ts:37` |
+| 5.4  | `e2e/tests/analytics.spec.ts:46` |
+| 5.5  | `overview-page.spec.ts:265` |
+| 5.6  | `overview-page.spec.ts:400` |
+| 5.7  | `overview-page.ts:73` |
+| 5.8  | Reproduced: 13 scenarios with a test; `check` and `e2e` pass; no snapshot file in the diff |
+| 5.9  | Recorded in `operations.md`: no refactor needed |
 
-| Task | Evidence                                                                                                         |
-| ---- | ---------------------------------------------------------------------------------------------------------------- |
-| 1.1  | `features/overview/overview-page.html:14,21,29,37,44,51`: the six labels; Today tiles, notice and card untouched  |
-| 1.2  | `features/overview/overview-page.ts:74`, bound at `overview-page.html:39`                                         |
-| 1.3  | `features/overview/overview-page.spec.ts:207`                                                                     |
-| 1.4  | `features/overview/overview-page.spec.ts:245`                                                                     |
-| 1.5  | `features/overview/overview-page.spec.ts:359,378,388`                                                             |
-| 2.1  | `features/participants/participants-page.spec.ts:295,353`                                                         |
-| 2.2  | `features/participants/participants-page.spec.ts:191`                                                             |
-| 3.1  | `e2e/tests/overview.spec.ts:18`, `e2e/tests/info-tips.spec.ts:17,24,38,40,126-128`                                |
-| 3.2  | `e2e/tests/overview.spec.ts:71`                                                                                   |
-| 3.3  | `e2e/tests/overview.spec.ts:90-128`                                                                               |
-| 4.1  | Reproduced: 10 scenarios, none "NO TEST"                                                                          |
-| 4.2  | Reproduced: `check` and `e2e` pass, real-backend suite included                                                   |
-| 4.3  | Checked in `tasks.md`; its outcome lives in the implementation report, which is not in the repository. The diff shows the small refactor: the shared `tips()` helper of the three split tests (`overview-page.spec.ts:188-196`) |
-| 5.1  | Pending (orchestrator, after the verification): not a finding                                                     |
-
-### Spec coverage
-
-Three MODIFIED requirements, no ADDED, REMOVED or RENAMED. Each delta keeps every scenario of its baseline requirement.
-
-| Requirement                                          | Implementation                                                                    |
-| ---------------------------------------------------- | --------------------------------------------------------------------------------- |
-| `overview-ui`: Live KPI tiles                        | `features/overview/overview-page.html:12-58`, `features/overview/overview-page.ts:74` |
-| `ui-info-tips`: Overview info tips                   | `features/overview/overview-page.html:24,32,54` (the tip name follows the label)    |
-| `participants-ui`: Participants filters and room chip | Wording only; behaviour unchanged, no source change in `features/participants/`     |
+Spec coverage: the three MODIFIED requirements of the previous verification are unchanged since `575ccc5cc` (their
+delta files are not in the diff) and one ADDED requirement, `ui-building-blocks`: "KPI tile values level in a row",
+implemented in `kpi-tile.ts` and `tile-row.ts`. No REMOVED or RENAMED requirement.
 
 ## Correctness
 
-### Requirement implementation
+### KPI tile values level in a row
 
-- Live KPI tiles: labels, values and links match the requirement. The egress link is
-  `/egress?status=starting,active,ending`, the value `EgressPage` reads with `QueryStateService.csv` and selects as
-  Active when every status of `EGRESS_IN_FLIGHT_STATUSES` is present (`features/egress/egress-page.ts:53,112-119`).
-- Overview info tips: tips on Active participants, Active publishers and Active agents, the Today tiles Participants
-  and Minutes, the Data pipeline card and the Unique identities header, and nowhere else.
-- No reference to the old tile names or to `/egress?status=active` as a tile link remains in the sources, the tests,
-  `README.md`, `CHANGELOG.md` or the `AGENTS.md` files. `openspec/specs` still holds the old wording, as expected
-  until the archive syncs the deltas.
+- Labels at the top (`kpi-tile.ts:117-120`, track 1, `align-self: start`); values and the first-load skeleton end at
+  the bottom of track 2 (`:122-126`); delta and hint in tracks 3 and 4, under the value (`:128-134`). The four tracks
+  are the row's (`grid-template-rows: subgrid`, `grid-row: span 4`), so each is as tall as its tallest part on the
+  line, and empty tracks leave the values at the bottom of the tiles. Labels are inline text in a block and wrap.
+- The rule selects on `:host-context(ovd-tile-row)`; a tile elsewhere keeps `display: block`. Every CE KPI tile is a
+  direct child of an `ovd-tile-row` (Overview live and Today, Rooms, Participants, Agents, Egress, Ingress, the
+  Analytics summary and the four Analytics card rows).
+- The screen reader texts of the tile (`ovd-visually-hidden`, absolutely positioned) and the measuring copy of
+  `oneLineTileWidth` (absolutely positioned, `tile-row.ts:56`) are out of flow and take no track.
 
-### Scenario coverage
+### Spacing of every tile row of the CE pages
 
-Tests taken from `./dashboard.sh scenarios` and read against their scenarios.
+The row gap became 0 and each tile carries a 12 px bottom margin inside the grid; the row's own margin went from
+16 px to 4 px. Effect, read from the styles:
 
-| Scenario                       | Test                                              | Asserts                                                                                                   |
-| ------------------------------ | ------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
-| Tile values and links          | `overview-page.spec.ts:207` (unit)                | The six labels, the values 12, 85, 54, 3, 1, 2 and the six `href`s, on the `live` of the scenario          |
-| Refresh keeps values           | `overview-page.spec.ts:245` (unit)                | `If-None-Match` sent, `304`: tile markup identical, no highlight, no skeleton, `lastUpdated` advances      |
-| Publishers tile                | `e2e/tests/overview.spec.ts:71` (e2e)             | URL `status=active&publisher=true`, "Publishers" chip with its button, request with `publisher=true`       |
-| Active egress tile             | `e2e/tests/overview.spec.ts:102` (e2e)            | URL `status=starting,active,ending`, Status reads "Active", request status, three rows, no `EG_complete`   |
-| Live tiles                     | `overview-page.spec.ts:359` (unit)                | The three tip names with "Active" and their three texts, and no other tip in the row                       |
-| Today tiles                    | `overview-page.spec.ts:378` (unit)                | The two tip names and texts, no hover text on the tiles                                                    |
-| Data pipeline and recent rooms | `overview-page.spec.ts:388` (unit)                | The card's text, the header's shared text, no tip in By node                                               |
-| Arriving from a room           | `participants-page.spec.ts:353` (unit)            | Chip text, link `/rooms/RM_abc`, removal drops `room` in the URL and the reload                            |
-| Clearing the kind filter       | `participants-page.spec.ts:191` (unit)            | Deselecting Standard writes `kind=all`; the filter reads "All kinds"                                       |
-| Publishers chip                | `participants-page.spec.ts:295` (unit)            | Chip with button, request `publisher=true`, removal drops `publisher` and `cursor` in the URL and reload   |
+- Between the lines of a wrapped row: 12 px, as before (tile margin instead of row gap).
+- Below a row: 12 + 4 = 16 px, as before, for every row that keeps the default margin: the summaries of Overview
+  (live), Rooms, Participants, Agents, Egress, Ingress and Analytics, and the four `.card-tiles` rows of Analytics
+  (no stylesheet overrides `.tiles` or `.card-tiles`).
+- Overview Today (`features/overview/overview-page.scss:35-38`), the reported deviation: the row had
+  `margin-bottom: 0`; it now has `-12px`, which cancels the margin of the tiles of its last line, so the tiles still
+  end at the card's content edge. With "No rooms today yet" shown, the paragraph's 12 px top margin collapses with the
+  row's −12 px to 0 and the tiles' 12 px margin keeps the 12 px gap the paragraph had. The adjustment is needed and
+  correct; see the SUGGESTION for the coupling it shows.
+- Tile height of a row whose labels fit: the tracks hold the same parts the block stacked (label, value with its
+  4 px margin, delta and hint with theirs), so the height is the same; the owner's review on the demo recorded the
+  rows as accepted (`operations.md`).
+- Analytics summary: a one-line value now ends level with the second line of "Data up / down", as the proposal and
+  the scenario state.
 
-Note on "Refresh keeps values": the unit test asserts the update time of the refresh service, the source of the
-"updated hh:mm:ss" text the shell renders, as task 1.4 states. Not a finding.
+### Scenario coverage (new requirement)
+
+Tests read against their scenarios; all three pass in `./dashboard.sh e2e` at the 1280 × 720 viewport of the suite
+(`Desktop Chrome`, set explicitly in two of them).
+
+| Scenario             | Test                               | Asserts                                                                                                         |
+| -------------------- | ---------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| Label on two lines   | `e2e/tests/overview.spec.ts:71`    | The six tiles share one line (same top); "Active participants" label taller than "Active rooms" (the GIVEN, so it cannot pass on a row where nothing wraps); six label tops equal; six value bottoms equal and each equal to the tile's content bottom (border box minus padding and border), i.e. at the bottom of the tile |
+| Hint under one value | `e2e/tests/egress.spec.ts:37`      | The hint text of "Started in range"; no hint on "Active now"; four value bottoms equal; the hint's top at or below the bottom of its value |
+| Value on two lines   | `e2e/tests/analytics.spec.ts:46`   | "Data up / down" renders two `.line`s; both tiles share a line (same top); the bottom of the value of "Rooms created" equals the bottom of the second line |
+
+Each test asserts what its scenario states. On the layout before group 5, "Label on two lines" and "Value on two
+lines" fail (the block put the values right under the labels and started both values level). "Hint under one value"
+would also pass on that layout, where the four labels fit one line; what it guards is the rejected alternative of
+decision 7 (a value block pushed to the bottom would put the value of "Started in range" one hint above that of
+"Active now"). Not a finding.
+
+The ten scenarios of the three modified requirements keep their tests (`scenarios` lists them at their current line
+numbers); the two changed unit assertions (S1, S2) only strengthen them.
 
 ## Coherence
 
 ### Design adherence
 
-| Decision                                                        | Status                                                                              |
-| --------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
-| 1. Egress link built from `EGRESS_IN_FLIGHT_STATUSES`           | Followed: `overview-page.ts:74`, no literal and no array in the template             |
-| 2. Labels stay literals in the template                         | Followed                                                                            |
-| 3. `ui-info-tips` and `participants-ui` change in wording only  | Followed: test titles and one new test, no source change                             |
-| 4. The two followed tiles tested end to end                     | Followed: `e2e/tests/overview.spec.ts:71,102`                                        |
-| 5. The four egresses defined in the test                        | Followed: `apiOptions.egresses` at `e2e/tests/overview.spec.ts:91-100`; `EGRESSES` untouched |
-| 6. No CHANGELOG, README or AGENTS change                        | Followed; `CHANGELOG.md:28` (3.10.0, unreleased) stays true                          |
+| Decision | Status |
+| -------- | ------ |
+| 1-6      | Unchanged since `575ccc5cc` and still followed; decision 6 holds for the layout too (the tiles are new in the unreleased 3.10.0, `proposal.md`) |
+| 7. Tiles share the row tracks (subgrid) | Followed: four tracks, label at the top, value at the end of its track, skeleton in the value's track, row gap 0 with the tiles carrying the space between lines, rule scoped to `ovd-tile-row` by host context, measuring copy absolutely positioned |
+| 8. The three review suggestions applied with the layout | Followed: tasks 5.5 to 5.7 |
 
-The test strategy table matches the files and levels the coverage check reports.
+The test strategy table matches the files and levels `scenarios` reports for the three new scenarios.
 
-### Project rules (`AGENTS.md`, `openspec/config.yaml`)
+### Project rules
 
-- Edition seams: the change stays in the `dashboard-ui` library; no shell, route or seam changes.
-- Data contract and secrets: typings, API and contract untouched; no secret in code, tests or fixtures.
-- Language and comments: English; two doc comments, both on non-obvious points; no history narrated.
-- Dependencies: none added or upgraded.
-- Commits: four, prefixed `openvidu-dashboard:` and naming the change, one logical step each, no attribution lines;
-  `git diff --check` clean.
-- Artifacts: the proposal states scope, non-scope, edition, repository and the CHANGELOG decision; every requirement
-  names its edition; the tasks name their verification and scenarios and end the implementer groups with the refactor
-  review, with the publish group last.
+- Edition seams: the change stays in the `dashboard-ui` library; the public API is unchanged. An extending edition
+  takes the layout with the library, as `proposal.md` and the Risks of `design.md` state.
+- Data contract, API, typings, secrets, dependencies: untouched.
+- Comments: the two new CSS comments and the two doc comment sentences explain non-obvious points (the subgrid and
+  why the row gap is 0); no history narrated.
+- Commits: four since the reports commit, prefixed `openvidu-dashboard:` and naming the change, one logical step
+  each, no attribution lines; `git diff --check` clean.
+- Artifacts: the revision adds the requirement with its edition, the decision with its rejected alternatives, the
+  risks and a task group ending in the refactor review, with the publish group last.
 
-## Definition of Done
+## Definition of Done (items the diff affects)
 
-| Item                                                                 | Status                                                                                  |
-| -------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
-| All tasks checked                                                    | Pending: 5.1 only (orchestrator, after this verification)                               |
-| `scenarios` finds a passing test for every delta scenario            | Met                                                                                     |
-| `./dashboard.sh check` passes locally                                | Met                                                                                     |
-| CI run of the push is green                                          | Pending (task 5.1)                                                                      |
-| Backend changes: `test-integration`                                  | Not applicable                                                                          |
-| UI changes: `e2e` passes, with axe and both themes                   | Met                                                                                     |
-| Data contract changes: `contract-check`                              | Not applicable                                                                          |
-| Image or runtime dependency changes: `build-image`, `smoke-image`    | Not applicable                                                                          |
-| Latest verification reports have no CRITICAL                         | Met for this report; `code-review.md` is written alongside by the `code-reviewer` and was not read here |
-| Refactor review applied or recorded                                  | Met by the diff (the `tips()` helper); the written outcome is in the implementation report, outside the repository |
-| `CHANGELOG.md`, `README.md` and the `AGENTS.md` files reflect the change | Met: none needs a change                                                            |
-| Change archived                                                      | Pending (after the push)                                                                |
+| Item | Status |
+| ---- | ------ |
+| All tasks checked; `scenarios` finds a passing test for every delta scenario | Pending: 6.1 only (orchestrator); 13/13 scenarios met |
+| `./dashboard.sh check` passes locally; CI run of the push green | Met locally; CI pending (task 6.1) |
+| UI changes: `e2e` passes, with axe and both themes | Met |
+| Backend, data contract, image changes | Not applicable |
+| Latest verification reports have no CRITICAL; refactor review applied or recorded | Met: this report has none and carries the code review's findings; refactor reviews recorded in `operations.md` |
+| `CHANGELOG.md`, `README.md` and the `AGENTS.md` files reflect the change | Met: none needs a change (no command, path or convention changes; the tiles are new in the unreleased 3.10.0) |
+| Change archived | Pending (after the push) |
 
 ## Issues
 
@@ -149,9 +168,30 @@ None.
 
 ### SUGGESTION
 
-None.
+#### S1. The 12 px under the last line of tiles is part of the row now, and only a comment says so
+
+- Where: `dashboard-ce/frontend/projects/dashboard-ui/src/lib/components/tiles/kpi-tile.ts:114`
+  (`margin-bottom: 12px`), `dashboard-ce/frontend/projects/dashboard-ui/src/lib/components/tiles/tile-row.ts:86`
+  (`margin-bottom: 4px`, which assumes the 12), `dashboard-ce/frontend/projects/dashboard-ui/src/lib/features/overview/overview-page.scss:37`
+  (`-12px`).
+- Case: a row's bottom spacing is now 12 px of tile margin plus the row's margin. A page that wants a row flush with
+  what follows must know the tile's internal margin, as Overview Today does with a literal −12 px; a page of an
+  extending edition that set `margin-bottom: 0` on an `ovd-tile-row`, as Overview Today did before, now gets 12 px
+  more under its tiles without any failing test in CE.
+- Recommendation: state it where an extending edition reads the API, in the doc comment of `TileRow`
+  (`tile-row.ts:70-75`): "the last line of tiles carries 12 px of margin under it; a row flush with what follows
+  sets `margin-bottom: -12px`", or expose the space as a custom property the row and the page share. No behaviour
+  change in CE is needed.
+
+## Notes (not findings)
+
+- A non-KPI element projected into an `ovd-tile-row` would take one row track while the tiles span four, and the
+  auto-placement could put a tile of the next line beside it. `TileRow` is documented and specified as a row of KPI
+  tiles and CE projects nothing else; an extending edition that does would see it.
+- During `./dashboard.sh check`, its output was saved to a log in the session scratchpad, outside the checkout; no
+  file of the repository other than this report was written.
 
 ## Final assessment
 
-All checks passed. Ready for archive once task 5.1 (the push and its green CI run) is done and `code-review.md` has
-no CRITICAL.
+No critical issues or warnings. 1 suggestion to consider. Ready for archive (with noted improvements) once task 6.1
+(the push and its green CI run) is done.
