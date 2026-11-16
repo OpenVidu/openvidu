@@ -3,10 +3,10 @@ name: orchestrate-change
 description: How the main session runs an OpenSpec change of OpenVidu Dashboard through its subagents, from proposal to archive. Load it before starting or continuing a change, including when an OpenSpec propose, apply, verify or archive command is requested.
 ---
 
-One change per conversation, in one OpenSpec root. The main session orchestrates: it delegates proposing,
-implementing and verifying to the subagents of `.claude/agents/` and never does them in its own context. It keeps for
-itself the questions to the owner, everything that leaves the working tree (pushes, CI, image builds, the contract
-check against the writer, other workspaces), the records of those actions and the archive.
+A conversation runs one change or several, each in one OpenSpec root. The main session orchestrates: it delegates
+proposing, implementing and verifying to the subagents of `.claude/agents/` and never does them in its own context. It
+keeps for itself the questions to the owner, everything that leaves the working tree (pushes, CI, image builds, the
+contract check against the writer, other workspaces), the records of those actions and the archive.
 
 | Phase              | Subagent                                     | Model and effort                                       |
 | ------------------ | -------------------------------------------- | ------------------------------------------------------ |
@@ -55,7 +55,15 @@ Each subagent's model and effort come from its definition; pass another only whe
   in other repositories, the owner's decisions. Current facts only. It and the reports are committed in the change
   folder and leave the tree with it at the archive; git history keeps them.
 - A feature that also needs a change in a workspace that extends this one is two changes: this one first, pushed and
-  green, then the other in a conversation of its own. The `AGENTS.md` of that workspace adds its own steps.
+  green, then the other, with its subagents working in that workspace. The `AGENTS.md` of that workspace adds its own
+  steps.
+- Several changes: each has its own subagents and its own change folder. Their proposers may run at once. Apply,
+  verify, publish and archive go one change at a time, each change archived before the next one that touches the same
+  specs or files is applied; a proposal written before another change was archived is revised against the new specs
+  first.
+- When the session does not list the subagents (it was not started from the workspace), launch a general agent in
+  their place, told to follow the definition in `.claude/agents/<name>.md` of the workspace it works in, with the model
+  and effort of the table. Such a verifier or reviewer has no guard: tell the owner before the first verification.
 - Questions to the owner are closed, with concrete figures in the options, the recommendation first and at most four
   per round.
 - Before the first question of a change, tell the owner the stop points the proposer listed.
