@@ -5,20 +5,20 @@ a scenario when its title is the scenario name, alone or followed by `: <detail>
 
 ## 1. Frontend: live tiles of the Overview (implementer)
 
-- [ ] 1.1 In `features/overview/overview-page.html`, label the live tiles "Active rooms", "Active participants",
+- [x] 1.1 In `features/overview/overview-page.html`, label the live tiles "Active rooms", "Active participants",
       "Active publishers", "Active egress", "Active ingress" and "Active agents"; leave the Today tiles, the stale
       notice and the Data pipeline card as they are. Verify: the test of 1.3 reads the six labels.
-- [ ] 1.2 In `features/overview/overview-page.ts`, expose the query parameters of the egress tile built from
+- [x] 1.2 In `features/overview/overview-page.ts`, expose the query parameters of the egress tile built from
       `EGRESS_IN_FLIGHT_STATUSES` joined with `,` (design, decision 1) and bind them in the template. Verify: the test
       of 1.3 reads the `href` `/egress?status=starting,active,ending`.
-- [ ] 1.3 In `features/overview/overview-page.spec.ts`, retitle "shows the live tiles with their links and feeds the
+- [x] 1.3 In `features/overview/overview-page.spec.ts`, retitle "shows the live tiles with their links and feeds the
       live counters" to `Tile values and links: …`, with `publishers: 54` in its overview and assertions on the six
       labels, the values 12, 85, 54, 3, 1 and 2 and the six links. Covers: Tile values and links. Verify: the unit test
       passes.
-- [ ] 1.4 In the same file, retitle "keeps every value on a 304 and sends the validator" to `Refresh keeps values: …`
+- [x] 1.4 In the same file, retitle "keeps every value on a 304 and sends the validator" to `Refresh keeps values: …`
       and assert that the update time of the refresh service advances with the `304`. Covers: Refresh keeps values.
       Verify: the unit test passes.
-- [ ] 1.5 In the same file, split "explains the live tiles, the today tiles, the data pipeline and unique identities
+- [x] 1.5 In the same file, split "explains the live tiles, the today tiles, the data pipeline and unique identities
       with info tips only" into `Live tiles: …`, `Today tiles: …` and `Data pipeline and recent rooms: …`, each
       asserting the names of its info tips ("About Active participants", "About Active publishers", "About Active
       agents" for the live tiles) and their texts, and keeping the assertions that nothing else carries a tip. Covers:

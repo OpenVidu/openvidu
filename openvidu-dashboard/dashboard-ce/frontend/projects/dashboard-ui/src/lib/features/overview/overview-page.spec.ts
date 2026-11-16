@@ -2,6 +2,8 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { Component, input } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
+import { MatTooltip } from '@angular/material/tooltip';
+import { By } from '@angular/platform-browser';
 import { provideRouter } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 import type { OverviewResponse, StatusResponse } from '@openvidu-dashboard/typings';
@@ -12,7 +14,9 @@ import { routeElement } from '../../../testing/harness.js';
 import { InfoService } from '../../core/info.js';
 import { PreferencesService } from '../../core/preferences/preferences.js';
 import { LiveCountersService } from '../../core/refresh/live-counters.js';
+import { RefreshRegistry } from '../../core/refresh/refresh.js';
 import { ServerStatusService } from '../../core/refresh/server-status.js';
+import { INFO_TEXTS } from '../../format/info-texts.js';
 import { OVERVIEW_NODES_CARD } from './overview-data.js';
 import { OverviewPage } from './overview-page.js';
 
@@ -181,6 +185,16 @@ function section(element: HTMLElement, title: string): HTMLElement | undefined {
 	);
 }
 
+/** The accessible name and the text of every info tip under `root`, in document order. */
+function tips(harness: RouterTestingHarness, root: Element | null | undefined): [string | null, string][] {
+	return (harness.routeDebugElement?.queryAll(By.css('ovd-info-tip button')) ?? [])
+		.filter((tip) => root?.contains(tip.nativeElement as Node) === true)
+		.map((tip) => [
+			(tip.nativeElement as HTMLElement).getAttribute('aria-label'),
+			tip.injector.get(MatTooltip).message
+		]);
+}
+
 describe('OverviewPage', () => {
 	beforeEach(() => {
 		reference = Date.now();
@@ -190,20 +204,27 @@ describe('OverviewPage', () => {
 		vi.useRealTimers();
 	});
 
-	it('shows the live tiles with their links and feeds the live counters', async () => {
-		const { element, http } = await open();
+	it('Tile values and links: labels, values and links of the six live tiles, which feed the live counters', async () => {
+		const { element, http } = await open(overview({ live: { ...overview().live, publishers: 54 } }));
 		const values = [...element.querySelectorAll('.tiles ovd-kpi-tile .value')].map(text);
 		const links = [...element.querySelectorAll<HTMLAnchorElement>('.tiles a')].map((link) =>
 			link.getAttribute('href')
 		);
 
-		expect(values).toEqual(['12', '85', '52', '3', '1', '2']);
-		expect([...element.querySelectorAll('.tiles ovd-kpi-tile .label')].map(text)).not.toContain('Services');
+		expect([...element.querySelectorAll('.tiles ovd-kpi-tile .label')].map(text)).toEqual([
+			'Active rooms',
+			'Active participants',
+			'Active publishers',
+			'Active egress',
+			'Active ingress',
+			'Active agents'
+		]);
+		expect(values).toEqual(['12', '85', '54', '3', '1', '2']);
 		expect(links).toEqual([
 			'/rooms?status=active',
 			'/participants?status=active',
 			'/participants?status=active&publisher=true',
-			'/egress?status=active',
+			'/egress?status=starting,active,ending',
 			'/ingress?status=publishing',
 			'/agents?status=active'
 		]);
@@ -221,11 +242,15 @@ describe('OverviewPage', () => {
 		expect(pipeline?.querySelector('p.muted')).toBeNull();
 	});
 
-	it('keeps every value on a 304 and sends the validator', async () => {
+	it('Refresh keeps values: a 304 sent with the validator keeps every tile and advances the update time', async () => {
 		vi.useFakeTimers({ shouldAdvanceTime: true });
 
 		const { element, http, harness } = await open();
 		const before = element.querySelector('.tiles')?.innerHTML;
+		const updated = () => TestBed.inject(RefreshRegistry).active()?.lastUpdated()?.getTime();
+		const first = updated();
+
+		expect(first).toBeDefined();
 
 		await vi.advanceTimersByTimeAsync(10_500);
 
@@ -237,6 +262,8 @@ describe('OverviewPage', () => {
 		await harness.fixture.whenStable();
 		expect(element.querySelector('.tiles')?.innerHTML).toBe(before);
 		expect(element.querySelector('.highlight')).toBeNull();
+		expect(element.querySelector('.tiles ovd-skeleton')).toBeNull();
+		expect(updated()).toBeGreaterThan(first ?? Infinity);
 	});
 
 	it('turns the chip and the writer line to stale from the last server status', async () => {
@@ -329,23 +356,48 @@ describe('OverviewPage', () => {
 		expect(today?.querySelectorAll('ovd-kpi-tile .value .approximate')).toHaveLength(5);
 	});
 
-	it('explains the live tiles, the today tiles, the data pipeline and unique identities with info tips only', async () => {
-		const { element } = await open();
-		const tips = (root: Element | null | undefined): (string | null)[] =>
-			[...(root?.querySelectorAll('ovd-info-tip button') ?? [])].map((button) =>
-				button.getAttribute('aria-label')
-			);
+	it('Live tiles: Active participants, Active publishers and Active agents carry the only live info tips', async () => {
+		const { element, harness } = await open();
 
-		expect(tips(element.querySelector('.tiles'))).toEqual([
-			'About Participants',
-			'About Publishers',
-			'About Agents'
+		expect(tips(harness, element.querySelector('.tiles'))).toEqual([
+			[
+				'About Active participants',
+				'Regular participants connected now. Egress, ingress and agents are not counted.'
+			],
+			[
+				'About Active publishers',
+				'Participants connected now that publish at least one track: camera, microphone or screen.'
+			],
+			[
+				'About Active agents',
+				'Agent sessions connected now. Agents join rooms as participants of kind Agent but are not counted as participants.'
+			]
 		]);
-		expect(tips(section(element, 'Today'))).toEqual(['About Participants', 'About Minutes']);
-		expect(tips(section(element, 'Data pipeline'))).toEqual(['About Data pipeline']);
-		expect(tips(section(element, 'Recent rooms'))).toEqual(['About Unique identities']);
-		expect(tips(section(element, 'By node'))).toEqual([]);
+	});
+
+	it('Today tiles: Participants and Minutes carry the only today info tips, without hover text of their own', async () => {
+		const { element, harness } = await open();
+
+		expect(tips(harness, section(element, 'Today'))).toEqual([
+			['About Participants', 'Participant sessions that started today. Only regular participants count.'],
+			['About Minutes', 'Minutes of the participant sessions that ended today.']
+		]);
 		expect(section(element, 'Today')?.querySelector('ovd-kpi-tile[mattooltip], ovd-kpi-tile[tabindex]')).toBeNull();
+	});
+
+	it('Data pipeline and recent rooms: the card and the Unique identities header carry the only other info tips', async () => {
+		const { element, harness } = await open();
+
+		expect(tips(harness, section(element, 'Data pipeline'))).toEqual([
+			[
+				'About Data pipeline',
+				'The OpenVidu server writes analytics in batches. This card shows when the last batch arrived.'
+			]
+		]);
+		expect(tips(harness, section(element, 'Recent rooms'))).toEqual([
+			['About Unique identities', INFO_TEXTS.uniqueIdentities]
+		]);
+		expect(tips(harness, section(element, 'By node'))).toEqual([]);
 	});
 
 	it('hints the stale entities after two responses in a row and renders the recent rooms', async () => {

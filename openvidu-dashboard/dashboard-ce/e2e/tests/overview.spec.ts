@@ -14,7 +14,7 @@ test('the overview shows the live tiles with links, the hint, the status card an
 	const tiles = page.getByRole('region', { name: 'Live' });
 
 	await expect(tiles).toContainText('Active rooms 12');
-	await expect(tiles).toContainText('Agents 2');
+	await expect(tiles).toContainText('Active agents 2');
 	await expect(tiles).not.toContainText('Services');
 	await expect(page.locator('.page-header ovd-live-chip')).toHaveText('LIVE');
 	// The notice needs two responses in a row reporting stale entities.

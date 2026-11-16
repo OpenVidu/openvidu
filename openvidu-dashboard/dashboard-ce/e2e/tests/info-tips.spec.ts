@@ -14,14 +14,14 @@ test('an info tip shows on hover without opening the list its tile links to', as
 	await page.goto('/overview?tz=UTC');
 
 	const tiles = page.getByRole('region', { name: 'Live' });
-	const tip = tiles.getByRole('button', { name: 'About Participants' });
+	const tip = tiles.getByRole('button', { name: 'About Active participants' });
 
 	await tip.hover();
 	await expect(tooltip(page)).toHaveText(PARTICIPANTS_NOW);
 	await tip.click();
 	await expect(page).toHaveURL(/\/overview/);
 
-	await tiles.getByRole('link', { name: 'Participants' }).click();
+	await tiles.getByRole('link', { name: 'Active participants' }).click();
 	await expect(page).toHaveURL(/\/participants\?.*status=active/);
 });
 
@@ -35,9 +35,9 @@ test('an info tip shows on keyboard focus and hides on Escape', async ({ page })
 
 	const tiles = page.getByRole('region', { name: 'Live' });
 
-	await tiles.getByRole('link', { name: 'Participants' }).focus();
+	await tiles.getByRole('link', { name: 'Active participants' }).focus();
 	await page.keyboard.press('Tab');
-	await expect(tiles.getByRole('button', { name: 'About Participants' })).toBeFocused();
+	await expect(tiles.getByRole('button', { name: 'About Active participants' })).toBeFocused();
 	await expect(tooltip(page)).toHaveText(PARTICIPANTS_NOW);
 	await page.keyboard.press('Escape');
 	await expect(tooltip(page)).toHaveCount(0);
@@ -123,7 +123,9 @@ test.describe('touch', () => {
 	test('a tap toggles an info tip', async ({ page }) => {
 		await page.goto('/overview?tz=UTC');
 
-		const tip = page.getByRole('region', { name: 'Live' }).getByRole('button', { name: 'About Participants' });
+		const tip = page
+			.getByRole('region', { name: 'Live' })
+			.getByRole('button', { name: 'About Active participants' });
 
 		await tip.tap();
 		await expect(tooltip(page)).toHaveText(PARTICIPANTS_NOW);

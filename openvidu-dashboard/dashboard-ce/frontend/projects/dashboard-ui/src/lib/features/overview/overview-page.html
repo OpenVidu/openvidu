@@ -18,7 +18,7 @@
 		[loading]="loading()"
 	/>
 	<ovd-kpi-tile
-		label="Participants"
+		label="Active participants"
 		link="/participants"
 		[queryParams]="{ status: 'active' }"
 		[info]="info.liveParticipants"
@@ -26,7 +26,7 @@
 		[loading]="loading()"
 	/>
 	<ovd-kpi-tile
-		label="Publishers"
+		label="Active publishers"
 		link="/participants"
 		[queryParams]="{ status: 'active', publisher: 'true' }"
 		[info]="info.livePublishers"
@@ -34,21 +34,21 @@
 		[loading]="loading()"
 	/>
 	<ovd-kpi-tile
-		label="Egress"
+		label="Active egress"
 		link="/egress"
-		[queryParams]="{ status: 'active' }"
+		[queryParams]="egressQueryParams"
 		[value]="tile(live()?.egresses)"
 		[loading]="loading()"
 	/>
 	<ovd-kpi-tile
-		label="Ingress"
+		label="Active ingress"
 		link="/ingress"
 		[queryParams]="{ status: 'publishing' }"
 		[value]="tile(live()?.ingressSessions)"
 		[loading]="loading()"
 	/>
 	<ovd-kpi-tile
-		label="Agents"
+		label="Active agents"
 		link="/agents"
 		[queryParams]="{ status: 'active' }"
 		[info]="info.liveAgents"

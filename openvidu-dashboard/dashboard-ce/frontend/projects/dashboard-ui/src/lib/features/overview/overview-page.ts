@@ -3,7 +3,7 @@ import { Component, computed, effect, inject, signal, untracked } from '@angular
 import { MatIcon } from '@angular/material/icon';
 import { MatProgressBar } from '@angular/material/progress-bar';
 import { RouterLink } from '@angular/router';
-import type { OverviewRecentRoom, StatusWriter } from '@openvidu-dashboard/typings';
+import { EGRESS_IN_FLIGHT_STATUSES, type OverviewRecentRoom, type StatusWriter } from '@openvidu-dashboard/typings';
 
 import { LiveChip } from '../../components/badges/live-chip.js';
 import { StatusBadge } from '../../components/badges/status-badge.js';
@@ -70,6 +70,8 @@ export class OverviewPage {
 	protected readonly nodesCard = inject(OVERVIEW_NODES_CARD);
 	protected readonly estimate = RECONCILER_ESTIMATE;
 	protected readonly info = INFO_TEXTS;
+	/** The URL the Active option of the Egress status filter writes: the statuses `live.egresses` counts. */
+	protected readonly egressQueryParams = { status: EGRESS_IN_FLIGHT_STATUSES.join(',') };
 	private readonly perNode = inject(FeatureService).enabledSignal('per-node-breakdown');
 	/** The By node card, only with `per-node-breakdown` and a card from the edition; nothing about nodes otherwise. */
 	protected readonly nodesCardShown = computed(() => this.perNode() && this.nodesCard !== null);
