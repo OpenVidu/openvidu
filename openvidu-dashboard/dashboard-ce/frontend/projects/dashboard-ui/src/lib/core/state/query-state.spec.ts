@@ -207,10 +207,10 @@ describe('ListStateService', () => {
 	});
 
 	it('leaves routes that are not range-scoped alone', async () => {
-		await harness.navigateByUrl('/settings?tab=about');
+		await harness.navigateByUrl('/settings?tab=data');
 		await harness.fixture.whenStable();
 
-		expect(url()).toBe('/settings?tab=about');
+		expect(url()).toBe('/settings?tab=data');
 	});
 
 	it('gives a detail opened from a list without tz the session zone', async () => {

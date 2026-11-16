@@ -8,7 +8,7 @@ import { RouterTestingHarness } from '@angular/router/testing';
 import type { InfoResponse, InfoRetention, InfoStorageEntry, StatusResponse } from '@openvidu-dashboard/typings';
 import { describe, expect, it, vi } from 'vitest';
 
-import { infoResponse, signIn, statusResponse } from '../../../testing/fixtures.js';
+import { infoResponse, settle, signIn, statusResponse } from '../../../testing/fixtures.js';
 import { InfoTip } from '../../components/info-tip/info-tip.js';
 import { AuthService } from '../../core/auth/auth.js';
 import { InfoService } from '../../core/info.js';
@@ -151,6 +151,32 @@ describe('SettingsPage', () => {
 	function data(element: HTMLElement): HTMLElement | null {
 		return element.querySelector('ovd-data-tab');
 	}
+
+	it('Migration ends', async () => {
+		const running = { state: 'running', progress: { processed: 5, total: 10 } } as const;
+		const { harness, http, element } = await settings('/settings?tab=data', infoResponse({ migration: running }));
+
+		http.expectOne('api/v1/status').flush(statusResponse({ migration: running }));
+		await harness.fixture.whenStable();
+		http.expectNone('api/v1/info');
+		expect(cells(classRow(element, 'Entities'))).toEqual(['Entities', '—', '0', '0 B']);
+
+		await loadStatus(http, statusResponse());
+		await harness.fixture.whenStable();
+
+		const reread = http.match('api/v1/info');
+
+		expect(reread).toHaveLength(1);
+		reread[0]?.flush(
+			infoResponse({
+				retention: DEFAULT_RETENTION,
+				storage: { rooms: { documents: 4, storageBytes: 36_864, indexBytes: 344_136 } }
+			})
+		);
+		await settle();
+		await harness.fixture.whenStable();
+		expect(cells(classRow(element, 'Entities'))).toEqual(['Entities', '90 days', '4', '381 kB']);
+	});
 
 	it('Deep link to Data', async () => {
 		const { harness, element } = await settings('/settings?tab=data', infoResponse());

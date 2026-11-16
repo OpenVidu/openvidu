@@ -234,12 +234,19 @@ describe('OverviewPage', () => {
 		http.verify();
 	});
 
-	it('shows a skeleton in the data pipeline card before the first status', async () => {
+	it('Before the first status', async () => {
 		const { element } = await open(overview(), [], null);
 		const pipeline = section(element, 'Data pipeline');
 
 		expect(pipeline?.querySelector('ovd-skeleton')).not.toBeNull();
 		expect(pipeline?.querySelector('p.muted')).toBeNull();
+
+		const visible = pipeline?.cloneNode(true) as HTMLElement | undefined;
+
+		visible?.querySelectorAll('.ovd-visually-hidden').forEach((hidden) => {
+			hidden.remove();
+		});
+		expect(text(visible)).not.toContain('Loading');
 	});
 
 	it('Refresh keeps values: a 304 sent with the validator keeps every tile and advances the update time', async () => {
@@ -266,10 +273,10 @@ describe('OverviewPage', () => {
 		expect(updated()).toBeGreaterThan(first ?? Infinity);
 	});
 
-	it('turns the chip and the writer line to stale from the last server status', async () => {
+	it('Server silent without a stop: the chip and the writer line turn stale', async () => {
 		const { element } = await open(overview(), [], {
-			...status({}, 3 * MINUTE),
-			writer: { lastSeenAt: ago(3 * MINUTE) }
+			...status({}, 10 * MINUTE),
+			writer: { lastSeenAt: ago(10 * MINUTE) }
 		});
 		const chip = element.querySelector('.page-header ovd-live-chip');
 
@@ -282,14 +289,16 @@ describe('OverviewPage', () => {
 		expect(lines[0]?.querySelector('mat-icon.warn')).not.toBeNull();
 	});
 
-	it('reads a stopped server with the neutral icon, not as a warning', async () => {
+	it('Server stopped', async () => {
+		reference = Date.parse(`${new Date().toISOString().slice(0, 10)}T12:10:04.000Z`);
+
 		const { element } = await open(overview(), [], {
 			...status({}, 10 * MINUTE),
 			writer: { lastSeenAt: ago(10 * MINUTE), stoppedAt: ago(10 * MINUTE) }
 		});
 		const line = section(element, 'Data pipeline')?.querySelector('li.line');
 
-		expect(text(line)).toMatch(/^Server stopped at \d\d:\d\d:\d\d/);
+		expect(text(line)).toMatch(/^Server stopped at 12:00:04/);
 		expect(line?.querySelector('mat-icon.neutral')).not.toBeNull();
 		expect(line?.querySelector('mat-icon.warn')).toBeNull();
 	});
@@ -310,7 +319,7 @@ describe('OverviewPage', () => {
 		expect(active?.querySelector('ovd-status-badge mat-icon.stale')).toBeNull();
 	});
 
-	it('reads paused while the auto-refresh is off and still follows the server status', async () => {
+	it('Auto-refresh off: reads paused and still follows the server status', async () => {
 		const { element, http, harness } = await open();
 
 		TestBed.inject(PreferencesService).setRefreshInterval('live', 0);
@@ -319,10 +328,14 @@ describe('OverviewPage', () => {
 
 		const before = text(section(element, 'Data pipeline')?.querySelector('li.line'));
 
+		const tiles = [...element.querySelectorAll('.tiles ovd-kpi-tile .value')].map(text);
+
 		reference += 60 * SECOND;
 		await loadStatus(http, status());
 		await harness.fixture.whenStable();
 		expect(text(section(element, 'Data pipeline')?.querySelector('li.line'))).not.toBe(before);
+		expect([...element.querySelectorAll('.tiles ovd-kpi-tile .value')].map(text)).toEqual(tiles);
+		expect(http.match((request) => request.url === 'api/v1/overview')).toHaveLength(0);
 	});
 
 	it('renders the edition card under By node with per-node-breakdown, explained by its info tip', async () => {
@@ -462,12 +475,15 @@ describe('OverviewPage', () => {
 		expect(element.querySelector('ovd-notice')).toBeNull();
 	});
 
-	it('reads the data pipeline without versions or retention', async () => {
+	it('Healthy card: no versions, retention or migration', async () => {
+		reference = Date.parse(`${new Date().toISOString().slice(0, 10)}T12:31:09.000Z`);
+
 		const { element } = await open();
 		const pipeline = section(element, 'Data pipeline');
 		const status = text(pipeline);
 
-		expect(status).toMatch(/Last batch at \d\d:\d\d:\d\d/);
+		expect(status).toContain('Data pipeline');
+		expect(status).toContain('Last batch at 12:31:05');
 		expect(status).not.toContain('node');
 		expect(pipeline?.querySelectorAll('mat-icon.ok')).toHaveLength(1);
 		expect(pipeline?.querySelector('mat-progress-bar')).toBeNull();
@@ -475,19 +491,47 @@ describe('OverviewPage', () => {
 		expect(status).not.toContain('openvidu-livekit');
 		expect(status).not.toContain('retention:');
 		expect(status).not.toContain('migration');
-		expect(pipeline?.querySelector('a')?.getAttribute('href')).toBe('/settings?tab=about');
 	});
 
-	it('shows the migration progress only while it runs', async () => {
-		const { element } = await open(
+	it('Storage and retention link', async () => {
+		const { element } = await open();
+		const link = [...(section(element, 'Data pipeline')?.querySelectorAll('a') ?? [])].find(
+			(anchor) => text(anchor) === 'Storage and retention'
+		);
+
+		expect(link?.getAttribute('href')).toBe('/settings?tab=data');
+	});
+
+	it('Slow writer batches', async () => {
+		const { element } = await open(overview(), [], {
+			...status({}, 80 * SECOND),
+			writer: { lastSeenAt: ago(80 * SECOND), batchIntervalMs: 60_000 }
+		});
+		const line = section(element, 'Data pipeline')?.querySelector('li.line');
+
+		expect(text(line)).toMatch(/^Last batch at \d\d:\d\d:\d\d/);
+		expect(line?.querySelector('mat-icon.ok')).not.toBeNull();
+		expect(line?.querySelector('mat-icon.warn')).toBeNull();
+	});
+
+	it('Migration running: the progress shows while it runs and follows each status', async () => {
+		const { element, http, harness } = await open(
 			overview(),
 			[],
 			status({ migration: { state: 'running', progress: { processed: 400_000, total: 1_200_000 } } })
 		);
-		const pipeline = section(element, 'Data pipeline');
+		const pipeline = () => section(element, 'Data pipeline');
 
-		expect(text(pipeline)).toContain('400,000 / 1,200,000 (33 %)');
-		expect(pipeline?.querySelector('mat-progress-bar')).not.toBeNull();
+		expect(text(pipeline())).toContain('400,000 / 1,200,000 (33 %)');
+		expect(pipeline()?.querySelector('mat-progress-bar')).not.toBeNull();
+
+		await loadStatus(
+			http,
+			status({ migration: { state: 'running', progress: { processed: 600_000, total: 1_200_000 } } })
+		);
+		http.match('api/v1/info');
+		await harness.fixture.whenStable();
+		expect(text(pipeline())).toContain('600,000 / 1,200,000 (50 %)');
 	});
 
 	it('waits for the first events on a fresh deployment without an error', async () => {

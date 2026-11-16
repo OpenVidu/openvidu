@@ -68,21 +68,21 @@ Paths are relative to `dashboard-ce/`; `ui/` is `frontend/projects/dashboard-ui/
 
 ## 4. Frontend: Overview link and info re-read (implementer)
 
-- [ ] 4.1 In `features/overview/overview-page.html`, point the "Storage and retention" link to `tab: 'data'`. Verify:
+- [x] 4.1 In `features/overview/overview-page.html`, point the "Storage and retention" link to `tab: 'data'`. Verify:
       the test `Storage and retention link` of 4.2 reads the `href` `/settings?tab=data`.
-- [ ] 4.2 In `features/overview/overview-page.spec.ts`, retitle or split the untitled tests of the Data pipeline card
+- [x] 4.2 In `features/overview/overview-page.spec.ts`, retitle or split the untitled tests of the Data pipeline card
       ("reads the data pipeline without versions or retention", "reads a stopped server…", "turns the chip and the
       writer line to stale…", "shows the migration progress only while it runs", "reads paused while the auto-refresh
       is off…", "shows a skeleton in the data pipeline card…") into `Healthy card`, `Server stopped`, `Server silent
       without a stop`, `Migration running`, `Auto-refresh off` and `Before the first status`, add `Slow writer
       batches`, which has no test yet, and `Storage and retention link`; leave the tests already titled after a
       scenario as they are. Covers: those eight scenarios. Verify: the unit tests pass.
-- [ ] 4.3 Split "re-reads the info document once when the migration ends, never while the server is steady" of
+- [x] 4.3 Split "re-reads the info document once when the migration ends, never while the server is steady" of
       `ui/core/refresh/server-status.spec.ts` into `Steady server` and a re-read test, and add `Migration ends` to
       `features/settings/settings-page.spec.ts`: with the Data tab open on a running migration, a status reporting it
       completed triggers one info request and the table shows the retention and the storage of the new document.
       Covers: Migration ends, Steady server. Verify: the unit tests pass.
-- [ ] 4.4 Follow the rename in the unit tests that use `/settings?tab=about` as a sample URL
+- [x] 4.4 Follow the rename in the unit tests that use `/settings?tab=about` as a sample URL
       (`ui/core/state/query-state.spec.ts`); `ui/core/auth/auth.spec.ts` keeps it as an arbitrary protected URL, like
       the `ui-shell` scenario of design decision 13. Verify: `pnpm exec ng test dashboard-ui --watch=false` passes.
 

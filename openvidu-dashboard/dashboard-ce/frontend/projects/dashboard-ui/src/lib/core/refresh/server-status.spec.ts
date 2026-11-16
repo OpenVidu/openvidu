@@ -165,7 +165,7 @@ describe('injectServerStatusPoll', () => {
 		controller.expectNone('api/v1/status');
 	});
 
-	it('re-reads the info document once when the migration ends, never while the server is steady', async () => {
+	it('re-reads the info document once when the migration ends', async () => {
 		await start(infoResponse({ migration: { state: 'running', progress: { processed: 1, total: 4 } } }));
 		await poll(statusResponse({ migration: { state: 'running', progress: { processed: 2, total: 4 } } }));
 		controller.expectNone('api/v1/info');
@@ -178,6 +178,15 @@ describe('injectServerStatusPoll', () => {
 		reread.flush(infoResponse({ versions: { dashboard: '3.10.0', server: '3.10.1' } }));
 		await vi.advanceTimersByTimeAsync(0);
 		expect(TestBed.inject(InfoService).info()?.versions.server).toBe('3.10.1');
+
+		await vi.advanceTimersByTimeAsync(30_000);
+		await poll(statusResponse());
+		controller.expectNone('api/v1/info');
+	});
+
+	it('Steady server', async () => {
+		await start(infoResponse());
+		await poll(statusResponse());
 
 		for (let tick = 0; tick < 20; tick++) {
 			await vi.advanceTimersByTimeAsync(30_000);
