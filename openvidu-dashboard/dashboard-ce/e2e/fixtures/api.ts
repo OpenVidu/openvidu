@@ -50,7 +50,10 @@ export interface ApiOptions {
 	roomSummary: RoomSummary;
 	/** Fields merged into every `GET rooms` page, e.g. `nextCursor`. */
 	roomsPage?: Partial<ListResponse<RoomListItem>>;
-	/** Sessions of `GET participants` (filtered by `q`, `kind`, `status`, `room`) and, of kind AGENT, `GET agents`. */
+	/**
+	 * Sessions of `GET participants` (filtered by `q`, `kind`, `status`, `room`) and, of kind AGENT, `GET agents` (also
+	 * by `origin`).
+	 */
 	participants: ParticipantListItem[];
 	/** Egresses of `GET egresses`, filtered by `q` (an id or a room name prefix), `status`, `type` and `room`. */
 	egresses?: EgressListItem[];
@@ -487,6 +490,7 @@ export class MockApi {
 			path === 'agents' ? ['AGENT'] : (params.get('kind') ?? '').split(',').filter((kind) => kind !== '');
 		const status = params.get('status');
 		const room = params.get('room');
+		const origin = path === 'agents' ? params.get('origin') : null;
 		const items = this.options.participants.filter((item) => {
 			if (q.startsWith('pa_')) {
 				return item.sid.toLowerCase() === q;
@@ -496,7 +500,8 @@ export class MockApi {
 				(q === '' || item.identity.toLowerCase().startsWith(q)) &&
 				(kinds.length === 0 || kinds.includes(item.kind)) &&
 				(status === null || item.status === status) &&
-				(room === null || item.roomSid === room)
+				(room === null || item.roomSid === room) &&
+				(origin === null || origin === ((item.agent?.openvidu ?? '') === '' ? 'third-party' : 'openvidu'))
 			);
 		});
 

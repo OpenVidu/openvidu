@@ -35,10 +35,56 @@ test('CE lists agent sessions with the counter tiles and the notice', async ({ p
 	await expectNoViolations(page);
 });
 
-test('an agent links to its locked participant detail in CE', async ({ page }) => {
+test('Detail links in CE: the SID and room links of an agent open their locked details', async ({ page }) => {
 	await page.goto('/agents?from=now-24h&to=now&tz=UTC');
 	await page.getByRole('table', { name: 'Agents' }).getByRole('link', { name: 'PA_agent1' }).click();
 
 	await expect(page).toHaveURL(/\/participants\/PA_agent1/);
 	await expect(page.getByText('Participant detail is available in OpenVidu PRO')).toBeVisible();
+
+	await page.goto('/agents?from=now-24h&to=now&tz=UTC');
+	await page
+		.getByRole('table', { name: 'Agents' })
+		.getByRole('row', { name: /agent-1/ })
+		.getByRole('link', { name: 'demo-room' })
+		.click();
+
+	await expect(page).toHaveURL(/\/rooms\/RM_ab12cd/);
+	await expect(page.getByText('Room detail is available in OpenVidu PRO')).toBeVisible();
+});
+
+test('OpenVidu agent with a name: the name, then the OpenVidu tag as high as the status badge', async ({ page }) => {
+	await page.goto('/agents?from=now-24h&to=now&tz=UTC');
+
+	const table = page.getByRole('table', { name: 'Agents' });
+	const openvidu = table.getByRole('row', { name: /agent-1/ });
+	const tag = openvidu.locator('.origin');
+	const status = openvidu.locator('ovd-status-badge .ovd-tag');
+
+	await expect(openvidu.getByRole('cell').nth(1)).toHaveText(/^\s*speech-processing\s+OpenVidu\s*$/);
+	await expect(tag).toHaveText('OpenVidu');
+
+	const [tagBox, statusBox] = await Promise.all([tag.boundingBox(), status.boundingBox()]);
+
+	expect(tagBox?.height).toBe(24);
+	expect(tagBox?.height).toBe(statusBox?.height);
+
+	const thirdParty = table.getByRole('row', { name: /agent-2/ });
+
+	await expect(thirdParty.getByRole('cell').nth(1)).toHaveText('dummy-agent');
+	await expect(thirdParty.locator('.origin')).toHaveCount(0);
+});
+
+test('OpenVidu origin selected: the URL gets origin=openvidu and the OpenVidu agent stays', async ({ page }) => {
+	await page.goto('/agents?from=now-24h&to=now&tz=UTC');
+
+	const table = page.getByRole('table', { name: 'Agents' });
+
+	await expect(table.getByRole('row')).toHaveCount(3);
+	await page.getByRole('combobox', { name: 'Origin' }).click();
+	await page.getByRole('option', { name: 'OpenVidu' }).click();
+
+	await expect(page).toHaveURL(/origin=openvidu/);
+	await expect(table.getByRole('row')).toHaveCount(2);
+	await expect(table.getByRole('row', { name: /agent-1/ })).toBeVisible();
 });

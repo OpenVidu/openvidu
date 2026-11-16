@@ -1,5 +1,6 @@
 import { expect, type Page, test } from '../fixtures/api.js';
 import { expectNoViolations } from '../fixtures/axe.js';
+import { PARTICIPANTS } from '../fixtures/participants.js';
 import { ROOM_SUMMARY, ROOMS } from '../fixtures/rooms.js';
 
 test.use({ apiOptions: { rooms: ROOMS, roomSummary: ROOM_SUMMARY } });
@@ -55,6 +56,23 @@ test('a column info tip never sorts the table', async ({ page }) => {
 	await expect(page).not.toHaveURL(/sort=/);
 	await page.mouse.move(0, 0);
 	await expectNoViolations(page);
+});
+
+test.describe('agents', () => {
+	test.use({ apiOptions: { participants: PARTICIPANTS } });
+
+	test('Agent column info tip', async ({ page }) => {
+		await page.goto('/agents?from=now-24h&to=now&tz=UTC');
+
+		const header = page.getByRole('columnheader', { name: /Agent/ });
+
+		await header.getByRole('button', { name: 'About Agent' }).click();
+		await expect(tooltip(page)).toHaveText(
+			'Name the agent registered with; an OpenVidu agent without one shows its type. The OpenVidu tag marks agents that declare themselves, as OpenVidu agents do from 3.10; every other agent counts as third-party.'
+		);
+		await expect(page).not.toHaveURL(/sort=/);
+		await expect(page.locator('mat-form-field').filter({ hasText: 'Origin' }).getByRole('button')).toHaveCount(0);
+	});
 });
 
 test('Analytics explains its terms and has no PRO divider', async ({ page }) => {

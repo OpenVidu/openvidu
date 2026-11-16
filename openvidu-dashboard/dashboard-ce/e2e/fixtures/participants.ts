@@ -46,13 +46,15 @@ export const PARTICIPANTS: ParticipantListItem[] = [
 		status: 'active',
 		leftAt: undefined,
 		durationMs: undefined,
-		client: { sdk: 'GO', version: '1.2' }
+		client: { sdk: 'GO', version: '1.2' },
+		agent: { name: 'speech-processing', openvidu: 'speech-processing' }
 	}),
 	participantItem({
 		sid: 'PA_agent2',
 		identity: 'agent-2',
 		kind: 'AGENT',
 		roomSid: 'RM_other',
-		roomName: 'other-room'
+		roomName: 'other-room',
+		agent: { name: 'dummy-agent' }
 	})
 ];

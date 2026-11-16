@@ -1,5 +1,6 @@
 import { expect, test } from '../fixtures/api.js';
 import { expectNoViolations } from '../fixtures/axe.js';
+import { PARTICIPANTS } from '../fixtures/participants.js';
 
 for (const scheme of ['light', 'dark'] as const) {
 	test.describe(`axe in the ${scheme} theme`, () => {
@@ -25,6 +26,16 @@ for (const scheme of ['light', 'dark'] as const) {
 			await page.goto('/overview');
 			await expect(page.getByRole('region', { name: 'Live' })).toContainText('Active rooms 12');
 			await expectNoViolations(page);
+		});
+
+		test.describe('agents', () => {
+			test.use({ apiOptions: { participants: PARTICIPANTS } });
+
+			test('OpenVidu agent with a name: the Agents page passes axe', async ({ page }) => {
+				await page.goto('/agents?from=now-24h&to=now&tz=UTC');
+				await expect(page.getByRole('table', { name: 'Agents' }).locator('.origin')).toHaveText('OpenVidu');
+				await expectNoViolations(page);
+			});
 		});
 
 		test.describe('signed out', () => {

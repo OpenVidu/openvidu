@@ -132,18 +132,18 @@ Tests only, committed in the writer checkout and not pushed until group 9. It co
 
 ## 6. End-to-end tests (implementer)
 
-- [ ] 6.1 In `e2e/fixtures/participants.ts`, give `PA_agent1` `agent: { name: 'speech-processing', openvidu:
+- [x] 6.1 In `e2e/fixtures/participants.ts`, give `PA_agent1` `agent: { name: 'speech-processing', openvidu:
       'speech-processing' }` and `PA_agent2` `agent: { name: 'dummy-agent' }`; in `e2e/fixtures/api.ts`, filter the
       `agents` list by `origin`. Verify: the existing e2e suites still pass.
-- [ ] 6.2 In `e2e/tests/agents.spec.ts`, retitle the locked detail test as `Detail links in CE` (SID and room links)
+- [x] 6.2 In `e2e/tests/agents.spec.ts`, retitle the locked detail test as `Detail links in CE` (SID and room links)
       and add `OpenVidu agent with a name: …` (the cell text, the tag 24 px high like the status badge of its row, no
       tag on the third-party row) and `OpenVidu origin selected: …` (the URL gets `origin=openvidu` and one row stays).
       Covers: Detail links in CE, OpenVidu agent with a name, OpenVidu origin selected. Verify: `./dashboard.sh e2e`
       passes.
-- [ ] 6.3 In `e2e/tests/info-tips.spec.ts`, add `Agent column info tip`: the tip of the Agent header reads the text,
+- [x] 6.3 In `e2e/tests/info-tips.spec.ts`, add `Agent column info tip`: the tip of the Agent header reads the text,
       the URL gets no `sort`, and the Origin select has no info button. Covers: Agent column info tip. Verify: the
       e2e suite passes.
-- [ ] 6.4 In `e2e/tests/accessibility.spec.ts`, inside the light and dark loop, add
+- [x] 6.4 In `e2e/tests/accessibility.spec.ts`, inside the light and dark loop, add
       `OpenVidu agent with a name: the Agents page passes axe`. Covers: OpenVidu agent with a name. Verify: the e2e
       suite passes in both themes.
 
