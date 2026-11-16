@@ -19,7 +19,8 @@ const UNDATED_HINT = "Not shown: no index starts with this collection's time fie
 	selector: 'ovd-collection-breakdown',
 	imports: [MatTooltip],
 	template: `
-		<table [attr.aria-label]="caption()">
+		<table>
+			<caption class="ovd-visually-hidden" [textContent]="caption()"></caption>
 			<thead>
 				<tr>
 					<th scope="col">Collection</th>

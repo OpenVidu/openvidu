@@ -156,7 +156,7 @@ Paths are relative to `dashboard-ce/`; `ui/` is `frontend/projects/dashboard-ui/
       new tab, no text under the table about the info icons or the estimates) and delete the `What the estimates
       assume` test; in `e2e/tests/settings.spec.ts`, follow the new text. Covers: Where the retention is set. Verify:
       the unit tests pass.
-- [ ] 9.5 In `features/settings/collection-breakdown.ts`, name the table with a visually hidden `<caption>`
+- [x] 9.5 In `features/settings/collection-breakdown.ts`, name the table with a visually hidden `<caption>`
       "Collections of <class>", like the Storage table, instead of `aria-label` (verification SUGGESTION 2); if
       Prettier breaks an interpolated caption into a name with stray whitespace, use a form whose accessible name is
       exact. In `features/settings/settings-page.spec.ts`, make `Expand a class` assert the table name. Covers: Expand

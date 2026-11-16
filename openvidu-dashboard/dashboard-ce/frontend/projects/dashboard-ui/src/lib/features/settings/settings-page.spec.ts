@@ -520,6 +520,9 @@ describe('SettingsPage', () => {
 		const rows = [...(breakdown?.querySelectorAll('ovd-collection-breakdown tbody tr') ?? [])];
 
 		expect(classRow(element, 'Entities')?.nextElementSibling).toBe(breakdown);
+		expect(breakdown?.querySelector('ovd-collection-breakdown table > caption')?.textContent).toBe(
+			'Collections of Entities'
+		);
 		expect(rows.map((row) => text(row.querySelector('th')))).toEqual([
 			'rooms',
 			'participants',
