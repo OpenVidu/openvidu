@@ -12,8 +12,8 @@ server-side specs kept here still say that attributes are stored only with `stor
 ## What Changes
 
 Edition: CE (the PRO dashboard takes it by moving `ce.ref` in a change of its own). Repositories: dashboard
-(`openvidu/openvidu-dashboard`), and openvidu-livekit for tests and the vendored contract only; openvidu-deployment is
-not touched.
+(`openvidu/openvidu-dashboard`), and openvidu-livekit for tests, the vendored contract and one changelog line only;
+openvidu-deployment is not touched.
 
 Observable behaviour:
 
@@ -85,7 +85,8 @@ None.
 - `dashboard-ce/e2e`: participant fixtures, the mocked API and the agents and info tips suites.
 - `dashboard-ce/tools/data-generator`: agent attributes.
 - openvidu-livekit (`openvidu/main`), by the orchestrator: one tests-only commit that titles the writer's privacy
-  tests after the scenarios of the two corrected requirements, and the vendored contract with the agent of the
-  contract scenario carrying the two attributes. Both are pushed before the dashboard, whose CI `contract` job diffs
-  the vendored contract of `openvidu/main`.
+  tests after the scenarios of the two corrected requirements, and a second commit with the vendored contract, the
+  agent of the contract scenario carrying the two attributes and one line in `CHANGELOG-openvidu.md` about the
+  attributes agents keep without `store_metadata`. Both are pushed before the dashboard, whose CI `contract` job
+  diffs the vendored contract of `openvidu/main`.
 - No new dependency.

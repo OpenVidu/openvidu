@@ -70,8 +70,8 @@ answer `400` `VALIDATION_ERROR`. The participants list has no `origin` parameter
 
 #### Scenario: Origin explain plans
 - **GIVEN** a database generated at scenario M, whose agents are of both origins
-- **WHEN** the agents list is explained with `origin=openvidu` and with `origin=third-party`, alone and with `status`, `q`, `room` and the ranked sorts over 24 hours
-- **THEN** each plan scans the range index of its other filters (`kind_status_joinedAt_id`, `identityLower_joinedAt`, `roomSid_identityLower_joinedAt` or `roomSid_joinedAt_id`) with no `COLLSCAN` and no in-memory sort, the ranked sorts aside, `totalDocsExamined` is at most the sessions those filters select in the range, and the p95 of a page is within 300 ms
+- **WHEN** the agents list is explained without `origin`, with `origin=openvidu` and with `origin=third-party`, alone and with `status`, `q`, `q` and `room`, `room`, and the ranked sorts over 24 hours
+- **THEN** in each combination the plans with `origin` use the same index as the plan without it, one of `kind_status_joinedAt_id`, `identityLower_joinedAt`, `roomSid_identityLower_joinedAt` and `roomSid_joinedAt_id`, with no `COLLSCAN`, and examine the same documents as it when the page does not cut the scan short, so a page with `origin` never examines more than that scan holds; no plan sorts in memory but the ranked sorts and the identity searches (`q`, `q` and `room`); and the p95 of a page with `origin` is within 300 ms
 
 ## MODIFIED Requirements
 

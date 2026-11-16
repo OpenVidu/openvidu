@@ -96,12 +96,16 @@ Tests only, committed in the writer checkout and not pushed until group 9. It co
       `Sessions of a room by duration` and the agents export test as `Agents: every row is an active agent` (it
       requests `status=active`), and add `OpenVidu agents export`. Covers: Sessions of a room by duration, Agents,
       OpenVidu agents export. Verify: the integration tests pass.
-- [ ] 4.7 In `backend/test/integration/participants-query-plan.test.ts`, add `Origin explain plans`: both origins
-      alone and with `status`, `q`, `q` and `room`, `room`, and the ranked sorts over 24 hours, each on the index of
-      design "API" with no `COLLSCAN`, no `SORT` outside the ranked sorts and `maxDocsExamined` equal to the agent
-      sessions the other filters select; add "Agents list, origin openvidu" and "Agents list, origin third-party" to
-      the p95 report with a 300 ms budget, enforced like the ranked rows. Covers: Origin explain plans. Verify: the
-      `integration-plans` project passes and the report shows both rows.
+- [ ] 4.7 In `backend/test/integration/participants-query-plan.test.ts`, add `Origin explain plans` (decision 14):
+      explain the agents list without `origin` and with each origin, alone and with `status`, `q`, `q` and `room`,
+      `room`, and the ranked sorts over 24 hours. In each combination the three plans use the same index, one of
+      `kind_status_joinedAt_id`, `identityLower_joinedAt`, `roomSid_identityLower_joinedAt` and `roomSid_joinedAt_id`,
+      with no `COLLSCAN`; with the page limit above the sessions in range they examine the same documents, and a
+      100-row page with `origin` examines at most that figure; no plan has a `SORT` stage except the ranked sorts and
+      the identity searches (`q`, `q` and `room`). Pin no index per combination. Add "Agents list, origin openvidu" and
+      "Agents list, origin third-party" to the p95 report with a 300 ms budget, enforced like the ranked rows. Covers:
+      Origin explain plans. Verify: the `integration-plans` project passes at scenario S and the report shows both
+      rows; if the three plans of a combination differ in index, stop and ask.
 - [x] 4.8 In `backend/AGENTS.md`, "Rules", add that attribute keys contain dots and are filtered with `$getField`
       inside `$expr`, never with a dotted path; add the Data line of the proposal to `CHANGELOG.md` (3.10.0, Added) in
       the commit of the API change. Verify: `./dashboard.sh check` passes.
@@ -163,7 +167,7 @@ After the full verification and its fixes, before any push.
       three agents, they are dispatched again with `lk dispatch create`, by the owner or with the owner's OK. Verify:
       the owner's verdict and any change asked are recorded in `operations.md`.
 
-## 9. Writer (openvidu-livekit): vendored contract and push (orchestrator)
+## 9. Writer (openvidu-livekit): vendored contract, changelog line and push (orchestrator)
 
 After group 8. The dashboard push follows this group: its CI `contract` job diffs the vendored contract of
 `openvidu/main`.
@@ -172,9 +176,14 @@ After group 8. The dashboard push follows this group: its CI `contract` job diff
       `openvidu/analytics/contract_integration_test.go`, give the agent of `scenarioEvents()` the attributes
       `lk.agent_name: speech-processing` and `openvidu.agent: speech-processing` (decision 10). Verify:
       `go test -tags integration -count=1 -run '^TestContractFixtures$' ./openvidu/analytics/` passes.
-- [ ] 9.2 Commit the vendored contract and the scenario in openvidu-livekit and run
-      `./dashboard.sh contract-check /home/pablo/Desktop/FIX-2/openvidu-livekit`. Verify: it ends with
-      "contract check passed"; the result is recorded in `operations.md`.
+- [ ] 9.2 In `CHANGELOG-openvidu.md` of openvidu-livekit, under `[Unreleased]`, add one line: whatever
+      `store_metadata` says, participants of kind `AGENT` keep the attributes `lk.agent_name`, `openvidu.agent` and
+      `openvidu.agent.*`. Commit it with the vendored contract and the scenario of 9.1, without pushing, and run
+      `./dashboard.sh contract-check /home/pablo/Desktop/FIX-2/openvidu-livekit`. Verify:
+      `git -C /home/pablo/Desktop/FIX-2/openvidu-livekit show --stat HEAD` lists only `CHANGELOG-openvidu.md`,
+      `openvidu/analytics/contract_integration_test.go` and files under `openvidu/analytics/schema/contract/`, the
+      changelog diff is that one line, and the contract check ends with "contract check passed"; the commit and the
+      result are recorded in `operations.md`.
 - [ ] 9.3 With the owner's OK, push openvidu-livekit `openvidu/main` (the commits of 1.6 and 9.2). Verify: its `Test`
       workflow run is green and recorded in `operations.md`.
 

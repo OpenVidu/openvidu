@@ -95,29 +95,37 @@ ignores it, as it ignores any unknown parameter today.
 
 CSV: `agent.name` and `agent.openvidu` after `client.browserVersion` in the one column list both exports share.
 
-Index backing each query of the agents list with `origin` (the same as without it; `origin` is residual):
+Index backing each query of the agents list, with `origin` and without it: `origin` is residual and changes neither
+the index nor the scan. The table states what the planner does today, measured with `explain()` on generated data;
+this change alters no production query.
 
-| Other filters             | Index                            | Sort                                   |
-| ------------------------- | -------------------------------- | -------------------------------------- |
-| none, `status`            | `kind_status_joinedAt_id` (hint) | index order, merged over the statuses  |
-| `q`                       | `identityLower_joinedAt`         | as today                               |
-| `q` and `room`            | `roomSid_identityLower_joinedAt` | as today                               |
-| `room`                    | `roomSid_joinedAt_id`            | index order                            |
-| `sort=leftAt`, `duration` | the index of the filters above   | ranked in memory over the range scan   |
-| exact `PA_` SID           | `_id`                            | point lookup, `origin` ignored         |
+| Other filters             | Index                                                                                          | Sort                                  |
+| ------------------------- | ---------------------------------------------------------------------------------------------- | ------------------------------------- |
+| none, `status`            | `kind_status_joinedAt_id` (hint)                                                               | index order, merged over the statuses |
+| `q`                       | no hint, chosen by the planner: `kind_status_joinedAt_id` on generated data, or `identityLower_joinedAt` | in memory                   |
+| `q` and `room`            | no hint, chosen by the planner: `roomSid_identityLower_joinedAt` or `roomSid_joinedAt_id`      | in memory                             |
+| `room`                    | `roomSid_joinedAt_id`                                                                          | index order                           |
+| `sort=leftAt`, `duration` | the index of the filters above                                                                 | ranked in memory over the range scan  |
+| exact `PA_` SID           | `_id`                                                                                          | point lookup, `origin` ignored        |
+
+An identity search sorts in memory with either index (measured on scenario S over 2 days, task 4.7): a prefix is a
+range on `identityLower`, so the identity indexes never return its matches in `joinedAt` order, and the agents list
+has never hinted an index for it.
 
 ## Performance budget
 
-- The origin filter adds no index scan: a page examines at most the agent sessions the other filters select in the
-  range, and stops at the page size when matches are dense. `total` counts over the same scan and is computed only
+- The origin filter adds no index scan: a page examines at most the documents of the scan that the same query reads
+  without `origin`, and stops at the page size when matches are dense. `total` counts over the same scan and is computed only
   within `DASHBOARD_LIST_TOTAL_MAX_RANGE` (7 days), as today.
 - Budget: p95 of a 100-row page of the agents list with `origin=openvidu` and with `origin=third-party` within 300 ms,
   the budget of the ranked sorts, since a sparse origin scans the agent sessions of the range. The unfiltered agents
   list keeps its 50 ms.
 - Verification: `backend/test/integration/participants-query-plan.test.ts` explains each combination of the table
-  above with `expectIndexBacked` / `expectIndexes` (no `COLLSCAN`, no `SORT` stage outside the ranked sorts,
-  `maxDocsExamined` equal to the agent sessions the other filters select) and adds the two rows to its p95 report.
-  It runs at scenario S by default and at scenario M over 7 days for the design figures (backend `AGENTS.md`).
+  above three times, without `origin` and with each origin, and compares them (decision 14): same index, one of the
+  four of the table; no `COLLSCAN`; the same `totalDocsExamined` with the page limit above the sessions in range; a
+  100-row page with `origin` examines at most that figure; no `SORT` stage outside the ranked sorts and the identity
+  searches. It adds the two rows to its p95 report. It runs at scenario S by default and at scenario M over 7 days
+  for the design figures (backend `AGENTS.md`).
 
 ## Decisions
 
@@ -182,8 +190,11 @@ Index backing each query of the agents list with `origin` (the same as without i
     (Data model). The orchestrator vendors the contract and, in the same writer commit, gives the agent of
     `scenarioEvents()` in `contract_integration_test.go` the same attributes (an `attributes` field on `scPerson`
     carried into its `ParticipantInfo`), so `TestContractFixtures` reproduces the fixture. This makes
-    `contract-check` prove that the writer produces the dotted keys the dashboard reads. Rejected: a description-only
-    contract change, which needs no writer test edit but leaves the keys checked on each side separately.
+    `contract-check` prove that the writer produces the dotted keys the dashboard reads. The same commit adds one
+    line to the writer's `CHANGELOG-openvidu.md`, under `[Unreleased]`: agents keep `lk.agent_name`, `openvidu.agent`
+    and `openvidu.agent.*` whatever `store_metadata` says (owner's decision; `15b31983` shipped the behaviour without
+    it, and the changelog still reads "metadata only with `store_metadata`"). Rejected: a description-only contract
+    change, which needs no writer test edit but leaves the keys checked on each side separately.
 
 11. **Delta spec shape.** New behaviour is ADDED wherever the existing text stays true (agent facts, both origin
     filters, the Agent cell, the info tip, the writer's agent rule). MODIFIED only where the text becomes false:
@@ -203,6 +214,17 @@ Index backing each query of the agents list with `origin` (the same as without i
 
 13. **CHANGELOG.** Two new lines under 3.10.0, Added (UI and Data), as the proposal words them, each in the commit of
     its change (frontend page, backend API).
+
+14. **The plan test compares each query with the same query without `origin`.** What the filter must not do is
+    change the index or widen the scan, and that holds whatever index the planner picks. The documents examined are
+    compared with the page limit above the sessions in range: an index-ordered page stops at its size, so with a
+    filter that rejects rows it reads further into the same scan (on the 8 agent sessions of openvidu-local-deployment,
+    a 2-row page examines 2 documents without `origin` and 8 with `origin=openvidu`; with the limit lifted, 8 in every
+    case). At scenario S over 2 days the agent sessions (about 20) fit in one page; at scenario M over 7 days (about
+    700) they do not. Rejected: one pinned index per combination (the planner is free on the identity searches and
+    was seen to pick either index of `q` and `room`); "no in-memory sort" for every combination (false for the
+    identity searches today, with `origin` or without it); a hint for the agents identity search (a production query
+    change, declined by the owner for this change).
 
 ## Test strategy
 
@@ -270,6 +292,12 @@ tests, the participant CSV unit test and the two participants export integration
   input; nothing else in the dashboard depends on it.
 - [`$getField` needs MongoDB 5.0] → The deployments bundle 8.0. An older external MongoDB answers the origin filter
   with a server error; the unfiltered list works.
+- [The planner is free on the identity searches, so the three variants of one combination could get different
+  indexes in a run] → Not seen on scenario S over 2 days. If it happens, stop and ask instead of loosening the
+  comparison.
+- [`participants-api` "Explain plans" in the main spec still says that no list query sorts in memory, which the
+  identity searches of the agents list do] → Not this change's to correct: it alters no production query. A later
+  change corrects the scenario or adds the hint.
 - [A sparse origin scans every agent session of the range] → Bounded by the range and the 300 ms budget, reported by
   the plan suite; a derived indexed field stays possible later without changing the API.
 - [With `store_metadata: true` the list reads whole `attributes` objects] → Only the two derived values are returned;
@@ -285,7 +313,8 @@ tests, the participant CSV unit test and the two participants export integration
 1. Writer tests titled after their scenarios, committed in the openvidu-livekit checkout (no push).
 2. Dashboard implementation and full verification.
 3. Owner review on `./dashboard.sh dev` against openvidu-local-deployment.
-4. Vendored contract and contract scenario committed in openvidu-livekit; `contract-check`; push of openvidu-livekit
-   `openvidu/main`; then the dashboard push, whose CI `contract` job diffs the vendored contract of `openvidu/main`.
-5. Rollback: revert the dashboard commits; the writer commits are tests and vendored files and can stay. No stored
-   data changes in either direction.
+4. Vendored contract, contract scenario and the changelog line committed in openvidu-livekit; `contract-check`; push
+   of openvidu-livekit `openvidu/main`; then the dashboard push, whose CI `contract` job diffs the vendored contract of
+   `openvidu/main`.
+5. Rollback: revert the dashboard commits; the writer commits are tests, vendored files and a changelog line that
+   describes behaviour the writer already has, and can stay. No stored data changes in either direction.
