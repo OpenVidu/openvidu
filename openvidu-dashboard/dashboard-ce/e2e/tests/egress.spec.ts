@@ -34,6 +34,28 @@ test('lists the egresses with tiles, links, badges, outputs and error markers', 
 	await expectNoViolations(page);
 });
 
+test('Hint under one value', async ({ page }) => {
+	await page.goto('/egress?from=now-24h&to=now&tz=UTC');
+
+	const tiles = page.getByRole('region', { name: 'Summary' }).locator('ovd-kpi-tile');
+	const started = tiles.filter({ hasText: 'Started in range' });
+
+	await expect(started.locator('.hint')).toHaveText('Room composite 3 · Web 1 · Track 1');
+	await expect(tiles.filter({ hasText: 'Active now' }).locator('.hint')).toHaveCount(0);
+
+	const bottoms = await tiles.evaluateAll((elements) =>
+		elements.map((tile) => Math.round(tile.querySelector('.value')?.getBoundingClientRect().bottom ?? 0))
+	);
+
+	expect(bottoms).toHaveLength(4);
+	expect(new Set(bottoms).size).toBe(1);
+
+	const value = await started.locator('.value').boundingBox();
+	const hint = await started.locator('.hint').boundingBox();
+
+	expect(hint?.y ?? 0).toBeGreaterThanOrEqual((value?.y ?? Infinity) + (value?.height ?? 0));
+});
+
 test('the status and type badges of the rows share one tag height, as a table and as cards', async ({ page }) => {
 	for (const width of [1440, 375]) {
 		await page.setViewportSize({ width, height: 900 });

@@ -33,7 +33,8 @@
 }
 
 .today-tiles {
-	margin-bottom: 0;
+	/* Cancels the margin of the last line of tiles. */
+	margin-bottom: -12px;
 }
 
 .status {

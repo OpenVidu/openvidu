@@ -26,6 +26,8 @@ export const TICKING_MS = 5_000;
  * the first load and highlights a changed value for 600 ms unless reduced motion is requested. An info tip explains the
  * label, a warning says what data is missing, a "≈" mark explains an approximate value, and a link makes the whole tile
  * open a list. An unavailable tile reads a dimmed "—" whatever its value, its texts dimmed too but not its warning.
+ * In an `ovd-tile-row` its label, value, delta and hint take the row tracks it shares with the tiles of its line, so
+ * their values end level; anywhere else its parts stack from the top.
  */
 @Component({
 	selector: 'ovd-kpi-tile',
@@ -98,6 +100,37 @@ export const TICKING_MS = 5_000;
 			border-radius: 12px;
 			background: var(--mat-sys-surface-container-lowest);
 			min-width: 0;
+		}
+
+		/*
+		 * The four row tracks the tile spans are shared with its line through the subgrid, each as tall as its tallest
+		 * part on the line. The row has no row gap, which would open between the parts of a tile: the tile's margin
+		 * separates the lines.
+		 */
+		:host-context(ovd-tile-row) {
+			display: grid;
+			grid-row: span 4;
+			grid-template-rows: subgrid;
+			margin-bottom: 12px;
+		}
+
+		:host-context(ovd-tile-row) .label {
+			grid-row: 1;
+			align-self: start;
+		}
+
+		:host-context(ovd-tile-row) .value,
+		:host-context(ovd-tile-row) .skeleton {
+			grid-row: 2;
+			align-self: end;
+		}
+
+		:host-context(ovd-tile-row) .delta {
+			grid-row: 3;
+		}
+
+		:host-context(ovd-tile-row) .hint {
+			grid-row: 4;
 		}
 
 		:host(.linked:hover) {

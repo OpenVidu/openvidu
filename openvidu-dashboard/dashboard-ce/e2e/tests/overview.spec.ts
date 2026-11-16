@@ -68,6 +68,42 @@ test('the overview shows the live tiles with links, the hint, the status card an
 	await expect(page).toHaveURL(/\/rooms\?.*status=active/);
 });
 
+test('Label on two lines', async ({ page }) => {
+	await page.setViewportSize({ width: 1280, height: 720 });
+	await page.goto('/overview?tz=UTC');
+
+	const tiles = page.getByRole('region', { name: 'Live' }).locator('ovd-kpi-tile');
+
+	await expect(tiles.locator('.value')).toHaveCount(6);
+
+	const boxes = await tiles.evaluateAll((elements) =>
+		elements.map((tile) => {
+			const box = tile.getBoundingClientRect();
+			const style = getComputedStyle(tile);
+			const label = tile.querySelector('.label')?.getBoundingClientRect();
+			const value = tile.querySelector('.value')?.getBoundingClientRect();
+
+			return {
+				top: Math.round(box.top),
+				contentBottom: Math.round(
+					box.bottom - Number.parseFloat(style.paddingBottom) - Number.parseFloat(style.borderBottomWidth)
+				),
+				labelTop: Math.round(label?.top ?? 0),
+				labelHeight: Math.round(label?.height ?? 0),
+				valueBottom: Math.round(value?.bottom ?? 0)
+			};
+		})
+	);
+	const [rooms, participants] = boxes;
+
+	// The six tiles share one line, where "Active participants" wraps and "Active rooms" does not.
+	expect(new Set(boxes.map((box) => box.top)).size).toBe(1);
+	expect(participants?.labelHeight).toBeGreaterThan(rooms?.labelHeight ?? Infinity);
+	expect(new Set(boxes.map((box) => box.labelTop)).size).toBe(1);
+	expect(new Set(boxes.map((box) => box.valueBottom)).size).toBe(1);
+	expect(boxes.every((box) => box.valueBottom === box.contentBottom)).toBe(true);
+});
+
 test('Publishers tile', async ({ page, api }) => {
 	await page.goto('/overview?tz=UTC');
 	await page

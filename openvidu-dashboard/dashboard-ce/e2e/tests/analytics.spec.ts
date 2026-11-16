@@ -43,6 +43,28 @@ test('the granularity selector offers what the range accepts', async ({ page }) 
 	await expect(page.getByRole('option')).toHaveText(['auto (5 min)', '5 min', '15 min', '1 h', '6 h', '1 d']);
 });
 
+test('Value on two lines', async ({ page }) => {
+	await page.setViewportSize({ width: 1280, height: 720 });
+	await page.goto('/analytics?from=now-24h&to=now&tz=UTC');
+
+	const tiles = page.getByRole('region', { name: 'Summary' }).locator('ovd-kpi-tile');
+	const rooms = tiles.filter({ hasText: 'Rooms created' });
+	const data = tiles.filter({ hasText: 'Data up / down' });
+
+	await expect(data.locator('.value .line')).toHaveCount(2);
+	await expect(rooms.locator('.value')).toBeVisible();
+
+	const roomsTile = await rooms.boundingBox();
+	const dataTile = await data.boundingBox();
+	const roomsValue = await rooms.locator('.value').boundingBox();
+	const secondLine = await data.locator('.value .line').last().boundingBox();
+
+	expect(Math.round(roomsTile?.y ?? 0)).toBe(Math.round(dataTile?.y ?? -1));
+	expect(Math.round((roomsValue?.y ?? 0) + (roomsValue?.height ?? 0))).toBe(
+		Math.round((secondLine?.y ?? 0) + (secondLine?.height ?? 0))
+	);
+});
+
 test('tiles, the six sections, the breakdown table and the page scroll over a chart', async ({ page }) => {
 	await page.setViewportSize({ width: 1280, height: 720 });
 	await page.goto('/analytics?from=now-24h&to=now&tz=UTC');

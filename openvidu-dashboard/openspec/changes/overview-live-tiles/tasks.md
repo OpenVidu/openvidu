@@ -61,20 +61,20 @@ a scenario when its title is the scenario name, alone or followed by `: <detail>
 
 `components/` is `frontend/projects/dashboard-ui/src/lib/components/`.
 
-- [ ] 5.1 In `components/tiles/kpi-tile.ts` and `components/tiles/tile-row.ts`, lay the tiles of a row on its shared
+- [x] 5.1 In `components/tiles/kpi-tile.ts` and `components/tiles/tile-row.ts`, lay the tiles of a row on its shared
       row tracks (design, decision 7): labels at the top, values ending level, delta and hint under the value, the
       skeleton in the value's track, 12 px between the lines of a wrapped row and none between the parts of a tile; a
       tile outside a tile row stays as it is. Keep the doc comments of both components true. Verify: the tests of 5.2
       to 5.4 pass, `kpi-tile.spec.ts` and `tile-row.spec.ts` pass unchanged, and a row without wrapped labels keeps
       its tile height (compare the Rooms summary before and after in the e2e trace or the demo).
-- [ ] 5.2 In `e2e/tests/overview.spec.ts`, add `Label on two lines`: at 1280 px the label of "Active participants" is
+- [x] 5.2 In `e2e/tests/overview.spec.ts`, add `Label on two lines`: at 1280 px the label of "Active participants" is
       taller than that of "Active rooms", the six labels start at the same height and the six values end at the same
       height, at the bottom of their tiles. Covers: Label on two lines. Verify: the test passes in
       `./dashboard.sh e2e` and fails on the layout before 5.1.
-- [ ] 5.3 In `e2e/tests/egress.spec.ts`, add `Hint under one value`: the four summary values end at the same height
+- [x] 5.3 In `e2e/tests/egress.spec.ts`, add `Hint under one value`: the four summary values end at the same height
       and the hint "Room composite 3 · Web 1 · Track 1" shows under the value of "Started in range". Covers: Hint
       under one value. Verify: the test passes in `./dashboard.sh e2e`.
-- [ ] 5.4 In `e2e/tests/analytics.spec.ts`, add `Value on two lines`: in the summary at 1280 px, "Rooms created" and
+- [x] 5.4 In `e2e/tests/analytics.spec.ts`, add `Value on two lines`: in the summary at 1280 px, "Rooms created" and
       "Data up / down" share a line of the row and the value of the first ends where the second line of the other
       ends. Covers: Value on two lines. Verify: the test passes in `./dashboard.sh e2e` and fails on the layout
       before 5.1.
@@ -87,10 +87,10 @@ a scenario when its title is the scenario name, alone or followed by `: <detail>
 - [ ] 5.7 Code review S3: in `features/overview/overview-page.ts`, reword the comment of `egressQueryParams` so it
       names the `status` the Active option of the Egress status filter writes, not a URL. Verify: `./dashboard.sh
       check` passes (lint and format).
-- [ ] 5.8 Run `./dashboard.sh scenarios overview-live-tiles`, `./dashboard.sh check` and `./dashboard.sh e2e`, one
+- [x] 5.8 Run `./dashboard.sh scenarios overview-live-tiles`, `./dashboard.sh check` and `./dashboard.sh e2e`, one
       at a time. Verify: the thirteen scenarios list a test each, and both suites pass, the e2e with axe and both
       themes; if a baseline screenshot changes, regenerate it with `--update-snapshots=all` and report which one.
-- [ ] 5.9 Refactor review of this group: assess whether the tile and the tile row need a refactor after sharing their
+- [x] 5.9 Refactor review of this group: assess whether the tile and the tile row need a refactor after sharing their
       tracks; apply a small one here or record that none is needed. Verify: the outcome is written in the
       implementation report.
 

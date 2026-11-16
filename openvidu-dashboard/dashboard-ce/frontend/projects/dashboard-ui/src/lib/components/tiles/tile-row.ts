@@ -70,7 +70,8 @@ function valueLengths(row: HTMLElement): string {
 /**
  * A row of KPI tiles (projected children) laid out in balanced columns, recomputed when its width, its tiles or their
  * values change. Tiles widen to keep each value on one line when the row can hold them, and wrap otherwise. It measures
- * itself after its first render, before the browser paints; until then the tiles wrap at the minimum width.
+ * itself after its first render, before the browser paints; until then the tiles wrap at the minimum width. The tiles of
+ * a line share its row tracks (see `ovd-kpi-tile`), so their labels start and their values end at the same height.
  */
 @Component({
 	selector: 'ovd-tile-row',
@@ -80,8 +81,9 @@ function valueLengths(row: HTMLElement): string {
 		:host {
 			display: grid;
 			grid-template-columns: repeat(auto-fit, minmax(min(var(--ovd-tile-min, 150px), 100%), 1fr));
-			gap: 12px;
-			margin-bottom: 16px;
+			/* The tiles carry the 12 px between lines: a row gap would also open between the tracks of one tile. */
+			gap: 0 12px;
+			margin-bottom: 4px;
 		}
 
 		:host(.measured) {
