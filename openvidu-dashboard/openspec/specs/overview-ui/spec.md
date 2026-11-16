@@ -176,7 +176,7 @@ up to `0`.
 ### Requirement: Server status card
 Edition: CE. A "Data pipeline" card SHALL show, from the last server status (a skeleton until the first, updated on
 each poll), the writer line, the migration progress bar only while it runs, and a "Storage and retention" link to
-`/settings?tab=about`. The writer line reads "Server stopped at hh:mm:ss" (neutral icon) when `writer.stoppedAt` is
+`/settings?tab=data`. The writer line reads "Server stopped at hh:mm:ss" (neutral icon) when `writer.stoppedAt` is
 set, "Last batch: never" (warning icon) without batches, and otherwise "Last batch at hh:mm:ss" with a check icon when
 fresh, a warning icon if not.
 
@@ -214,6 +214,11 @@ fresh, a warning icon if not.
 - **GIVEN** a status with `writer.batchIntervalMs: 60000` and the writer batch 80 s before `generatedAt`
 - **WHEN** the card renders
 - **THEN** the writer line shows the check icon
+
+#### Scenario: Storage and retention link
+- **GIVEN** a server status
+- **WHEN** the card renders
+- **THEN** its "Storage and retention" link points to `/settings?tab=data`
 
 ### Requirement: Fresh deployment empty state
 Edition: CE. When the server status reports `schema.status` `uninitialized`, or `recentRooms` is empty with every live
