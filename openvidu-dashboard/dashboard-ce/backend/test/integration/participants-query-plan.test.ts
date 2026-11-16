@@ -17,9 +17,17 @@ import { columnsCsv } from '../../src/api/csv.js';
 import { listRows } from '../../src/api/csv-export.js';
 import { rankedPipeline } from '../../src/api/ranked.js';
 import { prefixRegex } from '../../src/api/search.js';
-import { PARTICIPANT_LIST_PROJECTION, participantsListPlan } from '../../src/participants/participants-query.js';
+import {
+	PARTICIPANT_LIST_PROJECTION,
+	type ParticipantsFilter,
+	participantsListPlan
+} from '../../src/participants/participants-query.js';
 import { participantCsvColumns } from '../../src/participants/participants-csv.js';
-import { participantsExportQuery, participantsListQuery } from '../../src/participants/participants-schemas.js';
+import {
+	agentsListQuery,
+	participantsExportQuery,
+	participantsListQuery
+} from '../../src/participants/participants-schemas.js';
 import { ParticipantsService } from '../../src/participants/participants-service.js';
 import { WriterFreshness } from '../../src/status/freshness.js';
 import { expectWithinBudgets } from '../support/latency-budget.js';
@@ -67,14 +75,29 @@ describe.skipIf(mongoUri === '')(`participants query plan at scenario ${scenario
 		return columnsCsv(participantCsvColumns(false), rows.items);
 	};
 
-	const explainList = async (
-		query: Record<string, string>,
-		bound: number,
-		pinnedKind?: ParticipantKind,
-		limit = LIMIT
-	) => {
+	const explainList = (query: Record<string, string>, bound: number, pinnedKind?: ParticipantKind, limit = LIMIT) => {
 		const params = listParams(query, limit);
-		const plan = participantsListPlan(pinnedKind === undefined ? params : { ...params, kind: [pinnedKind] });
+
+		return explainFilter(pinnedKind === undefined ? params : { ...params, kind: [pinnedKind] }, bound, limit);
+	};
+
+	/** The agents list parameters of `query`. */
+	const agentsParams = (query: Record<string, string>) =>
+		agentsListQuery(() => now).parse({ from: ctx.range.from.toISOString(), limit: String(LIMIT), ...query });
+
+	/** The filter `ParticipantsService.agents()` builds from the agents list parameters of `query`. */
+	const agentsFilter = (query: Record<string, string>) => ({
+		...agentsParams(query),
+		kind: [ParticipantKind.AGENT]
+	});
+
+	/**
+	 * Explains the list query of `filter`: a page examines at most `bound` documents, a ranked list the sessions in its
+	 * range unless `rankedBound` says otherwise.
+	 */
+	const explainFilter = async (filter: ParticipantsFilter, bound: number, limit = LIMIT, rankedBound?: number) => {
+		const params = { ...filter, limit };
+		const plan = participantsListPlan(params);
 
 		if (plan.kind === 'ranked') {
 			const inRange = await db.collection(Collection.PARTICIPANTS).countDocuments(plan.countFilter);
@@ -94,7 +117,7 @@ describe.skipIf(mongoUri === '')(`participants query plan at scenario ${scenario
 					pipeline: rankedPipeline(request, now),
 					...(plan.hint === undefined ? {} : { options: { hint: plan.hint } })
 				},
-				{ maxDocsExamined: inRange }
+				{ maxDocsExamined: rankedBound ?? inRange }
 			);
 		}
 
@@ -228,6 +251,97 @@ describe.skipIf(mongoUri === '')(`participants query plan at scenario ${scenario
 			}
 		);
 
+		it('Origin explain plans', async () => {
+			const lastDay = new Date(now.getTime() - DAY).toISOString();
+			const agent = await db
+				.collection<ParticipantDocument>(Collection.PARTICIPANTS)
+				.findOne({ kind: ParticipantKind.AGENT, joinedAt: { $gte: ctx.range.from } });
+
+			if (agent === null) {
+				throw new Error('the generated database has no agent session in range');
+			}
+
+			const participants = db.collection(Collection.PARTICIPANTS);
+			const allowed = [
+				'kind_status_joinedAt_id',
+				'identityLower_joinedAt',
+				'roomSid_identityLower_joinedAt',
+				'roomSid_joinedAt_id'
+			];
+			const combinations: Record<string, string>[] = [
+				{},
+				{ status: 'left' },
+				{ q: 'agent' },
+				{ q: 'agent', room: agent.roomSid },
+				{ room: agent.roomSid }
+			];
+
+			for (const sort of ['leftAt', 'duration']) {
+				combinations.push(
+					{ sort, from: lastDay },
+					{ sort, from: lastDay, status: 'active' },
+					{ sort, from: lastDay, q: 'agent' },
+					{ sort, from: lastDay, q: 'agent', room: agent.roomSid },
+					{ sort, from: lastDay, room: agent.roomSid }
+				);
+			}
+
+			for (const query of combinations) {
+				const unfiltered = participantsListPlan(agentsFilter(query));
+
+				if (unfiltered.kind === 'sid') {
+					throw new Error(`${JSON.stringify(query)}: expected a range scan`);
+				}
+
+				// Every session joined in the range bounds any scan, and as a limit no page cuts the scan short.
+				const { joinedAt } = unfiltered.kind === 'ranked' ? unfiltered.match : unfiltered.countFilter;
+				const bound = await participants.countDocuments({ joinedAt });
+				const whole = bound + 1;
+				const plans = [];
+
+				for (const origin of [undefined, 'openvidu', 'third-party']) {
+					const filter = agentsFilter(origin === undefined ? query : { ...query, origin });
+
+					plans.push(await explainFilter(filter, bound, whole, bound));
+				}
+
+				const [plain, ...withOrigin] = plans;
+				const label = JSON.stringify(query);
+				const index = [...new Set(plain?.indexes)];
+				const identitySearch = query.q !== undefined;
+
+				expect(index, label).toHaveLength(1);
+				expect(allowed, label).toContain(index[0]);
+
+				for (const plan of plans) {
+					expect(plan.collscan, label).toBe(false);
+					expect([...new Set(plan.indexes)], label).toEqual(index);
+
+					if (query.sort === undefined && !identitySearch) {
+						expect(plan.planStages, label).not.toContain('SORT');
+					}
+				}
+
+				expect(
+					withOrigin.map((plan) => plan.totalDocsExamined),
+					label
+				).toEqual(withOrigin.map(() => plain?.totalDocsExamined));
+
+				for (const origin of ['openvidu', 'third-party']) {
+					const page = await explainFilter(
+						agentsFilter({ ...query, origin }),
+						plain?.totalDocsExamined ?? 0,
+						LIMIT,
+						plain?.totalDocsExamined ?? 0
+					);
+
+					expect(page.totalDocsExamined, `${label} ${origin}`).toBeLessThanOrEqual(
+						plain?.totalDocsExamined ?? 0
+					);
+				}
+			}
+		});
+
 		it('publisher: kind_status_joinedAt_id with isPublisher residual', async () => {
 			const active = await db
 				.collection(Collection.PARTICIPANTS)
@@ -288,6 +402,12 @@ describe.skipIf(mongoUri === '')(`participants query plan at scenario ${scenario
 				['List, status active', '50 ms', () => service.list(listParams({ status: 'active' }))],
 				['List, identity prefix', '50 ms', () => service.list(listParams({ q: ctx.samples.identityPrefix }))],
 				['Agents list', '50 ms', () => service.agents(listParams({}))],
+				['Agents list, origin openvidu', '300 ms', () => service.agents(agentsParams({ origin: 'openvidu' }))],
+				[
+					'Agents list, origin third-party',
+					'300 ms',
+					() => service.agents(agentsParams({ origin: 'third-party' }))
+				],
 				[
 					'Summary, 24 h',
 					'50 ms',
@@ -320,7 +440,9 @@ describe.skipIf(mongoUri === '')(`participants query plan at scenario ${scenario
 				report.push(`| ${name} | ${budget} | ${measured.toFixed(1)} ms |`);
 
 				if (
-					(name.startsWith('List, ranked') || name.startsWith('Export')) &&
+					(name.startsWith('List, ranked') ||
+						name.startsWith('Agents list, origin') ||
+						name.startsWith('Export')) &&
 					measured > Number.parseFloat(budget)
 				) {
 					overruns.push(`${name}: ${measured.toFixed(1)} ms > ${budget}`);

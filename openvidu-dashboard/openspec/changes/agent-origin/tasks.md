@@ -96,7 +96,7 @@ Tests only, committed in the writer checkout and not pushed until group 9. It co
       `Sessions of a room by duration` and the agents export test as `Agents: every row is an active agent` (it
       requests `status=active`), and add `OpenVidu agents export`. Covers: Sessions of a room by duration, Agents,
       OpenVidu agents export. Verify: the integration tests pass.
-- [ ] 4.7 In `backend/test/integration/participants-query-plan.test.ts`, add `Origin explain plans` (decision 14):
+- [x] 4.7 In `backend/test/integration/participants-query-plan.test.ts`, add `Origin explain plans` (decision 14):
       explain the agents list without `origin` and with each origin, alone and with `status`, `q`, `q` and `room`,
       `room`, and the ranked sorts over 24 hours. In each combination the three plans use the same index, one of
       `kind_status_joinedAt_id`, `identityLower_joinedAt`, `roomSid_identityLower_joinedAt` and `roomSid_joinedAt_id`,
