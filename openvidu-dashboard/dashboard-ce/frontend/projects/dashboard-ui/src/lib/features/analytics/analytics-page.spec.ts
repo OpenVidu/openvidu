@@ -594,6 +594,7 @@ describe('AnalyticsPage', () => {
 		expect(bandwidth?.querySelectorAll('ovd-kpi-tile .value.unavailable')).toHaveLength(2);
 		expect(bandwidth?.querySelector('ovd-time-series-chart .chart.unavailable')).not.toBeNull();
 		expect(text(bandwidth?.querySelector('ovd-time-series-chart'))).not.toContain('Show table');
+		expect(exportButton(element, 'Data transferred')?.disabled).toBe(true);
 	});
 
 	it('warns that the data covers only some servers when the others report no media statistics', async () => {

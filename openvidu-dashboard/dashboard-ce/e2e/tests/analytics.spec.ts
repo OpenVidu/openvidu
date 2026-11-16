@@ -351,6 +351,7 @@ test.describe('a range whose servers report no media statistics', () => {
 		await expect(section.locator('ovd-time-series-chart .chart.unavailable')).toHaveCount(1);
 		await expect(section.getByRole('button', { name: 'Show table' })).toHaveCount(0);
 		await expect(section.locator('ovd-notice')).toHaveCount(0);
+		await expect(section.getByRole('button', { name: 'Export XLSX' })).toBeDisabled();
 		await section
 			.getByRole('button', {
 				name: 'The servers of this range use mediasoup as RTC engine, which does not generate media statistics yet. This data will be available soon.'

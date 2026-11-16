@@ -242,15 +242,16 @@
 	</ovd-analytics-card>
 
 	@let bandwidth = view(['bytesUp', 'bytesDown']);
+	@let noMediaStats = mediaStats() === 'none';
 	<ovd-analytics-card
 		heading="Data transferred"
 		sectionId="bandwidth"
 		[warning]="mediaStatsWarning()"
 		[loading]="bandwidth.loading"
 		[error]="bandwidth.error"
-		[empty]="bandwidth.empty && mediaStats() !== 'none'"
+		[empty]="bandwidth.empty && !noMediaStats"
 		[exporting]="isExporting('bandwidth')"
-		[exportDisabled]="mediaStats() === 'none'"
+		[exportDisabled]="noMediaStats"
 		(export)="exportSection('bandwidth')"
 		(retry)="retry()"
 		(widen)="widenRange()"
@@ -261,13 +262,13 @@
 					label="Total up"
 					[info]="infoTexts.dataUp"
 					[value]="bytesTile(summary()?.bytesUp, '↑')"
-					[unavailable]="mediaStats() === 'none'"
+					[unavailable]="noMediaStats"
 				/>
 				<ovd-kpi-tile
 					label="Total down"
 					[info]="infoTexts.dataDown"
 					[value]="bytesTile(summary()?.bytesDown, '↓')"
-					[unavailable]="mediaStats() === 'none'"
+					[unavailable]="noMediaStats"
 				/>
 			</ovd-tile-row>
 			<ovd-time-series-chart
@@ -280,7 +281,7 @@
 				[to]="chartRange('bytesUp').to"
 				[tz]="tz()"
 				[note]="note('bytesUp')"
-				[unavailable]="mediaStats() === 'none'"
+				[unavailable]="noMediaStats"
 			/>
 		</ng-template>
 	</ovd-analytics-card>
