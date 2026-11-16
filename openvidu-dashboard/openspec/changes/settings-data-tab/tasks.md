@@ -122,7 +122,7 @@ Paths are relative to `dashboard-ce/`; `ui/` is `frontend/projects/dashboard-ui/
 
 ## 8. Review on the demo (owner)
 
-- [ ] 8.1 On `./dashboard.sh demo ce`, open Settings → Data and decide whether the expandable collection breakdown
+- [x] 8.1 On `./dashboard.sh demo ce`, open Settings → Data and decide whether the expandable collection breakdown
       stays. Verify: the decision is recorded by the orchestrator; if it goes, the change is revised (the "Collection
       breakdown" requirement and task group 3 are removed) and verified again before group 9.
 
