@@ -72,6 +72,8 @@ function valueLengths(row: HTMLElement): string {
  * values change. Tiles widen to keep each value on one line when the row can hold them, and wrap otherwise. It measures
  * itself after its first render, before the browser paints; until then the tiles wrap at the minimum width. The tiles of
  * a line share its row tracks (see `ovd-kpi-tile`), so their labels start and their values end at the same height.
+ * The 12 px under each line, the last one included, is the bottom margin of the tiles: a row that ends flush with its
+ * container sets `margin-bottom: -12px` (as the Overview Today tiles do); `margin-bottom: 0` leaves those 12 px.
  */
 @Component({
 	selector: 'ovd-tile-row',
