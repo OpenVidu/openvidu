@@ -9,6 +9,7 @@
 **/*.tsbuildinfo
 .git
 .claude
+.agents
 openspec
 dashboard-ce/tools
 # Their manifests keep the workspace consistent with the lockfile.

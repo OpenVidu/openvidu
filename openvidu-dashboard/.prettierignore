@@ -3,5 +3,6 @@ dist/
 .angular/
 coverage/
 .claude/
+.agents/
 openspec/
 pnpm-lock.yaml

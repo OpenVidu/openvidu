@@ -1,9 +1,13 @@
 ---
-name: "OPSX: Archive"
-description: "Archive a completed change in the experimental workflow"
+name: openspec-archive-change
+description: Archive a completed OpenSpec change in the experimental workflow. Use when the user wants to finalize and archive a change after implementation is complete. Also use when the user says "openspec archive" or "opsx archive".
 allowed-tools: Bash(openspec:*)
-category: "Workflow"
-tags: ["workflow", "archive", "experimental"]
+license: MIT
+compatibility: Requires openspec CLI.
+metadata:
+  author: openspec
+  version: "1.0"
+  generatedBy: "2.0.0"
 ---
 
 Archive a completed change in the experimental workflow.
@@ -16,14 +20,14 @@ One `"root": null` is not about setup: when a `status` error message starts with
 
 Otherwise, with no root, what happens next depends on how this workflow was reached:
 
-- **Auto-selected**: you chose this workflow yourself, without the user naming OpenSpec, naming this skill, or running its slash command. Stop using OpenSpec and answer the request normally, as you would with no OpenSpec installed. Do not ask them to set anything up and do not mention OpenSpec setup.
-- **Explicit OpenSpec request**: the user named OpenSpec, named this skill, or ran its slash command. Stop before writing and ask how to proceed: set this project up (`openspec init`), target a store they already have (`--store <id>`), or continue without OpenSpec for this request. Wait for their answer.
+- **Auto-selected**: you chose this workflow yourself, without the user naming OpenSpec, naming this skill, or invoking this skill by name. Stop using OpenSpec and answer the request normally, as you would with no OpenSpec installed. Do not ask them to set anything up and do not mention OpenSpec setup.
+- **Explicit OpenSpec request**: the user named OpenSpec, named this skill, or invoked this skill by name. Stop before writing and ask how to proceed: set this project up (`openspec init`), target a store they already have (`--store <id>`), or continue without OpenSpec for this request. Wait for their answer.
 
 In both branches, never create the root as a side effect: do not run `openspec init` until the user asks for it, do not hand-create `openspec/` files, and do not let a command create it.
 
 `<capability-path>` is the spec directory relative to `specs/` (for example, `user-auth` or `identity/user-auth`). Preserve the full path from each delta spec when resolving its main spec.
 
-**Input**: Optionally specify a change name after `/opsx:archive` (e.g., `/opsx:archive add-auth`). If omitted, check if it can be inferred from conversation context. If vague or ambiguous you MUST prompt for available changes.
+**Input**: Optionally specify a change name. If omitted, check if it can be inferred from conversation context. If vague or ambiguous you MUST prompt for available changes.
 
 **Steps**
 
@@ -37,7 +41,7 @@ In both branches, never create the root as a side effect: do not run `openspec i
    When prompting, show only active changes (not already archived).
    Include the schema used for each change if available.
 
-   Always announce: "Using change: <name>" and how to override (e.g., `/opsx:archive <other>`).
+   Always announce: "Using change: <name>" and how to override (e.g., `openspec-archive-change <other>`).
 
    **Load current archive inputs before the existing archive checks:**
 
@@ -77,7 +81,7 @@ In both branches, never create the root as a side effect: do not run `openspec i
 
    **If any artifacts are neither `done` nor `skipped`** (skipped artifacts satisfy the requirement - the change declares skip_specs):
    - Display warning listing incomplete artifacts
-   - Prompt user for confirmation to continue
+   - Ask the user to confirm they want to proceed
    - Proceed if user confirms
 
 3. **Check task completion status**
@@ -99,7 +103,7 @@ In both branches, never create the root as a side effect: do not run `openspec i
 
    **If incomplete tasks found:**
    - Display warning showing count of incomplete tasks
-   - Prompt user for confirmation to continue
+   - Ask the user to confirm they want to proceed
    - Proceed if user confirms
 
    **If `totalTasks` is zero:** Proceed without a task-related warning.
@@ -141,7 +145,7 @@ In both branches, never create the root as a side effect: do not run `openspec i
    form of main specs produced by this merge; do not use them as archive guidance,
    change CLI behavior, or copy the rule text into any output file.
 
-   Then run the `/opsx:sync` workflow inline (agent-driven intelligent merge) for change '<name>', passing the delta spec analysis and the fetched specs-rule snapshot from above, and wait for it to finish. The inline sync must reuse that snapshot without fetching `specs` instructions again. Do not delegate it to a background task — step 5 would move `changeRoot` out from under a sync that is still reading it, leaving the change archived and the main specs never updated. If your agent can only run it by delegation, delegate synchronously and wait for the result.
+   Then run the `openspec-sync-specs` workflow inline (agent-driven intelligent merge) for change '<name>', passing the delta spec analysis and the fetched specs-rule snapshot from above, and wait for it to finish. The inline sync must reuse that snapshot without fetching `specs` instructions again. Do not delegate it to a background task — step 5 would move `changeRoot` out from under a sync that is still reading it, leaving the change archived and the main specs never updated. If your agent can only run it by delegation, delegate synchronously and wait for the result.
 
    If the sync reports any stop or blocking condition, treat the sync as failed.
    Stop the archive immediately. Do not perform the post-sync content comparison and do not move its `changeRoot`.
@@ -185,7 +189,7 @@ In both branches, never create the root as a side effect: do not run `openspec i
    - Change name
    - Schema that was used
    - Archive location
-   - Spec sync status (synced / sync skipped / no delta specs)
+   - Whether specs were synced (if applicable)
    - Note about any warnings (incomplete artifacts/tasks)
 
 **Output On Success**
@@ -196,56 +200,9 @@ In both branches, never create the root as a side effect: do not run `openspec i
 **Change:** <change-name>
 **Schema:** <schema-name>
 **Archived to:** the archive path derived from `planningHome.changesDir`/<target-name>/
-**Specs:** ✓ Synced to main specs
+**Specs:** <"✓ Synced to main specs" only if the step 4 verification passed; otherwise "No delta specs" or "Sync skipped">
 
-All artifacts complete. All tasks complete.
-```
-
-**Output On Success (No Delta Specs)**
-
-```markdown
-## Archive Complete
-
-**Change:** <change-name>
-**Schema:** <schema-name>
-**Archived to:** the archive path derived from `planningHome.changesDir`/<target-name>/
-**Specs:** No delta specs
-
-All artifacts complete. All tasks complete.
-```
-
-**Output On Success With Warnings**
-
-```markdown
-## Archive Complete (with warnings)
-
-**Change:** <change-name>
-**Schema:** <schema-name>
-**Archived to:** the archive path derived from `planningHome.changesDir`/<target-name>/
-**Specs:** Sync skipped (user chose to skip)
-
-**Warnings:**
-- Archived with 2 incomplete artifacts
-- Archived with 3 incomplete tasks
-- Delta spec sync was skipped (user chose to skip)
-
-Review the archive if this was not intentional.
-```
-
-**Output On Error (Archive Exists)**
-
-```markdown
-## Archive Failed
-
-**Change:** <change-name>
-**Target:** the archive path derived from `planningHome.changesDir`/<target-name>/
-
-Target archive directory already exists.
-
-**Options:**
-1. Rename the existing archive
-2. Delete the existing archive if it's a duplicate
-3. Wait until a different date to archive
+<"All artifacts complete. All tasks complete." — or, if archived with warnings, list them instead (e.g. "Archived with 2 incomplete tasks")>
 ```
 
 **Guardrails**
@@ -254,7 +211,7 @@ Target archive directory already exists.
 - Don't block archive on warnings - just inform and confirm
 - Preserve .openspec.yaml when moving to archive (it moves with the directory)
 - Show clear summary of what happened
-- If sync is requested, run the `/opsx:sync` workflow inline (agent-driven)
+- If sync is requested, run the `openspec-sync-specs` workflow inline (agent-driven)
 - Never archive while a spec sync is still in flight — run the sync inline and verify the main specs before moving `changeRoot`
 - If delta specs exist, always run the sync assessment and show the combined summary before prompting
 - Apply relevant runtime context and report conflicts; operation guidance remains advisory

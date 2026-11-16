@@ -28,7 +28,7 @@ catalog:
   '@fontsource-variable/jetbrains-mono': 5.3.0
   '@material-symbols/svg-400': 0.48.3
   '@playwright/test': 1.65.0
-  '@fission-ai/openspec': 1.17.0
+  '@fission-ai/openspec': 2.0.0
   '@types/cookie-parser': 1.4.10
   '@types/express': 5.0.6
   '@types/node': 26.6.6
