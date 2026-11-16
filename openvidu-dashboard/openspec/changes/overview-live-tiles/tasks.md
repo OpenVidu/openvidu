@@ -96,6 +96,6 @@ a scenario when its title is the scenario name, alone or followed by `: <detail>
 
 ## 6. Publish (orchestrator)
 
-- [ ] 6.1 After the full verification, with the change pushed to `master` of `OpenVidu/openvidu`, confirm that the CI
+- [x] 6.1 After the full verification, with the change pushed to `master` of `OpenVidu/openvidu`, confirm that the CI
       run of that commit is green (`checks`, `unit`, `integration`, `contract`, `e2e`). Verify: the run's conclusion
       is success.

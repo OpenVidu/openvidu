@@ -9,3 +9,6 @@
   their reports. From group 5 on, every subagent runs on Opus at the owner's request.
 - Refactor review (task 4.3), from the implementer's report: no refactor beyond the local `tips()` helper of
   `overview-page.spec.ts`; task 5.9: none needed.
+- Last fix (verification SUGGESTION 1, a doc comment of `TileRow`) needed no new verification. The unpushed commits
+  were rebased onto `origin/master` (one commit outside `openvidu-dashboard/`); the dashboard tree equals the verified
+  one plus that comment. Pushed to `master` as `d72a90bfa`; CI run 43949778474 of `openvidu-dashboard-ci.yml` is green.
