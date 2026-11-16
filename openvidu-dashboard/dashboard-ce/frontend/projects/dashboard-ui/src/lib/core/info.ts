@@ -22,10 +22,13 @@ export class InfoService {
 	private readonly fullInfo = signal<InfoResponse | null>(null);
 	private readonly publicInfo = signal<InfoPublicResponse | null>(null);
 	private readonly failure = signal<ApiRequestError | null>(null);
+	private readonly fullInfoReadAt = signal<number | null>(null);
 
 	/** The full document; `null` before sign-in or when the last read failed without a previous one. */
 	readonly info = this.fullInfo.asReadonly();
 	readonly error = this.failure.asReadonly();
+	/** When the full document arrived (epoch ms): the instant its storage figures describe. */
+	readonly readAt = this.fullInfoReadAt.asReadonly();
 	readonly edition = computed(() => this.fullInfo()?.edition ?? this.publicInfo()?.edition ?? null);
 	readonly dashboardVersion = computed(
 		() => this.fullInfo()?.versions.dashboard ?? this.publicInfo()?.versions.dashboard ?? null
@@ -44,6 +47,7 @@ export class InfoService {
 			this.failure.set(null);
 
 			if (isFullInfo(info)) {
+				this.fullInfoReadAt.set(Date.now());
 				this.fullInfo.set(info);
 			} else {
 				this.publicInfo.set(info);

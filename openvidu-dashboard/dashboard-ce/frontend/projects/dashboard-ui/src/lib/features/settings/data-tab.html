@@ -1,0 +1,71 @@
+@if (unavailable()) {
+	<ovd-notice variant="error" actionLabel="Retry" (action)="retry()">Server info unavailable</ovd-notice>
+} @else if (classes(); as classes) {
+	@if (migration(); as migration) {
+		<section class="migration" aria-labelledby="ovd-data-migration">
+			<h2 id="ovd-data-migration">Legacy analytics migration</h2>
+			@if (running()) {
+				<mat-progress-bar mode="determinate" [value]="migrationPercent()" aria-label="Migration progress" />
+				<p class="ovd-tabular">{{ migration }} ({{ migrationPercent() }} %)</p>
+			} @else {
+				<p [class.failed]="failed()">{{ migration }}</p>
+			}
+		</section>
+	}
+
+	<h2>Storage</h2>
+	<div class="table-wrap">
+		<table class="classes">
+			<caption class="ovd-visually-hidden">
+				Storage and retention per data class
+			</caption>
+			<thead>
+				<tr>
+					<th scope="col">Data</th>
+					<th scope="col">Retention</th>
+					<th scope="col" class="end">Documents</th>
+					<th scope="col" class="end">Size</th>
+				</tr>
+			</thead>
+			<tbody>
+				@for (row of classes.rows; track row.label) {
+					<tr>
+						<th scope="row" class="label">{{ row.label }}</th>
+						<td class="ovd-tabular">
+							{{ row.retention }}
+							@if (row.tip; as tip) {
+								<ovd-info-tip [subject]="row.label + ' retention'" [text]="tip" />
+							}
+						</td>
+						<td class="end ovd-tabular">{{ row.documentsText }}</td>
+						<td class="end ovd-tabular">{{ row.size }}</td>
+					</tr>
+				}
+			</tbody>
+			<tfoot>
+				<tr>
+					<th scope="row">Total</th>
+					<td></td>
+					<td class="end ovd-tabular">{{ classes.total.documents }}</td>
+					<td class="end ovd-tabular">{{ classes.total.size }}</td>
+				</tr>
+			</tfoot>
+		</table>
+	</div>
+
+	@if (!classes.retentionReported) {
+		<p class="muted">Retention not reported by the server yet</p>
+	}
+	<p class="muted">
+		Retention is set in <code>openvidu.analytics.retention</code> of the OpenVidu server configuration
+		(<code>livekit.yaml</code>): <code>events</code>, <code>stats</code>, <code>tracks</code>,
+		<code>entities</code>, <code>rollups_5min</code>, <code>rollups_hourly</code> and <code>rollups_daily</code>. It
+		applies when the server restarts. <ovd-external-link [href]="documentation">Documentation</ovd-external-link>
+	</p>
+	<p class="muted">
+		The info icons mark the classes that have not reached their retention yet and estimate their size, assuming the
+		activity so far continues.
+	</p>
+} @else {
+	<ovd-skeleton variant="rows" [count]="6" />
+}

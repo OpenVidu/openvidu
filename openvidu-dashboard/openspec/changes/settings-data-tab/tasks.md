@@ -25,32 +25,32 @@ Paths are relative to `dashboard-ce/`; `ui/` is `frontend/projects/dashboard-ui/
 
 ## 2. Frontend: the Data tab (implementer)
 
-- [ ] 2.1 In `ui/core/info.ts`, record the time at which the full info document arrives and expose it as a read-only
+- [x] 2.1 In `ui/core/info.ts`, record the time at which the full info document arrives and expose it as a read-only
       signal (design decision 8). Verify: the tests of 2.6 read spans computed from it.
-- [ ] 2.2 Rename `features/settings/about-tab.{ts,html,scss}` to `data-tab.{ts,html,scss}` (class `DataTab`, selector
+- [x] 2.2 Rename `features/settings/about-tab.{ts,html,scss}` to `data-tab.{ts,html,scss}` (class `DataTab`, selector
       `ovd-data-tab`); in `settings-page.ts` set `SETTINGS_TABS` to `['preferences', 'data']` and label the tab "Data".
       Verify: the tests of 2.5 pass and `grep -ri "about-tab\|AboutTab" frontend e2e` finds nothing.
-- [ ] 2.3 In the Data tab, remove the version line and the edition badge, and replace the two tables with the
+- [x] 2.3 In the Data tab, remove the version line and the edition badge, and replace the two tables with the
       "Storage" table of the specs (columns Data, Retention, Documents, Size; seven class rows from
       `storage-classes.ts`; Total row; "—" and "Retention not reported by the server yet" without `retention`), with
       `ovd-info-tip` after the retention value of the rows that have a tip text (`subject` "<class> retention"). Keep
       the migration section, the unavailable notice and the skeleton as they are. Verify: the tests of 2.6 and 2.7
       pass.
-- [ ] 2.4 Under the table, add the two paragraphs of "Retention configuration message" with `ovd-external-link` to
+- [x] 2.4 Under the table, add the two paragraphs of "Retention configuration message" with `ovd-external-link` to
       `EXTERNAL_LINKS.documentation + '#retention'`; let the first column wrap so the table fits design decision 11.
       Verify: the tests of 2.8 pass.
-- [ ] 2.5 In `features/settings/settings-page.spec.ts`, add `Deep link to Data` and `Former About value`, and retitle or
+- [x] 2.5 In `features/settings/settings-page.spec.ts`, add `Deep link to Data` and `Former About value`, and retitle or
       split the existing tests into `Migration running on the Data tab`, `Completed before the page opened`,
       `Completed while watching`, `Backend down`, `Info in flight` and `Info arrives` (the last asserting that the tab
       holds no version line and no `ovd-edition-badge`). Covers: those eight scenarios. Verify: the unit tests pass.
-- [ ] 2.6 In the same file, add `Class rows`, `Retention that is not a whole number of days`, `Retention not
+- [x] 2.6 In the same file, add `Class rows`, `Retention that is not a whole number of days`, `Retention not
       reported` and `Storage total without schema_meta` (the last asserting that the tab text does not contain
       `schema_meta`), replacing the tests of the two former tables and of the `About helpers`. Covers: those four
       scenarios. Verify: the unit tests pass.
-- [ ] 2.7 In the same file, add `Class still filling`, `Unlimited daily rollups`, `Total without an estimate` and
+- [x] 2.7 In the same file, add `Class still filling`, `Unlimited daily rollups`, `Total without an estimate` and
       `Progress only in the tip`, reading the accessible name of the info tip and its text, with `oldest` dates built
       from the read time. Covers: those four scenarios. Verify: the unit tests pass.
-- [ ] 2.8 In the same file, add `Where the retention is set` (text, link target and new tab) and `What the estimates
+- [x] 2.8 In the same file, add `Where the retention is set` (text, link target and new tab) and `What the estimates
       assume`. Covers: those two scenarios. Verify: the unit tests pass.
 
 ## 3. Frontend: collection breakdown (implementer)
@@ -104,7 +104,7 @@ Paths are relative to `dashboard-ce/`; `ui/` is `frontend/projects/dashboard-ui/
 
 ## 6. CHANGELOG and docs of the workspace (implementer)
 
-- [ ] 6.1 In `../CHANGELOG.md` (3.10.0, `Added` → `UI`), rewrite the Settings line as `proposal.md` gives it. Verify:
+- [x] 6.1 In `../CHANGELOG.md` (3.10.0, `Added` → `UI`), rewrite the Settings line as `proposal.md` gives it. Verify:
       the section has one Settings line and none names an About tab.
 - [ ] 6.2 Confirm that `../README.md`, the `AGENTS.md` files and `frontend/projects/dashboard-ui/README.md` name
       neither the About tab nor its files, and correct any that does. Verify: `grep -rni "about tab\|about-tab\|tab=about"`

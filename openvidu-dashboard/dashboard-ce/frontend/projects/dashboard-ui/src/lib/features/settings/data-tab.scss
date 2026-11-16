@@ -7,15 +7,6 @@ h2 {
 	margin: 24px 0 8px;
 }
 
-.version {
-	display: flex;
-	flex-wrap: wrap;
-	align-items: center;
-	gap: 12px;
-	margin: 0;
-	font: var(--mat-sys-title-medium);
-}
-
 .migration p {
 	margin: 8px 0 0;
 }
@@ -25,6 +16,8 @@ h2 {
 }
 
 .muted {
+	max-width: 72ch;
+	margin: 12px 0 0;
 	color: var(--mat-sys-on-surface-variant);
 }
 
@@ -34,7 +27,6 @@ h2 {
 
 table {
 	border-collapse: collapse;
-	min-width: 480px;
 }
 
 th,
@@ -43,6 +35,11 @@ td {
 	border-bottom: 1px solid var(--mat-sys-outline-variant);
 	text-align: start;
 	white-space: nowrap;
+}
+
+/* The class names wrap so that the Retention cell and its info icon stay in view on a phone. */
+.label {
+	white-space: normal;
 }
 
 .end {

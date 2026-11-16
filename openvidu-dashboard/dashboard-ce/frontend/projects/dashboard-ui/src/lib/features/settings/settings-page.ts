@@ -2,21 +2,21 @@ import { afterNextRender, Component, computed, ElementRef, inject } from '@angul
 import { MatTab, MatTabGroup } from '@angular/material/tabs';
 
 import { QueryStateService } from '../../core/state/query-state.js';
-import { AboutTab } from './about-tab.js';
+import { DataTab } from './data-tab.js';
 import { PreferencesTab } from './preferences-tab.js';
 
-export const SETTINGS_TABS = ['preferences', 'about'] as const;
+export const SETTINGS_TABS = ['preferences', 'data'] as const;
 export type SettingsTab = (typeof SETTINGS_TABS)[number];
 
-/** Preferences and About tabs selected by the `tab` query parameter. */
+/** Preferences and Data tabs selected by the `tab` query parameter. */
 @Component({
 	selector: 'ovd-settings-page',
-	imports: [AboutTab, MatTab, MatTabGroup, PreferencesTab],
+	imports: [DataTab, MatTab, MatTabGroup, PreferencesTab],
 	template: `
 		<h1 class="ovd-page-title">Settings</h1>
 		<mat-tab-group [selectedIndex]="index()" (selectedIndexChange)="select($event)" [mat-stretch-tabs]="false">
 			<mat-tab label="Preferences"><ovd-preferences-tab /></mat-tab>
-			<mat-tab label="About"><ovd-about-tab /></mat-tab>
+			<mat-tab label="Data"><ovd-data-tab /></mat-tab>
 		</mat-tab-group>
 	`
 })

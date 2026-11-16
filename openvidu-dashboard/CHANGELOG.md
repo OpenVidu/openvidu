@@ -51,8 +51,9 @@ queried) and `Deployment` (running the service). One line per observable change,
   in place, dimmed when the range or entity has no media statistics at all.
 - Rooms, participants, egress and ingress sessions that the server closed because their end never arrived read as
   closed with an estimated end time.
-- Settings page with viewer preferences (any time zone as the default) and an About tab with the OpenVidu version, the
-  migration progress while it runs, the retention per data class and the storage.
+- Settings page with viewer preferences (any time zone as the default) and a Data tab with the retention and the
+  storage of each class of data and of its collections, an estimate of the size of the classes that have not reached
+  their retention yet, where the retention is configured and the migration progress while it runs.
 - PRO features appear locked in CE with a short explanation and a link.
 
 #### Data

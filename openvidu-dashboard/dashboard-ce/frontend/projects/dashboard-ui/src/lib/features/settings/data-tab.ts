@@ -1,29 +1,17 @@
 import { Component, computed, effect, inject, signal } from '@angular/core';
 import { MatProgressBar } from '@angular/material/progress-bar';
-import { MatTooltip } from '@angular/material/tooltip';
-import { Collection, type InfoMigration, type InfoRetention } from '@openvidu-dashboard/typings';
+import type { InfoMigration } from '@openvidu-dashboard/typings';
 
+import { ExternalLink } from '../../components/external-link/external-link.js';
 import { Notice } from '../../components/feedback/notice.js';
 import { Skeleton } from '../../components/feedback/skeleton.js';
+import { InfoTip } from '../../components/info-tip/info-tip.js';
 import { InfoService } from '../../core/info.js';
+import { EXTERNAL_LINKS } from '../../core/links.js';
 import { ServerStatusService } from '../../core/refresh/server-status.js';
 import { QueryStateService } from '../../core/state/query-state.js';
 import { formatBytes, formatNumber, formatTimestamp } from '../../format/formatters.js';
-import { EditionBadge } from '../../shell/edition-badge.js';
-import { formatRetention } from './storage-classes.js';
-
-/** One row per data class, in the order the writer expires them. */
-export function retentionRows(retention: InfoRetention): { label: string; value: string }[] {
-	return [
-		{ label: 'Events', value: formatRetention(retention.eventsMs) },
-		{ label: 'Stats', value: formatRetention(retention.statsMs) },
-		{ label: 'Tracks and subscriptions', value: formatRetention(retention.tracksMs) },
-		{ label: 'Entities', value: formatRetention(retention.entitiesMs) },
-		{ label: '5-minute rollups', value: formatRetention(retention.rollups5MinMs) },
-		{ label: 'Hourly rollups', value: formatRetention(retention.rollupsHourlyMs) },
-		{ label: 'Daily rollups', value: formatRetention(retention.rollupsDailyMs) }
-	];
-}
+import { storageClasses } from './storage-classes.js';
 
 /** The progress of a running migration, or the outcome of one that ended; `null` for none or pending. */
 export function migrationLine(migration: InfoMigration, tz: string): string | null {
@@ -43,31 +31,24 @@ export function migrationLine(migration: InfoMigration, tz: string): string | nu
 	}
 }
 
-/** Collections without an index that leads with their time field, which the info endpoint never dates. */
-const UNDATED: ReadonlySet<string> = new Set([
-	Collection.TRACKS,
-	Collection.TRACK_SUBSCRIPTIONS,
-	Collection.TRACK_STATS
-]);
-const UNDATED_HINT = "Not shown: no index starts with this collection's time field";
-
 /**
- * The OpenVidu version with the edition, the legacy migration while it runs (and its outcome when it ends while the
- * tab is open), the retention per data class and the storage per collection.
+ * The legacy migration while it runs (and its outcome when it ends while the tab is open), the storage and retention
+ * per data class, and where the retention is configured.
  */
 @Component({
-	selector: 'ovd-about-tab',
-	imports: [EditionBadge, MatProgressBar, MatTooltip, Notice, Skeleton],
-	templateUrl: './about-tab.html',
-	styleUrl: './about-tab.scss'
+	selector: 'ovd-data-tab',
+	imports: [ExternalLink, InfoTip, MatProgressBar, Notice, Skeleton],
+	templateUrl: './data-tab.html',
+	styleUrl: './data-tab.scss'
 })
-export class AboutTab {
+export class DataTab {
 	private readonly service = inject(InfoService);
 	private readonly server = inject(ServerStatusService);
 	private readonly tz = inject(QueryStateService).tz;
 	/** A migration seen running in this tab; its outcome stays visible until the tab is left. */
 	private readonly seenRunning = signal(false);
 
+	protected readonly documentation = `${EXTERNAL_LINKS.documentation}#retention`;
 	protected readonly info = this.service.info;
 	protected readonly unavailable = computed(() => this.info() === null && this.service.error() !== null);
 	/** From the server status poll (every 10 s while it runs), or the info document until the first status. */
@@ -91,29 +72,24 @@ export class AboutTab {
 			? Math.floor((progress.processed / progress.total) * 100)
 			: 0;
 	});
-	protected readonly retention = computed(() => {
-		const retention = this.info()?.retention;
+	protected readonly classes = computed(() => {
+		const info = this.info();
 
-		return retention === undefined ? null : retentionRows(retention);
-	});
-	protected readonly storage = computed(() =>
-		Object.entries(this.info()?.storage ?? {}).map(([collection, entry]) => ({
-			collection,
-			documents: formatNumber(entry.documents),
-			size: formatBytes(entry.storageBytes + entry.indexBytes),
-			oldest: entry.oldest === undefined ? '—' : formatTimestamp(entry.oldest, { tz: this.tz() }),
-			undatedHint: entry.oldest === undefined && UNDATED.has(collection) ? UNDATED_HINT : null
-		}))
-	);
-	protected readonly storageTotal = computed(() => {
-		const entries = Object.values(this.info()?.storage ?? {});
+		if (info === null) {
+			return null;
+		}
 
-		return entries.length === 0
-			? null
-			: {
-					documents: formatNumber(entries.reduce((sum, entry) => sum + entry.documents, 0)),
-					size: formatBytes(entries.reduce((sum, entry) => sum + entry.storageBytes + entry.indexBytes, 0))
-				};
+		const { rows, total } = storageClasses(info.storage, info.retention, this.service.readAt() ?? Date.now());
+
+		return {
+			rows: rows.map((row) => ({
+				...row,
+				documentsText: formatNumber(row.documents),
+				size: formatBytes(row.bytes)
+			})),
+			total: { documents: formatNumber(total.documents), size: formatBytes(total.bytes) },
+			retentionReported: info.retention !== undefined
+		};
 	});
 
 	constructor() {
