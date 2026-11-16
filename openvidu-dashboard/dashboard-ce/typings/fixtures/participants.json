@@ -277,6 +277,7 @@
 		"client": { "sdk": "PYTHON", "version": "1.2.0", "os": "linux" },
 		"permission": { "canSubscribe": true, "canPublish": true, "canPublishData": true },
 		"isPublisher": false,
+		"attributes": { "lk.agent_name": "speech-processing", "openvidu.agent": "speech-processing" },
 		"tracks": {
 			"published": { "$numberInt": "0" },
 			"bySource": {},

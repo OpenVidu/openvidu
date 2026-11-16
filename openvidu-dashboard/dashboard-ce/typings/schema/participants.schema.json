@@ -137,7 +137,7 @@
 			"bsonType": "object",
 			"properties": {},
 			"additionalProperties": { "bsonType": "string" },
-			"description": "Only with store_metadata"
+			"description": "Every attribute with store_metadata; without it, only lk.agent_name, openvidu.agent and openvidu.agent.* of an AGENT"
 		},
 		"tracks": {
 			"bsonType": "object",

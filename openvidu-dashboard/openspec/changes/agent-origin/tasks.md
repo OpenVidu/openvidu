@@ -35,21 +35,21 @@ Tests only, committed in the writer checkout and not pushed until group 9. It co
 
 ## 2. Typings and contract (implementer)
 
-- [ ] 2.1 In `typings/src/data-model/entities.ts`, export the attribute keys `AGENT_NAME_ATTRIBUTE`
+- [x] 2.1 In `typings/src/data-model/entities.ts`, export the attribute keys `AGENT_NAME_ATTRIBUTE`
       (`lk.agent_name`) and `OPENVIDU_AGENT_ATTRIBUTE` (`openvidu.agent`); in `typings/src/api/participants.ts`, add
       `AgentOrigin` (`openvidu`, `third-party`), `ParticipantAgent { name?, openvidu? }`, `ParticipantListItem.agent?`
       and `AgentsListQuery.origin?` (decision 6). Verify: `./dashboard.sh typecheck` passes and
       `pnpm --filter @openvidu-dashboard/typings test` passes.
-- [ ] 2.2 In `typings/contract/schemas.ts`, reword the `attributes` description of `participants` (design, Data
+- [x] 2.2 In `typings/contract/schemas.ts`, reword the `attributes` description of `participants` (design, Data
       model); in `typings/contract/fixtures/participants.ts`, give the agent
       `attributes: { 'lk.agent_name': 'speech-processing', 'openvidu.agent': 'speech-processing' }`; regenerate with
       `pnpm --filter @openvidu-dashboard/typings contract`. Verify: `git diff --stat` shows, of the generated files,
       only `schema/participants.schema.json` and `fixtures/participants.json`, and `contract_version.txt` still
       reads 1.
-- [ ] 2.3 In `typings/test/contract.test.ts`, add `Agent attributes in the contract fixtures`: the agent fixture
+- [x] 2.3 In `typings/test/contract.test.ts`, add `Agent attributes in the contract fixtures`: the agent fixture
       passes the `participants` validator with exactly those two attributes, and no other participant fixture has
       `attributes` or `metadata`. Covers: Agent attributes in the contract fixtures. Verify: the typings tests pass.
-- [ ] 2.4 In `typings/README.md`, "Conventions", add that `attributes` keys contain dots (`lk.agent_name`,
+- [x] 2.4 In `typings/README.md`, "Conventions", add that `attributes` keys contain dots (`lk.agent_name`,
       `openvidu.agent`), are read with `$getField` and never with a dotted path, and what an agent keeps without
       `store_metadata`. Verify: `./dashboard.sh format-check` passes.
 

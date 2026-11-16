@@ -29,6 +29,9 @@ The tests fail when a generated file is out of date.
   `participants.peakActive`) are kept with `$max` by the server's aggregator instead: an absent peak means no sample.
 - Protocol enums keep the protocol name without prefix (`API_DELETE`, `CLIENT_INITIATED`); model statuses are lower
   case. Rollup map keys are enum names or fixed vocabularies, never user input.
+- Participant `attributes` keys contain dots (`lk.agent_name`, `openvidu.agent`): read them with `$getField`, never
+  with a dotted path, which MongoDB takes as nested fields and matches nothing. Without `store_metadata` the writer
+  keeps no attributes, except `lk.agent_name`, `openvidu.agent` and `openvidu.agent.*` of a session of kind `AGENT`.
 - `internal` holds writer bookkeeping (id sets behind counters); the dashboard never reads it.
 - Validators reject unknown fields; the writer applies them with `validationAction: warn` in production and `error` in
   tests. Time-series collections do not accept validators, so `track_stats` is validated only in the plain-collection

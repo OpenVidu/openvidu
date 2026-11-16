@@ -248,6 +248,7 @@ export const participants: ParticipantDocument[] = [
 		client: { sdk: 'PYTHON', version: '1.2.0', os: 'linux' },
 		permission: standardPermission,
 		isPublisher: false,
+		attributes: { 'lk.agent_name': 'speech-processing', 'openvidu.agent': 'speech-processing' },
 		tracks: { published: 0, bySource: {}, subscribed: 0, subscribeFailures: 0 },
 		bytes: { up: 400_000, down: 30_000_000 },
 		quality: {

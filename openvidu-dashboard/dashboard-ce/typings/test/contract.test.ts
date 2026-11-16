@@ -266,6 +266,21 @@ describe('fixtures', () => {
 		]);
 	});
 
+	it('Agent attributes in the contract fixtures', () => {
+		const participants = readFixtures(Collection.PARTICIPANTS);
+		const agents = participants.filter((doc) => doc.kind === 'AGENT');
+		expect(agents).toHaveLength(1);
+		const [agent] = agents;
+		expect(validate(Collection.PARTICIPANTS, agent)).toBeNull();
+		expect(agent?.attributes).toEqual({
+			'lk.agent_name': 'speech-processing',
+			'openvidu.agent': 'speech-processing'
+		});
+
+		const others = participants.filter((doc) => doc !== agent);
+		expect(others.filter((doc) => 'attributes' in doc || 'metadata' in doc).map((doc) => doc._id)).toEqual([]);
+	});
+
 	it('carry the schema version on every entity document', () => {
 		for (const collection of Object.keys(ENTITY_RETENTION_CLASS) as Collection[]) {
 			for (const document of readFixtures(collection)) {

@@ -196,7 +196,14 @@ const participants = obj({
 	}),
 	isPublisher: req(bool()),
 	metadata: str('Only with store_metadata'),
-	attributes: obj({}, { additionalProperties: str(), description: 'Only with store_metadata' }),
+	attributes: obj(
+		{},
+		{
+			additionalProperties: str(),
+			description:
+				'Every attribute with store_metadata; without it, only lk.agent_name, openvidu.agent and openvidu.agent.* of an AGENT'
+		}
+	),
 	tracks: req(
 		obj({
 			published: req(int()),
