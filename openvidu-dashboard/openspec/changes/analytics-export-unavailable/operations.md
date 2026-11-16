@@ -8,3 +8,7 @@
   cherry-picked onto `origin/master` (two commits outside `openvidu-dashboard/`).
 - The verifier and the reviewer ran without their guard, with the owner's consent; `git status` after them showed only
   their reports.
+- Incremental verification on `988a180fb`: nothing open. Pushed to `master` as `19af60976`. CI run 43895194983 of
+  `openvidu-dashboard-ci.yml`: the first attempt failed in `Integration tests (MongoDB)` (`info-query-plan.test.ts`, no
+  oldest document of `ingresses` and `ingress_sessions` in the generated day), a suite this change does not touch; the
+  rerun of that job passed and the run is green.
