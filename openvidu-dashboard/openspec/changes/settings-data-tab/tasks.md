@@ -175,7 +175,7 @@ Paths are relative to `dashboard-ce/`; `ui/` is `frontend/projects/dashboard-ui/
 
 ## 11. Documentation (orchestrator)
 
-- [ ] 11.1 In `openvidu.io`, on the branch of the 3.10 dashboard page
+- [x] 11.1 In `openvidu.io`, on the branch of the 3.10 dashboard page
       (`docs/docs/self-hosting/production-ready/observability/openvidu-dashboard.md`), rewrite the Settings bullet
       "About" as "Data" (storage and retention per class of data and per collection, the estimate at full retention,
       the migration progress) and add to "Retention" that the Data tab estimates the size of each class and that a new

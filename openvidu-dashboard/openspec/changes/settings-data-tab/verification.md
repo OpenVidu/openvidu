@@ -1,138 +1,89 @@
 # Verification: settings-data-tab
 
 - Date: 2026-11-16
-- Mode: full
-- Verified commit: `d12444b89a858718102354ab4357ea93337beaa7` (`git diff origin/master`, `origin/master` =
-  `fced8ec7d`: the proposal commit, six implementation commits and the owner review record); working tree clean
+- Mode: incremental
+- Verified commit: `38021c9639b07bd7773519d07b4916f5875f2f00`; starts from `d12444b89a858718102354ab4357ea93337beaa7`
+  (the full verification and the code review). `git diff d12444b89..HEAD`: the reports and owner decisions
+  (`461dde1b3`), the approved revision of the artifacts (`02e08498d`), group 9 (`89b20e450` to `6af4a5aad`) and the
+  owner review of it (`38021c963`). Working tree clean before and after the checks.
 - Guard probe (step 1) skipped by the owner's decision: this session cannot activate the guard. Held to its rules: only
   reads, the checks below and this file.
+- This report supersedes `code-review.md` of `d12444b89`: every finding of it is listed below with its status.
+
+`features/` is `dashboard-ce/frontend/projects/dashboard-ui/src/lib/features/`, `core/` its sibling.
 
 ## Checks run
 
 | Command | Result |
 | --- | --- |
-| `./dashboard.sh check` | Pass (exit 0): lint, format, typecheck, `openspec validate --all --strict` (31 items), tooling tests 115, typings 109, backend unit 240, `dashboard-ui` 586 in 51 files, `frontend` 1 |
-| `./dashboard.sh scenarios settings-data-tab` | 49 scenarios, 0 without a test |
+| `./dashboard.sh check` | Pass (exit 0): lint, format, typecheck, `openspec validate --all --strict` (31 items), tooling tests 115, typings 109, backend unit 240, `dashboard-ui` 602 in 51 files (586 + 17 new − `What the estimates assume`), `frontend` 1 |
+| `./dashboard.sh scenarios settings-data-tab` | 52 scenarios, 0 without a test |
 | `./dashboard.sh e2e` | Pass (exit 0): mocked suite 126 passed, real-backend suite 6 passed (Docker available); axe on `tab=data` with Entities expanded in the light and the dark theme |
 | `./dashboard.sh test-integration` | Not applicable: no backend file changed |
 | Contract check, image build and smoke | Not applicable: no contract, image or runtime dependency change |
-| CI run of the push (task 9.1) | Pending (orchestrator, after this verification) |
+| CI run of the push (task 10.1) | Pending (orchestrator) |
 
-## Summary
+Bundle: initial 39.74 kB over the 1.20 MB warning budget (39.69 kB at `d12444b89`, 39.58 kB on `origin/master`
+`fced8ec7d`): the revision adds 0.05 kB raw (`EXTERNAL_LINKS.analyticsSettings`, `InfoRead`); initial 310.0 kB gzip
+of 400 kB; Settings chunk 19.8 kB gzip (19.9 kB before), under 150 kB. Not a finding of this change.
 
-| Dimension | Status |
-| --- | --- |
-| Completeness | 29/32 tasks; the 3 open (9.1, 10.1, 10.2) belong to the orchestrator after this verification: pending, not findings. 10 ADDED/MODIFIED requirements in `settings-about`, 1 in `overview-ui`, 1 in `ui-shell`, all implemented |
-| Correctness | 12/12 requirements covered; 49/49 scenarios with a passing test that asserts what the scenario states. 4 removals confirmed, 1 rename (About loading state → Data loading state) verified through its MODIFIED text |
-| Coherence | Design decisions 1–13 followed; performance budget met; 2 suggestions |
+## Earlier findings
 
-## Requirements and scenarios
+| Report | Finding | Status | Evidence |
+| --- | --- | --- | --- |
+| Verification | SUGGESTION 1, unlimited daily rollups without a clock | Resolved | "Clock of each data class" now ends "A class without a clock has no tip, except unlimited Daily rollups" (`specs/settings-about/spec.md:171-172`), design decision 7; `storage-classes.ts:145-149`; `Unlimited daily rollups without data` (`storage-classes.spec.ts:251`, no `analytics_daily` entry: 0 documents, tip "Grows without limit") |
+| Verification | SUGGESTION 2, breakdown table named by `aria-label` | Resolved | Visually hidden `<caption>` bound with `[textContent]` (`collection-breakdown.ts:23`), so the name is exact; `Expand a class` asserts it (`settings-page.spec.ts:523-525`); axe passes in both themes with Entities expanded |
+| Code review | WARNING 1, daily bucket start inflates the deployment clock | Resolved | `DEPLOYMENT_CLOCK` without `analytics_daily` (`storage-classes.ts:74-83`); design decisions 2 and 4, spec "Clock of each data class"; `Daily bucket outside the deployment clock` (`storage-classes.spec.ts:213`: daily 1 day, events 5 h → "Less than 1 day of 7 days so far"; with the daily bucket in the clock it would read "1 of 7 days so far · …") |
+| Code review | WARNING 2, span not pinned to the read | Resolved | `Span ends at the read` (`settings-page.spec.ts:391-410`): fake `Date`, info read with `rooms` 12 days old, clock advanced 2 days, then `tab=data` rendered; expects "12 of 90 days so far", which `Date.now()` at render would turn into 14 |
+| Code review | SUGGESTION 1, progress and full boundaries | Resolved | `Span rounded down: exactly one day` (`storage-classes.spec.ts:118`, catches `count <= 1` and a 2-unit threshold), `Class at full retention: exactly 6 of 7 days` (`:128`, catches `<` for `<=`) |
+| Code review | SUGGESTION 2, clock membership | Resolved | `it.each` over the four entity clock collections (`:169`) and the seven deployment clock collections (`:197`), each the only earliest; dropping any fails its row; adding `analytics_daily` back fails `:213` |
+| Code review | SUGGESTION 3, class without documents shows progress | Resolved | `documents === 0` → no tip (`storage-classes.ts:151`); requirement "Retention progress" ("A class with documents…"), design decision 7; `Class without documents` (`storage-classes.spec.ts:150`: Stats 0 documents, 0 bytes, no tip, with a 3-day deployment clock that would otherwise give "3 of 7 days so far") |
+| Code review | SUGGESTION 4, browser clock against server dates | Accepted by the owner | Known limit in the proposal (`proposal.md:41-42`) and in design Risks (`design.md:186-189`) |
+| Code review | SUGGESTION 5, dead `?? Date.now()` fallback | Resolved | `InfoService.read()` returns `InfoRead` (`core/info.ts:14-18`, `:36`); the Data tab destructures `{ info, readAt }` with no fallback (`data-tab.ts:79-87`) |
 
-`features/` is `dashboard-ce/frontend/projects/dashboard-ui/src/lib/features/`.
+## Revised requirements and scenarios
 
-- **Preferences and Data tabs**: `features/settings/settings-page.ts:8` (`SETTINGS_TABS = ['preferences', 'data']`),
-  tab label "Data". Deep link to Data (`settings-page.spec.ts:181`: Data selected and focused, tabs exactly
-  Preferences and Data), Former About value (`:194`).
-- **Legacy migration on the Data tab**: `data-tab.ts:59-78`, `data-tab.html:4-14`, unchanged behaviour. Migration
-  running on the Data tab (`:202`, 25 % then 50 % with the next status), Completed before the page opened (`:219`),
-  Completed while watching (`:232`).
-- **Storage per data class**: `storage-classes.ts:32-72` (the seven classes of design decision 2, `schema_meta` in
-  none), `:166-201` (sums and total), `data-tab.html:16-77`. Class rows (`settings-page.spec.ts:322`, also no
-  "Kept for"), Collections of each class (`storage-classes.spec.ts:56`), Class that sums several collections (`:73`),
-  Storage total without schema_meta (`settings-page.spec.ts:361`, Total row `Total`, empty, `289`, `737 kB`, no
-  `schema_meta` in the tab), Retention that is not a whole number of days (`:343`), Retention not reported (`:353`).
-  The design's classification test (`storage-classes.spec.ts:47`) fails when a contract collection is left
-  unclassified.
-- **Retention progress**: `storage-classes.ts:126-157` (rounding down, "Less than 1 <unit>", tolerance
-  `max(1 day, retention / 10)`). Class still filling (`settings-page.spec.ts:379`: accessible name and text of the
-  tip), Span rounded down, Class at full retention, Full within a tenth of the retention, Less than one unit of data,
-  Idle period reads as filling (`storage-classes.spec.ts:103-127`).
-- **Clock of each data class**: `storage-classes.ts:24-29`, `:75-81`, `:180`. Entities clock ignores nodes and
-  ingresses, Stats and tracks on the deployment clock, Deployment older than the stats retention, Class without a
-  clock (`storage-classes.spec.ts:129-165`).
-- **Size estimate at full retention**: `storage-classes.ts:139-157`. Linear estimate, No estimate under one day of
-  data, Unlimited daily rollups without a day of data, Daily rollups with a limit (`storage-classes.spec.ts:167-193`),
-  Unlimited daily rollups (`settings-page.spec.ts:391`), Total without an estimate (`:404`).
-- **Retention tip access**: the shared `ovd-info-tip` after the retention value, rendered only when the row has a tip
-  (`data-tab.html:52-54`). Progress only in the tip (`settings-page.spec.ts:417`). Retention tip by keyboard
-  (`e2e/tests/settings.spec.ts:62`: focus by Tab from the row's expand button, tooltip text, accessible description,
-  Escape hides it). Retention tip on a phone (`:80`), see the next section.
-- **Collection breakdown**: `collection-breakdown.ts`, `data-tab.html:35-47` and `:59-65`, `data-tab.ts:53`,
-  `:107-117`; state in a signal, not in the URL. Breakdown collapsed by default (`settings-page.spec.ts:475`), Expand a
-  class (`:492`), Collapse a class (`:530`), Collection without an oldest date (`:547`). Kept by the owner on the demo
-  (`operations.md`).
-- **Retention configuration message**: `data-tab.html:82-91`. Where the retention is set (`settings-page.spec.ts:429`,
-  text, `href` and `target="_blank"`), What the estimates assume (`:445`).
-- **Server info unavailable**, **Data loading state** (MODIFIED; RENAMED from About loading state): Backend down
-  (`:254`), Info in flight (`:293`), Info arrives (`:303`: only the Storage heading, the table and the message, no
-  version line, no `ovd-edition-badge`).
-- **Server status card** (`overview-ui`): `overview-page.html:120` targets `tab: 'data'`. The eight scenarios are titled
-  tests in `overview-page.spec.ts` (237, 276, 292, 322, 478, 496, 505, 517).
-- **Info re-read on server changes** (`ui-shell`): Migration ends (`settings-page.spec.ts:155`: one info request, the
-  Entities row then reads `90 days`, `4`, `381 kB`), Steady server (`core/refresh/server-status.spec.ts:187`: 20 polls
-  of 30 s, no info request).
+All in `specs/settings-about/spec.md`; each test below asserts what its scenario states.
 
-Removed requirements, checked against the baseline in `openspec/specs/settings-about/spec.md`: Settings tabs (no
-About tab, unit and e2e), OpenVidu version (no version line or edition badge in the tab: `Info arrives` and the e2e
-`Data shows the storage per data class…`), Retention and storage (the retention table and the per-collection table
-are gone; no "Kept for" column), Migration status (replaced with the same behaviour). No code path still delivers them.
+- **Retention progress** (now "A class with documents"): `storage-classes.ts:142-160`. Span ends at the read (see
+  WARNING 2 above), Class without documents (above), Span rounded down and Class at full retention with their new
+  boundary rows (above). The remaining scenarios are unchanged and pass.
+- **Clock of each data class**: deployment clock of seven collections without `analytics_daily`
+  (`storage-classes.ts:74-83`). Stats and tracks on the deployment clock (`storage-classes.spec.ts:182`, earliest an
+  hourly bucket 3 days old, 30 MB → "≈ 70 MB", 4 + 2 MB → "≈ 14 MB"; and `:197`), Daily bucket outside the deployment
+  clock (`:213`), Entities clock ignores nodes and ingresses (`:156`, `:169`), Unlimited daily rollups without data
+  (`:251`).
+- **Size estimate at full retention**: No estimate under one day of data now gives Tracks 16 documents
+  (`storage-classes.spec.ts:239`), needed since a class without documents has no tip; "Grows without limit" for
+  unlimited daily rollups whatever the data (`storage-classes.ts:145-149`). Only `rollupsDailyMs` is nullable in
+  `InfoRetention` (`dashboard-ce/typings/src/api/info.ts:50`), so no other class reaches that branch.
+- **Collection breakdown** ("a table named 'Collections of <class>'"): Expand a class asserts the caption text
+  (`settings-page.spec.ts:523`).
+- **Retention configuration message**: one `ovd-notice` `variant="info"` (host role `status`,
+  `components/feedback/notice.ts:14`) after the muted "Retention not reported…" line (`data-tab.html:202-211`), link
+  `EXTERNAL_LINKS.analyticsSettings` (`core/links.ts:4`). Where the retention is set (`settings-page.spec.ts:450-466`):
+  role `status`, the exact sentence, link text "Configuration reference", `href`, `target="_blank"`, and no text after
+  the table matching `info icon|estimate`. The e2e `Data shows the storage per data class…`
+  (`e2e/tests/settings.spec.ts:33-66`) checks the notice and the `href` in the built app; `Retention tip on a phone`
+  still asserts `scrollWidth <= 375` with the notice in place. The removed scenario `What the estimates assume` has no
+  test and no text left.
 
-## Points the orchestrator asked about
+Artifacts: proposal, design (decisions 2, 4, 7, 8, 10, 11, Risks, test map) and tasks agree with the specs and the
+code; the test map lists all 52 scenarios. `openspec validate --strict` passes.
 
-- **Tip on touch.** `Retention tip on a phone` (`e2e/tests/settings.spec.ts:77-97`) runs at 375 × 740 with
-  `hasTouch: true` and opens the tip with `tap()`, which in Chromium dispatches touch input (pointer type `touch`).
-  The tooltip appearing proves the tap path: the tip sets `matTooltipTouchGestures="off"` and MatTooltip shows on focus
-  only for keyboard focus, so nothing but `InfoTip.activate` (`components/info-tip/info-tip.ts:98-109`, `toggle()` for
-  touch) shows it. The second tap hiding it proves the touch toggle specifically: a mouse or keyboard activation calls
-  `show(0)` and would leave it open. The test also asserts the tooltip box inside 0–375 px and
-  `document.documentElement.scrollWidth <= 375`. Hover and keyboard focus are the shared tip's behaviour; keyboard is
-  asserted by `Retention tip by keyboard`.
-- **Accessible name of the breakdown table.** `collection-breakdown.ts:238` names the nested table with
-  `aria-label="Collections of <class>"`; the specs and the design say nothing about it, so it is no divergence (see
-  the suggestion on consistency).
-- **Unlimited daily rollups without an oldest date.** `storage-classes.ts:142-146` returns "Grows without limit" for
-  unlimited daily rollups even without a clock. That follows "Size estimate at full retention" ("SHALL always carry the
-  tip") but contradicts the general sentence of "Clock of each data class" ("A class without a clock carries no
-  tip"). See the suggestion.
-- **Extra tests.** `storage-classes.spec.ts:47` (classification, required by design decision 2), `:89` (total over the
-  rows), `core/info.spec.ts:47` (`readAt` set only by the full document, decision 8), `server-status.spec.ts:168` (the
-  re-read half of the former test, kept beside `Steady server` as task 4.3 asks). None contradicts a spec.
-- **Overview test adjustments.** `Server silent without a stop` now uses a 10-minute-old batch as the scenario states
-  (was 3 minutes); `Server stopped` and `Healthy card` pin the reference to today at 12:10:04 / 12:31:09 UTC to assert
-  the scenario times exactly (the page is in UTC, `overview-page.spec.ts:146`); `Auto-refresh off` adds that the tiles
-  keep their values and no overview request is made; `Migration running` adds the update with the next status;
-  `Before the first status` adds "no Loading text"; `Slow writer batches` and `Storage and retention link` are new. Each
-  matches its scenario; the titled tests of `overview-live-tiles` are untouched.
-- **Initial bundle warning.** Not raised by this change. The e2e build of this commit reports "bundle initial exceeded
-  maximum budget. Budget 1.20 MB was not met by 39.69 kB with a total of 1.24 MB"; the CI run of `origin/master`
-  `fced8ec7d` (run 43950788545, read with `gh run view --log`) reports the same warning at 39.58 kB over. The change
-  adds 0.11 kB raw to the initial bundle (transfer size unchanged within rounding: 251.30 → 251.22 kB), from the `readAt` signal of
-  `core/info.ts`; the Data tab, `storage-classes.ts` and the breakdown are in the lazy Settings chunk (strings such as
-  "Grows without limit" appear only there). The Settings chunk grew from 78.41 kB raw / 18.2 kB gzip to 83.46 kB /
-  19.9 kB gzip, under its 150 kB gzip budget; the initial total is 310.0 kB gzip against 400 kB.
+## InfoService.read()
 
-## Design adherence
+`InfoService` keeps one signal of `InfoRead` (`core/info.ts:28`); `info` is now a `computed` over it (`:33`, same
+`Signal<InfoResponse | null>` type for consumers) and `read` exposes the pair (`:36`). It is set only for the full
+document and cleared with it (`:55`, `:60`), so `info` and `readAt` can no longer disagree.
 
-- Decisions 1–2: no backend, API or contract change; one pure module with the class map, `formatRetention` moved into
-  it.
-- Decisions 3–7: each class by its own clock, Stats and Tracks on the deployment clock, Entities without `nodes` and
-  `ingresses`, the 1 day / 10 % tolerance, estimate `size × retention ÷ span` from one day of data, unlimited daily
-  rollups over 365 days, no estimate in the Total row.
-- Decision 8: `InfoService.readAt` (`core/info.ts:31`, `:50`), passed to the module (`data-tab.ts:86`).
-- Decisions 9–12: shared info tip with `subject` "<class> retention"; native expand button with `aria-expanded`,
-  `aria-controls` and the listed icons; plain table in its `overflow-x: auto` wrapper with a wrapping first column
-  (`data-tab.scss:40-43`); `DataTab`, `ovd-data-tab`, `data-tab.{ts,html,scss}`.
-- Performance budget: no request added; Settings lazy chunk within budget (above).
-
-## Conventions
-
-- Edition seams: the tab is not exported by `public-api.ts`; the PRO adaptation is out of scope as the proposal states.
-- Language, comments, commit messages (`openvidu-dashboard: …, change settings-data-tab`): conform.
-- CHANGELOG: `CHANGELOG.md:54-56`, the Settings line rewritten under 3.10.0 `Added` → `UI` as the proposal gives it, in
-  the commit that renames the tab (`de5f89d48`).
-- `README.md`, the `AGENTS.md` files and the library README name neither the About tab nor its files. Remaining
-  `tab=about` references are intended: `core/auth/auth.spec.ts:134` (arbitrary protected URL, task 4.4),
-  `settings-page.spec.ts:195` (`Former About value`), and the main specs, which change at sync.
+It is a seam an extending edition may use: `public-api.ts:49` exports all of `core/info.ts`, so `InfoRead` and
+`read()` are public, and the library README (`dashboard-ce/frontend/projects/dashboard-ui/README.md:78-79`, "Injection tokens") says root services such as
+`InfoService` can be replaced with a provider. An extending edition that replaces `InfoService` must now provide
+`read`, because the CE Data tab it renders through the CE Settings route reads it; a PRO adaptation of the Data tab
+(out of scope here) would take the instant from `read()`. No compatibility concern: `readAt` never reached
+`origin/master` (`fced8ec7d` has neither member), so nothing published is removed. See SUGGESTION 1 for the design
+text.
 
 ## Issues
 
@@ -146,36 +97,27 @@ None.
 
 ### SUGGESTION
 
-1. **Spec wording on unlimited daily rollups without a clock.** "Clock of each data class" ends with "A class without
-   a clock carries no tip", while "Size estimate at full retention" says unlimited daily rollups "SHALL always carry
-   the tip 'Grows without limit'". `storage-classes.ts:142-146` follows the latter, so a deployment with no daily bucket
-   yet shows the tip; no test pins that case (`storage-classes.spec.ts:185` has a 5-hour bucket). Recommendation: have
-   the owner confirm the behaviour, then qualify the clock sentence in
-   `specs/settings-about/spec.md` ("…carries no tip, except Daily rollups without a limit") before syncing and add a
-   test with an empty `analytics_daily`.
-2. **Code pattern deviation: table naming.** The breakdown table is named by `aria-label`
-   (`collection-breakdown.ts:238`), while the Storage table and the former tables use a visually hidden `<caption>`
-   (`data-tab.html:19-21`). Recommendation: use `<caption class="ovd-visually-hidden">Collections of {{ label() }}
-   </caption>` for consistency, or keep it; both give the same accessible name.
+1. **Design decision 8 still names the member that was replaced.** `design.md:103-107` says `InfoService` records
+   `readAt` with the document; the code exposes it as `InfoService.read()`, an `InfoRead` of `info` and `readAt`
+   (`core/info.ts:14-18`, `:36`), which is now public API. Recommendation: name `read()` / `InfoRead` in decision 8
+   before archiving, so the design matches the seam an extending edition sees.
 
-## Definition of Done
+## Definition of Done (items the diff affects)
 
 | Item | Status |
 | --- | --- |
-| All tasks checked | Not yet: 9.1, 10.1, 10.2 (orchestrator, after this verification) pending |
-| `scenarios` finds a passing test for every delta scenario | Met (49/49; all pass in `check` and `e2e`) |
+| All tasks checked | Not yet: 10.1, 11.1, 11.2 (orchestrator) pending; 9.1–9.7 checked |
+| `scenarios` finds a passing test for every delta scenario | Met (52/52; all pass in `check` and `e2e`) |
 | `check` passes locally | Met |
-| CI run of the push green | Pending (task 9.1) |
-| Backend changes: `test-integration` | Not applicable |
+| CI run of the push green | Pending (task 10.1) |
 | UI changes: `e2e` with axe and both themes | Met |
-| Data contract changes: `contract-check` | Not applicable |
-| Image or runtime dependency changes: `build-image`, `smoke-image` | Not applicable |
-| Latest verification report without CRITICAL | Met (this report) |
-| Refactor review applied or recorded | Task 7.3 checked; its outcome is in the implementation report, not in the repository, so not checked here. Recommendation: the orchestrator records it in `operations.md` |
-| `CHANGELOG.md`, `README.md`, `AGENTS.md` reflect the change | Met |
+| Latest verification reports without CRITICAL | Met (this report) |
+| Refactor review applied or recorded | 7.3 recorded in `operations.md`; the outcome of 9.7 is not in the repository, so not checked here. Recommendation: the orchestrator records it in `operations.md` |
+| `CHANGELOG.md`, `README.md`, `AGENTS.md` reflect the change | Met: the `CHANGELOG.md:54-56` line ("where the retention is configured") still holds; no README or AGENTS.md text names the message or `readAt` |
 | Change archived | Pending; at sync, update the Purpose of `openspec/specs/settings-about/spec.md` (design decision 12) |
 
 ## Final assessment
 
-No critical issues or warnings. 2 suggestions to consider. Ready for archive (with noted improvements) once the
-orchestrator's groups 9 and 10 are done.
+No critical issues or warnings. 1 suggestion to consider. Every finding of the earlier verification and code review is
+resolved, except code review SUGGESTION 4, accepted by the owner. Ready for archive (with noted improvements) once the
+orchestrator's groups 10 and 11 are done.

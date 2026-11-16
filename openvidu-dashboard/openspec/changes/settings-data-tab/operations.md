@@ -17,3 +17,11 @@
   applied; SUGGESTION 4 of the code review (browser clock against server dates) is accepted as a known limit.
 - Owner review of the revision (group 9) on `./dashboard.sh demo ce`: accepted; the retention link reads
   "Configuration reference" at the owner's request.
+- Incremental verification on `38021c963`: nothing open but a SUGGESTION on `design.md` (name `read()` / `InfoRead`),
+  applied without a new verification. Refactor review of group 9 (9.7), from the implementer's report: none needed.
+- Documentation (11.1): openvidu.io `docs/openvidu-dashboard-3.10` (draft PR #160) `b46779b71` rewrites the Settings
+  bullet as "Data" and adds the Data tab's estimate and how a new retention applies to "Retention"; the configuration
+  reference keeps `### Analytics settings`; the strict build (`mkdocs build --strict`, mkdocs-material image) passes.
+- Documentation (11.2): moved to the PRO change that adopts this one. The documentation screenshots are of the PRO
+  edition, taken by `dashboard-pro/e2e/scripts/docs-screenshots.mjs`, whose `settings-about` entry opens
+  `tab=about`; that change renames it to `settings-data`, retakes both images and updates their references.

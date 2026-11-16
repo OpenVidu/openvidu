@@ -100,11 +100,12 @@ OpenAPI change; `editions-info` keeps its contract.
    read "3 of 7 days so far" on servers that write no media statistics. Unlimited daily rollups are the exception and
    always read "Grows without limit", with or without data or a clock (owner's decision).
 
-8. **"Now" is the moment the info document was read.** `InfoService` records it with the document (`readAt`), and the
-   module takes it as an argument: sizes and spans then describe the same instant, and the module tests pass a fixed
-   time. The Data tab passes `readAt` without a fallback (it is set with every full document), and one tab test with
-   fake timers renders days after the read to pin that wiring ("Span ends at the read"). Rejected: `Date.now()` at
-   render, which would age the spans of a document whose sizes stay those of the read.
+8. **"Now" is the moment the info document was read.** `InfoService.read()` exposes an `InfoRead`, `{ info, readAt }`,
+   set as one value with every full document (`info()` is computed from it), and the module takes `readAt` as an
+   argument: sizes and spans then describe the same instant, and the module tests pass a fixed time. The Data tab
+   reads both from `read()`, so it needs no fallback, and one tab test with fake timers renders days after the read
+   to pin that wiring ("Span ends at the read"). Rejected: `Date.now()` at render, which would age the spans of a
+   document whose sizes stay those of the read.
 
 9. **Progress and estimate in the shared info tip (owner's decision).** `ovd-info-tip` after the retention value, with
    `subject` "<class> retention" (announced "About <class> retention") and the text of the specs; a class without
@@ -183,8 +184,8 @@ document gains the storage entries and `oldest` dates that make one class still 
   restart] → the documentation task states it; the tab message stays short.
 - [The figures are those of the last info read, which a long session does not refresh] → unchanged behaviour; spans
   use the same instant (decision 8).
-- [Spans use the browser clock (`readAt`) against server dates (`oldest`): a browser clock a day behind turns a full
-  Events class into "5 of 7 days so far", one ahead hides tips] → accepted by the owner as a known limit; the
+- [Spans use the browser clock (`readAt` of `InfoService.read()`) against server dates (`oldest`): a browser clock a
+  day behind turns a full Events class into "5 of 7 days so far", one ahead hides tips] → accepted by the owner as a known limit; the
   one-day tolerance absorbs skews of hours. A server-side "now" (the `Date` header of the info response or the
   `generatedAt` of the last status) is left for a later change.
 - [The configuration reference section the message links, `#analytics-settings`, exists only in the 3.10
