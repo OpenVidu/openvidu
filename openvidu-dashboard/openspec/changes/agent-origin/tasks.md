@@ -11,25 +11,25 @@ not duplicated. Decisions are those of `design.md`.
 Tests only, committed in the writer checkout and not pushed until group 9. It comes first because
 `./dashboard.sh scenarios` counts these tests from group 7 on.
 
-- [ ] 1.1 In `openvidu/analytics/writer_integration_test.go`, give the default-configuration case two subtests that
+- [x] 1.1 In `openvidu/analytics/writer_integration_test.go`, give the default-configuration case two subtests that
       share one helper, `Anonymized IP` and `Client address absent by default`: a `PARTICIPANT_JOINED` with
       `client_info.address` leaves no address in the participant document nor in the raw payload. Split it out of
       `personal data flags`. Covers: Anonymized IP, Client address absent by default. Verify: both subtests pass.
-- [ ] 1.2 In the same file, rename `IP addresses kept on request` to `IP addresses stored on request` (the document
+- [x] 1.2 In the same file, rename `IP addresses kept on request` to `IP addresses stored on request` (the document
       has `client.address` with `anonymize_ip: false`) and add `IP addresses kept`, which also finds the address in the
       raw payload. Covers: IP addresses stored on request, IP addresses kept. Verify: both subtests pass.
-- [ ] 1.3 In the same file, turn the rest of `personal data flags` into `Metadata enabled` (`store_metadata: true`: the
+- [x] 1.3 In the same file, turn the rest of `personal data flags` into `Metadata enabled` (`store_metadata: true`: the
       room's `config.metadata` and a STANDARD participant's `metadata` and `attributes` are stored) and add
       `Metadata disabled by default` (default configuration: none of the three is stored). Covers: Metadata enabled,
       Metadata disabled by default. Verify: both subtests pass.
-- [ ] 1.4 In `openvidu/analytics/migration_integration_test.go`, add `Migrated legacy session`: with the default
+- [x] 1.4 In `openvidu/analytics/migration_integration_test.go`, add `Migrated legacy session`: with the default
       configuration, a legacy `PARTICIPANT_JOINED` with a client address is replayed and the migrated participant
       document has no `client.address`. Covers: Migrated legacy session. Verify: the subtest passes.
-- [ ] 1.5 Run `go test -tags integration -count=1 ./openvidu/analytics/...` (Docker) and, from the dashboard
+- [x] 1.5 Run `go test -tags integration -count=1 ./openvidu/analytics/...` (Docker) and, from the dashboard
       workspace, `./dashboard.sh scenarios agent-origin /home/pablo/Desktop/FIX-2/openvidu-livekit`. Verify: the Go
       suite passes and the nine writer scenarios of design "Test strategy" each list a `_test.go` line, the two
       `agents keep …` ones included; the dashboard scenarios still read NO TEST at this point.
-- [ ] 1.6 Commit the test changes in openvidu-livekit (tests only, no behaviour change), without pushing, and record
+- [x] 1.6 Commit the test changes in openvidu-livekit (tests only, no behaviour change), without pushing, and record
       the commit in `operations.md`. Verify: `git -C /home/pablo/Desktop/FIX-2/openvidu-livekit show --stat HEAD`
       lists only `_test.go` files.
 
