@@ -161,10 +161,10 @@ Paths are relative to `dashboard-ce/`; `ui/` is `frontend/projects/dashboard-ui/
       Prettier breaks an interpolated caption into a name with stray whitespace, use a form whose accessible name is
       exact. In `features/settings/settings-page.spec.ts`, make `Expand a class` assert the table name. Covers: Expand
       a class. Verify: the unit tests pass and axe passes in 9.6.
-- [ ] 9.6 Run `./dashboard.sh scenarios settings-data-tab`, `./dashboard.sh check` and `./dashboard.sh e2e`; regenerate
+- [x] 9.6 Run `./dashboard.sh scenarios settings-data-tab`, `./dashboard.sh check` and `./dashboard.sh e2e`; regenerate
       with `--update-snapshots=all` only the theme baselines that change, and check them by eye. Verify: each of the 52
       scenarios lists a test and none reads "NO TEST"; `check` and `e2e` pass, with axe in both themes.
-- [ ] 9.7 Refactor review of the files touched by this group; apply a small one here or record that none is needed.
+- [x] 9.7 Refactor review of the files touched by this group; apply a small one here or record that none is needed.
       Verify: the outcome is written in the implementation report.
 
 ## 10. Publish (orchestrator)
