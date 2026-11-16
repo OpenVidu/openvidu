@@ -17,17 +17,23 @@ rules:
     - State scope and explicit non-scope, the edition (CE, PRO or both) and the repositories touched (dashboard, openvidu-livekit, openvidu-deployment)
     - List the observable behaviour that changes and the CHANGELOG lines it implies
   specs:
-    - Use Given/When/Then scenarios; every requirement names its edition (CE or PRO)
+    - Use Given/When/Then scenarios that can be automated; every requirement names its edition (CE or PRO)
+    - Scenario names are unique within the change and short enough to start a test title; tests are matched to scenarios by title
     - Requirements about lists state the filters, sort keys, cursor behaviour and page-size limits
   design:
     - Data model changes list collections, fields with types, indexes, retention, schema-version impact and the migration mapping from legacy events
     - API changes include the OpenAPI shape (paths, params, responses) and the index backing each query
     - State the performance budget and how it is verified (dataset size, explain() plan, p95)
     - Record decisions and rejected alternatives in a "Decisions" section
+    - Choose the simplest solution that meets the specs and justify any new abstraction
+    - Define the test strategy as scenario, test file and level (unit, integration or e2e)
   tasks:
-    - Group tasks by writer (openvidu-livekit), typings, backend, frontend, tests, docs and CHANGELOG
-    - Every task names its verification (test, lint, explain() check or manual step)
+    - Group tasks under numbered headings by writer (openvidu-livekit), typings, backend, frontend, tests, docs and CHANGELOG, ordered by dependencies, each heading ending with who does it, (implementer), (orchestrator) for pushes, CI, image builds and the contract check against the writer, or (owner)
+    - Every task names its verification (test, lint, explain() check or manual step) and the scenarios it covers; every scenario has at least one test task
     - Include updating the AGENTS.md files when commands, layout or conventions change
+    - End the implementer groups with a task for the refactor review
+    - Groups that publish come after the last implementer group, since the full verification runs between them
+    - The Definition of Done, verify, the push and the archive are not tasks; the verifier checks the first and the orchestrator does the rest
 
 operations:
   apply:
@@ -35,6 +41,8 @@ operations:
       - Run ./dashboard.sh check before reporting a task as done
       - Verify library versions on npm and APIs on Context7 before adding a dependency
       - Stop and ask the owner on ambiguity or when a task turns out infeasible; never guess
+      - 'Title each test with the name of the scenario it covers, alone or followed by ": <detail>"'
   archive:
     guidance:
+      - Archive only when the latest verification.md, and code-review.md unless an incremental verification superseded it, have no CRITICAL issue and the Definition of Done in AGENTS.md holds
       - Confirm the AGENTS.md files and CHANGELOG.md reflect the change before archiving
