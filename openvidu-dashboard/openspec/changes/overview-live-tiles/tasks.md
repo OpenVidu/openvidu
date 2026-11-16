@@ -26,11 +26,11 @@ a scenario when its title is the scenario name, alone or followed by `: <detail>
 
 ## 2. Tests: Participants filters (implementer)
 
-- [ ] 2.1 In `features/participants/participants-page.spec.ts`, retitle "shows a room chip whose removal drops the
+- [x] 2.1 In `features/participants/participants-page.spec.ts`, retitle "shows a room chip whose removal drops the
       room" to `Arriving from a room: …` and "requests publishers and the sort of the URL, and removes the Publishers
       chip" to `Publishers chip: …`, the latter opened with a `cursor` and asserting that removing the chip drops
       `publisher` and `cursor`. Covers: Arriving from a room, Publishers chip. Verify: the unit tests pass.
-- [ ] 2.2 In the same file, add `Clearing the kind filter`: on `/participants`, deselecting Standard writes `kind=all`
+- [x] 2.2 In the same file, add `Clearing the kind filter`: on `/participants`, deselecting Standard writes `kind=all`
       and the filter reads "All kinds". Covers: Clearing the kind filter. Verify: the unit test passes.
 
 ## 3. Tests: end to end (implementer)

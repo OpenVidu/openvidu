@@ -188,6 +188,21 @@ describe('ParticipantsPage', () => {
 		expect(text(standard.element.querySelector('.kind .mat-mdc-select-value'))).toBe('All kinds');
 	});
 
+	it('Clearing the kind filter: deselecting Standard writes kind=all and reads All kinds', async () => {
+		const { element, harness, http } = await open('/participants');
+
+		element.querySelector<HTMLElement>('.kind .mat-mdc-select-trigger')?.click();
+		await harness.fixture.whenStable();
+		[...document.querySelectorAll<HTMLElement>('mat-option')]
+			.find((option) => text(option) === 'Standard')
+			?.click();
+		await harness.fixture.whenStable();
+
+		expect(query().get('kind')).toBe('all');
+		await load(http, harness, page([item()]));
+		expect(text(element.querySelector('.kind .mat-mdc-select-value'))).toBe('All kinds');
+	});
+
 	it('shows active participants, sessions in range and active services', async () => {
 		const { element } = await open('/participants');
 		const tiles = [...element.querySelectorAll('ovd-kpi-tile')].map((tile) => text(tile));
@@ -277,11 +292,14 @@ describe('ParticipantsPage', () => {
 		expect(text(element.querySelector('ovd-empty-state button'))).toBe('Clear search');
 	});
 
-	it('requests publishers and the sort of the URL, and removes the Publishers chip', async () => {
+	it('Publishers chip: requests publishers and the sort of the URL, and its removal drops publisher and cursor', async () => {
 		const { element, harness, http, request } = await open(
-			'/participants?status=active&publisher=true&sort=leftAt&order=asc'
+			'/participants?status=active&publisher=true&sort=leftAt&order=asc&cursor=abc'
 		);
+		const chip = element.querySelector('.publisher-chip');
 
+		expect(text(chip)).toBe('Publishers');
+		expect(chip?.querySelector('button')).not.toBeNull();
 		expect(request.params.get('publisher')).toBe('true');
 		expect(request.params.get('sort')).toBe('leftAt');
 		expect(request.params.get('order')).toBe('asc');
@@ -290,7 +308,12 @@ describe('ParticipantsPage', () => {
 		element.querySelector<HTMLButtonElement>('.publisher-chip button')?.click();
 		await harness.fixture.whenStable();
 		expect(query().has('publisher')).toBe(false);
-		expect((await load(http, harness, page([]))).params.has('publisher')).toBe(false);
+		expect(query().has('cursor')).toBe(false);
+
+		const reload = await load(http, harness, page([]));
+
+		expect(reload.params.has('publisher')).toBe(false);
+		expect(reload.params.has('cursor')).toBe(false);
 	});
 
 	it('limits the ranked sorts to 24 hours unless a room is set', async () => {
@@ -327,7 +350,7 @@ describe('ParticipantsPage', () => {
 		await load(http, harness, page([item()]));
 	});
 
-	it('shows a room chip whose removal drops the room', async () => {
+	it('Arriving from a room: a room chip whose removal drops the room and reloads the list', async () => {
 		const { element, harness, request, http } = await open(
 			'/participants?room=RM_abc',
 			page([item({ roomName: 'demo-room' })])
