@@ -4,9 +4,9 @@ test.describe('signed out', () => {
 	test.use({ apiOptions: { signedIn: false } });
 
 	test('a protected route sends to the login with the URL to return to', async ({ page, api }) => {
-		await page.goto('/settings?tab=about');
+		await page.goto('/settings?tab=data');
 
-		await expect(page).toHaveURL('/login?redirect=%2Fsettings%3Ftab%3Dabout');
+		await expect(page).toHaveURL('/login?redirect=%2Fsettings%3Ftab%3Ddata');
 		await expect(page.getByText('CE', { exact: true })).toBeVisible();
 		await expect(page.getByText('3.10.0', { exact: true })).toBeVisible();
 
@@ -14,7 +14,7 @@ test.describe('signed out', () => {
 		await page.getByLabel('Password', { exact: true }).fill('secret');
 		await page.getByLabel('Password', { exact: true }).press('Enter');
 
-		await expect(page).toHaveURL('/settings?tab=about');
+		await expect(page).toHaveURL('/settings?tab=data');
 		expect(api.calls()).toContain('POST auth/login');
 	});
 

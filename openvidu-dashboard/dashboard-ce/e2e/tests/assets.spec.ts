@@ -59,8 +59,8 @@ test('the shell loads without console errors', async ({ page }) => {
 	page.on('pageerror', (error) => errors.push(error.message));
 	await page.goto('/rooms');
 	await expect(page.getByRole('heading', { level: 1, name: 'Rooms' })).toBeVisible();
-	await page.goto('/settings?tab=about');
-	await expect(page.getByRole('row', { name: 'Events 7 days' })).toBeVisible();
+	await page.goto('/settings?tab=data');
+	await expect(page.locator('ovd-data-tab table.classes').getByRole('row', { name: 'Events 7 days' })).toBeVisible();
 
 	expect(errors).toEqual([]);
 });

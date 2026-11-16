@@ -7,8 +7,8 @@ test('session against the real backend: redirect, sign-in, reload, sign-out and 
 	page,
 	context
 }) => {
-	await page.goto('/settings?tab=about');
-	await expect(page).toHaveURL('/login?redirect=%2Fsettings%3Ftab%3Dabout');
+	await page.goto('/settings?tab=data');
+	await expect(page).toHaveURL('/login?redirect=%2Fsettings%3Ftab%3Ddata');
 	await expect(page.getByText('CE', { exact: true })).toBeVisible();
 
 	await page.getByLabel('Username').fill(USERNAME);
@@ -18,13 +18,13 @@ test('session against the real backend: redirect, sign-in, reload, sign-out and 
 
 	await page.getByLabel('Password', { exact: true }).fill(PASSWORD);
 	await page.getByRole('button', { name: 'Sign in' }).click();
-	await expect(page).toHaveURL('/settings?tab=about');
-	await expect(page.locator('ovd-about-tab').getByText(/^OpenVidu \d+\.\d+/)).toBeVisible();
+	await expect(page).toHaveURL('/settings?tab=data');
+	await expect(page.locator('ovd-data-tab table.classes')).toBeVisible();
 	await expect(page.getByRole('row', { name: 'Daily rollups Kept forever' })).toBeVisible();
 	expect(await page.evaluate(() => localStorage.length + sessionStorage.length)).toBe(0);
 
 	await page.reload();
-	await expect(page).toHaveURL('/settings?tab=about');
+	await expect(page).toHaveURL('/settings?tab=data');
 	await expect(page.getByRole('heading', { level: 1, name: 'Settings' })).toBeVisible();
 
 	const refreshCookie = (await context.cookies()).find((cookie) => cookie.name === 'ov_dashboard_refresh');

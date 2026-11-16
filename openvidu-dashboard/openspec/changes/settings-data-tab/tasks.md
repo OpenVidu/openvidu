@@ -88,15 +88,15 @@ Paths are relative to `dashboard-ce/`; `ui/` is `frontend/projects/dashboard-ui/
 
 ## 5. Tests: end to end (implementer)
 
-- [ ] 5.1 In `e2e/fixtures/api.ts`, give the mocked info document storage entries for the collections of Entities,
+- [x] 5.1 In `e2e/fixtures/api.ts`, give the mocked info document storage entries for the collections of Entities,
       Events and the rollups, with `oldest` dates relative to the current time so that Entities is still filling and
       Events is full. Verify: the tests of 5.2 and 5.3 pass on any date.
-- [ ] 5.2 In `e2e/tests/settings.spec.ts`, replace the About tests with the Data tab ones (`tab=data`, `ovd-data-tab`,
+- [x] 5.2 In `e2e/tests/settings.spec.ts`, replace the About tests with the Data tab ones (`tab=data`, `ovd-data-tab`,
       the Storage table, an expanded class, no version line), remove "PRO shows the PRO badge", and add `Retention tip
       by keyboard` and `Retention tip on a phone` (375 px, touch: the tooltip box lies inside the viewport and
       `document.documentElement.scrollWidth` does not exceed its width). Covers: Retention tip by keyboard, Retention
       tip on a phone. Verify: the file passes in `./dashboard.sh e2e`.
-- [ ] 5.3 Follow the rename in `e2e/tests/accessibility.spec.ts` (axe on `tab=data` with one class expanded, both
+- [x] 5.3 Follow the rename in `e2e/tests/accessibility.spec.ts` (axe on `tab=data` with one class expanded, both
       themes), `e2e/tests/auth.spec.ts`, `e2e/tests/assets.spec.ts` (its "Events 7 days" row read on the Storage table)
       and `e2e/tests-backend/session.spec.ts` (`tab=data`, `ovd-data-tab`, no version line: assert the Storage table
       instead). Verify: `./dashboard.sh e2e` passes; report the real-backend suite as

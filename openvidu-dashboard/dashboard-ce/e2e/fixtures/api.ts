@@ -130,6 +130,36 @@ export function error(code: string, status: number, headers: Record<string, stri
 	return { status, headers, json: { error: { code, message: code } } };
 }
 
+const DAY_MS = 86_400_000;
+
+/**
+ * Storage entries dated from `now`: Entities (90 days) still filling with 12 days of data, Events (7 days) and the
+ * classes on the deployment clock full, and the tracks undated as the info endpoint reports them.
+ */
+function storage(now: number): InfoResponse['storage'] {
+	const entry = (documents: number, bytes: number, ageMs?: number) => ({
+		documents,
+		storageBytes: Math.round(bytes * 0.8),
+		indexBytes: Math.round(bytes * 0.2),
+		...(ageMs === undefined ? {} : { oldest: new Date(now - ageMs).toISOString() })
+	});
+
+	return {
+		rooms: entry(1203, 1_469_134, 12 * DAY_MS),
+		participants: entry(9_840, 6_200_000, 12 * DAY_MS),
+		egresses: entry(42, 90_000, 10 * DAY_MS),
+		nodes: entry(1, 41_000, 40 * DAY_MS),
+		events: entry(48_000, 21_000_000, 6.9 * DAY_MS),
+		track_stats: entry(310_000, 30_000_000),
+		tracks: entry(16_000, 4_000_000),
+		track_subscriptions: entry(52_000, 9_000_000),
+		analytics_5min: entry(2_016, 1_100_000, 6.95 * DAY_MS),
+		analytics_hourly: entry(720, 300_000, 30 * DAY_MS),
+		analytics_daily: entry(30, 26_000, 30 * DAY_MS),
+		schema_meta: entry(4, 41_000)
+	};
+}
+
 /** The dashboard API mocked with `page.route()`: auth endpoints, info, empty lists; every request is recorded. */
 export class MockApi {
 	readonly requests: RecordedRequest[] = [];
@@ -190,14 +220,7 @@ export class MockApi {
 				rollupsDailyMs: null
 			},
 			database: { version: '8.0.29', timeseriesSupported: true },
-			storage: {
-				rooms: {
-					documents: 1203,
-					storageBytes: 1_234_567,
-					indexBytes: 234_567,
-					oldest: '2026-09-01T00:00:00.000Z'
-				}
-			},
+			storage: storage(Date.now()),
 			features: edition === 'pro' ? Object.values(FeatureKey) : [],
 			limits: { rankedSortMaxRangeMs: 7 * 86_400_000, participantRankedSortMaxRangeMs: 86_400_000 },
 			openapiDocsEnabled: false,

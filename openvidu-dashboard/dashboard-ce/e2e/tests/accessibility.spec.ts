@@ -10,8 +10,10 @@ for (const scheme of ['light', 'dark'] as const) {
 			await expect(page.getByLabel('Rows per page')).toBeVisible();
 			await expectNoViolations(page);
 
-			await page.goto('/settings?tab=about');
+			await page.goto('/settings?tab=data');
 			await expect(page.getByRole('row', { name: 'Events 7 days' })).toBeVisible();
+			await page.getByRole('button', { name: 'Show collections of Entities' }).click();
+			await expect(page.getByRole('row', { name: /rooms 1,203/ })).toBeVisible();
 			await expectNoViolations(page);
 		});
 
