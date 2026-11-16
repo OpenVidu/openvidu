@@ -25,3 +25,4 @@
 - Documentation (11.2): moved to the PRO change that adopts this one. The documentation screenshots are of the PRO
   edition, taken by `dashboard-pro/e2e/scripts/docs-screenshots.mjs`, whose `settings-about` entry opens
   `tab=about`; that change renames it to `settings-data`, retakes both images and updates their references.
+- Pushed to `master` as `98fade773`; CI run 43974714286 of `openvidu-dashboard-ci.yml` is green.

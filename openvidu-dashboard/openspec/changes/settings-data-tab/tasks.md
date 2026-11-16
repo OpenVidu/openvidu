@@ -169,7 +169,7 @@ Paths are relative to `dashboard-ce/`; `ui/` is `frontend/projects/dashboard-ui/
 
 ## 10. Publish (orchestrator)
 
-- [ ] 10.1 After the full verification and the owner's review, with the change pushed to `master` of
+- [x] 10.1 After the full verification and the owner's review, with the change pushed to `master` of
       `OpenVidu/openvidu`, confirm that the CI run of that commit is green (`checks`, `unit`, `integration`,
       `contract`, `e2e`). Verify: the run's conclusion is success.
 
@@ -182,6 +182,6 @@ Paths are relative to `dashboard-ce/`; `ui/` is `frontend/projects/dashboard-ui/
       `entities` or `tracks` retention applies to what closes after the restart. Confirm that the configuration
       reference of the same draft (pull request #160) keeps the "Analytics settings" section at `#analytics-settings`,
       the target of the Data tab's message. Verify: the page builds without broken links and the anchor resolves.
-- [ ] 11.2 Replace `settings-about-light.png` and `settings-about-dark.png` with `settings-data-light.png` and
+- [x] 11.2 (moved to the PRO change, see `operations.md`) Replace `settings-about-light.png` and `settings-about-dark.png` with `settings-data-light.png` and
       `settings-data-dark.png`, taken on the demo with a class still filling, and update their references. Verify:
       the page shows both images and no file named `settings-about-*` remains.
