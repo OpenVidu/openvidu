@@ -149,11 +149,11 @@ Tests only, committed in the writer checkout and not pushed until group 9. It co
 
 ## 7. Checks and refactor review (implementer)
 
-- [ ] 7.1 Run `./dashboard.sh scenarios agent-origin /home/pablo/Desktop/FIX-2/openvidu-livekit`. Verify: each of the
+- [x] 7.1 Run `./dashboard.sh scenarios agent-origin /home/pablo/Desktop/FIX-2/openvidu-livekit`. Verify: each of the
       45 scenarios lists a test and none reads NO TEST; `Agents` lists the `Agents: …` test of task 4.6.
-- [ ] 7.2 Run `./dashboard.sh check`, `./dashboard.sh test-integration` and `./dashboard.sh e2e`, one at a time.
+- [x] 7.2 Run `./dashboard.sh check`, `./dashboard.sh test-integration` and `./dashboard.sh e2e`, one at a time.
       Verify: all pass, the e2e with axe and both themes; report any suite that could not run and why.
-- [ ] 7.3 Refactor review: assess whether the residual filters of `participantsListPlan` (`publisher`, `origin`) and
+- [x] 7.3 Refactor review: assess whether the residual filters of `participantsListPlan` (`publisher`, `origin`) and
       the two column options of `injectParticipantSessions` call for a shared form; apply a small refactor here or
       record that none is needed. Verify: the outcome is written in the implementation report.
 
