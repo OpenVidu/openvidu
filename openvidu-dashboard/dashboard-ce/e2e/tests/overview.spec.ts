@@ -1,5 +1,6 @@
 import { expect, type Page, test } from '../fixtures/api.js';
 import { expectNoViolations } from '../fixtures/axe.js';
+import { egressItem } from '../fixtures/egress.js';
 import { activeOverview, activeStatus, freshOverview, freshStatus } from '../fixtures/overview.js';
 
 function card(page: Page, title: string) {
@@ -65,6 +66,66 @@ test('the overview shows the live tiles with links, the hint, the status card an
 
 	await tiles.getByRole('link', { name: /Active rooms/ }).click();
 	await expect(page).toHaveURL(/\/rooms\?.*status=active/);
+});
+
+test('Publishers tile', async ({ page, api }) => {
+	await page.goto('/overview?tz=UTC');
+	await page
+		.getByRole('region', { name: 'Live' })
+		.getByRole('link', { name: /Active publishers/ })
+		.click();
+
+	await expect(page).toHaveURL(/\/participants\?(.*&)?status=active&publisher=true(&|$)/);
+	await expect(page.locator('.publisher-chip')).toHaveText('Publishers');
+	await expect(page.locator('.publisher-chip').getByRole('button')).toBeVisible();
+	await expect
+		.poll(() =>
+			api.requests.some(
+				(request) => request.path === 'participants' && request.params.get('publisher') === 'true'
+			)
+		)
+		.toBe(true);
+});
+
+test.describe('the Active egress tile', () => {
+	test.use({
+		apiOptions: {
+			egresses: [
+				egressItem({ egressId: 'EG_starting', status: 'starting' }),
+				egressItem({ egressId: 'EG_active', status: 'active' }),
+				egressItem({ egressId: 'EG_ending', status: 'ending' }),
+				egressItem({ egressId: 'EG_complete', status: 'complete' })
+			]
+		}
+	});
+
+	test('Active egress tile', async ({ page, api }) => {
+		await page.goto('/overview?tz=UTC');
+		await page
+			.getByRole('region', { name: 'Live' })
+			.getByRole('link', { name: /Active egress/ })
+			.click();
+
+		await expect(page).toHaveURL(/\/egress\?(.*&)?status=starting,active,ending(&|$)/);
+		await expect(page.getByRole('combobox', { name: 'Status' })).toHaveText('Active');
+		await expect
+			.poll(() =>
+				api.requests
+					.filter((request) => request.path === 'egresses')
+					.map((request) => request.params.get('status'))
+			)
+			.toContain('starting,active,ending');
+
+		const table = page.getByRole('table', { name: 'Egress' });
+
+		await expect(table.getByRole('row')).toHaveCount(4);
+
+		for (const id of ['EG_starting', 'EG_active', 'EG_ending']) {
+			await expect(table.getByRole('row', { name: new RegExp(id) })).toBeVisible();
+		}
+
+		await expect(table.getByRole('row', { name: /EG_complete/ })).toHaveCount(0);
+	});
 });
 
 test.describe('a fresh deployment', () => {

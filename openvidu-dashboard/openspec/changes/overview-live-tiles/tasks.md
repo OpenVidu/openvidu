@@ -35,13 +35,13 @@ a scenario when its title is the scenario name, alone or followed by `: <detail>
 
 ## 3. Tests: end to end (implementer)
 
-- [ ] 3.1 In `e2e/tests/overview.spec.ts` and `e2e/tests/info-tips.spec.ts`, follow the new names: "Active agents 2",
+- [x] 3.1 In `e2e/tests/overview.spec.ts` and `e2e/tests/info-tips.spec.ts`, follow the new names: "Active agents 2",
       the "Active participants" link and the "About Active participants" info tip. Verify: both files pass in
       `./dashboard.sh e2e`.
-- [ ] 3.2 In `e2e/tests/overview.spec.ts`, add `Publishers tile`: following the Active publishers tile opens
+- [x] 3.2 In `e2e/tests/overview.spec.ts`, add `Publishers tile`: following the Active publishers tile opens
       `/participants?…status=active&publisher=true` and the Participants page shows the "Publishers" chip. Covers:
       Publishers tile. Verify: the test passes in `./dashboard.sh e2e`.
-- [ ] 3.3 In `e2e/tests/overview.spec.ts`, add `Active egress tile`, with four egresses of its own (`starting`,
+- [x] 3.3 In `e2e/tests/overview.spec.ts`, add `Active egress tile`, with four egresses of its own (`starting`,
       `active`, `ending`, `complete`) through `apiOptions.egresses`: following the tile opens
       `/egress?…status=starting,active,ending`, the Status select reads "Active", the list request carries
       `status=starting,active,ending` and the table lists the three egresses that are not complete. Covers: Active
@@ -49,11 +49,11 @@ a scenario when its title is the scenario name, alone or followed by `: <detail>
 
 ## 4. Checks and refactor review (implementer)
 
-- [ ] 4.1 Run `./dashboard.sh scenarios overview-live-tiles`. Verify: each of the ten scenarios lists a test and none
+- [x] 4.1 Run `./dashboard.sh scenarios overview-live-tiles`. Verify: each of the ten scenarios lists a test and none
       reads "NO TEST".
-- [ ] 4.2 Run `./dashboard.sh check` and `./dashboard.sh e2e`. Verify: both pass, the e2e with axe and both themes;
+- [x] 4.2 Run `./dashboard.sh check` and `./dashboard.sh e2e`. Verify: both pass, the e2e with axe and both themes;
       report the real-backend suite as skipped if Docker is not available.
-- [ ] 4.3 Refactor review: assess whether the touched files need a refactor (the split info tip tests, the tile
+- [x] 4.3 Refactor review: assess whether the touched files need a refactor (the split info tip tests, the tile
       row); apply a small one here or record that none is needed. Verify: the outcome is written in the
       implementation report.
 
