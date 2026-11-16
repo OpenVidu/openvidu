@@ -70,7 +70,10 @@ What it writes (`analytics_5min` stays empty without `--five-minute-rollups`):
   (`DUPLICATE_IDENTITY` leave plus a new session of the same identity). Sessions last ~20 min, 3 % are
   aborted, 95 % are `STANDARD`; rooms with egress/ingress/agent/SIP get the matching participant kinds.
   Client (sdk/os/browser/device/network), connection type, connect time, disconnect reason and resumes
-  follow fixed distributions.
+  follow fixed distributions. Agent sessions carry the `attributes` the writer keeps without `store_metadata`, derived
+  from their identity: `agent-transcriber` is an OpenVidu agent (`lk.agent_name` and `openvidu.agent`
+  `speech-processing`), `agent-recorder` one in automatic dispatch (empty `lk.agent_name`) and `agent-assistant` a
+  third-party agent (`lk.agent_name` `assistant` only); no other session has `attributes`.
 - `tracks` (CAMERA video + MICROPHONE audio per publishing participant, with simulcast layers and final
   publish stats) and `track_subscriptions` (every participant subscribes to the tracks of the other
   identities present at the same time; 1 % failed).

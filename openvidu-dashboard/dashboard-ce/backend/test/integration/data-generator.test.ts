@@ -2,11 +2,14 @@ import { CONTRACT_SCHEMAS } from '@openvidu-dashboard/data-generator/contract';
 import { generate } from '@openvidu-dashboard/data-generator/generator';
 import { COLLECTION_NAMES, keepLive } from '@openvidu-dashboard/data-generator/schema';
 import {
+	AGENT_NAME_ATTRIBUTE,
 	type EgressDocument,
 	type EventDocument,
 	type HourlyRollupDocument,
 	type IngressSessionDocument,
 	type NodeDocument,
+	OPENVIDU_AGENT_ATTRIBUTE,
+	type ParticipantDocument,
 	type RoomDocument,
 	RoomTopology
 } from '@openvidu-dashboard/typings';
@@ -597,6 +600,49 @@ describe.skipIf(mongoUri === '')('data generator', () => {
 			}
 
 			expect(await db.collection('rooms').countDocuments({ topology: { $exists: false } })).toBe(0);
+		} finally {
+			await db.dropDatabase();
+		}
+	});
+
+	it('Generated agents of both origins', async () => {
+		const db = client.db('dashboard_test_generator_agents');
+		await db.dropDatabase();
+
+		try {
+			await generate(db, {
+				scenario: 'S',
+				days: 2,
+				statsMode: 'participant',
+				seed: 7,
+				retentionDays: { events: 7, stats: 7, tracks: 7, entities: 90 },
+				timeseries: true,
+				rollups: { fiveMinute: false, nodes: false, roomSums: false }
+			});
+
+			const participants = db.collection<ParticipantDocument>('participants');
+			const agents = await participants.find({ kind: 'AGENT' }).toArray();
+			const allowed = new Set([AGENT_NAME_ATTRIBUTE, OPENVIDU_AGENT_ATTRIBUTE]);
+
+			expect(agents.length).toBeGreaterThan(0);
+
+			for (const agent of agents) {
+				expect(agent.attributes, agent._id).toHaveProperty([AGENT_NAME_ATTRIBUTE]);
+				expect(
+					Object.keys(agent.attributes ?? {}).filter((key) => !allowed.has(key)),
+					agent._id
+				).toEqual([]);
+			}
+
+			const mark = (agent: ParticipantDocument) => agent.attributes?.[OPENVIDU_AGENT_ATTRIBUTE] ?? '';
+			expect(agents.some((agent) => mark(agent) !== '')).toBe(true);
+			expect(agents.some((agent) => mark(agent) === '')).toBe(true);
+			expect(await participants.countDocuments({ kind: { $ne: 'AGENT' }, attributes: { $exists: true } })).toBe(
+				0
+			);
+			expect(await participants.countDocuments({ $nor: [{ $jsonSchema: CONTRACT_SCHEMAS.participants }] })).toBe(
+				0
+			);
 		} finally {
 			await db.dropDatabase();
 		}

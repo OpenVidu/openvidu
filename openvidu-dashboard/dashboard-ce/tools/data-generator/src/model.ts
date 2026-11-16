@@ -1,3 +1,4 @@
+import { AGENT_NAME_ATTRIBUTE, OPENVIDU_AGENT_ATTRIBUTE } from '@openvidu-dashboard/typings';
 import { Long } from 'mongodb';
 import type { Rng } from './random.js';
 import { SCHEMA_VERSION } from './schema.js';
@@ -103,6 +104,8 @@ export interface ParticipantDoc {
 	client: ClientInfo;
 	permission: { canPublish: boolean; canSubscribe: boolean; canPublishData: boolean; hidden: boolean };
 	isPublisher: boolean;
+	/** Only on `AGENT` sessions: the attributes the writer keeps without `store_metadata`. */
+	attributes?: Record<string, string>;
 	trackSids: string[];
 	tracks: {
 		published: number;
@@ -881,6 +884,22 @@ function standardSession(
 	return session;
 }
 
+/**
+ * The attributes of a generated agent, derived from its identity alone so the random sequence and the scenario figures
+ * stay unchanged: the transcriber is an OpenVidu agent with a registered name, the recorder one in automatic dispatch
+ * (empty name) and the assistant a third-party agent.
+ */
+function agentAttributes(identity: string): Record<string, string> {
+	switch (identity) {
+		case 'agent-transcriber':
+			return { [AGENT_NAME_ATTRIBUTE]: 'speech-processing', [OPENVIDU_AGENT_ATTRIBUTE]: 'speech-processing' };
+		case 'agent-recorder':
+			return { [AGENT_NAME_ATTRIBUTE]: '', [OPENVIDU_AGENT_ATTRIBUTE]: 'speech-processing' };
+		default:
+			return { [AGENT_NAME_ATTRIBUTE]: identity.replace(/^agent-/, '') };
+	}
+}
+
 function serviceSession(
 	ctx: GeneratorContext,
 	base: RoomBase,
@@ -901,6 +920,10 @@ function serviceSession(
 		network: ''
 	};
 	const session = newSession(ctx, base, kind, identity, joinedAt, Math.max(5_000, length), client, false);
+
+	if (kind === 'AGENT') {
+		session.doc.attributes = agentAttributes(identity);
+	}
 
 	if (session.leftAt !== null) {
 		session.doc.disconnectReason = 'CLIENT_INITIATED';

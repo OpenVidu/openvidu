@@ -55,15 +55,15 @@ Tests only, committed in the writer checkout and not pushed until group 9. It co
 
 ## 3. Data generator (implementer)
 
-- [ ] 3.1 In `tools/data-generator/src/model.ts`, add `attributes?` to `ParticipantDoc` and set it on `AGENT` sessions
+- [x] 3.1 In `tools/data-generator/src/model.ts`, add `attributes?` to `ParticipantDoc` and set it on `AGENT` sessions
       from their identity, without drawing from the seeded stream (decision 12); keep it in the stored shape of
       `src/contract.ts`. Verify: task 3.2.
-- [ ] 3.2 In `backend/test/integration/data-generator.test.ts`, add `Generated agents of both origins` on a scenario S
+- [x] 3.2 In `backend/test/integration/data-generator.test.ts`, add `Generated agents of both origins` on a scenario S
       dataset of 2 days: every `AGENT` session has `lk.agent_name` and no key other than it and `openvidu.agent`, at
       least one has a non-empty mark and one has none, no other kind has `attributes`, and the collection validator
       accepted every session. Covers: Generated agents of both origins. Verify: the test passes (Docker) and the
       figures the other tests of the file assert are unchanged.
-- [ ] 3.3 In `tools/data-generator/README.md`, `participants` bullet, add the attributes of the generated agents.
+- [x] 3.3 In `tools/data-generator/README.md`, `participants` bullet, add the attributes of the generated agents.
       Verify: `./dashboard.sh format-check` passes.
 
 ## 4. Backend (implementer)
