@@ -15,3 +15,5 @@
   rollups keep "Grows without limit" without data (verification SUGGESTION 1); a class with 0 documents carries no
   tip otherwise; WARNING 2 and SUGGESTIONs 1, 2 and 5 of the code review and SUGGESTION 2 of the verification are
   applied; SUGGESTION 4 of the code review (browser clock against server dates) is accepted as a known limit.
+- Owner review of the revision (group 9) on `./dashboard.sh demo ce`: accepted; the retention link reads
+  "Configuration reference" at the owner's request.
