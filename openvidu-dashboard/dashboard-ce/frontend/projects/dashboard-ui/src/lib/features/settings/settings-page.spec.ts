@@ -15,7 +15,8 @@ import { SessionZoneService } from '../../core/state/session-zone.js';
 import { ToastService } from '../../core/ui/toast.js';
 import { DASHBOARD_ROUTES } from '../../routes.js';
 import { composeRoutes } from '../../routing/compose-routes.js';
-import { formatRetention, migrationLine, retentionRows } from './about-tab.js';
+import { migrationLine, retentionRows } from './about-tab.js';
+import { formatRetention } from './storage-classes.js';
 
 function setup(): HttpTestingController {
 	TestBed.configureTestingModule({

@@ -5,21 +5,21 @@ Paths are relative to `dashboard-ce/`; `ui/` is `frontend/projects/dashboard-ui/
 
 ## 1. Frontend: classes, clocks and estimates (implementer)
 
-- [ ] 1.1 Create `features/settings/storage-classes.ts` with the seven class definitions of design decision 2 (label,
+- [x] 1.1 Create `features/settings/storage-classes.ts` with the seven class definitions of design decision 2 (label,
       retention key, collections, clock collections) and a function that turns the `storage` and `retention` of an
       info document and its read time into the class rows (retention text, documents, bytes, tip text or none, the
       entries of its collections) and the total. Move `formatRetention` there. Verify: the tests of 1.2 to 1.5 pass.
-- [ ] 1.2 In `features/settings/storage-classes.spec.ts`, add a test that every `Collection` except `schema_meta`
+- [x] 1.2 In `features/settings/storage-classes.spec.ts`, add a test that every `Collection` except `schema_meta`
       belongs to exactly one class, and the tests `Collections of each class` and `Class that sums several
       collections`. Covers: Collections of each class, Class that sums several collections. Verify: the unit tests
       pass.
-- [ ] 1.3 In the same file, add `Span rounded down`, `Class at full retention`, `Full within a tenth of the
+- [x] 1.3 In the same file, add `Span rounded down`, `Class at full retention`, `Full within a tenth of the
       retention`, `Less than one unit of data` and `Idle period reads as filling`, each with the figures of its
       scenario and a fixed read time. Covers: those five scenarios. Verify: the unit tests pass.
-- [ ] 1.4 In the same file, add `Entities clock ignores nodes and ingresses`, `Stats and tracks on the deployment
+- [x] 1.4 In the same file, add `Entities clock ignores nodes and ingresses`, `Stats and tracks on the deployment
       clock`, `Deployment older than the stats retention` and `Class without a clock`. Covers: those four scenarios.
       Verify: the unit tests pass.
-- [ ] 1.5 In the same file, add `Linear estimate`, `No estimate under one day of data`, `Unlimited daily rollups
+- [x] 1.5 In the same file, add `Linear estimate`, `No estimate under one day of data`, `Unlimited daily rollups
       without a day of data` and `Daily rollups with a limit`. Covers: those four scenarios. Verify: the unit tests
       pass.
 

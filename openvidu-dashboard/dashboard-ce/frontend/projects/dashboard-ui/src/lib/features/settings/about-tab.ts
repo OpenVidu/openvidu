@@ -1,7 +1,7 @@
 import { Component, computed, effect, inject, signal } from '@angular/core';
 import { MatProgressBar } from '@angular/material/progress-bar';
 import { MatTooltip } from '@angular/material/tooltip';
-import { Collection, formatRetentionLength, type InfoMigration, type InfoRetention } from '@openvidu-dashboard/typings';
+import { Collection, type InfoMigration, type InfoRetention } from '@openvidu-dashboard/typings';
 
 import { Notice } from '../../components/feedback/notice.js';
 import { Skeleton } from '../../components/feedback/skeleton.js';
@@ -10,11 +10,7 @@ import { ServerStatusService } from '../../core/refresh/server-status.js';
 import { QueryStateService } from '../../core/state/query-state.js';
 import { formatBytes, formatNumber, formatTimestamp } from '../../format/formatters.js';
 import { EditionBadge } from '../../shell/edition-badge.js';
-
-/** `7 days`, `36 hours`, `Kept forever` for a retention without limit. */
-export function formatRetention(ms: number | null): string {
-	return ms === null ? 'Kept forever' : formatRetentionLength(ms, { formatCount: formatNumber });
-}
+import { formatRetention } from './storage-classes.js';
 
 /** One row per data class, in the order the writer expires them. */
 export function retentionRows(retention: InfoRetention): { label: string; value: string }[] {
