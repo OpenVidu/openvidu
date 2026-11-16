@@ -72,7 +72,7 @@ and the removable chip "Publishers" while `publisher=true`. SIP, CONNECTOR and B
 - **THEN** the URL reads `kind=all` and the filter shows "All kinds"
 
 #### Scenario: Publishers chip
-- **GIVEN** `/participants?status=active&publisher=true` opened from the Overview Publishers tile
+- **GIVEN** `/participants?status=active&publisher=true` opened from the Overview Active publishers tile
 - **WHEN** the page loads
 - **THEN** a chip reads "Publishers" with a remove button, the list request carries `publisher=true`, and removing the chip drops `publisher` and `cursor` and reloads the list
 

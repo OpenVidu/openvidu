@@ -35,12 +35,12 @@ reads two ways: Participant sessions, Unique identities, Services, Data up / dow
   participants."
 
 ### Requirement: Overview info tips
-Edition: CE. The Overview SHALL carry info tips on the live tiles Participants, Publishers and Agents, the Today tiles
-Participants and Minutes, the Data pipeline card and the Unique identities column of Recent rooms, and on no other tile,
-card or column of its own.
+Edition: CE. The Overview SHALL carry info tips on the live tiles Active participants, Active publishers and Active
+agents, the Today tiles Participants and Minutes, the Data pipeline card and the Unique identities column of Recent
+rooms, and on no other tile, card or column of its own.
 
 #### Scenario: Live tiles
-- **WHEN** the user opens the info tips of the live tiles Participants, Publishers and Agents
+- **WHEN** the user opens the info tips of the live tiles Active participants, Active publishers and Active agents
 - **THEN** they read "Regular participants connected now. Egress, ingress and agents are not counted.", "Participants connected now that publish at least one track: camera, microphone or screen." and "Agent sessions connected now. Agents join rooms as participants of kind Agent but are not counted as participants."
 
 #### Scenario: Today tiles
