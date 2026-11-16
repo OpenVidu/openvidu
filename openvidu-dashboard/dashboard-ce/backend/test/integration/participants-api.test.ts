@@ -5,7 +5,7 @@ import { Collection, type ListResponse, type ParticipantListItem } from '@openvi
 import { openApiDocument } from '../../src/api/openapi.js';
 import type { RouteRegistry } from '../../src/api/route-registry.js';
 import { TOKENS } from '../../src/di/tokens.js';
-import { bootClient, type Client, issue, json } from '../support/api-client.js';
+import { bootClient, type Client, get, issue, json } from '../support/api-client.js';
 import { minutesAgo, participant, reseed } from '../support/rooms-seed.js';
 
 const mongoUri = inject('mongoUri');
@@ -371,6 +371,125 @@ describe.skipIf(mongoUri === '')('participants API', () => {
 				'PA_ag1',
 				'PA_ag3'
 			]);
+		});
+
+		/** An agent session of `RM_a` joined `minutes` ago, with these attributes. */
+		const agent = (id: string, minutes: number, attributes?: Record<string, string>) =>
+			participant({
+				_id: id,
+				identity: `agent-${id}`,
+				roomSid: 'RM_a',
+				joinedAt: minutesAgo(minutes),
+				kind: 'AGENT',
+				...(attributes === undefined ? {} : { attributes })
+			});
+
+		/** An OpenVidu, a third-party, an unmarked agent with an empty mark, one without attributes and a STANDARD. */
+		const seedOrigins = () =>
+			reseed(ce.dashboard.db, {
+				participants: [
+					agent('PA_ov', 5, {
+						'lk.agent_name': 'speech-processing-dev',
+						'openvidu.agent': 'speech-processing'
+					}),
+					agent('PA_3p', 6, { 'lk.agent_name': 'dummy-agent' }),
+					agent('PA_bare', 7),
+					agent('PA_empty', 8, { 'lk.agent_name': 'x', 'openvidu.agent': '' }),
+					participant({ _id: 'PA_std', identity: 'alice', roomSid: 'RM_a', joinedAt: minutesAgo(9) })
+				]
+			});
+
+		it('Marked agent item', async () => {
+			await reseed(ce.dashboard.db, {
+				participants: [
+					agent('PA_ov', 5, {
+						'lk.agent_name': 'speech-processing-dev',
+						'openvidu.agent': 'speech-processing',
+						'openvidu.agent.version': '3.10.0'
+					})
+				]
+			});
+
+			for (const path of ['/agents', '/participants?kind=AGENT']) {
+				const items = (await json<ListResponse<ParticipantListItem>>(ce, path)).items;
+
+				expect(items, path).toHaveLength(1);
+				expect(items[0]?.agent, path).toEqual({ name: 'speech-processing-dev', openvidu: 'speech-processing' });
+			}
+		});
+
+		it('Other attributes stay out', async () => {
+			await reseed(ce.dashboard.db, {
+				participants: [
+					agent('PA_sup', 5, { 'lk.agent_name': 'support', 'lk.agent.state': 'listening', customer: 'acme' })
+				]
+			});
+
+			for (const path of ['/agents', '/participants']) {
+				const response = await get(ce, path);
+				const body = await response.text();
+
+				expect(response.status, path).toBe(200);
+				const items = (JSON.parse(body) as ListResponse<ParticipantListItem>).items;
+
+				expect(items[0]?.agent, path).toEqual({ name: 'support' });
+				expect(body, path).not.toContain('listening');
+				expect(body, path).not.toContain('acme');
+			}
+		});
+
+		it('OpenVidu agents only', async () => {
+			await seedOrigins();
+
+			const page = await json<ListResponse<ParticipantListItem>>(ce, '/agents?origin=openvidu');
+
+			expect(sids(page)).toEqual(['PA_ov']);
+			expect(page.total).toBe(1);
+		});
+
+		it('Third-party agents only: an empty mark included', async () => {
+			await seedOrigins();
+
+			const page = await json<ListResponse<ParticipantListItem>>(ce, '/agents?origin=third-party');
+
+			expect(sids(page)).toEqual(['PA_3p', 'PA_bare', 'PA_empty']);
+			expect(page.total).toBe(3);
+		});
+
+		it('Origin with other filters', async () => {
+			const mark = { 'lk.agent_name': 'speech-processing', 'openvidu.agent': 'speech-processing' };
+
+			await reseed(ce.dashboard.db, {
+				participants: [
+					agent('PA_ov_active', 5, mark),
+					{ ...agent('PA_ov_left', 6, mark), leftAt: minutesAgo(1), status: 'left', durationMs: 5 * MINUTE },
+					agent('PA_3p_active', 7, { 'lk.agent_name': 'dummy-agent' }),
+					{ ...agent('PA_ov_b', 8, mark), roomSid: 'RM_b' }
+				]
+			});
+
+			expect(
+				sids(await json(ce, '/agents?origin=openvidu&status=active&room=RM_a&sort=duration&from=now-6h&to=now'))
+			).toEqual(['PA_ov_active']);
+		});
+
+		it('Unknown origin', async () => {
+			expect(await issue(ce, '/agents?origin=livekit')).toMatchObject({
+				status: 400,
+				code: 'VALIDATION_ERROR',
+				first: { path: ['origin'] }
+			});
+		});
+
+		it('Exact SID ignores the origin', async () => {
+			await reseed(ce.dashboard.db, {
+				participants: [agent('PA_ag1', 3 * 24 * 60, { 'lk.agent_name': 'dummy-agent' })]
+			});
+
+			const page = await json<ListResponse<ParticipantListItem>>(ce, '/agents?q=PA_ag1&origin=openvidu');
+
+			expect(sids(page)).toEqual(['PA_ag1']);
+			expect(page.total).toBe(1);
 		});
 
 		it('carries the media node label of the sessions that have one', async () => {

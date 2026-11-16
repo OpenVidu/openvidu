@@ -1,6 +1,12 @@
 import * as z from 'zod';
 
-import { ENTITY_ID_PATTERNS, ParticipantKind, ParticipantSort, ParticipantStatus } from '@openvidu-dashboard/typings';
+import {
+	AgentOrigin,
+	ENTITY_ID_PATTERNS,
+	ParticipantKind,
+	ParticipantSort,
+	ParticipantStatus
+} from '@openvidu-dashboard/typings';
 
 import { csvParam, cursorParam, limitParam, orderParam, qParam, rangedQuery } from '../api/query.js';
 import { ROOM_SID } from '../rooms/rooms-schemas.js';
@@ -52,6 +58,18 @@ const participantsShape = {
 		.meta({ description: 'true keeps only the sessions that published a track' })
 };
 
+const agentsShape = {
+	...listShape,
+	origin: z
+		.enum(enumValues(AgentOrigin), { error: 'must be openvidu or third-party' })
+		.optional()
+		.meta({
+			description:
+				'openvidu keeps the agents that declare themselves OpenVidu agents, third-party the others; absent ' +
+				'means every agent'
+		})
+};
+
 const page = { cursor: cursorParam, limit: limitParam };
 
 export function participantsListQuery(now: () => Date) {
@@ -74,14 +92,14 @@ export function participantsSummaryQuery(now: () => Date) {
 export type ParticipantsSummaryParams = z.output<ReturnType<typeof participantsSummaryQuery>>;
 
 export function agentsListQuery(now: () => Date) {
-	return rangedQuery(now, { ...listShape, ...page });
+	return rangedQuery(now, { ...agentsShape, ...page });
 }
 
 export type AgentsListParams = z.output<ReturnType<typeof agentsListQuery>>;
 
 /** The agents list query without `cursor` and `limit`: the export reads every page. */
 export function agentsExportQuery(now: () => Date) {
-	return rangedQuery(now, listShape);
+	return rangedQuery(now, agentsShape);
 }
 
 export type AgentsExportParams = z.output<ReturnType<typeof agentsExportQuery>>;

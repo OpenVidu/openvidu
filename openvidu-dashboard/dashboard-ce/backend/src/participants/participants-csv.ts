@@ -21,7 +21,9 @@ const PARTICIPANT_CSV_COLUMNS: readonly CsvColumn<ParticipantListItem>[] = [
 	{ header: 'client.os', value: (session) => session.client?.os },
 	{ header: 'client.osVersion', value: (session) => session.client?.osVersion },
 	{ header: 'client.browser', value: (session) => session.client?.browser },
-	{ header: 'client.browserVersion', value: (session) => session.client?.browserVersion }
+	{ header: 'client.browserVersion', value: (session) => session.client?.browserVersion },
+	{ header: 'agent.name', value: (session) => session.agent?.name },
+	{ header: 'agent.openvidu', value: (session) => session.agent?.openvidu }
 ];
 
 /**

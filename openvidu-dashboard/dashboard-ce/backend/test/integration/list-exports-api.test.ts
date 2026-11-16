@@ -156,7 +156,7 @@ describe.skipIf(mongoUri === '')('list CSV exports', () => {
 			expect(lines).toHaveLength(10_001);
 		});
 
-		it('ranks the sessions of one room by duration over 90 days', async () => {
+		it('Sessions of a room by duration: ranked over 90 days', async () => {
 			await reseed(ce.dashboard.db, {
 				participants: [
 					participant({
@@ -185,7 +185,7 @@ describe.skipIf(mongoUri === '')('list CSV exports', () => {
 			expect(firstCells(lines)).toEqual(['PA_long', 'PA_short']);
 		});
 
-		it('exports the agents of the list with the participants header', async () => {
+		it('Agents: every row is an active agent, under the participants header', async () => {
 			await reseed(ce.dashboard.db, {
 				participants: [
 					participant({
@@ -195,16 +195,56 @@ describe.skipIf(mongoUri === '')('list CSV exports', () => {
 						joinedAt: minutesAgo(10),
 						kind: 'AGENT'
 					}),
+					participant({
+						_id: 'PA_agent_left',
+						identity: 'recorder',
+						roomSid: 'RM_abc',
+						joinedAt: minutesAgo(20),
+						leftAt: minutesAgo(15),
+						kind: 'AGENT'
+					}),
 					participant({ _id: 'PA_person', identity: 'alice', roomSid: 'RM_abc', joinedAt: minutesAgo(5) })
 				]
 			});
 
 			const agents = await csv(ce, '/agents/export.csv?status=active');
 			const people = await csv(ce, '/participants/export.csv');
+			const header = agents.lines[0]?.split(',') ?? [];
+			const rows = agents.lines.slice(1).map((line) => line.split(','));
 
 			expect(firstCells(agents.lines)).toEqual(['PA_agent']);
-			expect(agents.lines[1]?.split(',')[3]).toBe('AGENT');
+			expect(rows.map((row) => [row[header.indexOf('kind')], row[header.indexOf('status')]])).toEqual([
+				['AGENT', 'active']
+			]);
 			expect(agents.lines[0]).toBe(people.lines[0]);
+		});
+
+		it('OpenVidu agents export', async () => {
+			await reseed(ce.dashboard.db, {
+				participants: [
+					participant({
+						_id: 'PA_ov',
+						identity: 'agent-ov',
+						roomSid: 'RM_abc',
+						joinedAt: minutesAgo(10),
+						kind: 'AGENT',
+						attributes: { 'lk.agent_name': 'speech-processing', 'openvidu.agent': 'speech-processing' }
+					}),
+					participant({
+						_id: 'PA_3p',
+						identity: 'agent-3p',
+						roomSid: 'RM_abc',
+						joinedAt: minutesAgo(5),
+						kind: 'AGENT',
+						attributes: { 'lk.agent_name': 'dummy-agent' }
+					})
+				]
+			});
+
+			const { lines } = await csv(ce, '/agents/export.csv?origin=openvidu');
+
+			expect(firstCells(lines)).toEqual(['PA_ov']);
+			expect(lines[1]?.split(',').slice(-2)).toEqual(['speech-processing', 'speech-processing']);
 		});
 	});
 

@@ -64,6 +64,8 @@ queried) and `Deployment` (running the service). One line per observable change,
   exports, sorted by metrics (durations, end times, counters) within a range limit reported by `GET /api/v1/info`; an
   exact ID always finds its entity whatever the range and filters, and active rooms and participants carry a `stale`
   flag.
+- Agent sessions carry their agent name and OpenVidu agent type in the participants and agents lists and their CSV
+  exports (`agent.name`, `agent.openvidu`), and `GET /api/v1/agents` filters them with `origin`.
 - Analytics API: `/api/v1/analytics/series`, `/breakdowns`, `/summary` and `/export.csv`, read from the rollup
   collections.
 - Overview API: `GET /api/v1/overview` with live counters, today's totals and recent rooms.

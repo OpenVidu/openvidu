@@ -71,17 +71,52 @@ describe('list CSV columns', () => {
 		expect(row).toContain(',0,0,,,true,false,true,false');
 	});
 
-	it('writes the 19 participant columns, the published sources in one cell and an absent client empty', () => {
-		const [header, row] = lines(columnsCsv(participantCsvColumns(false), [session]));
+	const PARTICIPANT_HEADER =
+		'sid,identity,name,kind,status,roomSid,roomName,joinedAt,leftAt,durationMs,connectionType,isPublisher,' +
+		'publishedSources,client.sdk,client.version,client.os,client.osVersion,client.browser,client.browserVersion,' +
+		'agent.name,agent.openvidu';
 
-		expect(header).toBe(
-			'sid,identity,name,kind,status,roomSid,roomName,joinedAt,leftAt,durationMs,connectionType,isPublisher,' +
-				'publishedSources,client.sdk,client.version,client.os,client.osVersion,client.browser,client.browserVersion'
-		);
+	it('Header row: the 21 participant columns, then mediaNode with per-node-breakdown', () => {
+		expect(lines(columnsCsv(participantCsvColumns(false), []))[0]).toBe(PARTICIPANT_HEADER);
+		expect(PARTICIPANT_HEADER.split(',')).toHaveLength(21);
+		expect(lines(columnsCsv(participantCsvColumns(true), []))[0]).toBe(`${PARTICIPANT_HEADER},mediaNode`);
+	});
+
+	it('Session without client information: its six client cells are empty', () => {
+		const [, row] = lines(columnsCsv(participantCsvColumns(false), [session]));
+
 		expect(row).toBe(
-			'PA_a,alice,,STANDARD,active,RM_a,demo,2026-11-12T10:01:00.000Z,,,,true,CAMERA;MICROPHONE,,,,,,'
+			'PA_a,alice,,STANDARD,active,RM_a,demo,2026-11-12T10:01:00.000Z,,,,true,CAMERA;MICROPHONE,,,,,,,,'
 		);
-		expect(lines(columnsCsv(participantCsvColumns(true), []))[0]?.endsWith(',mediaNode')).toBe(true);
+	});
+
+	it('No client address', () => {
+		const headers = PARTICIPANT_HEADER.split(',');
+
+		expect(headers.filter((header) => /address|device|metadata|attribute/i.test(header))).toEqual([]);
+		expect(headers.filter((header) => header.startsWith('agent.'))).toEqual(['agent.name', 'agent.openvidu']);
+		expect(headers.filter((header) => header.includes('.') && !/^(client|agent)\./.test(header))).toEqual([]);
+	});
+
+	it('Agent columns', () => {
+		const rows = lines(
+			columnsCsv(participantCsvColumns(false), [
+				{
+					...session,
+					sid: 'PA_ov',
+					kind: 'AGENT',
+					agent: { name: 'speech-processing-dev', openvidu: 'speech-processing' }
+				},
+				{ ...session, sid: 'PA_3p', kind: 'AGENT', agent: { name: 'dummy-agent' } },
+				session
+			])
+		).slice(1);
+
+		expect(rows.map((row) => row.split(',').slice(-2))).toEqual([
+			['speech-processing-dev', 'speech-processing'],
+			['dummy-agent', ''],
+			['', '']
+		]);
 	});
 
 	it('writes the egress columns, an egress without room with empty room cells', () => {

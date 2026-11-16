@@ -67,6 +67,8 @@ Behaviour is specified in `openspec/specs/*-api`, `api-conventions`, `auth`, `st
 
 - Repositories own the queries. Every list, detail and time-series query is backed by an index and asserted with
   `expectIndexBacked` (`test/support/query-plan.ts`: no COLLSCAN above 1 000 documents, bounded `totalDocsExamined`).
+- Participant `attributes` keys contain dots (`lk.agent_name`, `openvidu.agent`): filter them with `$getField` inside
+  `$expr`, never with a dotted path, which MongoDB reads as nested fields; project the whole `attributes` object.
 
 ## Tests
 

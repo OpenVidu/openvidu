@@ -68,31 +68,31 @@ Tests only, committed in the writer checkout and not pushed until group 9. It co
 
 ## 4. Backend (implementer)
 
-- [ ] 4.1 In `backend/src/participants/participants-schemas.ts`, add `origin` (the `AgentOrigin` values, optional,
+- [x] 4.1 In `backend/src/participants/participants-schemas.ts`, add `origin` (the `AgentOrigin` values, optional,
       with its description) to the agents list and agents export queries only. Verify: `backend/test/unit/participants.test.ts`
       shows `origin` parsed on the agents queries and absent from the participants query, and
       `backend/test/integration/openapi-document.test.ts` passes with the parameter described.
-- [ ] 4.2 In `participants-query.ts`, add `origin?` to `ParticipantsFilter` and the residual `$expr` of decision 3 to
+- [x] 4.2 In `participants-query.ts`, add `origin?` to `ParticipantsFilter` and the residual `$expr` of decision 3 to
       every branch of `participantsListPlan` (page and ranked, `match` and `countFilter`), and `attributes: 1` to
       `PARTICIPANT_LIST_PROJECTION`; in `participants-service.ts`, pass `origin` from `agents()`. Verify: a unit test
       in `backend/test/unit/participants.test.ts` finds the residual on the `q`, `room`, kind-and-status and ranked
       branches, with the `kind_status_joinedAt_id` hint kept.
-- [ ] 4.3 In `participants-mappers.ts` and `participants-responses.ts`, derive and declare `agent` (decisions 4 and 5).
+- [x] 4.3 In `participants-mappers.ts` and `participants-responses.ts`, derive and declare `agent` (decisions 4 and 5).
       In `backend/test/unit/participants.test.ts`, add `Unmarked agent item`, `Agent item without a name`,
       `Agent item without attributes` and `Marked session of another kind`, each also parsed by the response schema.
       Covers: those four scenarios. Verify: the unit tests pass.
-- [ ] 4.4 In `participants-csv.ts`, add `agent.name` and `agent.openvidu` after `client.browserVersion`. In
+- [x] 4.4 In `participants-csv.ts`, add `agent.name` and `agent.openvidu` after `client.browserVersion`. In
       `backend/test/unit/list-csv.test.ts`, retitle the participant columns test as `Header row` (21 columns, then
       `mediaNode` with `per-node-breakdown`) and add or retitle `Session without client information`,
       `No client address` (no address, device, metadata nor attribute beyond the two `agent.*` columns) and
       `Agent columns`. Covers: Header row, Session without client information, No client address, Agent columns.
       Verify: the unit tests pass.
-- [ ] 4.5 In `backend/test/integration/participants-api.test.ts`, add `Marked agent item` (both lists),
+- [x] 4.5 In `backend/test/integration/participants-api.test.ts`, add `Marked agent item` (both lists),
       `Other attributes stay out`, `OpenVidu agents only`, `Third-party agents only` (an empty mark included),
       `Origin with other filters`, `Unknown origin` and `Exact SID ignores the origin`, seeding agent documents with
       dotted attribute keys. Covers: those seven scenarios. Verify: `./dashboard.sh test-integration` passes (Docker);
       if the seed refuses dotted keys, stop and ask.
-- [ ] 4.6 In `backend/test/integration/list-exports-api.test.ts`, retitle the room ranking test as
+- [x] 4.6 In `backend/test/integration/list-exports-api.test.ts`, retitle the room ranking test as
       `Sessions of a room by duration` and the agents export test as `Agents: every row is an active agent` (it
       requests `status=active`), and add `OpenVidu agents export`. Covers: Sessions of a room by duration, Agents,
       OpenVidu agents export. Verify: the integration tests pass.
@@ -102,7 +102,7 @@ Tests only, committed in the writer checkout and not pushed until group 9. It co
       sessions the other filters select; add "Agents list, origin openvidu" and "Agents list, origin third-party" to
       the p95 report with a 300 ms budget, enforced like the ranked rows. Covers: Origin explain plans. Verify: the
       `integration-plans` project passes and the report shows both rows.
-- [ ] 4.8 In `backend/AGENTS.md`, "Rules", add that attribute keys contain dots and are filtered with `$getField`
+- [x] 4.8 In `backend/AGENTS.md`, "Rules", add that attribute keys contain dots and are filtered with `$getField`
       inside `$expr`, never with a dotted path; add the Data line of the proposal to `CHANGELOG.md` (3.10.0, Added) in
       the commit of the API change. Verify: `./dashboard.sh check` passes.
 

@@ -1,6 +1,12 @@
 import type { Document, Sort } from 'mongodb';
 
-import { ParticipantKind, ParticipantSort, ParticipantStatus } from '@openvidu-dashboard/typings';
+import {
+	AgentOrigin,
+	OPENVIDU_AGENT_ATTRIBUTE,
+	ParticipantKind,
+	ParticipantSort,
+	ParticipantStatus
+} from '@openvidu-dashboard/typings';
 
 import { type CursorPayload, pageQuery, type PageQuery } from '../api/cursor.js';
 import { prefixRegex } from '../api/search.js';
@@ -21,6 +27,8 @@ export const PARTICIPANT_LIST_PROJECTION: Readonly<Document> = {
 	nodeId: 1,
 	mediaNode: 1,
 	isPublisher: 1,
+	// Whole object: its keys contain dots, which a projection path would read as nesting.
+	attributes: 1,
 	lastStatsAt: 1,
 	'tracks.bySource': 1,
 	'client.sdk': 1,
@@ -40,6 +48,7 @@ export interface ParticipantsFilter {
 	status?: ParticipantStatus | undefined;
 	room?: string | undefined;
 	publisher?: true | undefined;
+	origin?: AgentOrigin | undefined;
 	from: Date;
 	to: Date;
 	sort: ParticipantSort;
@@ -78,11 +87,25 @@ const PARTICIPANT_RANKS: Readonly<Record<RankedParticipantSort, (asOf: Date) => 
 };
 
 /**
+ * Residual filter of an agent origin: an OpenVidu agent has a non-empty `openvidu.agent` attribute. The key contains a
+ * dot, so it is read with `$getField`; a missing `attributes`, a missing key and an empty value read as third-party.
+ */
+function originFilter(origin: AgentOrigin | undefined): Document {
+	if (origin === undefined) {
+		return {};
+	}
+
+	const mark = { $ifNull: [{ $getField: { field: OPENVIDU_AGENT_ATTRIBUTE, input: '$attributes' } }, ''] };
+
+	return { $expr: { [origin === AgentOrigin.OPENVIDU ? '$gt' : '$eq']: [mark, ''] } };
+}
+
+/**
  * Filter, sort and keyset condition of a participants or agents list: a SID is a point lookup; an identity prefix
  * drives `{ identityLower, joinedAt }` (or `{ roomSid, identityLower, joinedAt }` with a room); a room drives
  * `{ roomSid, joinedAt, _id }`; kinds or a status drive `{ kind, status, joinedAt, _id }` with absent filters as `$in`
- * over every value so the sorted branches merge; otherwise `{ joinedAt, _id }`. `publisher` is residual on each. The
- * range is always on `joinedAt`; a ranked sort key scans it whole and ranks in memory.
+ * over every value so the sorted branches merge; otherwise `{ joinedAt, _id }`. `publisher` and `origin` are residual
+ * on each. The range is always on `joinedAt`; a ranked sort key scans it whole and ranks in memory.
  */
 export function participantsListPlan(filter: ParticipantsFilter, cursor?: CursorPayload): ParticipantsListPlan {
 	if (filter.q !== undefined && PARTICIPANT_SID.test(filter.q)) {
@@ -92,11 +115,14 @@ export function participantsListPlan(filter: ParticipantsFilter, cursor?: Cursor
 	const range = { from: filter.from, to: filter.to };
 	const bounds = pageQuery('joinedAt', filter.order, undefined, range).fieldFilter ?? {};
 	const kinds = filter.kind === undefined || filter.kind.length === 0 ? undefined : [...new Set(filter.kind)];
-	const publisher: Document = filter.publisher === true ? { isPublisher: true } : {};
+	const extra: Document = {
+		...(filter.publisher === true ? { isPublisher: true } : {}),
+		...originFilter(filter.origin)
+	};
 	const residual: Document = {
 		...(kinds === undefined ? {} : { kind: kinds.length === 1 ? kinds[0] : { $in: kinds } }),
 		...(filter.status === undefined ? {} : { status: filter.status }),
-		...publisher
+		...extra
 	};
 
 	const build = (joinedAt: Document): Document => {
@@ -118,11 +144,11 @@ export function participantsListPlan(filter: ParticipantsFilter, cursor?: Cursor
 				kind: kinds === undefined ? { $in: ALL_KINDS } : kinds.length === 1 ? kinds[0] : { $in: kinds },
 				status: filter.status ?? { $in: ALL_STATUSES },
 				joinedAt,
-				...publisher
+				...extra
 			};
 		}
 
-		return { joinedAt, ...publisher };
+		return { joinedAt, ...extra };
 	};
 
 	const byKindAndStatus =

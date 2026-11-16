@@ -17,6 +17,20 @@ export const participantClientSummary = z.object({
 	browserVersion: z.string().optional()
 });
 
+/** Agent facts of an `AGENT` session, derived from its `lk.agent_name` and `openvidu.agent` attributes. */
+export const participantAgent = z
+	.object({
+		name: z
+			.string()
+			.optional()
+			.meta({ description: "Name the agent's worker registered (lk.agent_name), absent when empty" }),
+		openvidu: z.string().optional().meta({
+			description:
+				'OpenVidu agent type (openvidu.agent), present on agents that declare themselves OpenVidu agents'
+		})
+	})
+	.meta({ description: 'Agent facts of a session of kind AGENT, absent when none is known' });
+
 /** Fields of a participant list item, which the PRO session detail extends. */
 export const participantListFields = {
 	sid: z.string(),
@@ -39,6 +53,7 @@ export const participantListFields = {
 	publishedSources: z
 		.array(z.enum(enumValues(TrackSource)))
 		.meta({ description: 'Track sources with at least one publication' }),
+	agent: participantAgent.optional(),
 	stale: staleField
 };
 
