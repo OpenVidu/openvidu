@@ -73,7 +73,8 @@ loadComponent: … }] }] }`. The locked `tracks/:trackSid` route, outside the si
 - **Missing media statistics.** `MEDIA_STATS_TEXTS`, `ovd-media-stats-warning`, `ovd-unavailable`, and the `warning`
   and `unavailable` inputs of `ovd-kpi-tile`, `ovd-time-series-chart`, `ovd-section-card` and `TableColumn` (with
   `warningWhen`, the rows a column warning applies to on phone cards); the Analytics page context exposes
-  `mediaStatsWarning()` for the cards of its seams.
+  `mediaStats()` and `mediaStatsWarning()` for the cards of its seams, and a card whose content is unavailable sets the
+  `exportDisabled` input of `ovd-analytics-card`.
 - **Injection tokens.** `SEARCH_SOURCES` (lists searched by the header), `BROWSER_STORAGE` (storage behind
   `StorageService`). Root services such as `InfoService` can be replaced with a provider.
 - **Shell slots.** `DashboardShell` projects `[ovdBanner]` content under the header, next to the migration, schema and

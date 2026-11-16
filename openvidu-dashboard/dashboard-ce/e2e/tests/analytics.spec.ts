@@ -364,6 +364,29 @@ test.describe('a range whose servers report no media statistics', () => {
 	});
 });
 
+test.describe('a range without media statistics and without bytes', () => {
+	test.use({
+		apiOptions: {
+			analyticsSummary: { mediaStats: 'none', bytesUp: 0, bytesDown: 0 },
+			analytics: { series: { bytesUp: () => 0, bytesDown: () => 0 } }
+		}
+	});
+
+	test('Export without media statistics: Data transferred stays unavailable with its export disabled', async ({
+		page
+	}) => {
+		await page.goto('/analytics?from=now-7d&to=now&tz=UTC');
+
+		const section = card(page, 'Data transferred');
+
+		await expect(section.locator('ovd-time-series-chart .chart.unavailable')).toHaveCount(1);
+		await expect(section.locator('ovd-empty-state')).toHaveCount(0);
+		await expect(section.getByRole('button', { name: 'Export XLSX' })).toBeDisabled();
+		await expect(card(page, 'Rooms').getByRole('button', { name: 'Export XLSX' })).toBeEnabled();
+		await expectNoViolations(page);
+	});
+});
+
 test.describe('a range where only some servers report media statistics', () => {
 	test.use({ apiOptions: { analyticsSummary: { mediaStats: 'partial' } } });
 

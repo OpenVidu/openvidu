@@ -250,6 +250,7 @@
 		[error]="bandwidth.error"
 		[empty]="bandwidth.empty && mediaStats() !== 'none'"
 		[exporting]="isExporting('bandwidth')"
+		[exportDisabled]="mediaStats() === 'none'"
 		(export)="exportSection('bandwidth')"
 		(retry)="retry()"
 		(widen)="widenRange()"

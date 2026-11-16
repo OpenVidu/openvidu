@@ -47,7 +47,8 @@ together (badges, feedback, locks, search, tiles, zone) share a folder and its s
   `hiddenWithoutFeature` in its `NavigationMeta`.
 - Missing data: the `warning` input of tiles, cards, charts and `TableColumn` with a `MEDIA_STATS_TEXTS` text (or
   `NODE_SCOPE_TEXTS` for egress and ingress in a node scope), plus `unavailable` on tiles, charts and breakdowns (and
-  `ovd-unavailable` in cells) when there is no real data; never a notice in their place.
+  `ovd-unavailable` in cells) when there is no real data; never a notice in their place. An Analytics card whose whole
+  content is unavailable sets `exportDisabled`.
 - Tags: `ovd-status-badge`, `ovd-live-chip`, `ovd-kind-badge` (a dot in the value's Analytics colour) and any chip
   shown beside them take the theme's `.ovd-tag` box (24 px), so a row of tags lines up; a page may name a badge in
   its tooltip (`subject`, `tooltip`), lists never do.

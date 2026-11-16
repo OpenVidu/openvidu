@@ -849,6 +849,58 @@ describe('AnalyticsPage', () => {
 		expect(exportButton(element, 'Data transferred')?.disabled).toBe(true);
 	});
 
+	it('Export without media statistics', async () => {
+		const { element } = await open('/analytics?from=now-7d&to=now&tz=UTC', [], {
+			summary: { ...SUMMARY, mediaStats: 'none', bytesUp: 0, bytesDown: 0 },
+			points: { bytesUp: [['2026-10-13T10:00:00.000Z', 0]], bytesDown: [['2026-10-13T10:00:00.000Z', 0]] }
+		});
+		const bandwidth = card(element, 'Data transferred');
+
+		expect(bandwidth?.querySelector('ovd-empty-state')).toBeNull();
+		expect(bandwidth?.querySelectorAll('ovd-kpi-tile .value.unavailable')).toHaveLength(2);
+		expect(bandwidth?.querySelector('ovd-time-series-chart .chart.unavailable')).not.toBeNull();
+		expect(exportButton(element, 'Data transferred')?.disabled).toBe(true);
+		expect(exportButton(element, 'Rooms')?.disabled).toBe(false);
+	});
+
+	it('Export with partial media statistics', async () => {
+		const recorder = workbookRecorder();
+		const { element } = await openAnalytics('/analytics?from=now-7d&to=now&tz=UTC', {
+			answers: { summary: { ...SUMMARY, mediaStats: 'partial' } },
+			providers: [recorder.provider]
+		});
+		const saved = await exportWorkbook(element, 'Data transferred');
+		const series = recorder.written[0]?.sheets.find((sheet) => sheet.name !== 'Info');
+
+		expect(saved).toHaveLength(1);
+		expect(saved[0]).toMatch(
+			/^analytics-bandwidth-\d{4}-\d\d-\d\dT\d{6}\.\d{3}Z-\d{4}-\d\d-\d\dT\d{6}\.\d{3}Z\.xlsx$/
+		);
+		expect(series?.columns.map((column) => column.header)).toEqual([
+			'Bucket start (UTC)',
+			'Data up / down · Up (bytes)',
+			'Data up / down · Down (bytes)'
+		]);
+		expect(series?.rows).toEqual([
+			['2026-10-13T10:00:00.000Z', 3, 3],
+			['2026-10-13T11:00:00.000Z', 5, 5]
+		]);
+	});
+
+	it('Partial media statistics without bytes', async () => {
+		const { element } = await open('/analytics?from=now-7d&to=now&tz=UTC', [], {
+			summary: { ...SUMMARY, mediaStats: 'partial' },
+			points: { bytesUp: [['2026-10-13T10:00:00.000Z', 0]], bytesDown: [['2026-10-13T10:00:00.000Z', 0]] }
+		});
+		const bandwidth = card(element, 'Data transferred');
+
+		expect(text(bandwidth?.querySelector('ovd-empty-state'))).toContain('No data in this range');
+		expect(
+			bandwidth?.querySelector('.heading-row ovd-media-stats-warning button')?.getAttribute('aria-label')
+		).toBe(MEDIA_STATS_TEXTS.rangePartial);
+		expect(exportButton(element, 'Data transferred')?.disabled).toBe(true);
+	});
+
 	it('never refreshes by itself and reloads on the manual refresh', async () => {
 		vi.useFakeTimers({ shouldAdvanceTime: true });
 

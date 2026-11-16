@@ -102,7 +102,7 @@ export class AnalyticsCard {
 	readonly empty = input(false, { transform: booleanAttribute });
 	readonly exportable = input(true, { transform: booleanAttribute });
 	readonly exporting = input(false, { transform: booleanAttribute });
-	/** Keeps "Export XLSX" disabled, as for data the current scope does not have. */
+	/** Keeps "Export XLSX" disabled while the card shows its content as unavailable. */
 	readonly exportDisabled = input(false, { transform: booleanAttribute });
 	/** Height of the real content, kept by the skeleton and the empty state. */
 	readonly height = input(280);
