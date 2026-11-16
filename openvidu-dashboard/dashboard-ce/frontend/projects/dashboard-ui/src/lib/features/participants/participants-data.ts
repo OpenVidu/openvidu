@@ -1,5 +1,6 @@
 import { inject, Service } from '@angular/core';
 import type {
+	AgentOrigin,
 	ListResponse,
 	ParticipantKind,
 	ParticipantListItem,
@@ -28,9 +29,15 @@ export interface ParticipantsListRequest {
 	limit: number;
 }
 
-export type AgentsListRequest = Omit<ParticipantsListRequest, 'kind' | 'publisher'>;
+/** What the participants and agents lists share. */
+type SessionsListRequest = Omit<ParticipantsListRequest, 'kind' | 'publisher'>;
 
-function listParams(request: AgentsListRequest): Record<string, QueryValue> {
+export interface AgentsListRequest extends SessionsListRequest {
+	/** OpenVidu or third-party agents; null for both. */
+	origin: AgentOrigin | null;
+}
+
+function listParams(request: SessionsListRequest): Record<string, QueryValue> {
 	return {
 		...apiRange(request.range),
 		q: request.q,
@@ -47,6 +54,10 @@ function participantsParams(request: ParticipantsListRequest): Record<string, Qu
 	return { ...listParams(request), kind: request.kind, publisher: request.publisher ? 'true' : null };
 }
 
+function agentsParams(request: AgentsListRequest): Record<string, QueryValue> {
+	return { ...listParams(request), origin: request.origin };
+}
+
 /** Requests of the participants search list, the agents list, their CSV exports and the summary. */
 @Service()
 export class ParticipantsDataService {
@@ -61,7 +72,7 @@ export class ParticipantsDataService {
 	}
 
 	agents(request: AgentsListRequest): Promise<ListResponse<ParticipantListItem>> {
-		return this.http.get('agents', { params: listParams(request) });
+		return this.http.get('agents', { params: agentsParams(request) });
 	}
 
 	/** The CSV of every participant session the request selects. */
@@ -74,7 +85,7 @@ export class ParticipantsDataService {
 	/** The CSV of every agent session the request selects. */
 	exportAgents(request: AgentsListRequest): Promise<Download> {
 		return this.http.download('agents/export.csv', {
-			params: { ...listParams(request), cursor: null, limit: null }
+			params: { ...agentsParams(request), cursor: null, limit: null }
 		});
 	}
 }

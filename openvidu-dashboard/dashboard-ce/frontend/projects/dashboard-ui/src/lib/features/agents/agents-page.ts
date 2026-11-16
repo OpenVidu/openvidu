@@ -2,7 +2,12 @@ import { Component, computed, effect, inject, signal, untracked } from '@angular
 import { MatFormField, MatLabel } from '@angular/material/form-field';
 import { MatOption, MatSelect } from '@angular/material/select';
 import { RouterLink } from '@angular/router';
-import { type ListResponse, type ParticipantListItem, type ParticipantsSummary } from '@openvidu-dashboard/typings';
+import {
+	AgentOrigin,
+	type ListResponse,
+	type ParticipantListItem,
+	type ParticipantsSummary
+} from '@openvidu-dashboard/typings';
 import { RoomChip } from '../../components/badges/room-chip.js';
 import { CursorPaginator } from '../../components/data-table/cursor-paginator.js';
 import { Notice } from '../../components/feedback/notice.js';
@@ -15,6 +20,7 @@ import { LiveCountersService } from '../../core/refresh/live-counters.js';
 import { ListStateService } from '../../core/state/list-state.js';
 import { QueryStateService } from '../../core/state/query-state.js';
 import { formatNumber } from '../../format/formatters.js';
+import { AGENT_ORIGIN_LABELS } from '../../format/labels.js';
 import { injectLiveCounters } from '../overview/overview-data.js';
 import {
 	injectParticipantSessions,
@@ -25,6 +31,9 @@ import { ParticipantSessionsTable } from '../participants/participant-sessions-t
 import { type AgentsListRequest, ParticipantsDataService } from '../participants/participants-data.js';
 
 const NOTICE_KEY = 'ovd.agents-notice-dismissed';
+const ORIGINS = Object.values(AgentOrigin);
+/** Value of the All option: a null value would leave the select empty instead of reading All. */
+const ALL_ORIGINS = 'all';
 
 interface AgentsData {
 	page: ListResponse<ParticipantListItem>;
@@ -60,7 +69,16 @@ export class AgentsPage {
 	protected readonly statuses = PARTICIPANT_STATUSES;
 	protected readonly statusLabels = PARTICIPANT_STATUS_LABELS;
 	protected readonly limit = this.query.limit;
-	protected readonly sessions = injectParticipantSessions({ kindColumn: false });
+	protected readonly origins = ORIGINS;
+	protected readonly allOrigins = ALL_ORIGINS;
+	protected readonly originLabels = AGENT_ORIGIN_LABELS;
+	protected readonly sessions = injectParticipantSessions({ kindColumn: false, agentColumn: true });
+	/** The `origin` of the URL; any other value reads as every origin. */
+	protected readonly origin = computed(() => {
+		const value = this.query.value('origin');
+
+		return ORIGINS.includes(value as AgentOrigin) ? (value as AgentOrigin) : null;
+	});
 	protected readonly activeAgents = inject(LiveCountersService).activeAgents;
 	protected readonly noticeOpen = signal(this.storage.get(NOTICE_KEY) !== 'true');
 	protected readonly participantsLink = computed(() => this.listState.withRange({ kind: 'AGENT' }));
@@ -70,6 +88,7 @@ export class AgentsPage {
 		q: this.sessions.q(),
 		status: this.sessions.status(),
 		room: this.sessions.room(),
+		origin: this.origin(),
 		sort: this.sessions.sort(),
 		order: this.sessions.order(),
 		cursor: this.query.cursor(),
@@ -137,8 +156,12 @@ export class AgentsPage {
 		return count === null ? null : formatNumber(count);
 	}
 
+	protected setOrigin(origin: AgentOrigin | typeof ALL_ORIGINS): void {
+		void this.query.navigate({ origin: origin === ALL_ORIGINS ? null : origin });
+	}
+
 	protected clearFilters(): void {
-		void this.query.navigate({ q: null, status: null, room: null });
+		void this.query.navigate({ q: null, status: null, origin: null, room: null });
 	}
 
 	protected dismissNotice(): void {

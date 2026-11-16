@@ -11,6 +11,7 @@ import { QueryStateService } from '../../core/state/query-state.js';
 import { injectRankedSort } from '../../core/state/ranked-sort.js';
 import { rangeSpanMs } from '../../core/state/relative-time.js';
 import { formatTimestamp } from '../../format/formatters.js';
+import { INFO_TEXTS } from '../../format/info-texts.js';
 import { isRoomSid } from '../rooms/room-display.js';
 import { participantPreview } from './participant-display.js';
 
@@ -30,7 +31,7 @@ const RANKED_SORTS: Readonly<Partial<Record<ParticipantSort, string>>> = { leftA
  * The URL state of a list of participant sessions (search, status, room, range and sort), its columns and actions,
  * shared by the Participants and Agents pages. Call it in an injection context.
  */
-export function injectParticipantSessions(options: { kindColumn: boolean }) {
+export function injectParticipantSessions(options: { kindColumn: boolean; agentColumn: boolean }) {
 	const query = inject(QueryStateService);
 	const listState = inject(ListStateService);
 	const previews = inject(EntityPreviewService);
@@ -66,6 +67,7 @@ export function injectParticipantSessions(options: { kindColumn: boolean }) {
 		order: ranked.order,
 		columns: computed<TableColumn[]>(() => [
 			{ key: 'sid', header: 'SID', hideable: false, card: 'title' },
+			...(options.agentColumn ? [{ key: 'agent', header: 'Agent', info: INFO_TEXTS.agentColumn }] : []),
 			{ key: 'identity', header: 'Identity' },
 			{ key: 'name', header: 'Name' },
 			{ key: 'room', header: 'Room', card: 'metric' },

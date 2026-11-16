@@ -119,12 +119,13 @@ describe('ParticipantsDataService', () => {
 					q: 'agent-',
 					status: 'active',
 					room: null,
+					origin: 'openvidu',
 					sort: 'joinedAt',
 					order: 'asc',
 					cursor: 'c',
 					limit: 10
 				}),
-				`api/v1/agents?${window}&q=agent-&status=active&sort=joinedAt&order=asc&cursor=c&limit=10`
+				`api/v1/agents?${window}&q=agent-&status=active&sort=joinedAt&order=asc&cursor=c&limit=10&origin=openvidu`
 			]
 		];
 

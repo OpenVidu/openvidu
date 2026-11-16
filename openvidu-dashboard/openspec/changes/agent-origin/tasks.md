@@ -112,22 +112,22 @@ Tests only, committed in the writer checkout and not pushed until group 9. It co
 
 ## 5. Frontend (implementer)
 
-- [ ] 5.1 Add `AGENT_ORIGIN_LABELS` to `format/labels.ts` and `agentColumn` to `INFO_TEXTS` (`format/info-texts.ts`)
+- [x] 5.1 Add `AGENT_ORIGIN_LABELS` to `format/labels.ts` and `agentColumn` to `INFO_TEXTS` (`format/info-texts.ts`)
       with the text of the `ui-info-tips` delta; in `participants/participants-data.ts`, add `origin` to
       `AgentsListRequest` and send it from `agents()` and `exportAgents()`. Verify: `./dashboard.sh typecheck` passes.
-- [ ] 5.2 Add `agentLabel(item)` to `participants/participant-display.ts`, the `agentColumn` option to
+- [x] 5.2 Add `agentLabel(item)` to `participants/participant-display.ts`, the `agentColumn` option to
       `injectParticipantSessions` and the `agent` cell with its "OpenVidu" tag to
       `participants/participant-sessions-table/` (decision 8); the Participants page passes `agentColumn: false` and
       keeps its columns. Verify: task 5.4 and `participants/participants-page.spec.ts` still pass.
-- [ ] 5.3 In `agents/agents-page.ts` and `.html`, read `origin` from the URL, add the Origin select after Status, send
+- [x] 5.3 In `agents/agents-page.ts` and `.html`, read `origin` from the URL, add the Origin select after Status, send
       `origin` in the list request and the export, and drop it in `clearFilters` (decision 8). Verify: task 5.4.
-- [ ] 5.4 In `agents/agents-page.spec.ts`, retitle or add one test per scenario: `Agent row`, `No agents`,
+- [x] 5.4 In `agents/agents-page.spec.ts`, retitle or add one test per scenario: `Agent row`, `No agents`,
       `Dates as on the other lists`, `Stale agent`, `OpenVidu agent with a name`, `Third-party agent`,
       `OpenVidu agent without a name`, `Agent without agent facts`, `Agent column not sortable`,
       `OpenVidu origin selected`, `Third-party origin from the URL`, `Invalid origin in the URL` and
       `Origin in the CSV export`. Covers: those thirteen scenarios. Verify:
       `pnpm exec ng test dashboard-ui --watch=false --include=**/agents-page.spec.ts` passes from `frontend/`.
-- [ ] 5.5 Add the UI line of the proposal to `CHANGELOG.md` (3.10.0, Added, after the Agents page line) in the commit
+- [x] 5.5 Add the UI line of the proposal to `CHANGELOG.md` (3.10.0, Added, after the Agents page line) in the commit
       of the page change. Verify: `./dashboard.sh check` passes.
 
 ## 6. End-to-end tests (implementer)

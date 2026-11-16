@@ -19,6 +19,14 @@
 			<ovd-copy-button [value]="item.sid" label="participant SID" />
 		</span>
 	</ng-template>
+	<ng-template ovdCell="agent" let-item>
+		<span class="cell">
+			{{ agentLabel(item) }}
+			@if (item.agent?.openvidu) {
+				<span class="origin ovd-tag">OpenVidu</span>
+			}
+		</span>
+	</ng-template>
 	<ng-template ovdCell="identity" let-item>
 		<span class="cell">
 			{{ item.identity }}

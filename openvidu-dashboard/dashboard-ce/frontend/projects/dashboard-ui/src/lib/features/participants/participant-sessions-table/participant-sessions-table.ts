@@ -12,6 +12,7 @@ import { Duration } from '../../../components/duration/duration.js';
 import type { Download } from '../../../core/http/http.js';
 import { EmptyState } from '../../../components/feedback/empty-state.js';
 import { MediaNodeLabel } from '../../../components/media-node/media-node.js';
+import { agentLabel } from '../participant-display.js';
 
 /** The table of a list of participant sessions, with its cells and its empty states. */
 @Component({
@@ -57,6 +58,7 @@ export class ParticipantSessionsTable {
 	readonly widenRange = output();
 
 	protected readonly trackSession = (item: ParticipantListItem): string => item.sid;
+	protected readonly agentLabel = agentLabel;
 
 	/** Hint of an active session the list response marks stale. */
 	protected staleHint(item: ParticipantListItem): string | undefined {

@@ -33,6 +33,16 @@
 		</mat-select>
 	</mat-form-field>
 
+	<mat-form-field class="origin" subscriptSizing="dynamic">
+		<mat-label>Origin</mat-label>
+		<mat-select [value]="origin() ?? allOrigins" (selectionChange)="setOrigin($event.value)">
+			<mat-option [value]="allOrigins">All</mat-option>
+			@for (origin of origins; track origin) {
+				<mat-option [value]="origin">{{ originLabels[origin] }}</mat-option>
+			}
+		</mat-select>
+	</mat-form-field>
+
 	@if (sessions.room(); as room) {
 		<div class="ovd-filter-slot"><ovd-room-chip [sid]="room" /></div>
 	}

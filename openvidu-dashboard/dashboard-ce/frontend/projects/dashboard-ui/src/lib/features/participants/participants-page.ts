@@ -64,7 +64,7 @@ export class ParticipantsPage {
 	protected readonly statuses = PARTICIPANT_STATUSES;
 	protected readonly statusLabels = PARTICIPANT_STATUS_LABELS;
 	protected readonly limit = this.query.limit;
-	protected readonly sessions = injectParticipantSessions({ kindColumn: true });
+	protected readonly sessions = injectParticipantSessions({ kindColumn: true, agentColumn: false });
 	protected readonly selectedKinds = computed(() => kindFilter(this.query.value('kind')));
 	protected readonly publisher = computed(() => this.query.value('publisher') === 'true');
 

@@ -1,4 +1,5 @@
 import type {
+	AgentOrigin,
 	BrowserFamily,
 	ClientSdk,
 	ConnectionType,
@@ -33,6 +34,11 @@ export const PARTICIPANT_KIND_LABELS: Readonly<Record<ParticipantKind, string>> 
 	AGENT: 'Agent',
 	CONNECTOR: 'Connector',
 	BRIDGE: 'Bridge'
+};
+
+export const AGENT_ORIGIN_LABELS: Readonly<Record<AgentOrigin, string>> = {
+	openvidu: 'OpenVidu',
+	'third-party': 'Third-party'
 };
 
 /** Labels of the egress types, in the order breakdowns list them. */

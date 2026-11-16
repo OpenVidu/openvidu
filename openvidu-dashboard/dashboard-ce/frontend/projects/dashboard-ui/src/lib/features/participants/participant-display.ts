@@ -62,6 +62,11 @@ export function participantPreview(
 	};
 }
 
+/** Agent cell text: the registered agent name, else the OpenVidu agent type, else `—`. */
+export function agentLabel(item: Pick<ParticipantListItem, 'agent'>): string {
+	return item.agent?.name ?? item.agent?.openvidu ?? '—';
+}
+
 /** Sources with at least one publication, camera first. */
 export function publishedSources(bySource: CountByTrackSource): TrackSource[] {
 	return (Object.keys(SOURCE_LABELS) as TrackSource[]).filter((source) => (bySource[source] ?? 0) > 0);

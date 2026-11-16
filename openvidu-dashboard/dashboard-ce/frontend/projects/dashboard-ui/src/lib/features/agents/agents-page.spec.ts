@@ -5,10 +5,11 @@ import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 import type { ListResponse, ParticipantListItem } from '@openvidu-dashboard/typings';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import { infoResponse, settle } from '../../../testing/fixtures.js';
 import { exportCsv, routeElement } from '../../../testing/harness.js';
+import { RangePickerService } from '../../components/date-time-range-picker/date-time-range-picker.js';
 import { InfoService } from '../../core/info.js';
 import { LiveCountersService } from '../../core/refresh/live-counters.js';
 import { AgentsPage } from './agents-page.js';
@@ -87,37 +88,77 @@ function text(element: Element | null | undefined): string {
 	return element?.textContent.replace(/\s+/g, ' ').trim() ?? '';
 }
 
+/** The text a viewer sees: without the hidden copy of the value each copy button keeps for the clipboard. */
+function visibleText(element: Element | null | undefined): string {
+	const clone = element?.cloneNode(true) as Element | undefined;
+
+	for (const hidden of clone?.querySelectorAll('ovd-copy-button') ?? []) {
+		hidden.remove();
+	}
+
+	return text(clone);
+}
+
+function query(): URLSearchParams {
+	return new URL(TestBed.inject(Router).url, 'http://localhost').searchParams;
+}
+
+/** The Agent cell of the first row, by the position of its header. */
+async function agentCell(item: ParticipantListItem): Promise<Element | undefined> {
+	const http = setup();
+	const harness = await RouterTestingHarness.create('/agents');
+
+	await load(http, harness, page([item]));
+
+	const element = routeElement(harness);
+	const index = [...element.querySelectorAll('thead th')].findIndex((th) => text(th) === 'Agent');
+
+	return element.querySelectorAll('tbody tr td')[index];
+}
+
 describe('AgentsPage', () => {
-	it('exports the active agents as CSV', async () => {
+	it('Origin in the CSV export', async () => {
 		const http = setup();
 		const info = TestBed.inject(InfoService).load();
 
 		http.expectOne('api/v1/info').flush(infoResponse());
 		await info;
 
-		const harness = await RouterTestingHarness.create('/agents?status=active&sort=duration');
+		const harness = await RouterTestingHarness.create('/agents?origin=openvidu&status=active&sort=duration');
 
 		await load(http, harness, page([agent()]));
 
 		const { params } = await exportCsv(http, routeElement(harness), 'agents/export.csv');
 
+		expect(params.get('origin')).toBe('openvidu');
 		expect(params.get('status')).toBe('active');
 		expect(params.get('sort')).toBe('duration');
 		expect(params.has('cursor') || params.has('limit')).toBe(false);
 	});
 
-	it('renders an agent row with its links, live duration and published sources, and no SDK or Kind', async () => {
+	it('Agent row: its cells in order, links, live duration and published sources, and no SDK, Kind or Node', async () => {
 		const http = setup();
+		const info = TestBed.inject(InfoService).load();
+
+		http.expectOne('api/v1/info').flush(infoResponse({ features: [] }));
+		await info;
+
 		const harness = await RouterTestingHarness.create('/agents');
 
-		await load(http, harness, page([agent({ name: 'Support bot', publishedSources: ['MICROPHONE'] })]));
+		await load(
+			http,
+			harness,
+			page([agent({ name: 'Support bot', publishedSources: ['MICROPHONE'], agent: { name: 'support' } })])
+		);
 
 		const element = routeElement(harness);
 		const row = element.querySelector('tbody tr');
 		const links = [...(row?.querySelectorAll('a') ?? [])].map((a) => a.getAttribute('href'));
+		const cells = [...(row?.querySelectorAll('td') ?? [])];
 
 		expect([...element.querySelectorAll('th')].map(text)).toEqual([
 			'SID',
+			'Agent',
 			'Identity',
 			'Name',
 			'Room',
@@ -128,6 +169,17 @@ describe('AgentsPage', () => {
 			'Published'
 		]);
 		expect(links).toEqual(['/participants/PA_z9', '/rooms/RM_abc']);
+		expect(cells.slice(0, 6).map(visibleText)).toEqual([
+			'PA_z9',
+			'support',
+			'agent-1',
+			'Support bot',
+			'demo-room',
+			'active'
+		]);
+		expect(visibleText(row).match(/PA_z9/g)).toHaveLength(1);
+		expect(cells[0]?.querySelector('ovd-copy-button')).not.toBeNull();
+		expect(cells[2]?.querySelector('ovd-copy-button')).not.toBeNull();
 		expect(text(row?.querySelector('a'))).toBe('PA_z9');
 		expect(text(row)).toContain('Support bot');
 		expect(text(row?.querySelector('ovd-status-badge'))).toContain('active');
@@ -161,15 +213,37 @@ describe('AgentsPage', () => {
 		expect(text(routeElement(harness).querySelector('ovd-room-chip'))).toContain('Room: demo-room');
 	});
 
-	it('shows the empty state and writes the status filter without the cursor', async () => {
+	it('No agents', async () => {
+		const http = setup();
+		const harness = await RouterTestingHarness.create('/agents?status=active&origin=openvidu&q=zzz&room=RM_abc');
+		const element = routeElement(harness);
+		const picker = TestBed.inject(RangePickerService);
+
+		await load(http, harness, page([]));
+		expect(text(element.querySelector('ovd-empty-state .title'))).toBe('No agents match');
+		expect(text(element.querySelector('ovd-empty-state'))).toContain('Change the filters or widen the time range.');
+
+		const [clear, widen] = [...element.querySelectorAll<HTMLButtonElement>('ovd-empty-state button')];
+
+		expect([clear, widen].map(text)).toEqual(['Clear filters', 'Widen range']);
+		widen?.click();
+		expect(picker.requests()).toBe(1);
+
+		clear?.click();
+		await harness.fixture.whenStable();
+
+		for (const name of ['q', 'status', 'origin', 'room']) {
+			expect(query().has(name), name).toBe(false);
+		}
+
+		await load(http, harness, page([]));
+	});
+
+	it('writes the status filter without the cursor', async () => {
 		const http = setup();
 		const harness = await RouterTestingHarness.create('/agents?cursor=abc');
 
 		await load(http, harness, page([]));
-		expect(text(routeElement(harness).querySelector('ovd-empty-state .title'))).toBe('No agents match');
-		expect(text(routeElement(harness).querySelector('ovd-empty-state'))).toContain(
-			'Change the filters or widen the time range.'
-		);
 
 		(
 			harness.routeDebugElement?.componentInstance as { sessions: { setStatus(value: string): void } }
@@ -181,6 +255,175 @@ describe('AgentsPage', () => {
 		expect(url).toContain('status=active');
 		expect(url).not.toContain('cursor');
 		expect((await load(http, harness, page([]))).params.get('status')).toBe('active');
+	});
+
+	it('Dates as on the other lists', async () => {
+		vi.useFakeTimers({ shouldAdvanceTime: true, now: new Date('2026-10-18T12:00:00Z') });
+
+		try {
+			const http = setup();
+			const harness = await RouterTestingHarness.create('/agents?tz=Europe/Madrid');
+
+			await load(
+				http,
+				harness,
+				page([
+					agent({ joinedAt: '2026-10-18T10:31:05Z' }),
+					agent({ sid: 'PA_y1', joinedAt: '2026-10-17T07:00:00Z', leftAt: '2026-10-17T07:30:00Z' })
+				])
+			);
+
+			const element = routeElement(harness);
+			const headers = [...element.querySelectorAll('thead th')].map(text);
+			const joined = headers.indexOf('Joined');
+
+			expect(
+				[...element.querySelectorAll('tbody tr')].map((row) => text(row.querySelectorAll('td')[joined]))
+			).toEqual(['12:31:05', '2026-10-17 09:00:00']);
+
+			const { sessions } = harness.routeDebugElement?.componentInstance as {
+				sessions: { columns(): { key: string; headerHint?: string }[] };
+			};
+
+			expect(
+				sessions
+					.columns()
+					.filter((column) => ['joinedAt', 'leftAt'].includes(column.key))
+					.map((column) => column.headerHint)
+			).toEqual(['Europe/Madrid', 'Europe/Madrid']);
+		} finally {
+			vi.useRealTimers();
+		}
+	});
+
+	it('Stale agent', async () => {
+		const http = setup();
+		const harness = await RouterTestingHarness.create('/agents');
+
+		await load(
+			http,
+			harness,
+			page([
+				agent({ stale: true }),
+				// An old join without the flag: the browser never judges staleness itself.
+				agent({ sid: 'PA_old', joinedAt: new Date(Date.now() - 86_400_000).toISOString() })
+			])
+		);
+
+		const [stale, fresh] = [...routeElement(harness).querySelectorAll('tbody tr')];
+
+		expect(stale?.querySelector('ovd-status-badge mat-icon.stale')).not.toBeNull();
+		expect(fresh?.querySelector('ovd-status-badge mat-icon.stale')).toBeNull();
+	});
+
+	it('OpenVidu agent with a name', async () => {
+		const cell = await agentCell(
+			agent({ agent: { name: 'speech-processing-dev', openvidu: 'speech-processing' } })
+		);
+		const tag = cell?.querySelector('.origin');
+		const status = cell?.closest('tr')?.querySelector('ovd-status-badge .ovd-tag');
+
+		expect(text(cell)).toBe('speech-processing-dev OpenVidu');
+		expect(text(tag)).toBe('OpenVidu');
+		// The shared 24 px tag box of the status badge of the row.
+		expect(tag?.classList.contains('ovd-tag')).toBe(true);
+		expect(status).not.toBeNull();
+		expect(tag?.classList.contains('mat-mdc-tooltip-trigger')).toBe(false);
+		expect(tag?.hasAttribute('tabindex')).toBe(false);
+	});
+
+	it('Third-party agent', async () => {
+		const cell = await agentCell(agent({ agent: { name: 'dummy-agent' } }));
+
+		expect(text(cell)).toBe('dummy-agent');
+		expect(cell?.closest('tr')?.querySelector('.origin')).toBeNull();
+	});
+
+	it('OpenVidu agent without a name', async () => {
+		const cell = await agentCell(agent({ agent: { openvidu: 'speech-processing' } }));
+
+		expect(text(cell)).toBe('speech-processing OpenVidu');
+		expect(text(cell?.querySelector('.origin'))).toBe('OpenVidu');
+	});
+
+	it('Agent without agent facts', async () => {
+		const cell = await agentCell(agent());
+
+		expect(text(cell)).toBe('—');
+		expect(cell?.closest('tr')?.querySelector('.origin')).toBeNull();
+	});
+
+	it('Agent column not sortable', async () => {
+		const http = setup();
+		const harness = await RouterTestingHarness.create('/agents');
+
+		await load(http, harness, page([agent()]));
+
+		const element = routeElement(harness);
+		const header = [...element.querySelectorAll('thead th')].find((th) => text(th) === 'Agent');
+
+		expect(header?.querySelector('button.sort')).toBeNull();
+		expect(header?.hasAttribute('aria-sort')).toBe(false);
+
+		[...element.querySelectorAll<HTMLButtonElement>('button')]
+			.find((button) => text(button) === 'Columns')
+			?.click();
+		await harness.fixture.whenStable();
+
+		expect(
+			[...document.querySelectorAll('[role="menuitemcheckbox"]')].map((item) => text(item)).filter(Boolean)
+		).toContain('Agent');
+	});
+
+	it('OpenVidu origin selected', async () => {
+		const http = setup();
+		const harness = await RouterTestingHarness.create('/agents?cursor=abc');
+		const element = routeElement(harness);
+
+		await load(http, harness, page([agent()]));
+
+		element.querySelector<HTMLElement>('.origin .mat-mdc-select-trigger')?.click();
+		await harness.fixture.whenStable();
+		[...document.querySelectorAll<HTMLElement>('mat-option')]
+			.find((option) => text(option) === 'OpenVidu')
+			?.click();
+		await harness.fixture.whenStable();
+
+		expect(query().get('origin')).toBe('openvidu');
+		expect(query().has('cursor')).toBe(false);
+		expect((await load(http, harness, page([agent()]))).params.get('origin')).toBe('openvidu');
+
+		element.querySelector<HTMLElement>('.origin .mat-mdc-select-trigger')?.click();
+		await harness.fixture.whenStable();
+		[...document.querySelectorAll<HTMLElement>('mat-option')].find((option) => text(option) === 'All')?.click();
+		await harness.fixture.whenStable();
+
+		expect(query().has('origin')).toBe(false);
+		expect((await load(http, harness, page([agent()]))).params.has('origin')).toBe(false);
+	});
+
+	it('Third-party origin from the URL', async () => {
+		const http = setup();
+		const harness = await RouterTestingHarness.create('/agents?origin=third-party&status=left');
+		const request = await load(http, harness, page([agent()]));
+		const element = routeElement(harness);
+
+		expect(text(element.querySelector('.origin .mat-mdc-select-value'))).toBe('Third-party');
+		expect(text(element.querySelector('.status .mat-mdc-select-value'))).toBe('Left');
+		expect(request.params.get('origin')).toBe('third-party');
+		expect(request.params.get('status')).toBe('left');
+	});
+
+	it('Invalid origin in the URL', async () => {
+		const http = setup();
+		const harness = await RouterTestingHarness.create('/agents?origin=livekit');
+		const request = await load(http, harness, page([agent()]));
+		const element = routeElement(harness);
+
+		expect(text(element.querySelector('.origin .mat-mdc-select-value'))).toBe('All');
+		expect(request.params.has('origin')).toBe(false);
+		expect(element.querySelector('ovd-error-banner')).toBeNull();
+		expect(element.querySelectorAll('tbody tr')).toHaveLength(1);
 	});
 
 	it('shows the live counter and reloads the table when it changes', async () => {

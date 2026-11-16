@@ -9,3 +9,9 @@
 	align-items: center;
 	gap: 4px 8px;
 }
+
+// Outlined like the kind badge; its text is the cue, so colour carries nothing.
+.origin {
+	border-color: var(--mat-sys-outline-variant);
+	color: var(--mat-sys-on-surface);
+}

@@ -33,6 +33,8 @@ queried) and `Deployment` (running the service). One line per observable change,
   join, leave and duration, and see the sources each session published.
 - Agents page listing agent sessions with a live counter and the agent sessions of the range, searchable by identity
   and sortable by join, leave and duration.
+- The Agents page names each agent, tags the agents that declare themselves OpenVidu agents and filters by origin:
+  OpenVidu or third-party.
 - One time range for every page, with presets, custom ranges and any time zone; the range picker warns while the start
   of the range predates the retention of the page's data.
 - Every list, chart and detail view is reproducible from its URL; Back restores filters, sort and page, and the time
