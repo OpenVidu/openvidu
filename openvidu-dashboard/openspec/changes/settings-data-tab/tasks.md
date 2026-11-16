@@ -106,17 +106,17 @@ Paths are relative to `dashboard-ce/`; `ui/` is `frontend/projects/dashboard-ui/
 
 - [x] 6.1 In `../CHANGELOG.md` (3.10.0, `Added` → `UI`), rewrite the Settings line as `proposal.md` gives it. Verify:
       the section has one Settings line and none names an About tab.
-- [ ] 6.2 Confirm that `../README.md`, the `AGENTS.md` files and `frontend/projects/dashboard-ui/README.md` name
+- [x] 6.2 Confirm that `../README.md`, the `AGENTS.md` files and `frontend/projects/dashboard-ui/README.md` name
       neither the About tab nor its files, and correct any that does. Verify: `grep -rni "about tab\|about-tab\|tab=about"`
       over those files finds nothing.
 
 ## 7. Checks and refactor review (implementer)
 
-- [ ] 7.1 Run `./dashboard.sh scenarios settings-data-tab`. Verify: each of the 49 scenarios lists a test and none
+- [x] 7.1 Run `./dashboard.sh scenarios settings-data-tab`. Verify: each of the 49 scenarios lists a test and none
       reads "NO TEST".
-- [ ] 7.2 Run `./dashboard.sh check` and `./dashboard.sh e2e`, and build the frontend. Verify: all pass, the e2e with
+- [x] 7.2 Run `./dashboard.sh check` and `./dashboard.sh e2e`, and build the frontend. Verify: all pass, the e2e with
       axe and both themes, and the bundle size check keeps the Settings chunk under its budget.
-- [ ] 7.3 Refactor review: assess whether the touched files need a refactor (the size of `settings-page.spec.ts`
+- [x] 7.3 Refactor review: assess whether the touched files need a refactor (the size of `settings-page.spec.ts`
       after the new tests, the split of the Overview and server status tests); apply a small one here or record that
       none is needed. Verify: the outcome is written in the implementation report.
 
