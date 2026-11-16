@@ -43,6 +43,7 @@ All tasks run through `./dashboard.sh`:
 ./dashboard.sh build-image ce     # build openvidu/openvidu-dashboard:dev
 ./dashboard.sh smoke-image ce     # smoke test and size budget of that image
 ./dashboard.sh contract-check ../openvidu-livekit   # data model contract check against the writer
+./dashboard.sh scenarios <change>  # tests of every scenario of an OpenSpec change, by title
 ./dashboard.sh help               # list every command
 ```
 

@@ -11,6 +11,8 @@
 .claude
 .agents
 openspec
+tools
+test
 dashboard-ce/tools
 # Their manifests keep the workspace consistent with the lockfile.
 !dashboard-ce/tools/*/package.json

@@ -25,7 +25,7 @@ done
 
 usage() {
 	cat <<'EOF'
-Usage: ./dashboard.sh <command> [ce|<path>] [--skip-install]
+Usage: ./dashboard.sh <command> [ce|<path>|<change>] [--skip-install]
 
 Commands:
   install        pnpm install for the whole workspace
@@ -40,11 +40,13 @@ Commands:
                  dashboard-ce/backend/dev.env, overridden by dashboard-ce/backend/.env and the environment
   demo [ce]      Local demo on generated data: MongoDB (a container, or DASHBOARD_DEMO_MONGO_URI), 30 days of data
                  kept live, backend and frontend dev servers on http://localhost:4200 (admin / admin)
-  test           Unit tests (Vitest) of every package that defines them (same as test-unit)
-  test-unit      Unit tests (Vitest) of every package that defines them
+  test           Same as test-unit
+  test-unit      Tests of the workspace tooling (test/) and unit tests (Vitest) of every package that defines them
   test-integration  Integration tests against MongoDB (Docker required)
   e2e            Build the application and run the Playwright tests against it with a mocked API
   spec-validate  openspec validate --all --strict
+  scenarios <change> [<openvidu-livekit>]  List the tests of every scenario of the change's delta specs, counting
+                 those of the writer when its checkout is given; fails when a scenario has none
   check          lint + format-check + typecheck + spec-validate + test-unit
   build-image [ce]  Build openvidu/openvidu-dashboard (IMAGE_TAG, default dev; BASE_HREF, default /)
   smoke-image [ce]  Smoke test of that image (health, port, user, docker stop, size budget)
@@ -163,6 +165,7 @@ case "$COMMAND" in
 		run test:integration
 		;;
 	spec-validate) run spec:validate ;;
+	scenarios) node tools/scenario-coverage.mjs ${ARGS[@]+"${ARGS[@]}"} ;;
 	check)
 		run lint
 		run format:check

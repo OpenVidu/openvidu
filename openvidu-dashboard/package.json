@@ -14,7 +14,7 @@
 		"format:check": "prettier --check .",
 		"typecheck": "pnpm -r run typecheck",
 		"build": "pnpm -r run build",
-		"test:unit": "pnpm -r --if-present run test",
+		"test:unit": "node --test \"test/*.test.mjs\" && pnpm -r --if-present run test",
 		"test:integration": "pnpm -r --if-present run test:integration",
 		"e2e": "pnpm --filter \"@openvidu-dashboard/e2e^...\" run build && pnpm --filter @openvidu-dashboard/e2e run e2e",
 		"spec:validate": "openspec validate --all --strict"
