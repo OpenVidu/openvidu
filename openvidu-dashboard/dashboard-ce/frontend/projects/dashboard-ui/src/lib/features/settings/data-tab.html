@@ -79,16 +79,13 @@
 	@if (!classes.retentionReported) {
 		<p class="muted">Retention not reported by the server yet</p>
 	}
-	<p class="muted">
-		Retention is set in <code>openvidu.analytics.retention</code> of the OpenVidu server configuration
-		(<code>livekit.yaml</code>): <code>events</code>, <code>stats</code>, <code>tracks</code>,
-		<code>entities</code>, <code>rollups_5min</code>, <code>rollups_hourly</code> and <code>rollups_daily</code>. It
-		applies when the server restarts. <ovd-external-link [href]="documentation">Documentation</ovd-external-link>
-	</p>
-	<p class="muted">
-		The info icons mark the classes that have not reached their retention yet and estimate their size, assuming the
-		activity so far continues.
-	</p>
+	<ovd-notice class="retention" variant="info">
+		<span>
+			Retention is set in <code>openvidu.analytics.retention</code> of the OpenVidu Server configuration
+			(<code>livekit.yaml</code>) and applies when the server restarts.
+		</span>
+		<ovd-external-link [href]="configurationReference">Configuration reference</ovd-external-link>
+	</ovd-notice>
 } @else {
 	<ovd-skeleton variant="rows" [count]="6" />
 }

@@ -45,7 +45,13 @@ test('Data shows the storage per data class, the collections of a class and no v
 	await expect(data).not.toContainText('Schema');
 	await expect(data).not.toContainText('Migration');
 	await expect(data).not.toContainText('schema_meta');
-	await expect(data).toContainText('Retention is set in openvidu.analytics.retention');
+	await expect(data.getByRole('status').filter({ hasText: 'Retention is set in' })).toContainText(
+		'Retention is set in openvidu.analytics.retention of the OpenVidu Server configuration (livekit.yaml) and applies when the server restarts.'
+	);
+	await expect(data.getByRole('link', { name: /Configuration reference/ })).toHaveAttribute(
+		'href',
+		'https://openvidu.io/latest/docs/self-hosting/configuration/reference/#analytics-settings'
+	);
 
 	await data.getByRole('button', { name: 'Show collections of Entities' }).click();
 	await expect(data.getByRole('button', { name: 'Hide collections of Entities' })).toHaveAttribute(

@@ -21,6 +21,11 @@ h2 {
 	color: var(--mat-sys-on-surface-variant);
 }
 
+.retention {
+	max-width: 72ch;
+	margin-top: 16px;
+}
+
 .table-wrap {
 	overflow-x: auto;
 }

@@ -52,7 +52,7 @@ export class DataTab {
 	/** Labels of the classes whose collections show; kept out of the URL. */
 	protected readonly expanded = signal<ReadonlySet<string>>(new Set());
 
-	protected readonly documentation = `${EXTERNAL_LINKS.documentation}#retention`;
+	protected readonly configurationReference = EXTERNAL_LINKS.analyticsSettings;
 	protected readonly info = this.service.info;
 	protected readonly unavailable = computed(() => this.info() === null && this.service.error() !== null);
 	/** From the server status poll (every 10 s while it runs), or the info document until the first status. */

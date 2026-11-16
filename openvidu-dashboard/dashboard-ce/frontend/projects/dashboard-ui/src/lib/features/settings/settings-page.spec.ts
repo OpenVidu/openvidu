@@ -449,28 +449,20 @@ describe('SettingsPage', () => {
 
 	it('Where the retention is set', async () => {
 		const { element } = await settings('/settings?tab=data', infoResponse({ retention: DEFAULT_RETENTION }));
-		const message = [
-			...element.querySelectorAll('ovd-data-tab table.classes ~ p, ovd-data-tab .table-wrap ~ p')
-		].find((paragraph) => text(paragraph).startsWith('Retention is set'));
-		const link = message?.querySelector('ovd-external-link a');
+		const notice = element.querySelector('ovd-data-tab .table-wrap ~ ovd-notice');
+		const link = notice?.querySelector('ovd-external-link a');
+		const under = [...element.querySelectorAll('ovd-data-tab .table-wrap ~ *')].map((node) => text(node)).join(' ');
 
-		expect(text(message)).toContain(
-			'Retention is set in openvidu.analytics.retention of the OpenVidu server configuration (livekit.yaml): events, stats, tracks, entities, rollups_5min, rollups_hourly and rollups_daily. It applies when the server restarts. Documentation'
+		expect(notice?.getAttribute('role')).toBe('status');
+		expect(text(notice?.querySelector('.text > span'))).toBe(
+			'Retention is set in openvidu.analytics.retention of the OpenVidu Server configuration (livekit.yaml) and applies when the server restarts.'
 		);
+		expect(text(link)).toContain('Configuration reference');
 		expect(link?.getAttribute('href')).toBe(
-			'https://openvidu.io/latest/docs/self-hosting/production-ready/observability/openvidu-dashboard/#retention'
+			'https://openvidu.io/latest/docs/self-hosting/configuration/reference/#analytics-settings'
 		);
 		expect(link?.getAttribute('target')).toBe('_blank');
-	});
-
-	it('What the estimates assume', async () => {
-		const { element } = await settings('/settings?tab=data', infoResponse({ retention: DEFAULT_RETENTION }));
-
-		expect(
-			[...element.querySelectorAll('ovd-data-tab .table-wrap ~ p')].map((paragraph) => text(paragraph))
-		).toContain(
-			'The info icons mark the classes that have not reached their retention yet and estimate their size, assuming the activity so far continues.'
-		);
+		expect(under).not.toMatch(/info icon|estimate/i);
 	});
 
 	function expandButton(element: HTMLElement, label: string): HTMLButtonElement | null | undefined {

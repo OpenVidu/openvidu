@@ -148,7 +148,7 @@ Paths are relative to `dashboard-ce/`; `ui/` is `frontend/projects/dashboard-ui/
       add `Span ends at the read` with fake timers: the info document read, the clock advanced two days, then
       `tab=data` opened (code review WARNING 2). Covers: Span ends at the read. Verify: the unit tests pass, and the
       new test fails when the tab passes `Date.now()` instead of `readAt` (tried and reverted).
-- [ ] 9.4 Replace the two paragraphs under the Storage table with one `ovd-notice` with `variant="info"` holding the
+- [x] 9.4 Replace the two paragraphs under the Storage table with one `ovd-notice` with `variant="info"` holding the
       text of "Retention configuration message" and its "Configuration reference" link, an `ovd-external-link` to a new
       `EXTERNAL_LINKS` entry for
       `https://openvidu.io/latest/docs/self-hosting/configuration/reference/#analytics-settings` (design decision 11).
