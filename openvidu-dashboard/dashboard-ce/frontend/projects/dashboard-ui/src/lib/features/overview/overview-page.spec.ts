@@ -262,7 +262,7 @@ describe('OverviewPage', () => {
 		await harness.fixture.whenStable();
 		expect(element.querySelector('.tiles')?.innerHTML).toBe(before);
 		expect(element.querySelector('.highlight')).toBeNull();
-		expect(element.querySelector('.tiles ovd-skeleton')).toBeNull();
+		expect(element.querySelector('.tiles .skeleton')).toBeNull();
 		expect(updated()).toBeGreaterThan(first ?? Infinity);
 	});
 
@@ -397,7 +397,7 @@ describe('OverviewPage', () => {
 		expect(tips(harness, section(element, 'Recent rooms'))).toEqual([
 			['About Unique identities', INFO_TEXTS.uniqueIdentities]
 		]);
-		expect(tips(harness, section(element, 'By node'))).toEqual([]);
+		expect(tips(harness, element)).toHaveLength(7);
 	});
 
 	it('hints the stale entities after two responses in a row and renders the recent rooms', async () => {

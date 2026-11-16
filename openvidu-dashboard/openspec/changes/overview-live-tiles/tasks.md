@@ -78,13 +78,13 @@ a scenario when its title is the scenario name, alone or followed by `: <detail>
       "Data up / down" share a line of the row and the value of the first ends where the second line of the other
       ends. Covers: Value on two lines. Verify: the test passes in `./dashboard.sh e2e` and fails on the layout
       before 5.1.
-- [ ] 5.5 Code review S1: in the `Refresh keeps values` test of `features/overview/overview-page.spec.ts`, replace the
+- [x] 5.5 Code review S1: in the `Refresh keeps values` test of `features/overview/overview-page.spec.ts`, replace the
       assertion on `.tiles ovd-skeleton`, an element a tile never renders, with one on the tile's own skeleton
       (`.tiles .skeleton`). Verify: the unit test passes, and fails if a tile is forced to show its skeleton.
-- [ ] 5.6 Code review S2: in the `Data pipeline and recent rooms` test of the same file, assert that the page carries
+- [x] 5.6 Code review S2: in the `Data pipeline and recent rooms` test of the same file, assert that the page carries
       7 info tips in all and drop the assertion on the By node section, which CE never renders. Verify: the unit test
       passes.
-- [ ] 5.7 Code review S3: in `features/overview/overview-page.ts`, reword the comment of `egressQueryParams` so it
+- [x] 5.7 Code review S3: in `features/overview/overview-page.ts`, reword the comment of `egressQueryParams` so it
       names the `status` the Active option of the Egress status filter writes, not a URL. Verify: `./dashboard.sh
       check` passes (lint and format).
 - [x] 5.8 Run `./dashboard.sh scenarios overview-live-tiles`, `./dashboard.sh check` and `./dashboard.sh e2e`, one
