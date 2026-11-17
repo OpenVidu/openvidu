@@ -130,15 +130,15 @@ Done in the writer checkout and committed there, not pushed (group 9). It comes 
 
 ## 6. End-to-end tests (implementer)
 
-- [ ] 6.1 In `e2e/fixtures/api.ts`, export `legacyStorage(now)` and add the `ApiOptions.legacy` flag: the two entries
+- [x] 6.1 In `e2e/fixtures/api.ts`, export `legacyStorage(now)` and add the `ApiOptions.legacy` flag: the two entries
       and a completed migration with `legacyRetainedUntil` 20 days ahead (D10). Verify: the existing e2e suites pass
       unchanged.
-- [ ] 6.2 In `e2e/tests/settings.spec.ts`, add `Legacy row kept for rollback: …` (the row after Daily rollups with its
+- [x] 6.2 In `e2e/tests/settings.spec.ts`, add `Legacy row kept for rollback: …` (the row after Daily rollups with its
       retention, documents and size, no info button, and its two collections once expanded) and, in the phone
       describe, `Legacy row on a phone: …` (the bounding box of the retention cell between 0 and 375 px and the
       document no wider than 375 px). Covers: Legacy row kept for rollback, Legacy row on a phone. Verify:
       `./dashboard.sh e2e` passes.
-- [ ] 6.3 In `e2e/tests/accessibility.spec.ts`, inside the light and dark loop, add
+- [x] 6.3 In `e2e/tests/accessibility.spec.ts`, inside the light and dark loop, add
       `Legacy row kept for rollback: the Data tab passes axe` with the Legacy data collections expanded. Covers: Legacy
       row kept for rollback. Verify: `./dashboard.sh e2e` passes in both themes.
 

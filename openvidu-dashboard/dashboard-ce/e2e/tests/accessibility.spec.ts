@@ -18,6 +18,21 @@ for (const scheme of ['light', 'dark'] as const) {
 			await expectNoViolations(page);
 		});
 
+		test.describe('legacy data', () => {
+			test.use({ apiOptions: { legacy: true } });
+
+			test('Legacy row kept for rollback: the Data tab passes axe', async ({ page }) => {
+				const label = 'Legacy data (before 3.10)';
+
+				await page.goto('/settings?tab=data');
+				await page.getByRole('button', { name: `Show collections of ${label}` }).click();
+				await expect(page.getByRole('table', { name: `Collections of ${label}` })).toContainText(
+					'legacy_events'
+				);
+				await expectNoViolations(page);
+			});
+		});
+
 		test('a locked page and the overview', async ({ page }) => {
 			await page.goto('/rooms/RM_ab12cd');
 			await expect(page.getByText('Room detail is available in OpenVidu PRO')).toBeVisible();

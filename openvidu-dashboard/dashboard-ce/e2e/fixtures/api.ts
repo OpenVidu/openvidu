@@ -9,6 +9,7 @@ import {
 	type InfoResponse,
 	type IngressListItem,
 	type IngressSummary,
+	type InfoMigration,
 	type ListResponse,
 	type OverviewResponse,
 	ParticipantKind,
@@ -82,6 +83,11 @@ export interface ApiOptions {
 	status?: () => StatusResponse;
 	/** The list CSV exports answer with `X-Export-Truncated: true`, as a cut file does. */
 	listExportTruncated?: boolean;
+	/**
+	 * The legacy collections of an upgrade from 3.9 in the info storage, and a completed migration that keeps them for
+	 * 20 more days in the info document and the default status.
+	 */
+	legacy?: boolean;
 }
 
 export interface RecordedRequest {
@@ -163,6 +169,25 @@ function storage(now: number): InfoResponse['storage'] {
 	};
 }
 
+/** Storage entries of the legacy collections: 420,000 documents and 130 MB together. */
+export function legacyStorage(now: number): InfoResponse['storage'] {
+	const oldest = new Date(now - 30 * DAY_MS).toISOString();
+
+	return {
+		legacy_events: { documents: 120_000, storageBytes: 32_000_000, indexBytes: 8_000_000, oldest },
+		stats: { documents: 300_000, storageBytes: 72_000_000, indexBytes: 18_000_000, oldest }
+	};
+}
+
+/** A completed migration that keeps the legacy data until 08:00 UTC 20 days after the day of `now`. */
+export function legacyMigration(now: number): InfoMigration {
+	return {
+		state: 'completed',
+		progress: { processed: 420_000, total: 420_000, finishedAt: new Date(now - DAY_MS).toISOString() },
+		legacyRetainedUntil: new Date(Math.floor(now / DAY_MS) * DAY_MS + 20 * DAY_MS + 8 * 3_600_000).toISOString()
+	};
+}
+
 /** The dashboard API mocked with `page.route()`: auth endpoints, info, empty lists; every request is recorded. */
 export class MockApi {
 	readonly requests: RecordedRequest[] = [];
@@ -223,7 +248,11 @@ export class MockApi {
 				rollupsDailyMs: null
 			},
 			database: { version: '8.0.29', timeseriesSupported: true },
-			storage: storage(Date.now()),
+			...(this.options.legacy === true ? { migration: legacyMigration(Date.now()) } : {}),
+			storage: {
+				...storage(Date.now()),
+				...(this.options.legacy === true ? legacyStorage(Date.now()) : {})
+			},
 			features: edition === 'pro' ? Object.values(FeatureKey) : [],
 			limits: { rankedSortMaxRangeMs: 7 * 86_400_000, participantRankedSortMaxRangeMs: 86_400_000 },
 			openapiDocsEnabled: false,
@@ -312,13 +341,24 @@ export class MockApi {
 				} else if (method === 'GET' && path === 'overview') {
 					await this.overview(route);
 				} else if (method === 'GET' && path === 'status') {
-					await route.fulfill({ json: (this.options.status ?? activeStatus)() });
+					await route.fulfill({ json: this.status() });
 				} else if (method === 'GET' && path.startsWith('analytics/')) {
 					await this.analytics(route, path.slice('analytics/'.length), url.searchParams);
 				} else {
 					await route.fulfill(error('NOT_FOUND', 404));
 				}
 		}
+	}
+
+	/** The `status` option, or a healthy writer with the legacy migration when `legacy` is set. */
+	private status(): StatusResponse {
+		if (this.options.status !== undefined) {
+			return this.options.status();
+		}
+
+		const now = Date.now();
+
+		return this.options.legacy === true ? activeStatus(now, 4_000, legacyMigration(now)) : activeStatus(now);
 	}
 
 	/** A one-line CSV under the file name of the list export, cut when `listExportTruncated` says so. */

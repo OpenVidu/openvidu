@@ -1,5 +1,18 @@
-import { expect, test } from '../fixtures/api.js';
+import { expect, legacyMigration, type Page, test } from '../fixtures/api.js';
 import { activeStatus } from '../fixtures/overview.js';
+
+const LEGACY_LABEL = 'Legacy data (before 3.10)';
+
+/** The retention text of the legacy data the mock keeps, in UTC. */
+function keptUntil(): string {
+	return `Kept until ${(legacyMigration(Date.now()).legacyRetainedUntil ?? '').slice(0, 10)} for rollback`;
+}
+
+function legacyRow(page: Page) {
+	return page.locator('ovd-data-tab table.classes > tbody > tr').filter({
+		has: page.getByRole('rowheader', { name: LEGACY_LABEL })
+	});
+}
 
 test('preferences persist across reloads and reset to the defaults', async ({ page }) => {
 	await page.goto('/settings');
@@ -80,6 +93,36 @@ test('Retention tip by keyboard', async ({ page }) => {
 	await expect(page.locator('.mat-mdc-tooltip')).toHaveCount(0);
 });
 
+test.describe('legacy data', () => {
+	test.use({ apiOptions: { legacy: true }, timezoneId: 'UTC' });
+
+	test('Legacy row kept for rollback: after Daily rollups, with its retention, size and collections', async ({
+		page
+	}) => {
+		await page.goto('/settings?tab=data');
+
+		const data = page.locator('ovd-data-tab');
+		const row = legacyRow(page);
+		const labels = data.locator('table.classes > tbody > tr > th[scope="row"]');
+
+		await expect(row.locator(':scope > th, :scope > td')).toHaveText([
+			LEGACY_LABEL,
+			keptUntil(),
+			'420,000',
+			'130 MB'
+		]);
+		await expect(labels.nth(-2)).toHaveText('Daily rollups');
+		await expect(labels.last()).toHaveText(LEGACY_LABEL);
+		await expect(row.locator('ovd-info-tip')).toHaveCount(0);
+
+		await data.getByRole('button', { name: `Show collections of ${LEGACY_LABEL}` }).click();
+
+		const collections = data.getByRole('table', { name: `Collections of ${LEGACY_LABEL}` });
+
+		await expect(collections.locator('tbody th')).toHaveText(['legacy_events', 'stats']);
+	});
+});
+
 test.describe('on a phone', () => {
 	test.use({ viewport: { width: 375, height: 740 }, hasTouch: true });
 
@@ -100,6 +143,24 @@ test.describe('on a phone', () => {
 
 		await tip.tap();
 		await expect(tooltip).toHaveCount(0);
+	});
+
+	test.describe('with legacy data', () => {
+		test.use({ apiOptions: { legacy: true }, timezoneId: 'UTC' });
+
+		test('Legacy row on a phone: the retention text wraps inside the viewport', async ({ page }) => {
+			await page.goto('/settings?tab=data');
+
+			const retention = legacyRow(page).locator(':scope > td').first();
+
+			await expect(retention).toHaveText(keptUntil());
+
+			const box = await retention.boundingBox();
+
+			expect(box?.x).toBeGreaterThanOrEqual(0);
+			expect((box?.x ?? 0) + (box?.width ?? 0)).toBeLessThanOrEqual(375);
+			expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(375);
+		});
 	});
 });
 
