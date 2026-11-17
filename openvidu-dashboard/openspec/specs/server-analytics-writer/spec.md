@@ -127,8 +127,8 @@ by `***`; the ingress URL SHALL be stored without userinfo, query string and fra
 ### Requirement: Personal data flags
 Edition: CE and PRO. `anonymize_ip` SHALL remove the client IP addresses (`client_info.address` and
 `client_meta.client_addr`) from every document, and `store_metadata` SHALL gate room metadata, participant metadata
-and attributes and ingress participant metadata; IP addresses and metadata are dropped by default, also from the
-documents of the legacy migration.
+and attributes and ingress participant metadata, the attributes of "Agent naming attributes" aside; IP addresses and
+metadata are dropped by default, also from the documents of the legacy migration.
 
 #### Scenario: Anonymized IP
 - **GIVEN** the default configuration
@@ -147,7 +147,7 @@ documents of the legacy migration.
 
 #### Scenario: Metadata enabled
 - **GIVEN** `store_metadata: true`
-- **WHEN** a room with metadata and a participant with attributes are projected
+- **WHEN** a room with metadata and a STANDARD participant with metadata and attributes are projected
 - **THEN** `config.metadata`, `metadata` and `attributes` are stored, and they are absent with the default configuration
 
 ### Requirement: Stored raw event types
@@ -838,3 +838,19 @@ hourly and daily rollups of the end bucket, in each scope of the room's server: 
 - **GIVEN** a batch whose `ROOM_ENDED` was already counted by a previous process
 - **WHEN** the batch is processed again
 - **THEN** `rooms.byTopology`, `rooms.recorded` and `rooms.bySize` are unchanged
+
+### Requirement: Agent naming attributes
+Edition: CE and PRO. Whatever `store_metadata` says, the projector SHALL keep in the `attributes` of a participant of
+kind `AGENT` the keys `lk.agent_name`, `openvidu.agent` and those that start with `openvidu.agent.`, so that the
+dashboard can name an agent and tell OpenVidu agents apart. Its other attributes, the attributes of every other kind
+and the attributes in raw event payloads SHALL still need `store_metadata`.
+
+#### Scenario: agents keep the attributes that name them without store_metadata
+- **GIVEN** the default configuration, an AGENT participant with the attributes `lk.agent_name`, `openvidu.agent`, `openvidu.agent.version`, `lk.agent.name`, `lk.agent.state`, `openvidu.agents` and `customer`, an AGENT participant with `lk.agent_name` and `lk.agent.state`, an AGENT participant with only `lk.agent.state`, and a STANDARD participant with `lk.agent_name` and `openvidu.agent`
+- **WHEN** their `PARTICIPANT_JOINED` events are projected
+- **THEN** the first document has exactly `lk.agent_name`, `openvidu.agent` and `openvidu.agent.version` in `attributes` and no `metadata`, the second only `lk.agent_name`, the third and the STANDARD one have no `attributes`, and no raw event payload holds attributes
+
+#### Scenario: agents keep every attribute with store_metadata
+- **GIVEN** `store_metadata: true` and an AGENT participant with the attributes `lk.agent_name`, `lk.agent.state` and `customer`
+- **WHEN** its `PARTICIPANT_JOINED` is projected
+- **THEN** the document's `attributes` hold the three of them

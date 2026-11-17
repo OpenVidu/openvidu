@@ -408,13 +408,14 @@ the rollups and `nodes` expire by TTL indexes.
 - **WHEN** the TTL indexes of `nodes` are listed
 - **THEN** `lastSeenAt_ttl` has `expireAfterSeconds` of 30 days
 
-### Requirement: Secrets and personal data
+### Requirement: Stored secrets and personal data
 Edition: CE and PRO. No document SHALL contain `turn_password`, storage credentials, stream keys, signing
 keys, tokens or SIP credentials. Client IP addresses SHALL be stored only when `anonymize_ip` is `false`, and
 participant metadata, attributes, room metadata and ingress participant metadata SHALL be stored only when
-`store_metadata` is enabled.
+`store_metadata` is enabled, except the attributes `lk.agent_name`, `openvidu.agent` and `openvidu.agent.*` of a
+participant of kind `AGENT`, which are always stored.
 
-#### Scenario: Anonymized IP
+#### Scenario: Client address absent by default
 - **GIVEN** the default configuration
 - **WHEN** a `PARTICIPANT_JOINED` with `client_info.address` is projected
 - **THEN** `client.address` is absent from the participant document and from the raw event payload
@@ -426,8 +427,13 @@ participant metadata, attributes, room metadata and ingress participant metadata
 
 #### Scenario: Metadata disabled by default
 - **GIVEN** default configuration
-- **WHEN** a room with metadata and a participant with attributes are projected
+- **WHEN** a room with metadata and a STANDARD participant with metadata and attributes are projected
 - **THEN** neither `config.metadata` nor `metadata`/`attributes` are stored
+
+#### Scenario: Agent attributes in the contract fixtures
+- **GIVEN** the contract fixtures, written as the default `store_metadata: false` writes them
+- **WHEN** the participant fixtures are validated and read
+- **THEN** the agent session passes the `participants` validator with `attributes` equal to `{ "lk.agent_name": "speech-processing", "openvidu.agent": "speech-processing" }`, and no other participant fixture has `attributes` or `metadata`
 
 ### Requirement: Index-backed queries
 Edition: CE and PRO. The writer SHALL create the indexes of the shared contract
@@ -644,3 +650,14 @@ hourly and daily rollups of each room's end bucket, in its scopes.
 - **WHEN** the hourly `global` documents of a day are summed, and the `node:` documents of each node apart
 - **THEN** their `rooms.byTopology`, `rooms.recorded` and `rooms.bySize` equal the counts, by class, recording
   and size range, of the rooms that ended that day, and of those of each node
+
+### Requirement: Generated agent attributes
+Edition: CE. The data generator SHALL give every agent session the `attributes` the writer keeps by default:
+`lk.agent_name` always, empty for agents without a registered name, and `openvidu.agent` on the agents it generates
+as OpenVidu agents, with no other key; sessions of other kinds get no `attributes`. A generated dataset with agents
+SHALL hold agents with the mark and agents without it.
+
+#### Scenario: Generated agents of both origins
+- **GIVEN** a dataset generated at scenario S over 2 days
+- **WHEN** its participant sessions are read
+- **THEN** every `AGENT` session has `attributes` with `lk.agent_name` and no key other than it and `openvidu.agent`, at least one has a non-empty `openvidu.agent` and at least one has none, no session of another kind has `attributes`, and every session passes the `participants` validator
