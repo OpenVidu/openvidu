@@ -51,3 +51,5 @@
   rebased tree `check`, `test-integration` (259/259), `e2e` (135, both themes; real backend 6/6) and `scenarios` (51, none
   without a test) passed. The verification reports refer to the commits before the rebase; the change's own content is
   the same.
+- Task 9.3: with the owner's OK, openvidu-livekit `openvidu/main` pushed (`682e41ca..05459651`); its `Test` run
+  44071926509 is green.

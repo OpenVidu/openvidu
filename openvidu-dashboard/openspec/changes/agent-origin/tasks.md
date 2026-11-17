@@ -221,7 +221,7 @@ After group 8. The dashboard push follows this group: its CI `contract` job diff
       `openvidu/analytics/contract_integration_test.go` and files under `openvidu/analytics/schema/contract/`, the
       changelog diff is that one line, and the contract check ends with "contract check passed"; the commit and the
       result are recorded in `operations.md`.
-- [ ] 9.3 With the owner's OK, push openvidu-livekit `openvidu/main` (the commits of 1.6 and 9.2). Verify: its `Test`
+- [x] 9.3 With the owner's OK, push openvidu-livekit `openvidu/main` (the commits of 1.6 and 9.2). Verify: its `Test`
       workflow run is green and recorded in `operations.md`.
 
 ## Workflow follow-up
