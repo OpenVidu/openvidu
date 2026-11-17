@@ -60,7 +60,7 @@ Done in the writer checkout and committed there, not pushed (group 9). It comes 
 
 ## 2. Typings (implementer)
 
-- [ ] 2.1 In `typings/src/data-model/collections.ts`, export `LegacyCollection` (`EVENTS: 'legacy_events'`,
+- [x] 2.1 In `typings/src/data-model/collections.ts`, export `LegacyCollection` (`EVENTS: 'legacy_events'`,
       `STATS: 'stats'`) and its type, outside `Collection` (D7); in `typings/src/api/info.ts`, add
       `legacyRetainedUntil?: string` to `InfoMigration` with its doc comment. Verify: `./dashboard.sh typecheck` and
       `pnpm --filter @openvidu-dashboard/typings test` pass, and the contract artifacts are unchanged

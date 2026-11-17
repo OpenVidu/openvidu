@@ -37,6 +37,8 @@ export interface InfoMigration {
 	progress?: { processed: number; total: number; startedAt?: string; finishedAt?: string };
 	/** Reason of a `failed` migration. */
 	error?: string;
+	/** ISO 8601 date until which the server keeps the legacy collections for a rollback, then drops them. */
+	legacyRetainedUntil?: string;
 }
 
 /** Retention the writer applies, in milliseconds; `rollupsDailyMs` is `null` when daily rollups are kept forever. */

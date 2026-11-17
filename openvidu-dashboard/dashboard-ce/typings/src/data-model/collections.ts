@@ -21,6 +21,16 @@ export type Collection = ValueOf<typeof Collection>;
 
 export const COLLECTIONS: readonly Collection[] = Object.values(Collection);
 
+/**
+ * Collections of the analytics writer before 3.10, outside the contract: the server keeps them after the migration
+ * until `legacyRetainedUntil` and then drops them.
+ */
+export const LegacyCollection = {
+	EVENTS: 'legacy_events',
+	STATS: 'stats'
+} as const;
+export type LegacyCollection = ValueOf<typeof LegacyCollection>;
+
 /** Retention classes configured in the writer (`openvidu.analytics.retention.*`). */
 export const RetentionClass = {
 	EVENTS: 'events',
