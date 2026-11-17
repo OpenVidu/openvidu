@@ -111,21 +111,21 @@ Done in the writer checkout and committed there, not pushed (group 9). It comes 
 
 ## 5. Frontend (implementer)
 
-- [ ] 5.1 In `settings/storage-classes.ts`, add the Legacy data row after Daily rollups, with its retention text per
+- [x] 5.1 In `settings/storage-classes.ts`, add the Legacy data row after Daily rollups, with its retention text per
       migration state ("In use by the migration", "Kept until the migration completes", "Kept until <date> for
       rollback", "Being removed by the server"), sums, collections and no tip, and widen
       `StorageCollectionEntry.collection` (D9). Verify: task 5.3.
-- [ ] 5.2 In `settings/data-tab.ts`, pass the latest migration state (`migrationState()`) and the session zone to
+- [x] 5.2 In `settings/data-tab.ts`, pass the latest migration state (`migrationState()`) and the session zone to
       `storageClasses()`; in `data-tab.html` and `data-tab.scss`, let the Retention cell of that row wrap. Verify:
       task 5.3.
-- [ ] 5.3 In `settings/storage-classes.spec.ts`, add `Legacy row kept for rollback`, `Legacy row while the migration
+- [x] 5.3 In `settings/storage-classes.spec.ts`, add `Legacy row kept for rollback`, `Legacy row while the migration
       runs`, `Legacy row of a pending migration`, `Legacy row of a failed migration`, `Legacy row after its date` (also
       `: without a date`) and `Deployment without legacy data`; in `settings/settings-page.spec.ts`, add `Legacy row
       kept for rollback: no info icon`, `Collections of Legacy data` and `Legacy row follows the status` (no new info
       request when the status changes). Covers: those eight scenarios. Verify: from `frontend/`,
       `pnpm exec ng test dashboard-ui --watch=false --include=**/settings/*.spec.ts` passes, with the existing tests
       of both files unchanged.
-- [ ] 5.4 Add the UI line of the proposal to `CHANGELOG.md` (3.10.0, Added, UI, after the Settings line) in the commit
+- [x] 5.4 Add the UI line of the proposal to `CHANGELOG.md` (3.10.0, Added, UI, after the Settings line) in the commit
       of the row. Verify: `./dashboard.sh check` passes.
 
 ## 6. End-to-end tests (implementer)

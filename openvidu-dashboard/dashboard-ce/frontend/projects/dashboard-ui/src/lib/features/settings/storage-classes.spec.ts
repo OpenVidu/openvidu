@@ -1,7 +1,14 @@
-import { COLLECTIONS, Collection, type InfoRetention, type InfoStorageEntry } from '@openvidu-dashboard/typings';
+import {
+	COLLECTIONS,
+	Collection,
+	type InfoMigration,
+	type InfoRetention,
+	type InfoStorageEntry
+} from '@openvidu-dashboard/typings';
 import { describe, expect, it } from 'vitest';
 
-import { STORAGE_CLASSES, type StorageClassRow, storageClasses } from './storage-classes.js';
+import { formatBytes, formatNumber } from '../../format/formatters.js';
+import { LEGACY_LABEL, STORAGE_CLASSES, type StorageClassRow, storageClasses } from './storage-classes.js';
 
 const HOUR = 3_600_000;
 const DAY = 24 * HOUR;
@@ -262,5 +269,100 @@ describe('storageClasses', () => {
 		expect(
 			tipOf('Daily rollups', { analytics_daily: entry(260_000, 73 * DAY) }, { rollupsDailyMs: 1_825 * DAY })
 		).toBe('73 of 1,825 days so far · ≈ 6.5 MB at full retention (estimate)');
+	});
+
+	describe('Legacy data row', () => {
+		const LEGACY_EVENTS: InfoStorageEntry = {
+			documents: 120_000,
+			storageBytes: 30_000_000,
+			indexBytes: 10_000_000
+		};
+		const LEGACY_STATS: InfoStorageEntry = { documents: 300_000, storageBytes: 80_000_000, indexBytes: 10_000_000 };
+		const ROOMS: InfoStorageEntry = { documents: 4, storageBytes: 36_864, indexBytes: 344_136 };
+
+		/** The Legacy data row of a migration, read in UTC unless `tz` says otherwise. */
+		function legacyOf(
+			storage: Record<string, InfoStorageEntry>,
+			migration: InfoMigration | null,
+			tz = 'UTC'
+		): StorageClassRow | undefined {
+			return storageClasses(storage, DEFAULT_RETENTION, READ_AT, { migration, tz }).rows.find(
+				(row) => row.label === LEGACY_LABEL
+			);
+		}
+
+		it('Legacy row kept for rollback', () => {
+			const { rows, total } = storageClasses(
+				{ legacy_events: LEGACY_EVENTS, stats: LEGACY_STATS, rooms: ROOMS },
+				DEFAULT_RETENTION,
+				READ_AT,
+				{
+					migration: { state: 'completed', legacyRetainedUntil: '2026-12-15T03:00:00Z' },
+					tz: 'America/New_York'
+				}
+			);
+			const legacy = rows.at(-1);
+
+			expect(rows.map((row) => row.label).slice(-2)).toEqual(['Daily rollups', 'Legacy data (before 3.10)']);
+			expect(legacy?.retention).toBe('Kept until 2026-12-14 for rollback');
+			expect(formatNumber(legacy?.documents ?? 0)).toBe('420,000');
+			expect(formatBytes(legacy?.bytes ?? 0)).toBe('130 MB');
+			expect(legacy?.tip).toBeNull();
+			expect(legacy?.collections.map(({ collection }) => collection)).toEqual(['legacy_events', 'stats']);
+			expect(formatNumber(total.documents)).toBe('420,004');
+			expect(formatBytes(total.bytes)).toBe('130 MB');
+		});
+
+		it('Legacy row while the migration runs', () => {
+			const legacy = legacyOf(
+				{ stats: LEGACY_STATS },
+				{ state: 'running', progress: { processed: 1, total: 2 } }
+			);
+
+			expect(legacy?.retention).toBe('In use by the migration');
+			expect(formatNumber(legacy?.documents ?? 0)).toBe('300,000');
+		});
+
+		it('Legacy row of a pending migration', () => {
+			const legacy = legacyOf({ legacy_events: LEGACY_EVENTS }, { state: 'pending' });
+
+			expect(legacy?.retention).toBe('Kept until the migration completes');
+			expect(formatNumber(legacy?.documents ?? 0)).toBe('120,000');
+		});
+
+		it('Legacy row of a failed migration', () => {
+			const legacy = legacyOf({ stats: LEGACY_STATS }, { state: 'failed', error: 'legacy event without a room' });
+
+			expect(legacy?.retention).toBe('Kept until the migration completes');
+			expect(formatNumber(legacy?.documents ?? 0)).toBe('300,000');
+		});
+
+		it('Legacy row after its date', () => {
+			const legacy = legacyOf(
+				{ legacy_events: { documents: 0, storageBytes: 2_000_000_000, indexBytes: 100_000_000 } },
+				{ state: 'completed', legacyRetainedUntil: new Date(READ_AT - HOUR).toISOString() }
+			);
+
+			expect(legacy?.retention).toBe('Being removed by the server');
+			expect(formatNumber(legacy?.documents ?? 0)).toBe('0');
+			expect(formatBytes(legacy?.bytes ?? 0)).toBe('2.1 GB');
+		});
+
+		it('Legacy row after its date: without a date', () => {
+			expect(legacyOf({ stats: LEGACY_STATS }, { state: 'completed' })?.retention).toBe(
+				'Being removed by the server'
+			);
+		});
+
+		it('Deployment without legacy data', () => {
+			const storage = Object.fromEntries(COLLECTIONS.map((collection) => [collection, entry(1_000)]));
+			const { rows } = storageClasses(storage, DEFAULT_RETENTION, READ_AT, {
+				migration: { state: 'completed', legacyRetainedUntil: '2026-12-15T03:00:00Z' },
+				tz: 'UTC'
+			});
+
+			expect(rows).toHaveLength(7);
+			expect(rows.map((row) => row.label)).not.toContain(LEGACY_LABEL);
+		});
 	});
 });

@@ -583,6 +583,111 @@ describe('SettingsPage', () => {
 		);
 	});
 
+	const LEGACY_LABEL = 'Legacy data (before 3.10)';
+	const LEGACY_STORAGE = {
+		rooms: { documents: 4, storageBytes: 36_864, indexBytes: 344_136 },
+		legacy_events: {
+			documents: 120_000,
+			storageBytes: 30_000_000,
+			indexBytes: 10_000_000,
+			oldest: '2026-10-13T09:25:55Z'
+		},
+		stats: { documents: 300_000, storageBytes: 80_000_000, indexBytes: 10_000_000, oldest: '2026-10-13T09:26:09Z' }
+	};
+	/** A date after any read of the test, so that the row keeps the data for rollback. */
+	const RETAINED_UNTIL = new Date(Date.now() + 30 * DAY).toISOString();
+	const keptUntil = (until: string) => `Kept until ${until.slice(0, 10)} for rollback`;
+
+	it('Legacy row kept for rollback: no info icon', async () => {
+		const completed = { state: 'completed', legacyRetainedUntil: RETAINED_UNTIL } as const;
+		const { harness, http, element } = await settings(
+			'/settings?tab=data',
+			infoResponse({ retention: DEFAULT_RETENTION, storage: LEGACY_STORAGE, migration: completed })
+		);
+
+		http.expectOne('api/v1/status').flush(statusResponse({ migration: completed }));
+		TestBed.inject(SessionZoneService).set('UTC');
+		await harness.fixture.whenStable();
+
+		expect(
+			classRows(element)
+				.map((row) => text(row.querySelector('th')))
+				.slice(-2)
+		).toEqual(['Daily rollups', LEGACY_LABEL]);
+		expect(cells(classRow(element, LEGACY_LABEL))).toEqual([
+			LEGACY_LABEL,
+			keptUntil(RETAINED_UNTIL),
+			'420,000',
+			'130 MB'
+		]);
+		expect(tipOf(harness, LEGACY_LABEL)).toBeNull();
+		expect(cells(element.querySelector('ovd-data-tab table.classes tfoot tr'))).toEqual([
+			'Total',
+			'',
+			'420,004',
+			'130 MB'
+		]);
+	});
+
+	it('Collections of Legacy data', async () => {
+		const { harness, element } = await settings(
+			'/settings?tab=data',
+			infoResponse({
+				retention: DEFAULT_RETENTION,
+				storage: LEGACY_STORAGE,
+				migration: { state: 'completed', legacyRetainedUntil: RETAINED_UNTIL }
+			})
+		);
+
+		TestBed.inject(SessionZoneService).set('UTC');
+		await harness.fixture.whenStable();
+
+		const button = expandButton(element, LEGACY_LABEL);
+
+		expect(button?.getAttribute('aria-label')).toBe(`Show collections of ${LEGACY_LABEL}`);
+		button?.click();
+		await harness.fixture.whenStable();
+
+		const breakdown = element.querySelector(`#${button?.getAttribute('aria-controls') ?? 'none'}`);
+		const rows = [...(breakdown?.querySelectorAll('ovd-collection-breakdown tbody tr') ?? [])];
+
+		expect(breakdown?.querySelector('ovd-collection-breakdown table > caption')?.textContent).toBe(
+			`Collections of ${LEGACY_LABEL}`
+		);
+		expect(rows.map((row) => text(row.querySelector('th')))).toEqual(['legacy_events', 'stats']);
+		expect(cells(rows[0])).toEqual(['legacy_events', '120,000', '40 MB', '2026-10-13 09:25:55 UTC']);
+	});
+
+	it('Legacy row follows the status', async () => {
+		const running = { state: 'running', progress: { processed: 5, total: 10 } } as const;
+		const { harness, http, element } = await settings(
+			'/settings?tab=data',
+			infoResponse({ retention: DEFAULT_RETENTION, storage: LEGACY_STORAGE, migration: running })
+		);
+
+		http.expectOne('api/v1/status').flush(statusResponse({ migration: running }));
+		TestBed.inject(SessionZoneService).set('UTC');
+		await harness.fixture.whenStable();
+		expect(cells(classRow(element, LEGACY_LABEL))[1]).toBe('In use by the migration');
+
+		await loadStatus(
+			http,
+			statusResponse({
+				migration: {
+					state: 'completed',
+					progress: { processed: 10, total: 10 },
+					legacyRetainedUntil: RETAINED_UNTIL
+				}
+			})
+		);
+		await harness.fixture.whenStable();
+
+		// The status poll re-reads the info document once on a new migration state; the row changes before it answers.
+		expect(http.match('api/v1/info')).toHaveLength(1);
+		expect(cells(classRow(element, LEGACY_LABEL))[1]).toBe(keptUntil(RETAINED_UNTIL));
+		expect(cells(classRow(element, LEGACY_LABEL)).slice(2)).toEqual(['420,000', '130 MB']);
+	});
+
 	it('saves any default zone, applies it to the session and resets to the browser zone', async () => {
 		const { harness } = await settings('/settings?tab=preferences', infoResponse());
 		const element = harness.fixture.nativeElement as HTMLElement;

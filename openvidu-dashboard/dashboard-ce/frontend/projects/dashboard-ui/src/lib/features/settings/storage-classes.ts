@@ -1,12 +1,14 @@
 import {
 	Collection,
 	formatRetentionLength,
+	type InfoMigration,
 	type InfoRetention,
 	type InfoStorageEntry,
+	LegacyCollection,
 	retentionLength
 } from '@openvidu-dashboard/typings';
 
-import { formatBytes, formatNumber } from '../../format/formatters.js';
+import { formatBytes, formatNumber, formatTimestamp } from '../../format/formatters.js';
 
 const HOUR_MS = 3_600_000;
 const DAY_MS = 24 * HOUR_MS;
@@ -82,8 +84,18 @@ const DEPLOYMENT_CLOCK: readonly Collection[] = [
 	Collection.ANALYTICS_HOURLY
 ];
 
+export const LEGACY_LABEL = 'Legacy data (before 3.10)';
+
+const LEGACY_COLLECTIONS: readonly LegacyCollection[] = [LegacyCollection.EVENTS, LegacyCollection.STATS];
+
+/** What the Legacy data row needs besides the storage: the latest migration state and the session zone. */
+export interface LegacyContext {
+	migration: InfoMigration | null;
+	tz: string;
+}
+
 export interface StorageCollectionEntry {
-	collection: Collection;
+	collection: Collection | LegacyCollection;
 	entry: InfoStorageEntry;
 }
 
@@ -160,16 +172,65 @@ function classTip(retentionMs: number | null, spanMs: number | null, documents: 
 }
 
 /**
+ * How long the server keeps the legacy data, from the migration state: until the migration completes, then until
+ * `legacyRetainedUntil`, compared with `readAt` so that the text stays the same between reads.
+ */
+function legacyRetention({ migration, tz }: LegacyContext, readAt: number): string {
+	switch (migration?.state) {
+		case 'running':
+			return 'In use by the migration';
+		case 'completed': {
+			const until = migration.legacyRetainedUntil;
+
+			return until !== undefined && Date.parse(until) > readAt
+				? `Kept until ${formatTimestamp(until, { tz }).slice(0, 10)} for rollback`
+				: 'Being removed by the server';
+		}
+		default:
+			return 'Kept until the migration completes';
+	}
+}
+
+/** The Legacy data row, or `null` when the info endpoint reports no legacy collection. */
+function legacyRow(
+	storage: Readonly<Record<string, InfoStorageEntry>>,
+	legacy: LegacyContext,
+	readAt: number
+): StorageClassRow | null {
+	const collections = LEGACY_COLLECTIONS.flatMap((collection) => {
+		const entry = storage[collection];
+
+		return entry === undefined ? [] : [{ collection, entry }];
+	});
+
+	if (collections.length === 0) {
+		return null;
+	}
+
+	return {
+		label: LEGACY_LABEL,
+		retention: legacyRetention(legacy, readAt),
+		documents: collections.reduce((sum, { entry }) => sum + entry.documents, 0),
+		bytes: collections.reduce((sum, { entry }) => sum + sizeOf(entry), 0),
+		tip: null,
+		collections
+	};
+}
+
+/**
  * The rows of the Storage table of the Data tab and their total.
  *
  * @param storage The `storage` of the info document.
  * @param retention The `retention` of the info document; without it, no row has a retention or a tip.
  * @param readAt When the info document was read (epoch ms), the end of every data span.
+ * @param legacy The migration and zone of the Legacy data row, which follows Daily rollups while a legacy collection
+ *   is reported.
  */
 export function storageClasses(
 	storage: Readonly<Record<string, InfoStorageEntry>>,
 	retention: InfoRetention | undefined,
-	readAt: number
+	readAt: number,
+	legacy: LegacyContext = { migration: null, tz: 'UTC' }
 ): StorageClasses {
 	const deploymentClock = earliest(storage, DEPLOYMENT_CLOCK);
 	const rows = STORAGE_CLASSES.map((definition): StorageClassRow => {
@@ -193,6 +254,12 @@ export function storageClasses(
 			collections
 		};
 	});
+
+	const legacyClass = legacyRow(storage, legacy, readAt);
+
+	if (legacyClass !== null) {
+		rows.push(legacyClass);
+	}
 
 	return {
 		rows,

@@ -56,6 +56,8 @@ queried) and `Deployment` (running the service). One line per observable change,
 - Settings page with viewer preferences (any time zone as the default) and a Data tab with the retention and the
   storage of each class of data and of its collections, an estimate of the size of the classes that have not reached
   their retention yet, where the retention is configured and the migration progress while it runs.
+- The Data tab of Settings shows the analytics data of versions before 3.10 while OpenVidu Server keeps it for the
+  migration or a rollback: its size, its collections and how long it is kept.
 - PRO features appear locked in CE with a short explanation and a link.
 
 #### Data

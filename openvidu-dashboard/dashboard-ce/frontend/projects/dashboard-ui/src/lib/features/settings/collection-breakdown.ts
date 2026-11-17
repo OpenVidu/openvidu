@@ -1,13 +1,13 @@
 import { Component, computed, inject, input } from '@angular/core';
 import { MatTooltip } from '@angular/material/tooltip';
-import { Collection } from '@openvidu-dashboard/typings';
+import { Collection, type LegacyCollection } from '@openvidu-dashboard/typings';
 
 import { QueryStateService } from '../../core/state/query-state.js';
 import { formatBytes, formatNumber, formatTimestamp } from '../../format/formatters.js';
 import type { StorageCollectionEntry } from './storage-classes.js';
 
 /** Collections without an index that leads with their time field, which the info endpoint never dates. */
-const UNDATED: ReadonlySet<Collection> = new Set([
+const UNDATED: ReadonlySet<Collection | LegacyCollection> = new Set<Collection | LegacyCollection>([
 	Collection.TRACKS,
 	Collection.TRACK_SUBSCRIPTIONS,
 	Collection.TRACK_STATS

@@ -47,7 +47,7 @@
 							</button>
 							{{ row.label }}
 						</th>
-						<td class="ovd-tabular">
+						<td class="ovd-tabular" [class.wrap]="row.legacy">
 							{{ row.retention }}
 							@if (row.tip; as tip) {
 								<ovd-info-tip [subject]="row.label + ' retention'" [text]="tip" />

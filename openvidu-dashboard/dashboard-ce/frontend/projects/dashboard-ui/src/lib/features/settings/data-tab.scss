@@ -47,6 +47,11 @@ td {
 	white-space: normal;
 }
 
+/* The longer retention texts of the Legacy data row wrap too, inside a 375 px viewport. */
+.wrap {
+	white-space: normal;
+}
+
 .expand {
 	display: inline-flex;
 	align-items: center;
