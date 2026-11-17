@@ -484,6 +484,42 @@ describe.skipIf(mongoUri === '')('info', () => {
 		}
 	});
 
+	it('Legacy collections in storage: a timestamp beyond the range of a date leaves the collection undated', async () => {
+		const dashboard = await boot(
+			mongoUri,
+			{},
+			{
+				seed: async (db) => {
+					await seedSchema(db);
+					await db.collection<SchemaMetaDocument>('schema_meta').insertOne({
+						_id: 'migration',
+						state: 'completed',
+						processed: 3,
+						total: 3,
+						legacyRetainedUntil: new Date('2026-12-15T08:00:00Z'),
+						...migrationFields
+					});
+					await seedLegacy(db, 'legacy_events', 'timestamp', [-1e13, 1791883555]);
+					await seedLegacy(db, 'stats', 'time_stamp', [1791883569]);
+				}
+			}
+		);
+
+		try {
+			const response = await fetch(`${dashboard.url}/api/v1/info`, {
+				headers: { Authorization: `Bearer ${await token(await login(dashboard))}` }
+			});
+			const body = (await response.json()) as { storage: Record<string, Record<string, unknown>> };
+
+			expect(response.status).toBe(200);
+			expect(body.storage.legacy_events).toMatchObject({ documents: 2 });
+			expect(body.storage.legacy_events).not.toHaveProperty('oldest');
+			expect(body.storage.stats).toMatchObject({ documents: 1, oldest: '2026-10-13T09:26:09.000Z' });
+		} finally {
+			await dashboard.stop();
+		}
+	});
+
 	it('Stats without a migration in info', async () => {
 		const dashboard = await boot(
 			mongoUri,

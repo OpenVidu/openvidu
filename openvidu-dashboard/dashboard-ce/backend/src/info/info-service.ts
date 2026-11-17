@@ -87,7 +87,16 @@ export function oldestQuery(db: Db, name: string): OldestQuery | null {
 		.sort({ [oldest.field]: 1 })
 		.limit(1);
 
-	return { cursor, field: oldest.field, read: (document) => toDate.convert(fieldValue(document, oldest.field)) };
+	return {
+		cursor,
+		field: oldest.field,
+		read: (document) => {
+			const date = toDate.convert(fieldValue(document, oldest.field));
+
+			// A corrupt value beyond the range of a Date leaves the collection undated rather than failing the read.
+			return date === undefined || Number.isNaN(date.getTime()) ? undefined : date;
+		}
+	};
 }
 
 /**
