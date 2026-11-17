@@ -5,6 +5,7 @@ import { Collection, type ListResponse, type ParticipantListItem } from '@openvi
 import { openApiDocument } from '../../src/api/openapi.js';
 import type { RouteRegistry } from '../../src/api/route-registry.js';
 import { TOKENS } from '../../src/di/tokens.js';
+import { PARTICIPANT_LIST_PROJECTION } from '../../src/participants/participants-query.js';
 import { bootClient, type Client, get, issue, json } from '../support/api-client.js';
 import { minutesAgo, participant, reseed } from '../support/rooms-seed.js';
 
@@ -436,6 +437,110 @@ describe.skipIf(mongoUri === '')('participants API', () => {
 				expect(body, path).not.toContain('listening');
 				expect(body, path).not.toContain('acme');
 			}
+		});
+
+		/** Seven OpenVidu and seven third-party agents, joined alternately 5 to 18 minutes ago. */
+		const seedInterleaved = () =>
+			reseed(ce.dashboard.db, {
+				participants: Array.from({ length: 14 }, (_, i) =>
+					i % 2 === 0
+						? agent(`PA_ov${String(i)}`, 5 + i, {
+								'lk.agent_name': 'sp',
+								'openvidu.agent': 'speech-processing'
+							})
+						: agent(`PA_tp${String(i)}`, 5 + i, { 'lk.agent_name': 'dummy-agent' })
+				)
+			});
+
+		/** Every page of `path` with three items each, following `nextCursor`. */
+		const walk = async (path: string) => {
+			const pages: ListResponse<ParticipantListItem>[] = [];
+			let cursor: string | null = null;
+
+			do {
+				const page: ListResponse<ParticipantListItem> = await json(
+					ce,
+					`${path}&limit=3${cursor === null ? '' : `&cursor=${encodeURIComponent(cursor)}`}`
+				);
+
+				pages.push(page);
+				cursor = page.nextCursor;
+			} while (cursor !== null && pages.length < 10);
+
+			return pages;
+		};
+
+		it('OpenVidu agents only: later pages keep the origin', async () => {
+			await seedInterleaved();
+
+			const path = '/agents?origin=openvidu';
+			const pages = await walk(path);
+
+			expect(pages.map(sids)).toEqual([
+				['PA_ov0', 'PA_ov2', 'PA_ov4'],
+				['PA_ov6', 'PA_ov8', 'PA_ov10'],
+				['PA_ov12']
+			]);
+			expect(
+				pages.flatMap((page) => page.items).every((item) => item.agent?.openvidu === 'speech-processing')
+			).toBe(true);
+			expect(pages[1]?.total).toBe(7);
+
+			const back = await json<ListResponse<ParticipantListItem>>(
+				ce,
+				`${path}&limit=3&cursor=${encodeURIComponent(pages[1]?.prevCursor ?? '')}`
+			);
+
+			expect(sids(back)).toEqual(['PA_ov0', 'PA_ov2', 'PA_ov4']);
+		});
+
+		it('Third-party agents only: later pages of a ranked sort keep the origin', async () => {
+			await seedInterleaved();
+
+			const path = '/agents?origin=third-party&sort=duration&from=now-6h&to=now';
+			const pages = await walk(path);
+
+			expect(pages.map(sids)).toEqual([
+				['PA_tp13', 'PA_tp11', 'PA_tp9'],
+				['PA_tp7', 'PA_tp5', 'PA_tp3'],
+				['PA_tp1']
+			]);
+			expect(pages.flatMap((page) => page.items).every((item) => item.agent?.openvidu === undefined)).toBe(true);
+			expect(pages[1]?.total).toBe(7);
+
+			const back = await json<ListResponse<ParticipantListItem>>(
+				ce,
+				`${path}&limit=3&cursor=${encodeURIComponent(pages[1]?.prevCursor ?? '')}`
+			);
+
+			expect(sids(back)).toEqual(['PA_tp13', 'PA_tp11', 'PA_tp9']);
+		});
+
+		it('Other attributes stay out: the list reads only the two agent attributes', async () => {
+			await reseed(ce.dashboard.db, {
+				participants: [
+					agent('PA_all', 5, {
+						'lk.agent_name': 'support',
+						'openvidu.agent': 'speech-processing',
+						'openvidu.agent.version': '3.10.0',
+						customer: 'acme'
+					}),
+					agent('PA_name', 6, { 'lk.agent_name': 'dummy-agent', 'lk.agent.state': 'listening' }),
+					agent('PA_none', 7)
+				]
+			});
+
+			const read = await ce.dashboard.db
+				.collection(Collection.PARTICIPANTS)
+				.find({}, { projection: PARTICIPANT_LIST_PROJECTION })
+				.sort({ joinedAt: -1 })
+				.toArray();
+
+			expect(read.map((doc) => doc.attributes as unknown)).toEqual([
+				{ 'lk.agent_name': 'support', 'openvidu.agent': 'speech-processing' },
+				{ 'lk.agent_name': 'dummy-agent' },
+				{}
+			]);
 		});
 
 		it('OpenVidu agents only', async () => {

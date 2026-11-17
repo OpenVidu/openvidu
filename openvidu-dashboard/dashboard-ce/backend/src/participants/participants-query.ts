@@ -1,6 +1,7 @@
 import type { Document, Sort } from 'mongodb';
 
 import {
+	AGENT_NAME_ATTRIBUTE,
 	AgentOrigin,
 	OPENVIDU_AGENT_ATTRIBUTE,
 	ParticipantKind,
@@ -12,7 +13,15 @@ import { type CursorPayload, pageQuery, type PageQuery } from '../api/cursor.js'
 import { prefixRegex } from '../api/search.js';
 import { PARTICIPANT_SID } from './participants-schemas.js';
 
-/** Fields of a participant document the list item needs. */
+/** The attribute `key` of the document, removed from the projection when absent. */
+function attribute(key: string): Document {
+	return { $ifNull: [{ $getField: { field: key, input: '$attributes' } }, '$$REMOVE'] };
+}
+
+/**
+ * Fields of a participant document the list item needs. Of `attributes`, only the two the agent facts read: their keys
+ * contain dots, so they are copied with `$getField` and `$setField` rather than projected by path.
+ */
 export const PARTICIPANT_LIST_PROJECTION: Readonly<Document> = {
 	identity: 1,
 	name: 1,
@@ -27,8 +36,13 @@ export const PARTICIPANT_LIST_PROJECTION: Readonly<Document> = {
 	nodeId: 1,
 	mediaNode: 1,
 	isPublisher: 1,
-	// Whole object: its keys contain dots, which a projection path would read as nesting.
-	attributes: 1,
+	attributes: {
+		$setField: {
+			field: OPENVIDU_AGENT_ATTRIBUTE,
+			input: { $setField: { field: AGENT_NAME_ATTRIBUTE, input: {}, value: attribute(AGENT_NAME_ATTRIBUTE) } },
+			value: attribute(OPENVIDU_AGENT_ATTRIBUTE)
+		}
+	},
 	lastStatsAt: 1,
 	'tracks.bySource': 1,
 	'client.sdk': 1,

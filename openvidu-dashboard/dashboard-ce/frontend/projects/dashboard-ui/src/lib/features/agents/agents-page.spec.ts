@@ -1,6 +1,6 @@
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting, type TestRequest } from '@angular/common/http/testing';
-import { Component } from '@angular/core';
+import { Component, type Provider, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
@@ -11,6 +11,7 @@ import { infoResponse, settle } from '../../../testing/fixtures.js';
 import { exportCsv, routeElement } from '../../../testing/harness.js';
 import { RangePickerService } from '../../components/date-time-range-picker/date-time-range-picker.js';
 import { InfoService } from '../../core/info.js';
+import { BreakpointService, type ScreenSize } from '../../core/ui/breakpoints.js';
 import { LiveCountersService } from '../../core/refresh/live-counters.js';
 import { AgentsPage } from './agents-page.js';
 
@@ -38,7 +39,7 @@ function page(items: ParticipantListItem[]): ListResponse<ParticipantListItem> {
 	return { items, nextCursor: null, prevCursor: null };
 }
 
-function setup(): HttpTestingController {
+function setup(providers: Provider[] = []): HttpTestingController {
 	TestBed.configureTestingModule({
 		providers: [
 			provideRouter([
@@ -48,7 +49,8 @@ function setup(): HttpTestingController {
 				{ path: 'rooms/:roomSid', component: Blank }
 			]),
 			provideHttpClient(),
-			provideHttpClientTesting()
+			provideHttpClientTesting(),
+			...providers
 		]
 	});
 
@@ -97,6 +99,11 @@ function visibleText(element: Element | null | undefined): string {
 	}
 
 	return text(clone);
+}
+
+/** The items of the last list response the page rendered. */
+function rows(harness: RouterTestingHarness): ParticipantListItem[] {
+	return (harness.routeDebugElement?.componentInstance as { rows(): ParticipantListItem[] }).rows();
 }
 
 function query(): URLSearchParams {
@@ -185,6 +192,13 @@ describe('AgentsPage', () => {
 		expect(text(row?.querySelector('ovd-status-badge'))).toContain('active');
 		expect(text(row)).not.toContain('GO 1.2');
 		expect(text(row)).toMatch(/5 m 0\d s/);
+		const joinedAt = rows(harness)[0]?.joinedAt ?? '';
+		const { sessions } = harness.routeDebugElement?.componentInstance as {
+			sessions: { time(value: string): string };
+		};
+
+		expect(cells[6]?.querySelector('time')?.getAttribute('datetime')).toBe(joinedAt);
+		expect(text(cells[6])).toBe(sessions.time(joinedAt));
 		expect(row?.querySelector('[aria-label="Not left"]')).not.toBeNull();
 		expect(row?.querySelectorAll('ovd-source-icon')).toHaveLength(1);
 		expect(text(row)).not.toContain('node-a');
@@ -351,6 +365,31 @@ describe('AgentsPage', () => {
 
 		expect(text(cell)).toBe('—');
 		expect(cell?.closest('tr')?.querySelector('.origin')).toBeNull();
+	});
+
+	it('Agent column not sortable: the column shows in the More area of the card layout', async () => {
+		const http = setup([{ provide: BreakpointService, useValue: { size: signal<ScreenSize>('xsmall') } }]);
+		const harness = await RouterTestingHarness.create('/agents');
+
+		await load(
+			http,
+			harness,
+			page([agent({ agent: { name: 'speech-processing', openvidu: 'speech-processing' } })])
+		);
+
+		const element = routeElement(harness);
+		const card = element.querySelector('.card');
+
+		expect(card).not.toBeNull();
+		card?.querySelector<HTMLButtonElement>('button.more')?.click();
+		await harness.fixture.whenStable();
+
+		const agentFact = [...(card?.querySelectorAll('.metrics > div') ?? [])].find((fact) =>
+			text(fact.querySelector('dt')).startsWith('Agent')
+		);
+
+		expect(agentFact?.querySelector('dt ovd-info-tip')).not.toBeNull();
+		expect(text(agentFact?.querySelector('dd'))).toBe('speech-processing OpenVidu');
 	});
 
 	it('Agent column not sortable', async () => {

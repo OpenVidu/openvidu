@@ -91,11 +91,26 @@ describe('list CSV columns', () => {
 	});
 
 	it('No client address', () => {
-		const headers = PARTICIPANT_HEADER.split(',');
+		// The item as a careless mapper could build it: what only the detail shows must still reach no cell.
+		const leaky = {
+			...session,
+			kind: 'AGENT',
+			agent: { name: 'support' },
+			client: { sdk: 'JS', version: '2.15.7', address: '203.0.113.7', deviceModel: 'Pixel 9' },
+			metadata: 'meta-secret',
+			attributes: { customer: 'acme' }
+		} as ParticipantListItem;
+		const [header, row] = lines(columnsCsv(participantCsvColumns(true), [leaky]));
+		const headers = header?.split(',') ?? [];
 
-		expect(headers.filter((header) => /address|device|metadata|attribute/i.test(header))).toEqual([]);
-		expect(headers.filter((header) => header.startsWith('agent.'))).toEqual(['agent.name', 'agent.openvidu']);
-		expect(headers.filter((header) => header.includes('.') && !/^(client|agent)\./.test(header))).toEqual([]);
+		expect(headers).toHaveLength(22);
+		expect(headers.filter((name) => /address|device|metadata|attribute/i.test(name))).toEqual([]);
+		expect(headers.filter((name) => name.startsWith('agent.'))).toEqual(['agent.name', 'agent.openvidu']);
+		expect(headers.filter((name) => name.includes('.') && !/^(client|agent)\./.test(name))).toEqual([]);
+
+		for (const value of ['203.0.113.7', 'Pixel 9', 'meta-secret', 'acme']) {
+			expect(row, value).not.toContain(value);
+		}
 	});
 
 	it('Agent columns', () => {

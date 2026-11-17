@@ -53,6 +53,8 @@ describe.skipIf(mongoUri === '')(`participants query plan at scenario ${scenario
 	let ctx: QueryContext;
 	let service: ParticipantsService;
 	let sample: ParticipantDocument;
+	/** Agent sessions joined in the generated range: what an origin filter scans. */
+	let agentsInRange = 0;
 	const now = new Date();
 	const report: string[] = [];
 
@@ -163,13 +165,18 @@ describe.skipIf(mongoUri === '')(`participants query plan at scenario ${scenario
 		}
 
 		sample = found;
+		agentsInRange = await db
+			.collection(Collection.PARTICIPANTS)
+			.countDocuments({ kind: ParticipantKind.AGENT, joinedAt: { $gte: ctx.range.from } });
 	}, GENERATION_TIMEOUT_MS);
 
 	afterAll(async () => {
 		if (report.length > 0) {
-			const text = [`Participants p95 of 20 runs, scenario ${scenario}, ${String(days)} days`, ...report].join(
-				'\n'
-			);
+			const text = [
+				`Participants p95 of 20 runs, scenario ${scenario}, ${String(days)} days, ` +
+					`${String(agentsInRange)} agent sessions in range`,
+				...report
+			].join('\n');
 
 			console.log(text);
 

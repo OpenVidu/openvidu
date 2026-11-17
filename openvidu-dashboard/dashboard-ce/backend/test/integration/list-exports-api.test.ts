@@ -219,6 +219,14 @@ describe.skipIf(mongoUri === '')('list CSV exports', () => {
 			expect(agents.lines[0]).toBe(people.lines[0]);
 		});
 
+		it('Unknown origin: the agents export answers 400', async () => {
+			expect(await issue(ce, '/agents/export.csv?origin=livekit')).toMatchObject({
+				status: 400,
+				code: 'VALIDATION_ERROR',
+				first: { path: ['origin'] }
+			});
+		});
+
 		it('OpenVidu agents export', async () => {
 			await reseed(ce.dashboard.db, {
 				participants: [
