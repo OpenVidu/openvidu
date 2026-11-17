@@ -78,7 +78,7 @@ export type ParticipantsListPlan =
 			countFilter: Document;
 			sort: Sort;
 			page: PageQuery;
-			/** Index of the kind and status branch: without it the planner may prefer `{ status, kind }` and sort in memory. */
+			/** Index the branch drives, pinned so the residual filters cannot tip the planner to another one. */
 			hint?: string;
 	  }
 	| {
@@ -119,7 +119,9 @@ function originFilter(origin: AgentOrigin | undefined): Document {
  * drives `{ identityLower, joinedAt }` (or `{ roomSid, identityLower, joinedAt }` with a room); a room drives
  * `{ roomSid, joinedAt, _id }`; kinds or a status drive `{ kind, status, joinedAt, _id }` with absent filters as `$in`
  * over every value so the sorted branches merge; otherwise `{ joinedAt, _id }`. `publisher` and `origin` are residual
- * on each. The range is always on `joinedAt`; a ranked sort key scans it whole and ranks in memory.
+ * on each. Every branch but the last hints its index: the planner's trial run between candidate indexes depends on
+ * the data and the residual filters. The range is always on `joinedAt`; a ranked sort key scans it whole and ranks in
+ * memory.
  */
 export function participantsListPlan(filter: ParticipantsFilter, cursor?: CursorPayload): ParticipantsListPlan {
 	if (filter.q !== undefined && PARTICIPANT_SID.test(filter.q)) {
@@ -165,10 +167,17 @@ export function participantsListPlan(filter: ParticipantsFilter, cursor?: Cursor
 		return { joinedAt, ...extra };
 	};
 
-	const byKindAndStatus =
-		filter.q === undefined && filter.room === undefined && (kinds !== undefined || filter.status !== undefined);
-
-	const hint = byKindAndStatus ? { hint: 'kind_status_joinedAt_id' } : {};
+	const index =
+		filter.q !== undefined
+			? filter.room === undefined
+				? 'identityLower_joinedAt'
+				: 'roomSid_identityLower_joinedAt'
+			: filter.room !== undefined
+				? 'roomSid_joinedAt_id'
+				: kinds !== undefined || filter.status !== undefined
+					? 'kind_status_joinedAt_id'
+					: undefined;
+	const hint = index === undefined ? {} : { hint: index };
 
 	if (filter.sort !== ParticipantSort.JOINED_AT) {
 		return {

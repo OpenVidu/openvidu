@@ -156,6 +156,33 @@ describe('participants list plan', () => {
 		expect(agentsPlan({})).not.toHaveProperty(['filter', '$expr']);
 	});
 
+	it('Origin explain plans: each branch hints its index, page and ranked, whatever the residual filters', () => {
+		const hints: [Record<string, string>, string][] = [
+			[{}, 'kind_status_joinedAt_id'],
+			[{ status: 'left' }, 'kind_status_joinedAt_id'],
+			[{ q: 'agent' }, 'identityLower_joinedAt'],
+			[{ q: 'agent', status: 'active' }, 'identityLower_joinedAt'],
+			[{ q: 'agent', room: 'RM_a' }, 'roomSid_identityLower_joinedAt'],
+			[{ room: 'RM_a' }, 'roomSid_joinedAt_id'],
+			[{ room: 'RM_a', status: 'left' }, 'roomSid_joinedAt_id']
+		];
+
+		for (const [query, hint] of hints) {
+			for (const sort of ['joinedAt', 'duration', 'leftAt']) {
+				for (const origin of [undefined, 'openvidu', 'third-party']) {
+					const result = agentsPlan({ ...query, sort, ...(origin === undefined ? {} : { origin }) });
+
+					expect(result, JSON.stringify({ ...query, sort, origin })).toHaveProperty('hint', hint);
+				}
+			}
+		}
+
+		expect(plan({ q: 'ali', publisher: 'true' }).hint).toBe('identityLower_joinedAt');
+		expect(plan({ room: 'RM_a', kind: 'AGENT' }).hint).toBe('roomSid_joinedAt_id');
+		expect(plan({ publisher: 'true' }).hint).toBeUndefined();
+		expect(agentsPlan({ q: 'PA_ag1' })).not.toHaveProperty('hint');
+	});
+
 	it('uses joinedAt, a room, an identity prefix or kind and status', () => {
 		expect(plan({}).filter).toEqual({ joinedAt: range });
 		expect(plan({ room: 'RM_abc', status: 'active' }).filter).toEqual({
