@@ -6,6 +6,8 @@
 #   DASHBOARD_DEMO_MONGO_URI    MongoDB to use instead of the container
 #   DASHBOARD_DEMO_MONGO_PORT   host port of the container (default 27018)
 #   DASHBOARD_DEMO_KEEP_DATA    true reuses the demo database instead of generating it again
+#   DASHBOARD_DEMO_LEGACY       true also generates the legacy collections of an upgrade from 3.9 and their completed
+#                               migration (data generator --legacy)
 
 TOOLS_DIR="$(dirname "${BASH_SOURCE[0]}")"
 
@@ -51,10 +53,17 @@ prepare_data() {
 	fi
 
 	if [ "${DASHBOARD_DEMO_KEEP_DATA:-false}" != true ]; then
-		echo "Generating $DATABASE (scenario S, 30 days, $STATS_MODE stats)"
+		local legacy_args=()
+
+		if [ "${DASHBOARD_DEMO_LEGACY:-false}" = true ]; then
+			legacy_args=(--legacy)
+		fi
+
+		echo "Generating $DATABASE (scenario S, 30 days, $STATS_MODE stats${legacy_args[*]:+, legacy data})"
 		pnpm --silent --dir "$TOOLS_DIR/data-generator" run generate --uri "$MONGO_URI" --db "$DATABASE" \
 			--scenario S --days 30 --stats-mode "$STATS_MODE" --drop --five-minute-rollups --room-sums \
-			--active-window 60 --min-active-rooms 10 ${GENERATOR_ARGS[@]+"${GENERATOR_ARGS[@]}"} | tail -2
+			--active-window 60 --min-active-rooms 10 ${legacy_args[@]+"${legacy_args[@]}"} \
+			${GENERATOR_ARGS[@]+"${GENERATOR_ARGS[@]}"} | tail -2
 	fi
 
 	pnpm --silent --dir "$TOOLS_DIR/data-generator" run keep-alive --uri "$MONGO_URI" --db "$DATABASE" &

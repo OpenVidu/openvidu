@@ -78,7 +78,7 @@ Done in the writer checkout and committed there, not pushed (group 9). It comes 
       accepted by the `schema_meta` validator with `legacyRetainedUntil` equal to the latest `openvidu_expire_at`,
       and the same document count in every contract collection as without the option. Verify: the test passes
       (Docker) and the figures the other tests of the file assert are unchanged.
-- [ ] 3.3 In `tools/demo-lib.sh`, pass `--legacy` when `DASHBOARD_DEMO_LEGACY=true` and document the variable in its
+- [x] 3.3 In `tools/demo-lib.sh`, pass `--legacy` when `DASHBOARD_DEMO_LEGACY=true` and document the variable in its
       header; add the option to `tools/data-generator/README.md` (options table and what it writes) and
       `DASHBOARD_DEMO_LEGACY=true` beside `DASHBOARD_DEMO_KEEP_DATA` in the root `AGENTS.md`. Verify:
       `./dashboard.sh check` passes; the demo runs in group 8.

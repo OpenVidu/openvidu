@@ -80,7 +80,8 @@ real-backend suite needs Docker), `scenarios <change>`,
 `contract-check <openvidu-livekit>`, `build-image ce`, `smoke-image ce`, `dev` (backend and frontend development
 servers against openvidu-local-deployment; README "Development") and `demo ce`: a local demo on generated data
 (http://localhost:4200, `admin` / `admin`; MongoDB container `openvidu-dashboard-demo-mongo` on port 27018;
-`DASHBOARD_DEMO_KEEP_DATA=true` reuses the data of a running container).
+`DASHBOARD_DEMO_KEEP_DATA=true` reuses the data of a running container; `DASHBOARD_DEMO_LEGACY=true` adds the legacy
+data of an upgrade from 3.9).
 
 Node 26 and the pnpm of `packageManager` (Node no longer ships Corepack). A new Node major is adopted once it is LTS and
 the toolchain (Angular, vitest, testcontainers) declares it in its engines; TypeScript stays on 6 until the
