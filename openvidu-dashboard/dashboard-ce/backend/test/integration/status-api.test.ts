@@ -138,7 +138,7 @@ describe.skipIf(mongoUri === '')('status API', () => {
 		const stoppedAt = ago(6 * SECOND);
 
 		await replace(ce.dashboard.db, Collection.NODES, [
-			{ ...node('node-a', 6 * SECOND), stoppedAt },
+			{ ...node('node-a', 6 * SECOND), lastSeenAt: stoppedAt, stoppedAt },
 			node('node-old', 2 * HOUR)
 		]);
 		expect((await json<StatusResponse>(ce, '/status')).writer).toEqual({
