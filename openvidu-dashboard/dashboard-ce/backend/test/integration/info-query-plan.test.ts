@@ -1,9 +1,10 @@
 import { generate } from '@openvidu-dashboard/data-generator/generator';
-import { Collection } from '@openvidu-dashboard/typings';
+import { Collection, LegacyCollection } from '@openvidu-dashboard/typings';
 import { type Db, MongoClient } from 'mongodb';
 import { afterAll, beforeAll, describe, expect, inject, it } from 'vitest';
 
-import { oldestQuery } from '../../src/info/info-service.js';
+import { rankedSortLimits } from '../../src/api/ranked-limits.js';
+import { fieldValue, InfoService, oldestQuery } from '../../src/info/info-service.js';
 import { expectIndexBacked } from '../support/query-plan.js';
 
 /** The oldest-document query of every collection About dates, explained on a generated database. */
@@ -39,7 +40,8 @@ describe.skipIf(mongoUri === '')('info oldest-document queries', () => {
 			retentionDays: { events: 7, stats: 7, tracks: 7, entities: 90 },
 			timeseries: true,
 			rollups: { fiveMinute: true, nodes: true, roomSums: true },
-			mediaNodes: true
+			mediaNodes: true,
+			legacy: true
 		});
 	}, 600_000);
 
@@ -71,6 +73,41 @@ describe.skipIf(mongoUri === '')('info oldest-document queries', () => {
 
 		expect(query.field).toBe('firstSeenAt');
 		await expectIndexBacked(db, query.cursor.clone(), { maxDocsExamined: 10, collscanThreshold: 10 });
+	});
+
+	it('legacy collections read their oldest legacy timestamp through the legacy index', async () => {
+		const info = await new InfoService(db, {
+			edition: 'ce',
+			version: 'test',
+			features: () => [],
+			limits: rankedSortLimits(7 * 86_400_000),
+			openapiDocsEnabled: false
+		}).fullInfo();
+
+		for (const [name, index] of [
+			[LegacyCollection.EVENTS, 'timestamp.seconds_1'],
+			[LegacyCollection.STATS, 'time_stamp.seconds_1']
+		] as const) {
+			const query = oldestQuery(db, name);
+
+			if (query === null) {
+				throw new Error(`${name} has no oldest-document query`);
+			}
+
+			const plan = await expectIndexBacked(db, query.cursor.clone(), {
+				maxDocsExamined: 1,
+				collscanThreshold: 0
+			});
+
+			expect(plan.indexes, name).toEqual([index]);
+			expect(plan.collscan, name).toBe(false);
+
+			const [oldest] = await query.cursor.toArray();
+			const seconds = fieldValue(oldest, query.field);
+
+			expect(typeof seconds, name).toBe('number');
+			expect(info.storage[name]?.oldest, name).toBe(new Date((seconds as number) * 1000).toISOString());
+		}
 	});
 
 	it('leaves tracks, subscriptions and stats undated', () => {

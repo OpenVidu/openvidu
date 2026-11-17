@@ -24,7 +24,11 @@ export const healthFactsShape = {
 				finishedAt: z.iso.datetime().optional()
 			})
 			.optional(),
-		error: z.string().optional()
+		error: z.string().optional(),
+		legacyRetainedUntil: z.iso
+			.datetime()
+			.optional()
+			.meta({ description: 'Until when the server keeps the legacy collections for a rollback, then drops them' })
 	}),
 	retention: z
 		.object({

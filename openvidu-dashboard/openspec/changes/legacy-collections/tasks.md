@@ -85,14 +85,14 @@ Done in the writer checkout and committed there, not pushed (group 9). It comes 
 
 ## 4. Backend (implementer)
 
-- [ ] 4.1 In `backend/src/info/info-service.ts`, `migrationInfo()` returns `legacyRetainedUntil` as ISO 8601 when the
+- [x] 4.1 In `backend/src/info/info-service.ts`, `migrationInfo()` returns `legacyRetainedUntil` as ISO 8601 when the
       document has it; in `info-routes.ts`, add `legacyRetainedUntil: z.iso.datetime().optional()` to
       `healthFactsShape.migration` (D8). Verify: tasks 4.3 and 4.4, and `backend/test/integration/openapi-document.test.ts`
       passes.
-- [ ] 4.2 In `info-service.ts`, report the existing legacy collections in `storage` when `fullInfo()` read a migration
+- [x] 4.2 In `info-service.ts`, report the existing legacy collections in `storage` when `fullInfo()` read a migration
       document, and date them through `oldestQuery` from `timestamp.seconds` and `time_stamp.seconds` (D7). Verify:
       tasks 4.3 and 4.5.
-- [ ] 4.3 In `backend/test/integration/api.test.ts`, retitle `reports a running writer` as `CE with a running writer`;
+- [x] 4.3 In `backend/test/integration/api.test.ts`, retitle `reports a running writer` as `CE with a running writer`;
       split `reports a writer that has not started, a running migration and a failed one` into
       `Writer not started yet`, `Migration in progress: …` and `Failed migration`; add `Nested keys` (a completed
       migration with `legacyRetainedUntil`: the keys of `versions`, `schema`, `migration` and `limits` and no other),
@@ -100,13 +100,13 @@ Done in the writer checkout and committed there, not pushed (group 9). It comes 
       `Stats without a migration in info`. Covers: CE with a running writer, Migration in progress, Nested keys, Legacy
       collections in storage, Stats without a migration in info. Verify: `./dashboard.sh test-integration` passes
       (Docker).
-- [ ] 4.4 In `backend/test/integration/status-api.test.ts`, add `Legacy retention date in the status`. Covers: Legacy
+- [x] 4.4 In `backend/test/integration/status-api.test.ts`, add `Legacy retention date in the status`. Covers: Legacy
       retention date in the status. Verify: the integration tests pass.
-- [ ] 4.5 In `backend/test/integration/info-query-plan.test.ts`, generate with `legacy: true` and add
+- [x] 4.5 In `backend/test/integration/info-query-plan.test.ts`, generate with `legacy: true` and add
       `legacy collections read their oldest legacy timestamp through the legacy index`: both queries are index-backed
       on `timestamp.seconds_1` and `time_stamp.seconds_1`, examine one document, have no COLLSCAN and return a number
       that `fullInfo()` reports as a date. Verify: the `integration-plans` project passes.
-- [ ] 4.6 Add the Data line of the proposal to `CHANGELOG.md` (3.10.0, Added, Data) in the commit of the API change.
+- [x] 4.6 Add the Data line of the proposal to `CHANGELOG.md` (3.10.0, Added, Data) in the commit of the API change.
       Verify: `./dashboard.sh check` passes.
 
 ## 5. Frontend (implementer)

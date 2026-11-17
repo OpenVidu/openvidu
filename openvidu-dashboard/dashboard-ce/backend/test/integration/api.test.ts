@@ -1,4 +1,4 @@
-import { type Db, MongoClient } from 'mongodb';
+import { type Db, Double, MongoClient } from 'mongodb';
 import { afterAll, beforeAll, describe, expect, inject, it } from 'vitest';
 
 import { SCHEMA_VERSION, type SchemaMetaDocument } from '@openvidu-dashboard/typings';
@@ -45,6 +45,31 @@ async function refresh(dashboard: BootedDashboard, cookie: string | undefined) {
 
 async function token(response: Response): Promise<string> {
 	return ((await response.json()) as { accessToken: string }).accessToken;
+}
+
+/** `GET /info` with the token of a fresh login. */
+async function info(dashboard: BootedDashboard): Promise<Record<string, unknown>> {
+	const response = await fetch(`${dashboard.url}/api/v1/info`, {
+		headers: { Authorization: `Bearer ${await token(await login(dashboard))}` }
+	});
+
+	return (await response.json()) as Record<string, unknown>;
+}
+
+/** A collection of the legacy writer with its indexes, one document per timestamp in seconds, live for 32 days. */
+async function seedLegacy(db: Db, name: string, timestampKey: string, seconds: number[]): Promise<void> {
+	await db
+		.collection(name)
+		.createIndexes([
+			{ key: { [`${timestampKey}.seconds`]: 1 } },
+			{ key: { openvidu_expire_at: 1 }, expireAfterSeconds: 0 }
+		]);
+	await db.collection(name).insertMany(
+		seconds.map((second) => ({
+			[timestampKey]: { seconds: new Double(second), nanos: new Double(0) },
+			openvidu_expire_at: new Date(Date.now() + 32 * 86_400_000)
+		}))
+	);
 }
 
 describe.skipIf(mongoUri === '')('API and authentication', () => {
@@ -187,7 +212,7 @@ describe.skipIf(mongoUri === '')('API and authentication', () => {
 });
 
 describe.skipIf(mongoUri === '')('info', () => {
-	it('reports a running writer', async () => {
+	it('CE with a running writer', async () => {
 		const dashboard = await boot(
 			mongoUri,
 			{},
@@ -301,8 +326,25 @@ describe.skipIf(mongoUri === '')('info', () => {
 		}
 	});
 
-	it('reports a writer that has not started, a running migration and a failed one', async () => {
+	it('Writer not started yet', async () => {
 		const empty = await boot(mongoUri);
+
+		try {
+			const emptyInfo = await info(empty);
+
+			expect(emptyInfo).toMatchObject({
+				versions: { dashboard: '3.10.0-test' },
+				schema: { status: 'uninitialized' },
+				migration: { state: 'none' }
+			});
+			expect(emptyInfo).not.toHaveProperty('retention');
+			expect(emptyInfo).not.toHaveProperty('versions.server');
+		} finally {
+			await empty.stop();
+		}
+	});
+
+	it('Migration in progress: info reports its progress', async () => {
 		const migrating = await boot(
 			mongoUri,
 			{},
@@ -321,6 +363,17 @@ describe.skipIf(mongoUri === '')('info', () => {
 			}
 		);
 
+		try {
+			expect((await info(migrating)).migration).toEqual({
+				state: 'running',
+				progress: { processed: 400_000, total: 1_200_000, startedAt: '2026-10-13T08:00:00.000Z' }
+			});
+		} finally {
+			await migrating.stop();
+		}
+	});
+
+	it('Failed migration', async () => {
 		const failed = await boot(
 			mongoUri,
 			{},
@@ -342,36 +395,7 @@ describe.skipIf(mongoUri === '')('info', () => {
 		);
 
 		try {
-			const emptyInfo = await (
-				await fetch(`${empty.url}/api/v1/info`, {
-					headers: { Authorization: `Bearer ${await token(await login(empty))}` }
-				})
-			).json();
-			const migratingInfo = (await (
-				await fetch(`${migrating.url}/api/v1/info`, {
-					headers: { Authorization: `Bearer ${await token(await login(migrating))}` }
-				})
-			).json()) as { migration: unknown };
-
-			expect(emptyInfo).toMatchObject({
-				versions: { dashboard: '3.10.0-test' },
-				schema: { status: 'uninitialized' },
-				migration: { state: 'none' }
-			});
-			expect(emptyInfo).not.toHaveProperty('retention');
-			expect(emptyInfo).not.toHaveProperty('versions.server');
-			expect(migratingInfo.migration).toEqual({
-				state: 'running',
-				progress: { processed: 400_000, total: 1_200_000, startedAt: '2026-10-13T08:00:00.000Z' }
-			});
-
-			const failedInfo = (await (
-				await fetch(`${failed.url}/api/v1/info`, {
-					headers: { Authorization: `Bearer ${await token(await login(failed))}` }
-				})
-			).json()) as { migration: unknown };
-
-			expect(failedInfo.migration).toEqual({
+			expect((await info(failed)).migration).toEqual({
 				state: 'failed',
 				progress: {
 					processed: 10,
@@ -382,9 +406,103 @@ describe.skipIf(mongoUri === '')('info', () => {
 				error: 'legacy event without a room'
 			});
 		} finally {
-			await empty.stop();
-			await migrating.stop();
 			await failed.stop();
+		}
+	});
+
+	it('Nested keys', async () => {
+		const dashboard = await boot(
+			mongoUri,
+			{},
+			{
+				seed: async (db) => {
+					await seedSchema(db);
+					await db.collection<SchemaMetaDocument>('schema_meta').insertOne({
+						_id: 'migration',
+						state: 'completed',
+						processed: 20,
+						total: 20,
+						startedAt: new Date('2026-10-13T08:00:00Z'),
+						finishedAt: new Date('2026-10-13T08:05:00Z'),
+						legacyRetainedUntil: new Date('2026-12-15T08:00:00Z'),
+						...migrationFields
+					});
+				}
+			}
+		);
+
+		try {
+			const body = await info(dashboard);
+			const keys = (key: string) => Object.keys(body[key] as object).sort();
+
+			expect(keys('versions')).toEqual(['dashboard', 'server']);
+			expect(keys('schema')).toEqual(['dashboard', 'status', 'writer']);
+			expect(keys('migration')).toEqual(['legacyRetainedUntil', 'progress', 'state']);
+			expect(keys('limits')).toEqual(['participantRankedSortMaxRangeMs', 'rankedSortMaxRangeMs']);
+		} finally {
+			await dashboard.stop();
+		}
+	});
+
+	it('Legacy collections in storage', async () => {
+		const dashboard = await boot(
+			mongoUri,
+			{},
+			{
+				seed: async (db) => {
+					await seedSchema(db);
+					await db.collection<SchemaMetaDocument>('schema_meta').insertOne({
+						_id: 'migration',
+						state: 'completed',
+						processed: 5,
+						total: 5,
+						startedAt: new Date('2026-11-14T08:00:00Z'),
+						finishedAt: new Date('2026-11-14T08:01:00Z'),
+						legacyRetainedUntil: new Date('2026-12-15T08:00:00Z'),
+						...migrationFields
+					});
+					await seedLegacy(db, 'legacy_events', 'timestamp', [1791883600, 1791883555, 1791883700]);
+					await seedLegacy(db, 'stats', 'time_stamp', [1791883569, 1791883599]);
+				}
+			}
+		);
+
+		try {
+			const body = await info(dashboard);
+			const storage = body.storage as Record<string, Record<string, unknown>>;
+
+			expect(storage.legacy_events).toEqual({
+				documents: 3,
+				storageBytes: expect.any(Number) as number,
+				indexBytes: expect.any(Number) as number,
+				oldest: '2026-10-13T09:25:55.000Z'
+			});
+			expect(storage.stats).toMatchObject({ documents: 2, oldest: '2026-10-13T09:26:09.000Z' });
+			expect(body.migration).toMatchObject({ legacyRetainedUntil: '2026-12-15T08:00:00.000Z' });
+		} finally {
+			await dashboard.stop();
+		}
+	});
+
+	it('Stats without a migration in info', async () => {
+		const dashboard = await boot(
+			mongoUri,
+			{},
+			{
+				seed: async (db) => {
+					await seedSchema(db);
+					await seedLegacy(db, 'stats', 'time_stamp', [1791883569, 1791883599]);
+				}
+			}
+		);
+
+		try {
+			const body = await info(dashboard);
+
+			expect(body.storage).not.toHaveProperty('stats');
+			expect(body.migration).toEqual({ state: 'none' });
+		} finally {
+			await dashboard.stop();
 		}
 	});
 });

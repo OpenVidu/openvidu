@@ -11,6 +11,7 @@ import {
 	type InfoResponse,
 	type InfoRetention,
 	type InfoStorageEntry,
+	LegacyCollection,
 	type SchemaMetaCapabilities,
 	type SchemaMetaConfig,
 	type SchemaMetaMigration,
@@ -26,9 +27,9 @@ export const STORAGE_CACHE_MS = 60_000;
 /**
  * Field that dates each collection, read through an index that leads with it (the `global` scope for the daily rollups);
  * `nodes` holds one document per node. Tracks and subscriptions have no such index, and the earliest stats sample
- * would scan the buckets of the time series.
+ * would scan the buckets of the time series. The legacy collections are dated by their timestamps in seconds.
  */
-const OLDEST: Partial<Record<string, { field: string; filter?: Document }>> = {
+const OLDEST: Partial<Record<string, { field: string; type?: 'number'; filter?: Document }>> = {
 	[Collection.ROOMS]: { field: 'createdAt' },
 	[Collection.PARTICIPANTS]: { field: 'joinedAt' },
 	[Collection.EGRESSES]: { field: 'startedAt' },
@@ -38,7 +39,9 @@ const OLDEST: Partial<Record<string, { field: string; filter?: Document }>> = {
 	[Collection.ANALYTICS_5MIN]: { field: 'bucket' },
 	[Collection.ANALYTICS_HOURLY]: { field: 'bucket' },
 	[Collection.ANALYTICS_DAILY]: { field: 'bucket', filter: { scope: 'global' } },
-	[Collection.NODES]: { field: 'firstSeenAt' }
+	[Collection.NODES]: { field: 'firstSeenAt' },
+	[LegacyCollection.EVENTS]: { field: 'timestamp.seconds', type: 'number' },
+	[LegacyCollection.STATS]: { field: 'time_stamp.seconds', type: 'number' }
 };
 
 /** The query of the oldest document of a collection and its date field, or `null` for a collection without one. */
@@ -51,11 +54,30 @@ export function oldestQuery(db: Db, name: string): { cursor: FindCursor<Document
 
 	const cursor = db
 		.collection(name)
-		.find({ ...oldest.filter, [oldest.field]: { $type: 'date' } }, { projection: { _id: 0, [oldest.field]: 1 } })
+		.find(
+			{ ...oldest.filter, [oldest.field]: { $type: oldest.type ?? 'date' } },
+			{ projection: { _id: 0, [oldest.field]: 1 } }
+		)
 		.sort({ [oldest.field]: 1 })
 		.limit(1);
 
 	return { cursor, field: oldest.field };
+}
+
+/**
+ * The value of a dotted field of a document: the projection of `a.b` returns `{ a: { b } }`.
+ * @param document document read by the query of {@link oldestQuery}
+ * @param field its date field
+ * @returns the value, `undefined` when absent
+ */
+export function fieldValue(document: Document | undefined, field: string): unknown {
+	let value: unknown = document;
+
+	for (const key of field.split('.')) {
+		value = typeof value === 'object' && value !== null ? (value as Document)[key] : undefined;
+	}
+
+	return value;
 }
 
 type SchemaMetaDocument =
@@ -105,7 +127,7 @@ export class InfoService {
 			},
 			...healthFacts(byId),
 			database: { version: String(build.version), timeseriesSupported: capabilities?.timeseries ?? false },
-			storage: await this.storageInfo(),
+			storage: await this.storageInfo(byId.has('migration')),
 			features: this.options.features(),
 			limits: this.options.limits,
 			openapiDocsEnabled: this.options.openapiDocsEnabled
@@ -126,7 +148,12 @@ export class InfoService {
 		return byId;
 	}
 
-	private async storageInfo(): Promise<Record<string, InfoStorageEntry>> {
+	/**
+	 * Storage of the contract collections that exist, cached for {@link STORAGE_CACHE_MS}.
+	 * @param withLegacy also the legacy collections that exist, which only a migration document makes legacy
+	 * @returns the entries by collection name
+	 */
+	private async storageInfo(withLegacy: boolean): Promise<Record<string, InfoStorageEntry>> {
 		if (this.storage !== undefined && this.now() - this.storage.at < STORAGE_CACHE_MS) {
 			return this.storage.value;
 		}
@@ -136,7 +163,9 @@ export class InfoService {
 		);
 		const value: Record<string, InfoStorageEntry> = {};
 
-		for (const name of Object.values(Collection)) {
+		const names: string[] = [...Object.values(Collection), ...(withLegacy ? Object.values(LegacyCollection) : [])];
+
+		for (const name of names) {
 			if (existing.has(name)) {
 				value[name] = await this.collectionStorage(name);
 			}
@@ -164,10 +193,12 @@ export class InfoService {
 
 		if (query !== null) {
 			const [oldest] = await query.cursor.toArray();
-			const value: unknown = oldest?.[query.field];
+			const value = fieldValue(oldest, query.field);
 
 			if (value instanceof Date) {
 				entry.oldest = value.toISOString();
+			} else if (typeof value === 'number' && Number.isFinite(value)) {
+				entry.oldest = new Date(value * 1000).toISOString();
 			}
 		}
 
@@ -199,7 +230,10 @@ function migrationInfo(migration: SchemaMetaMigration | undefined): InfoMigratio
 			...(migration.startedAt === undefined ? {} : { startedAt: migration.startedAt.toISOString() }),
 			...(migration.finishedAt === undefined ? {} : { finishedAt: migration.finishedAt.toISOString() })
 		},
-		...(migration.error === undefined ? {} : { error: migration.error })
+		...(migration.error === undefined ? {} : { error: migration.error }),
+		...(migration.legacyRetainedUntil === undefined
+			? {}
+			: { legacyRetainedUntil: migration.legacyRetainedUntil.toISOString() })
 	};
 }
 

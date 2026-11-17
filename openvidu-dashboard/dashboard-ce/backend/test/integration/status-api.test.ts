@@ -98,6 +98,28 @@ describe.skipIf(mongoUri === '')('status API', () => {
 		expect(Object.keys(body)).not.toContain('retention');
 	});
 
+	it('Legacy retention date in the status', async () => {
+		await replace(ce.dashboard.db, Collection.SCHEMA_META, [
+			{ _id: 'schema', version: SCHEMA_VERSION, writerVersion: '3.10.0', updatedAt: new Date() },
+			{
+				_id: 'migration',
+				state: 'completed',
+				processed: 1_200,
+				total: 1_200,
+				startedAt: ago(2 * HOUR),
+				finishedAt: ago(HOUR),
+				writerVersion: '3.10.0',
+				fromSchemaVersion: 0,
+				legacyRetainedUntil: new Date('2026-12-15T08:00:00Z')
+			}
+		]);
+
+		const body = await json<StatusResponse>(ce, '/status');
+
+		expect(body.migration).toMatchObject({ state: 'completed', legacyRetainedUntil: '2026-12-15T08:00:00.000Z' });
+		expect(statusResponse.parse(body)).toEqual(body);
+	});
+
 	it('reports the largest batch interval of the last hour', async () => {
 		await replace(ce.dashboard.db, Collection.NODES, [
 			node('node-a', 80 * SECOND, 60_000),
