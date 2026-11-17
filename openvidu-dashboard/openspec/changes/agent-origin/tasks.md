@@ -198,7 +198,7 @@ Tests only, committed in the writer checkout and not pushed until group 9. It co
 
 After the full verification and its fixes, before any push.
 
-- [ ] 8.1 The orchestrator serves the change with `./dashboard.sh dev` against openvidu-local-deployment
+- [x] 8.1 The orchestrator serves the change with `./dashboard.sh dev` against openvidu-local-deployment
       (`http://localhost:4200`); the owner reviews `/agents`: the Agent column, the OpenVidu tag on
       `speech-processing-dev` only, the three Origin options and the CSV export. If the 24 h range no longer holds the
       three agents, they are dispatched again with `lk dispatch create`, by the owner or with the owner's OK. Verify:
@@ -209,11 +209,11 @@ After the full verification and its fixes, before any push.
 After group 8. The dashboard push follows this group: its CI `contract` job diffs the vendored contract of
 `openvidu/main`.
 
-- [ ] 9.1 Run `dashboard-ce/typings/contract/vendor.sh /home/pablo/Desktop/FIX-2/openvidu-livekit` and, in
+- [x] 9.1 Run `dashboard-ce/typings/contract/vendor.sh /home/pablo/Desktop/FIX-2/openvidu-livekit` and, in
       `openvidu/analytics/contract_integration_test.go`, give the agent of `scenarioEvents()` the attributes
       `lk.agent_name: speech-processing` and `openvidu.agent: speech-processing` (decision 10). Verify:
       `go test -tags integration -count=1 -run '^TestContractFixtures$' ./openvidu/analytics/` passes.
-- [ ] 9.2 In `CHANGELOG-openvidu.md` of openvidu-livekit, under `[Unreleased]`, add one line: whatever
+- [x] 9.2 In `CHANGELOG-openvidu.md` of openvidu-livekit, under `[Unreleased]`, add one line: whatever
       `store_metadata` says, participants of kind `AGENT` keep the attributes `lk.agent_name`, `openvidu.agent` and
       `openvidu.agent.*`. Commit it with the vendored contract and the scenario of 9.1, without pushing, and run
       `./dashboard.sh contract-check /home/pablo/Desktop/FIX-2/openvidu-livekit`. Verify:

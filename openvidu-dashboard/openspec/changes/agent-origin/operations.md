@@ -36,3 +36,12 @@
   participant name, and the Name column hidden by default on the Agents page only. The proposer folded them into the
   artifacts (new tasks 5.6 to 5.8, 6.5, 6.6 and 7.4); the owner approved the revision as it stands, tooltip wording
   included. Task 8.1 stays open until the owner reviews them on the demo.
+- Demo review (task 8.1), second round, on `./dashboard.sh dev` at ports 4300 and 5100 (the owner's PRO development
+  servers held 4200 and 5000) against openvidu-local-deployment with three dispatched agents: `speech-processing-dev`
+  (the agent with the mark, `openvidu-agents` `6663bd2`), the published `speech-processing` image (no mark) and a plain
+  livekit-agents `dummy-agent`. The owner approved the demo with the tooltip, the Agent tip and the Name default.
+- Group 1's `e5891220` reached `origin/openvidu/main` of openvidu-livekit with the owner's push of `682e41ca`.
+- Tasks 9.1 and 9.2: openvidu-livekit `05459651` "Analytics: vendored dashboard contract with the agent attributes", on
+  `682e41ca`, not pushed. Besides the vendored contract, the scenario and the `CHANGELOG-openvidu.md` line, it carries the
+  `README-openvidu.md` wording of review S4 (owner's decision). `TestContractFixtures` passed;
+  `./dashboard.sh contract-check /home/pablo/Desktop/FIX-2/openvidu-livekit` ended with "contract check passed".
