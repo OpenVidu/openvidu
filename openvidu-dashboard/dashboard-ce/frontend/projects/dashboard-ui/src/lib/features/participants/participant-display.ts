@@ -62,6 +62,9 @@ export function participantPreview(
 	};
 }
 
+/** Tooltip of the OpenVidu tag of the Agent cell. */
+export const OPENVIDU_AGENT_HINT = 'This agent belongs to the official collection of OpenVidu agents';
+
 /** Agent cell text: the registered agent name, else the OpenVidu agent type, else `—`. */
 export function agentLabel(item: Pick<ParticipantListItem, 'agent'>): string {
 	return item.agent?.name ?? item.agent?.openvidu ?? '—';

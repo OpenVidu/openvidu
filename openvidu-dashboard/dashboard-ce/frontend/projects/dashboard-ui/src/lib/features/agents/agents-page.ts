@@ -72,7 +72,7 @@ export class AgentsPage {
 	protected readonly origins = ORIGINS;
 	protected readonly allOrigins = ALL_ORIGINS;
 	protected readonly originLabels = AGENT_ORIGIN_LABELS;
-	protected readonly sessions = injectParticipantSessions({ kindColumn: false, agentColumn: true });
+	protected readonly sessions = injectParticipantSessions({ kindColumn: false, agentColumn: true, nameHidden: true });
 	/** The `origin` of the URL; any other value reads as every origin. */
 	protected readonly origin = computed(() => {
 		const value = this.query.value('origin');

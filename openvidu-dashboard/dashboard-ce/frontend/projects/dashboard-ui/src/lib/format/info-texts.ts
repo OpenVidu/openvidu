@@ -40,7 +40,7 @@ export const INFO_TEXTS = {
 		'The most participants connected at the same time in each bucket, sampled every minute. Only regular participants count.',
 	participantKind: 'Every participant session by kind, services included.',
 	agentColumn:
-		'Name the agent registered with; an OpenVidu agent without one shows its type. The OpenVidu tag marks agents that declare themselves, as OpenVidu agents do from 3.10; every other agent counts as third-party.',
+		"Agent name the agent's worker registered with the server (its dispatch name), not its participant name. An OpenVidu agent without one shows its type. The OpenVidu tag marks agents that declare themselves, as OpenVidu agents do from 3.10; every other agent counts as third-party.",
 
 	activeParticipants: 'Regular participants connected now.',
 	roomFeatures: 'Services the room used: E egress, I ingress, A agent.',

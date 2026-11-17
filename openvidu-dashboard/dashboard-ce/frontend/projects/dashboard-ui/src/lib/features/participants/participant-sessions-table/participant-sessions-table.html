@@ -23,7 +23,13 @@
 		<span class="cell">
 			{{ agentLabel(item) }}
 			@if (item.agent?.openvidu) {
-				<span class="origin ovd-tag">OpenVidu</span>
+				<span
+					class="origin ovd-tag"
+					tabindex="0"
+					[matTooltip]="openviduAgentHint"
+					[attr.aria-label]="'OpenVidu, ' + openviduAgentHint"
+					>OpenVidu</span
+				>
 			}
 		</span>
 	</ng-template>

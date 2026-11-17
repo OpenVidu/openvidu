@@ -11,8 +11,10 @@ import { infoResponse, settle } from '../../../testing/fixtures.js';
 import { exportCsv, routeElement } from '../../../testing/harness.js';
 import { RangePickerService } from '../../components/date-time-range-picker/date-time-range-picker.js';
 import { InfoService } from '../../core/info.js';
+import { PreferencesService } from '../../core/preferences/preferences.js';
 import { BreakpointService, type ScreenSize } from '../../core/ui/breakpoints.js';
 import { LiveCountersService } from '../../core/refresh/live-counters.js';
+import { OPENVIDU_AGENT_HINT } from '../participants/participant-display.js';
 import { AgentsPage } from './agents-page.js';
 
 @Component({ selector: 'ovd-blank', template: '' })
@@ -167,7 +169,6 @@ describe('AgentsPage', () => {
 			'SID',
 			'Agent',
 			'Identity',
-			'Name',
 			'Room',
 			'Status',
 			'Joined',
@@ -176,19 +177,12 @@ describe('AgentsPage', () => {
 			'Published'
 		]);
 		expect(links).toEqual(['/participants/PA_z9', '/rooms/RM_abc']);
-		expect(cells.slice(0, 6).map(visibleText)).toEqual([
-			'PA_z9',
-			'support',
-			'agent-1',
-			'Support bot',
-			'demo-room',
-			'active'
-		]);
+		expect(cells.slice(0, 5).map(visibleText)).toEqual(['PA_z9', 'support', 'agent-1', 'demo-room', 'active']);
 		expect(visibleText(row).match(/PA_z9/g)).toHaveLength(1);
 		expect(cells[0]?.querySelector('ovd-copy-button')).not.toBeNull();
 		expect(cells[2]?.querySelector('ovd-copy-button')).not.toBeNull();
 		expect(text(row?.querySelector('a'))).toBe('PA_z9');
-		expect(text(row)).toContain('Support bot');
+		expect(text(row)).not.toContain('Support bot');
 		expect(text(row?.querySelector('ovd-status-badge'))).toContain('active');
 		expect(text(row)).not.toContain('GO 1.2');
 		expect(text(row)).toMatch(/5 m 0\d s/);
@@ -197,8 +191,8 @@ describe('AgentsPage', () => {
 			sessions: { time(value: string): string };
 		};
 
-		expect(cells[6]?.querySelector('time')?.getAttribute('datetime')).toBe(joinedAt);
-		expect(text(cells[6])).toBe(sessions.time(joinedAt));
+		expect(cells[5]?.querySelector('time')?.getAttribute('datetime')).toBe(joinedAt);
+		expect(text(cells[5])).toBe(sessions.time(joinedAt));
 		expect(row?.querySelector('[aria-label="Not left"]')).not.toBeNull();
 		expect(row?.querySelectorAll('ovd-source-icon')).toHaveLength(1);
 		expect(text(row)).not.toContain('node-a');
@@ -342,8 +336,121 @@ describe('AgentsPage', () => {
 		// The shared 24 px tag box of the status badge of the row.
 		expect(tag?.classList.contains('ovd-tag')).toBe(true);
 		expect(status).not.toBeNull();
-		expect(tag?.classList.contains('mat-mdc-tooltip-trigger')).toBe(false);
-		expect(tag?.hasAttribute('tabindex')).toBe(false);
+	});
+
+	it('OpenVidu tag tooltip', async () => {
+		const http = setup();
+		const harness = await RouterTestingHarness.create('/agents');
+
+		await load(
+			http,
+			harness,
+			page([agent({ agent: { name: 'speech-processing-dev', openvidu: 'speech-processing' } })])
+		);
+
+		routeElement(harness).querySelector('tbody .origin')?.dispatchEvent(new MouseEvent('mouseenter'));
+		await settle();
+		expect(text(document.querySelector('.mat-mdc-tooltip'))).toBe(
+			'This agent belongs to the official collection of OpenVidu agents'
+		);
+		expect(OPENVIDU_AGENT_HINT).toBe('This agent belongs to the official collection of OpenVidu agents');
+	});
+
+	it('OpenVidu tag name for screen readers', async () => {
+		const http = setup();
+		const harness = await RouterTestingHarness.create('/agents');
+
+		await load(
+			http,
+			harness,
+			page([
+				agent({ agent: { name: 'speech-processing-dev', openvidu: 'speech-processing' } }),
+				agent({ sid: 'PA_3p', identity: 'agent-2', agent: { name: 'dummy-agent' } })
+			])
+		);
+
+		const [openvidu, thirdParty] = [...routeElement(harness).querySelectorAll('tbody tr')];
+		const tag = openvidu?.querySelector('.origin');
+
+		expect(tag?.getAttribute('tabindex')).toBe('0');
+		expect(tag?.getAttribute('aria-label')).toBe(
+			'OpenVidu, This agent belongs to the official collection of OpenVidu agents'
+		);
+		expect(thirdParty?.querySelector('.origin, [aria-label^="OpenVidu"]')).toBeNull();
+	});
+
+	/** Opens the Columns menu of the table and returns its items. */
+	async function columnsMenu(harness: RouterTestingHarness): Promise<HTMLButtonElement[]> {
+		[...routeElement(harness).querySelectorAll<HTMLButtonElement>('button')]
+			.find((button) => text(button) === 'Columns')
+			?.click();
+		await harness.fixture.whenStable();
+
+		return [...document.querySelectorAll<HTMLButtonElement>('[role="menuitemcheckbox"]')];
+	}
+
+	function headers(harness: RouterTestingHarness): string[] {
+		return [...routeElement(harness).querySelectorAll('thead th')].map(text);
+	}
+
+	it('Name hidden by default', async () => {
+		const http = setup();
+		const harness = await RouterTestingHarness.create('/agents');
+
+		await load(http, harness, page([agent({ name: 'Support bot' })]));
+
+		expect(headers(harness)).toEqual([
+			'SID',
+			'Agent',
+			'Identity',
+			'Room',
+			'Status',
+			'Joined',
+			'Left',
+			'Duration',
+			'Published'
+		]);
+
+		const name = (await columnsMenu(harness)).find((item) => text(item) === 'Name');
+
+		expect(name?.getAttribute('aria-checked')).toBe('false');
+	});
+
+	it('Name shown from the Columns menu', async () => {
+		const http = setup();
+		const harness = await RouterTestingHarness.create('/agents');
+		const rows = page([agent({ name: 'Support bot' }), agent({ sid: 'PA_nameless', identity: 'agent-2' })]);
+
+		await load(http, harness, rows);
+		(await columnsMenu(harness)).find((item) => text(item) === 'Name')?.click();
+		await harness.fixture.whenStable();
+
+		const shown = headers(harness);
+		const name = shown.indexOf('Name');
+
+		expect(shown.slice(name - 1, name + 2)).toEqual(['Identity', 'Name', 'Room']);
+		expect(
+			[...routeElement(harness).querySelectorAll('tbody tr')].map((row) => text(row.querySelectorAll('td')[name]))
+		).toEqual(['Support bot', '—']);
+
+		await harness.navigateByUrl('/participants');
+		await harness.navigateByUrl('/agents');
+		await load(http, harness, rows);
+
+		expect(headers(harness)).toContain('Name');
+	});
+
+	it('Stored column choice kept', async () => {
+		const http = setup();
+
+		TestBed.inject(PreferencesService).setHiddenColumns('agents', ['published']);
+
+		const harness = await RouterTestingHarness.create('/agents');
+
+		await load(http, harness, page([agent({ name: 'Support bot' })]));
+
+		expect(headers(harness)).toContain('Name');
+		expect(headers(harness)).not.toContain('Published');
 	});
 
 	it('Third-party agent', async () => {

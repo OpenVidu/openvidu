@@ -31,7 +31,7 @@ const RANKED_SORTS: Readonly<Partial<Record<ParticipantSort, string>>> = { leftA
  * The URL state of a list of participant sessions (search, status, room, range and sort), its columns and actions,
  * shared by the Participants and Agents pages. Call it in an injection context.
  */
-export function injectParticipantSessions(options: { kindColumn: boolean; agentColumn: boolean }) {
+export function injectParticipantSessions(options: { kindColumn: boolean; agentColumn: boolean; nameHidden: boolean }) {
 	const query = inject(QueryStateService);
 	const listState = inject(ListStateService);
 	const previews = inject(EntityPreviewService);
@@ -69,7 +69,7 @@ export function injectParticipantSessions(options: { kindColumn: boolean; agentC
 			{ key: 'sid', header: 'SID', hideable: false, card: 'title' },
 			...(options.agentColumn ? [{ key: 'agent', header: 'Agent', info: INFO_TEXTS.agentColumn }] : []),
 			{ key: 'identity', header: 'Identity' },
-			{ key: 'name', header: 'Name' },
+			{ key: 'name', header: 'Name', ...(options.nameHidden ? { defaultHidden: true } : {}) },
 			{ key: 'room', header: 'Room', card: 'metric' },
 			...(options.kindColumn ? [{ key: 'kind', header: 'Kind' }] : []),
 			{ key: 'status', header: 'Status', hideable: false, card: 'status' },

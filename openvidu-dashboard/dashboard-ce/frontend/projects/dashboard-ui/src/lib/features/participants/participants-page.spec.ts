@@ -225,6 +225,14 @@ describe('ParticipantsPage', () => {
 		expect(text(element.querySelectorAll('ovd-kpi-tile')[2])).toBe('Sessions in range ≈ 900');
 	});
 
+	it('Name stays on the Participants table', async () => {
+		const { element } = await open('/participants', page([item()]));
+		const headers = [...element.querySelectorAll('thead th')].map(text);
+		const name = headers.indexOf('Name');
+
+		expect(headers.slice(name - 1, name + 2)).toEqual(['Identity', 'Name', 'Room']);
+	});
+
 	it('renders a row with links, badges, the live duration and the published sources', async () => {
 		const { client: _client, ...bare$ } = item({ sid: 'PA_bare', publishedSources: [] });
 		const { element } = await open('/participants', page([item(), bare$]));

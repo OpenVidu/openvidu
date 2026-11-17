@@ -1,5 +1,6 @@
 import { Component, input, output } from '@angular/core';
 import { MatButton } from '@angular/material/button';
+import { MatTooltip } from '@angular/material/tooltip';
 import { RouterLink } from '@angular/router';
 import type { ParticipantListItem, SortOrder } from '@openvidu-dashboard/typings';
 
@@ -12,7 +13,7 @@ import { Duration } from '../../../components/duration/duration.js';
 import type { Download } from '../../../core/http/http.js';
 import { EmptyState } from '../../../components/feedback/empty-state.js';
 import { MediaNodeLabel } from '../../../components/media-node/media-node.js';
-import { agentLabel } from '../participant-display.js';
+import { agentLabel, OPENVIDU_AGENT_HINT } from '../participant-display.js';
 
 /** The table of a list of participant sessions, with its cells and its empty states. */
 @Component({
@@ -24,6 +25,7 @@ import { agentLabel } from '../participant-display.js';
 		EmptyState,
 		KindBadge,
 		MatButton,
+		MatTooltip,
 		MediaNodeLabel,
 		RouterLink,
 		SourceIcon,
@@ -59,6 +61,7 @@ export class ParticipantSessionsTable {
 
 	protected readonly trackSession = (item: ParticipantListItem): string => item.sid;
 	protected readonly agentLabel = agentLabel;
+	protected readonly openviduAgentHint = OPENVIDU_AGENT_HINT;
 
 	/** Hint of an active session the list response marks stale. */
 	protected staleHint(item: ParticipantListItem): string | undefined {
