@@ -13,7 +13,7 @@ import { ServerStatusService } from '../../core/refresh/server-status.js';
 import { QueryStateService } from '../../core/state/query-state.js';
 import { formatBytes, formatNumber, formatTimestamp } from '../../format/formatters.js';
 import { CollectionBreakdown } from './collection-breakdown.js';
-import { LEGACY_LABEL, storageClasses } from './storage-classes.js';
+import { storageClasses } from './storage-classes.js';
 
 /** The progress of a running migration, or the outcome of one that ended; `null` for none or pending. */
 export function migrationLine(migration: InfoMigration, tz: string): string | null {
@@ -92,7 +92,6 @@ export class DataTab {
 		return {
 			rows: rows.map((row) => ({
 				...row,
-				legacy: row.label === LEGACY_LABEL,
 				documentsText: formatNumber(row.documents),
 				size: formatBytes(row.bytes)
 			})),

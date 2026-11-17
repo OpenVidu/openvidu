@@ -108,6 +108,8 @@ export interface StorageClassRow {
 	/** Progress and estimate of a class that has not reached its retention; `null` for none. */
 	tip: string | null;
 	collections: StorageCollectionEntry[];
+	/** The Legacy data row, whose retention text may wrap. */
+	legacy: boolean;
 }
 
 export interface StorageClasses {
@@ -213,7 +215,8 @@ function legacyRow(
 		documents: collections.reduce((sum, { entry }) => sum + entry.documents, 0),
 		bytes: collections.reduce((sum, { entry }) => sum + sizeOf(entry), 0),
 		tip: null,
-		collections
+		collections,
+		legacy: true
 	};
 }
 
@@ -230,7 +233,7 @@ export function storageClasses(
 	storage: Readonly<Record<string, InfoStorageEntry>>,
 	retention: InfoRetention | undefined,
 	readAt: number,
-	legacy: LegacyContext = { migration: null, tz: 'UTC' }
+	legacy: LegacyContext
 ): StorageClasses {
 	const deploymentClock = earliest(storage, DEPLOYMENT_CLOCK);
 	const rows = STORAGE_CLASSES.map((definition): StorageClassRow => {
@@ -251,7 +254,8 @@ export function storageClasses(
 			bytes,
 			tip:
 				retention === undefined ? null : classTip(retention[definition.retentionKey], spanMs, documents, bytes),
-			collections
+			collections,
+			legacy: false
 		};
 	});
 

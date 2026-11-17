@@ -8,11 +8,19 @@ import {
 import { describe, expect, it } from 'vitest';
 
 import { formatBytes, formatNumber } from '../../format/formatters.js';
-import { LEGACY_LABEL, STORAGE_CLASSES, type StorageClassRow, storageClasses } from './storage-classes.js';
+import {
+	LEGACY_LABEL,
+	type LegacyContext,
+	STORAGE_CLASSES,
+	type StorageClassRow,
+	storageClasses
+} from './storage-classes.js';
 
 const HOUR = 3_600_000;
 const DAY = 24 * HOUR;
 const READ_AT = Date.parse('2026-11-16T12:00:00.000Z');
+/** The context of the specs whose storage holds no legacy collection. */
+const NO_MIGRATION: LegacyContext = { migration: null, tz: 'UTC' };
 
 const DEFAULT_RETENTION: InfoRetention = {
 	eventsMs: 7 * DAY,
@@ -39,7 +47,7 @@ function rowOf(
 	storage: Record<string, InfoStorageEntry>,
 	retention: Partial<InfoRetention> = {}
 ): StorageClassRow {
-	const row = storageClasses(storage, { ...DEFAULT_RETENTION, ...retention }, READ_AT).rows.find(
+	const row = storageClasses(storage, { ...DEFAULT_RETENTION, ...retention }, READ_AT, NO_MIGRATION).rows.find(
 		(candidate) => candidate.label === label
 	);
 
@@ -73,7 +81,7 @@ describe('storageClasses', () => {
 
 	it('Collections of each class', () => {
 		const storage = Object.fromEntries(COLLECTIONS.map((collection) => [collection, entry(1_000)]));
-		const { rows } = storageClasses(storage, DEFAULT_RETENTION, READ_AT);
+		const { rows } = storageClasses(storage, DEFAULT_RETENTION, READ_AT, NO_MIGRATION);
 
 		expect(
 			rows.map((row) => [row.label, row.documents, row.collections.map(({ collection }) => collection)])
@@ -96,7 +104,8 @@ describe('storageClasses', () => {
 				nodes: { documents: 1, storageBytes: 20_000, indexBytes: 21_000 }
 			},
 			DEFAULT_RETENTION,
-			READ_AT
+			READ_AT,
+			NO_MIGRATION
 		);
 		const entities = rows.find((row) => row.label === 'Entities');
 
@@ -112,7 +121,8 @@ describe('storageClasses', () => {
 				schema_meta: { documents: 4, storageBytes: 20_480, indexBytes: 20_520 }
 			},
 			DEFAULT_RETENTION,
-			READ_AT
+			READ_AT,
+			NO_MIGRATION
 		);
 
 		expect(total).toEqual({ documents: 289, bytes: 737_000 });
@@ -308,6 +318,7 @@ describe('storageClasses', () => {
 			expect(formatNumber(legacy?.documents ?? 0)).toBe('420,000');
 			expect(formatBytes(legacy?.bytes ?? 0)).toBe('130 MB');
 			expect(legacy?.tip).toBeNull();
+			expect(rows.map((row) => row.legacy)).toEqual([...Array<boolean>(7).fill(false), true]);
 			expect(legacy?.collections.map(({ collection }) => collection)).toEqual(['legacy_events', 'stats']);
 			expect(formatNumber(total.documents)).toBe('420,004');
 			expect(formatBytes(total.bytes)).toBe('130 MB');
