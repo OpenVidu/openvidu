@@ -112,11 +112,14 @@ writer's vendored copy iterate. `storageInfo(withLegacy)` adds the existing lega
 when `fullInfo()` found a migration document in the `schema_meta` it already reads (same rule as D2; the 60 s cache
 keeps whatever the read found).
 
-`oldestQuery` gains the legacy entries: `{ 'timestamp.seconds': { $type: 'number' } }` sorted ascending, limit 1, and
-`time_stamp.seconds` for `stats`, read through `timestamp.seconds_1` and `time_stamp.seconds_1`; the numeric seconds
-become an ISO date. The projection of a dotted field returns a nested document, so the exported `fieldValue(doc,
-field)` takes the value by path, and `collectionStorage` converts a numeric value, in seconds, to an ISO date (a special
-case task 7.3 reviews).
+`OLDEST` gains the legacy entries: `{ 'timestamp.seconds': { $type: 'number' } }` sorted ascending, limit 1, and
+`time_stamp.seconds` for `stats`, read through `timestamp.seconds_1` and `time_stamp.seconds_1`. Each `OLDEST` entry
+carries a date converter, `fromDate` by default and `fromSeconds` for the two legacy collections, that holds the BSON
+type the query filters on (`date` or `number`) and how the value becomes a date. `oldestQuery` returns
+`{ cursor, field, read }`, and `collectionStorage` calls `query.read(document)` for the oldest date, whatever the
+collection. The projection of a dotted field returns a nested document, so the exported `fieldValue(doc, field)`
+takes the value by path. Rejected (refactor review, task 7.3): a numeric special case in `collectionStorage`, which
+spread the knowledge of one collection's date format over two places.
 
 ### D8. `migration.legacyRetainedUntil` in the shared migration shape
 
@@ -137,7 +140,10 @@ OpenAPI shape (additive):
   release.
 - `storageClasses(storage, retention, readAt, legacy)` appends the row after Daily rollups when `storage` holds a
   legacy entry, `legacy` being `{ migration, tz }`; the Total sums it like any row. `StorageCollectionEntry.collection`
-  widens to `Collection | LegacyCollection`. The row has `tip: null`.
+  widens to `Collection | LegacyCollection`. The row has `tip: null`. It stays a row apart from `STORAGE_CLASSES`
+  (refactor review, task 7.3): its retention comes from the migration state, it has no tip and it appears only with
+  legacy collections, and folding it in would break the invariant that `STORAGE_CLASSES` classifies every contract
+  collection exactly once.
 - Retention, from the `MigrationState` the dashboard reads (`pending`, `running`, `completed`, `failed`):
   - `running`: "In use by the migration".
   - `completed`: "Kept until <yyyy-MM-dd> for rollback" when `legacyRetainedUntil` is later than `readAt`, else "Being
