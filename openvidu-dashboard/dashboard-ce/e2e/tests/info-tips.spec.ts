@@ -68,7 +68,7 @@ test.describe('agents', () => {
 
 		await header.getByRole('button', { name: 'About Agent' }).click();
 		await expect(tooltip(page)).toHaveText(
-			'Name the agent registered with; an OpenVidu agent without one shows its type. The OpenVidu tag marks agents that declare themselves, as OpenVidu agents do from 3.10; every other agent counts as third-party.'
+			"Agent name the agent's worker registered with the server (its dispatch name), not its participant name. An OpenVidu agent without one shows its type. The OpenVidu tag marks agents that declare themselves, as OpenVidu agents do from 3.10; every other agent counts as third-party."
 		);
 		await expect(page).not.toHaveURL(/sort=/);
 		await expect(page.locator('mat-form-field').filter({ hasText: 'Origin' }).getByRole('button')).toHaveCount(0);

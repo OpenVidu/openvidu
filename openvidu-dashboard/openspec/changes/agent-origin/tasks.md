@@ -129,7 +129,7 @@ Tests only, committed in the writer checkout and not pushed until group 9. It co
       `pnpm exec ng test dashboard-ui --watch=false --include=**/agents-page.spec.ts` passes from `frontend/`.
 - [x] 5.5 Add the UI line of the proposal to `CHANGELOG.md` (3.10.0, Added, after the Agents page line) in the commit
       of the page change. Verify: `./dashboard.sh check` passes.
-- [ ] 5.6 Give the "OpenVidu" tag of `participants/participant-sessions-table/` its tooltip (decision 15): the text
+- [x] 5.6 Give the "OpenVidu" tag of `participants/participant-sessions-table/` its tooltip (decision 15): the text
       "This agent belongs to the official collection of OpenVidu agents" as a constant beside `agentLabel` in
       `participants/participant-display.ts`, `matTooltip`, `tabindex="0"` and `aria-label="OpenVidu, <text>"`, as
       `ovd-status-badge` does. In `agents/agents-page.spec.ts`, drop the two "no tooltip" assertions of
@@ -138,7 +138,7 @@ Tests only, committed in the writer checkout and not pushed until group 9. It co
       has no tag). No CHANGELOG line: the line of the tag covers it. Covers: OpenVidu agent with a name, OpenVidu tag
       tooltip, OpenVidu tag name for screen readers. Verify:
       `pnpm exec ng test dashboard-ui --watch=false --include=**/agents-page.spec.ts` passes from `frontend/`.
-- [ ] 5.7 Hide Name by default on the Agents page (decision 16): add `nameHidden` to `injectParticipantSessions`
+- [x] 5.7 Hide Name by default on the Agents page (decision 16): add `nameHidden` to `injectParticipantSessions`
       (`participants/participant-sessions.ts`), `true` from `agents/agents-page.ts` and `false` from the Participants
       page. In `agents/agents-page.spec.ts`, update `Agent row` (default headers and cells without Name) and add
       `Name hidden by default`, `Name shown from the Columns menu` (shown between Identity and Room, "Support bot" or
@@ -147,7 +147,7 @@ Tests only, committed in the writer checkout and not pushed until group 9. It co
       `Name stays on the Participants table`. Covers: Agent row, Name hidden by default, Name shown from the Columns
       menu, Stored column choice kept, Name stays on the Participants table. Verify: both spec files pass with
       `pnpm exec ng test dashboard-ui --watch=false --include=<spec>` from `frontend/`.
-- [ ] 5.8 Replace the text of `INFO_TEXTS.agentColumn` (`format/info-texts.ts`) with that of the `ui-info-tips` delta
+- [x] 5.8 Replace the text of `INFO_TEXTS.agentColumn` (`format/info-texts.ts`) with that of the `ui-info-tips` delta
       (decision 17). Verify: task 6.6 and `./dashboard.sh check` pass.
 
 ## 6. End-to-end tests (implementer)
@@ -166,14 +166,14 @@ Tests only, committed in the writer checkout and not pushed until group 9. It co
 - [x] 6.4 In `e2e/tests/accessibility.spec.ts`, inside the light and dark loop, add
       `OpenVidu agent with a name: the Agents page passes axe`. Covers: OpenVidu agent with a name. Verify: the e2e
       suite passes in both themes.
-- [ ] 6.5 In `e2e/tests/agents.spec.ts`, add `OpenVidu tag tooltip: …`: the tooltip reads the exact text when the
+- [x] 6.5 In `e2e/tests/agents.spec.ts`, add `OpenVidu tag tooltip: …`: the tooltip reads the exact text when the
       pointer rests on the tag and when Tab moves the focus to it, and Escape hides it while the tag has the focus,
       with the pointer handling of `info-tips.spec.ts`. In `e2e/tests/accessibility.spec.ts`, inside the light and dark loop, add
       `OpenVidu tag name for screen readers: …`: the tag is found by its accessible name, the third-party row has
       none, and axe finds no violation with the pointer away from the tag. Covers: OpenVidu tag tooltip, OpenVidu tag
       name for screen readers. Verify: `./dashboard.sh e2e` passes in both themes; if axe reports the name on the
       tag as a violation, stop and ask instead of dropping the name.
-- [ ] 6.6 In `e2e/tests/info-tips.spec.ts`, update `Agent column info tip` to the new text; in
+- [x] 6.6 In `e2e/tests/info-tips.spec.ts`, update `Agent column info tip` to the new text; in
       `e2e/tests/agents.spec.ts`, add `Name shown from the Columns menu: …` (no Name header at first, the Columns menu
       shows it between Identity and Room) and adjust any assertion that counted on the Name column. Covers: Agent
       column info tip, Name shown from the Columns menu. Verify: `./dashboard.sh e2e` passes.
@@ -187,7 +187,7 @@ Tests only, committed in the writer checkout and not pushed until group 9. It co
 - [x] 7.3 Refactor review: assess whether the residual filters of `participantsListPlan` (`publisher`, `origin`) and
       the two column options of `injectParticipantSessions` call for a shared form; apply a small refactor here or
       record that none is needed. Verify: the outcome is written in the implementation report.
-- [ ] 7.4 After 5.6 to 5.8, 6.5 and 6.6, run
+- [x] 7.4 After 5.6 to 5.8, 6.5 and 6.6, run
       `./dashboard.sh scenarios agent-origin /home/pablo/Desktop/FIX-2/openvidu-livekit`, `./dashboard.sh check` and
       `./dashboard.sh e2e`, one at a time, and say whether the refactor review of 7.3 still stands with the tooltip
       (one inline tag, one constant) and with three column options in `injectParticipantSessions`; apply a small

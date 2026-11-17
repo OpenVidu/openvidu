@@ -36,6 +36,24 @@ for (const scheme of ['light', 'dark'] as const) {
 				await expect(page.getByRole('table', { name: 'Agents' }).locator('.origin')).toHaveText('OpenVidu');
 				await expectNoViolations(page);
 			});
+
+			test('OpenVidu tag name for screen readers: named, focusable, absent on third-party rows, no violation', async ({
+				page
+			}) => {
+				await page.goto('/agents?from=now-24h&to=now&tz=UTC');
+
+				const table = page.getByRole('table', { name: 'Agents' });
+				const name = 'OpenVidu, This agent belongs to the official collection of OpenVidu agents';
+
+				await expect(table.getByLabel(name, { exact: true })).toHaveCount(1);
+				await expect(table.getByRole('row', { name: /agent-1/ }).getByLabel(name)).toHaveAttribute(
+					'tabindex',
+					'0'
+				);
+				await expect(table.getByRole('row', { name: /agent-2/ }).getByLabel(name)).toHaveCount(0);
+				await page.mouse.move(0, 0);
+				await expectNoViolations(page);
+			});
 		});
 
 		test.describe('signed out', () => {
