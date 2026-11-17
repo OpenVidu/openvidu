@@ -6,3 +6,6 @@
   (only once the Data tab reads "Kept until <date> for rollback" or "Being removed by the server") are accepted.
 - Writer (openvidu-livekit, `openvidu/main`, on b762d7f0): `bf6496cb` (test seed with live expiries) and `329d5c83`
   (legacy data dropped after its rollback window), committed and not pushed.
+- Owner decisions: the demo's legacy documents keep the designed expiries (the row reads "Being removed by the server"
+  on a demo reused past them); the `status-api.test.ts` timing flake gets a direct fix of its own, outside this
+  change, before the push.
