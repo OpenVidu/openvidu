@@ -15,15 +15,17 @@ context: |
 rules:
   proposal:
     - State scope and explicit non-scope, the edition (CE, PRO or both) and the repositories touched (dashboard, openvidu-livekit, openvidu-deployment)
+    - State the track (lite or full) and why it fits
     - List the observable behaviour that changes and the CHANGELOG lines it implies
   specs:
     - Use Given/When/Then scenarios that can be automated; every requirement names its edition (CE or PRO)
+    - Keep every requirement text at 500 characters or fewer; move examples and edge cases into scenarios
     - Scenario names are unique within the change and short enough to start a test title; tests are matched to scenarios by title
     - Requirements about lists state the filters, sort keys, cursor behaviour and page-size limits
   design:
     - Data model changes list collections, fields with types, indexes, retention, schema-version impact and the migration mapping from legacy events
     - API changes include the OpenAPI shape (paths, params, responses) and the index backing each query
-    - State the performance budget and how it is verified (dataset size, explain() plan, p95)
+    - State the performance budget and how it is verified (dataset size, explain() plan, p95); a test with a wall-clock budget runs alone, outside the parallel test run
     - Record decisions and rejected alternatives in a "Decisions" section
     - Choose the simplest solution that meets the specs and justify any new abstraction
     - Define the test strategy as scenario, test file and level (unit, integration or e2e)

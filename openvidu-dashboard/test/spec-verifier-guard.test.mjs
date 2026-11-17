@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { dirname, join } from 'node:path';
+import { dirname, join, relative } from 'node:path';
 import { after, describe, test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 
@@ -17,6 +17,9 @@ const hookCommand = /^ {10}command: '(.+)'$/m.exec(frontmatters[0] ?? '')?.[1] ?
 // changes of this repository.
 const sampleProject = mkdtempSync(join(tmpdir(), 'ovd-guard-project-'));
 const otherProject = mkdtempSync(join(tmpdir(), 'ovd-guard-other-'));
+// A checkout the project lists in agent-roots.json, with a change and its own dashboard.sh.
+const listedProject = mkdtempSync(join(tmpdir(), 'ovd-guard-listed-'));
+const listed = relative(sampleProject, listedProject);
 
 for (const change of ['openspec/changes/demo', 'edition/openspec/changes/nested']) {
 	mkdirSync(join(sampleProject, change), { recursive: true });
@@ -27,6 +30,10 @@ mkdirSync(join(sampleProject, 'openspec/changes/no-metadata'), { recursive: true
 mkdirSync(join(sampleProject, 'plain'));
 mkdirSync(join(otherProject, 'openspec'));
 symlinkSync(otherProject, join(sampleProject, 'outside'));
+mkdirSync(join(listedProject, 'openspec/changes/rooted'), { recursive: true });
+writeFileSync(join(listedProject, 'openspec/changes/rooted/.openspec.yaml'), 'schema: spec-driven\n');
+writeFileSync(join(listedProject, 'dashboard.sh'), '');
+writeFileSync(join(sampleProject, 'agent-roots.json'), JSON.stringify([listed, 'missing-checkout']));
 mkdirSync(join(sampleProject, '.claude/hooks'), { recursive: true });
 symlinkSync(
 	join(repoRoot, '.claude/hooks/spec-verifier-guard.mjs'),
@@ -36,6 +43,7 @@ symlinkSync(
 after(() => {
 	rmSync(sampleProject, { recursive: true, force: true });
 	rmSync(otherProject, { recursive: true, force: true });
+	rmSync(listedProject, { recursive: true, force: true });
 });
 
 /**
@@ -161,6 +169,75 @@ describe('Nested OpenSpec root', () => {
 	}
 });
 
+describe('Listed checkouts', () => {
+	for (const command of [
+		`cd ${listed} && ./dashboard.sh check`,
+		`cd ${listedProject} && ./dashboard.sh e2e`,
+		`cd ${listed} && openspec status --change "rooted" --json`,
+		`git -C ${listed} diff origin/master`,
+		`git -C "${listedProject}" status`
+	]) {
+		test(`Allowed in a listed checkout: ${command}`, () => {
+			assert.equal(guard('Bash', { command }).status, 0);
+		});
+	}
+
+	for (const command of [
+		`cd ${listed} && ./dashboard.sh build-image ce`,
+		`cd ${listed} && ./dashboard.sh contract-check ../openvidu-livekit`,
+		`cd ${listed} && rm -rf openspec`,
+		`cd ${listed} && git status`,
+		`cd ${listed}/openspec && ./dashboard.sh check`,
+		`cd ${listed} && ./dashboard.sh check && rm -rf x`,
+		'cd . && ./dashboard.sh check',
+		`git -C ${listed}/openspec status`,
+		`cd ${relative(sampleProject, otherProject)} && openspec list`
+	]) {
+		test(`Not allowed in a listed checkout: ${command}`, () => {
+			assert.equal(guard('Bash', { command }).status, BLOCKED);
+		});
+	}
+
+	for (const filePath of [
+		join(listedProject, 'openspec/changes/rooted/verification.md'),
+		`${listed}/openspec/changes/rooted/code-review.md`
+	]) {
+		test(`Report in a listed checkout: ${filePath}`, () => {
+			assert.equal(guard('Write', { file_path: filePath, content: '' }).status, 0);
+		});
+	}
+
+	for (const filePath of [
+		join(listedProject, 'AGENTS.md'),
+		join(listedProject, 'openspec/changes/rooted/tasks.md'),
+		join(otherProject, 'openspec/changes/rooted/verification.md')
+	]) {
+		test(`Any other file of a listed checkout: ${filePath}`, () => {
+			assert.equal(guard('Write', { file_path: filePath, content: '' }).status, BLOCKED);
+		});
+	}
+
+	test('Malformed roots file: the guard blocks every call', () => {
+		const project = mkdtempSync(join(tmpdir(), 'ovd-guard-bad-roots-'));
+
+		try {
+			mkdirSync(join(project, '.claude/hooks'), { recursive: true });
+			symlinkSync(
+				join(repoRoot, '.claude/hooks/spec-verifier-guard.mjs'),
+				join(project, '.claude/hooks/spec-verifier-guard.mjs')
+			);
+			writeFileSync(join(project, 'agent-roots.json'), '{ "not": "a list" }');
+
+			const result = guard('Bash', { command: 'git status' }, { projectDir: project });
+
+			assert.equal(result.status, BLOCKED);
+			assert.ok(result.stderr.includes('agent-roots.json'));
+		} finally {
+			rmSync(project, { recursive: true, force: true });
+		}
+	});
+});
+
 describe('No smuggled commands', () => {
 	for (const command of [
 		'openspec list && rm -rf x',
@@ -242,8 +319,24 @@ describe('Report is the only writable file', () => {
 describe('Guard self-check', () => {
 	const PROBE = 'echo spec-verifier-guard-probe';
 
-	test('Guard active: the guard blocks the probe', () => {
-		assert.equal(guard('Bash', { command: PROBE }).status, BLOCKED);
+	test('Guard active: the guard blocks the probe with its own message', () => {
+		const result = guard('Bash', { command: PROBE });
+
+		assert.equal(result.status, BLOCKED);
+		assert.ok(result.stderr.startsWith('spec-verifier guard: '));
+	});
+
+	test('Guard missing: the probe is blocked without the guard message', () => {
+		const project = mkdtempSync(join(tmpdir(), 'ovd-guard-missing-'));
+
+		try {
+			const result = guard('Bash', { command: PROBE }, { projectDir: project });
+
+			assert.equal(result.status, BLOCKED);
+			assert.ok(!result.stderr.includes('spec-verifier guard: '));
+		} finally {
+			rmSync(project, { recursive: true, force: true });
+		}
 	});
 
 	for (const [index, name] of AGENTS.entries()) {
@@ -251,7 +344,14 @@ describe('Guard self-check', () => {
 			const body = (agentFiles[index] ?? '').split('---').slice(2).join('---');
 			const firstStep = /^1\. ([\s\S]*?)^2\. /m.exec(body)?.[1] ?? '';
 
-			for (const text of [`\`${PROBE}\``, 'If it runs', 'stop', 'write nothing', 'Guard inactive']) {
+			for (const text of [
+				`\`${PROBE}\``,
+				'`spec-verifier guard:`',
+				'If it runs',
+				'stop',
+				'write nothing',
+				'Guard inactive'
+			]) {
 				assert.ok(firstStep.includes(text), text);
 			}
 		});
