@@ -10,9 +10,9 @@ other lists; Joined (the default), Left and Duration are sortable, with the curs
 error and empty states.
 
 #### Scenario: Agent row
-- **GIVEN** an active agent `agent-1` (session `PA_z9`, name "Support bot", agent name `support`) in `demo-room` publishing a microphone
+- **GIVEN** an active agent `agent-1` (session `PA_z9`, name "Support bot", agent name `support`) in `demo-room` publishing a microphone, and a viewer who has not chosen the columns of the table
 - **WHEN** the row renders
-- **THEN** the cells read, in order, `PA_z9` once, linking to `/participants/PA_z9` with its copy button, "support", `agent-1` with its copy button, "Support bot", `demo-room` linking to `/rooms/RM_abc`, "active", the join time, "—", a duration counting up live and the microphone source icon, and, with `features: []`, no Node column is offered
+- **THEN** the cells read, in order, `PA_z9` once, linking to `/participants/PA_z9` with its copy button, "support", `agent-1` with its copy button, `demo-room` linking to `/rooms/RM_abc`, "active", the join time, "—", a duration counting up live and the microphone source icon, with no Name cell, and, with `features: []`, no Node column is offered
 
 #### Scenario: Detail links in CE
 - **GIVEN** the CE dashboard with `features: []`
@@ -39,13 +39,13 @@ error and empty states.
 ### Requirement: Agent column
 Edition: CE. The Agent cell of the Agents table SHALL read the agent name of the session (`agent.name`), without one
 the OpenVidu agent type (`agent.openvidu`), and "—" with neither. On a session with `agent.openvidu` the text SHALL be
-followed by a tag that reads "OpenVidu", in the shared tag style and without a tooltip; no other session carries a
-tag. The column is not sortable, can be hidden and shows in the card layout.
+followed by a tag that reads "OpenVidu", in the shared tag style and explained by its tooltip; no other session
+carries a tag. The column is not sortable, can be hidden and shows in the card layout.
 
 #### Scenario: OpenVidu agent with a name
 - **GIVEN** an agent row whose item has `agent: { name: "speech-processing-dev", openvidu: "speech-processing" }`
 - **WHEN** the row renders
-- **THEN** the Agent cell reads "speech-processing-dev" followed by the tag "OpenVidu", which is 24 px high as the status badge of the row and has no tooltip
+- **THEN** the Agent cell reads "speech-processing-dev" followed by the tag "OpenVidu", which is 24 px high as the status badge of the row
 
 #### Scenario: Third-party agent
 - **GIVEN** an agent row whose item has `agent: { name: "dummy-agent" }`
@@ -65,6 +65,48 @@ tag. The column is not sortable, can be hidden and shows in the card layout.
 #### Scenario: Agent column not sortable
 - **WHEN** the Agents table renders
 - **THEN** the Agent header has no sort control, and the Columns menu offers to hide Agent
+
+### Requirement: Name column of the Agents table
+Edition: CE. Of the columns of the Agents table, Name, the participant's display name that agents rarely set, SHALL be
+hidden by default and offered by the Columns menu, which shows it between Identity and Room. A viewer who has already
+chosen the columns of the Agents table SHALL keep that choice, Name included. The Participants table keeps Name shown
+by default.
+
+#### Scenario: Name hidden by default
+- **GIVEN** a viewer who has not chosen the columns of the Agents table
+- **WHEN** the Agents table renders
+- **THEN** its headers read SID, Agent, Identity, Room, Status, Joined, Left, Duration and Published, and the Columns menu lists Name as not shown
+
+#### Scenario: Name shown from the Columns menu
+- **GIVEN** the Agents table with its default columns and an agent whose participant name is "Support bot"
+- **WHEN** the viewer selects Name in the Columns menu
+- **THEN** the Name column shows between Identity and Room, its cell reads "Support bot", or "—" for an agent without a name, and it is still shown when the page is reopened
+
+#### Scenario: Stored column choice kept
+- **GIVEN** a viewer whose stored columns of the Agents table hide only Published
+- **WHEN** the Agents table renders
+- **THEN** Name shows and Published does not
+
+#### Scenario: Name stays on the Participants table
+- **GIVEN** a viewer who has not chosen the columns of the Participants table
+- **WHEN** the Participants table renders
+- **THEN** its headers include Name, between Identity and Room
+
+### Requirement: OpenVidu tag tooltip
+Edition: CE. The "OpenVidu" tag of the Agent cell SHALL show, on hover and on keyboard focus, a tooltip that reads
+"This agent belongs to the official collection of OpenVidu agents". The tag SHALL be in the tab order and its
+accessible name SHALL be "OpenVidu, This agent belongs to the official collection of OpenVidu agents", as on the
+status and kind badges that carry a tooltip.
+
+#### Scenario: OpenVidu tag tooltip
+- **GIVEN** an agent row whose item has `agent: { name: "speech-processing-dev", openvidu: "speech-processing" }`
+- **WHEN** the user rests the pointer on its "OpenVidu" tag, or moves the keyboard focus to it with Tab
+- **THEN** in both cases a tooltip reads "This agent belongs to the official collection of OpenVidu agents", and with the focus on the tag Escape hides it
+
+#### Scenario: OpenVidu tag name for screen readers
+- **GIVEN** an agent row with the "OpenVidu" tag and a third-party agent row
+- **WHEN** the rows render
+- **THEN** the tag is focusable and its accessible name is "OpenVidu, This agent belongs to the official collection of OpenVidu agents", the third-party row has no such element, and the page has no accessibility violation in the light and dark themes
 
 ### Requirement: Agent origin filter
 Edition: CE. The Agents page SHALL read `origin` from the URL and offer, after the status select, an Origin select with

@@ -19,7 +19,10 @@ Observable behaviour:
 
 - **Agents page**: a new **Agent** column, second after SID, shows the agent name; an OpenVidu agent without a name
   (automatic dispatch registers none) shows its type, and an agent with neither shows "—". Sessions that carry the
-  `openvidu.agent` mark get an **OpenVidu** tag beside the name. The column has an info tip and is not sortable.
+  `openvidu.agent` mark get an **OpenVidu** tag beside the name, whose tooltip reads "This agent belongs to the
+  official collection of OpenVidu agents". The column has an info tip, which says the name is the one the agent's
+  worker registered and not the participant name, and is not sortable. The Name column (the participant's display
+  name, which agents rarely set) is hidden by default on this page and stays in the Columns menu.
 - **Origin filter** on the Agents page: All / OpenVidu / Third-party, kept in the URL as `origin` and carried by
   "Export CSV". An agent without the mark has no tag and counts as third-party, which includes OpenVidu agent images
   older than 3.10 and sessions stored before the server kept these attributes.

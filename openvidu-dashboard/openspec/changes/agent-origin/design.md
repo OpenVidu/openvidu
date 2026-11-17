@@ -169,11 +169,11 @@ has never hinted an index for it.
    - `injectParticipantSessions` takes `agentColumn: boolean` beside `kindColumn` and inserts
      `{ key: 'agent', header: 'Agent', info: INFO_TEXTS.agentColumn }` after SID: not sortable, hideable, no `card`
      slot (it shows in the "More" area of the card layout, so the three metric slots keep Room, Duration and
-     Published).
+     Published). A third option hides Name by default (decision 16).
    - `participant-sessions-table.html` gains the `agent` cell: the text from a pure `agentLabel(item)` in
      `participant-display.ts` (`agent.name ?? agent.openvidu`, "—" when undefined) and, with `agent.openvidu`,
      `<span class="origin ovd-tag">OpenVidu</span>`, outlined with `--mat-sys-outline-variant` like the kind badge,
-     without dot or tooltip. The text is the cue; colour carries nothing.
+     without dot. The text is the cue; colour carries nothing. Its tooltip is decision 15.
    - `agents-page.ts` reads `origin` with `query.value('origin')`, accepting only the `AgentOrigin` values (anything
      else is `null`, All), adds it to the request and to `clearFilters`, and the template adds the Origin `mat-select`
      after Status with labels from a new `AGENT_ORIGIN_LABELS` in `format/labels.ts` ("OpenVidu", "Third-party").
@@ -226,6 +226,37 @@ has never hinted an index for it.
     identity searches today, with `origin` or without it); a hint for the agents identity search (a production query
     change, declined by the owner for this change).
 
+15. **The OpenVidu tag has a tooltip, reachable as the other tags with one are.** Asked by the owner at the demo
+    review, with its exact text: "This agent belongs to the official collection of OpenVidu agents" (it replaces the
+    earlier "no tooltip"). The text is a constant beside `agentLabel` in `participant-display.ts`. The tag follows
+    `ovd-status-badge` and `ovd-kind-badge`, the two tags of the library that carry a tooltip: `matTooltip`,
+    `tabindex="0"` so keyboard focus shows it under the global `:focus-visible` ring, and
+    `aria-label="OpenVidu, <text>"` so a screen reader reads the label and the explanation. axe-core 4.14 reports
+    `aria-label` on a span that has text and no role as "needs review", not a violation, as it does for those badges;
+    the e2e axe checks fail on violations only. The rule that lists give badges no tooltip is about tooltips that name
+    what a badge shows (`subject`); this one explains a mark, like the stale hint of the status badge in lists. The
+    info tip of the Agent column and the CHANGELOG line of the tag stay as they are. Rejected: a hover-only tooltip
+    (keyboard and screen reader users would miss it); `role="img"` as the source icon has (the tag is text); an
+    `ovd-info-tip` beside every tag (a second icon per row for one sentence).
+
+16. **Name is hidden by default on the Agents page only.** Asked by the owner at the demo review: an empty Name
+    column beside Agent reads as a missing agent name. `injectParticipantSessions` takes `nameHidden: boolean` and
+    gives the `name` column `defaultHidden: true` with it; the Agents page passes `true`, the Participants page
+    `false`. Nothing else changes: the column keeps its key, place and cell. The table already handles the rest
+    (`data-table.ts`, `hiddenByUser`): defaults apply only while the viewer has no stored choice for the table id
+    (`agents`); the first toggle in the Columns menu stores the whole hidden list in the viewer's preferences
+    (browser storage, per table id) and from then on defaults are ignored. So a viewer who already toggled any column
+    of the Agents table keeps seeing Name until hiding it by hand, and everyone else gets the new default. No
+    migration of stored choices: 3.10.0 is unreleased, so only development and demo browsers hold one, and a stored
+    choice is the viewer's. In the card layout (XSmall) a hidden column is left out too, and cards have no Columns
+    button. No CHANGELOG line: the page is new in 3.10.0. Rejected: removing Name from the Agents page (agents can
+    set a participant name); renaming the header to "Participant name" (the Participants page shares it); rewriting
+    stored preferences.
+
+17. **The info tip of the Agent column says which name it is.** Text of the `ui-info-tips` delta: the agent name the
+    agent's worker registered with the server (its dispatch name), not its participant name; the rest as before.
+    `INFO_TEXTS.agentColumn` and the e2e test that reads it change together.
+
 ## Test strategy
 
 Levels: unit (Vitest), integration (Vitest against MongoDB, Docker), e2e (Playwright, mocked API), writer (Go,
@@ -244,6 +275,12 @@ Levels: unit (Vitest), integration (Vitest against MongoDB, Docker), e2e (Playwr
 | OpenVidu agent without a name                                     | `agents/agents-page.spec.ts`                                    | unit        |
 | Agent without agent facts                                         | `agents/agents-page.spec.ts`                                    | unit        |
 | Agent column not sortable                                         | `agents/agents-page.spec.ts`                                    | unit        |
+| Name hidden by default                                            | `agents/agents-page.spec.ts`                                    | unit        |
+| Name shown from the Columns menu                                  | `agents/agents-page.spec.ts`, `e2e/tests/agents.spec.ts`        | unit, e2e   |
+| Stored column choice kept                                         | `agents/agents-page.spec.ts`                                    | unit        |
+| Name stays on the Participants table                              | `participants/participants-page.spec.ts`                        | unit        |
+| OpenVidu tag tooltip                                              | `agents/agents-page.spec.ts`, `e2e/tests/agents.spec.ts`        | unit, e2e   |
+| OpenVidu tag name for screen readers                              | `agents/agents-page.spec.ts`, `e2e/tests/accessibility.spec.ts` (both themes) | unit, e2e |
 | OpenVidu origin selected                                          | `agents/agents-page.spec.ts`, `e2e/tests/agents.spec.ts`        | unit, e2e   |
 | Third-party origin from the URL                                   | `agents/agents-page.spec.ts`                                    | unit        |
 | Invalid origin in the URL                                         | `agents/agents-page.spec.ts`                                    | unit        |
@@ -289,7 +326,8 @@ tests, the participant CSV unit test and the two participants export integration
 - [An unmarked OpenVidu agent reads as third-party: images older than 3.10, pre-upgrade sessions] → Accepted by the
   owner; the info tip of the Agent column says that agents are marked only when they declare themselves.
 - [Any agent can set `openvidu.agent`] → It is a label for telling agents apart in a list, not an authorization
-  input; nothing else in the dashboard depends on it.
+  input; nothing else in the dashboard depends on it. The tooltip of the tag states the membership as a fact, in the
+  owner's words, although the dashboard only reads the label.
 - [`$getField` needs MongoDB 5.0] → The deployments bundle 8.0. An older external MongoDB answers the origin filter
   with a server error; the unfiltered list works.
 - [The planner is free on the identity searches, so the three variants of one combination could get different

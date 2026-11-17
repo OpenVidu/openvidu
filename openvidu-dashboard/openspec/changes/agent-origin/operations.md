@@ -31,3 +31,8 @@
   The participants list's ranked sorts over 24 hours exceeded their 300 ms budget (leftAt 783.7 ms, duration
   1031.1 ms): they rank about 20,500 sessions in memory, exceed it without this change's projection, and vary up to
   about 5x between runs. The owner accepts it as a gap that predates this change and is outside its scope.
+- Demo review (task 8.1), first round: the owner asked for a tooltip on the OpenVidu tag ("This agent belongs to the
+  official collection of OpenVidu agents"), an Agent column info tip that names the dispatch name apart from the
+  participant name, and the Name column hidden by default on the Agents page only. The proposer folded them into the
+  artifacts (new tasks 5.6 to 5.8, 6.5, 6.6 and 7.4); the owner approved the revision as it stands, tooltip wording
+  included. Task 8.1 stays open until the owner reviews them on the demo.
