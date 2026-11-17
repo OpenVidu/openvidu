@@ -118,7 +118,9 @@ carries a date converter, `fromDate` by default and `fromSeconds` for the two le
 type the query filters on (`date` or `number`) and how the value becomes a date. `oldestQuery` returns
 `{ cursor, field, read }`, and `collectionStorage` calls `query.read(document)` for the oldest date, whatever the
 collection. The projection of a dotted field returns a nested document, so the exported `fieldValue(doc, field)`
-takes the value by path. Rejected (refactor review, task 7.3): a numeric special case in `collectionStorage`, which
+takes the value by path. For any converter, `read` gives `undefined` when the converted date is invalid, so an oldest
+value beyond the range of a date leaves that collection undated in `GET /api/v1/info` instead of failing the
+endpoint. Rejected (refactor review, task 7.3): a numeric special case in `collectionStorage`, which
 spread the knowledge of one collection's date format over two places.
 
 ### D8. `migration.legacyRetainedUntil` in the shared migration shape
@@ -138,8 +140,8 @@ OpenAPI shape (additive):
 - Label "Legacy data (before 3.10)": the legacy writer wrote this data in every release before 3.10, not only 3.9, and
   the version ties it to the upgrade that left it. Rejected: "Legacy data (3.9)", which reads as data of that single
   release.
-- `storageClasses(storage, retention, readAt, legacy)` appends the row after Daily rollups when `storage` holds a
-  legacy entry, `legacy` being `{ migration, tz }`; the Total sums it like any row. `StorageCollectionEntry.collection`
+- `storageClasses(storage, retention, readAt, legacy)`, with `legacy` required, appends the row after Daily rollups
+  when `storage` holds a legacy entry, `legacy` being `{ migration, tz }`; the Total sums it like any row. `StorageCollectionEntry.collection`
   widens to `Collection | LegacyCollection`. The row has `tip: null`. It stays a row apart from `STORAGE_CLASSES`
   (refactor review, task 7.3): its retention comes from the migration state, it has no tip and it appears only with
   legacy collections, and folding it in would break the invariant that `STORAGE_CLASSES` classifies every contract
@@ -158,8 +160,9 @@ OpenAPI shape (additive):
   completion costs one info request; the row shows the text of the new state from the status before that request
   answers.
 - The breakdown reuses `ovd-collection-breakdown`: the legacy collections are dated (D7), so `UNDATED` is unchanged.
-- The Retention cell of this row may wrap (`white-space: normal` on a class of that cell), so its text stays inside a
-  375 px viewport like the wrapping class names.
+- `StorageClassRow` has a `legacy: boolean` flag, true only on the row `legacyRow()` builds. The Retention cell of
+  that row may wrap (`white-space: normal` on a class the Data tab binds to the flag, not to the label), so its text
+  stays inside a 375 px viewport like the wrapping class names.
 
 ### D10. Test data: inline seeds, a mock option and a generator option
 
@@ -220,7 +223,8 @@ credentials) against the installer templates of openvidu-deployment before writi
 | Scenario | Test file | Level |
 | --- | --- | --- |
 | Rollback after the migration | `openvidu/analytics/migration_integration_test.go` (`TestMigrationReplay`) | Go integration |
-| Rollback window ended, Rollback window ends while running, Rollback window still open, Unfinished migration keeps legacy data, Stats collection without a migration, Legacy documents newer than the date, Completed without a retention date, Nodes dropping together | `openvidu/analytics/migration_integration_test.go` (`TestLegacyRetention`) | Go integration |
+| Rollback window ended, Rollback window ends while running, Rollback window still open, Unfinished migration keeps legacy data, Stats collection without a migration, Legacy documents newer than the date, Completed without a retention date, Nodes dropping together | `openvidu/analytics/migration_integration_test.go` (`TestLegacyRetention`; `Rollback window ended` also checks that a restart after the drop builds no retention task) | Go integration |
+| Rollback window ended (through `InitializeAnalytics`, `Start` and `Stop`) | `openvidu/analytics/lifecycle_integration_test.go` (`Rollback window ended: the server drops the legacy data after Start`) | Go integration |
 | CE with a running writer, Migration in progress, Nested keys, Legacy collections in storage, Stats without a migration in info | `backend/test/integration/api.test.ts` | integration |
 | Legacy retention date in the status | `backend/test/integration/status-api.test.ts` | integration |
 | (oldest query plans, no scenario) | `backend/test/integration/info-query-plan.test.ts` | integration |
