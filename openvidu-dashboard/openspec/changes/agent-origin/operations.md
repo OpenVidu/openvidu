@@ -45,3 +45,9 @@
   `682e41ca`, not pushed. Besides the vendored contract, the scenario and the `CHANGELOG-openvidu.md` line, it carries the
   `README-openvidu.md` wording of review S4 (owner's decision). `TestContractFixtures` passed;
   `./dashboard.sh contract-check /home/pablo/Desktop/FIX-2/openvidu-livekit` ended with "contract check passed".
+- Rebase before the push: `origin/master` had moved past the base `7d85e6d07` with the archives of
+  `overview-live-tiles` and `settings-data-tab`; the change's commits were rebased onto `0127ecc01` with no conflict.
+  Upstream changed the `ui-info-tips` requirement "Overview info tips" only, which this change does not modify. On the
+  rebased tree `check`, `test-integration` (259/259), `e2e` (135, both themes; real backend 6/6) and `scenarios` (51, none
+  without a test) passed. The verification reports refer to the commits before the rebase; the change's own content is
+  the same.
