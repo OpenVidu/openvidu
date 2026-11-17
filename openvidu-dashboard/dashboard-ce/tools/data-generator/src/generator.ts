@@ -257,8 +257,10 @@ export async function generate(db: Db, options: GenerateOptions): Promise<Genera
 		}
 	}
 
+	// Creation instants are drawn by rejection inside a window that moves with the clock, so they take their own stream:
+	// the draws of the rooms' content stay the same at any hour.
 	const plans = planRooms(
-		rng,
+		new Rng(options.seed + 4_000_037),
 		scenario,
 		days,
 		windowStart,
