@@ -2,73 +2,98 @@
 
 - Date: 2026-11-17
 - Mode: incremental
-- Verified commit: `7393e95927c5d00e7103864a6e92877ecad6ad14` (`master`)
-- Starts from: `ff7cd0f23d23f394da86ba0a0fdb1a01c7aa14f9`, the commit of the previous (full) verification. Since then:
-  `689b241bb` (the two reports), `bb73f4fc2` (proposal of the follow-up change `agents-identity-search-plan`),
-  `04bb8d5c2` (`operations.md`: fix decisions and the scenario M run) and `7393e9592` (the fixes). Working tree clean
-  before and after the runs.
+- Verified commit: `fddcff58a3da75127672c12da3650bc6a1ff575b` (`master`)
+- Starts from: `7393e95927c5d00e7103864a6e92877ecad6ad14`, the commit of the previous (incremental) verification,
+  whose report was committed in `f753e0e8d`. Since then: `b84dc3c1d` (the fix of that report's W1 in
+  `dashboard-ce/backend/AGENTS.md`), `10125d6b3` (the owner's demo-review revision of the artifacts: design decisions
+  15 to 17, new scenarios, tasks 5.6 to 5.8, 6.5, 6.6 and 7.4, recorded in `operations.md`), `46b910eea` (the
+  implementation) and `fddcff58a` (its end-to-end tests). Working tree clean before and after the runs.
 - This report supersedes the previous `verification.md` and `code-review.md`.
 
 ## Conditions of this verification
 
 - Run as a general agent, without the PreToolUse guard of the `spec-verifier` definition, with the owner's consent
-  recorded in the orchestrator's prompt and `operations.md`. The probe was not run. Only the read-only commands the
-  guard allows were used, and this file is the only one written. `/proc/loadavg` was read with the Read tool.
+  recorded in the orchestrator's prompt. The probe was not run. Only the read-only commands the guard allows were
+  used, and this file is the only one written.
 
 ## Commands run
 
-| Command                                                                            | Result                                                                                                  | Load average (1 min) |
-| ---------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- | -------------------- |
-| `./dashboard.sh check`                                                             | Passed: lint, format, typecheck, `openspec validate --all --strict` (both changes and every spec), backend unit 249, frontend 557 + 1 |                      |
-| `./dashboard.sh scenarios agent-origin /home/pablo/Desktop/FIX-2/openvidu-livekit` | "45 scenarios, 0 without a test"                                                                        |                      |
-| `./dashboard.sh test-integration`                                                  | Passed: 22 files, 259/259 (4 more than at `ff7cd0f23`: the three new participants API tests and the agents export 400), 186 s | 5.5 during           |
-| `./dashboard.sh e2e`                                                               | Passed: 125/125 with the mocked API, real backend 6/6                                                   |                      |
+| Command                                                                            | Result                                                                                                                  |
+| ---------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `./dashboard.sh check`                                                             | Passed: lint, format, typecheck, `openspec validate --all --strict` (32 items), typings 110, backend unit 249, frontend 563 + 1 |
+| `./dashboard.sh scenarios agent-origin /home/pablo/Desktop/FIX-2/openvidu-livekit` | "51 scenarios, 0 without a test" (45 before, plus the 6 new ones of `agents-ui`)                                       |
+| `./dashboard.sh e2e`                                                               | Passed: 129/129 with the mocked API (4 more than at `7393e9592`: the tooltip and Name tests, the screen-reader test in both themes), real backend 6/6 |
 
-Recorded in `operations.md`, not checked here: the scenario M run over 7 days of `participants-query-plan.test.ts`
-(714 agent sessions in range; origin p95 12.4 ms and 18.3 ms against 300 ms) and the writer's Go suite at `e5891220`.
+`check` was run twice (the second time only to read its summary lines); both passed. `test-integration` was not run:
+since `7393e9592` no backend source or test changed, only a line of `dashboard-ce/backend/AGENTS.md`; its last run
+(259/259 at `7393e9592`) stands. Recorded in `operations.md`, not checked here: the scenario M run and the writer's Go
+suite at `e5891220`.
 
 ## Status of earlier findings
 
-### Previous verification (`ff7cd0f23`)
+### Previous verification (`7393e9592`)
 
 | Finding | Status | Evidence |
 | ------- | ------ | -------- |
-| W1. "Origin explain plans" evidenced at scenario S only | Resolved | `operations.md:407-413` records the scenario M run over 7 days with "Origin explain plans" passing and both origin rows under budget; the plan report now names the agent sessions in range (`dashboard-ce/backend/test/integration/participants-query-plan.test.ts:56-57,168-170,176-179`). The participants ranked-sort overrun at M is accepted by the owner as a gap that predates this change. |
-| S1. "No client address" asserted on the test's own literal | Resolved | `dashboard-ce/backend/test/unit/list-csv.test.ts:93-114` now runs `columnsCsv(participantCsvColumns(true), [leaky])` on an item carrying an address, a device model, metadata and attributes, checks the real header and that none of those values reaches the row. |
-| S2. "Agent row" left the Joined cell unasserted | Resolved | `dashboard-ce/frontend/projects/dashboard-ui/src/lib/features/agents/agents-page.spec.ts:195-201` asserts `cells[6]`: its `<time datetime>` and the text of the shared formatter. |
-| S3. Follow-up recorded only where archiving deletes it | Resolved | The follow-up is its own change, `openspec/changes/agents-identity-search-plan/` (`bb73f4fc2`), which survives this archive; `operations.md:404-406` says so. |
+| W1. `dashboard-ce/backend/AGENTS.md:71` told to project the whole `attributes` object | Resolved | `b84dc3c1d`: `dashboard-ce/backend/AGENTS.md:70-72` now reads "project the attributes a list needs with `$getField`/`$setField` (see `PARTICIPANT_LIST_PROJECTION`), never the whole object", which matches `dashboard-ce/backend/src/participants/participants-query.ts:16-45`. |
 
-### Previous code review (`code-review.md`, `ff7cd0f23`)
+### Earlier verification and code review (`ff7cd0f23`), carried
 
 | Finding | Status | Evidence |
 | ------- | ------ | -------- |
-| W1. A sparse origin scans every agent session of the range | Resolved | Same evidence as verification W1: measured at scenario M over 7 days with 714 agent sessions in range, 12.4 ms and 18.3 ms p95. A derived indexed field stays open, as the design says. |
-| W2. No test pages through a list filtered by origin | Resolved | `dashboard-ce/backend/test/integration/participants-api.test.ts:442-516`: 14 interleaved agents, `limit=3`, three pages for `origin=openvidu` on the default `joinedAt` order and for `origin=third-party` on the ranked `duration` sort; every page keeps the origin, the pages hold all 7 matches, `total` is 7 on page 2 and `prevCursor` returns page 1. Passed in this run. |
-| S1. With `store_metadata` every row read its whole `attributes` | Resolved | `dashboard-ce/backend/src/participants/participants-query.ts:16-45`: the projection builds `attributes` with `$setField`/`$getField` from the two agent keys only, an absent key removed with `$$REMOVE`. Applies to `find` (`participants-service.ts:174,221`) and to the ranked pipeline's `$project` (`api/ranked.ts:53`). `participants-api.test.ts:518-544` reads documents through the projection: both keys, one key, none (`{}`). This is the accepted deviation from task 4.2 (`attributes: 1`). |
-| S2. The two selects of the filter bar show "every value" differently | Accepted by the owner (not applied) | `operations.md:402-404`. |
-| S3. "Shows in the card layout" and the export 400 had no test | Resolved | Card layout: `agents-page.spec.ts:370-393` (XSmall breakpoint, opens "More", finds the Agent fact with its info tip and "speech-processing OpenVidu"). Export 400: `dashboard-ce/backend/test/integration/list-exports-api.test.ts:222-228`. |
-| S4. Writer README reads `openvidu.agent*` | Pending, by decision | Goes into the writer commit of task 9.2 (`operations.md:403-404`); group 9 is open by design. |
-| S5. Writer tests repeated to carry two scenario names | Accepted by the owner (not applied) | `operations.md:404`. |
+| Verification W1, S1, S2, S3 | Resolved | As in the previous report; nothing in the diff touches them. |
+| Review W1 (sparse origin scan), W2 (paging by origin), S1 (whole `attributes` read), S3 (card layout and export 400 tests) | Resolved | As in the previous report; nothing in the diff touches them. |
+| Review S2 (two selects show "every value" differently) | Accepted by the owner (not applied) | `operations.md`. |
+| Review S4 (writer README `openvidu.agent*`) | Pending, by decision | Task 9.2; group 9 is open by design. |
+| Review S5 (writer tests repeated for two scenario names) | Accepted by the owner (not applied) | `operations.md`. |
 
-## Review of the diff since `ff7cd0f23`
+## Review of the diff since `7393e9592`
 
-- Specs and design: the projection change keeps the response and CSV output identical (the mapper still reads the two
-  keys from `attributes`, and only for kind `AGENT`); "Other attributes stay out" still passes on the raw bodies. It
-  departs from decision 4 of `design.md:149-153` (`attributes: 1`, computed fields rejected) and from the risk at
-  `design.md:303`; the owner accepted that deviation, and `design.md` goes with the change folder at archive. The
-  documents keep the `ParticipantDocument` shape the decision wanted to preserve (`attributes` is still an object).
-- `$setField` and `$getField` need MongoDB 5.0; deployments and tests run `openvidu/mongodb:8.0.29-r1`, and
-  `$getField` was already used by the origin filter.
-- Bugs and security: none found. The projection removes absent keys rather than writing `null`, so the mapper's
-  "omit empty values" holds; a document without `attributes` projects `{}`, which the mapper treats as no facts.
-- Tests: every new test is titled with a scenario name and a detail, and all ran green here. The card-layout test is
-  titled after "Agent column not sortable" because the card layout is stated in the requirement text, not in a
-  scenario; acceptable.
-- Docs: `dashboard-ce/backend/AGENTS.md:70-71` still tells to "project the whole `attributes` object", which is what the
-  fix replaced (W1 below).
-- CHANGELOG: no line needed; the fix changes no observable behaviour.
-- `bb73f4fc2` and `04bb8d5c2` touch only another change's folder and `operations.md`; `openspec validate --strict`
-  passes on both changes.
+### Artifacts (`10125d6b3`)
+
+- The revision is coherent across `proposal.md`, `design.md` (decisions 15 to 17, test-strategy rows, risk note),
+  the `agents-ui` and `ui-info-tips` deltas and `tasks.md`. "OpenVidu agent with a name" drops its "has no tooltip"
+  clause and the requirement text now says the tag is "explained by its tooltip"; "Agent row" states its viewer has
+  not chosen the columns and has no Name cell. `operations.md:34-38` records the owner's approval, tooltip wording
+  included. `openspec validate --strict` passes.
+
+### Requirements and scenarios
+
+| Requirement / scenario | Implementation | Tests (titled after the scenario) |
+| ---------------------- | -------------- | --------------------------------- |
+| Agent column info tip (new text, decision 17) | `dashboard-ce/frontend/projects/dashboard-ui/src/lib/format/info-texts.ts:42-43`, identical to the delta | `dashboard-ce/e2e/tests/info-tips.spec.ts:64-75` asserts the exact text, the kept sort and no Origin info icon |
+| Name column of the Agents table: Name hidden by default | `participant-sessions.ts:34,72` (`nameHidden` gives `name` `defaultHidden: true`); `agents-page.ts:75` passes `true` | `agents-page.spec.ts:396` checks the nine headers in the scenario's order and the Columns menu item `aria-checked="false"` |
+| Name shown from the Columns menu | Existing `data-table` column toggling and stored preferences | Unit `agents-page.spec.ts:419`: Name between Identity and Room, "Support bot" and "—", still shown after navigating away and back. E2e `agents.spec.ts:102`: no Name header at first, then between Identity and Room |
+| Stored column choice kept | Stored hidden list replaces the defaults (`data-table.ts`, `hiddenByUser`, as decision 16 says) | `agents-page.spec.ts:443`: stored `['published']` for `agents`, Name shows and Published does not |
+| Name stays on the Participants table | `participants-page.ts:67-71` passes `nameHidden: false` | `participants-page.spec.ts:213`: Name between Identity and Room |
+| Agent row (updated) | Same | `agents-page.spec.ts:148`: headers and cells without Name, "Support bot" absent, Joined now `cells[5]` |
+| OpenVidu tag tooltip | `participant-sessions-table.html:25-32` (`matTooltip`, `tabindex="0"`), text `OPENVIDU_AGENT_HINT` in `participant-display.ts:65-66` beside `agentLabel` | Unit `agents-page.spec.ts:341` (hover shows the exact text). E2e `agents.spec.ts:78`: hover shows it and leaving hides it; Tab from the SID copy button focuses the tag and shows it; Escape hides it and the focus stays on the tag |
+| OpenVidu tag name for screen readers | `[attr.aria-label]="'OpenVidu, ' + openviduAgentHint"` | Unit `agents-page.spec.ts:359` (`tabindex="0"`, exact accessible name, third-party row has no tag). E2e `accessibility.spec.ts:38`, inside the light and dark loop: found by its exact accessible name once, focusable, absent from the third-party row, axe with no violation with the pointer away |
+
+### Accessibility
+
+- Keyboard: the tag is in the tab order (`tabindex="0"`) and the e2e test reaches it with Tab from the SID copy button
+  of the same row, gets the tooltip on focus and dismisses it with Escape without losing focus. The global
+  `:focus-visible` ring applies.
+- Screen readers: the accessible name is "OpenVidu, <explanation>", as `ovd-status-badge`
+  (`components/badges/status-badge.ts:90-93`) and `ovd-kind-badge` (`components/badges/kind-badge.ts:24-27`) build
+  theirs; the e2e test finds the tag through that name (`getByLabel`).
+- axe: no violation in the light and dark themes on the Agents page with the tag (`accessibility.spec.ts:32` and
+  `:38`, both inside the theme loop; 4 runs, all passed).
+- In the card layout (XSmall) the tag keeps the same attributes, since it is the same cell template in the "More" area.
+
+### Other checks
+
+- Design adherence: decisions 15 to 17 are followed as written (constant beside `agentLabel`, the badge pattern, a
+  third option of `injectParticipantSessions` touching only `defaultHidden`, no migration of stored choices). Task 7.4
+  asks the implementer to restate the refactor review with three options; three boolean flags remain a small, flat
+  options object and no shared form is called for.
+- Conventions: `dashboard-ce/frontend/AGENTS.md:43-44` says labels carry no hover text of their own and `:52-54` that
+  lists never name a badge in its tooltip. Decision 15 addresses both (the tooltip explains a mark, like the stale hint
+  of the status badge in lists, rather than naming what it shows), and the owner asked for it; no finding.
+- CHANGELOG: no new line, as the design says (the tag line covers the tooltip; the Agents page and its columns are new
+  in 3.10.0). README and the other `AGENTS.md` files need no change.
+- Bugs and security: none found. The tooltip text is a constant; no user data reaches `matTooltip` or `aria-label`.
 
 ## Issues
 
@@ -78,14 +103,7 @@ None.
 
 ### WARNING
 
-- **W1. `dashboard-ce/backend/AGENTS.md:71` contradicts the new projection.** The rule reads "filter them with
-  `$getField` inside `$expr`, never with a dotted path, which MongoDB reads as nested fields; project the whole
-  `attributes` object". Since `7393e9592` the list projection deliberately reads only the two agent keys
-  (`dashboard-ce/backend/src/participants/participants-query.ts:16-45`), so the next agent following the rule would
-  reintroduce what code-review S1 removed. Working rule 6 and the Definition of Done ask the `AGENTS.md` files to
-  reflect the change.
-  Recommendation: replace the last clause with "project them with `$getField`/`$setField` (see
-  `PARTICIPANT_LIST_PROJECTION`), never the whole object".
+None.
 
 ### SUGGESTION
 
@@ -93,24 +111,26 @@ None.
 
 ## Definition of Done (items the diff affects)
 
-| Item                                                                     | Status                                                                 |
-| ------------------------------------------------------------------------ | ---------------------------------------------------------------------- |
-| All tasks checked                                                        | Pending: groups 1 to 7 checked; 8.1 and 9.1 to 9.3 open by design      |
-| `./dashboard.sh scenarios` finds a passing test for every delta scenario | Met: 45 of 45; the 36 dashboard ones ran green here, 9 writer tests recorded |
-| `./dashboard.sh check` passes locally                                    | Met                                                                    |
-| CI run of the push is green                                              | Pending: nothing pushed yet                                            |
-| Backend changes: `test-integration` passes                               | Met: 259/259                                                           |
-| UI changes: `e2e` passes, with axe and both themes                       | Met: 125/125 and 6/6                                                   |
-| Data contract changes: `contract-check` passes against the writer        | Pending: task 9.2                                                      |
-| Latest verification reports have no CRITICAL                             | Met                                                                    |
-| `CHANGELOG.md`, `README.md` and the `AGENTS.md` files reflect the change | Not met: `dashboard-ce/backend/AGENTS.md:71` (W1)                      |
-| Change archived                                                          | Pending                                                                |
+| Item                                                                     | Status                                                                     |
+| ------------------------------------------------------------------------ | -------------------------------------------------------------------------- |
+| All tasks checked                                                        | Pending: groups 1 to 7 checked (5.6 to 5.8, 6.5, 6.6 and 7.4 included); 8.1 and 9.1 to 9.3 open by design |
+| `./dashboard.sh scenarios` finds a passing test for every delta scenario | Met: 51 of 51; the 42 dashboard ones ran green here, 9 writer tests recorded |
+| `./dashboard.sh check` passes locally                                    | Met                                                                        |
+| CI run of the push is green                                              | Pending: nothing pushed yet                                                |
+| Backend changes: `test-integration` passes                               | Met at `7393e9592` (259/259); no backend code changed since                |
+| UI changes: `e2e` passes, with axe and both themes                       | Met: 129/129 and 6/6                                                       |
+| Data contract changes: `contract-check` passes against the writer        | Pending: task 9.2                                                          |
+| Latest verification reports have no CRITICAL                             | Met                                                                        |
+| `CHANGELOG.md`, `README.md` and the `AGENTS.md` files reflect the change | Met: W1 resolved in `b84dc3c1d`; the revision needs no CHANGELOG line      |
+| Change archived                                                          | Pending                                                                    |
 
 The other items are unchanged from the previous report.
 
 ## Final assessment
 
-No critical issues. 1 warning to consider (W1: stale rule in `dashboard-ce/backend/AGENTS.md:71`), 0 suggestions.
-Every finding of the previous verification and code review is resolved, accepted by the owner (review S2, S5) or
-pending by decision in task 9.2 (review S4). Not checked here: the scenario M run and the writer's Go suite (recorded
-in `operations.md`), and groups 8 and 9, which follow this verification.
+All checks that ran passed: 0 CRITICAL, 0 WARNING, 0 SUGGESTION. The earlier W1 is resolved, and the demo-review
+revision (OpenVidu tag tooltip, reworded Agent info tip, Name hidden by default on the Agents page) is implemented as
+specified, with a test titled after each of its scenarios, keyboard and screen-reader reach of the tooltip, and axe
+clean in both themes. Not checked here: `test-integration` (not rerun, no backend code changed since its last pass),
+the scenario M run and the writer's Go suite (recorded in `operations.md`), and groups 8 and 9, which follow this
+verification by design.
