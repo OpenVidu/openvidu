@@ -18,6 +18,7 @@ import {
 	type ScenarioName
 } from './model.js';
 import { toStored } from './contract.js';
+import { LEGACY_EVENTS, LEGACY_STATS, writeLegacy } from './legacy.js';
 import { Rng } from './random.js';
 import { BATCH_INTERVAL_MS, COLLECTIONS, createCollections, SCHEMA_VERSION, type CollectionName } from './schema.js';
 
@@ -165,6 +166,11 @@ export interface GenerateOptions {
 	 * `-3` draining, `-4` not reporting for the last 3 hours and `-5` stopped 30 minutes before the end.
 	 */
 	mediaNodes?: boolean;
+	/**
+	 * The `legacy_events` and `stats` collections of the writer before 3.10 over the 48 hours before the range, and a
+	 * migration completed one hour into it whose `legacyRetainedUntil` is their latest expiry.
+	 */
+	legacy?: boolean;
 	log?: (line: string) => void;
 }
 
@@ -471,6 +477,30 @@ export async function generate(db: Db, options: GenerateOptions): Promise<Genera
 		detectedAt: generatedAt
 	});
 	writer.add(COLLECTIONS.schemaMeta, { _id: 'config', statsDetail: statsMode, recordedAt: generatedAt });
+
+	if (options.legacy === true) {
+		const legacy = await writeLegacy(db, windowStart, options.seed);
+		const total = legacy.events + legacy.stats;
+
+		writer.counts[LEGACY_EVENTS] = legacy.events;
+		writer.counts[LEGACY_STATS] = legacy.stats;
+		writer.inserted += total;
+		writer.add(COLLECTIONS.schemaMeta, {
+			_id: 'migration',
+			state: 'completed',
+			checkpoint: { phase: 'cleanup', events: legacy.lastEventSecond, stats: legacy.lastStatSecond },
+			processed: total,
+			total,
+			startedAt: new Date(windowStart + 5 * MINUTE),
+			finishedAt: new Date(windowStart + HOUR),
+			writerVersion: '3.10.0',
+			fromSchemaVersion: 0,
+			counts: { events: legacy.events, stats: legacy.stats, synthetic: 0, skipped: 0 },
+			nodeId: nodeIds[0] ?? '',
+			legacyRetainedUntil: legacy.latestExpiry
+		});
+	}
+
 	await writer.flushAll();
 
 	return {

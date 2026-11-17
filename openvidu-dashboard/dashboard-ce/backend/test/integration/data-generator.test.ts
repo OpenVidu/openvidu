@@ -7,6 +7,7 @@ import {
 	type EventDocument,
 	type HourlyRollupDocument,
 	type IngressSessionDocument,
+	LegacyCollection,
 	type NodeDocument,
 	OPENVIDU_AGENT_ATTRIBUTE,
 	type ParticipantDocument,
@@ -644,6 +645,81 @@ describe.skipIf(mongoUri === '')('data generator', () => {
 				0
 			);
 		} finally {
+			await db.dropDatabase();
+		}
+	});
+
+	it('generates a legacy history with a completed migration', async () => {
+		const plain = client.db('dashboard_test_generator_without_legacy');
+		const db = client.db('dashboard_test_generator_legacy');
+		const options = {
+			scenario: 'S',
+			days: 1,
+			statsMode: 'participant',
+			seed: 7,
+			retentionDays: { events: 7, stats: 7, tracks: 7, entities: 90 },
+			timeseries: true
+		} as const;
+		await plain.dropDatabase();
+		await db.dropDatabase();
+
+		try {
+			await generate(plain, options);
+			await generate(db, { ...options, legacy: true });
+
+			const events = db.collection(LegacyCollection.EVENTS);
+			const stats = db.collection(LegacyCollection.STATS);
+
+			expect(await events.countDocuments()).toBe(2_400);
+			expect(await stats.countDocuments()).toBe(7_200);
+
+			const indexes = async (name: string): Promise<Record<string, number | undefined>> =>
+				Object.fromEntries(
+					(await db.collection(name).indexes()).map((index) => [index.name ?? '', index.expireAfterSeconds])
+				);
+
+			expect(await indexes(LegacyCollection.EVENTS)).toEqual({
+				_id_: undefined,
+				'timestamp.seconds_1': undefined,
+				openvidu_expire_at_1: 0
+			});
+			expect(await indexes(LegacyCollection.STATS)).toEqual({
+				_id_: undefined,
+				'time_stamp.seconds_1': undefined,
+				openvidu_expire_at_1: 0
+			});
+
+			const [latest] = await db
+				.collection(LegacyCollection.STATS)
+				.aggregate<{ expireAt: Date }>([
+					{ $unionWith: LegacyCollection.EVENTS },
+					{ $group: { _id: null, expireAt: { $max: '$openvidu_expire_at' } } }
+				])
+				.toArray();
+			const migration = await db.collection('schema_meta').findOne({ _id: 'migration' as never });
+
+			expect(migration).toMatchObject({ state: 'completed', legacyRetainedUntil: latest?.expireAt });
+			expect(
+				await db.collection('schema_meta').countDocuments({
+					_id: 'migration' as never,
+					$nor: [{ $jsonSchema: CONTRACT_SCHEMAS.schema_meta }]
+				})
+			).toBe(0);
+
+			const counts = async (target: typeof db) =>
+				Object.fromEntries(
+					await Promise.all(
+						COLLECTION_NAMES.map(
+							async (name) => [name, await target.collection(name).countDocuments()] as const
+						)
+					)
+				);
+			const expected = await counts(plain);
+
+			// The only contract document the option adds is the migration document of schema_meta.
+			expect(await counts(db)).toEqual({ ...expected, schema_meta: (expected.schema_meta ?? 0) + 1 });
+		} finally {
+			await plain.dropDatabase();
 			await db.dropDatabase();
 		}
 	});

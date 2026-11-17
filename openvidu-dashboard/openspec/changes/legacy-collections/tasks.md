@@ -68,11 +68,11 @@ Done in the writer checkout and committed there, not pushed (group 9). It comes 
 
 ## 3. Data generator and demo (implementer)
 
-- [ ] 3.1 In `tools/data-generator/src/`, add `GenerateOptions.legacy` and the `--legacy` argument (D10): the two
+- [x] 3.1 In `tools/data-generator/src/`, add `GenerateOptions.legacy` and the `--legacy` argument (D10): the two
       legacy collections with their indexes, 50 events and 150 stats per hour over the 48 hours before the generated
       range, each expiring 32 days after it was written, and a completed `migration` document whose
       `legacyRetainedUntil` is the latest expiry; nothing drawn from the seeded stream. Verify: task 3.2.
-- [ ] 3.2 In `backend/test/integration/data-generator.test.ts`, add `generates a legacy history with a completed
+- [x] 3.2 In `backend/test/integration/data-generator.test.ts`, add `generates a legacy history with a completed
       migration`: on scenario S over 1 day, 2,400 `legacy_events` and 7,200 `stats` documents with the indexes
       `timestamp.seconds_1`, `time_stamp.seconds_1` and the TTL `openvidu_expire_at_1`, the `migration` document
       accepted by the `schema_meta` validator with `legacyRetainedUntil` equal to the latest `openvidu_expire_at`,

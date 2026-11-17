@@ -47,6 +47,7 @@ pnpm generate --uri "$MONGO_URI" --db ov_data_l --scenario L --days 1 --drop --s
 | `--min-active-rooms <n>`            | 0             | With `--active-window`: rooms added to the window when the hour of day leaves fewer than `n` active rooms                 |
 | `--nodes-without-media-stats <n>`   | 0             | The last `n` of the three nodes report no media statistics: `mediaStats: false`, no media `track_stats`, bytes or quality |
 | `--media-nodes`                     | off           | Five labelled media nodes `media-node-10-0-0-1` to `-5`, one per state (see Output)                                       |
+| `--legacy`                          | off           | The legacy collections of the writer before 3.10 and a completed migration (see Output)                                   |
 
 | Scenario | Rooms per day | Sessions per day | Average room size |
 | -------- | ------------- | ---------------- | ----------------- |
@@ -108,7 +109,14 @@ What it writes (`analytics_5min` stays empty without `--five-minute-rollups`):
   - `-4` not reporting for the last 3 hours, host of rooms that ended before;
   - `-5` stopped 30 minutes before the end, after draining for 10.
     The keep-alive refreshes only the nodes within an hour of the freshest one, so `-4` stays silent.
-- `schema_meta` (`schema`, `retention`, `capabilities`, `config`).
+- `schema_meta` (`schema`, `retention`, `capabilities`, `config`, and `migration` with `--legacy`).
+- With `--legacy` (`legacy: true` in `generate()`), what an upgrade from 3.9 leaves behind: `legacy_events` and `stats`
+  with the legacy indexes (`timestamp.seconds`, `time_stamp.seconds`, TTL on `openvidu_expire_at`), 50 events and
+  150 stats per hour over the 48 hours before the range (one room of five participants per hour, timestamps in seconds
+  as doubles), each expiring 32 days after it was written, and a `completed` `migration` document finished one hour
+  into the range whose `legacyRetainedUntil` is the latest expiry. It uses a random stream of its own, so every other
+  document of a seed stays the same. The legacy documents expire 30 to 32 days after the start of the range: with
+  `--days 30`, within two days of the generation, when the TTL monitor deletes them.
 
 Documents are inserted in batches of 5 000 with `insertMany(ordered: false)`. The output shows progress
 and a final summary with documents per collection, elapsed time and inserts per second. The generator
@@ -123,6 +131,7 @@ keeps only one room in memory at a time, so scenario L fits in a few hundred MB 
 | `src/model.ts`     | Scenarios, document types and the per-room entity generator                                  |
 | `src/derive.ts`    | Raw events, stats samples and rollups derived from a generated room                          |
 | `src/generator.ts` | `generate(db, options)` and the batched writer                                               |
+| `src/legacy.ts`    | Legacy collections of the writer before 3.10 (`--legacy`)                                    |
 | `src/generate.ts`  | Generator CLI                                                                                |
 | `src/context.ts`   | `queryContext(db)`: data range and sample identifiers for query plan tests                   |
 | `src/plan.ts`      | Explain summaries: plan stages, indexes, documents examined                                  |
