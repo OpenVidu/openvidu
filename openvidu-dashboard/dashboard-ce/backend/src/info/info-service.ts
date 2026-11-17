@@ -24,12 +24,29 @@ import type { StatsModeReader } from '../stats/stats-mode.js';
 
 export const STORAGE_CACHE_MS = 60_000;
 
+/** The BSON type the date field of a collection holds and how it becomes a date. */
+interface DateConverter {
+	bsonType: 'date' | 'number';
+	convert: (value: unknown) => Date | undefined;
+}
+
+const fromDate: DateConverter = {
+	bsonType: 'date',
+	convert: (value) => (value instanceof Date ? value : undefined)
+};
+
+/** Seconds since the epoch, as the legacy writer stored its timestamps. */
+const fromSeconds: DateConverter = {
+	bsonType: 'number',
+	convert: (value) => (typeof value === 'number' && Number.isFinite(value) ? new Date(value * 1000) : undefined)
+};
+
 /**
  * Field that dates each collection, read through an index that leads with it (the `global` scope for the daily rollups);
  * `nodes` holds one document per node. Tracks and subscriptions have no such index, and the earliest stats sample
  * would scan the buckets of the time series. The legacy collections are dated by their timestamps in seconds.
  */
-const OLDEST: Partial<Record<string, { field: string; type?: 'number'; filter?: Document }>> = {
+const OLDEST: Partial<Record<string, { field: string; filter?: Document; toDate?: DateConverter }>> = {
 	[Collection.ROOMS]: { field: 'createdAt' },
 	[Collection.PARTICIPANTS]: { field: 'joinedAt' },
 	[Collection.EGRESSES]: { field: 'startedAt' },
@@ -40,28 +57,37 @@ const OLDEST: Partial<Record<string, { field: string; type?: 'number'; filter?: 
 	[Collection.ANALYTICS_HOURLY]: { field: 'bucket' },
 	[Collection.ANALYTICS_DAILY]: { field: 'bucket', filter: { scope: 'global' } },
 	[Collection.NODES]: { field: 'firstSeenAt' },
-	[LegacyCollection.EVENTS]: { field: 'timestamp.seconds', type: 'number' },
-	[LegacyCollection.STATS]: { field: 'time_stamp.seconds', type: 'number' }
+	[LegacyCollection.EVENTS]: { field: 'timestamp.seconds', toDate: fromSeconds },
+	[LegacyCollection.STATS]: { field: 'time_stamp.seconds', toDate: fromSeconds }
 };
 
-/** The query of the oldest document of a collection and its date field, or `null` for a collection without one. */
-export function oldestQuery(db: Db, name: string): { cursor: FindCursor<Document>; field: string } | null {
+/** The query of the oldest document of a collection, its date field and the reader of the date of a result. */
+export interface OldestQuery {
+	cursor: FindCursor<Document>;
+	field: string;
+	/** The date of a document the cursor returned, `undefined` without one. */
+	read: (document: Document | undefined) => Date | undefined;
+}
+
+/** The query of the oldest document of a collection, or `null` for a collection without one. */
+export function oldestQuery(db: Db, name: string): OldestQuery | null {
 	const oldest = OLDEST[name];
 
 	if (oldest === undefined) {
 		return null;
 	}
 
+	const toDate = oldest.toDate ?? fromDate;
 	const cursor = db
 		.collection(name)
 		.find(
-			{ ...oldest.filter, [oldest.field]: { $type: oldest.type ?? 'date' } },
+			{ ...oldest.filter, [oldest.field]: { $type: toDate.bsonType } },
 			{ projection: { _id: 0, [oldest.field]: 1 } }
 		)
 		.sort({ [oldest.field]: 1 })
 		.limit(1);
 
-	return { cursor, field: oldest.field };
+	return { cursor, field: oldest.field, read: (document) => toDate.convert(fieldValue(document, oldest.field)) };
 }
 
 /**
@@ -193,12 +219,10 @@ export class InfoService {
 
 		if (query !== null) {
 			const [oldest] = await query.cursor.toArray();
-			const value = fieldValue(oldest, query.field);
+			const date = query.read(oldest);
 
-			if (value instanceof Date) {
-				entry.oldest = value.toISOString();
-			} else if (typeof value === 'number' && Number.isFinite(value)) {
-				entry.oldest = new Date(value * 1000).toISOString();
+			if (date !== undefined) {
+				entry.oldest = date.toISOString();
 			}
 		}
 

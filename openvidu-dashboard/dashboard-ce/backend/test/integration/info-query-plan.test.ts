@@ -106,7 +106,8 @@ describe.skipIf(mongoUri === '')('info oldest-document queries', () => {
 			const seconds = fieldValue(oldest, query.field);
 
 			expect(typeof seconds, name).toBe('number');
-			expect(info.storage[name]?.oldest, name).toBe(new Date((seconds as number) * 1000).toISOString());
+			expect(info.storage[name]?.oldest, name).toBe(query.read(oldest)?.toISOString());
+			expect(query.read(oldest)?.getTime(), name).toBe((seconds as number) * 1000);
 		}
 	});
 

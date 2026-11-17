@@ -150,7 +150,7 @@ Done in the writer checkout and committed there, not pushed (group 9). It comes 
       its name.
 - [ ] 7.2 Run `./dashboard.sh check`, `./dashboard.sh test-integration` and `./dashboard.sh e2e`, one at a time.
       Verify: all pass, the e2e with axe and both themes; report any suite that could not run and why.
-- [ ] 7.3 Refactor review: whether the Legacy data row should be a conditional entry of `STORAGE_CLASSES` rather than
+- [x] 7.3 Refactor review: whether the Legacy data row should be a conditional entry of `STORAGE_CLASSES` rather than
       a row apart, and whether `oldestQuery` should carry a value converter instead of a numeric special case; apply a
       small refactor here or record that none is needed. Verify: the outcome is written in the implementation report.
 
