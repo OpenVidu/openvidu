@@ -11,15 +11,15 @@ name, alone or followed by `: <detail>`; a test that exists under another title 
 Done in the writer checkout and committed there, not pushed (group 9). It comes first because
 `./dashboard.sh scenarios` counts these tests from group 7 on.
 
-- [ ] 1.1 Test seed with live expiries (D11): in `openvidu/analytics/migration_integration_test.go`, `legacyData.seed`
+- [x] 1.1 Test seed with live expiries (D11): in `openvidu/analytics/migration_integration_test.go`, `legacyData.seed`
       writes every legacy document with `openvidu_expire_at` set to now + 32 days, and `legacyFixerClose` uses the
       same date. Commit it apart (tests only). Verify:
       `go test -tags integration -count=1 -run '^TestMigration' ./openvidu/analytics/` passes (Docker) with the
       existing assertions unchanged.
-- [ ] 1.2 In `openvidu/analytics/migration.go`, factor the latest-expiry query of `cleanup` into
+- [x] 1.2 In `openvidu/analytics/migration.go`, factor the latest-expiry query of `cleanup` into
       `latestLegacyExpiry(ctx, db) (*time.Time, error)`, used by `cleanup`. Verify: `recorded snapshot with fixer
       closures` still finds `legacyRetainedUntil` set.
-- [ ] 1.3 Add `openvidu/analytics/migration_retention.go` (D1 to D5): `legacyRetention` with `db`, `log` (`jobLog`),
+- [x] 1.3 Add `openvidu/analytics/migration_retention.go` (D1 to D5): `legacyRetention` with `db`, `log` (`jobLog`),
       `now` and `interval` (`legacyRetentionInterval`, 1 h), its `check(ctx) (done bool, err error)` (no completed
       migration: wait, or done without a migration document; date ahead: log it once and wait; date passed or absent:
       `latestLegacyExpiry`, a later expiry raised with `$max` on a `completed` document and logged, else drop the
@@ -28,7 +28,7 @@ Done in the writer checkout and committed there, not pushed (group 9). It comes 
       document and `legacy_events` or `stats` exist; in `analytics.go` keep it in a package variable set by
       `InitializeAnalytics`, start it in `Start` after the migration task and stop it first in `Stop`. Verify: task
       1.4 and `go vet ./openvidu/analytics/...`.
-- [ ] 1.4 In `openvidu/analytics/migration_integration_test.go`, add `TestLegacyRetention` with one subtest per
+- [x] 1.4 In `openvidu/analytics/migration_integration_test.go`, add `TestLegacyRetention` with one subtest per
       scenario, on databases seeded with legacy collections (legacy indexes, their own `openvidu_expire_at`), a
       migration document, a fixed `now` and a short `interval`:
       `Rollback window ended` (built through `newLegacyRetentionTask`, as at startup; the `migration` document compared
@@ -41,16 +41,16 @@ Done in the writer checkout and committed there, not pushed (group 9). It comes 
       `Nodes dropping together` (two `legacyRetention` checks started together; both collections gone, no error).
       Covers: those eight scenarios. Verify:
       `go test -tags integration -count=1 -run '^TestLegacyRetention$' ./openvidu/analytics/` passes (Docker).
-- [ ] 1.5 In `TestMigrationReplay`, add `Rollback after the migration`: after a completed migration of the recorded
+- [x] 1.5 In `TestMigrationReplay`, add `Rollback after the migration`: after a completed migration of the recorded
       data, drop the v2 collections and `schema_meta` and rename `legacy_events` to `events`; `events` and `stats`
       hold every seeded document, with `timestamp.seconds_1`, `time_stamp.seconds_1` and the TTL index
       `openvidu_expire_at_1`. Covers: Rollback after the migration. Verify: the subtest passes.
-- [ ] 1.6 In `README-openvidu.md`, "Legacy data migration", state that `legacy_events` and `stats` are kept until
+- [x] 1.6 In `README-openvidu.md`, "Legacy data migration", state that `legacy_events` and `stats` are kept until
       `legacyRetainedUntil` (raised when a later legacy document exists) and then dropped by the hourly check of every
       node, and that the Rollback paragraph applies until that date; in `CHANGELOG-openvidu.md`, `[Unreleased]`,
       Changed, rewrite the line on the renamed `legacy_events` as the proposal says. Verify: read-through; the
       changelog diff is that one line.
-- [ ] 1.7 Lint with the toolchain of the `Dockerfile` (D6) and run `go test -count=1 ./openvidu/...` and
+- [x] 1.7 Lint with the toolchain of the `Dockerfile` (D6) and run `go test -count=1 ./openvidu/...` and
       `go test -tags integration -count=1 ./openvidu/analytics/...` (Docker), one at a time; run `go test ./test/`
       with a throwaway Redis only if a file outside `openvidu/analytics/` changed. Commit the feature (1.2 to 1.6) in
       the style of that repository's `git log` (`analytics: …`), without pushing, and give the commits to the
