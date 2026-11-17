@@ -53,7 +53,7 @@ Done in the writer checkout and committed there, not pushed (group 9). It comes 
 - [x] 1.7 Lint with the toolchain of the `Dockerfile` (D6) and run `go test -count=1 ./openvidu/...` and
       `go test -tags integration -count=1 ./openvidu/analytics/...` (Docker), one at a time; run `go test ./test/`
       with a throwaway Redis only if a file outside `openvidu/analytics/` changed. Commit the feature (1.2 to 1.6) in
-      the style of that repository's `git log` (`analytics: …`), without pushing, and give the commits to the
+      the style of that repository's `git log` (`Analytics: …`, `Analytics tests: …`), without pushing, and give the commits to the
       orchestrator for `operations.md`. Verify: lint and tests pass, and
       `git -C <writer checkout> log --oneline origin/openvidu/main..` lists the commits of 1.1 and 1.7 with a clean
       tree.
@@ -76,7 +76,8 @@ Done in the writer checkout and committed there, not pushed (group 9). It comes 
       migration`: on scenario S over 1 day, 2,400 `legacy_events` and 7,200 `stats` documents with the indexes
       `timestamp.seconds_1`, `time_stamp.seconds_1` and the TTL `openvidu_expire_at_1`, the `migration` document
       accepted by the `schema_meta` validator with `legacyRetainedUntil` equal to the latest `openvidu_expire_at`,
-      and the same document count in every contract collection as without the option. Verify: the test passes
+      and the same document count in every contract collection as without the option, except `schema_meta`, one
+      higher (the migration document). Verify: the test passes
       (Docker) and the figures the other tests of the file assert are unchanged.
 - [x] 3.3 In `tools/demo-lib.sh`, pass `--legacy` when `DASHBOARD_DEMO_LEGACY=true` and document the variable in its
       header; add the option to `tools/data-generator/README.md` (options table and what it writes) and
@@ -121,8 +122,8 @@ Done in the writer checkout and committed there, not pushed (group 9). It comes 
 - [x] 5.3 In `settings/storage-classes.spec.ts`, add `Legacy row kept for rollback`, `Legacy row while the migration
       runs`, `Legacy row of a pending migration`, `Legacy row of a failed migration`, `Legacy row after its date` (also
       `: without a date`) and `Deployment without legacy data`; in `settings/settings-page.spec.ts`, add `Legacy row
-      kept for rollback: no info icon`, `Collections of Legacy data` and `Legacy row follows the status` (no new info
-      request when the status changes). Covers: those eight scenarios. Verify: from `frontend/`,
+      kept for rollback: no info icon`, `Collections of Legacy data` and `Legacy row follows the status` (the new text
+      while the info request it triggers is unanswered). Covers: those eight scenarios. Verify: from `frontend/`,
       `pnpm exec ng test dashboard-ui --watch=false --include=**/settings/*.spec.ts` passes, with the existing tests
       of both files unchanged.
 - [x] 5.4 Add the UI line of the proposal to `CHANGELOG.md` (3.10.0, Added, UI, after the Settings line) in the commit

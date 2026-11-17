@@ -52,7 +52,8 @@ server" past that date or without one.
 #### Scenario: Legacy row follows the status
 - **GIVEN** a session in UTC and Data showing the Legacy data row with "In use by the migration" while the migration runs
 - **WHEN** the next status reports the migration completed with `legacyRetainedUntil` `2026-12-15T08:00:00Z`
-- **THEN** the row reads "Kept until 2026-12-15 for rollback" without another info request
+- **THEN** the row reads "Kept until 2026-12-15 for rollback" from that status, before the info document is read
+  again
 
 #### Scenario: Legacy row on a phone
 - **GIVEN** a 375 px viewport and a Legacy data row kept for rollback

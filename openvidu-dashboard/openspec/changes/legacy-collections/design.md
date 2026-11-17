@@ -46,8 +46,10 @@ A `legacyRetention` loop (`openvidu/analytics/migration_retention.go`) runs its 
 node runs it: the check only reads `schema_meta` until the date passes, and a drop is idempotent (MongoDB answers
 `NamespaceNotFound`, which the driver ignores), so two nodes dropping together end in the same state.
 
-`InitializeAnalytics` builds the task only when the migration document exists and `legacy_events` or `stats` exists at
-startup; `Start` starts it after the migration task and `Stop` stops it first, like the other tasks. A pending,
+`newLegacyRetentionTask` returns a `*legacyRetentionTask`, a `task` together with its `legacyRetention`, so the tests
+replace the log, the clock and the interval of the task built as at startup. `InitializeAnalytics` builds it only when
+the migration document exists and `legacy_events` or `stats` exists at startup; `Start` starts it after the migration
+task and `Stop` stops it first, like the other tasks. A pending,
 running or failed migration keeps the loop waiting: the next check after it completes on any node goes on.
 
 Rejected: checking at startup only (a server that runs for months never frees the space); a timer set to
@@ -80,8 +82,8 @@ and drops them.
 
 ### D5. Logs, and no new metric or option
 
-- At the first check, while the data is kept: info `analytics: legacy data kept for rollback until <date>` with
-  `legacyRetainedUntil`; again whenever D3 moves the date.
+- At the first check, while the data is kept: info `analytics: legacy data kept for rollback until <date>`, the date
+  in RFC 3339 in the message and in the `legacyRetainedUntil` field; logged again only when the date changes (D3).
 - On a drop: info `analytics: legacy data dropped after its rollback window` with `collections` (those this node found
   before dropping) and `legacyRetainedUntil`. A node whose list came back empty logs nothing; two nodes racing may
   both log, which is harmless.
@@ -99,7 +101,8 @@ github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.14.0 run --build-tags 
 ./test/` (Redis on localhost:6379) runs only if code outside `openvidu/analytics/` changes. `README-openvidu.md`,
 "Legacy data migration": the cleanup bullet and the Rollback paragraph state the window and the drop.
 `CHANGELOG-openvidu.md`: the existing unreleased Changed line on `legacy_events` is rewritten, since 3.10 is not
-released.
+released. Commit subjects follow the current log of that repository: `Analytics tests: …` for the seed of D11 and
+`Analytics: …` for the feature.
 
 ### D7. Legacy collections in `storage`, dated by their legacy index
 
@@ -111,7 +114,9 @@ keeps whatever the read found).
 
 `oldestQuery` gains the legacy entries: `{ 'timestamp.seconds': { $type: 'number' } }` sorted ascending, limit 1, and
 `time_stamp.seconds` for `stats`, read through `timestamp.seconds_1` and `time_stamp.seconds_1`; the numeric seconds
-become an ISO date. The projection of a dotted field returns a nested document, so the reader takes the value by path.
+become an ISO date. The projection of a dotted field returns a nested document, so the exported `fieldValue(doc,
+field)` takes the value by path, and `collectionStorage` converts a numeric value, in seconds, to an ISO date (a special
+case task 7.3 reviews).
 
 ### D8. `migration.legacyRetainedUntil` in the shared migration shape
 
@@ -142,7 +147,10 @@ OpenAPI shape (additive):
     `openvidu.analytics.migration.enabled: false` keeps, and `failed`; the server keeps the legacy data in both (D2).
     `none` falls here too, although the backend reports no legacy entry without a migration document (D7).
 - The migration comes from `migrationState()`, the status poll first, so the row follows a migration that completes
-  while the tab is open; the storage figures stay those of the info document.
+  while the tab is open; the storage figures stay those of the info document. The existing shell poll reads the info
+  document again once whenever the migration state changes (the "Migration ends" behaviour relies on it), so a
+  completion costs one info request; the row shows the text of the new state from the status before that request
+  answers.
 - The breakdown reuses `ovd-collection-breakdown`: the legacy collections are dated (D7), so `UNDATED` is unchanged.
 - The Retention cell of this row may wrap (`white-space: normal` on a class of that cell), so its text stays inside a
   375 px viewport like the wrapping class names.
@@ -152,13 +160,19 @@ OpenAPI shape (additive):
 - Unit and backend integration tests seed the legacy collections inline (a few documents, the legacy indexes,
   `openvidu_expire_at` in the future).
 - `e2e/fixtures/api.ts` exports `legacyStorage(now)` and the mock gains an `ApiOptions.legacy` flag that adds the
-  two entries and a completed migration with `legacyRetainedUntil` 20 days ahead; tests without it are unchanged.
+  two entries and a completed migration with `legacyRetainedUntil` 20 days ahead, to the info document and to the
+  default status; tests without it are unchanged.
+- The Angular tests that read the real clock compute their dates relative to it (`legacyRetainedUntil` 30 days ahead)
+  instead of the fixed dates of the scenarios; the texts they assert follow from those dates.
 - The data generator gains `GenerateOptions.legacy` (`--legacy`): `legacy_events` and `stats` with the legacy indexes
   (`timestamp.seconds`, `time_stamp.seconds`, TTL on `openvidu_expire_at`), 50 events and 150 stats per hour over the
   48 hours before the generated range (legacy-shaped minimal documents: `type`, `timestamp`/`time_stamp` in seconds,
   room and participant ids), each expiring 32 days after it was written, and a completed `migration` document
   (`finishedAt` one hour into the range, `legacyRetainedUntil` the latest expiry, counts of the documents). It draws
-  nothing from the seeded stream, so every other document of a seed stays the same. The query plan test of the info
+  nothing from the seeded stream, so every other document of a seed stays the same; `schema_meta` holds one more
+  document, the migration. `legacy.ts` declares the two names as literals typed `LegacyCollection` rather than
+  importing the value: `pnpm generate` runs on the compiled typings, which nothing rebuilds before the demo
+  generates, so a value added to them may be missing there. The query plan test of the info
   oldest dates uses it; `tools/demo-lib.sh` passes `--legacy` with `DASHBOARD_DEMO_LEGACY=true`, so the owner can see
   the row on the demo.
 
@@ -166,7 +180,9 @@ OpenAPI shape (additive):
 
 `legacyData.seed` rewrites `openvidu_expire_at` of every seeded legacy document to now + 32 days, and
 `legacyFixerClose` uses the same, so the TTL monitor never deletes a fixture during a test. The retention tests write
-their own documents with the expiries their scenarios need.
+their own documents with the expiries their scenarios need. The rollback subtest skips `system.*` names when it drops
+the v2 collections: dropping `system.views` fails while time-series collections exist, and dropping `track_stats`
+removes its own system collections.
 
 ### D12. Documentation command
 
