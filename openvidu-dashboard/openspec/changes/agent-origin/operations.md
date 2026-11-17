@@ -53,3 +53,5 @@
   the same.
 - Task 9.3: with the owner's OK, openvidu-livekit `openvidu/main` pushed (`682e41ca..05459651`); its `Test` run
   44071926509 is green.
+- Dashboard push: with the owner's OK, `master` pushed (`0127ecc01..5b174058a`); `openvidu-dashboard-ci.yml` run
+  44074047154 is green (contract with the writer, unit, checks, integration, end-to-end).
