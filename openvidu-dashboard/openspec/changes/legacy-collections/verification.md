@@ -1,100 +1,61 @@
 # Verification Report: legacy-collections
 
 - Date: 2026-11-17
-- Mode: full
-- Verified commit (dashboard, `master`, not pushed): `409e0a10a9860ab17164af27e219008da670131f`
-- Writer (openvidu-livekit `openvidu/main`, not pushed): `bf6496cb`, `329d5c839bf5a073598b15ea4d7bda4d345c10f1`
-  (HEAD), clean tree, two commits ahead of `origin/openvidu/main`
-- Range reviewed: `git diff origin/master` (76477924f..409e0a10a). Commit 55e056265 (status-api flake fix) is a direct
-  fix outside the change, approved by the owner; ee547c6b7 (proposal of `list-query-plans`, superseding
-  `agents-identity-search-plan`) is another change in the same unpushed range, not reviewed here.
+- Mode: incremental
+- Verified commit (dashboard, `master`, not pushed): `94a5ec0d4246beb3dabc7a8f1ac31d733381f9a2`, clean tree
+- Starts from: `409e0a10a` (full verification; reports committed in ba4e62280). Range reviewed: `ba4e62280..94a5ec0d4`
+  (87dc508cf, ae3c533f2, 94a5ec0d4)
+- Writer (openvidu-livekit `openvidu/main`, not pushed): `e6a397a489645171f1e7bb02eb262b40b80757ab` (HEAD), clean
+  tree; reviewed `329d5c83..e6a397a4`
+- This report supersedes `code-review.md` (409e0a10a / 329d5c83); its open findings are carried below.
 
 ## Summary
 
 | Dimension    | Status |
 | ------------ | ------ |
 | Completeness | 27/31 tasks; the 4 open ones (8.1 owner, 9.1, 9.2, 10.1 orchestrator) follow the verification by design. 4 ADDED and 2 MODIFIED requirements, all implemented |
-| Correctness  | 6/6 requirements mapped; 24/24 scenarios list a test that asserts what the scenario states. Dashboard tests run and pass; the 9 writer scenario tests read but Not verified as run (see Commands) |
-| Coherence    | Design D1 to D12 followed; 2 suggestions |
+| Correctness  | 6/6 requirements mapped; 24/24 scenarios list a test. Dashboard unit and integration tests pass; e2e had 1 failure in a test the change does not touch (W1). The writer tests, including the new lifecycle subtest, were read but not run (Not verified, see Commands) |
+| Coherence    | Design D7 and D9 updated to match the fixes and followed; no new deviation |
 
 ## Commands run
 
 | Command | Result |
 | ------- | ------ |
-| `./dashboard.sh check` | Pass: lint, format, typecheck, `openspec validate --all --strict` (32 items), unit tests (typings 110, backend 250, frontend 630 + 1, tooling 136) |
-| `./dashboard.sh scenarios legacy-collections <openvidu-livekit>` | 24 scenarios, 0 without a test |
-| `./dashboard.sh test-integration` | Pass: 22 files, 267 tests (Docker) |
-| `./dashboard.sh e2e` | Pass: 139 mocked tests (axe in light and dark, phone) and 6 real-backend tests |
-| Writer `go test -tags integration ./openvidu/analytics/...` and lint | Not verified: the verifier guard does not allow `go test`; `operations.md` records the writer commits but no test run. The commit message of 329d5c83 states lint and tests pass (implementer claim). The `Test` workflow run of task 9.2 will record it |
-| `contract-check`, CI run, image | Not checked here (orchestrator). No contract artifact changed (`typings/schema`, `typings/fixtures`, `typings/contract` untouched, `SCHEMA_VERSION` 1), so the DoD does not require `contract-check`; task 9.1 runs it anyway. No image or runtime dependency change |
+| `./dashboard.sh check` | Pass: lint, format, typecheck, `openspec validate --all --strict` (32 items), unit tests (tooling 136, typings 110, backend 250, frontend 630 + 1) |
+| `./dashboard.sh scenarios legacy-collections <openvidu-livekit>` | 24 scenarios, 0 without a test; `Rollback window ended` now also lists `lifecycle_integration_test.go:242`, `Legacy collections in storage` also lists `api.test.ts:487` |
+| `./dashboard.sh test-integration` | Pass: 22 files, 268 tests (Docker); one more than at 409e0a10a, the new `api.test.ts:487` |
+| `./dashboard.sh e2e` | Failed (exit 1): 1 of 139 mocked tests, `settings.spec.ts:81` `Retention tip by keyboard` (no `.mat-mdc-tooltip` within 5 s after the tip button was focused). Every legacy test passed (`settings.spec.ts:99`, `:151`). `scripts/e2e.mjs` runs the real-backend suite after the mocked one anyway, and `test-results/backend/.last-run.json` reads `passed`, but the captured output was cut before that suite, so its run is Not verified. Run once, as the verifier definition requires (W1) |
+| Writer `go test -tags integration ./openvidu/analytics/...` and lint | Not verified: the verifier guard does not allow `go test`. The commit message of e6a397a4 makes no test claim, and `operations.md` records no run. The `Test` workflow run of task 9.2 will record it |
+| `contract-check`, CI run, image | Not checked here (orchestrator, tasks 9.1 and 9.2). No contract artifact changed in the range |
 
-## Completeness
+## Earlier findings
 
-### Tasks
+### verification.md (409e0a10a)
 
-- 27 of 31 checked. Unchecked: 8.1 (owner demo review), 9.1 (contract check), 9.2 (writer push and CI), 10.1
-  (openvidu.io documentation): groups marked `(owner)` / `(orchestrator)` that come after the verification, so pending,
-  not findings.
+| # | Finding | Status | Evidence |
+| - | ------- | ------ | -------- |
+| S1 | Reworded THEN of "Legacy row follows the status" without a recorded owner decision | Open | `operations.md` is unchanged in the range: it records the reworded CHANGELOG line and the documentation condition, but not the reworded scenario |
+| S2 | Data tab detects the Legacy row by its label | Resolved | ae3c533f2: `StorageClassRow.legacy` (`storage-classes.ts:111-112`), `legacy: true` in `legacyRow()` (`:219`), `legacy: false` for the class rows (`:258`); `data-tab.ts` no longer imports `LEGACY_LABEL`; `data-tab.html:50` binds `[class.wrap]="row.legacy"`; `storage-classes.spec.ts:321` asserts the flag on all 8 rows |
 
-### Spec coverage
+### code-review.md (409e0a10a / 329d5c83)
 
-| Requirement | Delta | Implementation |
-| ----------- | ----- | -------------- |
-| Legacy data kept for rollback (`server-legacy-migration`) | MODIFIED | Writer `migration.go` (`cleanup` records `legacyRetainedUntil` through `latestLegacyExpiry`), nothing drops before the date (`migration_retention.go:122-129`) |
-| Legacy data dropped after its rollback window | ADDED | Writer `migration_retention.go:58-172`, wiring `analytics.go` (`retentions`, started after the migration in `Start`, stopped first in `Stop`) |
-| Info endpoint (`editions-info`) | MODIFIED | `backend/src/info/info-service.ts:254-260`, `info-routes.ts:27-31` |
-| Legacy data in info | ADDED | `info-service.ts:56-60,156,182-198,220-226` (legacy collections only with a migration document, dated by `fromSeconds` through `timestamp.seconds_1` / `time_stamp.seconds_1`) |
-| Legacy data row (`settings-about`) | ADDED | `features/settings/storage-classes.ts:87-260`, `data-tab.ts:87-95`, `data-tab.html:50`, `data-tab.scss:50-53` |
+| # | Finding | Status | Evidence |
+| - | ------- | ------ | -------- |
+| W1 | No test of the retention task's startup wiring | Resolved in code, not run | e6a397a4 adds `lifecycle_integration_test.go:242` `Rollback window ended: the server drops the legacy data after Start`. It seeds empty `legacy_events` and `stats` and a completed migration dated a day back, then goes through `InitializeAnalytics`, `go Start()`, waits up to 30 s for both collections to disappear (the loop checks at once, `migration_retention.go:87-106`), and calls `Stop`. Its cleanup resets `instance` and `retentions`. Removing `retentions = retention` (`analytics.go:210`) or `retention.start()` (`:447`) would fail it. The stop order of D1 is still asserted only by reading `analytics.go:460-465`. Not run here (guard) |
+| S1 | A legacy timestamp outside the range of a Date makes `GET /info` fail | Resolved | 87dc508cf: `read` returns `undefined` for an invalid date for any converter (`info-service.ts:90-99`); `api.test.ts:487` seeds `-1e13` and asserts 200, `legacy_events` with 2 documents and no `oldest`, `stats` still dated; it passes. Design D7 states it |
+| S2 | Loose legacy context default and label coupling | Resolved | ae3c533f2: `legacy: LegacyContext` is required (`storage-classes.ts:236`); the older specs pass `NO_MIGRATION`; the flag on the row as above. Design D9 states both |
+| S3 | `newLegacyRetentionTask` returning nil after a drop untested | Resolved in code, not run | e6a397a4: `migration_integration_test.go:1032` `require.Nil(t, env.startupTask(), ...)` after the drop in `Rollback window ended` |
 
-No REMOVED or RENAMED requirements.
+## Review of the range
 
-## Correctness
-
-### Scenario coverage (tests read)
-
-- Writer, `openvidu/analytics/migration_integration_test.go`: `Rollback after the migration` (:549, every seeded `_id`
-  back in `events` and `stats`, both legacy indexes and the TTL index), and `TestLegacyRetention` (:1016): window
-  ended (built through `newLegacyRetentionTask`, migration document unchanged, one info line with both names), ends
-  while running (the clock passes the date between checks of a running loop), still open (documents, indexes, one
-  info line with the RFC 3339 date after 5 checks), unfinished (pending with the migration disabled), stats without a
-  migration (no task, a check that returns done and keeps `stats`), newer documents (`$max` to the later expiry,
-  nothing dropped, logged once), completed without a date, two nodes together (no error, both gone). Each asserts its
-  scenario. Not run by this verification (see Commands).
-- Backend, `api.test.ts`: `CE with a running writer` (:215), `Migration in progress: info reports its progress`
-  (:347), `Nested keys` (:413, exact key sets including `legacyRetainedUntil`), `Legacy collections in storage`
-  (:447, 3 documents, `oldest` `2026-10-13T09:25:55.000Z`, `stats` 2 documents, the retention date),
-  `Stats without a migration in info` (:487). `status-api.test.ts:101` `Legacy retention date in the status`.
-  `info-query-plan.test.ts` checks both legacy oldest queries are IXSCAN on the legacy index, one document examined,
-  no COLLSCAN, and that `fullInfo()` reports the converted date.
-- Frontend, `storage-classes.spec.ts:294-366` (kept for rollback in America/New_York reads 2026-12-14, totals 420,004
-  and 130 MB, running, pending, failed, after its date and without a date, no legacy data) and
-  `settings-page.spec.ts:601-689` (no info icon and the rendered total, collections breakdown with the UTC oldest
-  date, the row follows the status while the triggered info request is still unanswered).
-- E2E, `settings.spec.ts:99` (row after Daily rollups with its cells, no info tip, both collections) and `:151`
-  (retention cell inside 375 px, no horizontal scroll); `accessibility.spec.ts:24` (axe with the breakdown open, light
-  and dark).
-
-### Implementation notes
-
-- Legacy timestamps of the recorded writer fixtures are doubles (`testdata/legacy/*.json`), which the `$type: 'number'`
-  filter of `fromSeconds` matches; the generator writes `Double` too.
-- The demo legacy documents expire between the generation and two days later with `--days 30`, so the row turns to
-  "Being removed by the server" on a reused demo; accepted by the owner (`operations.md`).
-
-## Coherence
-
-- D1 to D5 (writer): lock-free hourly loop on every node, completed-migration gate, `latestLegacyExpiry` re-read with
-  `$max` on a `completed` document, drop without a date, the three log lines through `jobLog`. Followed.
-- D6: only fork-owned files under `openvidu/analytics/` plus `README-openvidu.md` and `CHANGELOG-openvidu.md` (one-line
-  diff); commit subjects `Analytics tests: …` and `Analytics: …`. Followed.
-- D7, D8: `LegacyCollection` outside `Collection`, converters per `OLDEST` entry with `read`, exported `fieldValue`,
-  `legacyRetainedUntil` in the shared migration shape. Followed.
-- D9: label, position, `tip: null`, retention per state compared with `readAt`, session-zone date, wrap class, row kept
-  apart from `STORAGE_CLASSES` (refactor review 7.3 recorded in D7 and D9). Followed.
-- D10, D11: mock option, generator option with its own random stream, live writer seed expiries. Followed.
-- AGENTS.md conventions: English, scenario-titled tests, CHANGELOG lines (UI after the Settings line, Data under
-  Added) in the commits of the row and of the API change, root `AGENTS.md` and generator README updated, no PRO
-  reference in CE, no secret, no new dependency, commit subjects `openvidu-dashboard: …, change legacy-collections`.
+- Specs: no delta spec changed. The new `api.test.ts:487` hardens `Legacy collections in storage` without contradicting
+  the scenario; the behaviour is recorded in design D7.
+- Design: 94a5ec0d4 updates D7 (invalid oldest date leaves the collection undated), D9 (required `legacy` context, the
+  `legacy` flag on the row) and the test table (lifecycle subtest, the restart assertion). They match the code.
+- Conventions: commit subjects `openvidu-dashboard: …, change legacy-collections` and `Analytics tests: …`; tests titled
+  `<scenario>: <detail>`; comments minimal; English; no PRO reference, secret or dependency. No CHANGELOG line needed:
+  the fixes change no observable behaviour beyond the lines already written for the feature.
+- No new bug found in the range.
 
 ## Issues
 
@@ -104,38 +65,43 @@ None.
 
 ### WARNING
 
-None.
+1. `dashboard-ce/e2e/tests/settings.spec.ts:89`: the e2e run of this verification failed on `Retention tip by keyboard`
+   (the Entities tooltip did not appear after keyboard focus), so the DoD item "e2e passes" is not met by this run. The
+   test was added by `settings-data-tab` (5b1af5c38) and uses no legacy data. The only thing the range changes that it
+   reaches is the `legacy` flag, now `false` on the Entities row; the template binding and the `track row.label` are
+   unchanged, and the same test passed at 409e0a10a. It looks like a timing flake, but one run cannot show that.
+   Recommendation: rerun `./dashboard.sh e2e`. If it passes, record the run in `operations.md` before the push. If it
+   fails again, fix it before the push (a direct fix outside the change, like 55e056265, if the owner agrees).
 
 ### SUGGESTION
 
-1. `openspec/changes/legacy-collections/specs/settings-about/spec.md:55`: the THEN of "Legacy row follows the status"
-   was reworded during implementation (40f7a753a), from "without another info request" to "before the info document is
-   read again", because the existing shell poll reads the info document on every migration state change. The new text
-   matches what was built, but `operations.md` records no owner decision on changing an approved scenario.
-   Recommendation: record the owner's acceptance of the reworded scenario in `operations.md` before the archive.
-2. `dashboard-ce/frontend/projects/dashboard-ui/src/lib/features/settings/data-tab.ts:95`: the Data tab detects the
-   Legacy data row by its display label (`row.label === LEGACY_LABEL`) to set the wrap class
-   (`data-tab.html:50`), which ties styling to a user-facing string. Recommendation: have `legacyRow()` in
-   `storage-classes.ts` set a field of `StorageClassRow` (for example `wrapRetention: true`) and bind the class to it.
+1. `openspec/changes/legacy-collections/specs/settings-about/spec.md:55` (carried from the previous verification, S1):
+   the THEN of "Legacy row follows the status" was reworded during implementation (40f7a753a) from "without another
+   info request" to "before the info document is read again", and `operations.md` records no owner decision on it.
+   Recommendation: record the owner's acceptance in `operations.md` before the archive.
+2. `openspec/changes/legacy-collections/operations.md:7-8` and `tasks.md:172` (task 9.2): the writer commits recorded
+   for the push are `bf6496cb` and `329d5c83`; the new test commit `e6a397a4` is missing from both. Recommendation: add
+   `e6a397a4` to `operations.md`, push it with task 9.2, and have its `Test` workflow run cover the new lifecycle
+   subtest.
 
-## Definition of Done
+## Definition of Done (items the range or the runs affect)
 
 | Item | Status |
 | ---- | ------ |
 | All tasks checked | Not met yet: 8.1, 9.1, 9.2, 10.1 pending by design (after the verification) |
-| `scenarios` finds a passing test for every delta scenario | Met for the 15 dashboard scenarios (run and passing); the 9 writer scenarios have tests, not run here (Not verified; the 9.2 CI run records them) |
+| `scenarios` finds a passing test for every delta scenario | Met for the 15 dashboard scenarios (run and passing); the 9 writer scenarios have tests, including the new lifecycle subtest, not run here (Not verified; the 9.2 CI run records them) |
 | `./dashboard.sh check` passes locally | Met |
-| CI run of the push green | Pending (workflow follow-up, after group 9) |
-| Backend: `test-integration` passes | Met |
-| UI: `e2e` passes with axe and both themes | Met |
-| Data contract: `contract-check` | Not applicable (no contract artifact changed); task 9.1 runs it, recorded by the orchestrator |
-| Image or runtime dependency: `build-image` / `smoke-image` | Not applicable |
-| Latest verification reports have no CRITICAL; refactor review applied or recorded | Met for this report (`code-review.md` not written yet); refactor review recorded in design D7 and D9 |
-| `CHANGELOG.md`, `README.md`, `AGENTS.md` reflect the change | Met (README needs no change: no new image variable or command) |
-| Change archived | Pending |
+| Backend: `test-integration` passes | Met (268 tests) |
+| UI: `e2e` passes with axe and both themes | Not met by this run: 1 failure in an unrelated mocked test (W1); real-backend suite Not verified (output cut) |
+| Latest verification reports have no CRITICAL; refactor review applied or recorded | Met (this report supersedes `code-review.md`) |
+| `CHANGELOG.md`, `README.md`, `AGENTS.md` reflect the change | Met, unchanged by the range |
+
+Items not listed are unchanged from the previous report.
 
 ## Final Assessment
 
 No critical issues found in the checks that ran. Not verified: the run of the writer tests (`TestLegacyRetention`,
-`TestMigrationReplay`) and its lint, which the verifier guard cannot run and `operations.md` does not record yet; the
-`Test` workflow run of task 9.2 will. 0 warnings, 2 suggestions to consider.
+`TestMigrationReplay` and the new `TestWriterLifecycle` subtest) and the writer lint, which the verifier guard cannot
+run; the `Test` workflow run of task 9.2 will record them. Partially verified: `e2e`, which failed on one mocked test
+outside the change, and whose real-backend suite result was not visible in the captured output. All findings of
+`code-review.md` and S2 of the previous verification are resolved. 1 warning, 2 suggestions to consider.
