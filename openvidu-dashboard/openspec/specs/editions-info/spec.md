@@ -36,7 +36,7 @@ whether the docs routes are served.
 
 - **WHEN** a client with a valid bearer token requests `GET /api/v1/info`
 - **THEN** `versions` holds `dashboard` and `server?`, `schema` holds `dashboard`, `writer?` and `status`, `migration`
-  holds `state`, `progress?` and `error?`, and `limits` holds `rankedSortMaxRangeMs` and
+  holds `state`, `progress?`, `error?` and `legacyRetainedUntil?`, and `limits` holds `rankedSortMaxRangeMs` and
   `participantRankedSortMaxRangeMs`
 
 ### Requirement: Migration outcome in info
@@ -255,3 +255,31 @@ Edition: CE. The edition SHALL be determined by the package that is built, never
 - **GIVEN** a CE container started with `OPENVIDU_EDITION=PRO`
 - **WHEN** the client requests `GET /api/v1/info` with a valid token
 - **THEN** the response has `edition: "ce"` and `features: []`
+
+### Requirement: Legacy data in info
+
+Edition: CE. While `schema_meta` holds a `migration` document, `storage` SHALL also report each legacy collection that
+exists, `legacy_events` and `stats`, with `oldest` from its earliest `timestamp.seconds` or `time_stamp.seconds` read
+through the legacy index; without that document neither SHALL be reported. `migration.legacyRetainedUntil` SHALL carry
+the writer's `legacyRetainedUntil` when it is recorded, in `GET /api/v1/info` and in `GET /api/v1/status`.
+
+#### Scenario: Legacy collections in storage
+
+- **GIVEN** a completed migration with `legacyRetainedUntil` `2026-12-15T08:00:00Z`, `legacy_events` with 3 documents
+  whose earliest `timestamp.seconds` is 1791883555 and `stats` with 2 documents
+- **WHEN** the client requests `GET /api/v1/info` with a valid token
+- **THEN** `storage.legacy_events` has `documents: 3`, `storageBytes`, `indexBytes` and
+  `oldest: "2026-10-13T09:25:55.000Z"`, `storage.stats` has `documents: 2`, and `migration.legacyRetainedUntil` is
+  `"2026-12-15T08:00:00.000Z"`
+
+#### Scenario: Legacy retention date in the status
+
+- **GIVEN** a completed migration with `legacyRetainedUntil` `2026-12-15T08:00:00Z`
+- **WHEN** the client requests `GET /api/v1/status` with a valid token
+- **THEN** `migration.legacyRetainedUntil` is `"2026-12-15T08:00:00.000Z"`
+
+#### Scenario: Stats without a migration in info
+
+- **GIVEN** no `migration` document and a `stats` collection with documents
+- **WHEN** the client requests `GET /api/v1/info` with a valid token
+- **THEN** `storage` has no `stats` entry and `migration` is `{ state: "none" }`
