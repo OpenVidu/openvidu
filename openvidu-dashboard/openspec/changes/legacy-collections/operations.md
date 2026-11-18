@@ -10,3 +10,11 @@
 - Owner decisions: the demo's legacy documents keep the designed expiries (the row reads "Being removed by the server"
   on a demo reused past them); the `status-api.test.ts` timing flake gets a direct fix of its own, outside this
   change, before the push.
+- Owner review on the demo (8.1, `DASHBOARD_DEMO_LEGACY=true ./dashboard.sh demo ce`): approved, no change asked. The
+  first start served a stale Vite prebundle of the typings from `frontend/.angular/cache` (Settings and Agents failed
+  to load); clearing that local cache fixed it, nothing in the change.
+- Owner decisions: the reworded outcome of `Legacy row follows the status` (the row reads the new text from the status
+  before the info document is read again) is accepted; the e2e retention tip race (keyboard and phone tests, present
+  before this change) gets a direct fix of its own before the push.
+- `./dashboard.sh e2e` rerun after the incremental verification: mocked 139/139, real backend 6/6. The verifier's one
+  failure (`Retention tip by keyboard`) reproduces at the same rate on the frontend from before the change.

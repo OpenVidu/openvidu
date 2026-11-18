@@ -158,7 +158,7 @@ Done in the writer checkout and committed there, not pushed (group 9). It comes 
 
 After the full verification and its fixes, before any push.
 
-- [ ] 8.1 The orchestrator runs `DASHBOARD_DEMO_LEGACY=true ./dashboard.sh demo ce` (`http://localhost:4200`,
+- [x] 8.1 The orchestrator runs `DASHBOARD_DEMO_LEGACY=true ./dashboard.sh demo ce` (`http://localhost:4200`,
       `admin` / `admin`); the owner reviews `/settings?tab=data`: the Legacy data (before 3.10) row, its retention
       text and date, its collections, both themes and a phone width. Verify: the owner's verdict and any change asked
       are recorded in `operations.md`.
