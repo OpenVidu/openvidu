@@ -164,9 +164,9 @@
 
 ## 6. CHANGELOG, checks and refactor review (implementer)
 
-- [ ] 6.1 Add the line of the proposal to `CHANGELOG.md`, `3.10.0` → `Improved` → `Data`. Verify: `git diff
+- [x] 6.1 Add the line of the proposal to `CHANGELOG.md`, `3.10.0` → `Improved` → `Data`. Verify: `git diff
   CHANGELOG.md` shows one line.
-- [ ] 6.2 Run `./dashboard.sh check`, `./dashboard.sh test-integration` (Docker) and `./dashboard.sh scenarios
+- [x] 6.2 Run `./dashboard.sh check`, `./dashboard.sh test-integration` (Docker) and `./dashboard.sh scenarios
   list-query-plans`. Verify: all pass, and every delta scenario lists at least one passing test with no `NO TEST`.
 - [ ] 6.3 Refactor review: assess whether the four suites need a shared `total` explain helper or a shared
   bound helper, and whether the rooms plan type reads clearly with `hint` and `countHint`. Apply a small refactor

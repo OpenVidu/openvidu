@@ -130,6 +130,8 @@ queried) and `Deployment` (running the service). One line per observable change,
 
 - Participant counts, sessions, minutes, unique identities and client breakdowns count standard participants only;
   egress, ingress, agent and SIP sessions are counted apart, by kind.
+- Searches and filters of the participants, agents, rooms and egress lists run on the index that reads the fewest
+  documents for each case, so a search for a common identity or room-name prefix no longer reads and sorts every match.
 
 #### Deployment
 
