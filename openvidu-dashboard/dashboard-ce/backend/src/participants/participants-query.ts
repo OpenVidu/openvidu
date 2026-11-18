@@ -116,12 +116,14 @@ function originFilter(origin: AgentOrigin | undefined): Document {
 
 /**
  * Filter, sort and keyset condition of a participants or agents list: a SID is a point lookup; an identity prefix
- * drives `{ identityLower, joinedAt }` (or `{ roomSid, identityLower, joinedAt }` with a room); a room drives
- * `{ roomSid, joinedAt, _id }`; kinds or a status drive `{ kind, status, joinedAt, _id }` with absent filters as `$in`
- * over every value so the sorted branches merge; otherwise `{ joinedAt, _id }`. `publisher` and `origin` are residual
- * on each. Every branch but the last hints its index: the planner's trial run between candidate indexes depends on
- * the data and the residual filters. The range is always on `joinedAt`; a ranked sort key scans it whole and ranks in
- * memory.
+ * drives `{ roomSid, identityLower, joinedAt }` with a room; without one, kinds that exclude `STANDARD` (the agents
+ * list) drive `{ kind, status, joinedAt, _id }` with the prefix as a residual, and any other identity prefix leaves the
+ * index to the planner, which picks the prefix index for a selective prefix and the time index for a broad one; a room
+ * drives `{ roomSid, joinedAt, _id }`; kinds or a status drive `{ kind, status, joinedAt, _id }` with absent filters as
+ * `$in` over every value so the sorted branches merge; otherwise `{ joinedAt, _id }`. `publisher` and `origin` are
+ * residual on each. Every branch but the plain one and the planner's identity search hints its index: the planner's
+ * trial run between candidate indexes depends on the data and the residual filters. The range is always on
+ * `joinedAt`; a ranked sort key scans it whole and ranks in memory.
  */
 export function participantsListPlan(filter: ParticipantsFilter, cursor?: CursorPayload): ParticipantsListPlan {
 	if (filter.q !== undefined && PARTICIPANT_SID.test(filter.q)) {
@@ -141,7 +143,22 @@ export function participantsListPlan(filter: ParticipantsFilter, cursor?: Cursor
 		...extra
 	};
 
+	const serviceKindSearch =
+		filter.q !== undefined &&
+		filter.room === undefined &&
+		kinds !== undefined &&
+		!kinds.includes(ParticipantKind.STANDARD);
+	const kindAndStatus = (joinedAt: Document): Document => ({
+		kind: kinds === undefined ? { $in: ALL_KINDS } : kinds.length === 1 ? kinds[0] : { $in: kinds },
+		status: filter.status ?? { $in: ALL_STATUSES },
+		joinedAt
+	});
+
 	const build = (joinedAt: Document): Document => {
+		if (filter.q !== undefined && serviceKindSearch) {
+			return { ...kindAndStatus(joinedAt), identityLower: prefixRegex(filter.q), ...extra };
+		}
+
 		if (filter.q !== undefined) {
 			return {
 				...(filter.room === undefined ? {} : { roomSid: filter.room }),
@@ -156,12 +173,7 @@ export function participantsListPlan(filter: ParticipantsFilter, cursor?: Cursor
 		}
 
 		if (kinds !== undefined || filter.status !== undefined) {
-			return {
-				kind: kinds === undefined ? { $in: ALL_KINDS } : kinds.length === 1 ? kinds[0] : { $in: kinds },
-				status: filter.status ?? { $in: ALL_STATUSES },
-				joinedAt,
-				...extra
-			};
+			return { ...kindAndStatus(joinedAt), ...extra };
 		}
 
 		return { joinedAt, ...extra };
@@ -169,9 +181,11 @@ export function participantsListPlan(filter: ParticipantsFilter, cursor?: Cursor
 
 	const index =
 		filter.q !== undefined
-			? filter.room === undefined
-				? 'identityLower_joinedAt'
-				: 'roomSid_identityLower_joinedAt'
+			? filter.room !== undefined
+				? 'roomSid_identityLower_joinedAt'
+				: serviceKindSearch
+					? 'kind_status_joinedAt_id'
+					: undefined
 			: filter.room !== undefined
 				? 'roomSid_joinedAt_id'
 				: kinds !== undefined || filter.status !== undefined

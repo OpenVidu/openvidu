@@ -12,7 +12,7 @@
 
 ## 1. Backend: participants and agents identity searches (implementer)
 
-- [ ] 1.1 In `src/participants/participants-query.ts`, change the `q` branch without `room` (decisions 2 and 3):
+- [x] 1.1 In `src/participants/participants-query.ts`, change the `q` branch without `room` (decisions 2 and 3):
   - When `kind` is given and lists no `STANDARD`, build the kind and status form: `kind` as one value or `$in`,
     `status` as given or `$in` every status, `joinedAt`, the `identityLower` prefix and `extra` as residuals. Pin
     `kind_status_joinedAt_id`.
@@ -21,7 +21,7 @@
   - Update the doc comment.
 
   Verify: `./dashboard.sh check` passes, and `git diff` touches only this function and its comment.
-- [ ] 1.2 Update `test/unit/participants.test.ts`:
+- [x] 1.2 Update `test/unit/participants.test.ts`:
   - The test `Origin explain plans: each branch hints its index, page and ranked, whatever the residual filters`
     expects `kind_status_joinedAt_id` for `{ q: 'agent' }` and `{ q: 'agent', status: 'active' }`. The participants
     plan with `q` alone or with `publisher` has no hint.

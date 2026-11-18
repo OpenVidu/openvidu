@@ -160,8 +160,8 @@ describe('participants list plan', () => {
 		const hints: [Record<string, string>, string][] = [
 			[{}, 'kind_status_joinedAt_id'],
 			[{ status: 'left' }, 'kind_status_joinedAt_id'],
-			[{ q: 'agent' }, 'identityLower_joinedAt'],
-			[{ q: 'agent', status: 'active' }, 'identityLower_joinedAt'],
+			[{ q: 'agent' }, 'kind_status_joinedAt_id'],
+			[{ q: 'agent', status: 'active' }, 'kind_status_joinedAt_id'],
 			[{ q: 'agent', room: 'RM_a' }, 'roomSid_identityLower_joinedAt'],
 			[{ room: 'RM_a' }, 'roomSid_joinedAt_id'],
 			[{ room: 'RM_a', status: 'left' }, 'roomSid_joinedAt_id']
@@ -177,10 +177,75 @@ describe('participants list plan', () => {
 			}
 		}
 
-		expect(plan({ q: 'ali', publisher: 'true' }).hint).toBe('identityLower_joinedAt');
+		expect(plan({ q: 'ali' })).not.toHaveProperty('hint');
+		expect(plan({ q: 'ali', publisher: 'true' })).not.toHaveProperty('hint');
 		expect(plan({ room: 'RM_a', kind: 'AGENT' }).hint).toBe('roomSid_joinedAt_id');
 		expect(plan({ publisher: 'true' }).hint).toBeUndefined();
 		expect(agentsPlan({ q: 'PA_ag1' })).not.toHaveProperty('hint');
+	});
+
+	it('Agents identity prefix: the kind and status form with the prefix residual, page, ranked and total', () => {
+		const statuses = { $in: ['joining', 'active', 'left', 'aborted'] };
+		const query = { kind: 'AGENT', status: statuses, joinedAt: range, identityLower: { $regex: '^user' } };
+
+		expect(agentsPlan({ q: 'User' })).toEqual({
+			kind: 'page',
+			filter: query,
+			countFilter: query,
+			sort: { joinedAt: -1, _id: -1 },
+			page: expect.any(Object) as unknown,
+			hint: 'kind_status_joinedAt_id'
+		});
+
+		for (const sort of ['duration', 'leftAt']) {
+			expect(agentsPlan({ q: 'user', sort }), sort).toMatchObject({
+				kind: 'ranked',
+				match: query,
+				countFilter: query,
+				hint: 'kind_status_joinedAt_id'
+			});
+		}
+
+		expect(agentsPlan({ q: 'user', status: 'active', origin: 'openvidu' })).toMatchObject({
+			filter: { ...query, status: 'active', ...OPENVIDU_RESIDUAL },
+			countFilter: { ...query, status: 'active', ...OPENVIDU_RESIDUAL },
+			hint: 'kind_status_joinedAt_id'
+		});
+	});
+
+	it('Identity prefix of a service kind: kinds without STANDARD take the agents plan, with STANDARD no hint', () => {
+		expect(plan({ q: 'user', kind: 'AGENT' })).toMatchObject({
+			filter: {
+				kind: 'AGENT',
+				status: { $in: expect.any(Array) as unknown[] },
+				identityLower: { $regex: '^user' }
+			},
+			hint: 'kind_status_joinedAt_id'
+		});
+		expect(plan({ q: 'user', kind: 'AGENT,EGRESS', publisher: 'true' })).toMatchObject({
+			filter: { kind: { $in: ['AGENT', 'EGRESS'] }, identityLower: { $regex: '^user' }, isPublisher: true },
+			hint: 'kind_status_joinedAt_id'
+		});
+
+		const mixed = plan({ q: 'user-alice', kind: 'STANDARD,AGENT' });
+
+		expect(mixed.filter).toEqual({
+			identityLower: { $regex: '^user-alice' },
+			joinedAt: range,
+			kind: { $in: ['STANDARD', 'AGENT'] }
+		});
+		expect(mixed).not.toHaveProperty('hint');
+		expect(plan({ q: 'user', kind: 'AGENT', room: 'RM_a' }).hint).toBe('roomSid_identityLower_joinedAt');
+	});
+
+	it('Selective identity prefix: the participants list leaves the index to the planner', () => {
+		for (const query of [{ q: 'alice' }, { q: 'alice', status: 'active' }, { q: 'alice', publisher: 'true' }]) {
+			const page = plan(query);
+
+			expect(page, JSON.stringify(query)).not.toHaveProperty('hint');
+			expect(page.countFilter).toMatchObject({ identityLower: { $regex: '^alice' }, joinedAt: range });
+			expect(participantsListPlan(list.parse({ ...query, sort: 'duration' }))).not.toHaveProperty('hint');
+		}
 	});
 
 	it('uses joinedAt, a room, an identity prefix or kind and status', () => {
