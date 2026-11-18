@@ -251,6 +251,9 @@ lookup.
       `countQuery(collection, match, hint?)` in `backend/test/support/query-plan.ts`, builds that explain for the
       participants, rooms and egress suites. It is exported through `@openvidu-dashboard/backend/testing` with the
       rest of `test/support/`. There is no shared helper for the in-range bounds.
+    - `recordingDb()` in `backend/test/support/recording-db.ts` is a `Db` stand-in that records the hint of every
+      `find`, `countDocuments` and `aggregate`. The rooms and egress unit tests use it to check the hints the
+      services send. It is exported through `@openvidu-dashboard/backend/testing` too.
     - The helpers of the rooms and egress suites pass the plan's hint, as the services do.
     - Where the identity-search scenarios explain the page and `total`, they use the suite's range; only
       `sort=duration` runs over 24 hours, because the sample identity may have no session in the last day.

@@ -184,6 +184,16 @@
   here, or record the proposal. Verify: the outcome is written in the hand-off, and task 6.2 passes again if code
   changed.
 
+- [x] 6.6 Unit-test the hints the rooms and egress services send (commit 2496350e3). `test/support/recording-db.ts`
+  is a `Db` stand-in that records the hint of every `find`, `countDocuments` and `aggregate`. It backs these tests:
+  - `rooms-query.test.ts`: `Hinted room filters: the service passes the hint …`, `Broad room name prefix: the
+    service counts and ranks on the status index …` and `Several features: the service sends no hint`;
+  - `egress.test.ts`: `Room-name prefix: the service pages, counts and ranks without a hint …`.
+
+  Covers: Hinted room filters, Broad room name prefix, Several features, Room-name prefix. Verify: the unit tests
+  pass.
+- [ ] 6.7 Export `recording-db.ts` through `@openvidu-dashboard/backend/testing`. Verify: `./dashboard.sh check`
+  passes.
 - [x] 6.4 Export `countQuery` through `@openvidu-dashboard/backend/testing` (design decision 12). Verify:
   `./dashboard.sh check` passes, and the export resolves from a suite that imports the testing entry.
 - [x] 6.5 Run task 6.2 again after tasks 4.6, 4.7 and 6.4. Verify: all pass.
