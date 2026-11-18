@@ -98,14 +98,34 @@ describe('egress schemas and list plan', () => {
 		});
 		expect(plan({ q: 'Demo', status: 'failed' })).toEqual({
 			kind: 'page',
-			filter: { roomNameLower: { $regex: '^demo' }, status: { $in: ['failed'] } },
-			hint: 'roomNameLower_startedAt'
+			filter: { roomNameLower: { $regex: '^demo' }, status: { $in: ['failed'] } }
 		});
 		expect(plan({ q: 'demo', room: 'RM_abc' })).toEqual({
 			kind: 'page',
 			filter: { roomSid: 'RM_abc', roomNameLower: { $regex: '^demo' } },
 			hint: 'roomSid_startedAt'
 		});
+	});
+
+	it('Room-name prefix: no hint without a room, roomSid_startedAt with one', () => {
+		const plan = (query: Record<string, string>) => egressesListPlan(list.parse(query));
+
+		for (const sort of ['startedAt', 'endedAt', 'duration']) {
+			for (const query of [{ q: 'room' }, { q: 'room-a1', status: 'complete', type: 'web' }]) {
+				const result = plan({ ...query, sort });
+
+				expect(result, JSON.stringify({ ...query, sort })).toMatchObject({
+					kind: sort === 'startedAt' ? 'page' : 'ranked',
+					filter: { roomNameLower: { $regex: `^${query.q}` } }
+				});
+				expect(result).not.toHaveProperty('hint');
+			}
+
+			expect(plan({ q: 'room', room: 'RM_abc', sort })).toMatchObject({
+				filter: { roomSid: 'RM_abc', roomNameLower: { $regex: '^room' } },
+				hint: 'roomSid_startedAt'
+			});
+		}
 	});
 
 	it('ranks by end time and duration over the start range, egresses in flight at asOf', () => {

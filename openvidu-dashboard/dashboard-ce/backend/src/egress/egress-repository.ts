@@ -56,8 +56,8 @@ export class EgressRepository {
 			.toArray();
 	}
 
-	count(filter: Document, hint: string): Promise<number> {
-		return this.egresses.countDocuments(filter, { hint });
+	count(filter: Document, hint?: string): Promise<number> {
+		return this.egresses.countDocuments(filter, hint === undefined ? {} : { hint });
 	}
 
 	countInFlight(): Promise<number> {

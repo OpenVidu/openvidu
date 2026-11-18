@@ -58,14 +58,14 @@
 
 ## 3. Backend: egress room-name search (implementer)
 
-- [ ] 3.1 In `src/egress/egress-query.ts`, make `hint` optional and drop it from the `q` branch without `room`
+- [x] 3.1 In `src/egress/egress-query.ts`, make `hint` optional and drop it from the `q` branch without `room`
   (decision 8). The room, status and plain branches keep theirs. In `src/egress/egress-service.ts` and
   `src/egress/egress-repository.ts`:
   - read the `q` page without a hint through `sortedPage`;
   - run its count and ranked sort without a hint (`count` takes an optional hint).
 
   Verify: `./dashboard.sh check` passes, and `egress-api.test.ts` passes under `./dashboard.sh test-integration`.
-- [ ] 3.2 In `test/unit/egress.test.ts`, add `Room-name prefix: no hint without a room, roomSid_startedAt with one`,
+- [x] 3.2 In `test/unit/egress.test.ts`, add `Room-name prefix: no hint without a room, roomSid_startedAt with one`,
   and update any test that expects `roomNameLower_startedAt` as the plan's hint. Covers: Room-name prefix. Verify:
   the unit tests pass.
 

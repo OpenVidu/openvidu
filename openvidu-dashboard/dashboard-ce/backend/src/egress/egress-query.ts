@@ -5,8 +5,10 @@ import { EgressSort } from '@openvidu-dashboard/typings';
 import { prefixRegex } from '../api/search.js';
 import { EGRESS_ID, type EgressesListParams } from './egress-schemas.js';
 
-/** Index of a plan; `startedAt_id` and `roomNameLower_startedAt` are read with a sort on `{ startedAt, _id }`. */
-export type EgressesIndex = 'startedAt_id' | 'status_startedAt' | 'roomSid_startedAt' | 'roomNameLower_startedAt';
+/**
+ * Index of a plan; `startedAt_id`, and a plan without an index, are read with a sort on `{ startedAt, _id }`.
+ */
+export type EgressesIndex = 'startedAt_id' | 'status_startedAt' | 'roomSid_startedAt';
 
 export type EgressesListPlan =
 	| { kind: 'id'; filter: Document }
@@ -14,12 +16,13 @@ export type EgressesListPlan =
 			kind: 'page';
 			/** Scope and residual filters, without the range or the keyset condition. */
 			filter: Document;
-			hint: EgressesIndex;
+			/** Index of the page, `total` and the ranked sorts; absent leaves it to the planner. */
+			hint?: EgressesIndex;
 	  }
 	| {
 			kind: 'ranked';
 			filter: Document;
-			hint: EgressesIndex;
+			hint?: EgressesIndex;
 			rank: (asOf: Date) => Document;
 	  };
 
@@ -41,8 +44,9 @@ function residual(params: EgressesListParams, withStatus: boolean): Document {
 
 /**
  * Plan of an egresses list request after the filter-to-index table of the design: an egress id is a point lookup; a
- * room drives `{ roomSid, startedAt }` (a room name prefix residual); a room name prefix drives `{ roomNameLower,
- * startedAt }`; a status set drives `{ status, startedAt }` (an `$in` explode merged in `startedAt` order); otherwise
+ * room drives `{ roomSid, startedAt }` (a room name prefix residual); a room name prefix leaves the index to the
+ * planner, which reads `{ roomNameLower, startedAt }` for a selective prefix and a `startedAt` index for a broad one;
+ * a status set drives `{ status, startedAt }` (an `$in` explode merged in `startedAt` order); otherwise
  * `{ startedAt, _id }`. The range is always on `startedAt`; a ranked sort key scans it whole and ranks in memory.
  */
 export function egressesListPlan(params: EgressesListParams): EgressesListPlan {
@@ -51,12 +55,12 @@ export function egressesListPlan(params: EgressesListParams): EgressesListPlan {
 	}
 
 	const prefix = params.q === undefined ? {} : { roomNameLower: prefixRegex(params.q) };
-	let scope: { filter: Document; hint: EgressesIndex };
+	let scope: { filter: Document; hint?: EgressesIndex };
 
 	if (params.room !== undefined) {
 		scope = { filter: { roomSid: params.room, ...prefix, ...residual(params, true) }, hint: 'roomSid_startedAt' };
 	} else if (params.q !== undefined) {
-		scope = { filter: { ...prefix, ...residual(params, true) }, hint: 'roomNameLower_startedAt' };
+		scope = { filter: { ...prefix, ...residual(params, true) } };
 	} else if (params.status !== 'all') {
 		scope = { filter: residual(params, true), hint: 'status_startedAt' };
 	} else {

@@ -81,6 +81,7 @@ describe.skipIf(mongoUri === '')(`egress query plan at scenario ${scenario}`, ()
 
 		const range = { from: params.from, to: params.to };
 		const page = pageQuery('startedAt', params.order, undefined, range);
+		const hint = plan.hint === undefined ? {} : { hint: plan.hint };
 
 		if (plan.kind === 'ranked') {
 			const match = { ...plan.filter, ...page.filter };
@@ -99,19 +100,19 @@ describe.skipIf(mongoUri === '')(`egress query plan at scenario ${scenario}`, ()
 				{
 					collection: Collection.EGRESSES,
 					pipeline: rankedPipeline(request, now),
-					options: { hint: plan.hint }
+					options: hint
 				},
 				{ maxDocsExamined: inRange }
 			);
 		}
 
 		const direction: 1 | -1 = params.order === 'asc' ? 1 : -1;
-		const sorted = plan.hint === 'startedAt_id' || plan.hint === 'roomNameLower_startedAt';
+		const sorted = plan.hint === undefined || plan.hint === 'startedAt_id';
 
 		return expectIndexBacked(
 			db,
 			raw()
-				.find({ ...plan.filter, ...page.filter }, { projection: EGRESS_LIST_PROJECTION, hint: plan.hint })
+				.find({ ...plan.filter, ...page.filter }, { projection: EGRESS_LIST_PROJECTION, ...hint })
 				.sort(sorted ? page.sort : { startedAt: direction })
 				.limit(limit + 1),
 			{ maxDocsExamined: bound }

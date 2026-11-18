@@ -65,7 +65,7 @@ export class EgressService {
 					match: countFilter,
 					rank: plan.rank,
 					projection: EGRESS_LIST_PROJECTION,
-					hint,
+					...(hint === undefined ? {} : { hint }),
 					sort: params.sort,
 					order: params.order,
 					cursor,
@@ -83,7 +83,7 @@ export class EgressService {
 		}
 
 		const [page, counted] = await Promise.all([
-			hint === 'startedAt_id' || hint === 'roomNameLower_startedAt'
+			hint === undefined || hint === 'startedAt_id'
 				? this.sortedPage(filter, hint, params, cursor)
 				: this.indexOrdered(filter, hint, params, cursor),
 			total
@@ -96,10 +96,10 @@ export class EgressService {
 		};
 	}
 
-	/** A page sorted on `{ startedAt, _id }`: in index order on `startedAt_id`, in memory over a room name prefix. */
+	/** A page sorted on `{ startedAt, _id }`: in index order on `startedAt_id`, on the planner's index without a hint. */
 	private async sortedPage(
 		filter: Record<string, unknown>,
-		hint: string,
+		hint: string | undefined,
 		params: EgressesListParams,
 		cursor?: CursorPayload
 	) {
