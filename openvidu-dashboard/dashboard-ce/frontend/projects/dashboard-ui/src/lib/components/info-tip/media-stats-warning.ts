@@ -18,6 +18,6 @@ import { InfoTip } from './info-tip.js';
 	`
 })
 export class MediaStatsWarning {
-	/** One of `MEDIA_STATS_TEXTS`. */
+	/** A text of `MEDIA_STATS_TEXTS`. */
 	readonly text = input.required<string>();
 }

@@ -53,11 +53,11 @@ describe('client labels', () => {
 });
 
 describe('MEDIA_STATS_TEXTS', () => {
-	it('says there is no data, whatever the RTC engine, the same in every edition', () => {
-		expect(MEDIA_STATS_TEXTS).toEqual({
-			entity: 'There is no data for the requested timeframe.',
-			rangeNone: 'There is no data for the requested timeframe.',
-			column: 'Rooms with no data for the requested timeframe show no value.'
-		});
+	it('Texts', () => {
+		expect(MEDIA_STATS_TEXTS.entity('room')).toBe('No media statistics were recorded for this room.');
+		expect(MEDIA_STATS_TEXTS.entity('participant')).toBe('No media statistics were recorded for this participant.');
+		expect(MEDIA_STATS_TEXTS.entity('track')).toBe('No media statistics were recorded for this track.');
+		expect(MEDIA_STATS_TEXTS.rangeNone).toBe('There is no data for the requested timeframe.');
+		expect(MEDIA_STATS_TEXTS.column).toBe('Rooms with no data for the requested timeframe show no value.');
 	});
 });

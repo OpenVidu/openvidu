@@ -1059,21 +1059,23 @@ a 4.5:1 text contrast, keep the warning at full strength and are not highlighted
 - **THEN** it reads a dimmed "—" announced as "Not available"
 
 ### Requirement: Media statistics texts
-Edition: CE. The UI library SHALL export three warning texts for media statistics with no data, shown by every edition
-and naming no RTC engine: one for an entity (room, session or track), one for a range with `none` and one for a column
-header. A range with `partial` has data and gets no warning.
+Edition: CE. The UI library SHALL export the warning texts for media statistics with no data, shown by every edition
+and naming no RTC engine: one per entity page (room, participant or track), one for a range with `none` and one for a
+column header. A range with `partial` has data and gets no warning.
 
 #### Scenario: Texts
 - **WHEN** the exported texts are read
 - **THEN** they are:
-  - entity: "There is no data for the requested timeframe."
+  - room: "No media statistics were recorded for this room."
+  - participant: "No media statistics were recorded for this participant."
+  - track: "No media statistics were recorded for this track."
   - range `none`: "There is no data for the requested timeframe."
   - column: "Rooms with no data for the requested timeframe show no value."
 
 #### Scenario: Same texts in every edition
 - **GIVEN** a room with `mediaStats: false` in the CE Rooms list and the same room in a PRO room page
 - **WHEN** the user opens the warnings of both
-- **THEN** the Rooms list column reads the column text and the room page tiles read the entity text, from the same
+- **THEN** the Rooms list column reads the column text and the room page tiles read the room text, from the same
   exported texts
 
 ### Requirement: Balanced chart grid

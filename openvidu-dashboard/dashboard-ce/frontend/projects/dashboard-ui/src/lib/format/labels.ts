@@ -153,12 +153,15 @@ export const CONNECTION_TYPE_LABELS: Readonly<Record<ConnectionType, string>> = 
 /** The one explanation of a value estimated by the reconciler. */
 export const RECONCILER_ESTIMATE = 'Closed by the reconciler: the end time is estimated';
 
+/** An entity whose page warns when it has no media statistics. */
+export type MediaStatsEntity = 'room' | 'participant' | 'track';
+
 /**
- * Warnings of media statistics with no data: of one room, session or track (`entity`), of a range none of whose
+ * Warnings of media statistics with no data: of one room, participant or track (`entity`), of a range none of whose
  * servers reported them (`rangeNone`), and of a table column with rows that have none (`column`).
  */
 export const MEDIA_STATS_TEXTS = {
-	entity: 'There is no data for the requested timeframe.',
+	entity: (entity: MediaStatsEntity): string => `No media statistics were recorded for this ${entity}.`,
 	rangeNone: 'There is no data for the requested timeframe.',
 	column: 'Rooms with no data for the requested timeframe show no value.'
 } as const;
