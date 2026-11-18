@@ -232,9 +232,10 @@ describe.skipIf(mongoUri === '')(`egress query plan at scenario ${scenario}`, ()
 		expect(inPrefix).toBeGreaterThan(0);
 		expectIndexes(await explainList({ q: prefix }, inPrefix), ['roomNameLower_startedAt']);
 		expectIndexes(await explainTotal({ q: prefix }, inPrefix), ['roomNameLower_startedAt']);
-		expectIndexes(await explainList({ q: prefix, sort: 'duration' }, 0, LIMIT, inPrefix), [
-			'roomNameLower_startedAt'
-		]);
+
+		for (const sort of ['duration', 'endedAt']) {
+			expectIndexes(await explainList({ q: prefix, sort }, 0, LIMIT, inPrefix), ['roomNameLower_startedAt']);
+		}
 
 		const broad = await explainList({ q: 'room' }, 2 * (LIMIT + 1));
 
