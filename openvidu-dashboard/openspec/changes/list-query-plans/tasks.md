@@ -35,7 +35,7 @@
 
 ## 2. Backend: rooms list plans (implementer)
 
-- [ ] 2.1 In `src/rooms/rooms-query.ts`, add an optional `hint` to the `page` and `ranked` plans (decisions 5 to 7):
+- [x] 2.1 In `src/rooms/rooms-query.ts`, add an optional `hint` to the `page` and `ranked` plans (decisions 5 to 7):
   - Without `q`: `mediaNode_status_createdAt_id` with `mediaNode`, else `status_createdAt_id_<feature>` with exactly
     one feature, else `status_createdAt_id` with a status. No hint with several features or with no filter.
   - With `q` and a status: no hint on the page; a hint for the ranked match and the count, namely
@@ -45,10 +45,10 @@
     creation range).
 
   Verify: `./dashboard.sh check` passes.
-- [ ] 2.2 In `src/rooms/rooms-repository.ts` and `src/rooms/rooms-service.ts`, pass the plan's hints to `list`,
+- [x] 2.2 In `src/rooms/rooms-repository.ts` and `src/rooms/rooms-service.ts`, pass the plan's hints to `list`,
   `count` and `ranked`. Each hint is passed only when it is defined. Verify: `./dashboard.sh check` passes, and
   `rooms-api.test.ts` passes under `./dashboard.sh test-integration` (Docker).
-- [ ] 2.3 In `test/unit/rooms-query.test.ts`, add:
+- [x] 2.3 In `test/unit/rooms-query.test.ts`, add:
   - `Hinted room filters: status, media node and one feature pin their index for page, ranked and total`;
   - `Several features: no hint on the $or of partial indexes`;
   - `Broad room name prefix: with a status the ranked match and total pin the status index, the page has no hint`

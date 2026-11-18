@@ -44,6 +44,10 @@ export type RoomsListPlan =
 			countFilter: Document;
 			sort: Sort;
 			page: PageQuery;
+			/** Index of the page query, when pinned. */
+			hint?: string;
+			/** Index of `total`, when pinned. */
+			countHint?: string;
 	  }
 	| {
 			kind: 'ranked';
@@ -51,6 +55,8 @@ export type RoomsListPlan =
 			match: Document;
 			countFilter: Document;
 			rank: (asOf: Date) => Document;
+			/** Index of the ranked match and of `total`, when pinned. */
+			hint?: string;
 	  };
 
 type RankedRoomSort = Exclude<RoomSort, 'createdAt'>;
@@ -81,11 +87,32 @@ function anyFeature(flags: Document[]): Document {
 }
 
 /**
+ * Index pinned for the page, the ranked sorts and `total` of a list without a name prefix. Several features are never
+ * pinned: one hint covers the whole `$or`, and a feature's partial index would silently drop the rooms of the others.
+ */
+function filterIndex(params: RoomsListParams, status: RoomStatus | undefined): string | undefined {
+	const [feature, ...others] = new Set(params.features ?? []);
+
+	if (params.mediaNode !== undefined) {
+		return 'mediaNode_status_createdAt_id';
+	}
+
+	if (feature !== undefined) {
+		return others.length === 0 ? `status_createdAt_id_${feature}` : undefined;
+	}
+
+	return status === undefined ? undefined : 'status_createdAt_id';
+}
+
+/**
  * Filter, sort and keyset condition of a rooms list request, following the filter-to-index table of the design: a
- * SID is a point lookup; a name prefix drives `{ nameLower, createdAt }` (media node, status and features residual); a
- * media node drives `{ mediaNode, status, createdAt, _id }`; features are an `$or` of branches, one per partial index; otherwise
- * the `status` picks `{ status, createdAt, _id }` or `{ createdAt, _id }`. The range is always on `createdAt`; a
- * ranked sort key scans it whole and ranks in memory.
+ * SID is a point lookup; a name prefix (media node, status and features residual) leaves the index to the planner; a
+ * media node drives `{ mediaNode, status, createdAt, _id }`; features are an `$or` of branches, one per partial index;
+ * otherwise the `status` picks `{ status, createdAt, _id }` or `{ createdAt, _id }`. The media node, one feature and
+ * the status pin their index for the page, the ranked sorts and `total`. A name prefix with a status pins the status
+ * index of the range for the ranked sorts and `total`: they keep no order, so the planner could pick
+ * `status_endedAt_id`, which the creation range does not bound. The range is always on `createdAt`; a ranked sort key
+ * scans it whole and ranks in memory.
  */
 export function roomsListPlan(params: RoomsListParams, cursor?: CursorPayload): RoomsListPlan {
 	if (params.q !== undefined && ROOM_SID.test(params.q)) {
@@ -127,8 +154,18 @@ export function roomsListPlan(params: RoomsListParams, cursor?: CursorPayload): 
 		return { ...(status ? { status } : {}), [field]: fieldFilter, ...anyFeature(flags) };
 	};
 
+	const statusIndex = params.mediaNode === undefined ? 'status_createdAt_id' : 'mediaNode_status_createdAt_id';
+	const pageIndex = params.q === undefined ? filterIndex(params, status) : undefined;
+	const countIndex = params.q === undefined ? pageIndex : status === undefined ? undefined : statusIndex;
+
 	if (isRankedRoomSort(params.sort)) {
-		return { kind: 'ranked', match: build(bounds), countFilter: build(bounds), rank: ROOM_RANKS[params.sort] };
+		return {
+			kind: 'ranked',
+			match: build(bounds),
+			countFilter: build(bounds),
+			rank: ROOM_RANKS[params.sort],
+			...(countIndex === undefined ? {} : { hint: countIndex })
+		};
 	}
 
 	const page = pageQuery(field, params.order, cursor, range);
@@ -138,6 +175,8 @@ export function roomsListPlan(params: RoomsListParams, cursor?: CursorPayload): 
 		filter: { ...build(page.fieldFilter ?? {}), ...page.ties },
 		countFilter: build(bounds),
 		sort: page.sort,
-		page
+		page,
+		...(pageIndex === undefined ? {} : { hint: pageIndex }),
+		...(countIndex === undefined ? {} : { countHint: countIndex })
 	};
 }

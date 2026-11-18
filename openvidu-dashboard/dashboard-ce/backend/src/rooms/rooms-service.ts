@@ -70,13 +70,14 @@ export class RoomsService {
 				this.repository.ranked({
 					match: plan.match,
 					rank: plan.rank,
+					...(plan.hint === undefined ? {} : { hint: plan.hint }),
 					sort: params.sort,
 					order: params.order,
 					cursor,
 					limit: params.limit,
 					now: this.options.now()
 				}),
-				this.counted(params, options) ? this.repository.count(plan.countFilter) : undefined,
+				this.counted(params, options) ? this.repository.count(plan.countFilter, plan.hint) : undefined,
 				this.options.freshness.staleContext()
 			]);
 
@@ -88,8 +89,8 @@ export class RoomsService {
 		}
 
 		const [fetched, total, context] = await Promise.all([
-			this.repository.list(plan.filter, plan.sort, params.limit + 1),
-			this.counted(params, options) ? this.repository.count(plan.countFilter) : undefined,
+			this.repository.list(plan.filter, plan.sort, params.limit + 1, plan.hint),
+			this.counted(params, options) ? this.repository.count(plan.countFilter, plan.countHint) : undefined,
 			this.options.freshness.staleContext()
 		]);
 		const page = buildPage(

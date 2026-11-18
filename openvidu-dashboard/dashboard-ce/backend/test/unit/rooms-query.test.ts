@@ -129,6 +129,78 @@ describe('rooms list plan', () => {
 		});
 	});
 
+	it('Hinted room filters: status, media node and one feature pin their index for page, ranked and total', () => {
+		const cases: [Record<string, string>, string][] = [
+			[{ status: 'closed' }, 'status_createdAt_id'],
+			[{ status: 'active' }, 'status_createdAt_id'],
+			[{ mediaNode: 'mn-a' }, 'mediaNode_status_createdAt_id'],
+			[{ mediaNode: 'mn-a', status: 'closed', features: 'egress,agent' }, 'mediaNode_status_createdAt_id'],
+			[{ features: 'egress' }, 'status_createdAt_id_egress'],
+			[{ features: 'sip,sip', status: 'closed' }, 'status_createdAt_id_sip']
+		];
+
+		for (const [query, index] of cases) {
+			expect(plan(query), JSON.stringify(query)).toMatchObject({ hint: index, countHint: index });
+
+			for (const sort of ['endedAt', 'duration', 'uniqueIdentities', 'active']) {
+				expect(roomsListPlan(params({ ...query, sort })), JSON.stringify({ ...query, sort })).toMatchObject({
+					kind: 'ranked',
+					hint: index
+				});
+			}
+		}
+
+		const unfiltered = plan();
+
+		expect(unfiltered).not.toHaveProperty('hint');
+		expect(unfiltered).not.toHaveProperty('countHint');
+		expect(roomsListPlan(params({ sort: 'endedAt' }))).not.toHaveProperty('hint');
+	});
+
+	it('Several features: no hint on the $or of partial indexes', () => {
+		for (const query of [{ features: 'egress,agent' }, { features: 'egress,ingress,sip', status: 'closed' }]) {
+			const page = plan(query);
+
+			expect(page.filter, JSON.stringify(query)).toHaveProperty('$or');
+			expect(page).not.toHaveProperty('hint');
+			expect(page).not.toHaveProperty('countHint');
+
+			for (const sort of ['endedAt', 'duration', 'uniqueIdentities', 'active']) {
+				expect(roomsListPlan(params({ ...query, sort })), sort).not.toHaveProperty('hint');
+			}
+		}
+	});
+
+	it('Broad room name prefix: with a status the ranked match and total pin the status index, the page has no hint', () => {
+		const cases: [Record<string, string>, string][] = [
+			[{ q: 'room', status: 'closed' }, 'status_createdAt_id'],
+			[{ q: 'room', status: 'active', features: 'egress' }, 'status_createdAt_id'],
+			[{ q: 'room', status: 'closed', mediaNode: 'mn-a' }, 'mediaNode_status_createdAt_id']
+		];
+
+		for (const [query, index] of cases) {
+			const page = plan(query);
+
+			expect(page, JSON.stringify(query)).not.toHaveProperty('hint');
+			expect(page.countHint).toBe(index);
+
+			for (const sort of ['endedAt', 'duration', 'uniqueIdentities', 'active']) {
+				expect(roomsListPlan(params({ ...query, sort })), JSON.stringify({ ...query, sort })).toMatchObject({
+					kind: 'ranked',
+					hint: index
+				});
+			}
+		}
+
+		for (const query of [{ q: 'room' }, { q: 'room', mediaNode: 'mn-a' }, { q: 'room', features: 'egress' }]) {
+			const page = plan(query);
+
+			expect(page, JSON.stringify(query)).not.toHaveProperty('hint');
+			expect(page).not.toHaveProperty('countHint');
+			expect(roomsListPlan(params({ ...query, sort: 'duration' }))).not.toHaveProperty('hint');
+		}
+	});
+
 	it('cursor: narrows the sort field and adds the tie filter, in every branch and only there', () => {
 		const value = new Date('2026-10-13T10:00:00Z');
 		const decoded = decodeCursor(

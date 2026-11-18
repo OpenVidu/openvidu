@@ -34,16 +34,19 @@ export class RoomsRepository {
 		return this.db.collection<ParticipantDocument>(Collection.PARTICIPANTS);
 	}
 
-	list(filter: Document, sort: Sort, limit: number): Promise<RoomDocument[]> {
+	list(filter: Document, sort: Sort, limit: number, hint?: string): Promise<RoomDocument[]> {
 		return this.rooms
-			.find(filter as Filter<RoomDocument>, { projection: ROOM_LIST_PROJECTION })
+			.find(filter as Filter<RoomDocument>, {
+				projection: ROOM_LIST_PROJECTION,
+				...(hint === undefined ? {} : { hint })
+			})
 			.sort(sort)
 			.limit(limit)
 			.toArray();
 	}
 
-	count(filter: Document): Promise<number> {
-		return this.rooms.countDocuments(filter);
+	count(filter: Document, hint?: string): Promise<number> {
+		return this.rooms.countDocuments(filter, hint === undefined ? {} : { hint });
 	}
 
 	/** One page of a ranked sort over the rooms matching `request.match`. */
