@@ -70,9 +70,19 @@ describe.skipIf(mongoUri === '')(`rooms query plan at scenario ${scenario}`, () 
 		return columnsCsv(roomCsvColumns(false), rows.items);
 	};
 
-	const explainList = async (query: Record<string, string>, bound: (branches: number) => number, limit = LIMIT) => {
+	/**
+	 * Explains the first page of `query` on the plan's hint, as the service reads it: a page examines at most
+	 * `bound(branches)` documents, a ranked list the rooms it matches unless `rankedBound` says otherwise.
+	 */
+	const explainList = async (
+		query: Record<string, string>,
+		bound: (branches: number) => number,
+		limit = LIMIT,
+		rankedBound?: number
+	) => {
 		const params = listParams(query, limit);
 		const plan = roomsListPlan(params);
+		const hint = plan.kind === 'sid' || plan.hint === undefined ? {} : { hint: plan.hint };
 
 		if (plan.kind === 'ranked') {
 			const inRange = await db.collection(Collection.ROOMS).countDocuments(plan.countFilter);
@@ -80,8 +90,12 @@ describe.skipIf(mongoUri === '')(`rooms query plan at scenario ${scenario}`, () 
 
 			return expectIndexBacked(
 				db,
-				{ collection: Collection.ROOMS, pipeline: rankedPipeline({ ...request, cursor: undefined, now }, now) },
-				{ maxDocsExamined: inRange }
+				{
+					collection: Collection.ROOMS,
+					pipeline: rankedPipeline({ ...request, cursor: undefined, now }, now),
+					options: hint
+				},
+				{ maxDocsExamined: rankedBound ?? inRange }
 			);
 		}
 
@@ -91,12 +105,44 @@ describe.skipIf(mongoUri === '')(`rooms query plan at scenario ${scenario}`, () 
 			db,
 			db
 				.collection<RoomDocument>(Collection.ROOMS)
-				.find(plan.filter, { projection: ROOM_LIST_PROJECTION })
+				.find(plan.filter, { projection: ROOM_LIST_PROJECTION, ...hint })
 				.sort(plan.kind === 'page' ? plan.sort : { _id: 1 })
 				.limit(limit + 1),
 			{ maxDocsExamined: bound(branches) }
 		);
 	};
+
+	/** Explains `total` of `query` as `countDocuments` runs it: `$match` then `$group`, on the plan's count hint. */
+	const explainTotal = (query: Record<string, string>, bound: number) => {
+		const plan = roomsListPlan(listParams(query));
+
+		if (plan.kind === 'sid') {
+			throw new Error('expected a range scan');
+		}
+
+		const hint = plan.kind === 'page' ? plan.countHint : plan.hint;
+
+		return expectIndexBacked(
+			db,
+			{
+				collection: Collection.ROOMS,
+				pipeline: [{ $match: plan.countFilter }, { $group: { _id: 1, n: { $sum: 1 } } }],
+				...(hint === undefined ? {} : { options: { hint } })
+			},
+			{ maxDocsExamined: bound }
+		);
+	};
+
+	/** Rooms created in the suite's range that also match `extra`. */
+	const roomsInRange = (extra: Document = {}) =>
+		db.collection(Collection.ROOMS).countDocuments({ createdAt: { $gte: ctx.range.from, $lt: now }, ...extra });
+
+	/** The media node label of a generated room. */
+	const someMediaNode = async () =>
+		(await db.collection<RoomDocument>(Collection.ROOMS).findOne({ mediaNode: { $exists: true } }))?.mediaNode ??
+		'none';
+
+	const RANKED_SORTS = ['endedAt', 'duration', 'uniqueIdentities', 'active'] as const;
 
 	beforeAll(async () => {
 		client = new MongoClient(mongoUri);
@@ -137,49 +183,149 @@ describe.skipIf(mongoUri === '')(`rooms query plan at scenario ${scenario}`, () 
 	describe('list', () => {
 		const page = () => LIMIT + 2;
 
-		it('status set, sort createdAt: status_createdAt_id', async () => {
+		it('Explain plans on the generated database: rooms, status set on status_createdAt_id', async () => {
 			expectIndexes(await explainList({ status: 'closed' }, page), ['status_createdAt_id']);
 		});
 
-		it('status all, sort createdAt: createdAt_id', async () => {
+		it('Explain plans on the generated database: rooms, status all on createdAt_id', async () => {
 			expectIndexes(await explainList({}, page), ['createdAt_id']);
 		});
 
-		it('export at the row cap: the list index, at most the cap and its ties or the rooms in range', async () => {
+		it('Explain plans on the generated database: rooms, export at the row cap on the list index, at most the cap and its ties or the rooms in range', async () => {
 			const cap = () => LIST_EXPORT_MAX_ROWS + 2;
 
 			expectIndexes(await explainList({}, cap, LIST_EXPORT_MAX_ROWS), ['createdAt_id']);
 			expectIndexes(await explainList({ sort: 'duration' }, cap, LIST_EXPORT_MAX_ROWS), ['createdAt_id']);
 		});
 
-		it.each(['endedAt', 'duration', 'uniqueIdentities', 'active'])(
-			'ranked by %s: the range index of the filters, at most the rooms in range',
-			async (sort) => {
-				const { mediaNode } = (await db.collection<RoomDocument>(Collection.ROOMS).findOne({})) ?? {};
+		it.each(RANKED_SORTS)('Ranked sorts over 7 days: rooms by %s', async (sort) => {
+			const mediaNode = await someMediaNode();
+			const inRange = await roomsInRange();
 
-				expectIndexes(await explainList({ sort }, page), ['createdAt_id']);
-				expectIndexes(await explainList({ sort, status: 'closed' }, page), ['status_createdAt_id']);
-				expectIndexes(await explainList({ sort, mediaNode: mediaNode ?? 'none' }, page), [
-					'mediaNode_status_createdAt_id'
-				]);
-				expectIndexes(await explainList({ sort, features: 'egress' }, page), ['status_createdAt_id_egress']);
-				expectIndexes(await explainList({ sort, q: ctx.samples.namePrefix }, page), ['nameLower_createdAt']);
-			}
-		);
+			expectIndexes(await explainList({ sort }, page, LIMIT, inRange), ['createdAt_id']);
+			expectIndexes(await explainList({ sort, status: 'closed' }, page, LIMIT, inRange), ['status_createdAt_id']);
+			expectIndexes(await explainList({ sort, mediaNode }, page, LIMIT, inRange), [
+				'mediaNode_status_createdAt_id'
+			]);
+			expectIndexes(await explainList({ sort, features: 'egress' }, page, LIMIT, inRange), [
+				'status_createdAt_id_egress'
+			]);
+			expectIndexes(await explainList({ sort, q: ctx.samples.namePrefix }, page, LIMIT, inRange), [
+				'nameLower_createdAt'
+			]);
+			expectIndexes(await explainList({ sort, q: 'room', status: 'closed' }, page, LIMIT, inRange), [
+				'status_createdAt_id'
+			]);
+		});
 
-		it('name prefix within one media node: nameLower_createdAt, media node residual', async () => {
-			const { mediaNode } = (await db.collection<RoomDocument>(Collection.ROOMS).findOne({})) ?? {};
+		it('Name prefix within one node: nameLower_createdAt, media node residual', async () => {
+			const room = await db.collection<RoomDocument>(Collection.ROOMS).findOne({
+				nameLower: prefixRegex(ctx.samples.namePrefix),
+				mediaNode: { $exists: true }
+			});
 			const inPrefix = await db
 				.collection(Collection.ROOMS)
 				.countDocuments({ nameLower: prefixRegex(ctx.samples.namePrefix) });
 
 			expectIndexes(
-				await explainList({ q: ctx.samples.namePrefix, mediaNode: mediaNode ?? 'none' }, () => inPrefix),
+				await explainList({ q: ctx.samples.namePrefix, mediaNode: room?.mediaNode ?? 'none' }, () => inPrefix),
 				['nameLower_createdAt']
 			);
 		});
 
-		it('features: one partial index per flag', async () => {
+		it('Hinted room filters: status, media node and one feature on their index for page, total and ranked', async () => {
+			const mediaNode = await someMediaNode();
+			const filters: [Record<string, string>, string, Document][] = [
+				[{ status: 'closed' }, 'status_createdAt_id', { status: RoomStatus.CLOSED }],
+				[{ mediaNode }, 'mediaNode_status_createdAt_id', { mediaNode }],
+				[{ features: 'egress' }, 'status_createdAt_id_egress', { 'features.egress': true }]
+			];
+
+			for (const [query, index, match] of filters) {
+				const ofFilter = await roomsInRange(match);
+
+				expectIndexes(await explainList(query, page), [index]);
+				expectIndexes(await explainTotal(query, ofFilter), [index]);
+
+				for (const sort of RANKED_SORTS) {
+					expectIndexes(await explainList({ ...query, sort }, page, LIMIT, ofFilter), [index]);
+				}
+			}
+		});
+
+		it('Several features: both partial indexes merged, items and total the union of the features', async () => {
+			const query = { features: 'egress,agent' };
+			const pagePlan = await explainList(query, (branches) => branches * (LIMIT + 2));
+			const union = { $or: [{ 'features.egress': true }, { 'features.agent': true }] };
+
+			expectIndexes(pagePlan, ['status_createdAt_id_egress', 'status_createdAt_id_agent']);
+			expect(pagePlan.planStages).not.toContain('SORT');
+			expect((await explainTotal(query, await roomsInRange(union))).collscan).toBe(false);
+
+			const listed = await service.list(listParams(query));
+			const truth = await db
+				.collection<RoomDocument>(Collection.ROOMS)
+				.find({ createdAt: { $gte: ctx.range.from, $lt: now }, ...union }, { projection: { _id: 1 } })
+				.sort({ createdAt: -1, _id: -1 })
+				.limit(LIMIT)
+				.toArray();
+
+			expect(truth.length).toBeGreaterThan(0);
+			expect(listed.total).toBe(await roomsInRange(union));
+			expect(listed.items.map((item) => item.sid)).toEqual(truth.map((room) => room._id));
+		});
+
+		it('Selective room name prefix: nameLower_createdAt for page, total and a ranked sort', async () => {
+			const query = { q: ctx.samples.namePrefix };
+			const ofPrefix = await roomsInRange({ nameLower: prefixRegex(ctx.samples.namePrefix) });
+
+			expectIndexes(await explainList(query, () => ofPrefix), ['nameLower_createdAt']);
+			expectIndexes(await explainTotal(query, ofPrefix), ['nameLower_createdAt']);
+			expectIndexes(await explainList({ ...query, sort: 'duration' }, page, LIMIT, ofPrefix), [
+				'nameLower_createdAt'
+			]);
+		});
+
+		it('Broad room name prefix: a range index within two pages, the status index with a status, never status_endedAt_id', async () => {
+			const inRange = await roomsInRange();
+			const twoPages = () => 2 * (LIMIT + 2);
+			const notEndedAt = (plan: { indexes: string[]; collscan: boolean }, label: string) => {
+				expect(plan.collscan, label).toBe(false);
+				expect(plan.indexes, label).not.toContain('status_endedAt_id');
+			};
+
+			for (const query of [{ q: 'room' }, { q: 'room', status: 'closed' }]) {
+				const label = JSON.stringify(query);
+				const pagePlan = await explainList(query, twoPages);
+
+				notEndedAt(pagePlan, label);
+				expect(
+					pagePlan.indexes.every((index) => ['createdAt_id', 'status_createdAt_id'].includes(index)),
+					label
+				).toBe(true);
+				expect(pagePlan.planStages, label).not.toContain('SORT');
+
+				const total = await explainTotal(query, inRange);
+
+				notEndedAt(total, `${label} total`);
+
+				if (query.status !== undefined) {
+					expectIndexes(total, ['status_createdAt_id']);
+				}
+
+				for (const sort of RANKED_SORTS) {
+					const ranked = await explainList({ ...query, sort }, page, LIMIT, inRange);
+
+					notEndedAt(ranked, `${label} ${sort}`);
+
+					if (query.status !== undefined) {
+						expectIndexes(ranked, ['status_createdAt_id']);
+					}
+				}
+			}
+		});
+
+		it('Explain plans on the generated database: rooms, features on one partial index per flag', async () => {
 			expectIndexes(await explainList({ features: 'egress' }, page), ['status_createdAt_id_egress']);
 			expectIndexes(await explainList({ features: 'egress,agent' }, (branches) => branches * (LIMIT + 2)), [
 				'status_createdAt_id_egress',
@@ -191,27 +337,17 @@ describe.skipIf(mongoUri === '')(`rooms query plan at scenario ${scenario}`, () 
 			);
 		});
 
-		it('name prefix: nameLower_createdAt within the prefix range', async () => {
-			const inPrefix = await db
-				.collection(Collection.ROOMS)
-				.countDocuments({ nameLower: prefixRegex(ctx.samples.namePrefix) });
-
-			expectIndexes(await explainList({ q: ctx.samples.namePrefix }, () => inPrefix), ['nameLower_createdAt']);
-		});
-
-		it('SID: _id', async () => {
+		it('Explain plans on the generated database: rooms, SID on _id', async () => {
 			expectIdLookup(await explainList({ q: ctx.samples.roomSid }, () => 1));
 		});
 
-		it('media node: mediaNode_status_createdAt_id', async () => {
-			const { mediaNode } = (await db.collection<RoomDocument>(Collection.ROOMS).findOne({})) ?? {};
-
-			expectIndexes(await explainList({ mediaNode: mediaNode ?? 'none' }, page), [
+		it('Explain plans on the generated database: rooms, media node on mediaNode_status_createdAt_id', async () => {
+			expectIndexes(await explainList({ mediaNode: await someMediaNode() }, page), [
 				'mediaNode_status_createdAt_id'
 			]);
 		});
 
-		it('a page after a cursor keeps the index and examines the page and the ties', async () => {
+		it('Explain plans on the generated database: rooms, a page after a cursor keeps the index and examines the page and the ties', async () => {
 			const first = await service.list(listParams({ status: 'closed', limit: '25' }));
 			const cursor = decodeCursor(first.nextCursor ?? '', 'createdAt', 'desc');
 
@@ -228,7 +364,11 @@ describe.skipIf(mongoUri === '')(`rooms query plan at scenario ${scenario}`, () 
 			expectIndexes(
 				await expectIndexBacked(
 					db,
-					db.collection<RoomDocument>(Collection.ROOMS).find(plan.filter).sort(plan.sort).limit(26),
+					db
+						.collection<RoomDocument>(Collection.ROOMS)
+						.find(plan.filter, plan.hint === undefined ? {} : { hint: plan.hint })
+						.sort(plan.sort)
+						.limit(26),
 					{ maxDocsExamined: 27 }
 				),
 				['status_createdAt_id']
@@ -267,7 +407,7 @@ describe.skipIf(mongoUri === '')(`rooms query plan at scenario ${scenario}`, () 
 		const matched = (collection: string, match: Document) => async () =>
 			db.collection(collection).countDocuments(match);
 
-		it('summary counts', async () => {
+		it('Explain plans on the generated database: rooms, summary counts', async () => {
 			const range = { $gte: new Date(now.getTime() - DAY), $lt: now };
 			// Any index with the right prefix serves a count; the planner may prefer the smaller partial one, which reads
 			// every active session and checks the kind after the fetch, so the documents it may examine bound the count.
@@ -335,6 +475,11 @@ describe.skipIf(mongoUri === '')(`rooms query plan at scenario ${scenario}`, () 
 				['Export, ranked by duration', '2000 ms', () => exportCsv({ sort: 'duration' })],
 				['List, node', '150 ms', () => service.list(listParams({ mediaNode: biggest?.mediaNode ?? 'none' }))],
 				[`List, prefix "${common}"`, '150 ms', () => service.list(listParams({ q: common }))],
+				[
+					'List, ranked by endedAt, prefix and status closed',
+					'300 ms',
+					() => service.list(listParams({ sort: 'endedAt', q: 'room', status: 'closed' }))
+				],
 				[
 					'Summary, exact (24 h)',
 					'150 ms',

@@ -120,7 +120,7 @@
 
 ## 5. Plan suites: rooms, egress and ingress (implementer)
 
-- [ ] 5.1 In `test/integration/rooms-query-plan.test.ts`, make `explainList` pass the plan's hint (page find, ranked
+- [x] 5.1 In `test/integration/rooms-query-plan.test.ts`, make `explainList` pass the plan's hint (page find, ranked
   pipeline), and add a `total` explain with the count hint. Then:
   - retitle the index tests to `Explain plans on the generated database: rooms, …`;
   - retitle the ranked test to `Ranked sorts over 7 days: rooms by %s`, adding `q=room&status=closed` on
@@ -129,7 +129,7 @@
 
   Covers: Explain plans on the generated database, Ranked sorts over 7 days, Name prefix within one node. Verify:
   the S run passes.
-- [ ] 5.2 Add to the rooms suite:
+- [x] 5.2 Add to the rooms suite:
   - `Hinted room filters: …`: page, `total` and each ranked sort with `status=closed`, `mediaNode` and
     `features=egress`; no `status_endedAt_id`.
   - `Several features: …`: the plan of `features=egress,agent` uses both partial indexes, and the service's `items`
