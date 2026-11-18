@@ -8,3 +8,6 @@
 - Follow-up outside this change: removing the unused rooms index `status_endedAt_id` is a separate data contract and
   writer change, after this one.
 - Applied after `legacy-collections` is archived.
+- Evidence gap recorded for the owner: "Activity range over 30 days" (ingress, carried unchanged from before this
+  change) asks for scenario M over 30 days; an M dataset of 30 days (~60 M documents) does not fit this machine, so the
+  group 7 run covers every suite at M over 7 days and that 30-day premise stays unverified at M.

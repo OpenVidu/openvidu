@@ -35,7 +35,7 @@ for the ranked sorts and for the name searches, which may sort in memory.
 
 Edition: CE. Without `q`, the rooms list SHALL run its page, ranked sorts and `total` on
 `mediaNode_status_createdAt_id` with `mediaNode`, else on the partial index of the feature with one feature, else on
-`status_createdAt_id` with a status. Several features and `q` SHALL leave the index to the query planner, except
+`status_createdAt_id` with a status. Several features without `mediaNode`, and `q`, SHALL leave the index to the query planner, except
 that `q` with a status SHALL run its ranked sorts and `total` on `mediaNode_status_createdAt_id` with `mediaNode` and
 on `status_createdAt_id` otherwise.
 

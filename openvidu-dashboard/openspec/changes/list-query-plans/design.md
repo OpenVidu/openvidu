@@ -91,7 +91,8 @@ lookup.
   - agents list with one agent identity.
 
   Measured at M over 7 days: 1.1 ms, 56.7 ms, 2.0 ms and 2.9 ms. On the broad search, the covered `total` takes 48 of
-  the 56.7 ms. These rows replace "List, identity prefix" (50 ms, reported).
+  the 56.7 ms. These rows replace "List, identity prefix" (50 ms, reported). The same searches ranked by `duration`
+  over 24 hours get rows of 300 ms each, enforced like the other ranked sorts.
 - **Rooms.** Every ranked row stays at 300 ms, enforced. One row is added: ranked by `endedAt` with `q=room&status=closed`
   (the name-prefix-with-status hint), measured at M at 64 ms over 7 days.
 - **Egress.** The current prefix row is broad (`roo`), and a row for one room's name is added; both are within
@@ -253,14 +254,21 @@ lookup.
     - The helpers of the rooms and egress suites pass the plan's hint, as the services do.
     - Where the identity-search scenarios explain the page and `total`, they use the suite's range; only
       `sort=duration` runs over 24 hours, because the sample identity may have no session in the last day.
+    - The ranked cases of the unhinted participants identity search assert membership in the planner's candidates
+      named by "Ranked sorts over 24 hours": `identityLower_joinedAt`, `joinedAt_id`, `kind_status_joinedAt_id` (with
+      `kind`), and with `status` also `status_kind` or `status_lastStatsAt_open`. They also assert its bound.
     - Selective room-name and egress cases are bounded by the matches in the range, which is tighter than the bound
       the scenarios state.
-    - `Activity range over 30 days` is only retitled. At S it runs over the suite's 2-day range, and the 30 days come
-      from the M run.
+    - `Activity range over 30 days` is only retitled. That scenario predates this change and is carried unchanged.
+      At S it runs over the suite's 2-day range. The M run is 7 days for every suite, because a 30-day M dataset does
+      not fit the verification machine, so its 30-day premise stays unverified at M. The orchestrator records the gap
+      in `operations.md`.
     - The rooms, egress and ingress export, cursor-page and summary plan tests carry the
       `Explain plans on the generated database: <list>, …` titles.
     - New budget rows:
       - "Identity search latency": four rows, 300 ms, enforced;
+      - the participants and agents identity searches ranked by `duration` over 24 hours (selective, broad and agents
+        prefixes): 300 ms each, enforced like the other ranked rows;
       - "List, ranked by endedAt, prefix and status closed": 300 ms, enforced;
       - "List, room name prefix of one room": 200 ms, enforced like every egress row.
 

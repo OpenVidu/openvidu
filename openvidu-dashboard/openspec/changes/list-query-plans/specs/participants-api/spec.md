@@ -20,7 +20,7 @@ the list's filters select, and the identity searches that the query planner serv
 #### Scenario: Ranked sorts over 24 hours
 - **GIVEN** a database generated at scenario M
 - **WHEN** the participants and agents lists are explained with `sort=leftAt` and `sort=duration` over 24 hours, with and without `q`, `room`, `kind` and `status`
-- **THEN** each plan scans the range index of its filters (`joinedAt_id`, `kind_status_joinedAt_id`, `roomSid_joinedAt_id`, `identityLower_joinedAt` or `roomSid_identityLower_joinedAt`), or `status_kind` for an identity search with `status`, `totalDocsExamined` is at most the sessions joined in the range or in that status, and the p95 of a page is within 300 ms
+- **THEN** each plan scans the range index of its filters (`joinedAt_id`, `kind_status_joinedAt_id`, `roomSid_joinedAt_id`, `identityLower_joinedAt` or `roomSid_identityLower_joinedAt`), except that an identity search of the participants list without `room`, whose index the query planner chooses, uses one of `identityLower_joinedAt`, `joinedAt_id`, `kind_status_joinedAt_id` (with `kind`), and with `status` also `status_kind` or `status_lastStatsAt_open`; `totalDocsExamined` is at most the sessions joined in the range or, with `status`, the sessions joined in the range plus those in that status; and the p95 of a page is within 300 ms
 
 #### Scenario: Publisher filter
 - **WHEN** the list with `status=active&publisher=true` is explained

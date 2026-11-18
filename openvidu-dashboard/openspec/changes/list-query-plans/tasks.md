@@ -119,6 +119,16 @@
 
   Covers: Identity search latency. Verify: the S run passes and prints one report with the four rows.
 
+- [ ] 4.6 In `Ranked sorts over 24 hours: by %s`, add `q=user&status=active` to the participants cases. For every
+  unhinted participants identity search, assert that the index is one of `identityLower_joinedAt`, `joinedAt_id`,
+  `kind_status_joinedAt_id` (with `kind`), and with `status` also `status_kind` or `status_lastStatsAt_open`. Assert
+  `totalDocsExamined` at most the sessions joined in the range, plus the sessions in that status when `status` is
+  set. Covers: Ranked sorts over 24 hours. Verify: the S run passes, and the test fails when the candidate set is
+  emptied in a scratch edit that is then reverted.
+- [ ] 4.7 Add enforced 300 ms rows for the identity searches ranked by `duration` over 24 hours (participants
+  selective and `q=user`, agents `q=user` and one agent identity) to the suite's report. Covers: Ranked sorts over 24
+  hours. Verify: the S run passes and the report shows the rows.
+
 ## 5. Plan suites: rooms, egress and ingress (implementer)
 
 - [x] 5.1 In `test/integration/rooms-query-plan.test.ts`, make `explainList` pass the plan's hint (page find, ranked
@@ -173,6 +183,10 @@
   bound helper, and whether the rooms plan type reads clearly with `hint` and `countHint`. Apply a small refactor
   here, or record the proposal. Verify: the outcome is written in the hand-off, and task 6.2 passes again if code
   changed.
+
+- [ ] 6.4 Export `countQuery` through `@openvidu-dashboard/backend/testing` (design decision 12). Verify:
+  `./dashboard.sh check` passes, and the export resolves from a suite that imports the testing entry.
+- [ ] 6.5 Run task 6.2 again after tasks 4.6, 4.7 and 6.4. Verify: all pass.
 
 ## 7. Evidence at scenario M (orchestrator)
 
