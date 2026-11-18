@@ -56,17 +56,17 @@ configuration variables and exit codes.
 
 ## Layout
 
-| Path                                | Contents                                                                        | Agent notes |
-| ----------------------------------- | ------------------------------------------------------------------------------- | ----------- |
-| `dashboard-ce/typings`              | Contract shared by backend, frontend and the writer; API types                  | `README.md` |
-| `dashboard-ce/backend`              | Express 5 REST API; serves the built SPA                                        | `AGENTS.md` |
-| `dashboard-ce/frontend`             | Thin CE application and, in `projects/dashboard-ui`, the library with all UI    | `AGENTS.md` |
-| `dashboard-ce/e2e`                  | Playwright tests against the built applications                                 | `AGENTS.md` |
-| `dashboard-ce/docker`               | Image and its smoke test                                                        | `AGENTS.md` |
-| `dashboard-ce/tools/data-generator` | Contract-valid analytics data for tests and the local demo                      | `README.md` |
-| `openspec/`                         | Specs and in-progress changes                                                   |             |
-| `.claude/`, `.agents/`              | Workflow subagents, `orchestrate-change` skill, verifier guard; OpenSpec skills |             |
-| `tools/`, `test/`                   | Scenario coverage script; tests of the workflow tooling (`node --test`)         |             |
+| Path                                | Contents                                                                           | Agent notes |
+| ----------------------------------- | ---------------------------------------------------------------------------------- | ----------- |
+| `dashboard-ce/typings`              | Contract shared by backend, frontend and the writer; API types                     | `README.md` |
+| `dashboard-ce/backend`              | Express 5 REST API; serves the built SPA                                           | `AGENTS.md` |
+| `dashboard-ce/frontend`             | Thin CE application and, in `projects/dashboard-ui`, the library with all UI       | `AGENTS.md` |
+| `dashboard-ce/e2e`                  | Playwright tests against the built applications                                    | `AGENTS.md` |
+| `dashboard-ce/docker`               | Image and its smoke test                                                           | `AGENTS.md` |
+| `dashboard-ce/tools/data-generator` | Contract-valid analytics data for tests and the local demo                         | `README.md` |
+| `openspec/`                         | Specs and in-progress changes                                                      |             |
+| `.claude/`, `.agents/`              | Workflow subagents, `orchestrate-change` skill, verifier guard; OpenSpec skills    |             |
+| `tools/`, `test/`                   | Scenario coverage script; tests of the tooling and package scripts (`node --test`) |             |
 
 Build order: `typings` → `backend` → `dashboard-ui` → `frontend`. Workspace packages are consumed from their TypeScript
 sources through the `source` export condition, so type checking, linting and tests need no build; the runtime uses

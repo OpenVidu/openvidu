@@ -13,8 +13,8 @@
 		"./schema": "./src/schema.ts"
 	},
 	"scripts": {
-		"generate": "tsx src/generate.ts",
-		"keep-alive": "tsx src/keep-alive.ts",
+		"generate": "tsx --conditions=source src/generate.ts",
+		"keep-alive": "tsx --conditions=source src/keep-alive.ts",
 		"typecheck": "tsc --noEmit -p tsconfig.json"
 	},
 	"dependencies": {
