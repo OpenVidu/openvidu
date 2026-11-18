@@ -67,7 +67,7 @@ time, when the orchestrator schedules them.
 
 ## 5. Contract check (orchestrator)
 
-- [ ] 5.1 In the CE workspace, run `./dashboard.sh contract-check <writer checkout>` (Docker). Verify: it ends with
+- [x] 5.1 In the CE workspace, run `./dashboard.sh contract-check <writer checkout>` (Docker). Verify: it ends with
       "contract check passed", with writer and dashboard at schema version 2.
 
 ## 6. Publish (orchestrator)
