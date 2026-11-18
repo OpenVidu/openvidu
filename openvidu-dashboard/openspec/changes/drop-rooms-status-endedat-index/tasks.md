@@ -33,10 +33,10 @@ time, when the orchestrator schedules them.
 
 ## 3. Writer: vendored contract and the drop step (implementer)
 
-- [ ] 3.1 From the CE workspace, run `dashboard-ce/typings/contract/vendor.sh <writer checkout>`. Verify: in the writer
+- [x] 3.1 From the CE workspace, run `dashboard-ce/typings/contract/vendor.sh <writer checkout>`. Verify: in the writer
       checkout, `git diff --stat` lists only `openvidu/analytics/schema/contract/schema/indexes.json`, and
       `go test ./openvidu/analytics/schema/` passes.
-- [ ] 3.2 In the writer checkout, add the drop step as a function of its own at the end of
+- [x] 3.2 In the writer checkout, add the drop step as a function of its own at the end of
       `openvidu/analytics/schema/upgrade.go`, with the retired list (`rooms`: `status_endedAt_id`) beside it: it lists
       the indexes of `rooms`, drops `status_endedAt_id` when listed, treats `IndexNotFound` (code 27, another node
       dropped it first) as done, and appends `rooms.status_endedAt_id` to `InitResult.DroppedIndexes` only when its drop
@@ -46,7 +46,7 @@ time, when the orchestrator schedules them.
       `go build ./openvidu/...` and the lint of `buildtest.yaml` with the Go version of the `Dockerfile`
       (`GOTOOLCHAIN=go$(.github/scripts/go-version.sh Dockerfile) go run
       github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.14.0 run --build-tags integration ./openvidu/...`) pass.
-- [ ] 3.3 In the writer checkout, add the subtests `Retired rooms index dropped` and `Nodes dropping the retired index
+- [x] 3.3 In the writer checkout, add the subtests `Retired rooms index dropped` and `Nodes dropping the retired index
       together` to `TestInitialize` in `openvidu/analytics/schema/initialize_integration_test.go`. The first creates
       `status_endedAt_id` `{ status: 1, endedAt: -1, _id: -1 }` and `operator_custom` on an initialized database, then
       checks the first `Initialize` (dropped list, no created index, `operator_custom` kept, version 2) and a second one
@@ -54,13 +54,13 @@ time, when the orchestrator schedules them.
       checks that all return without error and the index is gone. Covers both writer scenarios. Verify:
       `go test -race -tags integration ./openvidu/analytics/schema/...` passes (Docker), and the first subtest fails
       without the call of 3.2.
-- [ ] 3.4 In the writer checkout, commit 3.1 to 3.3 on `openvidu/main` without pushing. Verify:
+- [x] 3.4 In the writer checkout, commit 3.1 to 3.3 on `openvidu/main` without pushing. Verify:
       `go test -race -tags integration ./openvidu/analytics/...` passes (Docker), as the `Analytics integration tests`
       step of `buildtest.yaml` runs it.
 
 ## 4. Refactor review (implementer)
 
-- [ ] 4.1 Review the diff of both checkouts for a needed refactor; apply a small one here, record a larger one as a
+- [x] 4.1 Review the diff of both checkouts for a needed refactor; apply a small one here, record a larger one as a
       proposed change. Confirm that no `AGENTS.md`, README or `CHANGELOG.md` needs a line (no command, layout or
       convention changes, and the index never shipped). Verify: in the CE workspace, `./dashboard.sh check` passes and
       `./dashboard.sh scenarios drop-rooms-status-endedat-index <writer checkout>` finds a test for every scenario.
