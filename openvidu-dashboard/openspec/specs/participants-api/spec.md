@@ -145,24 +145,82 @@ envelope of the participants list, without `kind` or `publisher`, in every editi
 
 Edition: CE. Every query of this capability SHALL be served by an index of `data-model` with no
 collection scan and with `totalDocsExamined` bounded by the page size plus the documents of the filtered
-range, verified with `explain()` on a generated dataset; only the ranked sorts rank in memory, over the range scan
-that the list's filters select.
+range, verified with `explain()` on a generated dataset; only the ranked sorts, which rank over the range scan that
+the list's filters select, and the identity searches that the query planner serves sort in memory.
 
 #### Scenario: Explain plans
 
 - **GIVEN** a database generated at scenario M
 - **WHEN** the list with and without `q`, `room`, `kind`, `status` and `publisher`, the summary and the agents
   list queries are explained
-- **THEN** no winning plan contains a `COLLSCAN` stage and none sorts in memory, the ranked sorts aside
+- **THEN** no winning plan contains a `COLLSCAN` stage, and none sorts in memory but the ranked sorts and the identity
+  searches of the participants list and of a room
 
 #### Scenario: Ranked sorts over 24 hours
 - **GIVEN** a database generated at scenario M
 - **WHEN** the participants and agents lists are explained with `sort=leftAt` and `sort=duration` over 24 hours, with and without `q`, `room`, `kind` and `status`
-- **THEN** each plan scans the range index of its filters (`joinedAt_id`, `kind_status_joinedAt_id`, `roomSid_joinedAt_id`, `identityLower_joinedAt` or `roomSid_identityLower_joinedAt`), `totalDocsExamined` is at most the sessions joined in the range, and the p95 of a page is within 300 ms
+- **THEN** each plan scans the range index of its filters (`joinedAt_id`, `kind_status_joinedAt_id`, `roomSid_joinedAt_id`, `identityLower_joinedAt` or `roomSid_identityLower_joinedAt`), except that an identity search of the participants list without `room`, whose index the query planner chooses, uses one of `identityLower_joinedAt`, `joinedAt_id`, `kind_status_joinedAt_id` (with `kind`), and with `status` also `status_kind` or `status_lastStatsAt_open`; `totalDocsExamined` is at most the sessions joined in the range or, with `status`, the sessions joined in the range plus those in that status; and the p95 of a page is within 300 ms
 
 #### Scenario: Publisher filter
 - **WHEN** the list with `status=active&publisher=true` is explained
 - **THEN** the plan uses `kind_status_joinedAt_id` with `isPublisher` as a residual filter
+
+### Requirement: Identity search plans
+
+Edition: CE. An identity search (`q` as an identity prefix) with `room` SHALL run on `roomSid_identityLower_joinedAt`.
+Without `room`, the agents list and a participants list whose `kind` lists no `STANDARD` SHALL run it on
+`kind_status_joinedAt_id`, merged in `joinedAt` order with no in-memory sort; any other participants list SHALL leave
+the index to the query planner. Each choice SHALL hold for the page, the ranked sorts and `total`.
+
+#### Scenario: Selective identity prefix
+
+- **GIVEN** a generated database whose STANDARD identities all start with `user-`
+- **WHEN** the participants list is explained with `q` set to one session's whole identity, for the page, `total`
+  and `sort=duration` over 24 hours
+- **THEN** each plan uses `identityLower_joinedAt`, the page sorts in memory, and each examines at most the sessions
+  of that identity joined in the range
+
+#### Scenario: Broad identity prefix
+
+- **GIVEN** the same database
+- **WHEN** the participants list is explained with `q=user`, for the page, `total` and `sort=duration` over 24 hours
+- **THEN** the page uses `joinedAt_id` with no in-memory sort and examines at most two pages, and `total` and the
+  ranked sort examine at most the sessions joined in the range, with no `COLLSCAN`
+
+#### Scenario: Identity prefix with a status
+
+- **GIVEN** the same database
+- **WHEN** the participants list is explained with `q=user&status=active`, for the page and `total`
+- **THEN** no plan contains a `COLLSCAN`, and each examines at most the sessions joined in the range plus the active
+  sessions
+
+#### Scenario: Agents identity prefix
+
+- **GIVEN** the same database
+- **WHEN** the agents list is explained with `q=user`, which no agent identity starts with, and with `q` set to one
+  agent identity, for the page, `total` and `sort=duration` over 24 hours
+- **THEN** each plan uses `kind_status_joinedAt_id`, the page has no in-memory sort, and each examines at most the
+  agent sessions joined in the range
+
+#### Scenario: Identity prefix of a service kind
+
+- **GIVEN** the same database
+- **WHEN** the participants list is explained with `kind=AGENT&q=user` and with `kind=STANDARD,AGENT` and `q` set to
+  one session's whole identity
+- **THEN** the first uses `kind_status_joinedAt_id` with no in-memory sort, as the agents list does, and the second
+  uses `identityLower_joinedAt`, as the query planner chooses
+
+#### Scenario: Identity prefix within a room
+
+- **WHEN** the participants and agents lists are explained with `q` and `room`
+- **THEN** each plan uses `roomSid_identityLower_joinedAt` and examines at most the sessions of that room
+
+#### Scenario: Identity search latency
+
+- **GIVEN** a database generated at scenario M over 7 days whose STANDARD identities all start with `user-`
+- **WHEN** a page with its `total` is requested from the participants list with one whole identity and with
+  `q=user`, and from the agents list with `q=user` and with one agent identity
+- **THEN** the p95 of each is within 300 ms
 
 ### Requirement: Participants summary endpoint
 Edition: CE. `GET /api/v1/participants/summary` SHALL accept `from`, `to` and `tz` and answer `200` with
@@ -360,4 +418,4 @@ answer `400` `VALIDATION_ERROR`. The participants list has no `origin` parameter
 #### Scenario: Origin explain plans
 - **GIVEN** a database generated at scenario M, whose agents are of both origins
 - **WHEN** the agents list is explained without `origin`, with `origin=openvidu` and with `origin=third-party`, alone and with `status`, `q`, `q` and `room`, `room`, and the ranked sorts over 24 hours
-- **THEN** in each combination the plans with `origin` use the same index as the plan without it, one of `kind_status_joinedAt_id`, `identityLower_joinedAt`, `roomSid_identityLower_joinedAt` and `roomSid_joinedAt_id`, with no `COLLSCAN`, and examine the same documents as it when the page does not cut the scan short, so a page with `origin` never examines more than that scan holds; no plan sorts in memory but the ranked sorts and the identity searches (`q`, `q` and `room`); and the p95 of a page with `origin` is within 300 ms
+- **THEN** in each combination the plans with `origin` use the same index as the plan without it, with no `COLLSCAN`: `roomSid_identityLower_joinedAt` with `q` and `room`, `roomSid_joinedAt_id` with `room` alone and `kind_status_joinedAt_id` otherwise; they examine the same documents as it when the page does not cut the scan short, so a page with `origin` never examines more than that scan holds; no plan sorts in memory but the ranked sorts and the identity searches of a room; and the p95 of a page with `origin` is within 300 ms

@@ -221,7 +221,7 @@ Edition: CE and PRO. Every query of this capability SHALL run on an index of the
 (`dashboard-ce/typings/contract/indexes.ts`), or on `_id` for the hourly rollups the long-range summary reads: no
 winning plan contains a `COLLSCAN`, and `totalDocsExamined` is bounded
 by the page size plus the documented residual filters, and for the list by the ingresses of the three branches of the
-activity range.
+activity range plus, with `q`, the ingresses whose name starts with it.
 
 #### Scenario: Explain plans on the generated database
 
@@ -235,6 +235,14 @@ activity range.
 - **WHEN** the list is explained with each sort key over 30 days for `createdAt` and over 7 days for the others
 - **THEN** the three branches use `createdAt_id`, `lastSessionAt_id` and `status_createdAt`, `totalDocsExamined` is at
   most the ingresses the branches select, and the p95 of a page is within 200 ms
+
+#### Scenario: Ingress name prefix
+
+- **GIVEN** a generated database whose ingress names all start with `ingress-`
+- **WHEN** the list is explained over the last hour and over the last 24 hours with a prefix of one ingress name and
+  with `q=ingress`
+- **THEN** no plan contains a `COLLSCAN`, and each examines at most the ingresses of the three branches plus the
+  ingresses whose name starts with the prefix
 
 ### Requirement: Ranked ingress sorts
 

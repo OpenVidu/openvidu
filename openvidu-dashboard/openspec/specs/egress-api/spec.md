@@ -191,7 +191,7 @@ Edition: CE and PRO. Every query of this capability SHALL run on an index of the
 (`dashboard-ce/typings/contract/indexes.ts`), or on `_id` for the hourly rollups the long-range summary reads: no
 winning plan contains a `COLLSCAN`, and `totalDocsExamined` is bounded
 by the page size plus the documented residual filters for the index-ordered pages and by the egresses started in the
-range for the ranked sorts.
+range for the ranked sorts and for the room-name searches without `room`.
 
 #### Scenario: Explain plans on the generated database
 
@@ -201,8 +201,12 @@ range for the ranked sorts.
 
 #### Scenario: Room-name prefix
 
-- **WHEN** the list with `q` set to a room-name prefix and no `room` is explained
-- **THEN** the plan uses `roomNameLower_startedAt` with the range on `startedAt`, and no query reads `rooms`
+- **GIVEN** a generated database whose room names all start with `room-`
+- **WHEN** the list with `q` and no `room` is explained with a prefix of one room's name and with `q=room`, for the
+  page, `total` and `sort=duration`
+- **THEN** the first runs on `roomNameLower_startedAt`, the page of the second uses `startedAt_id` with no in-memory
+  sort and examines at most two pages, every plan examines at most the egresses started in the range, and no query
+  reads `rooms`
 
 #### Scenario: Ranked sorts over 7 days
 
