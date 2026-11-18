@@ -1,11 +1,12 @@
 import {
+	type AggregatePlan,
 	type ExplainSummary,
 	explainQuery,
 	isAggregate,
 	type PlannableQuery,
 	summarizeExplain
 } from '@openvidu-dashboard/data-generator/plan';
-import type { Db } from 'mongodb';
+import type { Db, Document } from 'mongodb';
 import { expect } from 'vitest';
 
 export type { ExplainSummary, PlannableQuery };
@@ -56,6 +57,18 @@ export async function expectIndexBacked(
 	}
 
 	return plan;
+}
+
+/**
+ * The aggregation `countDocuments` runs for `match`, to explain a list's `total`.
+ * @param hint index the count is pinned to, if any
+ */
+export function countQuery(collection: string, match: Document, hint?: string): AggregatePlan {
+	return {
+		collection,
+		pipeline: [{ $match: match }, { $group: { _id: 1, n: { $sum: 1 } } }],
+		...(hint === undefined ? {} : { options: { hint } })
+	};
 }
 
 /** The winning plan uses exactly `expected` and scans no collection. */

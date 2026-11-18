@@ -22,7 +22,7 @@ import { egressesListPlan } from '../../src/egress/egress-query.js';
 import { EGRESS_CSV_COLUMNS } from '../../src/egress/egress-csv.js';
 import { egressesExportQuery, egressesListQuery } from '../../src/egress/egress-schemas.js';
 import { EgressService } from '../../src/egress/egress-service.js';
-import { expectIdLookup, expectIndexBacked, expectIndexes, p95 } from '../support/query-plan.js';
+import { countQuery, expectIdLookup, expectIndexBacked, expectIndexes, p95 } from '../support/query-plan.js';
 import { expectWithinBudgets } from '../support/latency-budget.js';
 
 /**
@@ -132,18 +132,9 @@ describe.skipIf(mongoUri === '')(`egress query plan at scenario ${scenario}`, ()
 			throw new Error('expected a page or ranked plan');
 		}
 
-		return expectIndexBacked(
-			db,
-			{
-				collection: Collection.EGRESSES,
-				pipeline: [
-					{ $match: { ...plan.filter, startedAt: { $gte: params.from, $lt: params.to } } },
-					{ $group: { _id: 1, n: { $sum: 1 } } }
-				],
-				...(plan.hint === undefined ? {} : { options: { hint: plan.hint } })
-			},
-			{ maxDocsExamined: bound }
-		);
+		const match = { ...plan.filter, startedAt: { $gte: params.from, $lt: params.to } };
+
+		return expectIndexBacked(db, countQuery(Collection.EGRESSES, match, plan.hint), { maxDocsExamined: bound });
 	};
 
 	/** Egresses started in the suite's range. */
