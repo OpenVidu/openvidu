@@ -80,6 +80,8 @@ const ENTITIES_TIP = /^12 of 90 days so far · ≈ [\d.]+ MB at full retention \
 
 test('Retention tip by keyboard', async ({ page }) => {
 	await page.goto('/settings?tab=data');
+	// The tooltip shows once on focus: wait for the Data tab to settle so that nothing closes it while it renders.
+	await page.waitForLoadState('networkidle');
 
 	const tip = page.getByRole('button', { name: 'About Entities retention' });
 
