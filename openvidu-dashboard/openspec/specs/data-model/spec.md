@@ -490,6 +490,16 @@ Edition: CE and PRO. `ingresses` SHALL have the index `lastSessionAt_id` `{ last
 - **WHEN** the indexes of `ingresses` are listed
 - **THEN** `lastSessionAt_id` exists with the key `{ lastSessionAt: -1, _id: -1 }` and the partial filter `{ lastSessionAt: { $exists: true } }`
 
+### Requirement: Rooms end time not indexed
+Edition: CE and PRO. The shared contract SHALL define no `rooms` index whose key contains `endedAt`. Room lists and
+counts read the creation range on `createdAt` and rank by the end time in memory, so such an index serves no query and
+only competes in the planner's trials with the indexes the range bounds.
+
+#### Scenario: No rooms index on endedAt
+- **GIVEN** the index list of the contract (`schema/indexes.json`)
+- **WHEN** its `rooms` entries are read
+- **THEN** none has `endedAt` in its key and none is named `status_endedAt_id`
+
 ### Requirement: Generated data follows the writer's shape
 Edition: CE and PRO. The data generator SHALL write documents in the writer's shape: event payloads as the writer's
 protojson (snake_case names nested under `room`, `participant`, `track`, `egress` and `ingress`, 64-bit integers as

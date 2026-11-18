@@ -276,8 +276,7 @@ on `status_createdAt_id` otherwise.
 - **WHEN** the list is explained with `status=closed`, with `mediaNode` and with `features=egress`, for the page,
   `total` and each ranked sort
 - **THEN** every plan of a filter uses its index (`status_createdAt_id`, `mediaNode_status_createdAt_id`,
-  `status_createdAt_id_egress`), never `status_endedAt_id`, and examines at most the rooms of that filter created in
-  the range
+  `status_createdAt_id_egress`) and examines at most the rooms of that filter created in the range
 
 #### Scenario: Several features
 
@@ -296,8 +295,8 @@ on `status_createdAt_id` otherwise.
 - **WHEN** the list is explained with `q=room`, alone and with `status=closed`, for the page, `total` and each ranked
   sort
 - **THEN** the page uses a range index with no in-memory sort and examines at most two pages, the ranked sorts and
-  `total` with `status=closed` use `status_createdAt_id`, and no plan uses `status_endedAt_id` or examines more than
-  the rooms created in the range
+  `total` with `status=closed` use `status_createdAt_id`, and no plan scans the collection or examines more than the
+  rooms created in the range
 
 ### Requirement: Rooms CSV export
 
