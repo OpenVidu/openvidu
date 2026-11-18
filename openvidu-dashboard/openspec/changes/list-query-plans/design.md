@@ -125,7 +125,8 @@ lookup.
 3. **Agents list, and a participants list whose kinds exclude `STANDARD`: `kind_status_joinedAt_id`, merged.**
    - The `q` branch without a room is built as the kind and status branch builds it: `kind` as one value or `$in`,
      `status` as given or `$in` every status. The identity prefix, `isPublisher` and the origin are residual filters,
-     and the plan is pinned on the page, the ranked sorts and `total`.
+     and the plan is pinned on the page, the ranked sorts and `total`. Both branches build their filter with one
+     shared local function.
    - The condition is "`kind` given and without `STANDARD`". `agents()` passes `[AGENT]`, so both lists take the
      branch with no new flag (owner's answer 1). With `STANDARD` among the kinds, the query is the participants case
      of decision 2.
@@ -141,7 +142,10 @@ lookup.
    1 ms or less at M.
 
 5. **Rooms: pin the status, media node and single-feature branches for the page, the ranked sorts and `total`.**
-   - The plan type gains `hint`, also passed to `total`, and `RoomsRepository.list`, `count` and `ranked` accept it.
+   - The `page` plan gains two optional fields: `hint` for the find and `countHint` for `total`. Every pinned plan
+     sets `countHint` explicitly; it is never inferred from `hint`.
+   - The `ranked` plan gains an optional `hint`, used for the match and for `total`.
+   - `RoomsRepository.list` and `count` take an optional hint; `ranked` already passed one through `rankedPage`.
      For these branches, the query `total` runs is the page filter without the cursor condition, so the same index
      serves it. The owner accepted the `total`.
    - At M the trials are clear for the media node (101/203 against 70/203) and the feature (101/203 against 57/203),
@@ -165,7 +169,7 @@ lookup.
      index is not eligible.
    - **The fix:** when `q` comes with a status, the ranked sort and `total` pin `mediaNode_status_createdAt_id` with
      `mediaNode`, and `status_createdAt_id` otherwise. Both are bounded by the rooms of that status created in the
-     range. The page stays with the planner.
+     range. The page stays with the planner: its plan has no `hint` and carries the pin in `countHint`.
    - **Cost**, measured on the M database (planner → pin):
 
      | Case                       | `total`         | Ranked         |
@@ -186,8 +190,10 @@ lookup.
    - **Accepted:** without a status, a broad prefix ranked ties `nameLower_createdAt` with `createdAt_id`. Both read
      at most the rooms of the range, as in the participants case of decision 2.
 
-8. **Egress room-name search without a room: no pin** (owner's answer 3). The plan type makes `hint` optional. The
-   service reads a `q` page without a hint through `sortedPage`, and the count and the ranked sort run without a hint.
+8. **Egress room-name search without a room: no pin** (owner's answer 3).
+   - The plan type makes `hint` optional, and `roomNameLower_startedAt` leaves the `EgressesIndex` type.
+   - The service reads a `q` page without a hint through `sortedPage`, sorted on `{ startedAt, _id }`. Its count
+     and ranked sort run without a hint; `EgressRepository.count` takes an optional hint.
 
    | Case (M)                    | Pinned `roomNameLower_startedAt` | Planner |
    | --------------------------- | -------------------------------- | ------- |
@@ -240,14 +246,29 @@ lookup.
       - a broad prefix, or a prefix with a status, on the participants list;
       - the rooms broad prefix ranked without a status;
       - the ingress prefixes.
-    - `total` is explained as `countDocuments` runs it: `$match` then `$group`, with the same hint.
+    - `total` is explained as `countDocuments` runs it: `$match` then `$group`, with the same hint. One helper,
+      `countQuery(collection, match, hint?)` in `backend/test/support/query-plan.ts`, builds that explain for the
+      participants, rooms and egress suites. It is exported through `@openvidu-dashboard/backend/testing` with the
+      rest of `test/support/`. There is no shared helper for the in-range bounds.
     - The helpers of the rooms and egress suites pass the plan's hint, as the services do.
+    - Where the identity-search scenarios explain the page and `total`, they use the suite's range; only
+      `sort=duration` runs over 24 hours, because the sample identity may have no session in the last day.
+    - Selective room-name and egress cases are bounded by the matches in the range, which is tighter than the bound
+      the scenarios state.
+    - `Activity range over 30 days` is only retitled. At S it runs over the suite's 2-day range, and the 30 days come
+      from the M run.
+    - The rooms, egress and ingress export, cursor-page and summary plan tests carry the
+      `Explain plans on the generated database: <list>, …` titles.
+    - New budget rows:
+      - "Identity search latency": four rows, 300 ms, enforced;
+      - "List, ranked by endedAt, prefix and status closed": 300 ms, enforced;
+      - "List, room name prefix of one room": 200 ms, enforced like every egress row.
 
 13. **Code structure.**
-    - The participants plan keeps one `index` choice, now dependent on the kinds. The rooms plan returns the hint
-      next to the filters it already returns.
-    - No new abstraction. The three services already accept a hint, except `RoomsRepository`, which gains the
-      parameter.
+    - The participants plan keeps one `index` choice, now dependent on the kinds. The rooms plan returns `hint` and
+      `countHint` next to the filters it already returns.
+    - No new production abstraction. `RoomsRepository.list` and `count`, and `EgressRepository.count`, gain an
+      optional hint parameter. The refactor review added only the test helper `countQuery` (decision 12).
 
 14. **CHANGELOG and AGENTS.md.**
     - One line under `Improved` → `Data` (proposal).

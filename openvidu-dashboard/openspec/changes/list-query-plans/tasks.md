@@ -35,12 +35,13 @@
 
 ## 2. Backend: rooms list plans (implementer)
 
-- [x] 2.1 In `src/rooms/rooms-query.ts`, add an optional `hint` to the `page` and `ranked` plans (decisions 5 to 7):
+- [x] 2.1 In `src/rooms/rooms-query.ts`, add an optional `hint` and `countHint` to the `page` plan and an optional `hint`
+  (match and total) to the `ranked` plan (decisions 5 to 7):
   - Without `q`: `mediaNode_status_createdAt_id` with `mediaNode`, else `status_createdAt_id_<feature>` with exactly
     one feature, else `status_createdAt_id` with a status. No hint with several features or with no filter.
   - With `q` and a status: no hint on the page; a hint for the ranked match and the count, namely
-    `mediaNode_status_createdAt_id` with `mediaNode` and `status_createdAt_id` otherwise. Return that hint as a
-    separate `countHint` on the page plan.
+    `mediaNode_status_createdAt_id` with `mediaNode` and `status_createdAt_id` otherwise. Every pinned page plan
+    sets `countHint` explicitly.
   - Update the doc comment with the reason for the `q` and status pin (`status_endedAt_id` is not bounded by the
     creation range).
 
@@ -88,8 +89,8 @@
 
   Remove `identity prefix: identityLower_joinedAt within the prefix range`; task 4.3 replaces it. Covers: Explain
   plans, Ranked sorts over 24 hours, Publisher filter. Verify: the S run passes.
-- [x] 4.3 Add one test per identity-search scenario, each explaining page, `total` and `sort=duration` over 24 hours
-  where the scenario says so:
+- [x] 4.3 Add one test per identity-search scenario, each explaining the page and `total` over the suite's range, and
+  `sort=duration` over 24 hours where the scenario says so:
   - `Selective identity prefix: …`: `identityLower_joinedAt`, page `SORT`, at most the sessions of that identity in
     range.
   - `Broad identity prefix: …`: page on `joinedAt_id` without `SORT`, at most `2 * (LIMIT + 2)` documents; `total`
