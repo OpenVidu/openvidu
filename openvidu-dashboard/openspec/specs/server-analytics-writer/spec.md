@@ -387,8 +387,10 @@ the same time SHALL all complete it.
 - **THEN** every node completes initialization and the legacy documents end up once in `legacy_events`
 
 ### Requirement: Contract upgrade
-Edition: CE and PRO. When `schema_meta.schema` records an older contract version, the writer SHALL remove from the
-existing documents the fields that version had and the current one has not, before recording its own version.
+Edition: CE and PRO. When `schema_meta.schema` records an older contract version, the writer SHALL remove the fields
+that version had and the current one has not from the `tracks` documents still holding them, before recording its
+own version; `track_stats` and `events` keep them until retention expires. A repeated or concurrent upgrade rewrites
+nothing already upgraded, and a version recorded by a newer writer is never lowered.
 
 #### Scenario: Upgrade from schema version 1
 - **GIVEN** a database whose `schema_meta.schema` records version 1 and `tracks` documents with `frames` in `publishStats.layers` and in `internal.publishStats`
