@@ -350,4 +350,18 @@ describe('index definitions', () => {
 			expect(index.retentionClass !== undefined && index.options.expireAfterSeconds !== undefined).toBe(false);
 		}
 	});
+
+	it('No rooms index on endedAt', () => {
+		const rooms = indexes.filter((index) => index.collection === Collection.ROOMS);
+
+		expect(rooms.length).toBeGreaterThan(0);
+
+		for (const index of rooms) {
+			expect(index.name, index.name).not.toBe('status_endedAt_id');
+			expect(
+				index.key.some(([field]) => field === 'endedAt'),
+				index.name
+			).toBe(false);
+		}
+	});
 });

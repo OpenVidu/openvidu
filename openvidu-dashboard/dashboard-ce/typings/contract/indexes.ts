@@ -42,11 +42,6 @@ export const INDEXES: readonly IndexDefinition[] = [
 		['createdAt', -1],
 		['_id', -1]
 	]),
-	index(Collection.ROOMS, 'status_endedAt_id', [
-		['status', 1],
-		['endedAt', -1],
-		['_id', -1]
-	]),
 	index(Collection.ROOMS, 'nameLower_createdAt', [
 		['nameLower', 1],
 		['createdAt', -1]

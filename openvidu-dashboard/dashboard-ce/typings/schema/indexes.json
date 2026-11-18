@@ -20,16 +20,6 @@
 	},
 	{
 		"collection": "rooms",
-		"name": "status_endedAt_id",
-		"key": [
-			["status", 1],
-			["endedAt", -1],
-			["_id", -1]
-		],
-		"options": {}
-	},
-	{
-		"collection": "rooms",
 		"name": "nameLower_createdAt",
 		"key": [
 			["nameLower", 1],

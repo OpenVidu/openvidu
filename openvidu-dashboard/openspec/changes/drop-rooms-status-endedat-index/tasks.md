@@ -7,11 +7,11 @@ time, when the orchestrator schedules them.
 
 ## 1. Typings: contract without the index (implementer)
 
-- [ ] 1.1 In the CE workspace, remove the `status_endedAt_id` entry from `INDEXES` in
+- [x] 1.1 In the CE workspace, remove the `status_endedAt_id` entry from `INDEXES` in
       `dashboard-ce/typings/contract/indexes.ts` and run `pnpm --filter @openvidu-dashboard/typings contract`. Verify:
       `git diff --stat` lists `contract/indexes.ts` and `schema/indexes.json` only under `dashboard-ce/typings`
       (fixtures, `contract_version.txt` and `src/schema-version.ts` untouched; the version stays 2).
-- [ ] 1.2 In the CE workspace, add the test `No rooms index on endedAt` to the `index definitions` suite of
+- [x] 1.2 In the CE workspace, add the test `No rooms index on endedAt` to the `index definitions` suite of
       `dashboard-ce/typings/test/contract.test.ts`: no `rooms` entry of `schema/indexes.json` has `endedAt` in its key
       or is named `status_endedAt_id`. Covers "No rooms index on endedAt". Verify:
       `pnpm --filter @openvidu-dashboard/typings test` passes, and fails with the entry of 1.1 restored.
