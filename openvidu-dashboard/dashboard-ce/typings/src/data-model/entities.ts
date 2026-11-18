@@ -216,7 +216,6 @@ export interface RtpLayerStats {
 	layer: number;
 	bytes: number;
 	packets: number;
-	frames: number;
 }
 
 /** Final RTP statistics of a closed publication or subscription (`TRACK_PUBLISH_STATS` / `TRACK_SUBSCRIBE_STATS`). */

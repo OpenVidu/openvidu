@@ -248,7 +248,7 @@ signal/data pseudo-tracks SHALL only add to the participant byte totals, without
 
 #### Scenario: Fields of a stats document
 - **WHEN** a stats document is read
-- **THEN** it has `ts`, `meta { roomSid, participantSid, trackSid (track mode only), kind (`up` | `down`), nodeId }`, `score`, `minScore`, `medianScore`, `bytes`, `packets`, `packetsLost`, `rttMs`, `jitterMs`, `nacks`, `plis`, `firs`, `frames`, `layers[] { layer, bytes, packets, frames }`, `mimeType` (track mode only)
+- **THEN** it has `ts`, `meta { roomSid, participantSid, trackSid (track mode only), kind (`up` | `down`), nodeId }`, `score`, `minScore`, `medianScore`, `bytes`, `packets`, `packetsLost`, `rttMs`, `jitterMs`, `nacks`, `plis`, `firs`, `layers[] { layer, bytes, packets }`, `mimeType` (track mode only)
 
 #### Scenario: Participant mode merges tracks
 - **GIVEN** `participant` mode and one flush with camera and microphone upstream stats of the same participant

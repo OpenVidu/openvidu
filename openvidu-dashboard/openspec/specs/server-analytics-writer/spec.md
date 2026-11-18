@@ -189,7 +189,7 @@ per track and direction. Both modes produce the same document shape.
 #### Scenario: Participant mode merge rules
 - **GIVEN** `stats_detail: participant` and one flush with camera and microphone upstream stats of the same participant
 - **WHEN** it is stored
-- **THEN** one upstream document exists with `bytes`, `packets`, `packetsLost`, `nacks`, `plis`, `firs` and `frames` summed, `rttMs` and `jitterMs` at their maximum, `score` as the mean of the non-zero scores, `minScore` as the minimum, `medianScore` as the median of the track medians, `layers` summed per layer index and no `mimeType`
+- **THEN** one upstream document exists with `bytes`, `packets`, `packetsLost`, `nacks`, `plis` and `firs` summed, `rttMs` and `jitterMs` at their maximum, `score` as the mean of the non-zero scores, `minScore` as the minimum, `medianScore` as the median of the track medians, `layers` summed per layer index and no `mimeType`
 
 #### Scenario: Track mode
 - **GIVEN** `stats_detail: track` and the same flush
@@ -385,6 +385,15 @@ the same time SHALL all complete it.
 - **GIVEN** an empty database or a legacy-shaped `events` collection
 - **WHEN** several nodes initialize at the same time
 - **THEN** every node completes initialization and the legacy documents end up once in `legacy_events`
+
+### Requirement: Contract upgrade
+Edition: CE and PRO. When `schema_meta.schema` records an older contract version, the writer SHALL remove from the
+existing documents the fields that version had and the current one has not, before recording its own version.
+
+#### Scenario: Upgrade from schema version 1
+- **GIVEN** a database whose `schema_meta.schema` records version 1 and `tracks` documents with `frames` in `publishStats.layers` and in `internal.publishStats`
+- **WHEN** the server starts
+- **THEN** no `tracks` document has a `frames` field and `schema_meta.schema` records version 2
 
 ### Requirement: Legacy events collection at first start
 Edition: CE and PRO. Before initializing, the writer SHALL rename a legacy `events` collection, written by

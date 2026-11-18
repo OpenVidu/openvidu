@@ -25,7 +25,7 @@
 			"channels": { "$numberInt": "2" },
 			"sampleRate": { "$numberInt": "48000" }
 		},
-		"schemaVersion": { "$numberInt": "1" },
+		"schemaVersion": { "$numberInt": "2" },
 		"expiresAt": { "$date": "2027-01-10T10:20:00.000Z" }
 	},
 	{
@@ -51,7 +51,7 @@
 			"channels": { "$numberInt": "2" },
 			"sampleRate": { "$numberInt": "48000" }
 		},
-		"schemaVersion": { "$numberInt": "1" },
+		"schemaVersion": { "$numberInt": "2" },
 		"expiresAt": null
 	}
 ]

@@ -67,7 +67,7 @@
 			"trackSids": ["TR_aLiceCam3Vp8", "TR_aLiceMic0pus"],
 			"egressIds": ["EG_rec0rdMp4Kq2", "EG_trackF4iled9"]
 		},
-		"schemaVersion": { "$numberInt": "1" },
+		"schemaVersion": { "$numberInt": "2" },
 		"expiresAt": { "$date": "2027-01-10T09:45:00.000Z" }
 	},
 	{
@@ -134,7 +134,7 @@
 			"ingressSessionIds": ["rtmp_7f3c9a1e2b4d", "rtmp_9d4e2f6a8c1b"],
 			"activeIngressSessionIds": ["rtmp_9d4e2f6a8c1b"]
 		},
-		"schemaVersion": { "$numberInt": "1" },
+		"schemaVersion": { "$numberInt": "2" },
 		"expiresAt": null
 	}
 ]

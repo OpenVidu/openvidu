@@ -64,24 +64,21 @@
 				{
 					"layer": { "$numberInt": "0" },
 					"bytes": { "$numberLong": "45000000" },
-					"packets": { "$numberInt": "52000" },
-					"frames": { "$numberInt": "35880" }
+					"packets": { "$numberInt": "52000" }
 				},
 				{
 					"layer": { "$numberInt": "1" },
 					"bytes": { "$numberLong": "100000000" },
-					"packets": { "$numberInt": "98000" },
-					"frames": { "$numberInt": "71760" }
+					"packets": { "$numberInt": "98000" }
 				},
 				{
 					"layer": { "$numberInt": "2" },
 					"bytes": { "$numberLong": "220000000" },
-					"packets": { "$numberInt": "160000" },
-					"frames": { "$numberInt": "71760" }
+					"packets": { "$numberInt": "160000" }
 				}
 			]
 		},
-		"schemaVersion": { "$numberInt": "1" }
+		"schemaVersion": { "$numberInt": "2" }
 	},
 	{
 		"_id": "TR_aLiceMic0pus",
@@ -119,7 +116,7 @@
 			"durationMs": { "$numberLong": "2392000" },
 			"layers": []
 		},
-		"schemaVersion": { "$numberInt": "1" }
+		"schemaVersion": { "$numberInt": "2" }
 	},
 	{
 		"_id": "TR_daveCamH264x",
@@ -155,7 +152,7 @@
 			"total": { "$numberInt": "0" },
 			"failed": { "$numberInt": "0" }
 		},
-		"schemaVersion": { "$numberInt": "1" },
+		"schemaVersion": { "$numberInt": "2" },
 		"expiresAt": null
 	},
 	{
@@ -177,7 +174,7 @@
 			"total": { "$numberInt": "0" },
 			"failed": { "$numberInt": "0" }
 		},
-		"schemaVersion": { "$numberInt": "1" },
+		"schemaVersion": { "$numberInt": "2" },
 		"expiresAt": null
 	},
 	{
@@ -232,12 +229,11 @@
 				{
 					"layer": { "$numberInt": "0" },
 					"bytes": { "$numberLong": "668000000" },
-					"packets": { "$numberInt": "480000" },
-					"frames": { "$numberInt": "35640" }
+					"packets": { "$numberInt": "480000" }
 				}
 			]
 		},
-		"schemaVersion": { "$numberInt": "1" }
+		"schemaVersion": { "$numberInt": "2" }
 	},
 	{
 		"_id": "TR_1ngVid2H264b",
@@ -273,7 +269,7 @@
 			"failed": { "$numberInt": "0" }
 		},
 		"internal": { "subscriberSids": ["PA_dav3Pub6Mn2"] },
-		"schemaVersion": { "$numberInt": "1" },
+		"schemaVersion": { "$numberInt": "2" },
 		"expiresAt": null
 	}
 ]

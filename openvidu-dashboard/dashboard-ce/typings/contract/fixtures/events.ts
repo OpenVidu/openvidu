@@ -91,7 +91,6 @@ function rtpStats(start: Date, end: Date, packets: number, bytes: number, lost: 
 		packets_lost: i32(lost),
 		packet_loss_rate: f64(Math.round((lost / seconds) * 1000) / 1000),
 		packet_loss_percentage: f64(Math.round((lost / packets) * 10_000) / 100),
-		frames: i32(Math.round(seconds * 30)),
 		jitter_current: f64(4_200),
 		jitter_max: f64(12_500),
 		nacks: i32(Math.round(lost / 3)),

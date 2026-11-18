@@ -40,7 +40,7 @@
 		],
 		"retryCount": { "$numberInt": "0" },
 		"backupStorageUsed": false,
-		"schemaVersion": { "$numberInt": "1" },
+		"schemaVersion": { "$numberInt": "2" },
 		"expiresAt": { "$date": "2027-01-10T09:40:20.000Z" }
 	},
 	{
@@ -80,7 +80,7 @@
 		],
 		"retryCount": { "$numberInt": "1" },
 		"backupStorageUsed": false,
-		"schemaVersion": { "$numberInt": "1" },
+		"schemaVersion": { "$numberInt": "2" },
 		"expiresAt": { "$date": "2027-01-10T09:30:40.000Z" }
 	},
 	{
@@ -123,7 +123,7 @@
 		],
 		"retryCount": { "$numberInt": "0" },
 		"backupStorageUsed": false,
-		"schemaVersion": { "$numberInt": "1" },
+		"schemaVersion": { "$numberInt": "2" },
 		"expiresAt": null
 	}
 ]

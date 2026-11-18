@@ -18,13 +18,11 @@
 		"nacks": { "$numberInt": "1" },
 		"plis": { "$numberInt": "0" },
 		"firs": { "$numberInt": "0" },
-		"frames": { "$numberInt": "900" },
 		"layers": [
 			{
 				"layer": { "$numberInt": "0" },
 				"bytes": { "$numberLong": "3000000" },
-				"packets": { "$numberInt": "2900" },
-				"frames": { "$numberInt": "900" }
+				"packets": { "$numberInt": "2900" }
 			}
 		]
 	},
@@ -47,13 +45,11 @@
 		"nacks": { "$numberInt": "0" },
 		"plis": { "$numberInt": "0" },
 		"firs": { "$numberInt": "0" },
-		"frames": { "$numberInt": "900" },
 		"layers": [
 			{
 				"layer": { "$numberInt": "0" },
 				"bytes": { "$numberLong": "16875000" },
-				"packets": { "$numberInt": "12000" },
-				"frames": { "$numberInt": "900" }
+				"packets": { "$numberInt": "12000" }
 			}
 		]
 	},
@@ -77,13 +73,11 @@
 		"nacks": { "$numberInt": "1" },
 		"plis": { "$numberInt": "0" },
 		"firs": { "$numberInt": "0" },
-		"frames": { "$numberInt": "900" },
 		"layers": [
 			{
 				"layer": { "$numberInt": "0" },
 				"bytes": { "$numberLong": "3000000" },
-				"packets": { "$numberInt": "2900" },
-				"frames": { "$numberInt": "900" }
+				"packets": { "$numberInt": "2900" }
 			}
 		],
 		"mimeType": "video/H264"
@@ -108,7 +102,6 @@
 		"nacks": { "$numberInt": "0" },
 		"plis": { "$numberInt": "0" },
 		"firs": { "$numberInt": "0" },
-		"frames": { "$numberInt": "0" },
 		"layers": [],
 		"mimeType": "audio/opus"
 	},
@@ -132,13 +125,11 @@
 		"nacks": { "$numberInt": "0" },
 		"plis": { "$numberInt": "0" },
 		"firs": { "$numberInt": "0" },
-		"frames": { "$numberInt": "900" },
 		"layers": [
 			{
 				"layer": { "$numberInt": "0" },
 				"bytes": { "$numberLong": "16875000" },
-				"packets": { "$numberInt": "12000" },
-				"frames": { "$numberInt": "900" }
+				"packets": { "$numberInt": "12000" }
 			}
 		],
 		"mimeType": "video/H264"

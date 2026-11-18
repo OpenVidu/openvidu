@@ -148,7 +148,7 @@ export interface RtpStats {
 	jitterMaxMs: number;
 	rttMaxMs: number;
 	durationMs: number;
-	layers: { layer: number; bytes: Long; packets: number; frames: number }[];
+	layers: { layer: number; bytes: Long; packets: number }[];
 }
 
 export interface TrackDoc {
@@ -1142,8 +1142,7 @@ function rtpStats(rng: Rng, bitrate: number, durationMs: number, layerCount: num
 		layers.push({
 			layer: i,
 			bytes: int64(bytes / layerCount),
-			packets: Math.round(packets / layerCount),
-			frames: Math.round((durationMs / 1000) * 30)
+			packets: Math.round(packets / layerCount)
 		});
 	}
 

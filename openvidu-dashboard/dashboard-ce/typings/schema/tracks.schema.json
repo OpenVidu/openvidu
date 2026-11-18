@@ -100,12 +100,11 @@
 					"bsonType": "array",
 					"items": {
 						"bsonType": "object",
-						"required": ["layer", "bytes", "packets", "frames"],
+						"required": ["layer", "bytes", "packets"],
 						"properties": {
 							"layer": { "bsonType": ["int", "long"] },
 							"bytes": { "bsonType": ["long", "int"] },
-							"packets": { "bsonType": ["int", "long"] },
-							"frames": { "bsonType": ["int", "long"] }
+							"packets": { "bsonType": ["int", "long"] }
 						},
 						"additionalProperties": false
 					}

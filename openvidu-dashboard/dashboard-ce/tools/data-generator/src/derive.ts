@@ -59,8 +59,7 @@ export interface StatsDoc {
 	nacks: number;
 	plis: number;
 	firs: number;
-	frames: number;
-	layers: { layer: number; bytes: Long; packets: number; frames: number }[];
+	layers: { layer: number; bytes: Long; packets: number }[];
 	mimeType?: string;
 }
 
@@ -602,8 +601,7 @@ function sample(
 	mimeType?: string
 ): StatsDoc {
 	let bytes = 0;
-	let frames = 0;
-	const layers = new Map<number, { bytes: number; packets: number; frames: number }>();
+	const layers = new Map<number, { bytes: number; packets: number }>();
 
 	for (const source of sources) {
 		const track = Array.isArray(source) ? source[1] : source;
@@ -614,15 +612,12 @@ function sample(
 		bytes += flushBytes;
 
 		if (track.type === 'VIDEO') {
-			const videoFrames = 30 * (FLUSH_MS / 1000);
-			frames += videoFrames;
 			const layerCount = Array.isArray(source) ? 1 : (track.codecs[0]?.layers.length ?? 1);
 
 			for (let i = 0; i < layerCount; i += 1) {
-				const layer = layers.get(i) ?? { bytes: 0, packets: 0, frames: 0 };
+				const layer = layers.get(i) ?? { bytes: 0, packets: 0 };
 				layer.bytes += flushBytes / layerCount;
 				layer.packets += Math.round(flushBytes / layerCount / 1_100);
-				layer.frames += videoFrames / layerCount;
 				layers.set(i, layer);
 			}
 		}
@@ -645,12 +640,10 @@ function sample(
 		nacks: rng.int(0, 3),
 		plis: rng.chance(0.05) ? 1 : 0,
 		firs: 0,
-		frames: Math.round(frames),
 		layers: [...layers.entries()].map(([layer, l]) => ({
 			layer,
 			bytes: int64(l.bytes),
-			packets: l.packets,
-			frames: Math.round(l.frames)
+			packets: l.packets
 		})),
 		...(mimeType === undefined ? {} : { mimeType })
 	};

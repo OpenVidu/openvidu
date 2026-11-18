@@ -224,7 +224,6 @@ export function trackStat(
 		nacks: 0,
 		plis: 0,
 		firs: 0,
-		frames: 0,
 		layers: [],
 		...input
 	};

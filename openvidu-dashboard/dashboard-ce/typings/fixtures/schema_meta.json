@@ -1,7 +1,7 @@
 [
 	{
 		"_id": "schema",
-		"version": { "$numberInt": "1" },
+		"version": { "$numberInt": "2" },
 		"writerVersion": "3.10.0",
 		"updatedAt": { "$date": "2026-10-12T08:00:00.000Z" }
 	},

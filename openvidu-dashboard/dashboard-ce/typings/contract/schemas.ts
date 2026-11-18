@@ -83,7 +83,7 @@ const quality = obj({
 	lost: req(int('Samples with score below 1.25'))
 });
 
-const layerStats = obj({ layer: req(int()), bytes: req(long()), packets: req(int()), frames: req(int()) });
+const layerStats = obj({ layer: req(int()), bytes: req(long()), packets: req(int()) });
 
 const finalStatsFields = {
 	bytes: req(long()),
@@ -427,7 +427,6 @@ const trackStats = obj({
 	nacks: req(int()),
 	plis: req(int()),
 	firs: req(int()),
-	frames: req(int()),
 	layers: req(arr(layerStats)),
 	mimeType: str('Track stats detail only')
 });

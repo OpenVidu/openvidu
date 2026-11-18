@@ -22,8 +22,7 @@ const cameraUp = {
 	nacks: 1,
 	plis: 0,
 	firs: 0,
-	frames: 900,
-	layers: [{ layer: 0, bytes: 3_000_000, packets: 2_900, frames: 900 }]
+	layers: [{ layer: 0, bytes: 3_000_000, packets: 2_900 }]
 };
 
 const microphoneUp = {
@@ -38,7 +37,6 @@ const microphoneUp = {
 	nacks: 0,
 	plis: 0,
 	firs: 0,
-	frames: 0,
 	layers: []
 };
 
@@ -54,8 +52,7 @@ const ingressDown = {
 	nacks: 0,
 	plis: 0,
 	firs: 0,
-	frames: 900,
-	layers: [{ layer: 0, bytes: 16_875_000, packets: 12_000, frames: 900 }]
+	layers: [{ layer: 0, bytes: 16_875_000, packets: 12_000 }]
 };
 
 /** The same flush in `participant` detail (first two documents) and in `track` detail (last three). */
@@ -74,8 +71,7 @@ export const trackStats: TrackStatsDocument[] = [
 		nacks: 1,
 		plis: 0,
 		firs: 0,
-		frames: 900,
-		layers: [{ layer: 0, bytes: 3_000_000, packets: 2_900, frames: 900 }]
+		layers: [{ layer: 0, bytes: 3_000_000, packets: 2_900 }]
 	},
 	{ ts: statsAt, meta: daveDown, ...ingressDown },
 	{ ts: statsAt, meta: { ...daveUp, trackSid: T.daveCamera }, ...cameraUp, mimeType: 'video/H264' },

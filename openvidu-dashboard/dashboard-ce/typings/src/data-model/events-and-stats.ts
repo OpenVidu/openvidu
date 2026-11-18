@@ -50,7 +50,6 @@ export interface TrackStatsDocument {
 	nacks: number;
 	plis: number;
 	firs: number;
-	frames: number;
 	layers: RtpLayerStats[];
 	/** Present in `track` stats detail only. */
 	mimeType?: string;

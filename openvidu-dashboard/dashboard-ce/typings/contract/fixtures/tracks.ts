@@ -63,9 +63,9 @@ export const tracks: TrackDocument[] = [
 		publishStats: {
 			...finalStats(2_392_000, 365_000_000, 310_000, 120),
 			layers: [
-				{ layer: 0, bytes: 45_000_000, packets: 52_000, frames: 35_880 },
-				{ layer: 1, bytes: 100_000_000, packets: 98_000, frames: 71_760 },
-				{ layer: 2, bytes: 220_000_000, packets: 160_000, frames: 71_760 }
+				{ layer: 0, bytes: 45_000_000, packets: 52_000 },
+				{ layer: 1, bytes: 100_000_000, packets: 98_000 },
+				{ layer: 2, bytes: 220_000_000, packets: 160_000 }
 			]
 		},
 		schemaVersion
@@ -146,7 +146,7 @@ export const tracks: TrackDocument[] = [
 		subscribers: { current: 0, total: 1, failed: 0 },
 		publishStats: {
 			...finalStats(1_188_000, 668_000_000, 480_000, 40),
-			layers: [{ layer: 0, bytes: 668_000_000, packets: 480_000, frames: 35_640 }]
+			layers: [{ layer: 0, bytes: 668_000_000, packets: 480_000 }]
 		},
 		schemaVersion
 	},
