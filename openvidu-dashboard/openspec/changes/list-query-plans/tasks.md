@@ -184,7 +184,7 @@
   here, or record the proposal. Verify: the outcome is written in the hand-off, and task 6.2 passes again if code
   changed.
 
-- [ ] 6.4 Export `countQuery` through `@openvidu-dashboard/backend/testing` (design decision 12). Verify:
+- [x] 6.4 Export `countQuery` through `@openvidu-dashboard/backend/testing` (design decision 12). Verify:
   `./dashboard.sh check` passes, and the export resolves from a suite that imports the testing entry.
 - [ ] 6.5 Run task 6.2 again after tasks 4.6, 4.7 and 6.4. Verify: all pass.
 

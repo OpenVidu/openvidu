@@ -10,6 +10,7 @@ export { expectWithinBudgets } from './latency-budget.js';
 export { type MongoHandle, startMongo } from './mongo-container.js';
 export { type CheckedDocument, type CheckedOperation, documentationIssues } from './openapi-checks.js';
 export {
+	countQuery,
 	type ExplainSummary,
 	expectIdLookup,
 	expectIndexBacked,
