@@ -186,7 +186,7 @@
 
 - [x] 6.4 Export `countQuery` through `@openvidu-dashboard/backend/testing` (design decision 12). Verify:
   `./dashboard.sh check` passes, and the export resolves from a suite that imports the testing entry.
-- [ ] 6.5 Run task 6.2 again after tasks 4.6, 4.7 and 6.4. Verify: all pass.
+- [x] 6.5 Run task 6.2 again after tasks 4.6, 4.7 and 6.4. Verify: all pass.
 
 ## 7. Evidence at scenario M (orchestrator)
 
