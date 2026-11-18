@@ -177,7 +177,7 @@ After group 8. The dashboard push follows this group.
 After the dashboard push and its green CI run, before the archive. In the openvidu.io checkout, branch
 `docs/openvidu-dashboard-3.10` (draft PR #160), following that repository's `CLAUDE.md`.
 
-- [ ] 10.1 In `docs/docs/self-hosting/production-ready/observability/openvidu-dashboard.md`, "Analytics data", after
+- [x] 10.1 In `docs/docs/self-hosting/production-ready/observability/openvidu-dashboard.md`, "Analytics data", after
       the migration paragraph: OpenVidu Server keeps the analytics data of the previous version (`legacy_events` and
       `stats`) so that a rollback still has it; it keeps expiring with its own retention (32 days with the installers
       up to 3.9) and, after the date Settings → Data shows, the server removes both collections and frees their disk

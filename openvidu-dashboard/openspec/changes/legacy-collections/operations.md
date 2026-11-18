@@ -22,3 +22,10 @@
   writer and dashboard at schema version 1.
 - Writer push (9.2): `openvidu/main` b762d7f0..e6a397a4; `Test` run 44262129580 success (job `test`), CodeQL run
   44262129352 success.
+- Dashboard push: `master` a0bc5599b..b13e44a2e (with the direct fixes 55e056265 and 129894f52 and the
+  `list-query-plans` proposal); `openvidu-dashboard-ci.yml` run 44263750148 success (lint, format, type check and spec
+  validation; unit; integration; data model contract; end-to-end).
+- Documentation (10.1): openvidu.io `docs/openvidu-dashboard-3.10` (draft PR #160) 97486126e, "Analytics data" and the
+  Settings Data bullet; the drop command was run on `openvidu/mongodb:8.0-compat` (container `mongo`, port 20000,
+  replica set `rs0`) and the credentials match the installer templates; `ovweb lint` no errors, PR `validate` run
+  44264449127 success.
