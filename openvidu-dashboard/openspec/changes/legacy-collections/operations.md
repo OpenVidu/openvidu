@@ -18,3 +18,7 @@
   before this change) gets a direct fix of its own before the push.
 - `./dashboard.sh e2e` rerun after the incremental verification: mocked 139/139, real backend 6/6. The verifier's one
   failure (`Retention tip by keyboard`) reproduces at the same rate on the frontend from before the change.
+- Contract check (9.1): `./dashboard.sh contract-check <writer checkout>` at writer e6a397a4: "contract check passed",
+  writer and dashboard at schema version 1.
+- Writer push (9.2): `openvidu/main` b762d7f0..e6a397a4; `Test` run 44262129580 success (job `test`), CodeQL run
+  44262129352 success.

@@ -167,9 +167,9 @@ After the full verification and its fixes, before any push.
 
 After group 8. The dashboard push follows this group.
 
-- [ ] 9.1 Run `./dashboard.sh contract-check <writer checkout>`. Verify: it ends
+- [x] 9.1 Run `./dashboard.sh contract-check <writer checkout>`. Verify: it ends
       with "contract check passed", recorded in `operations.md`.
-- [ ] 9.2 Push openvidu-livekit `openvidu/main` (the commits of 1.1 and 1.7). Verify: its `Test` workflow run is green
+- [x] 9.2 Push openvidu-livekit `openvidu/main` (the commits of 1.1 and 1.7). Verify: its `Test` workflow run is green
       and recorded in `operations.md`.
 
 ## 10. Documentation in openvidu.io (orchestrator)
