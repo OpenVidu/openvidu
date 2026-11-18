@@ -15,7 +15,7 @@ import {
 	RoomTopology
 } from '@openvidu-dashboard/typings';
 import { type Document, type Filter, MongoClient } from 'mongodb';
-import { afterAll, beforeAll, describe, expect, inject, it } from 'vitest';
+import { afterAll, beforeAll, describe, expect, inject, it, vi } from 'vitest';
 
 /**
  * The data generator writes what the writer would: every document of every collection, `track_stats` included (a
@@ -664,8 +664,15 @@ describe.skipIf(mongoUri === '')('data generator', () => {
 		await db.dropDatabase();
 
 		try {
-			await generate(plain, options);
-			await generate(db, { ...options, legacy: true });
+			// The generated counts depend on the minute of `Date.now()`: both databases are generated at one instant.
+			const clock = vi.spyOn(Date, 'now').mockReturnValue(Date.now());
+
+			try {
+				await generate(plain, options);
+				await generate(db, { ...options, legacy: true });
+			} finally {
+				clock.mockRestore();
+			}
 
 			const events = db.collection(LegacyCollection.EVENTS);
 			const stats = db.collection(LegacyCollection.STATS);
