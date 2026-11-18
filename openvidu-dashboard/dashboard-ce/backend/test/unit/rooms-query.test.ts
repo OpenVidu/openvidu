@@ -4,6 +4,9 @@ import { encodeCursor, decodeCursor, type CursorPayload } from '../../src/api/cu
 import { escapeRegex } from '../../src/api/search.js';
 import { roomsListPlan } from '../../src/rooms/rooms-query.js';
 import { roomsListQuery, type RoomsListParams } from '../../src/rooms/rooms-schemas.js';
+import { RoomsService } from '../../src/rooms/rooms-service.js';
+import type { WriterFreshness } from '../../src/status/freshness.js';
+import { recordingDb } from '../support/recording-db.js';
 
 const NOW = new Date('2026-10-13T12:00:00Z');
 const FROM = new Date('2026-10-12T12:00:00Z');
@@ -232,5 +235,56 @@ describe('rooms list plan', () => {
 			}
 		});
 		expect(plan({}, decoded).filter).toEqual({ createdAt: narrowed, $nor: ties });
+	});
+});
+
+describe('rooms service hints', () => {
+	const freshness = { staleContext: () => Promise.resolve({ staleMs: 0, now: NOW }) } as unknown as WriterFreshness;
+
+	/** The hint of each driver call the service makes for `query`, by operation. */
+	async function hints(query: Record<string, string>) {
+		const { db, calls } = recordingDb();
+
+		await new RoomsService(db, { totalMaxRangeMs: 7 * 86_400_000, freshness, now: () => NOW }).list(params(query));
+
+		expect(calls.every((call) => call.collection === 'rooms')).toBe(true);
+		expect(calls).toHaveLength(2);
+
+		return Object.fromEntries(calls.map((call) => [call.operation, call.hint]));
+	}
+
+	it('Hinted room filters: the service passes the hint to the page, ranked and count queries', async () => {
+		expect(await hints({ status: 'closed' })).toStrictEqual({
+			find: 'status_createdAt_id',
+			countDocuments: 'status_createdAt_id'
+		});
+		expect(await hints({ mediaNode: 'mn-a', sort: 'duration' })).toStrictEqual({
+			aggregate: 'mediaNode_status_createdAt_id',
+			countDocuments: 'mediaNode_status_createdAt_id'
+		});
+		expect(await hints({ features: 'egress', sort: 'endedAt' })).toStrictEqual({
+			aggregate: 'status_createdAt_id_egress',
+			countDocuments: 'status_createdAt_id_egress'
+		});
+	});
+
+	it('Broad room name prefix: the service counts and ranks on the status index and pages without a hint', async () => {
+		expect(await hints({ q: 'room', status: 'closed' })).toStrictEqual({
+			find: undefined,
+			countDocuments: 'status_createdAt_id'
+		});
+		expect(await hints({ q: 'room', status: 'closed', sort: 'endedAt' })).toStrictEqual({
+			aggregate: 'status_createdAt_id',
+			countDocuments: 'status_createdAt_id'
+		});
+		expect(await hints({ q: 'room' })).toStrictEqual({ find: undefined, countDocuments: undefined });
+	});
+
+	it('Several features: the service sends no hint', async () => {
+		expect(await hints({ features: 'egress,agent' })).toStrictEqual({ find: undefined, countDocuments: undefined });
+		expect(await hints({ features: 'egress,agent', sort: 'active' })).toStrictEqual({
+			aggregate: undefined,
+			countDocuments: undefined
+		});
 	});
 });

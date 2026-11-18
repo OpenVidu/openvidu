@@ -7,6 +7,8 @@ import { outputsSummary, toEgressListItem } from '../../src/egress/egress-mapper
 import { egressesListPlan } from '../../src/egress/egress-query.js';
 import { egressListItem } from '../../src/egress/egress-responses.js';
 import { egressesListQuery } from '../../src/egress/egress-schemas.js';
+import { EgressService } from '../../src/egress/egress-service.js';
+import { recordingDb } from '../support/recording-db.js';
 import { loadFixture } from '../support/fixtures.js';
 
 const NOW = new Date('2026-10-13T12:00:00Z');
@@ -145,5 +147,36 @@ describe('egress schemas and list plan', () => {
 
 		expect(ended.kind === 'ranked' ? ended.rank(asOf) : undefined).toEqual({ $ifNull: ['$endedAt', asOf] });
 		expect(() => list.parse({ sort: 'durationMs' })).toThrow();
+	});
+});
+
+describe('egress service hints', () => {
+	/** The driver calls the service makes for `query`. */
+	async function calls(query: Record<string, string>) {
+		const recorded = recordingDb();
+
+		await new EgressService(recorded.db, { totalMaxRangeMs: 7 * 86_400_000, now: () => NOW }).list(
+			list.parse(query)
+		);
+
+		expect(recorded.calls.every((call) => call.collection === 'egresses')).toBe(true);
+
+		return recorded.calls.map((call) => [call.operation, call.hint]);
+	}
+
+	it('Room-name prefix: the service pages, counts and ranks without a hint, and on roomSid_startedAt with a room', async () => {
+		expect(await calls({ q: 'room' })).toStrictEqual([
+			['countDocuments', undefined],
+			['find', undefined]
+		]);
+		expect(await calls({ q: 'room', sort: 'duration' })).toStrictEqual([
+			['countDocuments', undefined],
+			['aggregate', undefined]
+		]);
+
+		const withRoom = await calls({ q: 'room', room: 'RM_abc' });
+
+		expect(withRoom.map(([operation]) => operation).sort()).toEqual(['countDocuments', 'find']);
+		expect(withRoom.every(([, hint]) => hint === 'roomSid_startedAt')).toBe(true);
 	});
 });
