@@ -284,15 +284,37 @@ describe.skipIf(mongoUri === '')(`participants query plan at scenario ${scenario
 				'roomSid_identityLower_joinedAt'
 			]);
 
-			const broad = listParams({ ...last, q: 'user' });
-			const withStatus = listParams({ ...last, q: 'user', status: 'active' });
-			const active = await db.collection(Collection.PARTICIPANTS).countDocuments({ status: 'active' });
+			// The identity searches whose index the planner chooses: one of the scenario's candidates, within the sessions
+			// joined in the range plus, with a status, the sessions in it.
+			const unhinted: Record<string, string>[] = [
+				{ q: selective },
+				{ q: 'user' },
+				{ q: 'user', status: 'active' },
+				{ q: 'user', kind: 'STANDARD,AGENT' }
+			];
 
-			expect((await explainFilter(broad, 0, LIMIT, await sessionsInRange(broad))).collscan).toBe(false);
+			for (const query of unhinted) {
+				const candidates = [
+					'identityLower_joinedAt',
+					'joinedAt_id',
+					...(query.kind === undefined ? [] : ['kind_status_joinedAt_id']),
+					...(query.status === undefined ? [] : ['status_kind', 'status_lastStatsAt_open'])
+				];
+				const filter = listParams({ ...last, ...query });
+				const inStatus =
+					query.status === undefined
+						? 0
+						: await db.collection(Collection.PARTICIPANTS).countDocuments({ status: query.status });
+				const plan = await explainFilter(filter, 0, LIMIT, (await sessionsInRange(filter)) + inStatus);
+				const label = `${JSON.stringify(query)} on ${plan.indexes.join(', ')}`;
 
-			const plan = await explainFilter(withStatus, 0, LIMIT, (await sessionsInRange(withStatus)) + active);
-
-			expect(plan.collscan, `q=user&status=active on ${plan.indexes.join(', ')}`).toBe(false);
+				expect(plan.collscan, label).toBe(false);
+				expect(plan.indexes.length, label).toBeGreaterThan(0);
+				expect(
+					plan.indexes.every((index) => candidates.includes(index)),
+					label
+				).toBe(true);
+			}
 		});
 
 		it('Selective identity prefix: identityLower_joinedAt, the page sorted in memory, at most the sessions of the identity', async () => {
@@ -602,6 +624,34 @@ describe.skipIf(mongoUri === '')(`participants query plan at scenario ${scenario
 					`Agents list, identity "${agentIdentity}"`,
 					'300 ms',
 					() => service.agents(agentsParams({ q: agentIdentity }))
+				]
+			];
+
+			expectWithinBudgets(await measure(rows, () => true));
+		});
+
+		it('Ranked sorts over 24 hours: p95 of the identity searches ranked by duration', async () => {
+			const ranked = { sort: 'duration', from: lastDay };
+			const rows: [string, string, () => Promise<unknown>][] = [
+				[
+					`List, identity "${selective}", ranked by duration (24 h)`,
+					'300 ms',
+					() => service.list(listParams({ ...ranked, q: selective }))
+				],
+				[
+					'List, identity prefix "user", ranked by duration (24 h)',
+					'300 ms',
+					() => service.list(listParams({ ...ranked, q: 'user' }))
+				],
+				[
+					'Agents list, identity prefix "user", ranked by duration (24 h)',
+					'300 ms',
+					() => service.agents(agentsParams({ ...ranked, q: 'user' }))
+				],
+				[
+					`Agents list, identity "${agentIdentity}", ranked by duration (24 h)`,
+					'300 ms',
+					() => service.agents(agentsParams({ ...ranked, q: agentIdentity }))
 				]
 			];
 

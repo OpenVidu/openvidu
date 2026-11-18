@@ -119,13 +119,13 @@
 
   Covers: Identity search latency. Verify: the S run passes and prints one report with the four rows.
 
-- [ ] 4.6 In `Ranked sorts over 24 hours: by %s`, add `q=user&status=active` to the participants cases. For every
+- [x] 4.6 In `Ranked sorts over 24 hours: by %s`, add `q=user&status=active` to the participants cases. For every
   unhinted participants identity search, assert that the index is one of `identityLower_joinedAt`, `joinedAt_id`,
   `kind_status_joinedAt_id` (with `kind`), and with `status` also `status_kind` or `status_lastStatsAt_open`. Assert
   `totalDocsExamined` at most the sessions joined in the range, plus the sessions in that status when `status` is
   set. Covers: Ranked sorts over 24 hours. Verify: the S run passes, and the test fails when the candidate set is
   emptied in a scratch edit that is then reverted.
-- [ ] 4.7 Add enforced 300 ms rows for the identity searches ranked by `duration` over 24 hours (participants
+- [x] 4.7 Add enforced 300 ms rows for the identity searches ranked by `duration` over 24 hours (participants
   selective and `q=user`, agents `q=user` and one agent identity) to the suite's report. Covers: Ranked sorts over 24
   hours. Verify: the S run passes and the report shows the rows.
 
