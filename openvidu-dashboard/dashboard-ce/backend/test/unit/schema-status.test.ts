@@ -16,6 +16,14 @@ describe('writer schema status', () => {
 		expect(schemaStatus(MIN_SUPPORTED_SCHEMA_VERSION - 1).status).toBe('older');
 	});
 
+	it('reads a writer at the oldest supported version, below the dashboard one, as ok', () => {
+		expect(schemaStatus(MIN_SUPPORTED_SCHEMA_VERSION)).toEqual({
+			dashboard: SCHEMA_VERSION,
+			writer: MIN_SUPPORTED_SCHEMA_VERSION,
+			status: 'ok'
+		});
+	});
+
 	it('tells an older writer to upgrade', () => {
 		expect(olderSchemaMessage(0)).toBe(
 			`Analytics schema version 0 is older than the minimum ${String(MIN_SUPPORTED_SCHEMA_VERSION)} supported by this dashboard; upgrade the OpenVidu server`

@@ -1,7 +1,7 @@
 import { type Db, Double, MongoClient } from 'mongodb';
 import { afterAll, beforeAll, describe, expect, inject, it } from 'vitest';
 
-import { SCHEMA_VERSION, type SchemaMetaDocument } from '@openvidu-dashboard/typings';
+import { MIN_SUPPORTED_SCHEMA_VERSION, SCHEMA_VERSION, type SchemaMetaDocument } from '@openvidu-dashboard/typings';
 
 import type { RouteRegistry } from '../../src/api/route-registry.js';
 import { AuthService } from '../../src/auth/auth-service.js';
@@ -546,7 +546,8 @@ describe.skipIf(mongoUri === '')('info', () => {
 describe.skipIf(mongoUri === '')('readiness', () => {
 	it.each([
 		['uninitialized', undefined, 200],
-		['newer', SCHEMA_VERSION + 1, 200]
+		['newer', SCHEMA_VERSION + 1, 200],
+		['ok', MIN_SUPPORTED_SCHEMA_VERSION, 200]
 	])('is ready with a writer schema that is %s', async (status, version, code) => {
 		const dashboard = await boot(
 			mongoUri,
