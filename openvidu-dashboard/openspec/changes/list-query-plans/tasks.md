@@ -71,7 +71,7 @@
 
 ## 4. Plan suite: participants and agents (implementer)
 
-- [ ] 4.1 In `test/integration/participants-query-plan.test.ts`, set up the prefixes (decision 11):
+- [x] 4.1 In `test/integration/participants-query-plan.test.ts`, set up the prefixes (decision 11):
   - After `generate`, rewrite every STANDARD session with an update pipeline that prefixes `identity` and
     `identityLower` with `user-`.
   - Reload `sample`, and keep the whole rewritten identity (selective) and one agent identity as fixtures.
@@ -79,7 +79,7 @@
   - Say in the header comment that identities are rewritten.
 
   Verify: the S run passes the untouched tests.
-- [ ] 4.2 Retitle the existing tests (decision 12):
+- [x] 4.2 Retitle the existing tests (decision 12):
   - the no-filter, room, kind and status, and summary tests become `Explain plans: …`, each asserting no `COLLSCAN`
     and no `SORT`;
   - `ranked by %s: …` becomes `Ranked sorts over 24 hours: by %s`, with its `q` cases on the selective identity
@@ -88,7 +88,7 @@
 
   Remove `identity prefix: identityLower_joinedAt within the prefix range`; task 4.3 replaces it. Covers: Explain
   plans, Ranked sorts over 24 hours, Publisher filter. Verify: the S run passes.
-- [ ] 4.3 Add one test per identity-search scenario, each explaining page, `total` and `sort=duration` over 24 hours
+- [x] 4.3 Add one test per identity-search scenario, each explaining page, `total` and `sort=duration` over 24 hours
   where the scenario says so:
   - `Selective identity prefix: …`: `identityLower_joinedAt`, page `SORT`, at most the sessions of that identity in
     range.
@@ -105,11 +105,11 @@
 
   Covers the six scenarios named. Verify: the S run passes, and each test fails when its expected index is changed
   in a scratch edit that is then reverted.
-- [ ] 4.4 Update `Origin explain plans`. Replace the allowed set with the index of each combination:
+- [x] 4.4 Update `Origin explain plans`. Replace the allowed set with the index of each combination:
   `roomSid_identityLower_joinedAt` for `q` and `room`, `roomSid_joinedAt_id` for `room`, and
   `kind_status_joinedAt_id` otherwise. Assert no `SORT` outside the ranked sorts and `q` with `room`. Covers: Origin
   explain plans. Verify: the S run passes.
-- [ ] 4.5 In the `performance budget` block:
+- [x] 4.5 In the `performance budget` block:
   - Add `Identity search latency: p95 of a page and its total`. It measures, through the service, the participants
     list with the selective identity and with `q=user`, and the agents list with `q=user` and with one agent
     identity. It enforces 300 ms through `expectWithinBudgets` and appends four rows to the suite's report.
