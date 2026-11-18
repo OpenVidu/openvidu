@@ -278,19 +278,18 @@ describe.skipIf(mongoUri === '')(`rooms query plan at scenario ${scenario}`, () 
 			]);
 		});
 
-		it('Broad room name prefix: a range index within two pages, the status index with a status, never status_endedAt_id', async () => {
+		it('Broad room name prefix: a range index within two pages, the status index with a status', async () => {
 			const inRange = await roomsInRange();
 			const twoPages = () => 2 * (LIMIT + 2);
-			const notEndedAt = (plan: { indexes: string[]; collscan: boolean }, label: string) => {
+			const noCollscan = (plan: { collscan: boolean }, label: string) => {
 				expect(plan.collscan, label).toBe(false);
-				expect(plan.indexes, label).not.toContain('status_endedAt_id');
 			};
 
 			for (const query of [{ q: 'room' }, { q: 'room', status: 'closed' }]) {
 				const label = JSON.stringify(query);
 				const pagePlan = await explainList(query, twoPages);
 
-				notEndedAt(pagePlan, label);
+				noCollscan(pagePlan, label);
 				expect(
 					pagePlan.indexes.every((index) => ['createdAt_id', 'status_createdAt_id'].includes(index)),
 					label
@@ -299,7 +298,7 @@ describe.skipIf(mongoUri === '')(`rooms query plan at scenario ${scenario}`, () 
 
 				const total = await explainTotal(query, inRange);
 
-				notEndedAt(total, `${label} total`);
+				noCollscan(total, `${label} total`);
 
 				if (query.status !== undefined) {
 					expectIndexes(total, ['status_createdAt_id']);
@@ -308,7 +307,7 @@ describe.skipIf(mongoUri === '')(`rooms query plan at scenario ${scenario}`, () 
 				for (const sort of RANKED_SORTS) {
 					const ranked = await explainList({ ...query, sort }, page, LIMIT, inRange);
 
-					notEndedAt(ranked, `${label} ${sort}`);
+					noCollscan(ranked, `${label} ${sort}`);
 
 					if (query.status !== undefined) {
 						expectIndexes(ranked, ['status_createdAt_id']);
@@ -404,11 +403,7 @@ describe.skipIf(mongoUri === '')(`rooms query plan at scenario ${scenario}`, () 
 			// Any index with the right prefix serves a count; the planner may prefer the smaller partial one, which reads
 			// every active session and checks the kind after the fetch, so the documents it may examine bound the count.
 			const counts: [string, Document, string[], Document?][] = [
-				[
-					Collection.ROOMS,
-					{ status: RoomStatus.ACTIVE },
-					['status_createdAt_id', 'status_endedAt_id', 'status_lastEventAt_active']
-				],
+				[Collection.ROOMS, { status: RoomStatus.ACTIVE }, ['status_createdAt_id', 'status_lastEventAt_active']],
 				[
 					Collection.PARTICIPANTS,
 					{ status: ParticipantStatus.ACTIVE, kind: ParticipantKind.STANDARD },

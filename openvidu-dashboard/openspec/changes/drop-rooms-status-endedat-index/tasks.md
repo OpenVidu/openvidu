@@ -18,12 +18,12 @@ time, when the orchestrator schedules them.
 
 ## 2. Backend: rooms plans without the index (implementer)
 
-- [ ] 2.1 In the CE workspace, rewrite the doc comment of `roomsListPlan` in
+- [x] 2.1 In the CE workspace, rewrite the doc comment of `roomsListPlan` in
       `dashboard-ce/backend/src/rooms/rooms-query.ts` so the pin of a name prefix with a status no longer cites
       `status_endedAt_id`: it keeps the ranked sorts and `total` on the status index of the range, which guards a
       database whose server has not dropped the index yet and keeps the plan deterministic. No code change. Verify:
       `./dashboard.sh check` passes.
-- [ ] 2.2 In the CE workspace, in `dashboard-ce/backend/test/integration/rooms-query-plan.test.ts`: retitle the broad
+- [x] 2.2 In the CE workspace, in `dashboard-ce/backend/test/integration/rooms-query-plan.test.ts`: retitle the broad
       prefix test `Broad room name prefix: a range index within two pages, the status index with a status`, keep its
       `COLLSCAN` assertion and drop the `status_endedAt_id` one; drop `status_endedAt_id` from the indexes the rooms
       summary count of active rooms may use. Covers "Hinted room filters", "Several features", "Selective room name

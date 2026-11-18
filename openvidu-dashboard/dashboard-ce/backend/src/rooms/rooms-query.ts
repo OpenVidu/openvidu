@@ -110,9 +110,9 @@ function filterIndex(params: RoomsListParams, status: RoomStatus | undefined): s
  * media node drives `{ mediaNode, status, createdAt, _id }`; features are an `$or` of branches, one per partial index;
  * otherwise the `status` picks `{ status, createdAt, _id }` or `{ createdAt, _id }`. The media node, one feature and
  * the status pin their index for the page, the ranked sorts and `total`. A name prefix with a status pins the status
- * index of the range for the ranked sorts and `total`: they keep no order, so the planner could pick
- * `status_endedAt_id`, which the creation range does not bound. The range is always on `createdAt`; a ranked sort key
- * scans it whole and ranks in memory.
+ * index of the range for the ranked sorts and `total`: they keep no order, and the pin keeps their plan deterministic
+ * and bounded by the range on a database whose server still has an index the range does not bound. The range is
+ * always on `createdAt`; a ranked sort key scans it whole and ranks in memory.
  */
 export function roomsListPlan(params: RoomsListParams, cursor?: CursorPayload): RoomsListPlan {
 	if (params.q !== undefined && ROOM_SID.test(params.q)) {
