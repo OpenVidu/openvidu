@@ -200,7 +200,7 @@
 
 ## 7. Evidence at scenario M (orchestrator)
 
-- [ ] 7.1 After the full verification and before the archive, run each plan suite once at scenario M over 7 days,
+- [x] 7.1 After the full verification and before the archive, run each plan suite once at scenario M over 7 days,
   one at a time and alone on the machine, with the command of `backend/AGENTS.md`: participants, rooms, egress, then
   ingress (`<PREFIX>_PLAN_SCENARIO=M <PREFIX>_PLAN_DAYS=7 <PREFIX>_PLAN_REPORT=<file>`). Covers every scenario of the
   delta at M. Verify:
