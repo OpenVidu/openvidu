@@ -141,7 +141,7 @@
   - In the budget block, the enforced row "List, ranked by endedAt, prefix and status closed" (300 ms).
 
   Covers the four scenarios named. Verify: the S run passes.
-- [ ] 5.3 In `test/integration/egress-query-plan.test.ts`, make the explain helper follow the plan's optional hint
+- [x] 5.3 In `test/integration/egress-query-plan.test.ts`, make the explain helper follow the plan's optional hint
   and read a `q` page with the `{ startedAt, _id }` sort. Then:
   - retitle the index tests to `Explain plans on the generated database: egress, …`;
   - retitle the ranked test to `Ranked sorts over 7 days: egress by %s`, whose `q` case asserts the bound only;

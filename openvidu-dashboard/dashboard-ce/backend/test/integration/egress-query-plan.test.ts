@@ -70,8 +70,12 @@ describe.skipIf(mongoUri === '')(`egress query plan at scenario ${scenario}`, ()
 	};
 	const egresses = () => db.collection<EgressDocument>(Collection.EGRESSES);
 	const raw = () => db.collection(Collection.EGRESSES);
-	/** The first page of a list request as the service reads it on the index of its plan. */
-	const explainList = async (query: Record<string, string>, bound: number, limit = LIMIT) => {
+	/**
+	 * The first page of a list request as the service reads it on the index of its plan, or on the planner's without
+	 * one: a page examines at most `bound` documents, a ranked list the egresses it matches unless `rankedBound` says
+	 * otherwise.
+	 */
+	const explainList = async (query: Record<string, string>, bound: number, limit = LIMIT, rankedBound?: number) => {
 		const params = listParams(query, limit);
 		const plan = egressesListPlan(params);
 
@@ -102,7 +106,7 @@ describe.skipIf(mongoUri === '')(`egress query plan at scenario ${scenario}`, ()
 					pipeline: rankedPipeline(request, now),
 					options: hint
 				},
-				{ maxDocsExamined: inRange }
+				{ maxDocsExamined: rankedBound ?? inRange }
 			);
 		}
 
@@ -118,6 +122,32 @@ describe.skipIf(mongoUri === '')(`egress query plan at scenario ${scenario}`, ()
 			{ maxDocsExamined: bound }
 		);
 	};
+
+	/** Explains `total` of `query` as `countDocuments` runs it: `$match` then `$group`, on the plan's hint. */
+	const explainTotal = (query: Record<string, string>, bound: number) => {
+		const params = listParams(query);
+		const plan = egressesListPlan(params);
+
+		if (plan.kind === 'id') {
+			throw new Error('expected a page or ranked plan');
+		}
+
+		return expectIndexBacked(
+			db,
+			{
+				collection: Collection.EGRESSES,
+				pipeline: [
+					{ $match: { ...plan.filter, startedAt: { $gte: params.from, $lt: params.to } } },
+					{ $group: { _id: 1, n: { $sum: 1 } } }
+				],
+				...(plan.hint === undefined ? {} : { options: { hint: plan.hint } })
+			},
+			{ maxDocsExamined: bound }
+		);
+	};
+
+	/** Egresses started in the suite's range. */
+	const egressesInRange = () => raw().countDocuments({ startedAt: { $gte: ctx.range.from, $lt: now } });
 
 	beforeAll(async () => {
 		client = new MongoClient(mongoUri);
@@ -166,7 +196,7 @@ describe.skipIf(mongoUri === '')(`egress query plan at scenario ${scenario}`, ()
 		await client.close();
 	});
 
-	it('status=all: startedAt_id without a sort, type residual', async () => {
+	it('Explain plans on the generated database: egress, status=all on startedAt_id without a sort, type residual', async () => {
 		const inRange = await egresses().countDocuments({ startedAt: { $gte: ctx.range.from, $lt: now } });
 		const all = await explainList({}, LIMIT + 1);
 
@@ -175,7 +205,7 @@ describe.skipIf(mongoUri === '')(`egress query plan at scenario ${scenario}`, ()
 		expectIndexes(await explainList({ type: 'web' }, inRange), ['startedAt_id']);
 	});
 
-	it('export at the row cap: startedAt_id, at most the cap or the egresses in range', async () => {
+	it('Explain plans on the generated database: egress, export at the row cap on startedAt_id, at most the cap or the egresses in range', async () => {
 		const all = await explainList({}, LIST_EXPORT_MAX_ROWS + 1, LIST_EXPORT_MAX_ROWS);
 
 		expectIndexes(all, ['startedAt_id']);
@@ -183,7 +213,7 @@ describe.skipIf(mongoUri === '')(`egress query plan at scenario ${scenario}`, ()
 		expect((await explainList({ sort: 'duration' }, 0, LIST_EXPORT_MAX_ROWS)).collscan).toBe(false);
 	});
 
-	it('status set: status_startedAt merged in startedAt order', async () => {
+	it('Explain plans on the generated database: egress, status set on status_startedAt merged in startedAt order', async () => {
 		const plan = await explainList({ status: EGRESS_IN_FLIGHT_STATUSES.join(',') }, LIMIT + 1);
 
 		expectIndexes(plan, ['status_startedAt']);
@@ -191,7 +221,7 @@ describe.skipIf(mongoUri === '')(`egress query plan at scenario ${scenario}`, ()
 		expectIndexes(await explainList({ status: 'failed,aborted', type: 'track' }, LIMIT * 60), ['status_startedAt']);
 	});
 
-	it('room: roomSid_startedAt, status and type residual', async () => {
+	it('Explain plans on the generated database: egress, room on roomSid_startedAt, status and type residual', async () => {
 		const ofRoom = await raw().countDocuments({ roomSid: sample.roomSid });
 
 		expectIndexes(await explainList({ room: sample.roomSid ?? 'RM_none', status: 'complete' }, ofRoom), [
@@ -199,28 +229,48 @@ describe.skipIf(mongoUri === '')(`egress query plan at scenario ${scenario}`, ()
 		]);
 	});
 
-	it('room name prefix: roomNameLower_startedAt within the prefix, no room cap', async () => {
+	it('Room-name prefix: one room on roomNameLower_startedAt, room on startedAt_id within two pages, every plan within the egresses in range', async () => {
 		const { roomSid, prefix } = roomNameSample;
-		const inPrefix = await raw().countDocuments({ roomNameLower: prefixRegex(prefix) });
+		const inRange = await egressesInRange();
+		const inPrefix = await raw().countDocuments({
+			roomNameLower: prefixRegex(prefix),
+			startedAt: { $gte: ctx.range.from, $lt: now }
+		});
 		const ofRoom = await raw().countDocuments({ roomSid });
 
 		expect(inPrefix).toBeGreaterThan(0);
 		expectIndexes(await explainList({ q: prefix }, inPrefix), ['roomNameLower_startedAt']);
+		expectIndexes(await explainTotal({ q: prefix }, inPrefix), ['roomNameLower_startedAt']);
+		expectIndexes(await explainList({ q: prefix, sort: 'duration' }, 0, LIMIT, inPrefix), [
+			'roomNameLower_startedAt'
+		]);
+
+		const broad = await explainList({ q: 'room' }, 2 * (LIMIT + 1));
+
+		expectIndexes(broad, ['startedAt_id']);
+		expect(broad.planStages).not.toContain('SORT');
+
+		for (const [name, plan] of [
+			['total', await explainTotal({ q: 'room' }, inRange)],
+			['duration', await explainList({ q: 'room', sort: 'duration' }, 0, LIMIT, inRange)]
+		] as const) {
+			expect(plan.collscan, `q=room ${name} on ${plan.indexes.join(', ')}`).toBe(false);
+		}
+
 		// With a room filter the room index serves the query and the prefix is a residual filter.
 		expectIndexes(await explainList({ q: prefix, room: roomSid }, ofRoom), ['roomSid_startedAt']);
 	});
 
-	it.each(['endedAt', 'duration'])(
-		'ranked by %s: the range index of the filters, at most the egresses in range',
-		async (sort) => {
-			expectIndexes(await explainList({ sort }, LIMIT), ['startedAt_id']);
-			expectIndexes(await explainList({ sort, status: 'complete' }, LIMIT), ['status_startedAt']);
-			expectIndexes(await explainList({ sort, room: sample.roomSid ?? 'RM_none' }, LIMIT), ['roomSid_startedAt']);
-			expectIndexes(await explainList({ sort, q: roomNameSample.prefix }, LIMIT), ['roomNameLower_startedAt']);
-		}
-	);
+	it.each(['endedAt', 'duration'])('Ranked sorts over 7 days: egress by %s', async (sort) => {
+		const inRange = await egressesInRange();
 
-	it('id, detail and summary: _id, status_startedAt and startedAt_id', async () => {
+		expectIndexes(await explainList({ sort }, LIMIT), ['startedAt_id']);
+		expectIndexes(await explainList({ sort, status: 'complete' }, LIMIT), ['status_startedAt']);
+		expectIndexes(await explainList({ sort, room: sample.roomSid ?? 'RM_none' }, LIMIT), ['roomSid_startedAt']);
+		expect((await explainList({ sort, q: roomNameSample.prefix }, LIMIT, LIMIT, inRange)).collscan).toBe(false);
+	});
+
+	it('Explain plans on the generated database: egress, id, detail and summary on _id, status_startedAt and startedAt_id', async () => {
 		expectIdLookup(
 			await expectIndexBacked(db, egresses().find({ _id: sample._id }).limit(1), { maxDocsExamined: 1 })
 		);
@@ -261,6 +311,7 @@ describe.skipIf(mongoUri === '')(`egress query plan at scenario ${scenario}`, ()
 			['List, type=web', 300, () => service.list(listParams({ type: 'web' }))],
 			['List, room', 150, () => service.list(listParams({ room: sample.roomSid ?? 'RM_none' }))],
 			[`List, room name prefix "${prefix}"`, 200, () => service.list(listParams({ q: prefix }))],
+			['List, room name prefix of one room', 200, () => service.list(listParams({ q: roomNameSample.prefix }))],
 			['List, ranked by endedAt', 200, () => service.list(listParams({ sort: 'endedAt' }))],
 			['List, ranked by duration', 200, () => service.list(listParams({ sort: 'duration' }))],
 			['Export, status all (up to 10,000 rows)', 2000, () => exportCsv({})],
