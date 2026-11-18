@@ -19,5 +19,6 @@ export {
 	p95,
 	type PlannableQuery
 } from './query-plan.js';
+export { type RecordedCall, recordingDb } from './recording-db.js';
 export * from './rooms-seed.js';
 export { silentLogger } from './silent-logger.js';

@@ -192,7 +192,7 @@
 
   Covers: Hinted room filters, Broad room name prefix, Several features, Room-name prefix. Verify: the unit tests
   pass.
-- [ ] 6.7 Export `recording-db.ts` through `@openvidu-dashboard/backend/testing`. Verify: `./dashboard.sh check`
+- [x] 6.7 Export `recording-db.ts` through `@openvidu-dashboard/backend/testing`. Verify: `./dashboard.sh check`
   passes.
 - [x] 6.4 Export `countQuery` through `@openvidu-dashboard/backend/testing` (design decision 12). Verify:
   `./dashboard.sh check` passes, and the export resolves from a suite that imports the testing entry.
