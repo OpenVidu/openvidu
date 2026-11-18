@@ -172,14 +172,14 @@ test.describe('a room whose server reports no media statistics', () => {
 		const warning = table(page)
 			.getByRole('columnheader', { name: /Data up \/ down/ })
 			.getByRole('button', {
-				name: 'Rooms on servers using mediasoup as RTC engine show no value here yet. This data will be available soon.'
+				name: 'Rooms with no data for the requested timeframe show no value.'
 			});
 
 		await expect(row.locator('ovd-unavailable')).toHaveCount(1);
 		await expect(table(page)).not.toContainText('0 B');
 		await warning.hover();
 		await expect(page.locator('.mat-mdc-tooltip')).toHaveText(
-			'Rooms on servers using mediasoup as RTC engine show no value here yet. This data will be available soon.'
+			'Rooms with no data for the requested timeframe show no value.'
 		);
 	});
 
@@ -217,7 +217,7 @@ test.describe('rooms on servers with and without media statistics', () => {
 		await page.goto('/rooms');
 
 		const warning = {
-			name: 'Rooms on servers using mediasoup as RTC engine show no value here yet. This data will be available soon.'
+			name: 'Rooms with no data for the requested timeframe show no value.'
 		};
 		const unreported = page.locator('.card', { hasText: 'RM_ab12cd' });
 		const reported = page.locator('.card', { hasText: 'RM_pion01' });

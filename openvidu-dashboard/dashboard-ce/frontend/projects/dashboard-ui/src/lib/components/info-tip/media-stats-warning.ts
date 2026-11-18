@@ -3,8 +3,8 @@ import { Component, input } from '@angular/core';
 import { InfoTip } from './info-tip.js';
 
 /**
- * The warning icon of data that the servers do not generate (media statistics of mediasoup): its text shows like an info
- * tip and names the icon for assistive technology.
+ * The warning icon of media statistics with no data: its text shows like an info tip and names the icon for assistive
+ * technology.
  */
 @Component({
 	selector: 'ovd-media-stats-warning',

@@ -1059,19 +1059,16 @@ a 4.5:1 text contrast, keep the warning at full strength and are not highlighted
 - **THEN** it reads a dimmed "—" announced as "Not available"
 
 ### Requirement: Media statistics texts
-Edition: CE. The UI library SHALL export four media statistics warning texts, shown by every edition: one for an
-entity (room, session or track), one for a range with `none`, one for a range with `partial` and one for a column
-header.
+Edition: CE. The UI library SHALL export three warning texts for media statistics with no data, shown by every edition
+and naming no RTC engine: one for an entity (room, session or track), one for a range with `none` and one for a column
+header. A range with `partial` has data and gets no warning.
 
 #### Scenario: Texts
 - **WHEN** the exported texts are read
 - **THEN** they are:
-  - entity: "This data is not available when using mediasoup as RTC engine. It will be available soon."
-  - range `none`: "The servers of this range use mediasoup as RTC engine, which does not generate media statistics
-    yet. This data will be available soon."
-  - range `partial`: "This data comes only from rooms on servers using Pion as RTC engine. mediasoup does not generate
-    media statistics yet. They will be available soon."
-  - column: "Rooms on servers using mediasoup as RTC engine show no value here yet. This data will be available soon."
+  - entity: "There is no data for the requested timeframe."
+  - range `none`: "There is no data for the requested timeframe."
+  - column: "Rooms with no data for the requested timeframe show no value."
 
 #### Scenario: Same texts in every edition
 - **GIVEN** a room with `mediaStats: false` in the CE Rooms list and the same room in a PRO room page

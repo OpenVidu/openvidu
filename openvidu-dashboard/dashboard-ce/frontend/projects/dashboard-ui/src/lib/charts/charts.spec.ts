@@ -330,7 +330,7 @@ describe('chart options', () => {
 		from="2026-10-13T10:01:25Z"
 		to="2026-10-13T10:06:55Z"
 		tz="UTC"
-		warning="This data is not available when using mediasoup as RTC engine. It will be available soon."
+		warning="There is no data for the requested timeframe."
 		unavailable
 	/>`
 })

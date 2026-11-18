@@ -139,7 +139,7 @@ down, Features (badges E, I, A) and, with `per-node-breakdown` only, Node (`medi
 - **WHEN** the rows render
 - **THEN** the Data up / down cell of `RM_m1` reads an unavailable "—" announced as "Not available" instead of
   "↑ 0 B ↓ 0 B", the cell of `RM_p1` reads "↑ 12.0 MB ↓ 48.0 MB", and the Data up / down header carries the column
-  warning "Rooms on servers using mediasoup as RTC engine show no value here yet. This data will be available soon."
+  warning "Rooms with no data for the requested timeframe show no value."
 
 #### Scenario: Page without rooms lacking media statistics
 

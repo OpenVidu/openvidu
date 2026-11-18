@@ -597,7 +597,7 @@ describe('AnalyticsPage', () => {
 		expect(exportButton(element, 'Data transferred')?.disabled).toBe(true);
 	});
 
-	it('warns that the data covers only some servers when the others report no media statistics', async () => {
+	it('shows the data of the servers that report media statistics without a warning when the others report none', async () => {
 		const { element } = await open('/analytics?from=now-7d&to=now&tz=UTC', [], {
 			summary: { ...SUMMARY, mediaStats: 'partial' }
 		});
@@ -605,12 +605,8 @@ describe('AnalyticsPage', () => {
 		const bandwidth = card(element, 'Data transferred');
 
 		expect(text(tile)).toContain('↑ 1.2 TB');
-		expect(tile?.querySelector('ovd-media-stats-warning button')?.getAttribute('aria-label')).toBe(
-			MEDIA_STATS_TEXTS.rangePartial
-		);
-		expect(
-			bandwidth?.querySelector('.heading-row ovd-media-stats-warning button')?.getAttribute('aria-label')
-		).toBe(MEDIA_STATS_TEXTS.rangePartial);
+		expect(tile?.querySelector('ovd-media-stats-warning')).toBeNull();
+		expect(bandwidth?.querySelector('ovd-media-stats-warning')).toBeNull();
 		expect(bandwidth?.querySelector('.unavailable')).toBeNull();
 		expect(bandwidth?.querySelector('ovd-time-series-chart')).not.toBeNull();
 	});
@@ -896,9 +892,7 @@ describe('AnalyticsPage', () => {
 		const bandwidth = card(element, 'Data transferred');
 
 		expect(text(bandwidth?.querySelector('ovd-empty-state'))).toContain('No data in this range');
-		expect(
-			bandwidth?.querySelector('.heading-row ovd-media-stats-warning button')?.getAttribute('aria-label')
-		).toBe(MEDIA_STATS_TEXTS.rangePartial);
+		expect(bandwidth?.querySelector('ovd-media-stats-warning')).toBeNull();
 		expect(exportButton(element, 'Data transferred')?.disabled).toBe(true);
 	});
 

@@ -316,16 +316,9 @@ export class AnalyticsPage implements AnalyticsPageContext {
 	protected readonly result = this.loader.data;
 	protected readonly summary = computed(() => this.result()?.summary.value ?? null);
 	readonly mediaStats = computed(() => this.summary()?.mediaStats);
-	readonly mediaStatsWarning = computed(() => {
-		switch (this.mediaStats()) {
-			case 'none':
-				return MEDIA_STATS_TEXTS.rangeNone;
-			case 'partial':
-				return MEDIA_STATS_TEXTS.rangePartial;
-			default:
-				return undefined;
-		}
-	});
+	readonly mediaStatsWarning = computed(() =>
+		this.mediaStats() === 'none' ? MEDIA_STATS_TEXTS.rangeNone : undefined
+	);
 
 	/** Egress and ingress are counted for the whole deployment only: a node scope shows them unavailable. */
 	protected readonly egressIngressUnavailable = computed(() => this.scope() !== 'global');

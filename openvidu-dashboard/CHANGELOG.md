@@ -49,8 +49,8 @@ queried) and `Deployment` (running the service). One line per observable change,
   batch interval.
 - Info icons next to tiles, cards, charts and columns explain the terms they show, such as participant sessions and
   unique identities; they open on hover, keyboard focus or a tap.
-- Data that servers running mediasoup do not generate shows a warning icon that explains why. Its tiles and charts stay
-  in place, dimmed when the range or entity has no media statistics at all.
+- Media statistics with no data for the range or entity show a warning icon that says so. Their tiles and charts stay
+  in place, dimmed.
 - Rooms, participants, egress and ingress sessions that the server closed because their end never arrived read as
   closed with an estimated end time.
 - Settings page with viewer preferences (any time zone as the default) and a Data tab with the retention and the

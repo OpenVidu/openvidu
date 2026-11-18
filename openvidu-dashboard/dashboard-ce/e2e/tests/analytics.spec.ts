@@ -376,13 +376,11 @@ test.describe('a range whose servers report no media statistics', () => {
 		await expect(section.getByRole('button', { name: 'Export XLSX' })).toBeDisabled();
 		await section
 			.getByRole('button', {
-				name: 'The servers of this range use mediasoup as RTC engine, which does not generate media statistics yet. This data will be available soon.'
+				name: 'There is no data for the requested timeframe.'
 			})
 			.first()
 			.hover();
-		await expect(page.locator('.mat-mdc-tooltip')).toHaveText(
-			'The servers of this range use mediasoup as RTC engine, which does not generate media statistics yet. This data will be available soon.'
-		);
+		await expect(page.locator('.mat-mdc-tooltip')).toHaveText('There is no data for the requested timeframe.');
 		await expectNoViolations(page);
 	});
 });
@@ -413,36 +411,31 @@ test.describe('a range without media statistics and without bytes', () => {
 test.describe('a range where only some servers report media statistics', () => {
 	test.use({ apiOptions: { analyticsSummary: { mediaStats: 'partial' } } });
 
-	test('the Data up / down tile and the Data transferred section warn and keep their data', async ({ page }) => {
+	test('the Data up / down tile and the Data transferred section keep their data without a warning', async ({
+		page
+	}) => {
 		await page.goto('/analytics?from=now-7d&to=now&tz=UTC');
 
 		const section = card(page, 'Data transferred');
 
-		await expect(
-			page.getByRole('region', { name: 'Summary' }).getByRole('button', {
-				name: 'This data comes only from rooms on servers using Pion as RTC engine. mediasoup does not generate media statistics yet. They will be available soon.'
-			})
-		).toHaveCount(1);
-		await expect(
-			section.getByRole('button', {
-				name: 'This data comes only from rooms on servers using Pion as RTC engine. mediasoup does not generate media statistics yet. They will be available soon.'
-			})
-		).toHaveCount(1);
+		await expect(page.getByRole('region', { name: 'Summary' }).locator('ovd-media-stats-warning')).toHaveCount(0);
+		await expect(section.locator('ovd-media-stats-warning')).toHaveCount(0);
 		await expect(section.locator('.unavailable')).toHaveCount(0);
 		await expect(section.locator('ovd-time-series-chart')).toHaveCount(1);
 	});
+});
+
+test.describe('a range whose servers report no media statistics, on a phone', () => {
+	test.use({ apiOptions: { analyticsSummary: { mediaStats: 'none', bytesUp: 0, bytesDown: 0 } } });
 
 	test('the warning tooltip opens with a tap on a phone', async ({ page }) => {
 		await page.setViewportSize({ width: 375, height: 800 });
 		await page.goto('/analytics?from=now-7d&to=now&tz=UTC');
 
 		await card(page, 'Data transferred')
-			.getByRole('button', {
-				name: 'This data comes only from rooms on servers using Pion as RTC engine. mediasoup does not generate media statistics yet. They will be available soon.'
-			})
+			.getByRole('button', { name: 'There is no data for the requested timeframe.' })
+			.first()
 			.click();
-		await expect(page.locator('.mat-mdc-tooltip')).toHaveText(
-			'This data comes only from rooms on servers using Pion as RTC engine. mediasoup does not generate media statistics yet. They will be available soon.'
-		);
+		await expect(page.locator('.mat-mdc-tooltip')).toHaveText('There is no data for the requested timeframe.');
 	});
 });

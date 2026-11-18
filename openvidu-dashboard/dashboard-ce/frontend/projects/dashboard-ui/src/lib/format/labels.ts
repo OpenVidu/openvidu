@@ -154,16 +154,13 @@ export const CONNECTION_TYPE_LABELS: Readonly<Record<ConnectionType, string>> = 
 export const RECONCILER_ESTIMATE = 'Closed by the reconciler: the end time is estimated';
 
 /**
- * Warnings of the media statistics that mediasoup does not generate: of one room, session or track (`entity`), of a
- * range whose rollups have none (`rangeNone`) or only some (`rangePartial`), and of a table column (`column`).
+ * Warnings of media statistics with no data: of one room, session or track (`entity`), of a range none of whose
+ * servers reported them (`rangeNone`), and of a table column with rows that have none (`column`).
  */
 export const MEDIA_STATS_TEXTS = {
-	entity: 'This data is not available when using mediasoup as RTC engine. It will be available soon.',
-	rangeNone:
-		'The servers of this range use mediasoup as RTC engine, which does not generate media statistics yet. This data will be available soon.',
-	rangePartial:
-		'This data comes only from rooms on servers using Pion as RTC engine. mediasoup does not generate media statistics yet. They will be available soon.',
-	column: 'Rooms on servers using mediasoup as RTC engine show no value here yet. This data will be available soon.'
+	entity: 'There is no data for the requested timeframe.',
+	rangeNone: 'There is no data for the requested timeframe.',
+	column: 'Rooms with no data for the requested timeframe show no value.'
 } as const;
 
 /** Why egress and ingress figures are missing in a node scope: they are counted for the whole deployment only. */

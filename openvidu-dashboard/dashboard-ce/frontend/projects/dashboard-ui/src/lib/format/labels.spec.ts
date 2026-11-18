@@ -53,14 +53,11 @@ describe('client labels', () => {
 });
 
 describe('MEDIA_STATS_TEXTS', () => {
-	it('names mediasoup and Pion, the same in every edition', () => {
+	it('says there is no data, whatever the RTC engine, the same in every edition', () => {
 		expect(MEDIA_STATS_TEXTS).toEqual({
-			entity: 'This data is not available when using mediasoup as RTC engine. It will be available soon.',
-			rangeNone:
-				'The servers of this range use mediasoup as RTC engine, which does not generate media statistics yet. This data will be available soon.',
-			rangePartial:
-				'This data comes only from rooms on servers using Pion as RTC engine. mediasoup does not generate media statistics yet. They will be available soon.',
-			column: 'Rooms on servers using mediasoup as RTC engine show no value here yet. This data will be available soon.'
+			entity: 'There is no data for the requested timeframe.',
+			rangeNone: 'There is no data for the requested timeframe.',
+			column: 'Rooms with no data for the requested timeframe show no value.'
 		});
 	});
 });

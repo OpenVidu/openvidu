@@ -436,25 +436,25 @@ are `node:<label>` scopes.
 ### Requirement: Media statistics coverage warnings
 
 Edition: CE. With `mediaStats: "none"` in the summary, the Data up / down tile SHALL be unavailable and carry the
-range `none` warning, and the Data transferred section SHALL keep its tiles and chart, unavailable, with that warning
-on its heading. With `"partial"`, the tile and the section heading SHALL carry the range `partial` warning and keep
-their values. Without `mediaStats`, neither carries a warning. No notice replaces the section's content.
+range `none` warning, "There is no data for the requested timeframe.", and the Data transferred section SHALL keep its
+tiles and chart, unavailable, with that warning on its heading. With `"partial"` or without `mediaStats`, the data
+exists for the range: neither carries a warning and both keep their values. No notice replaces the section's content.
 
 #### Scenario: No server reports media statistics
 
 - **GIVEN** a summary with `mediaStats: "none"`, `bytesUp: 0` and `bytesDown: 0`
-- **WHEN** the page renders
+- **WHEN** the page renders and the user opens the warning of the Data transferred heading
 - **THEN** the Data up / down tile reads an unavailable "—" with the warning after its label, and the Data
   transferred section shows the warning after its heading, the Total up and Total down tiles unavailable and the "Data
-  up / down" chart unavailable over the whole range
+  up / down" chart unavailable over the whole range, and the tooltip reads "There is no data for the requested
+  timeframe."
 
 #### Scenario: Some servers report media statistics
 
 - **GIVEN** a summary with `mediaStats: "partial"`, `bytesUp: 1200000000` and `bytesDown: 3400000000`
-- **WHEN** the page renders and the user opens the warning of the Data transferred heading
-- **THEN** the tile reads "↑ 1.2 GB" over "↓ 3.4 GB" with the warning after its label, the chart renders its data at
-  full strength, and the tooltip reads "This data comes only from rooms on servers using Pion as RTC engine.
-  mediasoup does not generate media statistics yet. They will be available soon."
+- **WHEN** the page renders
+- **THEN** the tile reads "↑ 1.2 GB" over "↓ 3.4 GB" and the chart renders its data at full strength, and neither
+  carries a warning
 
 #### Scenario: Every server reports media statistics
 
@@ -744,5 +744,5 @@ keep its "Export XLSX" as any other card: enabled with data, disabled while it r
 
 - **GIVEN** a summary with `mediaStats: "partial"`, and `bytesUp` and `bytesDown` series whose every bucket is 0
 - **WHEN** the Analytics page renders
-- **THEN** the Data transferred section reads "No data in this range" under the range `partial` warning of its heading,
-  and its "Export XLSX" is disabled
+- **THEN** the Data transferred section reads "No data in this range" without a warning, and its "Export XLSX" is
+  disabled

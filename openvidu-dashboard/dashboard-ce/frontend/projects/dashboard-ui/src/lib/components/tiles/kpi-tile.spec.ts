@@ -40,7 +40,7 @@ class LinkedHost {}
 		label="Quality"
 		value="4.3"
 		info="Average MOS score."
-		warning="This data is not available when using mediasoup as RTC engine. It will be available soon."
+		warning="There is no data for the requested timeframe."
 		unavailable
 	/>`
 })
@@ -148,7 +148,7 @@ describe('KpiTile', () => {
 
 		expect(icons).toEqual(['info', 'warning']);
 		expect(label?.querySelector('ovd-media-stats-warning button')?.getAttribute('aria-label')).toBe(
-			'This data is not available when using mediasoup as RTC engine. It will be available soon.'
+			'There is no data for the requested timeframe.'
 		);
 		expect(element.querySelector('.value.unavailable')?.textContent.trim()).toBe('—');
 		expect(element.querySelector('ovd-kpi-tile')?.classList.contains('dimmed')).toBe(true);
