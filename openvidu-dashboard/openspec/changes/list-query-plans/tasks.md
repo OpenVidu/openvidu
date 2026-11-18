@@ -152,7 +152,7 @@
 
   Covers: Explain plans on the generated database, Ranked sorts over 7 days, Room-name prefix. Verify: the S run
   passes.
-- [ ] 5.4 In `test/integration/ingress-query-plan.test.ts`:
+- [x] 5.4 In `test/integration/ingress-query-plan.test.ts`:
   - retitle `lists: …` to `Activity range over 30 days: …`, and the id, detail and summary test to `Explain plans on
     the generated database: ingress, …`;
   - add `Ingress name prefix: …`, which explains, over the last hour and the last 24 hours, one ingress name minus

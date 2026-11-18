@@ -10,6 +10,7 @@ import { Collection, type IngressDocument, LIST_EXPORT_MAX_ROWS } from '@openvid
 import { columnsCsv } from '../../src/api/csv.js';
 import { listRows } from '../../src/api/csv-export.js';
 import { rankedPipeline } from '../../src/api/ranked.js';
+import { prefixRegex } from '../../src/api/search.js';
 import { INGRESS_LIST_PROJECTION } from '../../src/ingress/ingress-mappers.js';
 import { activityRange, ingressesListPlan } from '../../src/ingress/ingress-query.js';
 import { INGRESS_CSV_COLUMNS } from '../../src/ingress/ingress-csv.js';
@@ -65,7 +66,8 @@ describe.skipIf(mongoUri === '')(`ingress query plan at scenario ${scenario}`, (
 	/**
 	 * The first page of a list request as the service ranks it, examining at most the ingresses of each branch of the
 	 * activity range: every branch fetches its own matches, so an ingress in two branches is examined twice, and the
-	 * status, input type and name filters apply to the union.
+	 * status, input type and name filters apply to the union. With `q`, the planner may read the name index instead,
+	 * which examines the ingresses whose name starts with it, in the range or not.
 	 */
 	const explainList = async (query: Record<string, string>, limit = LIMIT) => {
 		const params = listParams(query, limit);
@@ -78,11 +80,12 @@ describe.skipIf(mongoUri === '')(`ingress query plan at scenario ${scenario}`, (
 		const request = { ...params, match: plan.match, rank: plan.rank, projection: INGRESS_LIST_PROJECTION };
 		const branches = (activityRange(params.from, params.to) as { $or: Document[] }).$or;
 		const counts = await Promise.all(branches.map((branch) => raw().countDocuments(branch)));
+		const named = params.q === undefined ? 0 : await raw().countDocuments({ nameLower: prefixRegex(params.q) });
 
 		return expectIndexBacked(
 			db,
 			{ collection: Collection.INGRESSES, pipeline: rankedPipeline({ ...request, cursor: undefined, now }, now) },
-			{ maxDocsExamined: counts.reduce((sum, count) => sum + count, 0) }
+			{ maxDocsExamined: counts.reduce((sum, count) => sum + count, named) }
 		);
 	};
 
@@ -132,7 +135,7 @@ describe.skipIf(mongoUri === '')(`ingress query plan at scenario ${scenario}`, (
 		await client.close();
 	});
 
-	it('lists: the activity range as three index-backed branches, at most the ingresses in it', async () => {
+	it('Activity range over 30 days: the activity range as three index-backed branches, at most the ingresses in it', async () => {
 		expectIndexes(await explainList({}), ['createdAt_id', 'lastSessionAt_id', 'status_createdAt']);
 
 		for (const query of [
@@ -147,7 +150,21 @@ describe.skipIf(mongoUri === '')(`ingress query plan at scenario ${scenario}`, (
 		}
 	});
 
-	it('export at the row cap: the three branches, at most the ingresses in the activity range', async () => {
+	it('Ingress name prefix: no COLLSCAN over the last hour and 24 hours, at most the branches and the name matches', async () => {
+		const selective = sample.nameLower?.slice(0, -1) ?? 'ingress-';
+
+		for (const hours of [1, 24]) {
+			const from = new Date(now.getTime() - hours * 3_600_000).toISOString();
+
+			for (const q of [selective, 'ingress']) {
+				const plan = await explainList({ q, from });
+
+				expect(plan.collscan, `q=${q} over ${String(hours)} h on ${plan.indexes.join(', ')}`).toBe(false);
+			}
+		}
+	});
+
+	it('Explain plans on the generated database: ingress, export at the row cap on the three branches, at most the ingresses in the activity range', async () => {
 		expectIndexes(await explainList({}, LIST_EXPORT_MAX_ROWS), [
 			'createdAt_id',
 			'lastSessionAt_id',
@@ -156,7 +173,7 @@ describe.skipIf(mongoUri === '')(`ingress query plan at scenario ${scenario}`, (
 		expect((await explainList({ sort: 'totalDuration' }, LIST_EXPORT_MAX_ROWS)).collscan).toBe(false);
 	});
 
-	it('id, detail and summary: _id, status_createdAt and createdAt_id', async () => {
+	it('Explain plans on the generated database: ingress, id, detail and summary on _id, status_createdAt and createdAt_id', async () => {
 		expectIdLookup(await expectIndexBacked(db, typed().find({ _id: sample._id }).limit(1), { maxDocsExamined: 1 }));
 		expect(ingressesListPlan(listParams({ q: sample._id }))).toEqual({ kind: 'id', filter: { _id: sample._id } });
 		expectIndexes(
