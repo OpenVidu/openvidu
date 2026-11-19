@@ -13,6 +13,7 @@ import type {
 
 import { ConfirmDialogService } from '../../components/confirm-dialog/confirm-dialog.js';
 import { ExternalLink } from '../../components/external-link/external-link.js';
+import { errorMessage } from '../../components/feedback/error-banner.js';
 import { Notice } from '../../components/feedback/notice.js';
 import { Skeleton } from '../../components/feedback/skeleton.js';
 import { InfoTip } from '../../components/info-tip/info-tip.js';
@@ -172,6 +173,20 @@ export function deletionOutcome(job: DeletionJob, tz: string, now: number): stri
 			: `failed at ${time}: ${job.error ?? 'A database error stopped it'}.`;
 
 	return `Deleting ${jobObject(job.class)} ${reason} ${deleted} Start it again to finish.`;
+}
+
+/**
+ * The notice of a deletion request that started nothing: the message of a `409` (a deletion already running, the data
+ * before 3.10 not kept for rollback), or the generic message of any other failure with its request id.
+ */
+export function deletionRefusal(error: unknown): string {
+	const failure = toApiRequestError(error);
+
+	if (failure.status === 409) {
+		return failure.message;
+	}
+
+	return `The deletion did not start: ${errorMessage(failure)}${failure.requestId === undefined ? '' : ` Request ${failure.requestId}`}`;
 }
 
 /** The line under a class name: its last completed deletion, or a later one left incomplete. */
@@ -386,7 +401,7 @@ export class DataTab {
 		try {
 			await this.http.post<DeletionJob>('deletions', request);
 		} catch (error) {
-			this.refused.set(toApiRequestError(error).message);
+			this.refused.set(deletionRefusal(error));
 		}
 
 		void this.server.pollNow();

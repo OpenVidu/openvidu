@@ -198,9 +198,9 @@ analytics data. This cannot be undone.", with no disk space sentence and no link
 
 ### Requirement: Confirming a deletion
 Edition: CE. Delete SHALL send the deletion request and close the dialog, without a toast; the Data tab then shows the
-progress of the accepted job, and a refused request shows an error notice with the message of the response ("A
-deletion is already running" or "The data before 3.10 is not kept for rollback"). Cancel and Escape close the dialog
-and send nothing.
+progress of the accepted job. A request that starts nothing SHALL show a dismissible error notice, cleared at the next
+request: the message of a `409` response, or "The deletion did not start: <message of the error> Request <id>" for any
+other failure. Cancel and Escape close the dialog and send nothing.
 
 #### Scenario: Deletion confirmed
 - **GIVEN** the Events dialog open
@@ -211,6 +211,13 @@ and send nothing.
 - **GIVEN** a deletion started from another session that this one has not seen yet
 - **WHEN** the user confirms the Stats dialog and the server answers `409`
 - **THEN** an error notice reads "A deletion is already running" and the delete buttons become disabled
+
+#### Scenario: Deletion not started
+- **GIVEN** the Events dialog open
+- **WHEN** the user confirms and the server answers `500` with the request id `caddy-7f3a`, or the request does not
+  reach the server
+- **THEN** an error notice reads "The deletion did not start: Something went wrong while loading the data. Request
+  caddy-7f3a", or "The deletion did not start: The server is unreachable.", and no toast shows
 
 #### Scenario: Deletion cancelled in the dialog
 - **GIVEN** the Entities dialog open

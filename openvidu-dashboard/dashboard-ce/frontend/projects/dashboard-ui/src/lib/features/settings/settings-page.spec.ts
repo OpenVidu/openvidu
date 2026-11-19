@@ -1117,12 +1117,52 @@ describe('SettingsPage', () => {
 			await settle();
 			await harness.fixture.whenStable();
 
-			expect(text(element.querySelector('ovd-data-tab ovd-notice.deletion-notice'))).toContain(
+			expect(text(element.querySelector('ovd-data-tab ovd-notice.deletion-notice'))).toBe(
 				'A deletion is already running'
 			);
 			expect(deleteButtons(element).every((button) => button.getAttribute('aria-disabled') === 'true')).toBe(
 				true
 			);
+		});
+
+		it('Deletion not started', async () => {
+			const { harness, http, element } = await dataTab();
+			const notice = () => text(element.querySelector('ovd-data-tab ovd-notice.deletion-notice'));
+
+			await open(harness, element, 'Delete Events');
+			await confirmDialog(harness);
+			http.expectOne('api/v1/deletions').flush(
+				{ error: { code: 'INTERNAL_ERROR', message: 'Internal server error' } },
+				{ status: 500, statusText: 'Server Error', headers: { 'X-Request-Id': 'caddy-7f3a' } }
+			);
+			await settle();
+			http.expectOne('api/v1/status').flush(statusResponse());
+			await settle();
+			await harness.fixture.whenStable();
+
+			expect(notice()).toBe(
+				'The deletion did not start: Something went wrong while loading the data. Request caddy-7f3a'
+			);
+			expect(vi.mocked(TestBed.inject(ToastService)).show.mock.calls).toEqual([]);
+
+			await open(harness, element, 'Delete Events');
+			await confirmDialog(harness);
+			// The next request clears the notice of the previous one.
+			expect(element.querySelector('ovd-data-tab ovd-notice.deletion-notice')).toBeNull();
+			http.expectOne('api/v1/deletions').error(new ProgressEvent('error'), {
+				status: 0,
+				statusText: 'Unknown Error'
+			});
+			await settle();
+			http.expectOne('api/v1/status').flush(statusResponse());
+			await settle();
+			await harness.fixture.whenStable();
+
+			expect(notice()).toBe('The deletion did not start: The server is unreachable.');
+
+			element.querySelector<HTMLButtonElement>('ovd-data-tab ovd-notice.deletion-notice button')?.click();
+			await harness.fixture.whenStable();
+			expect(element.querySelector('ovd-data-tab ovd-notice.deletion-notice')).toBeNull();
 		});
 
 		it('Deletion cancelled in the dialog', async () => {
