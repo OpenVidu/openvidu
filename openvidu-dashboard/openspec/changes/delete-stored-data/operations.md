@@ -21,3 +21,5 @@ The owner delegated these to the dashboard's author, who answered in a Slack dir
   - An interrupted or failed Entities job marks entities, events, stats and tracks incomplete, at its last heartbeat.
   - The missing-delete-rights case is tested with a database wrapper that throws a `MongoServerError` with code 13.
   - Guiding principle given: weigh implementation complexity against the efficiency gained.
+- 2026-11-19 19:55 (ts `1795114552.189919`): the example scenarios of a running Entities job show its 9 collection
+  steps instead of 5.
