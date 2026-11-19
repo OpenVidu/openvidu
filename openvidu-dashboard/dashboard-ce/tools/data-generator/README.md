@@ -101,7 +101,7 @@ What it writes (`analytics_5min` stays empty without `--five-minute-rollups`):
   in the hourly and daily ones, `ingress.peakActive`, from the generated egresses and ingress sessions. Egress and
   ingress counters and peaks are written in the global scope only, never in a media node scope, and egresses and
   ingress sessions carry no `mediaNode`, as the writer does.
-- `nodes`, with `rtcEngine` (`mediasoup` for the nodes of `--nodes-without-media-stats`), `ip` and the room counters
+- `nodes`, with `rtcEngine` (`mediasoup` for `-2`, `pion` for the others), `ip` and the room counters
   `rooms.hosted` and `rooms.reconciled`: 3 nodes, or with `--media-nodes` five media nodes, one per state:
   - `-1` restarted: an earlier, stopped process hosts its older rooms;
   - `-2` alive;

@@ -27,6 +27,8 @@ const DAY = 86_400_000;
 const HOUR = 3_600_000;
 const MINUTE = 60_000;
 const NODE_COUNT = 3;
+/** The media node that runs mediasoup; every other node runs Pion, with or without media statistics. */
+const MEDIASOUP_MEDIA_NODE = 'media-node-10-0-0-2';
 // Relative weight of each UTC hour for room creation: office-hours peak around 14:00, quiet nights.
 const HOUR_WEIGHTS: readonly (readonly [number, number])[] = Array.from({ length: 24 }, (_, h) => [
 	h,
@@ -384,7 +386,7 @@ export async function generate(db: Db, options: GenerateOptions): Promise<Genera
 			serverVersion: '3.10.0',
 			batchIntervalMs: BATCH_INTERVAL_MS,
 			mediaStats: reportsMediaStats,
-			rtcEngine: reportsMediaStats ? 'pion' : 'mediasoup',
+			rtcEngine: mediaNode === MEDIASOUP_MEDIA_NODE ? 'mediasoup' : 'pion',
 			...(mediaNode === undefined
 				? {}
 				: { mediaNode, ip: mediaNode.replace('media-node-', '').replaceAll('-', '.') }),

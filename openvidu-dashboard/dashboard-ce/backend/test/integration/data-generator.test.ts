@@ -273,7 +273,11 @@ describe.skipIf(mongoUri === '')('data generator', () => {
 			expect(
 				nodes.every((node) => node.ip === node.mediaNode?.replace('media-node-', '').replaceAll('-', '.'))
 			).toBe(true);
-			expect(nodes.every((node) => node.rtcEngine === 'pion')).toBe(true);
+			expect(
+				nodes.every(
+					(node) => node.rtcEngine === (node.mediaNode === 'media-node-10-0-0-2' ? 'mediasoup' : 'pion')
+				)
+			).toBe(true);
 			expect(first).toHaveLength(2);
 			expect(label(2)?.drainingAt).toBeUndefined();
 			expect(end - (label(3)?.drainingAt?.getTime() ?? 0)).toBe(20 * 60_000);
@@ -414,8 +418,14 @@ describe.skipIf(mongoUri === '')('data generator', () => {
 				.toArray();
 			const unmarked = nodes.filter((node) => !node.mediaStats).map((node) => node._id);
 
-			expect(nodes.every((node) => node.rtcEngine === (node.mediaStats ? 'pion' : 'mediasoup'))).toBe(true);
 			expect(nodes.find((node) => !node.mediaStats)?.mediaNode).toBe('media-node-10-0-0-3');
+			// Engines of the generated nodes: the engine follows the media node, not the media statistics.
+			expect(nodes.filter((node) => !node.mediaStats).every((node) => node.rtcEngine === 'pion')).toBe(true);
+			expect(
+				nodes
+					.filter((node) => node.mediaNode === 'media-node-10-0-0-2')
+					.map((node) => [node.rtcEngine, node.mediaStats])
+			).toEqual([['mediasoup', true]]);
 
 			expect(nodes.filter((node) => node.mediaStats)).toHaveLength(nodes.length - 1);
 			expect(unmarked).toHaveLength(1);

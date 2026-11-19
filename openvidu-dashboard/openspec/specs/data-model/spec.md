@@ -550,8 +550,9 @@ and stopped. It SHALL stamp each label on the rooms and sessions its node hosted
 #### Scenario: Engines of the generated nodes
 - **GIVEN** a database generated with `--media-nodes --nodes-without-media-stats 1`
 - **WHEN** `nodes` is read
-- **THEN** the documents of the node chosen without media statistics have `mediaStats: false` and
-  `rtcEngine: "mediasoup"`, and the others `mediaStats: true` and `rtcEngine: "pion"`
+- **THEN** the documents of `media-node-10-0-0-2` have `rtcEngine: "mediasoup"` and the others `rtcEngine: "pion"`,
+  whatever their media statistics: `media-node-10-0-0-2` has `mediaStats: true`, and the node chosen without media
+  statistics, `media-node-10-0-0-3`, has `mediaStats: false` and `rtcEngine: "pion"`
 
 ### Requirement: Media statistics marks of the rollups
 Edition: CE and PRO. A rollup document of `analytics_5min`, `analytics_hourly` or `analytics_daily` MAY carry
