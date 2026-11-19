@@ -5,16 +5,10 @@ import { MatTooltip } from '@angular/material/tooltip';
 import { By } from '@angular/platform-browser';
 import { provideRouter, Router } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
-import type {
-	DeletionJob,
-	InfoResponse,
-	InfoRetention,
-	InfoStorageEntry,
-	StatusResponse
-} from '@openvidu-dashboard/typings';
+import type { InfoResponse, InfoRetention, InfoStorageEntry, StatusResponse } from '@openvidu-dashboard/typings';
 import { describe, expect, it, vi } from 'vitest';
 
-import { infoResponse, settle, signIn, statusResponse } from '../../../testing/fixtures.js';
+import { deletionJob, infoResponse, settle, signIn, statusResponse } from '../../../testing/fixtures.js';
 import { InfoTip } from '../../components/info-tip/info-tip.js';
 import { AuthService } from '../../core/auth/auth.js';
 import { InfoService } from '../../core/info.js';
@@ -793,20 +787,7 @@ describe('SettingsPage', () => {
 			'https://openvidu.io/latest/docs/self-hosting/production-ready/observability/openvidu-dashboard/#freeing-disk-space';
 		const kept = { state: 'completed', legacyRetainedUntil: RETAINED_UNTIL } as const;
 
-		function job(overrides: Partial<DeletionJob> = {}): DeletionJob {
-			return {
-				id: 'job-1',
-				class: 'events',
-				includeLegacy: false,
-				state: 'running',
-				cutoff: '2026-11-19T10:07:00.000Z',
-				startedAt: '2026-11-19T10:07:00.000Z',
-				currentClass: 'events',
-				collection: { index: 1, total: 1 },
-				deleted: 0,
-				...overrides
-			};
-		}
+		const job = deletionJob;
 
 		/** The Data tab after the info document and the first status. */
 		async function dataTab(info: Partial<InfoResponse> = {}, status: Partial<StatusResponse> = {}) {

@@ -12,7 +12,6 @@ import { createLogger, format, transports } from 'winston';
 import {
 	Collection,
 	type DashboardDeletionJob,
-	type DeletionJob,
 	type InfoResponse,
 	type StatusResponse
 } from '@openvidu-dashboard/typings';
@@ -21,7 +20,7 @@ import { TOKENS } from '../../src/di/tokens.js';
 import { DeletionRecordsStore } from '../../src/deletions/deletion-records.js';
 import { DeletionRunner } from '../../src/deletions/deletion-runner.js';
 import { bootClient, type Client, json } from '../support/api-client.js';
-import { insertWorld, retentionDocument, room, until } from '../support/deletion-world.js';
+import { insertWorld, postDeletion, retentionDocument, room, settledDeletion } from '../support/deletion-world.js';
 import { createContractCollections } from '../support/rooms-seed.js';
 import { silentLogger } from '../support/silent-logger.js';
 
@@ -49,30 +48,6 @@ function runningJob(overrides: Partial<DashboardDeletionJob> = {}): DashboardDel
 		requestId: 'request-1',
 		...overrides
 	};
-}
-
-function post(client: Client, body: unknown, headers: Record<string, string> = {}): Promise<Response> {
-	return fetch(`${client.dashboard.url}/api/v1/deletions`, {
-		method: 'POST',
-		headers: { Authorization: `Bearer ${client.token}`, 'Content-Type': 'application/json', ...headers },
-		body: JSON.stringify(body)
-	});
-}
-
-async function settled(client: Client): Promise<DeletionJob> {
-	let job: DeletionJob | undefined;
-
-	await until(async () => {
-		job = (await json<StatusResponse>(client, '/status')).deletion;
-
-		return job !== undefined && job.state !== 'running';
-	});
-
-	if (job === undefined) {
-		throw new Error('no deletion job');
-	}
-
-	return job;
 }
 
 async function setDashboard(db: Db, dashboard: Document | undefined): Promise<void> {
@@ -194,12 +169,12 @@ describe.skipIf(mongoUri === '')('deletion jobs', () => {
 			deleted: 400_000,
 			finishedAt: heartbeatAt.toISOString()
 		});
-		expect((await post(ce, { class: 'stats' })).status).toBe(202);
+		expect((await postDeletion(ce, { class: 'stats' })).status).toBe(202);
 
 		const dashboard = await new DeletionRecordsStore(db).read();
 
 		expect(dashboard?.deletions?.events?.incomplete).toEqual({ state: 'interrupted', at: heartbeatAt });
-		await settled(ce);
+		await settledDeletion(ce);
 	});
 
 	it('Instance restarted mid-job', async () => {
@@ -366,8 +341,8 @@ describe.skipIf(mongoUri === '')('deletion jobs', () => {
 		await setDashboard(db, undefined);
 		await insertWorld(db, room('RM_details', { endedAt: ago(DAY), tracks: 1, events: 2, stats: 2 }));
 
-		expect((await post(ce, { class: 'entities' })).status).toBe(202);
-		expect((await settled(ce)).state).toBe('completed');
+		expect((await postDeletion(ce, { class: 'entities' })).status).toBe(202);
+		expect((await settledDeletion(ce)).state).toBe('completed');
 
 		const { deletions } = await json<InfoResponse>(ce, '/info');
 
@@ -386,8 +361,8 @@ describe.skipIf(mongoUri === '')('deletion jobs', () => {
 			await insertWorld(db, room('RM_storage', { endedAt: ago(DAY), events: 25 }));
 
 			expect((await json<InfoResponse>(second, '/info')).storage.events?.documents).toBe(25);
-			expect((await post(ce, { class: 'events' })).status).toBe(202);
-			expect((await settled(ce)).state).toBe('completed');
+			expect((await postDeletion(ce, { class: 'events' })).status).toBe(202);
+			expect((await settledDeletion(ce)).state).toBe('completed');
 			expect((await json<InfoResponse>(second, '/info')).storage.events?.documents).toBe(0);
 		} finally {
 			await second.dashboard.stop();
@@ -423,20 +398,26 @@ describe.skipIf(mongoUri === '')('deletion log', () => {
 
 		try {
 			await insertWorld(client.dashboard.db, room('RM_log', { endedAt: ago(DAY), events: 12 }));
-			expect((await post(client, { class: 'events' }, { 'X-Request-Id': 'caddy-7f3a' })).status).toBe(202);
-			expect((await settled(client)).state).toBe('completed');
+			expect((await postDeletion(client, { class: 'events' }, { 'X-Request-Id': 'caddy-7f3a' })).status).toBe(
+				202
+			);
+			expect((await settledDeletion(client)).state).toBe('completed');
 
-			const deletionLines = lines.filter((line) => line.logger === 'deletions');
+			const deletionLines = () => lines.filter((line) => line.logger === 'deletions');
 
-			expect(deletionLines).toHaveLength(2);
-			expect(deletionLines[0]).toMatchObject({
+			// The end line follows the record of the outcome, which the status may report first.
+			await expect.poll(() => deletionLines().length).toBe(2);
+
+			const [start, end] = deletionLines();
+
+			expect(start).toMatchObject({
 				message: 'Deletion started',
 				class: 'events',
 				includeLegacy: false,
 				requestId: 'caddy-7f3a',
 				cutoff: expect.any(String) as string
 			});
-			expect(deletionLines[1]).toMatchObject({
+			expect(end).toMatchObject({
 				message: 'Deletion completed',
 				class: 'events',
 				requestId: 'caddy-7f3a',

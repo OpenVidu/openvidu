@@ -2,11 +2,18 @@ import { randomUUID } from 'node:crypto';
 
 import type { Db, Document } from 'mongodb';
 
-import { Collection, type DashboardDeletionJob, type DeletionClass } from '@openvidu-dashboard/typings';
+import {
+	Collection,
+	type DashboardDeletionJob,
+	type DeletionClass,
+	type DeletionJob,
+	type StatusResponse
+} from '@openvidu-dashboard/typings';
 
 import { stepCount } from '../../src/deletions/deletion-plan.js';
 import { DeletionRecordsStore, INSTANCE } from '../../src/deletions/deletion-records.js';
 import { DeletionRunner } from '../../src/deletions/deletion-runner.js';
+import { type Client, json } from './api-client.js';
 import { silentLogger } from './silent-logger.js';
 
 const MINUTE = 60_000;
@@ -291,4 +298,30 @@ export async function until(condition: () => Promise<boolean>, timeoutMs = 30_00
 
 		await new Promise((resolve) => setTimeout(resolve, 50));
 	}
+}
+
+/** `POST /api/v1/deletions` with the client's token. */
+export function postDeletion(client: Client, body: unknown, headers: Record<string, string> = {}): Promise<Response> {
+	return fetch(`${client.dashboard.url}/api/v1/deletions`, {
+		method: 'POST',
+		headers: { Authorization: `Bearer ${client.token}`, 'Content-Type': 'application/json', ...headers },
+		body: JSON.stringify(body)
+	});
+}
+
+/** The latest deletion job of the status once it no longer runs. */
+export async function settledDeletion(client: Client): Promise<DeletionJob> {
+	let job: DeletionJob | undefined;
+
+	await until(async () => {
+		job = (await json<StatusResponse>(client, '/status')).deletion;
+
+		return job !== undefined && job.state !== 'running';
+	});
+
+	if (job === undefined) {
+		throw new Error('no deletion job');
+	}
+
+	return job;
 }

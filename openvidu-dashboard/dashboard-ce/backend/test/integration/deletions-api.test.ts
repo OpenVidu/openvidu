@@ -18,7 +18,8 @@ import {
 	retentionDocument,
 	room,
 	sizes,
-	until,
+	postDeletion,
+	settledDeletion,
 	type World
 } from '../support/deletion-world.js';
 
@@ -36,30 +37,6 @@ const migrationFields = {
 	processed: 10,
 	total: 10
 };
-
-function post(client: Client, body: unknown, headers: Record<string, string> = {}): Promise<Response> {
-	return fetch(`${client.dashboard.url}/api/v1/deletions`, {
-		method: 'POST',
-		headers: { Authorization: `Bearer ${client.token}`, 'Content-Type': 'application/json', ...headers },
-		body: JSON.stringify(body)
-	});
-}
-
-async function settled(client: Client): Promise<DeletionJob> {
-	let job: DeletionJob | undefined;
-
-	await until(async () => {
-		job = (await json<StatusResponse>(client, '/status')).deletion;
-
-		return job !== undefined && job.state !== 'running';
-	});
-
-	if (job === undefined) {
-		throw new Error('no deletion job');
-	}
-
-	return job;
-}
 
 async function reset(db: Db, documents: Document[] = []): Promise<void> {
 	for (const collection of [
@@ -120,7 +97,7 @@ describe.skipIf(mongoUri === '')('deletions API', () => {
 		const deletion = (await json<StatusResponse>(ce, '/status')).deletion;
 
 		if (deletion?.state === 'running') {
-			await settled(ce);
+			await settledDeletion(ce);
 		}
 	});
 
@@ -131,7 +108,7 @@ describe.skipIf(mongoUri === '')('deletions API', () => {
 		await insertWorld(db, ended);
 
 		const before = Date.now();
-		const response = await post(ce, { class: 'events' });
+		const response = await postDeletion(ce, { class: 'events' });
 		const job = (await response.json()) as DeletionJob;
 
 		expect(response.status).toBe(202);
@@ -147,7 +124,7 @@ describe.skipIf(mongoUri === '')('deletions API', () => {
 		expect(job.startedAt).toBe(job.cutoff);
 		expect(Math.abs(Date.parse(job.cutoff) - before)).toBeLessThan(5_000);
 
-		const done = await settled(ce);
+		const done = await settledDeletion(ce);
 
 		expect(done).toMatchObject({ id: job.id, state: 'completed', deleted: 30 });
 		expect(await remaining(db, ended)).toEqual({ ...sizes(ended), [Collection.EVENTS]: 0 });
@@ -156,7 +133,7 @@ describe.skipIf(mongoUri === '')('deletions API', () => {
 	it('Legacy flag outside Total', async () => {
 		await reset(db);
 
-		const response = await post(ce, { class: 'events', includeLegacy: true });
+		const response = await postDeletion(ce, { class: 'events', includeLegacy: true });
 		const body = (await response.json()) as { error: { code: string; details: { issues: { path: string[] }[] } } };
 
 		expect(response.status).toBe(400);
@@ -176,7 +153,7 @@ describe.skipIf(mongoUri === '')('deletions API', () => {
 			{ class: 'nodes' },
 			{}
 		]) {
-			expect((await post(ce, body)).status, JSON.stringify(body)).toBe(400);
+			expect((await postDeletion(ce, body)).status, JSON.stringify(body)).toBe(400);
 		}
 
 		expect((await json<StatusResponse>(ce, '/status')).deletion).toBeUndefined();
@@ -218,7 +195,7 @@ describe.skipIf(mongoUri === '')('deletions API', () => {
 			}
 		]);
 
-		const response = await post(ce, { class: 'stats' });
+		const response = await postDeletion(ce, { class: 'stats' });
 		const body = (await response.json()) as {
 			error: { code: string; message: string; details: { job: DeletionJob } };
 		};
@@ -247,8 +224,8 @@ describe.skipIf(mongoUri === '')('deletions API', () => {
 				}))
 			);
 
-			const started = await post(ce, { class: 'entities' });
-			const refused = await post(second, { class: 'all' });
+			const started = await postDeletion(ce, { class: 'entities' });
+			const refused = await postDeletion(second, { class: 'all' });
 			const body = (await refused.json()) as { error: { code: string; details: { job: DeletionJob } } };
 
 			expect(started.status).toBe(202);
@@ -256,7 +233,7 @@ describe.skipIf(mongoUri === '')('deletions API', () => {
 			expect(body.error.code).toBe('CONFLICT');
 			expect(body.error.details.job.class).toBe('entities');
 
-			const done = await settled(second);
+			const done = await settledDeletion(second);
 
 			expect(done).toMatchObject({ class: 'entities', state: 'completed', deleted: 30_000 });
 		} finally {
@@ -278,12 +255,16 @@ describe.skipIf(mongoUri === '')('deletions API', () => {
 		await insertWorld(db, ended);
 		await seedLegacy(db);
 
-		const response = await post(ce, { class: 'legacy' });
+		const response = await postDeletion(ce, { class: 'legacy' });
 		const job = (await response.json()) as DeletionJob;
 
 		expect(response.status).toBe(202);
 		expect(job).toMatchObject({ class: 'legacy', currentClass: 'legacy', collection: { index: 1, total: 2 } });
-		expect(await settled(ce)).toMatchObject({ state: 'completed', deleted: 5, collection: { index: 2, total: 2 } });
+		expect(await settledDeletion(ce)).toMatchObject({
+			state: 'completed',
+			deleted: 5,
+			collection: { index: 2, total: 2 }
+		});
 
 		const names = await collectionNames(db);
 		const storage = (await json<InfoResponse>(ce, '/info')).storage;
@@ -300,7 +281,7 @@ describe.skipIf(mongoUri === '')('deletions API', () => {
 		await seedLegacy(db);
 
 		for (const body of [{ class: 'legacy' }, { class: 'all', includeLegacy: true }]) {
-			const response = await post(ce, body);
+			const response = await postDeletion(ce, body);
 			const error = ((await response.json()) as { error: { code: string; message: string } }).error;
 
 			expect(response.status).toBe(409);
@@ -318,7 +299,7 @@ describe.skipIf(mongoUri === '')('deletions API', () => {
 	it('Legacy refused after its window', async () => {
 		await reset(db, [{ _id: 'migration', state: 'completed', ...migrationFields, legacyRetainedUntil: ago(HOUR) }]);
 
-		const response = await post(ce, { class: 'legacy' });
+		const response = await postDeletion(ce, { class: 'legacy' });
 
 		expect(response.status).toBe(409);
 		expect(((await response.json()) as { error: { message: string } }).error.message).toBe(
@@ -355,8 +336,8 @@ describe.skipIf(mongoUri === '')('deletions API', () => {
 		await insertWorld(db, world);
 		await seedLegacy(db);
 
-		expect((await post(ce, { class: 'all' })).status).toBe(202);
-		expect(await settled(ce)).toMatchObject({ state: 'completed', collection: { index: 17, total: 17 } });
+		expect((await postDeletion(ce, { class: 'all' })).status).toBe(202);
+		expect(await settledDeletion(ce)).toMatchObject({ state: 'completed', collection: { index: 17, total: 17 } });
 		expect(Object.values(await remaining(db, world)).every((count) => count === 0)).toBe(true);
 		expect(await db.collection(LegacyCollection.EVENTS).countDocuments()).toBe(3);
 		expect(await db.collection(LegacyCollection.STATS).countDocuments()).toBe(2);
@@ -378,9 +359,9 @@ describe.skipIf(mongoUri === '')('deletions API', () => {
 		await insertWorld(db, world);
 		await seedLegacy(db);
 
-		expect((await post(ce, { class: 'all', includeLegacy: true })).status).toBe(202);
+		expect((await postDeletion(ce, { class: 'all', includeLegacy: true })).status).toBe(202);
 
-		const done = await settled(ce);
+		const done = await settledDeletion(ce);
 
 		expect(done).toMatchObject({ state: 'completed', includeLegacy: true, collection: { index: 19, total: 19 } });
 		expect(Object.values(await remaining(db, world)).every((count) => count === 0)).toBe(true);

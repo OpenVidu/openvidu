@@ -6,26 +6,16 @@ import { provideRouter, Router } from '@angular/router';
 import type { DeletionJob, StatusResponse } from '@openvidu-dashboard/typings';
 import { beforeEach, describe, expect, it } from 'vitest';
 
-import { statusResponse } from '../../testing/fixtures.js';
+import { deletionJob, statusResponse } from '../../testing/fixtures.js';
 import { ServerStatusService, STATUS_POLL_FAST_MS } from '../core/refresh/server-status.js';
 import { BannerSlot } from './banner-slot.js';
 
 @Component({ template: '' })
 class Page {}
 
+/** A running Entities deletion. */
 function job(overrides: Partial<DeletionJob> = {}): DeletionJob {
-	return {
-		id: 'job-1',
-		class: 'entities',
-		includeLegacy: false,
-		state: 'running',
-		cutoff: '2026-10-13T11:59:00.000Z',
-		startedAt: '2026-10-13T11:59:00.000Z',
-		currentClass: 'events',
-		collection: { index: 1, total: 9 },
-		deleted: 0,
-		...overrides
-	};
+	return deletionJob({ class: 'entities', collection: { index: 1, total: 9 }, ...overrides });
 }
 
 describe('BannerSlot', () => {

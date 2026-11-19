@@ -50,7 +50,7 @@
 ## 8. CHANGELOG and refactor review (implementer)
 
 - [x] 8.1 Add the CHANGELOG lines of the proposal under the next release (`Added` › `UI` and `Improved` › `UI`). Verify with `./dashboard.sh check` (format). Owner's decision: each line was written in the commit of its observable change (the deletions API, the banner, the Data tab), not in this group.
-- [ ] 8.2 Refactor review of the new slice, the Data tab and the status service: apply small refactors, propose a separate change for larger ones, and record the outcome in the report.
+- [x] 8.2 Refactor review of the new slice, the Data tab and the status service: apply small refactors, propose a separate change for larger ones, and record the outcome in the report. Applied: the deletion texts of the Data tab in `deletion-texts.ts`, one `deletionJob()` fixture for the UI specs, the request and wait helpers of the backend suites in `test/support/deletion-world.ts`; no larger refactor to propose.
 
 ## 9. Demo review (owner)
 
