@@ -10,16 +10,16 @@ github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.14.0 run --build-tags 
 
 ## 1. Writer: rollups and stats deltas written per collection (implementer)
 
-- [ ] 1.1 In `openvidu/analytics/batch.go`, replace `rollupsDone` of `eventEntry` and `statsEntry` with the set of
+- [x] 1.1 In `openvidu/analytics/batch.go`, replace `rollupsDone` of `eventEntry` and `statsEntry` with the set of
       rollup collections written, and `deltasDone` of `statsEntry` with the set of delta collections written; apply
       the increments and the stats updates one collection at a time in a fixed order, each call carrying only the
       entries that still miss that collection, and mark them when it succeeds or its writes are rejected for good
       (design, decision 1). Keep `done()` and the writer's requeue as they are in meaning. Leave `store/` unchanged.
       Verify: `go build ./openvidu/...` and lint pass.
-- [ ] 1.2 In `applyRollups`, compute the room-end increments of an entry once, on its first pass, and keep them on the
+- [x] 1.2 In `applyRollups`, compute the room-end increments of an entry once, on its first pass, and keep them on the
       entry; count `hostedRooms` when a `ROOM_CREATED` entry has written every rollup collection (design, decision 2).
       Verify: `go test ./openvidu/analytics/` passes.
-- [ ] 1.3 Add `openvidu/analytics/batch_test.go` with a fake `batchStore` that records each `ApplyIncrements` and
+- [x] 1.3 Add `openvidu/analytics/batch_test.go` with a fake `batchStore` that records each `ApplyIncrements` and
       `ApplyUpdates` call by collection and fails one collection once with a network error. Tests `Rollup step
       interrupted between collections` (5-minute written, hourly fails: the retry writes no 5-minute increment again,
       hourly and daily once, and the summed counters equal the event counts; also a `ROOM_CREATED` counted once in
@@ -30,21 +30,21 @@ github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.14.0 run --build-tags 
 
 ## 2. Migration: in-flight batch, retries and lock (implementer)
 
-- [ ] 2.1 In `openvidu/analytics/migration.go`, hold the in-flight batch on the migrator (design, decision 3):
+- [x] 2.1 In `openvidu/analytics/migration.go`, hold the in-flight batch on the migrator (design, decision 3):
       `applyEvents` and `applyStats` decode a batch once into it, record whether the authentic events and the fixer
       closures are finished, and `replay` finishes a held batch before it advances the checkpoint and opens the cursor.
       Drop the held batch when it completes, when the run ends and at the start of `run`. Keep the inner `retrying`
       and the outer `withRetries` with their budget (decision 4). Verify: `go build ./openvidu/...` and lint pass.
-- [ ] 2.2 Refresh the lease before every new attempt in `retrying` and `withRetries`, returning `errLockLost` when the
+- [x] 2.2 Refresh the lease before every new attempt in `retrying` and `withRetries`, returning `errLockLost` when the
       refresh fails (decision 5); pass the lease to both. Update the doc comments of `migrationLockTTL` and
       `migrationRetries` to the five rounds of five attempts and the refresh before each retry. Verify:
       `go build ./openvidu/...` and lint pass.
-- [ ] 2.3 Add `openvidu/analytics/migration_test.go` with the unit tests `Transient error with progress` (a phase
+- [x] 2.3 Add `openvidu/analytics/migration_test.go` with the unit tests `Transient error with progress` (a phase
       failing with a network error four times, then progressing and failing again, is not given up and keeps
       `running`) and `Lock refreshed while a batch retries` (a lease whose refresh fails before the third attempt: two
       attempts, one refresh between them, `errLockLost`, no third attempt). Verify: `go test -race
       ./openvidu/analytics/` passes.
-- [ ] 2.4 In `openvidu/analytics/migration_integration_test.go`, add to `TestMigrationResilience`, with failures
+- [x] 2.4 In `openvidu/analytics/migration_integration_test.go`, add to `TestMigrationResilience`, with failures
       injected by wrapping the real store: `Batch finished after its fixer closures failed` (fixer closures fail once
       after the authentic events were applied; rollups, closed entities and `counts` equal a reference run);
       `Stats batch finished after a transient error` (room deltas fail once after `track_stats` and participant
@@ -58,7 +58,7 @@ github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.14.0 run --build-tags 
       attempts of the failing write before `failed`. Covers the five integration scenarios of the migration. Verify:
       `go test -race -tags integration -run 'TestMigration' ./openvidu/analytics/` passes (Docker), and the new
       subtests fail against the code before 2.1.
-- [ ] 2.5 Commit 1.1 to 2.4 on `openvidu/main` of the writer checkout without pushing. Verify:
+- [x] 2.5 Commit 1.1 to 2.4 on `openvidu/main` of the writer checkout without pushing. Verify:
       `go test -race -tags integration ./openvidu/analytics/...` passes (Docker), as the `Analytics integration tests`
       step of `buildtest.yaml` runs it, and `go test -race ./openvidu/analytics/...` passes.
 
