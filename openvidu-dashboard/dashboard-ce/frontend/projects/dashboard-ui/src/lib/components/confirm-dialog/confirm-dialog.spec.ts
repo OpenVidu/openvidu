@@ -116,6 +116,15 @@ describe('ConfirmDialog', () => {
 		expect(host.results()).toEqual([{ checked: true }]);
 	});
 
+	it('Escape cancels: so does Cancel', async () => {
+		dialog().querySelector<HTMLButtonElement>('.ovd-confirm-cancel')?.click();
+		await settle();
+
+		expect(document.querySelector('mat-dialog-container')).toBeNull();
+		expect(host.results()).toEqual([null]);
+		expect(document.activeElement).toBe(opener);
+	});
+
 	it('Escape cancels', async () => {
 		const escape = new KeyboardEvent('keydown', { key: 'Escape', bubbles: true });
 

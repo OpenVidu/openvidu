@@ -6,7 +6,6 @@ import {
 	MAT_DIALOG_DATA,
 	MatDialog,
 	MatDialogActions,
-	MatDialogClose,
 	MatDialogContent,
 	MatDialogRef,
 	MatDialogTitle
@@ -16,8 +15,9 @@ import { firstValueFrom } from 'rxjs';
 /** What a confirmation dialog asks. */
 export interface ConfirmDialogData {
 	title: string;
-	/** Body: a text, or a template (links, several paragraphs). */
+	/** Body: a text, or a template (links, several paragraphs) rendered with `bodyContext` as `$implicit`. */
 	body: string | TemplateRef<unknown>;
+	bodyContext?: unknown;
 	/** Label of the confirm button, in the error colour, such as "Delete". */
 	confirmLabel: string;
 	/** An unchecked checkbox under the body, and the note shown under it while checked. */
@@ -35,22 +35,17 @@ export interface ConfirmDialogResult {
  */
 @Component({
 	selector: 'ovd-confirm-dialog',
-	imports: [
-		MatButton,
-		MatCheckbox,
-		MatDialogActions,
-		MatDialogClose,
-		MatDialogContent,
-		MatDialogTitle,
-		NgTemplateOutlet
-	],
+	imports: [MatButton, MatCheckbox, MatDialogActions, MatDialogContent, MatDialogTitle, NgTemplateOutlet],
 	template: `
 		<h2 mat-dialog-title>{{ data.title }}</h2>
 		<mat-dialog-content>
 			@if (isText(data.body)) {
 				<p>{{ data.body }}</p>
 			} @else {
-				<ng-container [ngTemplateOutlet]="data.body" />
+				<ng-container
+					[ngTemplateOutlet]="data.body"
+					[ngTemplateOutletContext]="{ $implicit: data.bodyContext }"
+				/>
 			}
 			@if (data.checkbox; as checkbox) {
 				<mat-checkbox class="checkbox" [checked]="checked()" (change)="checked.set($event.checked)">
@@ -62,7 +57,7 @@ export interface ConfirmDialogResult {
 			}
 		</mat-dialog-content>
 		<mat-dialog-actions align="end">
-			<button matButton type="button" class="ovd-confirm-cancel" mat-dialog-close>Cancel</button>
+			<button matButton type="button" class="ovd-confirm-cancel" (click)="cancel()">Cancel</button>
 			<button matButton="filled" type="button" class="confirm" (click)="confirm()">
 				{{ data.confirmLabel }}
 			</button>
@@ -98,6 +93,10 @@ export class ConfirmDialog {
 
 	protected isText(body: ConfirmDialogData['body']): body is string {
 		return typeof body === 'string';
+	}
+
+	protected cancel(): void {
+		this.ref.close();
 	}
 
 	protected confirm(): void {
