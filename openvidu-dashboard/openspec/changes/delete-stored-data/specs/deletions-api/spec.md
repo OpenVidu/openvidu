@@ -168,8 +168,9 @@ before entities and rollups after them, and, with `includeLegacy`, drop the lega
 - **THEN** every class is deleted by its rules and `legacy_events` and `stats` no longer exist
 
 ### Requirement: Deletion pace
-Edition: CE. A job SHALL delete at most 5,000 documents per batch and wait 100 ms between batches, one collection at a
-time, so that the server's writes keep their pace.
+Edition: CE. A job SHALL delete about 5,000 documents per batch (a statistics batch bounded by time can exceed it when
+documents share the bound's timestamp) and wait 100 ms between batches, one collection at a time, so that the server's
+writes keep their pace.
 
 #### Scenario: Batches of a large collection
 - **GIVEN** 12,000 events to delete
