@@ -13,6 +13,7 @@ import { type SessionRepository } from '../auth/session-repository.js';
 import { provisionSigningKey } from '../auth/signing-key.js';
 import { loadConfigFile } from '../config/config-file.js';
 import { type DashboardConfig, parseConfig } from '../config/variables.js';
+import { type DeletionRecordsStore } from '../deletions/deletion-records.js';
 import { buildContainer } from '../di/container.js';
 import { TOKENS } from '../di/tokens.js';
 import { createHttpApp } from '../http/app.js';
@@ -273,6 +274,13 @@ function ceStartupHooks(options: DashboardOptions): StartupHook[] {
 		},
 		async ({ container }) => {
 			await container.get<SessionRepository>(TOKENS.SessionRepository).ensureIndexes();
+		},
+		async ({ container, logger }) => {
+			const job = await container.get<DeletionRecordsStore>(TOKENS.DeletionRecords).markRestarted();
+
+			if (job !== undefined) {
+				logger.warn(`Deletion ${job.id} marked interrupted: this instance restarted while running it`);
+			}
 		}
 	];
 }

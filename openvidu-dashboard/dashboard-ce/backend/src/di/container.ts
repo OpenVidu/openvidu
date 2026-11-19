@@ -15,6 +15,7 @@ import { registerAuthRoutes } from '../auth/auth-routes.js';
 import { AuthService } from '../auth/auth-service.js';
 import { SessionRepository } from '../auth/session-repository.js';
 import { type DashboardConfig } from '../config/variables.js';
+import { DeletionRecordsStore } from '../deletions/deletion-records.js';
 import { registerEgressRoutes } from '../egress/egress-routes.js';
 import { EgressService } from '../egress/egress-service.js';
 import { registerInfoRoute } from '../info/info-routes.js';
@@ -75,6 +76,10 @@ export function buildContainer(inputs: ContainerInputs): Container {
 			(database: Db, clock: () => Date) => new StatsModeReader(database, clock),
 			[TOKENS.Database, TOKENS.Clock]
 		)
+		.inSingletonScope();
+	container
+		.bind(TOKENS.DeletionRecords)
+		.toResolvedValue((database: Db) => new DeletionRecordsStore(database), [TOKENS.Database])
 		.inSingletonScope();
 	container
 		.bind(TOKENS.InfoService)
