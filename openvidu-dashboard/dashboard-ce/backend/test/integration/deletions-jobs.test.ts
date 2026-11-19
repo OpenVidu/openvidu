@@ -135,9 +135,9 @@ describe.skipIf(mongoUri === '')('deletion jobs', () => {
 		await setDashboard(db, {
 			deletion: runningJob({
 				class: 'entities',
-				currentClass: 'events',
+				currentClass: 'entities',
 				deleted: 1_234_000,
-				collection: { index: 2, total: 5 }
+				collection: { index: 2, total: 9 }
 			})
 		});
 
@@ -146,8 +146,9 @@ describe.skipIf(mongoUri === '')('deletion jobs', () => {
 		expect(status.deletion).toMatchObject({
 			class: 'entities',
 			state: 'running',
+			currentClass: 'entities',
 			deleted: 1_234_000,
-			collection: { index: 2, total: 5 }
+			collection: { index: 2, total: 9 }
 		});
 	});
 

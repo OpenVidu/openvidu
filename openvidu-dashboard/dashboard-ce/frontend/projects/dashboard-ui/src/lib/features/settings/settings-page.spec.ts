@@ -1173,7 +1173,7 @@ describe('SettingsPage', () => {
 						class: 'entities',
 						currentClass: 'entities',
 						deleted: 1_234_000,
-						collection: { index: 2, total: 5 }
+						collection: { index: 2, total: 9 }
 					})
 				}
 			);
@@ -1182,7 +1182,7 @@ describe('SettingsPage', () => {
 			expect(text(section?.querySelector('h2'))).toBe('Deleting analytics data');
 			expect(section?.querySelector('mat-progress-bar')?.getAttribute('mode')).toBe('indeterminate');
 			expect(text(section?.querySelector('p'))).toBe(
-				'Deleting Entities: 1,234,000 documents deleted · collection 2 of 5'
+				'Deleting Entities: 1,234,000 documents deleted · collection 2 of 9'
 			);
 		});
 
