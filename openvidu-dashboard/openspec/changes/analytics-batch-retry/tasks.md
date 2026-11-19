@@ -73,11 +73,11 @@ github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.14.0 run --build-tags 
 
 After the full verification.
 
-- [ ] 4.1 Push `openvidu/main` of the writer checkout. Verify: its `Test` workflow run (`buildtest.yaml`, analytics
+- [x] 4.1 Push `openvidu/main` of the writer checkout. Verify: its `Test` workflow run (`buildtest.yaml`, analytics
       integration tests included) is green.
 - [ ] 4.2 Merge `openvidu/main` of openvidu-livekit into openvidu-pro-livekit and push it. Verify: its CI run is
       green.
-- [ ] 4.3 Push the CE workspace's `master` with the change. Verify: the `openvidu-dashboard-ci.yml` run, `contract`
+- [x] 4.3 Push the CE workspace's `master` with the change. Verify: the `openvidu-dashboard-ci.yml` run, `contract`
       job included (it builds the writer's `openvidu/main`), is green.
 
 ## Workflow follow-up
