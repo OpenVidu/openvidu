@@ -177,7 +177,7 @@ time, so that the server's writes keep their pace.
 - **THEN** it deletes them in three batches of at most 5,000 documents with at least 100 ms between two batches
 
 ### Requirement: Deletion job in the status
-Edition: CE. `GET /api/v1/status` SHALL report the latest job, when any exists, as `deletion` with its `class`,
+Edition: CE. `GET /api/v1/status` SHALL report the latest job, when any exists, as `deletion` with its `id`, `class`,
 `includeLegacy`, `state` (`running`, `completed`, `interrupted` or `failed`), `cutoff`, `startedAt`, `finishedAt?`,
 `currentClass?`, `deleted` (documents deleted by the whole job), `collection { index, total }` and `error?`, read from
 `schema_meta` only.
