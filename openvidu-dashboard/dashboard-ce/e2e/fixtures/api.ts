@@ -150,6 +150,7 @@ function storage(now: number): InfoResponse['storage'] {
 		documents,
 		storageBytes: Math.round(bytes * 0.8),
 		indexBytes: Math.round(bytes * 0.2),
+		freeBytes: 0,
 		...(ageMs === undefined ? {} : { oldest: new Date(now - ageMs).toISOString() })
 	});
 
@@ -174,8 +175,8 @@ export function legacyStorage(now: number): InfoResponse['storage'] {
 	const oldest = new Date(now - 30 * DAY_MS).toISOString();
 
 	return {
-		legacy_events: { documents: 120_000, storageBytes: 32_000_000, indexBytes: 8_000_000, oldest },
-		stats: { documents: 300_000, storageBytes: 72_000_000, indexBytes: 18_000_000, oldest }
+		legacy_events: { documents: 120_000, storageBytes: 32_000_000, indexBytes: 8_000_000, freeBytes: 0, oldest },
+		stats: { documents: 300_000, storageBytes: 72_000_000, indexBytes: 18_000_000, freeBytes: 0, oldest }
 	};
 }
 
@@ -253,6 +254,7 @@ export class MockApi {
 				...storage(Date.now()),
 				...(this.options.legacy === true ? legacyStorage(Date.now()) : {})
 			},
+			deletions: {},
 			features: edition === 'pro' ? Object.values(FeatureKey) : [],
 			limits: { rankedSortMaxRangeMs: 7 * 86_400_000, participantRankedSortMaxRangeMs: 86_400_000 },
 			openapiDocsEnabled: false,

@@ -163,6 +163,7 @@ export class InfoService {
 			...healthFacts(byId),
 			database: { version: String(build.version), timeseriesSupported: capabilities?.timeseries ?? false },
 			storage: await this.storageInfo(byId.has('migration')),
+			deletions: {},
 			features: this.options.features(),
 			limits: this.options.limits,
 			openapiDocsEnabled: this.options.openapiDocsEnabled
@@ -222,7 +223,8 @@ export class InfoService {
 		const entry: InfoStorageEntry = {
 			documents: count,
 			storageBytes: Number(storageStats.storageSize ?? 0),
-			indexBytes: Number(storageStats.totalIndexSize ?? 0)
+			indexBytes: Number(storageStats.totalIndexSize ?? 0),
+			freeBytes: Number(storageStats.freeStorageSize ?? 0) + Number(storageStats.indexFreeStorageSize ?? 0)
 		};
 		const query = oldestQuery(this.db, name);
 

@@ -2,6 +2,7 @@ export * from './schema-version.js';
 export * from './api/analytics.js';
 export * from './api/auth.js';
 export * from './api/csv.js';
+export * from './api/deletions.js';
 export * from './api/egress.js';
 export * from './api/errors.js';
 export * from './api/features.js';

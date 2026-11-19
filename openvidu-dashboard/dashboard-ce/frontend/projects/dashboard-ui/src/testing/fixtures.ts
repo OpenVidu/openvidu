@@ -9,6 +9,7 @@ export function infoResponse(overrides: Partial<InfoResponse> = {}): InfoRespons
 		migration: { state: 'completed', progress: { processed: 10, total: 10 } },
 		database: { version: '8.0.29', timeseriesSupported: true },
 		storage: {},
+		deletions: {},
 		features: [],
 		limits: { rankedSortMaxRangeMs: 7 * 86_400_000, participantRankedSortMaxRangeMs: 86_400_000 },
 		openapiDocsEnabled: false,

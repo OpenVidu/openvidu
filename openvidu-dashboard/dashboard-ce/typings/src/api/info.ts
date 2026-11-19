@@ -1,4 +1,5 @@
 import type { MigrationState } from '../data-model/enums.js';
+import type { DeletionRecords } from './deletions.js';
 import type { FeatureKey } from './features.js';
 
 /** Dashboard edition, fixed by the package that starts the server. */
@@ -61,6 +62,8 @@ export interface InfoStorageEntry {
 	documents: number;
 	storageBytes: number;
 	indexBytes: number;
+	/** Space free for new data in the collection and its indexes; 0 when MongoDB does not report it. */
+	freeBytes: number;
 	/** Earliest `ts`, `bucket` or `createdAt` of the collection, when an index gives it cheaply. */
 	oldest?: string;
 }
@@ -88,6 +91,8 @@ export interface InfoResponse {
 	retention?: InfoRetention;
 	database: InfoDatabase;
 	storage: Record<string, InfoStorageEntry>;
+	/** The last deletion of each class; `{}` when none ever ran. */
+	deletions: DeletionRecords;
 	features: FeatureKey[];
 	limits: InfoLimits;
 	openapiDocsEnabled: boolean;

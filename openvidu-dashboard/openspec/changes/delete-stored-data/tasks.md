@@ -2,8 +2,8 @@
 
 ## 1. Typings (implementer)
 
-- [ ] 1.1 Add the deletion API types to `dashboard-ce/typings/src/api/`: `DeletionClass`, `DeletionClassKey`, `DeletionJob`, `DeletionRecord`, `StartDeletionRequest`; `deletion?` in the status response, `deletions` in `InfoResponse`, `freeBytes` in `InfoStorageEntry`; export them. Verify with `./dashboard.sh check` (typecheck and the typings contract tests).
-- [ ] 1.2 Add `deletion?` and `deletions?` to `SchemaMetaDashboard` (`src/data-model/system.ts`) without touching `contract/`; verify the generated `schema/` and the schema version are unchanged with a typings test titled "Contract unchanged".
+- [x] 1.1 Add the deletion API types to `dashboard-ce/typings/src/api/`: `DeletionClass`, `DeletionClassKey`, `DeletionJob`, `DeletionRecord`, `StartDeletionRequest`; `deletion?` in the status response, `deletions` in `InfoResponse`, `freeBytes` in `InfoStorageEntry`; export them. Verify with `./dashboard.sh check` (typecheck and the typings contract tests).
+- [x] 1.2 Add `deletion?` and `deletions?` to `SchemaMetaDashboard` (`src/data-model/system.ts`) without touching `contract/`; verify the generated `schema/` and the schema version are unchanged with a typings test titled "Contract unchanged".
 
 ## 2. Backend: records, lock and runner (implementer)
 

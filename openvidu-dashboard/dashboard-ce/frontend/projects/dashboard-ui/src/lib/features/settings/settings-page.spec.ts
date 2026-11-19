@@ -68,6 +68,7 @@ function entry(bytes: number, ageMs?: number, documents = 1): InfoStorageEntry {
 		documents,
 		storageBytes: bytes,
 		indexBytes: 0,
+		freeBytes: 0,
 		...(ageMs === undefined ? {} : { oldest: new Date(Date.now() - ageMs).toISOString() })
 	};
 }
@@ -170,7 +171,7 @@ describe('SettingsPage', () => {
 		reread[0]?.flush(
 			infoResponse({
 				retention: DEFAULT_RETENTION,
-				storage: { rooms: { documents: 4, storageBytes: 36_864, indexBytes: 344_136 } }
+				storage: { rooms: { documents: 4, storageBytes: 36_864, indexBytes: 344_136, freeBytes: 0 } }
 			})
 		);
 		await settle();
@@ -364,9 +365,9 @@ describe('SettingsPage', () => {
 			infoResponse({
 				retention: DEFAULT_RETENTION,
 				storage: {
-					rooms: { documents: 4, storageBytes: 36_864, indexBytes: 344_136 },
-					events: { documents: 285, storageBytes: 65_536, indexBytes: 290_464 },
-					schema_meta: { documents: 4, storageBytes: 20_480, indexBytes: 20_520 }
+					rooms: { documents: 4, storageBytes: 36_864, indexBytes: 344_136, freeBytes: 0 },
+					events: { documents: 285, storageBytes: 65_536, indexBytes: 290_464, freeBytes: 0 },
+					schema_meta: { documents: 4, storageBytes: 20_480, indexBytes: 20_520, freeBytes: 0 }
 				}
 			})
 		);
@@ -474,7 +475,13 @@ describe('SettingsPage', () => {
 		track_stats: entry(1_000),
 		tracks: entry(1_000),
 		track_subscriptions: entry(1_000),
-		rooms: { documents: 1_203, storageBytes: 1_200_000, indexBytes: 270_000, oldest: '2026-09-01T00:00:00Z' },
+		rooms: {
+			documents: 1_203,
+			storageBytes: 1_200_000,
+			indexBytes: 270_000,
+			freeBytes: 0,
+			oldest: '2026-09-01T00:00:00Z'
+		},
 		participants: entry(1_000, DAY),
 		egresses: entry(1_000, DAY),
 		ingresses: entry(1_000, DAY),
@@ -585,14 +592,21 @@ describe('SettingsPage', () => {
 
 	const LEGACY_LABEL = 'Legacy data (before 3.10)';
 	const LEGACY_STORAGE = {
-		rooms: { documents: 4, storageBytes: 36_864, indexBytes: 344_136 },
+		rooms: { documents: 4, storageBytes: 36_864, indexBytes: 344_136, freeBytes: 0 },
 		legacy_events: {
 			documents: 120_000,
 			storageBytes: 30_000_000,
 			indexBytes: 10_000_000,
+			freeBytes: 0,
 			oldest: '2026-10-13T09:25:55Z'
 		},
-		stats: { documents: 300_000, storageBytes: 80_000_000, indexBytes: 10_000_000, oldest: '2026-10-13T09:26:09Z' }
+		stats: {
+			documents: 300_000,
+			storageBytes: 80_000_000,
+			indexBytes: 10_000_000,
+			freeBytes: 0,
+			oldest: '2026-10-13T09:26:09Z'
+		}
 	};
 	/** A date after any read of the test, so that the row keeps the data for rollback. */
 	const RETAINED_UNTIL = new Date(Date.now() + 30 * DAY).toISOString();

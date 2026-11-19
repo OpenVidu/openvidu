@@ -1,4 +1,5 @@
-import { readFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
+import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { EJSON, Int32 } from 'bson';
@@ -61,6 +62,28 @@ describe('generated contract files', () => {
 
 	it('records the schema version', () => {
 		expect(readText('schema/contract_version.txt').trim()).toBe(String(SCHEMA_VERSION));
+	});
+});
+
+/**
+ * Digest of every generated file of `schema/` (name and content) and the schema version the deletion records of
+ * `schema_meta` `_id: "dashboard"` were added on: they need no contract change. A later contract change updates both.
+ */
+const CONTRACT_DIGEST = 'dd6883f588e9d5ab594038e71b0a5fef098c092f0546823c4da7ef0b2cb2226e';
+const CONTRACT_SCHEMA_VERSION = 2;
+
+describe('contract of the dashboard deletion records', () => {
+	it('Contract unchanged', () => {
+		const hash = createHash('sha256');
+
+		for (const file of readdirSync(join(packageRoot, 'schema')).sort()) {
+			hash.update(`${file}\0`);
+			hash.update(readFileSync(join(packageRoot, 'schema', file)));
+			hash.update('\0');
+		}
+
+		expect(hash.digest('hex')).toBe(CONTRACT_DIGEST);
+		expect(SCHEMA_VERSION).toBe(CONTRACT_SCHEMA_VERSION);
 	});
 });
 

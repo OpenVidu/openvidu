@@ -1,3 +1,4 @@
+import type { DeletionJob } from './deletions.js';
 import type { InfoMigration, InfoSchema } from './info.js';
 
 /** The analytics writer as the server nodes report it. */
@@ -17,4 +18,6 @@ export interface StatusResponse {
 	schema: InfoSchema;
 	migration: InfoMigration;
 	writer: StatusWriter;
+	/** The latest deletion job, absent when none ever ran. */
+	deletion?: DeletionJob;
 }
