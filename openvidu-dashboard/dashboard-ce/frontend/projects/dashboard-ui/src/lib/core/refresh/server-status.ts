@@ -1,4 +1,4 @@
-import { computed, effect, inject, Service, signal, untracked } from '@angular/core';
+import { computed, DestroyRef, effect, inject, Service, signal, untracked } from '@angular/core';
 import { freshnessWindows, type RefreshIntervalMs, type StatusResponse } from '@openvidu-dashboard/typings';
 
 import { HttpService } from '../http/http.js';
@@ -6,7 +6,7 @@ import { InfoService } from '../info.js';
 import { injectRefreshScheduler, type RefreshScheduler } from './refresh.js';
 
 export const STATUS_POLL_MS: RefreshIntervalMs = 30_000;
-/** Poll while the migration runs or the schema is uninitialized, so their banners follow the server. */
+/** Poll while the migration or a deletion runs or the schema is uninitialized, so their banners follow the server. */
 export const STATUS_POLL_FAST_MS: RefreshIntervalMs = 10_000;
 /** Consecutive silent statuses before the silent writer banner shows. */
 const SILENT_STATUSES = 2;
@@ -71,10 +71,24 @@ export class ServerStatusService {
 	readonly pollInterval = computed<RefreshIntervalMs>(() => {
 		const status = this.status();
 
-		return status?.migration.state === 'running' || status?.schema.status === 'uninitialized'
+		return status?.migration.state === 'running' ||
+			status?.deletion?.state === 'running' ||
+			status?.schema.status === 'uninitialized'
 			? STATUS_POLL_FAST_MS
 			: STATUS_POLL_MS;
 	});
+	/** The poll of the signed-in frame, which `pollNow()` runs at once. */
+	private poller: (() => Promise<void>) | null = null;
+
+	/** Requests the status at once, such as right after a deletion is accepted; the poll then goes on from it. */
+	pollNow(): Promise<void> {
+		return this.poller?.() ?? this.load();
+	}
+
+	/** Called by the poll of the signed-in frame; `null` when it stops. */
+	attachPoller(poller: (() => Promise<void>) | null): void {
+		this.poller = poller;
+	}
 
 	async load(): Promise<void> {
 		const body = await this.http.get<StatusResponse>('status');
@@ -86,12 +100,15 @@ export class ServerStatusService {
 
 /**
  * Polls the server status for the signed-in frame, whatever the page and its auto-refresh, and re-reads the info
- * document once when the status reports another schema status or migration state.
+ * document once when the status reports another schema status or migration state, or another deletion job or state
+ * than the one the last info document was read with.
  */
 export function injectServerStatusPoll(): RefreshScheduler {
 	const status = inject(ServerStatusService);
 	const info = inject(InfoService);
 	let reread: string | null = null;
+	/** The deletion job and state of the status when the info document was last read; `undefined` before any status. */
+	let deletionRead: string | undefined;
 
 	effect(() => {
 		const body = status.status();
@@ -101,17 +118,28 @@ export function injectServerStatusPoll(): RefreshScheduler {
 			return;
 		}
 
+		const deletion = body.deletion === undefined ? 'none' : `${body.deletion.id}|${body.deletion.state}`;
 		const key = `${body.schema.status}|${body.migration.state}`;
+		const deletionChanged = deletionRead !== undefined && deletion !== deletionRead;
 
-		if (key !== `${known.schema.status}|${known.migration.state}` && key !== reread) {
+		deletionRead = deletion;
+
+		if ((key !== `${known.schema.status}|${known.migration.state}` && key !== reread) || deletionChanged) {
 			reread = key;
 			untracked(() => void info.load());
 		}
 	});
 
-	return injectRefreshScheduler({
+	const scheduler = injectRefreshScheduler({
 		register: false,
 		interval: status.pollInterval,
 		load: () => status.load()
 	});
+
+	status.attachPoller(() => scheduler.refresh());
+	inject(DestroyRef).onDestroy(() => {
+		status.attachPoller(null);
+	});
+
+	return scheduler;
 }

@@ -28,9 +28,9 @@
 
 ## 5. UI: status cadence and banner (implementer)
 
-- [ ] 5.1 Poll the status every 10 s while a deletion runs and at once after an accepted request; re-read the info when the deletion job or state changes; cover "Deletion cadence", "Status right after starting a deletion" and "Deletion ends" in `core/refresh/server-status.spec.ts`.
-- [ ] 5.2 Add the deletion banner to the banner slot; cover "Banner of a running deletion", "Banner of a Total deletion", "No banner on the Data tab", "Banner ends with the job" and "Dismissed banner and a new job" in `shell/banner-slot.spec.ts`.
-- [ ] 5.3 Title, or add, tests for the unchanged scenarios of the modified shell requirements that no test names yet: "Schema mismatch" and "Schema initialized while the page is open" in `shell/banner-slot.spec.ts`, "Migration cadence", "Hidden tab" and "Signed out" in `core/refresh/server-status.spec.ts`; keep "Migration running", "Auto-refresh off", "Migration ends" and "Steady server" covered.
+- [x] 5.1 Poll the status every 10 s while a deletion runs and at once after an accepted request; re-read the info when the deletion job or state changes; cover "Deletion cadence", "Status right after starting a deletion" and "Deletion ends" in `core/refresh/server-status.spec.ts`.
+- [x] 5.2 Add the deletion banner to the banner slot; cover "Banner of a running deletion", "Banner of a Total deletion", "No banner on the Data tab", "Banner ends with the job" and "Dismissed banner and a new job" in `shell/banner-slot.spec.ts`.
+- [x] 5.3 Title, or add, tests for the unchanged scenarios of the modified shell requirements that no test names yet: "Schema mismatch" and "Schema initialized while the page is open" in `shell/banner-slot.spec.ts`, "Migration cadence", "Hidden tab" and "Signed out" in `core/refresh/server-status.spec.ts`; keep "Migration running", "Auto-refresh off", "Migration ends" and "Steady server" covered.
 
 ## 6. UI: Data tab (implementer)
 
