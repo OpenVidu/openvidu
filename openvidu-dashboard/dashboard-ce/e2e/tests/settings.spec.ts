@@ -1,4 +1,5 @@
 import { expect, legacyMigration, type Page, test } from '../fixtures/api.js';
+import { expectNoViolations } from '../fixtures/axe.js';
 import { activeStatus } from '../fixtures/overview.js';
 
 const LEGACY_LABEL = 'Legacy data (before 3.10)';
@@ -107,7 +108,7 @@ test.describe('legacy data', () => {
 		const row = legacyRow(page);
 		const labels = data.locator('table.classes > tbody > tr > th[scope="row"]');
 
-		await expect(row.locator(':scope > th, :scope > td')).toHaveText([
+		await expect(row.locator(':scope > th, :scope > td:not(.action)')).toHaveText([
 			LEGACY_LABEL,
 			keptUntil(),
 			'420,000',
@@ -163,8 +164,109 @@ test.describe('on a phone', () => {
 			expect((box?.x ?? 0) + (box?.width ?? 0)).toBeLessThanOrEqual(375);
 			expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(375);
 		});
+
+		test('Delete buttons on a phone', async ({ page }) => {
+			await page.goto('/settings?tab=data');
+
+			const buttons = page.locator('ovd-data-tab td.action button');
+
+			await expect(buttons).toHaveCount(9);
+
+			for (const button of await buttons.all()) {
+				const box = await button.boundingBox();
+
+				expect(box?.x).toBeGreaterThanOrEqual(0);
+				expect((box?.x ?? 0) + (box?.width ?? 0)).toBeLessThanOrEqual(375);
+			}
+
+			expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(375);
+		});
+
+		test.describe('in the dark theme', () => {
+			test.use({ colorScheme: 'dark' });
+
+			test('Dialog on a phone', async ({ page }) => {
+				await page.goto('/settings?tab=data');
+				await page.getByRole('button', { name: 'Delete all analytics data' }).click();
+
+				const dialog = page.getByRole('dialog', { name: 'Delete all analytics data?' });
+				const checkbox = dialog.getByRole('checkbox', { name: 'Also delete the data before 3.10' });
+
+				await expect(dialog).toBeVisible();
+				await expect(dialog.getByRole('button', { name: 'Cancel' })).toBeFocused();
+				await checkbox.check();
+				await expect(dialog).toContainText('A rollback to 3.9 will find no analytics data.');
+
+				for (const part of [
+					dialog.getByRole('heading', { name: 'Delete all analytics data?' }),
+					dialog.locator('mat-dialog-content p').first(),
+					dialog.getByRole('link', { name: /How to free disk space/ }),
+					checkbox,
+					dialog.getByRole('button', { name: 'Cancel' }),
+					dialog.getByRole('button', { name: 'Delete', exact: true })
+				]) {
+					await part.scrollIntoViewIfNeeded();
+
+					const box = await part.boundingBox();
+
+					expect(box?.x).toBeGreaterThanOrEqual(0);
+					expect((box?.x ?? 0) + (box?.width ?? 0)).toBeLessThanOrEqual(375);
+				}
+
+				expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(375);
+				await expectNoViolations(page);
+			});
+		});
 	});
 });
+
+for (const scheme of ['light', 'dark'] as const) {
+	test.describe(`deleting in the ${scheme} theme`, () => {
+		test.use({ colorScheme: scheme, timezoneId: 'UTC' });
+
+		test('Events dialog: flow with axe in both themes', async ({ page, api }) => {
+			await page.clock.install();
+			await page.goto('/settings?tab=data');
+			await page.getByRole('button', { name: 'Delete Events' }).click();
+
+			const dialog = page.getByRole('dialog', { name: 'Delete events?' });
+
+			await expect(dialog).toContainText(
+				'Deletes the stored events of rooms, participant sessions, egresses and ingresses that have ended.'
+			);
+			await expect(dialog.getByRole('button', { name: 'Cancel' })).toBeFocused();
+			await expect(dialog.getByRole('link', { name: /How to free disk space/ })).toHaveAttribute(
+				'href',
+				'https://openvidu.io/latest/docs/self-hosting/production-ready/observability/openvidu-dashboard/#freeing-disk-space'
+			);
+			await expectNoViolations(page);
+
+			await dialog.getByRole('button', { name: 'Delete', exact: true }).click();
+			await expect(dialog).toHaveCount(0);
+			await expect(page.getByRole('button', { name: 'Delete Events' })).toBeFocused();
+			await expect.poll(() => api.deletionRequests).toEqual([{ class: 'events' }]);
+
+			const data = page.locator('ovd-data-tab');
+
+			await expect(data.getByRole('heading', { name: 'Deleting analytics data' })).toBeVisible();
+			await expect(data).toContainText('Deleting Events: 0 documents deleted · collection 1 of 1');
+			await expect(page.getByRole('button', { name: 'Delete Stats' })).toHaveAttribute('aria-disabled', 'true');
+			await expect(page.getByText('Lists and figures may change.')).toHaveCount(0);
+			await expectNoViolations(page);
+
+			api.finishDeletion(48_000);
+			await page.clock.fastForward('00:11');
+			await expect(page.getByText('Events deleted: 48,000 documents')).toBeVisible();
+			await expect(data.getByRole('heading', { name: 'Deleting analytics data' })).toHaveCount(0);
+			await expect(
+				data
+					.locator('table.classes > tbody > tr')
+					.filter({ has: page.getByRole('button', { name: 'Show collections of Events' }) })
+					.locator('th .sub')
+			).toHaveText(/^Deleted \d{4}-\d{2}-\d{2} \d{2}:\d{2}$/);
+		});
+	});
+}
 
 test.describe('incompatible writer', () => {
 	test.use({
