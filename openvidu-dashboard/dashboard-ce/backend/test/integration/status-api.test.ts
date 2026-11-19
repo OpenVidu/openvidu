@@ -153,6 +153,78 @@ describe.skipIf(mongoUri === '')('status API', () => {
 		expect((await json<StatusResponse>(ce, '/status')).writer).not.toHaveProperty('stoppedAt');
 	});
 
+	/** A dashboard document whose deletion job, of `class`, had its last heartbeat `heartbeatAgo` before now. */
+	function deletionMeta(deletionClass: string, heartbeatAgo: number): Document {
+		return {
+			_id: 'dashboard',
+			deletion: {
+				id: 'job-status',
+				class: deletionClass,
+				includeLegacy: false,
+				state: 'running',
+				cutoff: ago(HOUR),
+				startedAt: ago(HOUR),
+				heartbeatAt: ago(heartbeatAgo),
+				instance: 'elsewhere@2026-11-19T09:00:00.000Z',
+				currentClass: deletionClass,
+				collection: { index: 1, total: 1 },
+				deleted: 12,
+				deletedBy: { track_stats: 12 },
+				requestId: 'request-1'
+			}
+		};
+	}
+
+	it('Running deletion in the status', async () => {
+		await replace(ce.dashboard.db, Collection.SCHEMA_META, [deletionMeta('stats', 8 * SECOND)]);
+
+		const client = new MongoClient(mongoUri, { monitorCommands: true });
+		const commands: CommandStartedEvent[] = [];
+
+		client.on('commandStarted', (event) => {
+			commands.push(event);
+		});
+
+		try {
+			const db = client.db(ce.dashboard.db.databaseName);
+			const body = await new StatusService(db, {
+				info: new InfoService(db, {
+					edition: 'ce',
+					version: 'test',
+					features: () => [],
+					limits: rankedSortLimits(7 * 86_400_000),
+					openapiDocsEnabled: false
+				}),
+				now: () => new Date()
+			}).status();
+
+			expect(body.deletion).toMatchObject({ class: 'stats', state: 'running', deleted: 12 });
+			expect(body.deletion).not.toHaveProperty('instance');
+			expect(statusResponse.parse(body)).toEqual(body);
+			expect(
+				commands
+					.filter((event) => event.commandName === 'find')
+					.map((event) => (event.command as Record<string, unknown>).find)
+					.sort()
+			).toEqual([Collection.NODES, Collection.SCHEMA_META]);
+		} finally {
+			await client.close();
+		}
+
+		expect((await json<StatusResponse>(ce, '/status')).deletion?.state).toBe('running');
+	});
+
+	it('Stale deletion in the status', async () => {
+		await replace(ce.dashboard.db, Collection.SCHEMA_META, [deletionMeta('stats', 75 * SECOND)]);
+
+		const body = await json<StatusResponse>(ce, '/status');
+
+		expect(body.deletion?.state).toBe('interrupted');
+		expect(Date.parse(body.deletion?.finishedAt ?? '')).toBeLessThan(Date.parse(body.generatedAt) - 60 * SECOND);
+		expect(statusResponse.parse(body)).toEqual(body);
+		await replace(ce.dashboard.db, Collection.SCHEMA_META, []);
+	});
+
 	it('documents the route', () => {
 		const document = openApiDocument(ce.dashboard.running.container.get<RouteRegistry>(TOKENS.RouteRegistry), {
 			version: 'test'

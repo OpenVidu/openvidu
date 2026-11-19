@@ -32,6 +32,14 @@ export {
 } from './analytics/analytics-catalogue.js';
 export { AnalyticsFeatureGate } from './analytics/analytics-gate.js';
 export { AnalyticsService } from './analytics/analytics-service.js';
+export {
+	DeletionRecordsStore,
+	judgeJob as judgeDeletionJob,
+	toDeletionJob,
+	toDeletionRecords
+} from './deletions/deletion-records.js';
+export { deletionJob, deletionRecords } from './deletions/deletion-schemas.js';
+export { FigureCaches } from './deletions/figure-caches.js';
 export { EgressService } from './egress/egress-service.js';
 export { ApiError } from './http/api-error.js';
 export { InfoService } from './info/info-service.js';

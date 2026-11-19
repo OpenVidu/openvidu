@@ -29,8 +29,11 @@ export const TOKENS = {
 	/** Allows the PRO metrics, dimensions and scopes of the enabled features. */
 	AnalyticsFeatureGate: Symbol.for('openvidu-dashboard.AnalyticsFeatureGate'),
 	StatsModeReader: Symbol.for('openvidu-dashboard.StatsModeReader'),
+	/** `FigureCaches`: caches cleared when a deletion completes; an extending edition registers its own. */
+	FigureCaches: Symbol.for('openvidu-dashboard.FigureCaches'),
 	/** `DeletionRecordsStore`: the deletion records of the `schema_meta` dashboard document. */
 	DeletionRecords: Symbol.for('openvidu-dashboard.DeletionRecords'),
+	DeletionService: Symbol.for('openvidu-dashboard.DeletionService'),
 	/** Bound by the signing-key startup hook. */
 	SigningKey: Symbol.for('openvidu-dashboard.SigningKey'),
 	/** Bound by the base-path startup hook. */

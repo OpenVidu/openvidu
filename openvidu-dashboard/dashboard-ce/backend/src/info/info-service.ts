@@ -13,12 +13,15 @@ import {
 	type InfoStorageEntry,
 	LegacyCollection,
 	type SchemaMetaCapabilities,
+	type SchemaMetaDashboard,
 	type SchemaMetaConfig,
 	type SchemaMetaMigration,
 	type SchemaMetaRetention,
 	type SchemaMetaSchema
 } from '@openvidu-dashboard/typings';
 
+import { toDeletionRecords } from '../deletions/deletion-records.js';
+import type { FigureCaches } from '../deletions/figure-caches.js';
 import { schemaStatus } from '../schema/schema-status.js';
 import type { StatsModeReader } from '../stats/stats-mode.js';
 
@@ -116,7 +119,12 @@ export function fieldValue(document: Document | undefined, field: string): unkno
 }
 
 type SchemaMetaDocument =
-	SchemaMetaSchema | SchemaMetaMigration | SchemaMetaRetention | SchemaMetaCapabilities | SchemaMetaConfig;
+	| SchemaMetaSchema
+	| SchemaMetaMigration
+	| SchemaMetaRetention
+	| SchemaMetaCapabilities
+	| SchemaMetaConfig
+	| SchemaMetaDashboard;
 
 /** Schema status, migration and retention, as `GET /info` and the overview report them. */
 export type HealthFacts = Pick<InfoResponse, 'schema' | 'migration' | 'retention'>;
@@ -129,7 +137,15 @@ export interface InfoServiceOptions {
 	openapiDocsEnabled: boolean;
 	/** Refreshed with the `config` document of every full read. */
 	statsMode?: StatsModeReader;
+	/** Cleared when a read finds a deletion completed since the last one; the storage cache registers itself. */
+	caches?: FigureCaches;
 	now?: () => number;
+}
+
+/** Schema status, migration and retention with the dashboard document, from one read of `schema_meta`. */
+export interface StatusFacts {
+	health: HealthFacts;
+	dashboard?: SchemaMetaDashboard;
 }
 
 /** The info document: public subset before login, every fact after it; `schema_meta` is read on every call. */
@@ -142,6 +158,9 @@ export class InfoService {
 		private readonly options: InfoServiceOptions
 	) {
 		this.now = options.now ?? Date.now;
+		options.caches?.register(() => {
+			this.storage = undefined;
+		});
 	}
 
 	publicInfo(): InfoPublicResponse {
@@ -152,7 +171,9 @@ export class InfoService {
 		const byId = await this.schemaMeta();
 		const schema = byId.get('schema') as SchemaMetaSchema | undefined;
 		const capabilities = byId.get('capabilities') as SchemaMetaCapabilities | undefined;
-		const build = await this.db.command({ buildInfo: 1 });
+		const [build, hello] = await Promise.all([this.db.command({ buildInfo: 1 }), this.db.command({ hello: 1 })]);
+		// Running deletion jobs are judged by the MongoDB clock, as their heartbeats are written.
+		const now = hello.localTime instanceof Date ? hello.localTime : new Date(this.now());
 
 		return {
 			edition: this.options.edition,
@@ -163,7 +184,7 @@ export class InfoService {
 			...healthFacts(byId),
 			database: { version: String(build.version), timeseriesSupported: capabilities?.timeseries ?? false },
 			storage: await this.storageInfo(byId.has('migration')),
-			deletions: {},
+			deletions: toDeletionRecords(byId.get('dashboard') as SchemaMetaDashboard | undefined, now),
 			features: this.options.features(),
 			limits: this.options.limits,
 			openapiDocsEnabled: this.options.openapiDocsEnabled
@@ -175,17 +196,26 @@ export class InfoService {
 		return healthFacts(await this.schemaMeta());
 	}
 
+	/** The health facts and the dashboard document, with its deletion records, from one read of `schema_meta`. */
+	async statusFacts(): Promise<StatusFacts> {
+		const byId = await this.schemaMeta();
+		const dashboard = byId.get('dashboard') as SchemaMetaDashboard | undefined;
+
+		return { health: healthFacts(byId), ...(dashboard === undefined ? {} : { dashboard }) };
+	}
+
 	private async schemaMeta(): Promise<ReadonlyMap<string, unknown>> {
 		const meta = await this.db.collection<SchemaMetaDocument>(Collection.SCHEMA_META).find({}).toArray();
 		const byId = new Map(meta.map((document) => [document._id, document]));
 
 		this.options.statsMode?.remember(byId.get('config') as SchemaMetaConfig | undefined);
+		this.options.caches?.observe(byId.get('dashboard') as SchemaMetaDashboard | undefined);
 
 		return byId;
 	}
 
 	/**
-	 * Storage of the contract collections that exist, cached for {@link STORAGE_CACHE_MS}.
+	 * Storage of the contract collections that exist, cached for {@link STORAGE_CACHE_MS} or until a deletion completes.
 	 * @param withLegacy also the legacy collections that exist, which only a migration document makes legacy
 	 * @returns the entries by collection name
 	 */
