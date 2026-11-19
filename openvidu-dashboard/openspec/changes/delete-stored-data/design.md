@@ -105,7 +105,7 @@ interface SchemaMetaDashboard {
     heartbeatAt: Date;          // $$NOW every 10 s
     finishedAt?: Date;
     instance: string;           // host name + process start, to recognise its own job after a restart
-    currentClass?: DeletionClassKey;
+    currentClass?: DeletionStep;   // a class key, or 'legacy' while the legacy collections are dropped
     collection: { index: number; total: number };
     deleted: number;            // whole job
     deletedBy: Record<string, number>;  // per collection, for the log
@@ -119,46 +119,61 @@ interface SchemaMetaDashboard {
 }
 ```
 
-- **Lock**: `findOneAndUpdate({ _id: 'dashboard', $or: [ { deletion: { $exists: false } }, { 'deletion.state': { $ne:
-  'running' } }, { $expr: { $lt: ['$deletion.heartbeatAt', { $subtract: ['$$NOW', 60000] }] } } ] }, pipeline
-  setting the new `deletion`)`, with upsert when the document does not exist (a duplicate-key error on that race reads
-  as "already running"). Times use the MongoDB clock (`$$NOW`) so instance clocks do not matter.
-- **Stale job**: the status and the info judge `running` with `heartbeatAt` older than 60 s as `interrupted`; the next
-  lock acquisition writes it so (and its `deletions` entries); an instance at startup marks a running job whose
-  `instance` is its own host name `interrupted`.
-- **`deletions`**: a class gets `completed` (and loses `incomplete`) when its last collection is done; when a job ends
-  interrupted or failed, every class of the job not completed gets `incomplete`. Entities also writes `events`,
-  `stats` and `tracks`; Total writes each class.
+- **Lock**, in two steps under the MongoDB clock (`$$NOW`), so instance clocks do not matter:
+  1. a conditional update marks a `running` job whose `heartbeatAt` is older than 60 s `interrupted` (with its
+     `deletions` entries);
+  2. the lock is taken only if there is no `running` job, with upsert when the document does not exist (a duplicate-key
+     error on that race reads as "already running").
+
+  Between the two steps another request can take the lock; the loser answers `409` and a retry succeeds once that job
+  ends. The owner accepted that rare window.
+- **Stale job**: the status and the info judge `running` with `heartbeatAt` older than 60 s as `interrupted`. An
+  instance at startup marks `interrupted` a running job whose `instance` has its host name, unless that `instance` is
+  this very process.
+- **Takeover**: the runner checks before each batch that the record is still its own running job; when it is not (a
+  stale judgement let another instance take the lock), it stops and logs "Deletion <id> stopped: another instance took
+  over its record" (approved by the owner).
+- **`deletions`**: a class gets `completed` (and loses `incomplete`) when its last collection is done. When a job ends
+  interrupted or failed, every class of the job whose `completed.cutoff` is not the job's cutoff gets `incomplete`, at
+  the last heartbeat when interrupted (also the job's `finishedAt`) and at the failure time when failed. Entities also
+  writes `events`, `stats` and `tracks`, completed or incomplete alike; Total writes each class. A failure that cannot
+  be recorded logs "Cannot record the failed deletion".
 
 ### API
 
 - `POST /api/v1/deletions` (`operationId: startDeletion`, tag `Deletions`, bearer), body
   `{ class: DeletionClass, includeLegacy?: boolean }` (strict; `includeLegacy` only with `all`, else `400`).
-  `202` → `DeletionJob` (the `deletion` shape without `instance`, `heartbeatAt`, `deletedBy`, `requestId`). `409`
+  `202` → `DeletionJob` (the `deletion` shape, `id` included, without `instance`, `heartbeatAt`, `deletedBy`,
+  `requestId`). `409`
   `CONFLICT` → "A deletion is already running" with `details.job`, or "The data before 3.10 is not kept for rollback".
 - `GET /api/v1/status` adds `deletion?: DeletionJob`; `GET /api/v1/info` adds `deletions` (`{}` when none, dates as ISO
   strings, `endedBefore` = cutoff − 5 min for extending editions) and `storage.<collection>.freeBytes`
   (`freeStorageSize + indexFreeStorageSize`, 0 when absent).
-- No index is needed for these reads (one document).
+- No index is needed for these reads (one document). The info makes one extra `hello` command per call.
 
 ### What each class deletes
 
 T = cutoff − 5 min. At job start the runner snapshots the kept sets: rooms in progress at the cutoff plus rooms closed
 with `endedAt ≥ T` (`rooms` has no `endedAt` index, so they are found through `expiresAt_ttl` with the current entities
-retention, `expiresAt ≥ T + retention.entities`; see Risks), open egresses and egresses
-ended at or after T, open ingress sessions, ingress definitions not deleted. Anything created after the cutoff ends
-after T and is excluded by the time filters, so the snapshot does not need refreshing.
+retention, `expiresAt ≥ T + retention.entities`; see Risks), open egresses and egresses ended at or after T (found the
+same way, through `expiresAt_ttl` with the current entities retention), and the kept ingress ids: the ingress
+definitions not deleted plus the `ingressId` of the open ingress sessions. Anything created after the cutoff ends after
+T and is excluded by the time filters, so the snapshot does not need refreshing.
 
 | Class | Collections in order | Filter of a deletable document | Index |
 | --- | --- | --- | --- |
 | Events | `events` | `ts < T`, `roomSid`, `egressId`, `ingressId` not in the kept sets | `ts_ttl` |
-| Stats | `track_stats` | `ts < T`, `meta.roomSid` not kept | `ts_ttl` (time series) |
-| Tracks and subscriptions | `track_stats` (with `meta.trackSid`), `track_subscriptions`, `tracks` | stats as above with `meta.trackSid` present; closed (`expiresAt` a date), `roomSid` not kept | `ts_ttl`, `expiresAt_ttl` |
+| Stats | `track_stats` | `ts < T`, `meta.roomSid` not kept | time series: the buckets' clustered index, no hint; plain fallback: `ts_ttl` |
+| Tracks and subscriptions | `track_stats` (with `meta.trackSid`), `track_subscriptions`, `tracks` | stats as above with `meta.trackSid` present; subscriptions with `unsubscribedAt < T`, or without it `expiresAt < T + retention.tracks`; tracks with `unpublishedAt < T`; both closed (`expiresAt` a date) and `roomSid` not kept | as Stats, `expiresAt_ttl` |
 | Entities | `events`, `track_stats`, `track_subscriptions`, `tracks`, `ingress_sessions`, `egresses`, `participants`, `ingresses`, `rooms` | detail collections as above; entities closed with their end field (`endedAt`, `leftAt`, egress `endedAt` else `updatedAt`, ingress session `endedAt` else `startedAt`, ingress `deletedAt`) before T and `roomSid`/`_id` not kept | `expiresAt_ttl` |
-| 5-minute | `analytics_5min` | `bucket < floor5(cutoff) − 5 min` | `bucket_ttl` or the scope index |
-| Hourly | `analytics_hourly` | `bucket < floorHour(cutoff) − 1 h` | idem |
-| Daily | `analytics_daily` | `bucket < floorUtcDay(cutoff) − 1 day` | the scope index (no TTL index when unlimited) |
+| 5-minute | `analytics_5min` | `bucket < floor5(cutoff) − 5 min` | `bucket_ttl` |
+| Hourly | `analytics_hourly` | `bucket < floorHour(cutoff) − 1 h` | `bucket_ttl` |
+| Daily | `analytics_daily` | `bucket < floorUtcDay(cutoff) − 1 day` | the scope-leading index, reading every daily document (a small collection; no TTL index when unlimited) |
 | Legacy | `legacy_events`, `stats` | dropped | — |
+
+Progress steps, counted from 1 in `collection { index, total }`: one per collection of each class (Events 1, Stats 1,
+Tracks and subscriptions 3, Entities 9, each rollup class 1, Legacy 2), so Total has 17, or 19 with the legacy data. A
+dropped legacy collection adds its `estimatedDocumentCount` to `deleted`.
 
 Total runs Events, Stats, Tracks, Entities (its detail collections are then empty), 5-minute, hourly, daily, then
 Legacy with `includeLegacy`. Defining the cascade as "not belonging to what is kept" makes every class rerunnable.
@@ -170,6 +185,11 @@ Rejected: drop and recreate collections (owned by the writer, and active documen
 - Runs in the accepting instance, outside the request, until done. Per collection: `find(filter).hint(index)
   .project({_id:1}).limit(5000)`, `deleteMany({ _id: { $in } })`, add to `deleted`, update the progress, wait 100 ms;
   stop when a batch is empty. A heartbeat timer writes `heartbeatAt` every 10 s.
+- A time-series `track_stats` is batched by time instead (decided by the dashboard's author as the most efficient
+  option): each batch reads the `ts` of the 5,000th deletable document sorted by `ts`, without a hint (the buckets'
+  clustered index serves it), and runs `deleteMany(class filter + ts ≤ that bound)`. `≤` makes every batch progress; a
+  batch can exceed 5,000 documents when several share the bound's timestamp. The plain fallback collection keeps the
+  `_id` batches with the `ts_ttl` hint.
 - A batch error is retried three times with 1 s between tries; an authorization error (code 13) fails at once with
   "The database user cannot delete data"; any other final error with "A database error stopped it". The cause goes to
   the log, never to the API.
@@ -180,20 +200,34 @@ Rejected: drop and recreate collections (owned by the writer, and active documen
 
 ### Caches
 
-Every instance keeps the `finishedAt` of the newest completed class it has seen; when a status or info read finds a
-newer one in `deletions` it clears its storage cache and its `AnalyticsCache` before answering. An extending edition
+Every instance keeps the `finishedAt` of the newest completed class it has seen, and of the newest completed job; when
+a status or info read finds a newer one in `deletions` or in `deletion` it clears its storage cache and its
+`AnalyticsCache` before answering. The job's `finishedAt` covers a Legacy deletion, which records no class. An extending edition
 can register more caches to clear (an exported hook), which the later PRO change uses for its series memo.
 
 ### UI
 
-- `dashboard-ui`: a `ConfirmDialog` building block (Material dialog; title, projected body, optional checkbox, Cancel
-  focused first, confirm in the error colour), opened through a small service; the first dialog of the library.
-- Data tab: last column of icon buttons; dialogs per class with the approved texts and `EXTERNAL_LINKS.freeingDiskSpace`;
-  progress section; outcome notice; toast at the end; "Deleted …" lines; free space lines; estimate from
-  `storage − free`.
-- `ServerStatusService`: 10 s cadence while `deletion.state` is `running`, an immediate poll after an accepted request;
-  the info re-read also compares the deletion job id and state.
+- `dashboard-ui`: a `ConfirmDialog` building block (Material dialog with its default `aria-modal`, kept with the
+  owner's confirmation; title, a body template with a `bodyContext` so one template serves the ten dialogs, optional
+  checkbox, Cancel focused first and closing with no result, confirm in the error colour), opened through a small
+  service; the first dialog of the library.
+- Data tab: last column of icon buttons; dialogs per class with the approved texts (`features/settings/
+  deletion-texts.ts`, class labels in `format/deletions.ts`) and `EXTERNAL_LINKS.freeingDiskSpace`; progress section;
+  outcome notice; toast at the end; "Deleted …" lines; free space lines; estimate from `storage − free`.
+- Any failed `POST /deletions` shows one dismissible error notice above "Storage", cleared at the next request: the
+  message of a `409`, or "The deletion did not start: <message of the error> Request <id>" for any other failure (owner
+  decision; requirement "Confirming a deletion", scenario "Deletion not started").
+- `ServerStatusService`: 10 s cadence while `deletion.state` is `running`; `pollNow()` polls at once after an accepted
+  request and `attachPoller()` lets the Data tab follow the polls. The info re-read keys on the deletion job id and
+  state as of the last info read, the first status setting the baseline.
 - Banner slot: the deletion banner, hidden on the Data tab.
+- Style, chosen by the implementer under the owner's delegation and reviewed in the demo: a filled Delete button in the
+  error colour; the "How to free disk space" link on its own line; the `delete` icon in the default colour, its tooltip
+  being its name; the delete column `position: sticky` at the end of the table so the buttons stay visible at 375 px,
+  with a visually empty header holding a hidden "Delete"; the second lines in body-small on-surface-variant, the
+  incomplete ones in the warning colour; the progress section styled like the migration one, with an indeterminate
+  bar; the interrupted and failed warning notice without dismiss and the refused error notice with dismiss, both at
+  most 72 characters wide; the banner in the info style with the `delete` icon.
 
 ### Documentation (PR #160)
 
@@ -209,8 +243,10 @@ as the minimum for deleting stats stored as a time series. The exact
 
 ### Performance budget
 
-- Every batch query is index-backed: `expectIndexBacked` on a scenario M dataset for the find of each class (no
-  `COLLSCAN`, `totalDocsExamined` bounded by the batch plus the kept documents met).
+- Every batch query is index-backed: `expectIndexBacked` for the find of each class (no `COLLSCAN`,
+  `totalDocsExamined` bounded by the batch plus the kept documents met), in `deletions-query-plan.test.ts` on a
+  scenario S dataset by default and on scenario M with `DELETIONS_PLAN_SCENARIO=M`. The time-series `track_stats` find
+  runs without a hint on the buckets' clustered index.
 - Pace: unit test of the runner with a fake clock (batches ≤ 5,000, ≥ 100 ms apart).
 - The status keeps its command budget (`find` on `schema_meta` and `nodes` only), checked by the existing command
   monitoring test extended with a running job.
@@ -223,7 +259,7 @@ as the minimum for deleting stats stored as a time series. The exact
 | Legacy dropped during the rollback window, Legacy refused while the migration runs, Legacy refused after its window, Total without legacy, Total with legacy | `backend/test/integration/deletions-api.test.ts` | integration |
 | Room in progress kept whole, Recent data kept, Open entities without a room kept, Nodes never deleted, Room ending during the job, Data after the cutoff untouched | `backend/test/integration/deletions-rules.test.ts` | integration |
 | Events deletion leaves entities, Per-track stats go with the tracks, Entities with their data, Entities deletion run again, Rollup buckets kept at 10:07, Entities deletion keeps rollups | `backend/test/integration/deletions-rules.test.ts` | integration |
-| Batches of a large collection | `backend/src/deletions/deletion-runner.test.ts` | unit |
+| Batches of a large collection | `backend/test/unit/deletion-runner.test.ts` | unit |
 | Status of a running job, Status without any job, Instance gone mid-job, Instance restarted mid-job, Database user without delete rights | `backend/test/integration/deletions-jobs.test.ts` | integration |
 | Running deletion in the status, Stale deletion in the status | `backend/test/integration/status-api.test.ts` | integration |
 | Completed Events deletion in info, Interrupted Total in info, Entities records its details, Storage refreshed on another instance, Log lines of a deletion | `backend/test/integration/deletions-jobs.test.ts` | integration |
@@ -231,7 +267,7 @@ as the minimum for deleting stats stored as a time series. The exact
 | Records accepted by the validator, Contract unchanged | `backend/test/integration/deletions-jobs.test.ts`, `typings` contract test | integration, unit |
 | Sub-resource path, Unknown API path (unchanged) | existing tests | — |
 | Estimate after a deletion, Free space after a deletion, Little free space | `dashboard-ui/.../settings/storage-classes.spec.ts` | unit |
-| Buttons of the table, Legacy row without a button, Buttons while a deletion runs, Buttons while the migration runs, Empty class deletable, the four detail dialogs, the three rollup dialogs, Total dialog, Total with the legacy checkbox, Total with the checkbox left unchecked, Legacy dialog, Deletion confirmed, Deletion refused, Deletion cancelled in the dialog, Progress of an Entities deletion, Progress follows the status, Deletion completed while watching, Interrupted deletion notice, Failed deletion notice, Class deleted, Class left incomplete | `dashboard-ui/.../settings/settings-page.spec.ts` | unit |
+| Buttons of the table, Legacy row without a button, Buttons while a deletion runs, Buttons while the migration runs, Empty class deletable, the four detail dialogs, the three rollup dialogs, Total dialog, Total with the legacy checkbox, Total with the checkbox left unchecked, Legacy dialog, Deletion confirmed, Deletion refused, Deletion not started, Deletion cancelled in the dialog, Progress of an Entities deletion, Progress follows the status, Deletion completed while watching, Interrupted deletion notice, Failed deletion notice, Class deleted, Class left incomplete | `dashboard-ui/.../settings/settings-page.spec.ts` | unit |
 | Keyboard confirmation, Escape cancels | `dashboard-ui/.../components/confirm-dialog/confirm-dialog.spec.ts` | unit |
 | Banner of a running deletion, Banner of a Total deletion, No banner on the Data tab, Banner ends with the job, Dismissed banner and a new job | `dashboard-ui/.../shell/banner-slot.spec.ts` | unit |
 | Deletion cadence, Status right after starting a deletion, Deletion ends | `dashboard-ui/.../core/refresh/server-status.spec.ts` | unit |
@@ -239,7 +275,9 @@ as the minimum for deleting stats stored as a time series. The exact
 | Events deletion accepted: against the real backend | `e2e/tests-backend/deletions.spec.ts` | e2e (backend) |
 
 The e2e suites cannot run on the owner's machine (Ubuntu 20.04: Playwright 1.65 ships no Chromium for it); they are
-validated by the `e2e` job of CI.
+validated by the `e2e` job of CI. No baseline screenshot of the Data tab existed, so none was added.
+
+CHANGELOG lines were written in the commit of each observable change (owner decision), not in a final group.
 
 ## Risks / Trade-offs
 

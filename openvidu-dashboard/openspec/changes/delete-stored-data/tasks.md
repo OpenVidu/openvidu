@@ -43,7 +43,7 @@
 
 ## 7. End-to-end tests (implementer)
 
-- [x] 7.1 Extend the mock API (`e2e/fixtures/api.ts`) with `POST /deletions`, `deletion` and `deletions`; cover "Delete buttons on a phone", "Dialog on a phone" and "Events dialog: flow with axe in both themes" in `e2e/tests/settings.spec.ts`, and update the baseline screenshots of the Data tab.
+- [x] 7.1 Extend the mock API (`e2e/fixtures/api.ts`) with `POST /deletions`, `deletion` and `deletions`; cover "Delete buttons on a phone", "Dialog on a phone" and "Events dialog: flow with axe in both themes" in `e2e/tests/settings.spec.ts`, and update the baseline screenshots of the Data tab. No Data tab baseline existed, so none was added.
 - [x] 7.2 Cover "Events deletion accepted: against the real backend" in `e2e/tests-backend/deletions.spec.ts` (seeded MongoDB; the Events row's documents drop after the job and its "Deleted …" line shows).
 - [x] 7.3 Run `./dashboard.sh scenarios delete-stored-data` and verify every delta scenario has a test. The e2e suites cannot run on the owner's machine (Ubuntu 20.04, no Playwright Chromium): report them as validated by the CI `e2e` job, not as passed locally.
 
