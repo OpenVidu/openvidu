@@ -1,5 +1,6 @@
 import {
 	Collection,
+	type DeletionClassKey,
 	formatRetentionLength,
 	type InfoMigration,
 	type InfoRetention,
@@ -17,6 +18,8 @@ const UNIT_MS = { day: DAY_MS, hour: HOUR_MS, minute: 60_000, second: 1_000 } as
 
 interface StorageClass {
 	label: string;
+	/** The deletion class of the row. */
+	deletionClass: DeletionClassKey;
 	retentionKey: keyof InfoRetention;
 	collections: readonly Collection[];
 	/** Collections whose earliest `oldest` dates the class; `null` for the deployment clock. */
@@ -32,16 +35,30 @@ const ENTITY_CLOCK = [
 
 /** The data classes in the order the writer expires them; `schema_meta` belongs to none. */
 export const STORAGE_CLASSES: readonly StorageClass[] = [
-	{ label: 'Events', retentionKey: 'eventsMs', collections: [Collection.EVENTS], clock: [Collection.EVENTS] },
-	{ label: 'Stats', retentionKey: 'statsMs', collections: [Collection.TRACK_STATS], clock: null },
+	{
+		label: 'Events',
+		deletionClass: 'events',
+		retentionKey: 'eventsMs',
+		collections: [Collection.EVENTS],
+		clock: [Collection.EVENTS]
+	},
+	{
+		label: 'Stats',
+		deletionClass: 'stats',
+		retentionKey: 'statsMs',
+		collections: [Collection.TRACK_STATS],
+		clock: null
+	},
 	{
 		label: 'Tracks and subscriptions',
+		deletionClass: 'tracks',
 		retentionKey: 'tracksMs',
 		collections: [Collection.TRACKS, Collection.TRACK_SUBSCRIPTIONS],
 		clock: null
 	},
 	{
 		label: 'Entities',
+		deletionClass: 'entities',
 		retentionKey: 'entitiesMs',
 		collections: [
 			Collection.ROOMS,
@@ -55,18 +72,21 @@ export const STORAGE_CLASSES: readonly StorageClass[] = [
 	},
 	{
 		label: '5-minute rollups',
+		deletionClass: 'rollups-5min',
 		retentionKey: 'rollups5MinMs',
 		collections: [Collection.ANALYTICS_5MIN],
 		clock: [Collection.ANALYTICS_5MIN]
 	},
 	{
 		label: 'Hourly rollups',
+		deletionClass: 'rollups-hourly',
 		retentionKey: 'rollupsHourlyMs',
 		collections: [Collection.ANALYTICS_HOURLY],
 		clock: [Collection.ANALYTICS_HOURLY]
 	},
 	{
 		label: 'Daily rollups',
+		deletionClass: 'rollups-daily',
 		retentionKey: 'rollupsDailyMs',
 		collections: [Collection.ANALYTICS_DAILY],
 		clock: [Collection.ANALYTICS_DAILY]
@@ -105,6 +125,12 @@ export interface StorageClassRow {
 	retention: string;
 	documents: number;
 	bytes: number;
+	/** Space free for new data in the collections of the row and their indexes. */
+	freeBytes: number;
+	/** The deletion class of a class row; absent on the Legacy data row. */
+	deletionClass?: DeletionClassKey;
+	/** The Legacy data row kept for a rollback, the only time it can be deleted. */
+	rollback: boolean;
 	/** Progress and estimate of a class that has not reached its retention; `null` for none. */
 	tip: string | null;
 	collections: StorageCollectionEntry[];
@@ -114,7 +140,7 @@ export interface StorageClassRow {
 
 export interface StorageClasses {
 	rows: StorageClassRow[];
-	total: { documents: number; bytes: number };
+	total: { documents: number; bytes: number; freeBytes: number };
 }
 
 /** `7 days`, `36 hours`, `Kept forever` for a retention without limit. */
@@ -149,7 +175,7 @@ function progress(spanMs: number, retentionMs: number): string {
 
 /**
  * The tip of a class, or `null` when it has reached its retention, has no clock or has no documents; unlimited daily
- * rollups always have one. A class within one day or a tenth of
+ * rollups always have one. The estimate scales the space in use (`bytes`, without the space free for new data). A class within one day or a tenth of
  * its retention, whichever is longer, counts as full: the oldest surviving document of a full class is always slightly
  * younger than the retention.
  */
@@ -177,19 +203,19 @@ function classTip(retentionMs: number | null, spanMs: number | null, documents: 
  * How long the server keeps the legacy data, from the migration state: until the migration completes, then until
  * `legacyRetainedUntil`, compared with `readAt` so that the text stays the same between reads.
  */
-function legacyRetention({ migration, tz }: LegacyContext, readAt: number): string {
+function legacyRetention({ migration, tz }: LegacyContext, readAt: number): { text: string; rollback: boolean } {
 	switch (migration?.state) {
 		case 'running':
-			return 'In use by the migration';
+			return { text: 'In use by the migration', rollback: false };
 		case 'completed': {
 			const until = migration.legacyRetainedUntil;
 
 			return until !== undefined && Date.parse(until) > readAt
-				? `Kept until ${formatTimestamp(until, { tz }).slice(0, 10)} for rollback`
-				: 'Being removed by the server';
+				? { text: `Kept until ${formatTimestamp(until, { tz }).slice(0, 10)} for rollback`, rollback: true }
+				: { text: 'Being removed by the server', rollback: false };
 		}
 		default:
-			return 'Kept until the migration completes';
+			return { text: 'Kept until the migration completes', rollback: false };
 	}
 }
 
@@ -209,11 +235,15 @@ function legacyRow(
 		return null;
 	}
 
+	const retention = legacyRetention(legacy, readAt);
+
 	return {
 		label: LEGACY_LABEL,
-		retention: legacyRetention(legacy, readAt),
+		retention: retention.text,
 		documents: collections.reduce((sum, { entry }) => sum + entry.documents, 0),
 		bytes: collections.reduce((sum, { entry }) => sum + sizeOf(entry), 0),
+		freeBytes: collections.reduce((sum, { entry }) => sum + entry.freeBytes, 0),
+		rollback: retention.rollback,
 		tip: null,
 		collections,
 		legacy: true
@@ -244,6 +274,7 @@ export function storageClasses(
 		});
 		const documents = collections.reduce((sum, { entry }) => sum + entry.documents, 0);
 		const bytes = collections.reduce((sum, { entry }) => sum + sizeOf(entry), 0);
+		const freeBytes = collections.reduce((sum, { entry }) => sum + entry.freeBytes, 0);
 		const clock = definition.clock === null ? deploymentClock : earliest(storage, definition.clock);
 		const spanMs = clock === null ? null : Math.max(0, readAt - clock);
 
@@ -252,8 +283,13 @@ export function storageClasses(
 			retention: retention === undefined ? '—' : formatRetention(retention[definition.retentionKey]),
 			documents,
 			bytes,
+			freeBytes,
+			deletionClass: definition.deletionClass,
+			rollback: false,
 			tip:
-				retention === undefined ? null : classTip(retention[definition.retentionKey], spanMs, documents, bytes),
+				retention === undefined
+					? null
+					: classTip(retention[definition.retentionKey], spanMs, documents, Math.max(0, bytes - freeBytes)),
 			collections,
 			legacy: false
 		};
@@ -269,7 +305,8 @@ export function storageClasses(
 		rows,
 		total: {
 			documents: rows.reduce((sum, row) => sum + row.documents, 0),
-			bytes: rows.reduce((sum, row) => sum + row.bytes, 0)
+			bytes: rows.reduce((sum, row) => sum + row.bytes, 0),
+			freeBytes: rows.reduce((sum, row) => sum + row.freeBytes, 0)
 		}
 	};
 }

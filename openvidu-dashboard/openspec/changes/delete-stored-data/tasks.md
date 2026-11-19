@@ -34,12 +34,12 @@
 
 ## 6. UI: Data tab (implementer)
 
-- [ ] 6.1 Add the free space lines and compute the estimate from the space in use in `storage-classes.ts`; cover "Estimate after a deletion", "Free space after a deletion", "Little free space" and the unchanged estimate scenarios ("Linear estimate", "No estimate under one day of data", "Unlimited daily rollups", "Unlimited daily rollups without a day of data", "Daily rollups with a limit", "Total without an estimate") in `storage-classes.spec.ts` and `settings-page.spec.ts`.
-- [ ] 6.2 Add the delete buttons column and their disabled states; cover "Buttons of the table", "Legacy row without a button", "Buttons while a deletion runs", "Buttons while the migration runs" and "Empty class deletable" in `settings-page.spec.ts`.
-- [ ] 6.3 Add the ten dialogs with the approved texts and `EXTERNAL_LINKS.freeingDiskSpace`; cover "Events dialog", "Stats dialog", "Tracks dialog", "Entities dialog", "5-minute rollups dialog", "Hourly rollups dialog", "Daily rollups dialog", "Total dialog", "Total with the legacy checkbox", "Total with the checkbox left unchecked" and "Legacy dialog" in `settings-page.spec.ts`.
-- [ ] 6.4 Send the request on Delete and handle `202` and `409`; cover "Deletion confirmed", "Deletion refused" and "Deletion cancelled in the dialog" in `settings-page.spec.ts`.
-- [ ] 6.5 Add the progress section, the end toast, the interrupted and failed notice and the last deletion lines; cover "Progress of an Entities deletion", "Progress follows the status", "Deletion completed while watching", "Interrupted deletion notice", "Failed deletion notice", "Class deleted" and "Class left incomplete" in `settings-page.spec.ts`.
-- [ ] 6.6 Update `dashboard-ce/frontend/projects/dashboard-ui/AGENTS.md` if a convention changed. Verify with `./dashboard.sh check`.
+- [x] 6.1 Add the free space lines and compute the estimate from the space in use in `storage-classes.ts`; cover "Estimate after a deletion", "Free space after a deletion", "Little free space" and the unchanged estimate scenarios ("Linear estimate", "No estimate under one day of data", "Unlimited daily rollups", "Unlimited daily rollups without a day of data", "Daily rollups with a limit", "Total without an estimate") in `storage-classes.spec.ts` and `settings-page.spec.ts`.
+- [x] 6.2 Add the delete buttons column and their disabled states; cover "Buttons of the table", "Legacy row without a button", "Buttons while a deletion runs", "Buttons while the migration runs" and "Empty class deletable" in `settings-page.spec.ts`.
+- [x] 6.3 Add the ten dialogs with the approved texts and `EXTERNAL_LINKS.freeingDiskSpace`; cover "Events dialog", "Stats dialog", "Tracks dialog", "Entities dialog", "5-minute rollups dialog", "Hourly rollups dialog", "Daily rollups dialog", "Total dialog", "Total with the legacy checkbox", "Total with the checkbox left unchecked" and "Legacy dialog" in `settings-page.spec.ts`.
+- [x] 6.4 Send the request on Delete and handle `202` and `409`; cover "Deletion confirmed", "Deletion refused" and "Deletion cancelled in the dialog" in `settings-page.spec.ts`.
+- [x] 6.5 Add the progress section, the end toast, the interrupted and failed notice and the last deletion lines; cover "Progress of an Entities deletion", "Progress follows the status", "Deletion completed while watching", "Interrupted deletion notice", "Failed deletion notice", "Class deleted" and "Class left incomplete" in `settings-page.spec.ts`.
+- [x] 6.6 Update `dashboard-ce/frontend/projects/dashboard-ui/AGENTS.md` if a convention changed. Verify with `./dashboard.sh check`.
 
 ## 7. End-to-end tests (implementer)
 
@@ -49,7 +49,7 @@
 
 ## 8. CHANGELOG and refactor review (implementer)
 
-- [ ] 8.1 Add the CHANGELOG lines of the proposal under the next release (`Added` › `UI` and `Improved` › `UI`). Verify with `./dashboard.sh check` (format).
+- [x] 8.1 Add the CHANGELOG lines of the proposal under the next release (`Added` › `UI` and `Improved` › `UI`). Verify with `./dashboard.sh check` (format). Owner's decision: each line was written in the commit of its observable change (the deletions API, the banner, the Data tab), not in this group.
 - [ ] 8.2 Refactor review of the new slice, the Data tab and the status service: apply small refactors, propose a separate change for larger ones, and record the outcome in the report.
 
 ## 9. Demo review (owner)

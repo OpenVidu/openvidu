@@ -7,8 +7,35 @@ h2 {
 	margin: 24px 0 8px;
 }
 
-.migration p {
+.migration p,
+.deletion p {
 	margin: 8px 0 0;
+}
+
+.deletion-notice {
+	max-width: 72ch;
+	margin-top: 16px;
+}
+
+/* A second line under a cell value: the last deletion of a class, the space free for new data. */
+.sub {
+	display: block;
+	color: var(--mat-sys-on-surface-variant);
+	font: var(--mat-sys-body-small);
+}
+
+.incomplete {
+	color: var(--ovd-status-warning-fg);
+}
+
+/* The delete column stays in view while the table scrolls sideways inside its wrap on a phone. */
+.action {
+	position: sticky;
+	inset-inline-end: 0;
+	width: 40px;
+	padding-inline: 4px 0;
+	background: var(--mat-sys-surface);
+	text-align: end;
 }
 
 .failed {

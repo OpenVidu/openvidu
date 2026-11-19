@@ -277,13 +277,11 @@ describe('injectServerStatusPoll', () => {
 
 		await vi.advanceTimersByTimeAsync(10_000);
 		await poll(statusResponse({ deletion: deletion('completed') }));
-		controller
-			.expectOne('api/v1/info')
-			.flush(
-				infoResponse({
-					deletions: { events: { completed: { cutoff: 'a', endedBefore: 'b', finishedAt: 'c' } } }
-				})
-			);
+		controller.expectOne('api/v1/info').flush(
+			infoResponse({
+				deletions: { events: { completed: { cutoff: 'a', endedBefore: 'b', finishedAt: 'c' } } }
+			})
+		);
 		await vi.advanceTimersByTimeAsync(0);
 		expect(TestBed.inject(InfoService).info()?.deletions.events?.completed).toBeDefined();
 

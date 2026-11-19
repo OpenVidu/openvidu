@@ -64,6 +64,8 @@ together (badges, feedback, locks, search, tiles, zone) share a folder and its s
 - Identifiers appear once, with `ovd-copy-button` beside the visible value; navigation uses links, never row clicks.
 - Lists use `ovd-list-search` inside `.ovd-filter-bar`, `ovd-room-chip` for the room filter, ranked sorts from
   `rankedSortReasons()` and `ovd-data-table`.
+- Destructive actions are confirmed with `ConfirmDialogService` (`ovd-confirm-dialog`, the library's only dialog):
+  Cancel first and focused, the confirm button in the error colour.
 - Messages use `ovd-notice` (`ovd-error-banner` for errors with Retry) and enum labels `enumLabel()`
   (`format/labels.ts`).
 - Icons are Material Symbols Rounded listed in `projects/dashboard-ui/icons.json` and compiled by

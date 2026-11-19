@@ -13,6 +13,22 @@
 		</section>
 	}
 
+	@if (deletionOutcome(); as outcome) {
+		<ovd-notice class="deletion-notice" variant="warning">{{ outcome }}</ovd-notice>
+	}
+	@if (refused(); as message) {
+		<ovd-notice class="deletion-notice" variant="error" dismissible (dismiss)="refused.set(null)">{{
+			message
+		}}</ovd-notice>
+	}
+	@if (deletionProgress(); as progress) {
+		<section class="deletion" aria-labelledby="ovd-data-deletion">
+			<h2 id="ovd-data-deletion">Deleting analytics data</h2>
+			<mat-progress-bar mode="indeterminate" aria-label="Deletion progress" />
+			<p class="ovd-tabular">{{ progress }}</p>
+		</section>
+	}
+
 	<h2>Storage</h2>
 	<div class="table-wrap">
 		<table class="classes">
@@ -25,6 +41,7 @@
 					<th scope="col">Retention</th>
 					<th scope="col" class="end">Documents</th>
 					<th scope="col" class="end">Size</th>
+					<th scope="col" class="action"><span class="ovd-visually-hidden">Delete</span></th>
 				</tr>
 			</thead>
 			<tbody>
@@ -46,6 +63,9 @@
 								/>
 							</button>
 							{{ row.label }}
+							@if (row.deleted; as deleted) {
+								<span class="sub" [class.incomplete]="deleted.incomplete">{{ deleted.text }}</span>
+							}
 						</th>
 						<td class="ovd-tabular" [class.wrap]="row.legacy">
 							{{ row.retention }}
@@ -54,11 +74,31 @@
 							}
 						</td>
 						<td class="end ovd-tabular">{{ row.documentsText }}</td>
-						<td class="end ovd-tabular">{{ row.size }}</td>
+						<td class="end ovd-tabular">
+							{{ row.size }}
+							@if (row.free; as free) {
+								<span class="sub">{{ free }}</span>
+							}
+						</td>
+						<td class="action">
+							@if (row.deletion; as deletion) {
+								<button
+									matIconButton
+									type="button"
+									disabledInteractive
+									[disabled]="deleteBlocked() !== null"
+									[attr.aria-label]="row.deleteName"
+									[matTooltip]="deleteBlocked() ?? row.deleteName"
+									(click)="delete(deletion)"
+								>
+									<mat-icon svgIcon="delete" />
+								</button>
+							}
+						</td>
 					</tr>
 					@if (open) {
 						<tr class="breakdown" [id]="'ovd-collections-' + index">
-							<td colspan="4">
+							<td colspan="5">
 								<ovd-collection-breakdown [label]="row.label" [collections]="row.collections" />
 							</td>
 						</tr>
@@ -70,7 +110,25 @@
 					<th scope="row">Total</th>
 					<td></td>
 					<td class="end ovd-tabular">{{ classes.total.documents }}</td>
-					<td class="end ovd-tabular">{{ classes.total.size }}</td>
+					<td class="end ovd-tabular">
+						{{ classes.total.size }}
+						@if (classes.total.free; as free) {
+							<span class="sub">{{ free }}</span>
+						}
+					</td>
+					<td class="action">
+						<button
+							matIconButton
+							type="button"
+							disabledInteractive
+							[disabled]="deleteBlocked() !== null"
+							aria-label="Delete all analytics data"
+							[matTooltip]="deleteBlocked() ?? 'Delete all analytics data'"
+							(click)="delete('all', classes.legacyKept)"
+						>
+							<mat-icon svgIcon="delete" />
+						</button>
+					</td>
 				</tr>
 			</tfoot>
 		</table>
@@ -89,3 +147,13 @@
 } @else {
 	<ovd-skeleton variant="rows" [count]="6" />
 }
+
+<ng-template #deletionBody let-body>
+	<p>{{ body.lead }}</p>
+	@if (body.rest) {
+		<p>{{ body.rest }}</p>
+	}
+	@if (body.link) {
+		<p><ovd-external-link [href]="freeingDiskSpace">How to free disk space</ovd-external-link></p>
+	}
+</ng-template>

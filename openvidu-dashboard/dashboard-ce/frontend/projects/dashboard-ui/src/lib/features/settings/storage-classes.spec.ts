@@ -126,7 +126,7 @@ describe('storageClasses', () => {
 			NO_MIGRATION
 		);
 
-		expect(total).toEqual({ documents: 289, bytes: 737_000 });
+		expect(total).toEqual({ documents: 289, bytes: 737_000, freeBytes: 0 });
 	});
 
 	it('Span rounded down', () => {
@@ -252,6 +252,68 @@ describe('storageClasses', () => {
 		expect(tipOf('Hourly rollups', { analytics_hourly: entry(3_000_000, 30 * DAY) })).toBe(
 			'30 of 400 days so far · ≈ 40 MB at full retention (estimate)'
 		);
+	});
+
+	it('Estimate after a deletion', () => {
+		const events = { ...entry(2_000_000_000, 2 * DAY), freeBytes: 1_900_000_000 };
+
+		expect(tipOf('Events', { events })).toBe('2 of 7 days so far · ≈ 350 MB at full retention (estimate)');
+	});
+
+	it('Estimate after a deletion: unlimited daily rollups scale the space in use too', () => {
+		const daily = { ...entry(2_600_000, 73 * DAY), freeBytes: 2_340_000 };
+
+		expect(tipOf('Daily rollups', { analytics_daily: daily })).toBe(
+			'Grows without limit · ≈ 1.3 MB per year (estimate)'
+		);
+	});
+
+	it('Free space after a deletion', () => {
+		const { rows, total } = storageClasses(
+			{
+				events: {
+					documents: 1_200,
+					storageBytes: 1_500_000_000,
+					indexBytes: 500_000_000,
+					freeBytes: 1_800_000_000
+				},
+				rooms: { ...entry(1_000_000), freeBytes: 200_000 }
+			},
+			DEFAULT_RETENTION,
+			READ_AT,
+			NO_MIGRATION
+		);
+
+		expect(rows.find((row) => row.label === 'Events')).toMatchObject({
+			bytes: 2_000_000_000,
+			freeBytes: 1_800_000_000
+		});
+		expect(total.freeBytes).toBe(1_800_200_000);
+	});
+
+	it('names the deletion class of every class row and deletes the Legacy row only while kept for rollback', () => {
+		const legacy = { legacy_events: entry(1_000), stats: entry(1_000) };
+		const kept = storageClasses(legacy, DEFAULT_RETENTION, READ_AT, {
+			migration: { state: 'completed', legacyRetainedUntil: new Date(READ_AT + DAY).toISOString() },
+			tz: 'UTC'
+		}).rows;
+		const removed = storageClasses(legacy, DEFAULT_RETENTION, READ_AT, {
+			migration: { state: 'completed', legacyRetainedUntil: new Date(READ_AT - DAY).toISOString() },
+			tz: 'UTC'
+		}).rows;
+
+		expect(kept.map((row) => row.deletionClass ?? null)).toEqual([
+			'events',
+			'stats',
+			'tracks',
+			'entities',
+			'rollups-5min',
+			'rollups-hourly',
+			'rollups-daily',
+			null
+		]);
+		expect(kept.at(-1)?.rollback).toBe(true);
+		expect(removed.at(-1)?.rollback).toBe(false);
 	});
 
 	it('No estimate under one day of data', () => {

@@ -5,7 +5,13 @@ import { MatTooltip } from '@angular/material/tooltip';
 import { By } from '@angular/platform-browser';
 import { provideRouter, Router } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
-import type { InfoResponse, InfoRetention, InfoStorageEntry, StatusResponse } from '@openvidu-dashboard/typings';
+import type {
+	DeletionJob,
+	InfoResponse,
+	InfoRetention,
+	InfoStorageEntry,
+	StatusResponse
+} from '@openvidu-dashboard/typings';
 import { describe, expect, it, vi } from 'vitest';
 
 import { infoResponse, settle, signIn, statusResponse } from '../../../testing/fixtures.js';
@@ -77,8 +83,24 @@ function text(element: Element | null | undefined): string {
 	return (element?.textContent ?? '').replace(/\s+/g, ' ').trim();
 }
 
+/** The text of a cell without its second lines (last deletion, free space). */
+function main(cell: Element | null | undefined): string {
+	if (cell === null || cell === undefined) {
+		return '';
+	}
+
+	const copy = cell.cloneNode(true) as Element;
+
+	copy.querySelectorAll('.sub').forEach((sub) => {
+		sub.remove();
+	});
+
+	return text(copy);
+}
+
+/** The texts of the cells of a row, without the delete column and the second lines. */
 function cells(row: Element | null | undefined): string[] {
-	return [...(row?.querySelectorAll(':scope > th, :scope > td') ?? [])].map((cell) => text(cell));
+	return [...(row?.querySelectorAll(':scope > th, :scope > td:not(.action)') ?? [])].map((cell) => main(cell));
 }
 
 function classRows(element: HTMLElement): HTMLTableRowElement[] {
@@ -90,7 +112,7 @@ function classRows(element: HTMLElement): HTMLTableRowElement[] {
 }
 
 function classRow(element: HTMLElement, label: string): HTMLTableRowElement | undefined {
-	return classRows(element).find((row) => text(row.querySelector('th')) === label);
+	return classRows(element).find((row) => main(row.querySelector('th')) === label);
 }
 
 /** The accessible name and the text of the info tip of a class row; `null` without one. */
@@ -323,12 +345,9 @@ describe('SettingsPage', () => {
 	it('Class rows', async () => {
 		const { element } = await settings('/settings?tab=data', infoResponse({ retention: DEFAULT_RETENTION }));
 
-		expect([...element.querySelectorAll('ovd-data-tab table.classes thead th')].map((cell) => text(cell))).toEqual([
-			'Data',
-			'Retention',
-			'Documents',
-			'Size'
-		]);
+		expect(
+			[...element.querySelectorAll('ovd-data-tab table.classes thead th:not(.action)')].map((cell) => text(cell))
+		).toEqual(['Data', 'Retention', 'Documents', 'Size']);
 		expect(classRows(element).map((row) => cells(row).slice(0, 2).join(' '))).toEqual([
 			'Events 7 days',
 			'Stats 7 days',
@@ -763,5 +782,550 @@ describe('SettingsPage', () => {
 		await harness.fixture.whenStable();
 		expect(element.querySelector<HTMLInputElement>('ovd-preferences-tab ovd-zone-select input')?.value).toBe('UTC');
 		localStorage.removeItem(PREFERENCES_KEY);
+	});
+
+	describe('deletions', () => {
+		const DISK =
+			'MongoDB keeps the freed disk space for new data of the same collections and does not return it to the system.';
+		const KEPT =
+			'Data of rooms in progress and data that ended in the last 5 minutes are kept. This cannot be undone.';
+		const DOCS_LINK =
+			'https://openvidu.io/latest/docs/self-hosting/production-ready/observability/openvidu-dashboard/#freeing-disk-space';
+		const kept = { state: 'completed', legacyRetainedUntil: RETAINED_UNTIL } as const;
+
+		function job(overrides: Partial<DeletionJob> = {}): DeletionJob {
+			return {
+				id: 'job-1',
+				class: 'events',
+				includeLegacy: false,
+				state: 'running',
+				cutoff: '2026-11-19T10:07:00.000Z',
+				startedAt: '2026-11-19T10:07:00.000Z',
+				currentClass: 'events',
+				collection: { index: 1, total: 1 },
+				deleted: 0,
+				...overrides
+			};
+		}
+
+		/** The Data tab after the info document and the first status. */
+		async function dataTab(info: Partial<InfoResponse> = {}, status: Partial<StatusResponse> = {}) {
+			const opened = await settings(
+				'/settings?tab=data',
+				infoResponse({ retention: DEFAULT_RETENTION, storage: LEGACY_STORAGE, ...info })
+			);
+
+			opened.http.expectOne('api/v1/status').flush(statusResponse(status));
+			TestBed.inject(SessionZoneService).set('UTC');
+			await opened.harness.fixture.whenStable();
+
+			return opened;
+		}
+
+		function deleteButton(element: HTMLElement, name: string): HTMLButtonElement {
+			const button = element.querySelector<HTMLButtonElement>(`ovd-data-tab button[aria-label="${name}"]`);
+
+			if (button === null) {
+				throw new Error(`no button ${name}`);
+			}
+
+			return button;
+		}
+
+		function deleteButtons(element: HTMLElement): HTMLButtonElement[] {
+			return [...element.querySelectorAll<HTMLButtonElement>('ovd-data-tab td.action button')];
+		}
+
+		function tooltipOf(harness: RouterTestingHarness, button: HTMLElement): string | undefined {
+			return harness.routeDebugElement
+				?.queryAll(By.directive(MatTooltip))
+				.find((candidate) => candidate.nativeElement === button)
+				?.injector.get(MatTooltip).message;
+		}
+
+		function dialog(): HTMLElement | null {
+			return document.querySelector<HTMLElement>('mat-dialog-container');
+		}
+
+		async function open(harness: RouterTestingHarness, element: HTMLElement, name: string): Promise<HTMLElement> {
+			deleteButton(element, name).click();
+			await settle();
+			await harness.fixture.whenStable();
+
+			const opened = dialog();
+
+			if (opened === null) {
+				throw new Error(`${name} opened no dialog`);
+			}
+
+			return opened;
+		}
+
+		async function cancel(harness: RouterTestingHarness): Promise<void> {
+			dialog()?.querySelector<HTMLButtonElement>('.ovd-confirm-cancel')?.click();
+			await settle();
+			await harness.fixture.whenStable();
+		}
+
+		async function confirmDialog(harness: RouterTestingHarness): Promise<void> {
+			dialog()?.querySelector<HTMLButtonElement>('.confirm')?.click();
+			await settle();
+			await harness.fixture.whenStable();
+		}
+
+		function paragraphs(opened: HTMLElement): string[] {
+			return [...opened.querySelectorAll('mat-dialog-content p')].map((paragraph) => text(paragraph));
+		}
+
+		it('Buttons of the table', async () => {
+			const { element } = await dataTab({ migration: kept }, { migration: kept });
+
+			expect(deleteButtons(element).map((button) => button.getAttribute('aria-label'))).toEqual([
+				'Delete Events',
+				'Delete Stats',
+				'Delete Tracks and subscriptions',
+				'Delete Entities',
+				'Delete 5-minute rollups',
+				'Delete Hourly rollups',
+				'Delete Daily rollups',
+				'Delete Legacy data (before 3.10)',
+				'Delete all analytics data'
+			]);
+			expect(text(element.querySelector('ovd-data-tab thead th.action'))).toBe('Delete');
+		});
+
+		it('Legacy row without a button', async () => {
+			for (const migration of [
+				{ state: 'running', progress: { processed: 1, total: 4 } },
+				{ state: 'completed', legacyRetainedUntil: new Date(Date.now() - DAY).toISOString() },
+				{ state: 'none' }
+			] as const) {
+				TestBed.resetTestingModule();
+
+				const { element } = await dataTab({ migration }, { migration });
+				const row = classRow(element, LEGACY_LABEL);
+
+				expect(row, migration.state).toBeDefined();
+				expect(row?.querySelector('td.action button'), migration.state).toBeNull();
+				expect(deleteButtons(element)).toHaveLength(8);
+			}
+		});
+
+		it('Buttons while a deletion runs', async () => {
+			const { harness, element } = await dataTab(
+				{},
+				{ deletion: job({ class: 'stats', currentClass: 'stats' }) }
+			);
+			const events = deleteButton(element, 'Delete Events');
+
+			events.focus();
+			expect(document.activeElement).toBe(events);
+			expect(events.getAttribute('aria-disabled')).toBe('true');
+			expect(tooltipOf(harness, events)).toBe('A deletion is running');
+
+			events.click();
+			await settle();
+			expect(dialog()).toBeNull();
+		});
+
+		it('Buttons while the migration runs', async () => {
+			const running = { state: 'running', progress: { processed: 1, total: 4 } } as const;
+			const { harness, element } = await dataTab({ migration: running }, { migration: running });
+
+			for (const button of deleteButtons(element)) {
+				expect(button.getAttribute('aria-disabled')).toBe('true');
+				expect(tooltipOf(harness, button)).toBe('Available once the migration ends');
+			}
+		});
+
+		it('Empty class deletable', async () => {
+			const { harness, element } = await dataTab({
+				storage: { track_stats: { documents: 0, storageBytes: 4_096, indexBytes: 4_096, freeBytes: 0 } }
+			});
+			const stats = deleteButton(element, 'Delete Stats');
+
+			expect(stats.getAttribute('aria-disabled')).not.toBe('true');
+			expect(tooltipOf(harness, stats)).toBe('Delete Stats');
+		});
+
+		it('Events dialog', async () => {
+			const { harness, element } = await dataTab();
+			const opened = await open(harness, element, 'Delete Events');
+			const link = opened.querySelector<HTMLAnchorElement>('ovd-external-link a');
+
+			expect(text(opened.querySelector('h2'))).toBe('Delete events?');
+			expect(paragraphs(opened).slice(0, 2)).toEqual([
+				'Deletes the stored events of rooms, participant sessions, egresses and ingresses that have ended. Their records stay, but their event timelines become empty.',
+				`${KEPT} ${DISK}`
+			]);
+			expect(text(link)).toContain('How to free disk space');
+			expect(link?.getAttribute('href')).toBe(DOCS_LINK);
+			expect(link?.getAttribute('target')).toBe('_blank');
+			expect([...opened.querySelectorAll('mat-dialog-actions button')].map((button) => text(button))).toEqual([
+				'Cancel',
+				'Delete'
+			]);
+			await cancel(harness);
+		});
+
+		it.each([
+			[
+				'Stats dialog',
+				'Delete Stats',
+				'Delete stats?',
+				'Deletes the media statistics (quality, bitrate, packet loss) of sessions and tracks that have ended. Their charts become empty; Analytics keeps its figures.',
+				`${KEPT} ${DISK}`
+			],
+			[
+				'Tracks dialog',
+				'Delete Tracks and subscriptions',
+				'Delete tracks and subscriptions?',
+				'Deletes the published tracks and subscriptions that have ended, with the statistics stored per track. Statistics stored per participant are kept.',
+				`${KEPT} ${DISK}`
+			],
+			[
+				'Entities dialog',
+				'Delete Entities',
+				'Delete entities?',
+				'Deletes rooms, participant sessions, egresses and ingress sessions that have ended, with their events, stats, tracks and subscriptions. Ingresses that are not deleted and media node records are kept; Analytics keeps its figures.',
+				`${KEPT} ${DISK}`
+			],
+			[
+				'5-minute rollups dialog',
+				'Delete 5-minute rollups',
+				'Delete 5-minute rollups?',
+				'Deletes the 5-minute rollups before the previous 5 minutes. Analytics charts of ranges up to one day become empty for that time.',
+				`This cannot be undone. ${DISK}`
+			],
+			[
+				'Hourly rollups dialog',
+				'Delete Hourly rollups',
+				'Delete hourly rollups?',
+				'Deletes the hourly rollups before the previous hour. Overview figures of today, list summaries and Analytics of ranges up to 90 days become empty for that time.',
+				`This cannot be undone. ${DISK}`
+			],
+			[
+				'Daily rollups dialog',
+				'Delete Daily rollups',
+				'Delete daily rollups?',
+				'Deletes the daily rollups before yesterday. Analytics of ranges over 90 days and unique identities become empty for that time.',
+				`This cannot be undone. ${DISK}`
+			]
+		])('%s', async (_scenario, name, title, lead, rest) => {
+			const { harness, element } = await dataTab();
+			const opened = await open(harness, element, name);
+
+			expect(text(opened.querySelector('h2'))).toBe(title);
+			expect(paragraphs(opened).slice(0, 2)).toEqual([lead, rest]);
+			expect(opened.querySelector('ovd-external-link a')?.getAttribute('href')).toBe(DOCS_LINK);
+			await cancel(harness);
+		});
+
+		it('Total dialog', async () => {
+			const { harness, element } = await dataTab({ storage: {} });
+			const opened = await open(harness, element, 'Delete all analytics data');
+
+			expect(text(opened.querySelector('h2'))).toBe('Delete all analytics data?');
+			expect(paragraphs(opened).slice(0, 2)).toEqual([
+				'Deletes events, stats, tracks and subscriptions, entities and the 5-minute, hourly and daily rollups: Analytics loses its history.',
+				`Data of rooms in progress, data that ended in the last 5 minutes, the latest rollups, ingresses that are not deleted and media node records are kept. This cannot be undone. ${DISK}`
+			]);
+			expect(opened.querySelector('ovd-external-link a')?.getAttribute('href')).toBe(DOCS_LINK);
+			expect(opened.querySelector('mat-checkbox')).toBeNull();
+			await cancel(harness);
+		});
+
+		it('Total with the legacy checkbox', async () => {
+			const { harness, http, element } = await dataTab({ migration: kept }, { migration: kept });
+			const opened = await open(harness, element, 'Delete all analytics data');
+			const checkbox = opened.querySelector<HTMLInputElement>('mat-checkbox input');
+			const note =
+				'The data before 3.10 is dropped and its disk space freed at once. A rollback to 3.9 will find no analytics data.';
+
+			expect(text(opened.querySelector('mat-checkbox'))).toBe('Also delete the data before 3.10');
+			expect(checkbox?.checked).toBe(false);
+			expect(opened.textContent).not.toContain(note);
+
+			checkbox?.click();
+			await harness.fixture.whenStable();
+			expect(text(opened)).toContain(note);
+
+			await confirmDialog(harness);
+
+			const request = http.expectOne('api/v1/deletions');
+
+			expect(request.request.body).toEqual({ class: 'all', includeLegacy: true });
+			request.flush(job({ class: 'all', includeLegacy: true }), { status: 202, statusText: 'Accepted' });
+		});
+
+		it('Total with the checkbox left unchecked', async () => {
+			const { harness, http, element } = await dataTab({ migration: kept }, { migration: kept });
+
+			await open(harness, element, 'Delete all analytics data');
+			await confirmDialog(harness);
+
+			const request = http.expectOne('api/v1/deletions');
+
+			expect(request.request.body).toEqual({ class: 'all' });
+			request.flush(job({ class: 'all' }), { status: 202, statusText: 'Accepted' });
+		});
+
+		it('Legacy dialog', async () => {
+			const { harness, http, element } = await dataTab({ migration: kept }, { migration: kept });
+			const opened = await open(harness, element, 'Delete Legacy data (before 3.10)');
+
+			expect(text(opened.querySelector('h2'))).toBe('Delete data before 3.10?');
+			expect(paragraphs(opened)).toEqual([
+				'Deletes the analytics data of OpenVidu before 3.10. Its disk space is freed at once. A rollback to 3.9 will find no analytics data. This cannot be undone.'
+			]);
+			expect(opened.querySelector('ovd-external-link')).toBeNull();
+
+			await confirmDialog(harness);
+			expect(http.expectOne('api/v1/deletions').request.body).toEqual({ class: 'legacy' });
+		});
+
+		it('Deletion confirmed', async () => {
+			const { harness, http, element } = await dataTab();
+
+			await open(harness, element, 'Delete Events');
+			await confirmDialog(harness);
+			expect(dialog()).toBeNull();
+
+			http.expectOne('api/v1/deletions').flush(job(), { status: 202, statusText: 'Accepted' });
+			await settle();
+			http.expectOne('api/v1/status').flush(statusResponse({ deletion: job({ deleted: 5_000 }) }));
+			await settle();
+			await harness.fixture.whenStable();
+
+			expect(vi.mocked(TestBed.inject(ToastService)).show.mock.calls).toEqual([]);
+			expect(text(element.querySelector('ovd-data-tab section.deletion p'))).toBe(
+				'Deleting Events: 5,000 documents deleted · collection 1 of 1'
+			);
+		});
+
+		it('Deletion refused', async () => {
+			const { harness, http, element } = await dataTab();
+
+			await open(harness, element, 'Delete Stats');
+			await confirmDialog(harness);
+			http.expectOne('api/v1/deletions').flush(
+				{ error: { code: 'CONFLICT', message: 'A deletion is already running', details: { job: job() } } },
+				{ status: 409, statusText: 'Conflict' }
+			);
+			await settle();
+			http.expectOne('api/v1/status').flush(statusResponse({ deletion: job() }));
+			await settle();
+			await harness.fixture.whenStable();
+
+			expect(text(element.querySelector('ovd-data-tab ovd-notice.deletion-notice'))).toContain(
+				'A deletion is already running'
+			);
+			expect(deleteButtons(element).every((button) => button.getAttribute('aria-disabled') === 'true')).toBe(
+				true
+			);
+		});
+
+		it('Deletion cancelled in the dialog', async () => {
+			const { harness, http, element } = await dataTab();
+
+			await open(harness, element, 'Delete Entities');
+			await cancel(harness);
+			expect(dialog()).toBeNull();
+
+			const opened = await open(harness, element, 'Delete Entities');
+			const escape = new KeyboardEvent('keydown', { key: 'Escape', bubbles: true });
+
+			Object.defineProperty(escape, 'keyCode', { value: 27 });
+			opened.dispatchEvent(escape);
+			await settle();
+			await harness.fixture.whenStable();
+
+			expect(dialog()).toBeNull();
+			http.expectNone('api/v1/deletions');
+		});
+
+		it('Progress of an Entities deletion', async () => {
+			const { element } = await dataTab(
+				{},
+				{
+					deletion: job({
+						class: 'entities',
+						currentClass: 'entities',
+						deleted: 1_234_000,
+						collection: { index: 2, total: 5 }
+					})
+				}
+			);
+			const section = element.querySelector('ovd-data-tab section.deletion');
+
+			expect(text(section?.querySelector('h2'))).toBe('Deleting analytics data');
+			expect(section?.querySelector('mat-progress-bar')?.getAttribute('mode')).toBe('indeterminate');
+			expect(text(section?.querySelector('p'))).toBe(
+				'Deleting Entities: 1,234,000 documents deleted · collection 2 of 5'
+			);
+		});
+
+		it('Progress follows the status', async () => {
+			const { harness, http, element } = await dataTab(
+				{},
+				{
+					deletion: job({
+						class: 'all',
+						currentClass: 'events',
+						deleted: 100,
+						collection: { index: 1, total: 17 }
+					})
+				}
+			);
+			const line = () => text(element.querySelector('ovd-data-tab section.deletion p'));
+
+			expect(line()).toBe('Deleting Events: 100 documents deleted · collection 1 of 17');
+
+			await loadStatus(
+				http,
+				statusResponse({
+					deletion: job({
+						class: 'all',
+						currentClass: 'stats',
+						deleted: 9_100,
+						collection: { index: 2, total: 17 }
+					})
+				})
+			);
+			await harness.fixture.whenStable();
+			expect(line()).toBe('Deleting Stats: 9,100 documents deleted · collection 2 of 17');
+		});
+
+		it('Deletion completed while watching', async () => {
+			const { harness, http, element } = await dataTab({}, { deletion: job({ deleted: 1_000_000 }) });
+
+			await loadStatus(http, statusResponse({ deletion: job({ state: 'completed', deleted: 1_250_312 }) }));
+			await harness.fixture.whenStable();
+
+			expect(vi.mocked(TestBed.inject(ToastService)).show.mock.calls).toEqual([
+				['Events deleted: 1,250,312 documents']
+			]);
+
+			const reread = http.match('api/v1/info');
+
+			expect(reread).toHaveLength(1);
+			reread[0]?.flush(
+				infoResponse({
+					retention: DEFAULT_RETENTION,
+					storage: { events: { documents: 12, storageBytes: 2_000_000, indexBytes: 0, freeBytes: 1_500_000 } }
+				})
+			);
+			await settle();
+			await harness.fixture.whenStable();
+			expect(cells(classRow(element, 'Events')).slice(2)).toEqual(['12', '2 MB']);
+			expect(element.querySelector('ovd-data-tab section.deletion')).toBeNull();
+		});
+
+		it('Interrupted deletion notice', async () => {
+			const today = new Date().toISOString().slice(0, 10);
+			const interrupted = job({ state: 'interrupted', finishedAt: `${today}T10:20:00.000Z`, deleted: 400_000 });
+			const expected =
+				'Deleting Events was interrupted at 10:20: the dashboard stopped while running it. 400,000 documents were deleted. Start it again to finish.';
+
+			for (let load = 0; load < 2; load++) {
+				TestBed.resetTestingModule();
+
+				const { element } = await dataTab({}, { deletion: interrupted });
+
+				expect(text(element.querySelector('ovd-data-tab ovd-notice.deletion-notice'))).toBe(expected);
+				expect(element.querySelector('ovd-data-tab ovd-notice.deletion-notice button')).toBeNull();
+			}
+		});
+
+		it('Interrupted deletion notice: a job of another day names its date', async () => {
+			const { element } = await dataTab(
+				{},
+				{ deletion: job({ state: 'interrupted', finishedAt: '2026-11-18T10:20:00.000Z', deleted: 1 }) }
+			);
+
+			expect(text(element.querySelector('ovd-data-tab ovd-notice.deletion-notice'))).toBe(
+				'Deleting Events was interrupted at 2026-11-18 10:20: the dashboard stopped while running it. 1 document was deleted. Start it again to finish.'
+			);
+		});
+
+		it('Failed deletion notice', async () => {
+			const today = new Date().toISOString().slice(0, 10);
+			const { element } = await dataTab(
+				{},
+				{
+					deletion: job({
+						class: 'all',
+						state: 'failed',
+						finishedAt: `${today}T10:20:00.000Z`,
+						error: 'The database user cannot delete data'
+					})
+				}
+			);
+
+			expect(text(element.querySelector('ovd-data-tab ovd-notice.deletion-notice'))).toBe(
+				'Deleting all analytics data failed at 10:20: The database user cannot delete data. 0 documents were deleted. Start it again to finish.'
+			);
+		});
+
+		it('Class deleted', async () => {
+			const { element } = await dataTab({
+				deletions: {
+					events: {
+						completed: {
+							cutoff: '2026-11-19T10:07:00Z',
+							endedBefore: '2026-11-19T10:02:00Z',
+							finishedAt: '2026-11-19T10:31:12Z'
+						}
+					}
+				}
+			});
+			const line = classRow(element, 'Events')?.querySelector('th .sub');
+
+			expect(text(line)).toBe('Deleted 2026-11-19 10:31');
+			expect(line?.classList.contains('incomplete')).toBe(false);
+		});
+
+		it('Class left incomplete', async () => {
+			const { element } = await dataTab({
+				deletions: { entities: { incomplete: { state: 'interrupted', at: '2026-11-19T10:20:00Z' } } }
+			});
+			const line = classRow(element, 'Entities')?.querySelector('th .sub');
+
+			expect(text(line)).toBe('Deletion interrupted 2026-11-19 10:20 (incomplete)');
+			expect(line?.classList.contains('incomplete')).toBe(true);
+			expect(element.querySelector('ovd-data-tab tfoot th .sub')).toBeNull();
+			expect(classRow(element, LEGACY_LABEL)?.querySelector('th .sub')).toBeNull();
+		});
+
+		it('Free space after a deletion', async () => {
+			const { element } = await dataTab({
+				storage: {
+					events: {
+						documents: 1_200,
+						storageBytes: 1_500_000_000,
+						indexBytes: 500_000_000,
+						freeBytes: 1_800_000_000
+					},
+					rooms: { documents: 4, storageBytes: 36_864, indexBytes: 344_136, freeBytes: 200_000_000 }
+				}
+			});
+			const events = classRow(element, 'Events');
+
+			expect(cells(events).slice(2)).toEqual(['1,200', '2 GB']);
+			expect(text(events?.querySelector('td:nth-child(4) .sub'))).toBe('1.8 GB free for new data');
+			expect(text(element.querySelector('ovd-data-tab tfoot .sub'))).toBe('2 GB free for new data');
+		});
+
+		it('Little free space', async () => {
+			const { element } = await dataTab({
+				storage: {
+					events: { documents: 1_200, storageBytes: 1_500_000, indexBytes: 500_000, freeBytes: 200_000 },
+					rooms: { documents: 4, storageBytes: 36_864, indexBytes: 344_136, freeBytes: 100_000 }
+				}
+			});
+
+			expect(element.querySelector('ovd-data-tab td .sub')).toBeNull();
+			expect(element.querySelector('ovd-data-tab tfoot .sub')).toBeNull();
+		});
 	});
 });
