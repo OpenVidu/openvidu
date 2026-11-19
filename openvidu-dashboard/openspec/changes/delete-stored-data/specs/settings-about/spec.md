@@ -230,10 +230,10 @@ analytics data" with an indeterminate progress bar and the line "Deleting <class
 · collection <i> of <total>", n counting the whole job, updated with every status response.
 
 #### Scenario: Progress of an Entities deletion
-- **GIVEN** a status reporting an Entities deletion with 1,234,000 documents deleted at its second of five collections
+- **GIVEN** a status reporting an Entities deletion with 1,234,000 documents deleted at its second of nine collections
 - **WHEN** Data renders
 - **THEN** the section "Deleting analytics data" shows an indeterminate progress bar and "Deleting Entities: 1,234,000
-  documents deleted · collection 2 of 5"
+  documents deleted · collection 2 of 9"
 
 #### Scenario: Progress follows the status
 - **GIVEN** Data showing a running Total deletion at Events

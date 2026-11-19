@@ -184,10 +184,10 @@ Edition: CE. `GET /api/v1/status` SHALL report the latest job, when any exists, 
 `schema_meta` only.
 
 #### Scenario: Status of a running job
-- **GIVEN** an Entities job that deleted 1,234,000 documents and works on its second of five collections
+- **GIVEN** an Entities job that deleted 1,234,000 documents and works on its second of nine collections
 - **WHEN** the client requests the status
 - **THEN** `deletion` has `class: "entities"`, `state: "running"`, `deleted: 1234000` and
-  `collection: { index: 2, total: 5 }`
+  `collection: { index: 2, total: 9 }`
 
 #### Scenario: Status without any job
 - **GIVEN** no deletion ever ran
