@@ -64,7 +64,7 @@ github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.14.0 run --build-tags 
 
 ## 3. Refactor review (implementer)
 
-- [ ] 3.1 Review the diff of the writer checkout for a needed refactor; apply a small one here, record a larger one as
+- [x] 3.1 Review the diff of the writer checkout for a needed refactor; apply a small one here, record a larger one as
       a proposed change. Confirm that no `AGENTS.md`, README, `CHANGELOG.md` or `CHANGELOG-openvidu.md` needs a line
       (design, decision 7). Verify: in the CE workspace, `./dashboard.sh check` passes and
       `./dashboard.sh scenarios analytics-batch-retry <writer checkout>` finds a test for every scenario.
