@@ -24,7 +24,7 @@
 
 ## 4. UI: confirmation dialog (implementer)
 
-- [ ] 4.1 Add the `ConfirmDialog` building block and its service to `dashboard-ui` (title, body, optional checkbox, Cancel focused first, confirm in the error colour, focus return) and export it; cover "Keyboard confirmation" and "Escape cancels" in `components/confirm-dialog/confirm-dialog.spec.ts`; document it in the library README.
+- [x] 4.1 Add the `ConfirmDialog` building block and its service to `dashboard-ui` (title, body, optional checkbox, Cancel focused first, confirm in the error colour, focus return) and export it; cover "Keyboard confirmation" and "Escape cancels" in `components/confirm-dialog/confirm-dialog.spec.ts`; document it in the library README.
 
 ## 5. UI: status cadence and banner (implementer)
 

@@ -75,6 +75,10 @@ loadComponent: … }] }] }`. The locked `tracks/:trackSid` route, outside the si
   `warningWhen`, the rows a column warning applies to on phone cards); the Analytics page context exposes
   `mediaStats()` and `mediaStatsWarning()` for the cards of its seams, and a card whose content is unavailable sets the
   `exportDisabled` input of `ovd-analytics-card`.
+- **Confirmation dialog.** `ConfirmDialogService.confirm({ title, body, confirmLabel, checkbox? })` confirms a
+  destructive action in a modal dialog: a text or template body, an optional unchecked checkbox with a note shown while
+  checked, then Cancel (focused first) and the confirm button in the error colour. It resolves to `{ checked }` when
+  confirmed and `null` when cancelled, and returns focus to the control that opened it.
 - **Injection tokens.** `SEARCH_SOURCES` (lists searched by the header), `BROWSER_STORAGE` (storage behind
   `StorageService`). Root services such as `InfoService` can be replaced with a provider.
 - **Shell slots.** `DashboardShell` projects `[ovdBanner]` content under the header, next to the migration, schema and

@@ -7,6 +7,7 @@ export * from './lib/charts/chart-note.js';
 export * from './lib/charts/chart-options.js';
 export * from './lib/charts/time-series-chart/time-series-chart.js';
 export * from './lib/shell/breadcrumbs.js';
+export * from './lib/components/confirm-dialog/confirm-dialog.js';
 export * from './lib/components/copy-button/copy-button.js';
 export * from './lib/components/data-table/cursor-paginator.js';
 export * from './lib/components/data-table/data-table.js';
