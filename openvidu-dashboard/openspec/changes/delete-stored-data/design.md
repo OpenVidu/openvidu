@@ -91,6 +91,7 @@ See proposal.md for the motivation. Facts that shape the approach:
 | Legacy flag | `includeLegacy` with a class other than `all` is a `400` validation error. |
 | Free bytes | `freeBytes` is 0 when MongoDB does not report free space. |
 | Storage re-reads (demo review, 2026-11-20) | The Data tab re-reads the info document each time it opens, when a deletion ends and once more about 60 s after it ends, when MongoDB has released the space at its checkpoint; no continuous polling. |
+| Free space of the indexes | `freeBytes` adds the reusable bytes of every index to those of the data, so the line covers everything a deletion left reusable (`events` after deleting everything: 28.8 MB instead of 16.0 MB). Decided by the dashboard's author on the owner's delegation (Slack, 2026-11-20 12:28); the data-only alternative would have needed wording saying so. |
 | Free space tip (demo review, 2026-11-20) | An info icon after each free line: "MongoDB reuses this space for new data. The rest of the space the deleted data used stays reserved until the collection is compacted; see Freeing disk space.", the last words linking to `#freeing-disk-space`. |
 
 ### Records in `schema_meta` `_id: "dashboard"`
@@ -156,8 +157,8 @@ interface SchemaMetaDashboard {
   `CONFLICT` → "A deletion is already running" with `details.job`, or "The data before 3.10 is not kept for rollback".
 - `GET /api/v1/status` adds `deletion?: DeletionJob`; `GET /api/v1/info` adds `deletions` (`{}` when none, dates as ISO
   strings, `endedBefore` = cutoff − 5 min for extending editions) and `storage.<collection>.freeBytes`
-  (`freeStorageSize`, 0 when absent; whether it also adds the reusable bytes of every index is the open question
-  below; the shipped `freeStorageSize + indexFreeStorageSize` always adds 0 for the indexes on MongoDB 8.0).
+  (`storageStats.freeStorageSize` plus, for every entry of `storageStats.indexDetails`, its `["block-manager"]["file
+  bytes available for reuse"]`, each missing value counted as 0; decided by the dashboard's author, see Decisions).
 - No index is needed for these reads (one document). The info makes one extra `hello` command per call.
 
 ### What each class deletes
@@ -218,7 +219,9 @@ The storage cache also has a second boundary, so that the Data tab's read about 
 released at the checkpoint: a cached value read before `finishedAt + 60 s` is not served once that moment has passed
 (compared with the backend clock against the newest completion `finishedAt`, a MongoDB time; the UI reads at 65 s to
 absorb the status poll's delay and small clock differences). Chosen over a cache bypass parameter, which would add an
-API input any client could use to skip the cache, and over shortening the cache, which would cost every read.
+API input any client could use to skip the cache, and over shortening the cache, which would cost every read. As built,
+the storage cache records a value with the time its read started, `InfoService` reads the dashboard clock
+(`TOKENS.Clock`), and `FigureCaches` exposes `newestCompletion`, checked against `CHECKPOINT_MS` (60 s).
 
 ### UI
 
@@ -237,12 +240,18 @@ API input any client could use to skip the cache, and over shortening the cache,
   state as of the last info read, the first status setting the baseline.
 - Banner slot: the deletion banner, hidden on the Data tab.
 - Data tab storage re-reads: an info read when the tab opens (navigation or tab switch), the shell's read when a
-  deletion ends, and one timer of 65 s from that end report, cancelled when the tab closes; no periodic read. A read at
-  opening can serve a storage value cached up to 60 s.
+  deletion ends, and one timer of 65 s from that end report; no periodic read. A read at opening can serve a storage
+  value cached up to 60 s. As built, both are driven by an `active` input that `SettingsPage` sets
+  (`[active]="tab() === 'data'"`), not by the component's creation and destruction, because the Material tab group keeps
+  the Data tab component alive across tab switches: becoming active reads the info document, becoming inactive or being
+  destroyed cancels the timer. The timer starts on any change of the deletion job or state to an ended state seen while
+  the tab is open, a job the tab never saw running included; the tab's first status only sets the baseline.
 - Free space tip: the shared info tip gains an optional link; with one, the icon toggles a small non-modal panel (CDK
-  overlay) with the text and a focusable link instead of a tooltip, because a tooltip cannot hold a reachable link.
-  Escape, a click outside or a second activation closes it and focus returns to the icon (`ui-building-blocks`, "Info
-  tip with a link").
+  overlay) with the text and a focusable link instead of a tooltip, because a tooltip cannot hold a reachable link, and
+  shows no tooltip on hover. Escape, a click outside or a second activation closes it and focus returns to the icon.
+  Keyboard flow as if the panel were inline (owner confirmed, 2026-11-20): Tab from the icon moves to the link,
+  Shift+Tab from the link returns to the icon, Tab from the link closes the panel and continues after the icon
+  (`ui-building-blocks`, "Info tip with a link").
 - Style, chosen by the implementer under the owner's delegation and reviewed in the demo: a filled Delete button in the
   error colour; the "How to free disk space" link on its own line; the `delete` icon in the default colour, its tooltip
   being its name; the delete column `position: sticky` at the end of the table so the buttons stay visible at 375 px,
@@ -293,7 +302,7 @@ as the minimum for deleting stats stored as a time series. The exact
 | Keyboard confirmation, Escape cancels | `dashboard-ui/.../components/confirm-dialog/confirm-dialog.spec.ts` | unit |
 | Link tip by keyboard | `dashboard-ui/.../components/info-tip/info-tip.spec.ts` | unit |
 | Free space tip of a class, Free space tip of the Total, Data tab opened, Second read after a deletion, No further reads | `dashboard-ui/.../settings/settings-page.spec.ts` | unit |
-| Storage read again after the release | `backend/test/integration/api.test.ts` (clock injected) | integration |
+| Storage read again after the release, Free space of the indexes | `backend/test/integration/api.test.ts` (clock injected for the first) | integration |
 | Link tip on a phone | `e2e/tests/settings.spec.ts` | e2e |
 | Banner of a running deletion, Banner of a Total deletion, No banner on the Data tab, Banner ends with the job, Dismissed banner and a new job | `dashboard-ui/.../shell/banner-slot.spec.ts` | unit |
 | Deletion cadence, Status right after starting a deletion, Deletion ends | `dashboard-ui/.../core/refresh/server-status.spec.ts` | unit |
@@ -318,15 +327,6 @@ CHANGELOG lines were written in the commit of each observable change (owner deci
 - [Deleted space is not returned to the system] → said in every dialog and documented with `compact`.
 - [Unique identities of the deletion day undercounted] → accepted by the owner.
 - [A crashed instance leaves the lock up to 60 s] → stale lock judged by the MongoDB clock.
-
-## Open Questions
-
-- **Do the free figures include the indexes' reusable bytes?** Asked to the dashboard's author (2026-11-20); the
-  answer is pending. (a, recommended) `freeBytes` = data `freeStorageSize` + the "file bytes available for reuse" of
-  every index of the collection, so the line covers everything the deletion left reusable (for `events` after
-  deleting everything: 28.8 MB instead of 16.0 MB); (b) data only, with wording saying so. The specs keep "the
-  collection and its indexes" (option a) in `editions-info` and `settings-about` until the answer; option (b) changes
-  those two texts and the free line wording.
 
 ## Migration Plan
 

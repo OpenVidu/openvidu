@@ -77,3 +77,10 @@ from 60 s after it a value read before that moment, SHALL NOT be served.
 - **GIVEN** an Events deletion that completed at 10:00:00 and storage figures read and cached at 10:00:20
 - **WHEN** the client requests `GET /api/v1/info` at 10:00:50 and again at 10:01:05
 - **THEN** the first answer serves the figures cached at 10:00:20 and the second reads `$collStats` again
+
+#### Scenario: Free space of the indexes
+
+- **GIVEN** `$collStats` of `events` reporting `freeStorageSize` 16.0 MB and two indexes with 8.0 MB and 4.8 MB of
+  file bytes available for reuse, and of `rooms` reporting `freeStorageSize` 1 MB and an index without that figure
+- **WHEN** the client requests `GET /api/v1/info` with a valid token
+- **THEN** `storage.events.freeBytes` is 28.8 MB and `storage.rooms.freeBytes` is 1 MB
