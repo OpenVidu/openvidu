@@ -115,15 +115,16 @@ describe.skipIf(mongoUri === '')(`deletion batch query plans at scenario ${scena
 			expect(step.byTime).toBe(true);
 
 			// A batch reads the buckets in the order of their start up to the 5,000th deletable measurement, kept rooms'
-			// included, plus those that start within a bucket span after it, which the bounded sort reads ahead; never
-			// the rest of the collection. Its delete reads the same buckets.
+			// included, plus those that start within a bucket span after it, which the bounded sort needs; the cursor of
+			// buckets reads ahead in batches, so up to twice those, and never the rest of the collection. Its delete reads
+			// the buckets up to the batch.
 			const [bound] = await batchQuery(db, step).toArray();
 			const until = (bound?.ts as Date | undefined) ?? (step.filter.ts as { $lt: Date }).$lt;
 			const readAhead = await buckets.countDocuments({
 				'control.min.ts': { $lte: new Date(until.getTime() + maxSpanMs) }
 			});
 			const plan = await expectIndexBacked(db, batchQuery(db, step), {
-				maxDocsExamined: readAhead,
+				maxDocsExamined: 2 * readAhead,
 				collscanThreshold: 0
 			});
 			const deletion = summarizeExplain(
@@ -139,7 +140,7 @@ describe.skipIf(mongoUri === '')(`deletion batch query plans at scenario ${scena
 			);
 
 			expect(plan.collscan).toBe(false);
-			expect(readAhead).toBeLessThan(await buckets.estimatedDocumentCount());
+			expect(2 * readAhead).toBeLessThan(await buckets.estimatedDocumentCount());
 			expect(deletion.collscan).toBe(false);
 			expect(deletion.totalDocsExamined ?? Number.POSITIVE_INFINITY).toBeLessThanOrEqual(readAhead);
 		}
