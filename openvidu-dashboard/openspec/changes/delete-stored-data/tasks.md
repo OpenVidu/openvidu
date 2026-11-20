@@ -54,7 +54,7 @@
 
 ## 9. Free space after the demo review (implementer)
 
-- [ ] 9.1 Give the storage cache its second boundary (a value read before the newest completion `finishedAt` + 60 s is not served after that moment); cover "Storage read again after the release" in `backend/test/integration/api.test.ts` with an injected clock. Verify with `./dashboard.sh test-integration`.
+- [x] 9.1 Give the storage cache its second boundary (a value read before the newest completion `finishedAt` + 60 s is not served after that moment); cover "Storage read again after the release" in `backend/test/integration/api.test.ts` with an injected clock. Verify with `./dashboard.sh test-integration`.
 - [ ] 9.2 Add the optional link to the shared info tip (a panel instead of a tooltip, `aria-expanded`, Escape, click outside and second activation close it, focus back to the icon); cover "Link tip by keyboard" in `components/info-tip/info-tip.spec.ts`, keep the existing info tip scenarios green, and document it in the library README.
 - [ ] 9.3 Put the free space tip after each free line with `EXTERNAL_LINKS.freeingDiskSpace`; cover "Free space tip of a class" and "Free space tip of the Total" in `settings-page.spec.ts`.
 - [ ] 9.4 Read the info document when the Data tab opens and 65 s after the reported end of a deletion while the tab stays open (timer cancelled when it closes); cover "Data tab opened", "Second read after a deletion" and "No further reads" in `settings-page.spec.ts`, and keep "Steady server" and "Deletion ends" green in `server-status.spec.ts`.

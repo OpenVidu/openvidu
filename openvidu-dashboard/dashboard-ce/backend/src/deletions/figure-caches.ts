@@ -25,6 +25,11 @@ export class FigureCaches {
 	private seen = 0;
 	private readonly clears: (() => void)[] = [];
 
+	/** `finishedAt` (epoch ms) of the newest completion seen; 0 before any. */
+	get newestCompletion(): number {
+		return this.seen;
+	}
+
 	/** Registers the clear of a cache. */
 	register(clear: () => void): void {
 		this.clears.push(clear);

@@ -106,7 +106,7 @@ export function buildContainer(inputs: ContainerInputs): Container {
 	container
 		.bind(TOKENS.InfoService)
 		.toResolvedValue(
-			(database: Db, statsMode: StatsModeReader, caches: FigureCaches) =>
+			(database: Db, statsMode: StatsModeReader, caches: FigureCaches, clock: () => Date) =>
 				new InfoService(database, {
 					edition: edition,
 					version: version,
@@ -114,9 +114,10 @@ export function buildContainer(inputs: ContainerInputs): Container {
 					limits: rankedSortLimits(config.lists.totalMaxRangeMs),
 					openapiDocsEnabled: inputs.docsEnabled,
 					statsMode,
-					caches
+					caches,
+					now: () => clock().getTime()
 				}),
-			[TOKENS.Database, TOKENS.StatsModeReader, TOKENS.FigureCaches]
+			[TOKENS.Database, TOKENS.StatsModeReader, TOKENS.FigureCaches, TOKENS.Clock]
 		)
 		.inSingletonScope();
 	container

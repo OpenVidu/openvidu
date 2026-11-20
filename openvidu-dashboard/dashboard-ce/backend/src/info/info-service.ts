@@ -26,6 +26,8 @@ import { schemaStatus } from '../schema/schema-status.js';
 import type { StatsModeReader } from '../stats/stats-mode.js';
 
 export const STORAGE_CACHE_MS = 60_000;
+/** WiredTiger releases the blocks a deletion freed at its next checkpoint, at most this long after the deletion. */
+export const CHECKPOINT_MS = 60_000;
 
 /** The BSON type the date field of a collection holds and how it becomes a date. */
 interface DateConverter {
@@ -215,12 +217,18 @@ export class InfoService {
 	}
 
 	/**
-	 * Storage of the contract collections that exist, cached for {@link STORAGE_CACHE_MS} or until a deletion completes.
+	 * Storage of the contract collections that exist, cached for {@link STORAGE_CACHE_MS}: until a deletion completes,
+	 * and again until the checkpoint after it ({@link CHECKPOINT_MS}), which releases the space it freed.
 	 * @param withLegacy also the legacy collections that exist, which only a migration document makes legacy
 	 * @returns the entries by collection name
 	 */
 	private async storageInfo(withLegacy: boolean): Promise<Record<string, InfoStorageEntry>> {
-		if (this.storage !== undefined && this.now() - this.storage.at < STORAGE_CACHE_MS) {
+		const now = this.now();
+		// A value read before the checkpoint that follows the newest completed deletion is not served after it.
+		const release = (this.options.caches?.newestCompletion ?? 0) + CHECKPOINT_MS;
+		const released = this.storage !== undefined && this.storage.at < release && now >= release;
+
+		if (this.storage !== undefined && now - this.storage.at < STORAGE_CACHE_MS && !released) {
 			return this.storage.value;
 		}
 
@@ -237,7 +245,7 @@ export class InfoService {
 			}
 		}
 
-		this.storage = { at: this.now(), value };
+		this.storage = { at: now, value };
 
 		return value;
 	}

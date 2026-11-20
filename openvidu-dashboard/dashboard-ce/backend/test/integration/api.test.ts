@@ -755,6 +755,43 @@ describe.skipIf(mongoUri === '')('info storage and deletions', () => {
 		}
 	});
 
+	it('Storage read again after the release', async () => {
+		const finishedAt = ago(20_000);
+		const dashboard = await boot(
+			mongoUri,
+			{},
+			{
+				seed: async (db) => {
+					await seedSchema(db);
+					await createContractCollections(db);
+					await db.collection('events').insertMany([{ _id: 'AE_1', ts: ago(DAY) }] as never[]);
+					await db.collection<SchemaMetaDocument>('schema_meta').insertOne({
+						_id: 'dashboard',
+						deletions: { events: { completed: { cutoff: ago(DAY), endedBefore: ago(DAY), finishedAt } } }
+					});
+				}
+			}
+		);
+		const documents = async () =>
+			((await info(dashboard)).storage as Record<string, { documents: number }>).events?.documents;
+
+		try {
+			// Read and cached 20 s after the deletion completed.
+			expect(await documents()).toBe(1);
+			await dashboard.db.collection('events').insertOne({ _id: 'AE_2', ts: ago(DAY) } as never);
+
+			// 50 s after it: the value cached at 20 s is served.
+			dashboard.advance(30_000);
+			expect(await documents()).toBe(1);
+
+			// 65 s after it, past the checkpoint: `$collStats` is read again.
+			dashboard.advance(15_000);
+			expect(await documents()).toBe(2);
+		} finally {
+			await dashboard.stop();
+		}
+	});
+
 	it('Sub-resource path', async () => {
 		const dashboard = await boot(mongoUri, {}, { seed: (db) => seedSchema(db) });
 
