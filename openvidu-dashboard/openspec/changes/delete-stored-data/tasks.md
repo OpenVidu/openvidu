@@ -52,14 +52,26 @@
 - [x] 8.1 Add the CHANGELOG lines of the proposal under the next release (`Added` › `UI` and `Improved` › `UI`). Verify with `./dashboard.sh check` (format). Owner's decision: each line was written in the commit of its observable change (the deletions API, the banner, the Data tab), not in this group.
 - [x] 8.2 Refactor review of the new slice, the Data tab and the status service: apply small refactors, propose a separate change for larger ones, and record the outcome in the report. Applied: the deletion texts of the Data tab in `deletion-texts.ts`, one `deletionJob()` fixture for the UI specs, the request and wait helpers of the backend suites in `test/support/deletion-world.ts`; no larger refactor to propose.
 
-## 9. Demo review (owner)
+## 9. Free space after the demo review (implementer)
 
-- [ ] 9.1 The owner reviews `./dashboard.sh demo ce`: delete buttons, the ten dialogs, progress and banner, end toast, "Deleted …" lines, free space lines, both themes and a 375 px window.
+- [ ] 9.1 Give the storage cache its second boundary (a value read before the newest completion `finishedAt` + 60 s is not served after that moment); cover "Storage read again after the release" in `backend/test/integration/api.test.ts` with an injected clock. Verify with `./dashboard.sh test-integration`.
+- [ ] 9.2 Add the optional link to the shared info tip (a panel instead of a tooltip, `aria-expanded`, Escape, click outside and second activation close it, focus back to the icon); cover "Link tip by keyboard" in `components/info-tip/info-tip.spec.ts`, keep the existing info tip scenarios green, and document it in the library README.
+- [ ] 9.3 Put the free space tip after each free line with `EXTERNAL_LINKS.freeingDiskSpace`; cover "Free space tip of a class" and "Free space tip of the Total" in `settings-page.spec.ts`.
+- [ ] 9.4 Read the info document when the Data tab opens and 65 s after the reported end of a deletion while the tab stays open (timer cancelled when it closes); cover "Data tab opened", "Second read after a deletion" and "No further reads" in `settings-page.spec.ts`, and keep "Steady server" and "Deletion ends" green in `server-status.spec.ts`.
+- [ ] 9.5 Cover "Link tip on a phone" in `e2e/tests/settings.spec.ts` (375 px, axe in both themes).
+- [ ] 9.6 Run `./dashboard.sh check` and `./dashboard.sh scenarios delete-stored-data`; refactor review of the info tip and the Data tab reads, recorded in the report.
 
-## 10. Documentation in PR #160 of OpenVidu/openvidu.io (orchestrator)
+Pending the dashboard's author: whether `freeBytes` adds the reusable bytes of every index (design, Open Questions);
+its task is added here once answered.
 
-- [ ] 10.1 In branch `docs/openvidu-dashboard-3.10`, write in `docs/docs/self-hosting/production-ready/observability/openvidu-dashboard.md` the "Settings" line about the delete buttons, the legacy paragraph line, `### Deleting analytics data` and `#### Freeing disk space` (why MongoDB keeps the space, `dryRun`, `compact` for every collection including `track_stats`, Single Node, Elastic, High Availability member by member, external MongoDB, MongoDB 7.0 as the minimum for deleting stats), after checking the `compact` form for a time-series collection on MongoDB 8.0; verify the anchor `#freeing-disk-space` matches the dialog link, `ovweb lint` and `mkdocs build --strict`.
-- [ ] 10.2 Show the owner the section and wait for the go-ahead before pushing to the PR branch; then push. The PR stays a draft and is NOT merged. Record the commit in `operations.md`.
+## 10. Demo review (owner)
+
+- [ ] 10.1 The owner reviews `./dashboard.sh demo ce`: delete buttons, the ten dialogs, progress and banner, end toast, "Deleted …" lines, free space lines with their tip and their refresh about 60 s after a deletion, both themes and a 375 px window. First review (2026-11-20) found the free space issues fixed by group 9; re-review after it.
+
+## 11. Documentation in PR #160 of OpenVidu/openvidu.io (orchestrator)
+
+- [ ] 11.1 In branch `docs/openvidu-dashboard-3.10`, write in `docs/docs/self-hosting/production-ready/observability/openvidu-dashboard.md` the "Settings" line about the delete buttons, the legacy paragraph line, `### Deleting analytics data` and `#### Freeing disk space` (why MongoDB keeps the space, `dryRun`, `compact` for every collection including `track_stats`, Single Node, Elastic, High Availability member by member, external MongoDB, MongoDB 7.0 as the minimum for deleting stats), after checking the `compact` form for a time-series collection on MongoDB 8.0; verify the anchor `#freeing-disk-space` matches the dialog link, `ovweb lint` and `mkdocs build --strict`.
+- [ ] 11.2 Show the owner the section and wait for the go-ahead before pushing to the PR branch; then push. The PR stays a draft and is NOT merged. Record the commit in `operations.md`.
 
 ## Workflow follow-up
 

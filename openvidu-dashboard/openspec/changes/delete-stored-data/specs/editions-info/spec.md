@@ -46,7 +46,8 @@ Edition: CE. With a valid bearer token `GET /api/v1/info` SHALL include `databas
 and `timeseriesSupported`) and `storage`, one entry per analytics collection with `documents`, `storageBytes`,
 `indexBytes`, `freeBytes` (space free for new data in the collection and its indexes, 0 when not reported) and
 `oldest` (the earliest value of the collection's time field when an index leads with it, and of `firstSeenAt` for
-`nodes`), read with `$collStats` and cached for 60 seconds or until a deletion completes a class.
+`nodes`), read with `$collStats` and cached for 60 seconds; once a deletion completes, a value read before it, and
+from 60 s after it a value read before that moment, SHALL NOT be served.
 
 #### Scenario: Storage per collection
 
@@ -70,3 +71,9 @@ and `timeseriesSupported`) and `storage`, one entry per analytics collection wit
 - **WHEN** the client requests `GET /api/v1/info` with a valid token after the deletion completes
 - **THEN** `storage.events.documents` is `10000`, `storageBytes` has not decreased and `freeBytes` is larger than
   before the deletion
+
+#### Scenario: Storage read again after the release
+
+- **GIVEN** an Events deletion that completed at 10:00:00 and storage figures read and cached at 10:00:20
+- **WHEN** the client requests `GET /api/v1/info` at 10:00:50 and again at 10:01:05
+- **THEN** the first answer serves the figures cached at 10:00:20 and the second reads `$collStats` again

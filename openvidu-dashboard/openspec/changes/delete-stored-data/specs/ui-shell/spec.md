@@ -60,8 +60,8 @@ refresh, and does not appear in the refresh control.
 
 ### Requirement: Info re-read on server changes
 Edition: CE. The shell SHALL read `GET /api/v1/info` at start and after sign-in, and read it again once when a status
-reports a schema status, a migration state or a deletion job or state different from the last info document; it SHALL
-NOT poll the info endpoint.
+reports a schema status, a migration state or a deletion job or state different from the last info document; besides
+the reads of the Data tab of Settings, it SHALL NOT poll the info endpoint.
 
 #### Scenario: Migration ends
 - **GIVEN** an info document with a running migration

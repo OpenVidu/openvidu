@@ -67,6 +67,46 @@ document), in the shared byte formatter, when it reaches 1 MB; Size keeps readin
 - **WHEN** Data renders
 - **THEN** no row and not the Total shows a free line
 
+### Requirement: Free space tip
+Edition: CE. Each free line SHALL end with an info tip with a link, named "About free space of <class>" ("About free
+space" on the Total), whose text reads "MongoDB reuses this space for new data. The rest of the space the deleted data
+used stays reserved until the collection is compacted; see Freeing disk space." with "Freeing disk space" linking to the
+documentation section the deletion dialogs link to.
+
+#### Scenario: Free space tip of a class
+- **GIVEN** an Events row with "1.8 GB free for new data"
+- **WHEN** the user activates the info icon after that line
+- **THEN** a panel reads "MongoDB reuses this space for new data. The rest of the space the deleted data used stays
+  reserved until the collection is compacted; see Freeing disk space." and its "Freeing disk space" link opens
+  `https://openvidu.io/latest/docs/self-hosting/production-ready/observability/openvidu-dashboard/#freeing-disk-space`
+  in a new tab
+
+#### Scenario: Free space tip of the Total
+- **GIVEN** a Total row with a free line
+- **WHEN** Data renders
+- **THEN** the line ends with an info icon named "About free space"
+
+### Requirement: Storage figures re-read
+Edition: CE. Data SHALL read the info document each time the Data tab is opened, when a status reports that a
+deletion ended, and once more 65 s after that report while the tab stays open, so that it shows the space MongoDB
+releases at its next checkpoint; it SHALL NOT read it periodically otherwise.
+
+#### Scenario: Data tab opened
+- **GIVEN** a session that read the info document on the Overview
+- **WHEN** the user opens `/settings?tab=data`, then switches to Preferences and back to Data
+- **THEN** `GET /api/v1/info` is requested once at each opening of Data
+
+#### Scenario: Second read after a deletion
+- **GIVEN** the Data tab open while an Events deletion runs
+- **WHEN** a status reports it completed, and 65 s pass with the tab open
+- **THEN** `GET /api/v1/info` is requested once at the report and once 65 s later, and the free lines show the figures
+  of the second read
+
+#### Scenario: No further reads
+- **GIVEN** the Data tab open after the second read of a completed deletion
+- **WHEN** ten more minutes pass with no deletion
+- **THEN** `GET /api/v1/info` is not requested again
+
 ### Requirement: Delete buttons
 Edition: CE. The Storage table SHALL end each class row, the Total row and the Legacy data row while it reads "Kept
 until <date> for rollback" with an icon button, named "Delete <class>", "Delete all analytics data" and "Delete Legacy
