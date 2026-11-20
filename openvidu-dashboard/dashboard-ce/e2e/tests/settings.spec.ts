@@ -376,32 +376,51 @@ test.describe('free space at a desktop width', () => {
 	});
 });
 
-test.describe('Total dialog at a desktop size', () => {
-	test.use({ viewport: { width: 1280, height: 800 }, apiOptions: { legacy: true } });
+/** Desktop sizes, plain and zoomed: a 120 % page zoom is a 1.2 device scale with a CSS viewport 1/1.2 of the window. */
+const DIALOG_SCREENS = [
+	{ name: '1280 × 800', viewport: { width: 1280, height: 800 }, deviceScaleFactor: 1 },
+	{ name: '1920 × 1080 at 1.25', viewport: { width: 1920, height: 1080 }, deviceScaleFactor: 1.25 },
+	{ name: 'a 1280 × 800 window zoomed to 120 %', viewport: { width: 1067, height: 667 }, deviceScaleFactor: 1.2 },
+	{ name: 'a 1920 × 1080 window zoomed to 120 %', viewport: { width: 1600, height: 900 }, deviceScaleFactor: 1.2 }
+] as const;
 
-	test('Total with the legacy checkbox: the dialog content does not scroll at 1280 × 800', async ({ page }) => {
-		await page.goto('/settings?tab=data');
-		await page.getByRole('button', { name: 'Delete all analytics data' }).click();
+for (const screen of DIALOG_SCREENS) {
+	test.describe(`Total dialog on ${screen.name}`, () => {
+		test.use({
+			viewport: screen.viewport,
+			deviceScaleFactor: screen.deviceScaleFactor,
+			apiOptions: { legacy: true }
+		});
 
-		const dialog = page.getByRole('dialog', { name: 'Delete all analytics data?' });
-		const content = dialog.locator('mat-dialog-content');
-		const overflow = () =>
-			content.evaluate((element) => ({ scrollHeight: element.scrollHeight, clientHeight: element.clientHeight }));
+		test(`Total with the legacy checkbox: the dialog content does not scroll on ${screen.name}`, async ({
+			page
+		}) => {
+			await page.goto('/settings?tab=data');
+			await page.getByRole('button', { name: 'Delete all analytics data' }).click();
 
-		await expect(dialog.getByRole('checkbox', { name: 'Also delete the data before 3.10' })).toBeVisible();
+			const dialog = page.getByRole('dialog', { name: 'Delete all analytics data?' });
+			const checkbox = dialog.getByRole('checkbox', { name: 'Also delete the data before 3.10' });
+			const overflow = () =>
+				dialog.locator('mat-dialog-content').evaluate((element) => ({
+					scrollHeight: element.scrollHeight,
+					clientHeight: element.clientHeight
+				}));
 
-		const unchecked = await overflow();
+			await expect(checkbox).toBeVisible();
 
-		expect(unchecked.scrollHeight).toBeLessThanOrEqual(unchecked.clientHeight);
+			const unchecked = await overflow();
 
-		await dialog.getByRole('checkbox', { name: 'Also delete the data before 3.10' }).check();
-		await expect(dialog).toContainText('A rollback to 3.9 will find no analytics data.');
+			expect(unchecked.scrollHeight).toBeLessThanOrEqual(unchecked.clientHeight);
 
-		const checked = await overflow();
+			await checkbox.check();
+			await expect(dialog).toContainText('A rollback to 3.9 will find no analytics data.');
 
-		expect(checked.scrollHeight).toBeLessThanOrEqual(checked.clientHeight);
+			const checked = await overflow();
+
+			expect(checked.scrollHeight).toBeLessThanOrEqual(checked.clientHeight);
+		});
 	});
-});
+}
 
 test.describe('incompatible writer', () => {
 	test.use({

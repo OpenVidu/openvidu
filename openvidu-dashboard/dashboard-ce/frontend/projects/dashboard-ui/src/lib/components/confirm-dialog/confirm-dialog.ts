@@ -68,11 +68,11 @@ export interface ConfirmDialogResult {
 			display: block;
 		}
 
-		/* The vertical margin holds the 48 px touch target around the 40 px checkbox, which would else make the content
-		   scroll when the checkbox ends it. */
+		/* The 48 px touch target around the 40 px checkbox overflows it by 4 px on each side: the margins hold it, with
+		   room to spare for the rounding of zoomed and high-density screens, so the content never scrolls for it. */
 		.checkbox {
 			display: block;
-			margin-block: 4px;
+			margin-block: 4px 12px;
 			margin-inline-start: -8px;
 		}
 
