@@ -262,7 +262,7 @@ export class InfoService {
 			documents: count,
 			storageBytes: Number(storageStats.storageSize ?? 0),
 			indexBytes: Number(storageStats.totalIndexSize ?? 0),
-			freeBytes: Number(storageStats.freeStorageSize ?? 0) + Number(storageStats.indexFreeStorageSize ?? 0)
+			freeBytes: Number(storageStats.freeStorageSize ?? 0) + indexReusableBytes(storageStats.indexDetails)
 		};
 		const query = oldestQuery(this.db, name);
 
@@ -277,6 +277,23 @@ export class InfoService {
 
 		return entry;
 	}
+}
+
+/**
+ * The bytes the indexes of a collection keep for reuse: `$collStats` reports the free space of the data file only, and
+ * that of each index in its block manager details; a missing figure counts as 0.
+ */
+export function indexReusableBytes(indexDetails: unknown): number {
+	if (typeof indexDetails !== 'object' || indexDetails === null) {
+		return 0;
+	}
+
+	return Object.values(indexDetails as Record<string, unknown>).reduce<number>((sum, details) => {
+		const blockManager = (details as Document | null)?.['block-manager'] as Document | undefined;
+		const reusable = Number(blockManager?.['file bytes available for reuse'] ?? 0);
+
+		return sum + (Number.isFinite(reusable) ? reusable : 0);
+	}, 0);
 }
 
 function healthFacts(byId: ReadonlyMap<string, unknown>): HealthFacts {

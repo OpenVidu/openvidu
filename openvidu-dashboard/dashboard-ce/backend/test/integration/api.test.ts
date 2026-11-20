@@ -3,11 +3,13 @@ import { afterAll, beforeAll, describe, expect, inject, it } from 'vitest';
 
 import { MIN_SUPPORTED_SCHEMA_VERSION, SCHEMA_VERSION, type SchemaMetaDocument } from '@openvidu-dashboard/typings';
 
+import { rankedSortLimits } from '../../src/api/ranked-limits.js';
 import type { RouteRegistry } from '../../src/api/route-registry.js';
 import { AuthService } from '../../src/auth/auth-service.js';
 import { SessionRepository } from '../../src/auth/session-repository.js';
 import { provisionSigningKey } from '../../src/auth/signing-key.js';
 import { TOKENS } from '../../src/di/tokens.js';
+import { InfoService } from '../../src/info/info-service.js';
 import { silentLogger } from '../support/silent-logger.js';
 import { boot, type BootedDashboard, refreshCookie } from '../support/boot.js';
 import { createContractCollections } from '../support/rooms-seed.js';
@@ -691,6 +693,76 @@ describe.skipIf(mongoUri === '')('info storage and deletions', () => {
 			}
 		} finally {
 			await dashboard.stop();
+		}
+	});
+
+	it('Free space of the indexes', async () => {
+		const client = await MongoClient.connect(mongoUri);
+		const db = client.db(`api_free_${String(Date.now())}`);
+		const stats: Record<string, Record<string, unknown>> = {
+			events: {
+				count: 10,
+				storageSize: 36_200_000,
+				totalIndexSize: 35_400_000,
+				freeStorageSize: 16_000_000,
+				indexDetails: {
+					_id_: { 'block-manager': { 'file bytes available for reuse': 8_000_000 } },
+					ts_ttl: { 'block-manager': { 'file bytes available for reuse': 4_800_000 } }
+				}
+			},
+			rooms: {
+				count: 2,
+				storageSize: 4_096,
+				totalIndexSize: 4_096,
+				freeStorageSize: 1_000_000,
+				indexDetails: { _id_: {} }
+			}
+		};
+		// `$collStats` of the two collections answers the figures above; every other call reaches MongoDB.
+		const reporting = new Proxy(db, {
+			get(target, property, receiver) {
+				if (property !== 'collection') {
+					return Reflect.get(target, property, receiver) as unknown;
+				}
+
+				return (name: string) => {
+					const collection = target.collection(name);
+					const storageStats = stats[name];
+
+					return new Proxy(collection, {
+						get(inner, key, innerReceiver) {
+							if (key === 'aggregate' && storageStats !== undefined) {
+								return () => ({ toArray: () => Promise.resolve([{ storageStats }]) });
+							}
+
+							const value = Reflect.get(inner, key, innerReceiver) as unknown;
+
+							return typeof value === 'function'
+								? (value as (...args: unknown[]) => unknown).bind(inner)
+								: value;
+						}
+					});
+				};
+			}
+		});
+
+		try {
+			await db.createCollection('events');
+			await db.createCollection('rooms');
+
+			const info = await new InfoService(reporting, {
+				edition: 'ce',
+				version: 'test',
+				features: () => [],
+				limits: rankedSortLimits(7 * 86_400_000),
+				openapiDocsEnabled: false
+			}).fullInfo();
+
+			expect(info.storage.events?.freeBytes).toBe(28_800_000);
+			expect(info.storage.rooms?.freeBytes).toBe(1_000_000);
+		} finally {
+			await db.dropDatabase();
+			await client.close();
 		}
 	});
 
