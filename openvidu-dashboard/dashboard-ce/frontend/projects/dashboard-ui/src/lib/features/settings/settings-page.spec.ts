@@ -1276,6 +1276,33 @@ describe('SettingsPage', () => {
 			expect(element.querySelector('ovd-data-tab section.deletion')).toBeNull();
 		});
 
+		it('No completion toast on Preferences', async () => {
+			const { harness, http } = await settings(
+				'/settings?tab=preferences',
+				infoResponse({ retention: DEFAULT_RETENTION })
+			);
+			const toasts = vi.mocked(TestBed.inject(ToastService));
+
+			http.expectOne('api/v1/status').flush(statusResponse({ deletion: job() }));
+			await harness.fixture.whenStable();
+			await loadStatus(http, statusResponse({ deletion: job({ state: 'completed', deleted: 10 }) }));
+			await harness.fixture.whenStable();
+
+			expect(toasts.show.mock.calls).toEqual([]);
+		});
+
+		it('No completion toast on Preferences: Data left for Preferences before the end', async () => {
+			const { harness, http } = await dataTab({}, { deletion: job() });
+			const toasts = vi.mocked(TestBed.inject(ToastService));
+
+			await harness.navigateByUrl('/settings?tab=preferences');
+			await harness.fixture.whenStable();
+			await loadStatus(http, statusResponse({ deletion: job({ state: 'completed', deleted: 10 }) }));
+			await harness.fixture.whenStable();
+
+			expect(toasts.show.mock.calls).toEqual([]);
+		});
+
 		it('Interrupted deletion notice', async () => {
 			const today = new Date().toISOString().slice(0, 10);
 			const interrupted = job({ state: 'interrupted', finishedAt: `${today}T10:20:00.000Z`, deleted: 400_000 });

@@ -238,6 +238,8 @@ export class DataTab {
 			} else {
 				clearTimeout(secondRead);
 				this.freePending.set(null);
+				// Only the open tab announces the end of the job it shows.
+				this.watching.set(null);
 			}
 		});
 		// When a status reports that a deletion ended, the shell reads the info document; the open tab reads it once
@@ -278,7 +280,8 @@ export class DataTab {
 				this.seenRunning.set(true);
 			}
 		});
-		// The completion of a job this tab showed running is announced once; an interrupted or failed one has its notice.
+		// The completion of a job the open tab showed running is announced once; an interrupted or failed one has its
+		// notice.
 		effect(() => {
 			const job = this.deletion();
 
@@ -288,7 +291,9 @@ export class DataTab {
 
 			untracked(() => {
 				if (job.state === 'running') {
-					this.watching.set(job.id);
+					if (this.active()) {
+						this.watching.set(job.id);
+					}
 				} else if (job.id === this.watching()) {
 					this.watching.set(null);
 
