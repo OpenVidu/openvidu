@@ -65,6 +65,51 @@ export function batchQuery(db: Db, step: BatchStep): FindCursor<Document> {
 	return (step.hint === undefined ? cursor : cursor.hint(step.hint)).limit(BATCH_SIZE);
 }
 
+/** One read of a kept set: the ids (or the `field`) of the matching documents of `collection`, on `expiresAt_ttl`. */
+export interface KeptSetQuery {
+	set: keyof KeptSets;
+	collection: string;
+	filter: Document;
+	field: string;
+}
+
+/**
+ * The reads of the kept sets of a cutoff, all on `expiresAt_ttl`. Open entities have `expiresAt: null`. Nothing indexes
+ * the end time of rooms and egresses, so those that ended in the grace window are read among the largest expiries under
+ * the current entities retention, and their end time is checked on those candidates: an expiry set under a longer
+ * earlier retention does not keep an entity that ended before the window.
+ */
+export function keptSetQueries(cutoff: Date, entitiesMs: number): KeptSetQuery[] {
+	const endedBefore = new Date(cutoff.getTime() - GRACE_MS);
+	const candidates = { $gte: new Date(endedBefore.getTime() + entitiesMs) };
+	const since = { $gte: endedBefore };
+
+	return [
+		{ set: 'rooms', collection: Collection.ROOMS, filter: { expiresAt: null }, field: '_id' },
+		{ set: 'rooms', collection: Collection.ROOMS, filter: { expiresAt: candidates, endedAt: since }, field: '_id' },
+		{ set: 'egresses', collection: Collection.EGRESSES, filter: { expiresAt: null }, field: '_id' },
+		{
+			set: 'egresses',
+			collection: Collection.EGRESSES,
+			filter: {
+				expiresAt: candidates,
+				$or: [{ endedAt: since }, { endedAt: { $exists: false }, updatedAt: since }]
+			},
+			field: '_id'
+		},
+		{ set: 'ingresses', collection: Collection.INGRESSES, filter: { expiresAt: null }, field: '_id' },
+		{ set: 'ingresses', collection: Collection.INGRESS_SESSIONS, filter: { expiresAt: null }, field: 'ingressId' }
+	];
+}
+
+/** The cursor of a kept-set read. */
+export function keptSetCursor(db: Db, query: KeptSetQuery): FindCursor<Document> {
+	return db
+		.collection(query.collection)
+		.find(query.filter, { projection: { [query.field]: 1 } })
+		.hint('expiresAt_ttl');
+}
+
 /** Reads the kept sets of a cutoff and how `track_stats` is stored, once when a job starts. */
 export async function planContext(db: Db, cutoff: Date): Promise<PlanContext> {
 	const retention = await db
@@ -72,39 +117,23 @@ export async function planContext(db: Db, cutoff: Date): Promise<PlanContext> {
 		.findOne({ _id: 'retention' }, { projection: { entitiesMs: 1, tracksMs: 1 } });
 	const entitiesMs = retention?.entitiesMs ?? DEFAULT_RETENTION_MS.entities ?? 0;
 	const tracksMs = retention?.tracksMs ?? DEFAULT_RETENTION_MS.tracks ?? 0;
-	const endedInGrace = { $gte: new Date(cutoff.getTime() - GRACE_MS + entitiesMs) };
-	const ids = async (collection: string, filter: Document, field = '_id'): Promise<string[]> => {
-		const documents = await db
-			.collection(collection)
-			.find(filter, { projection: { [field]: 1 } })
-			.hint('expiresAt_ttl')
-			.toArray();
+	const kept: Record<keyof KeptSets, Set<string>> = { rooms: new Set(), egresses: new Set(), ingresses: new Set() };
 
-		return documents.map((document) => document[field] as unknown).filter((id) => typeof id === 'string');
-	};
-	// Open entities have `expiresAt: null`; those that ended in the grace window have the largest expiry under the
-	// current entities retention, since nothing indexes their end time.
-	const kept: KeptSets = {
-		rooms: [
-			...(await ids(Collection.ROOMS, { expiresAt: null })),
-			...(await ids(Collection.ROOMS, { expiresAt: endedInGrace }))
-		],
-		egresses: [
-			...(await ids(Collection.EGRESSES, { expiresAt: null })),
-			...(await ids(Collection.EGRESSES, { expiresAt: endedInGrace }))
-		],
-		ingresses: [
-			...new Set([
-				...(await ids(Collection.INGRESSES, { expiresAt: null })),
-				...(await ids(Collection.INGRESS_SESSIONS, { expiresAt: null }, 'ingressId'))
-			])
-		]
-	};
+	for (const query of keptSetQueries(cutoff, entitiesMs)) {
+		for (const document of await keptSetCursor(db, query).toArray()) {
+			const id: unknown = document[query.field];
+
+			if (typeof id === 'string') {
+				kept[query.set].add(id);
+			}
+		}
+	}
+
 	const [trackStats] = await db.listCollections({ name: Collection.TRACK_STATS }, { nameOnly: false }).toArray();
 
 	return {
 		cutoff,
-		kept,
+		kept: { rooms: [...kept.rooms], egresses: [...kept.egresses], ingresses: [...kept.ingresses] },
 		tracksRetentionMs: tracksMs,
 		trackStatsTimeseries: trackStats?.type === 'timeseries'
 	};

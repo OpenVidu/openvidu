@@ -5,7 +5,13 @@ import { afterAll, beforeAll, describe, expect, inject, it } from 'vitest';
 import { Collection } from '@openvidu-dashboard/typings';
 
 import { type CollectionStep, planSteps } from '../../src/deletions/deletion-plan.js';
-import { BATCH_SIZE, batchQuery, planContext } from '../../src/deletions/deletion-runner.js';
+import {
+	BATCH_SIZE,
+	batchQuery,
+	keptSetCursor,
+	keptSetQueries,
+	planContext
+} from '../../src/deletions/deletion-runner.js';
 import { expectIndexBacked } from '../support/query-plan.js';
 
 /**
@@ -18,6 +24,7 @@ const mongoUri = inject('mongoUri');
 const scenario = (process.env.DELETIONS_PLAN_SCENARIO ?? 'S') as 'S' | 'M' | 'L';
 const days = Number(process.env.DELETIONS_PLAN_DAYS ?? '2');
 const DATABASE = 'dashboard_test_deletions_plan';
+const DAY = 86_400_000;
 const GENERATION_TIMEOUT_MS = scenario === 'S' ? 600_000 : 3_600_000;
 
 type BatchStep = Extract<CollectionStep, { kind: 'batches' }>;
@@ -125,6 +132,21 @@ describe.skipIf(mongoUri === '')(`deletion batch query plans at scenario ${scena
 			});
 
 			expect(plan.indexes, step.collection).toEqual([step.hint]);
+		}
+	});
+
+	it('reads the kept sets through expiresAt_ttl, the end time checked on the grace-window candidates only', async () => {
+		// The generated data keeps entities 90 days.
+		for (const query of keptSetQueries(new Date(), 90 * DAY)) {
+			const candidates = await db
+				.collection(query.collection)
+				.countDocuments({ expiresAt: query.filter.expiresAt as unknown });
+			const plan = await expectIndexBacked(db, keptSetCursor(db, query), {
+				maxDocsExamined: candidates,
+				collscanThreshold: 0
+			});
+
+			expect(plan.indexes, `${query.collection} ${JSON.stringify(query.filter)}`).toEqual(['expiresAt_ttl']);
 		}
 	});
 });

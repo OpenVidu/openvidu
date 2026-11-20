@@ -99,6 +99,39 @@ describe.skipIf(mongoUri === '')('what a deletion deletes and keeps', () => {
 		expect(await remaining(db, gone)).toEqual(none(gone));
 	});
 
+	it('Room ended under a longer retention', async () => {
+		const cutoff = new Date();
+		const endedAt = ago(cutoff, 40 * DAY);
+		const old = room('RM_old_retention', {
+			endedAt,
+			sessions: 2,
+			tracks: 2,
+			subscriptions: 2,
+			events: 6,
+			stats: 6,
+			egress: 'ended'
+		});
+		// Closed under the 90-day retention: their expiry stays when the retention is shortened.
+		const closedUnder90Days = (documents: Document[] | undefined) =>
+			(documents ?? []).map((document) =>
+				document.expiresAt instanceof Date ? { ...document, expiresAt: after(endedAt, 90 * DAY) } : document
+			);
+		const world: World = {
+			...old,
+			[Collection.ROOMS]: closedUnder90Days(old[Collection.ROOMS]),
+			[Collection.EGRESSES]: closedUnder90Days(old[Collection.EGRESSES]),
+			[Collection.PARTICIPANTS]: closedUnder90Days(old[Collection.PARTICIPANTS])
+		};
+
+		await fresh(world);
+		await db
+			.collection<{ _id: string }>(Collection.SCHEMA_META)
+			.updateOne({ _id: 'retention' }, { $set: { entitiesMs: 30 * DAY } });
+		await runJob(db, 'entities', cutoff);
+
+		expect(await remaining(db, world)).toEqual(none(world));
+	});
+
 	it('Open entities without a room kept', async () => {
 		const cutoff = new Date();
 		const longAgo = ago(cutoff, 200 * DAY);
