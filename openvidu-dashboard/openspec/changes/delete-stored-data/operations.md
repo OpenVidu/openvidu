@@ -25,3 +25,16 @@ The owner delegated these to the dashboard's author, who answered in a Slack dir
   steps instead of 5.
 - 2026-11-20 12:28 (ts `1795174089.449919`), raised by the owner's demo review: the free figure of a collection adds
   the bytes each of its indexes keeps for reuse, since MongoDB 8.0 reports no per-collection index free space.
+- 2026-11-20 16:13 (ts `1795187616.965179`), agreeing with the owner: the free line shows only on classes with a
+  completed deletion, since a fresh database already reports free space from WiredTiger fragmentation.
+
+## Demo review
+
+- The owner reviewed `./dashboard.sh demo ce` on 2026-11-20 from another machine over Tailscale (a `socat` forward of
+  the laptop's tailnet address to the demo's port 4200), at 120 % zoom. The findings became tasks 9.1–9.14 and the
+  layout fixes of the table and the Total dialog; the owner approved the re-review the same day.
+
+## Documentation
+
+- PR #160 of OpenVidu/openvidu.io was merged into `next` (merge commit `75e6aa101`) by the dashboard's author, who asked
+  for the documentation of this change to be committed directly on `next`, without a branch or PR.

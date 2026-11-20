@@ -72,7 +72,7 @@
 
 ## 10. Demo review (owner)
 
-- [ ] 10.1 The owner reviews `./dashboard.sh demo ce`: delete buttons, the ten dialogs, progress and banner, end toast, "Deleted …" lines, free space lines with their tip and their refresh about 60 s after a deletion, both themes and a 375 px window. First review (2026-11-20) found the free space issues fixed by group 9; re-review after it.
+- [x] 10.1 The owner reviews `./dashboard.sh demo ce`: delete buttons, the ten dialogs, progress and banner, end toast, "Deleted …" lines, free space lines with their tip and their refresh about 60 s after a deletion, both themes and a 375 px window. First review (2026-11-20) found the free space issues fixed by group 9; the owner approved the re-review on 2026-11-20, from another machine over Tailscale at 120 % zoom.
 
 ## 11. Documentation on `next` of OpenVidu/openvidu.io (orchestrator)
 
