@@ -86,6 +86,33 @@ documentation section the deletion dialogs link to.
 - **WHEN** Data renders
 - **THEN** the line ends with an info icon named "About free space"
 
+### Requirement: Free space pending after a deletion
+Edition: CE. When the Data tab sees a deletion complete, it SHALL show "Free space updates in about a minute" in place
+of the free line of every class that job completed and, if it completed one, of the Total, until its second read after the deletion
+replaces it with the free line, or nothing under 1 MB. Leaving the tab drops the notice: the read when the tab opens
+again shows the figures as they are.
+
+#### Scenario: Free space pending after an Events deletion
+- **GIVEN** the Data tab open while an Events deletion runs
+- **WHEN** a status reports it completed
+- **THEN** the Events row and the Total show "Free space updates in about a minute" under their size, and the other
+  rows keep their free lines
+
+#### Scenario: Free space after the second read
+- **GIVEN** the Events row showing "Free space updates in about a minute"
+- **WHEN** the second read after the deletion reports 17.2 MB free for `events`
+- **THEN** the Events row shows "17.2 MB free for new data" and the notice is gone from it and from the Total
+
+#### Scenario: Free space pending after a Total deletion
+- **GIVEN** the Data tab open while a Total deletion runs
+- **WHEN** a status reports it completed
+- **THEN** the seven class rows and the Total show "Free space updates in about a minute"
+
+#### Scenario: Free space pending dropped on return
+- **GIVEN** the Events row showing "Free space updates in about a minute"
+- **WHEN** the user switches to Preferences and back to Data before the second read
+- **THEN** no row shows the notice and the free lines are those of the read made when Data opened again
+
 ### Requirement: Storage figures re-read
 Edition: CE. Data SHALL read the info document each time the Data tab is opened, when a status reports that a
 deletion ended, and once more 65 s after that report while the tab stays open, so that it shows the space MongoDB

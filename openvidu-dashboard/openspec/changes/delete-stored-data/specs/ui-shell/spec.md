@@ -24,9 +24,9 @@ database). The banners follow every response of the server status poll.
 - **THEN** the banner disappears within 10 s without a reload
 
 ### Requirement: Server status poll
-Edition: CE. While signed in, the shell SHALL request `GET /api/v1/status` at once and then every 30 s, or every 10 s
-while the migration runs, a deletion runs or the schema is uninitialized, on every page and whatever the auto-refresh
-preference. The poll pauses while the tab is hidden and fetches at once on return, backs off on failures like the page
+Edition: CE. While signed in, the shell SHALL request `GET /api/v1/status` at once and then every 30 s, every 10 s while
+the migration runs or the schema is uninitialized, or every 2 s while a deletion runs, on every page and whatever the
+auto-refresh preference. The poll pauses while the tab is hidden and fetches at once on return, backs off on failures like the page
 refresh, and does not appear in the refresh control.
 
 #### Scenario: Auto-refresh off
@@ -51,12 +51,17 @@ refresh, and does not appear in the refresh control.
 #### Scenario: Deletion cadence
 - **GIVEN** a status reporting a running deletion
 - **WHEN** the next polls run
-- **THEN** they are 10 s apart until a status reports the deletion ended, and 30 s apart after it
+- **THEN** they are 2 s apart until a status reports the deletion ended, and 30 s apart after it
 
 #### Scenario: Status right after starting a deletion
 - **GIVEN** a session polling every 30 s
 - **WHEN** the user's deletion request is accepted
-- **THEN** a status request is sent at once and the next ones 10 s apart
+- **THEN** a status request is sent at once and the next ones 2 s apart
+
+#### Scenario: Deletion during the migration
+- **GIVEN** a status reporting both a running migration and a running deletion
+- **WHEN** the next polls run
+- **THEN** they are 2 s apart, and 10 s apart once a status reports the deletion ended while the migration still runs
 
 ### Requirement: Info re-read on server changes
 Edition: CE. The shell SHALL read `GET /api/v1/info` at start and after sign-in, and read it again once when a status

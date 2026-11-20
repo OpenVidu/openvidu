@@ -14,7 +14,7 @@ See proposal.md for the motivation. Facts that shape the approach:
 - Open entities have `expiresAt: null`; every entity collection has the `expiresAt_ttl` index; `events` and
   `track_stats` have `ts_ttl`; the rollups have `bucket_ttl` and their scope indexes (`typings/contract/indexes.ts`).
 - `schema_meta` `_id: "dashboard"` is reserved for the dashboard and its validator accepts any field
-  (`typings/contract/schemas.ts`); the writer never touches it. `GET /status` (every page, 30 s or 10 s) and `GET /info`
+  (`typings/contract/schemas.ts`); the writer never touches it. `GET /status` (every page, 30 s, 10 s or 2 s) and `GET /info`
   read the whole `schema_meta` on every call.
 - In High Availability four dashboards share the database behind a round-robin proxy; each keeps its own 60 s storage
   cache and Analytics cache.
@@ -93,6 +93,8 @@ See proposal.md for the motivation. Facts that shape the approach:
 | Storage re-reads (demo review, 2026-11-20) | The Data tab re-reads the info document each time it opens, when a deletion ends and once more about 60 s after it ends, when MongoDB has released the space at its checkpoint; no continuous polling. |
 | Free space of the indexes | `freeBytes` adds the reusable bytes of every index to those of the data, so the line covers everything a deletion left reusable (`events` after deleting everything: 28.8 MB instead of 16.0 MB). Decided by the dashboard's author on the owner's delegation (Slack, 2026-11-20 12:28); the data-only alternative would have needed wording saying so. |
 | Free space tip (demo review, 2026-11-20) | An info icon after each free line: "MongoDB reuses this space for new data. The rest of the space the deleted data used stays reserved until the collection is compacted; see Freeing disk space.", the last words linking to `#freeing-disk-space`. |
+| Free space pending (demo review, 2026-11-20) | Right after a deletion the freed space is not reported yet (MongoDB reports it after its next checkpoint, and the size can even grow, e.g. Events 46.3 → 70.3 MB), so the classes the job completed show "Free space updates in about a minute" until the second read. |
+| Status poll during a deletion (demo review, 2026-11-20) | Every 2 s while a deletion runs, wherever the status poll runs; the migration and the uninitialized schema keep 10 s. |
 
 ### Records in `schema_meta` `_id: "dashboard"`
 
@@ -235,7 +237,9 @@ the storage cache records a value with the time its read started, `InfoService` 
 - Any failed `POST /deletions` shows one dismissible error notice above "Storage", cleared at the next request: the
   message of a `409`, or "The deletion did not start: <message of the error> Request <id>" for any other failure (owner
   decision; requirement "Confirming a deletion", scenario "Deletion not started").
-- `ServerStatusService`: 10 s cadence while `deletion.state` is `running`; `pollNow()` polls at once after an accepted
+- `ServerStatusService`: 2 s cadence while `deletion.state` is `running` (a new constant beside `STATUS_POLL_FAST_MS`,
+  which keeps 10 s for the migration and the uninitialized schema; the shortest applies when both hold), back to the
+  normal cadence when the job ends; `pollNow()` polls at once after an accepted
   request and `attachPoller()` lets the Data tab follow the polls. The info re-read keys on the deletion job id and
   state as of the last info read, the first status setting the baseline.
 - Banner slot: the deletion banner, hidden on the Data tab.
@@ -246,6 +250,14 @@ the storage cache records a value with the time its read started, `InfoService` 
   the Data tab component alive across tab switches: becoming active reads the info document, becoming inactive or being
   destroyed cancels the timer. The timer starts on any change of the deletion job or state to an ended state seen while
   the tab is open, a job the tab never saw running included; the tab's first status only sets the baseline.
+- Free space pending: when the Data tab sees a job complete, the classes it completed (Entities also its detail classes,
+  Total all seven) and the Total show "Free space updates in about a minute" in the free line's place, muted and
+  without a tip, until the 65 s read; then the normal free line, or nothing under 1 MB. Becoming inactive drops the
+  notice with the timer, so a return shows the open read's figures. A Legacy job completes no class, so no notice. The
+  Total shows it after any job that completed a class, since its free figure sums them (decided under the owner's
+  delegation of style and consistency).
+- Progress: the bar stays indeterminate (style, decided under the owner's delegation); with the 2 s poll the document
+  counter and "collection X of Y" show the progress.
 - Free space tip: the shared info tip gains an optional link; with one, the icon toggles a small non-modal panel (CDK
   overlay) with the text and a focusable link instead of a tooltip, because a tooltip cannot hold a reachable link, and
   shows no tooltip on hover. Escape, a click outside or a second activation closes it and focus returns to the icon.
@@ -301,11 +313,11 @@ as the minimum for deleting stats stored as a time series. The exact
 | Buttons of the table, Legacy row without a button, Buttons while a deletion runs, Buttons while the migration runs, Empty class deletable, the four detail dialogs, the three rollup dialogs, Total dialog, Total with the legacy checkbox, Total with the checkbox left unchecked, Legacy dialog, Deletion confirmed, Deletion refused, Deletion not started, Deletion cancelled in the dialog, Progress of an Entities deletion, Progress follows the status, Deletion completed while watching, Interrupted deletion notice, Failed deletion notice, Class deleted, Class left incomplete | `dashboard-ui/.../settings/settings-page.spec.ts` | unit |
 | Keyboard confirmation, Escape cancels | `dashboard-ui/.../components/confirm-dialog/confirm-dialog.spec.ts` | unit |
 | Link tip by keyboard | `dashboard-ui/.../components/info-tip/info-tip.spec.ts` | unit |
-| Free space tip of a class, Free space tip of the Total, Data tab opened, Second read after a deletion, No further reads | `dashboard-ui/.../settings/settings-page.spec.ts` | unit |
+| Free space tip of a class, Free space tip of the Total, Data tab opened, Second read after a deletion, No further reads, Free space pending after an Events deletion, Free space after the second read, Free space pending after a Total deletion, Free space pending dropped on return | `dashboard-ui/.../settings/settings-page.spec.ts` | unit |
 | Storage read again after the release, Free space of the indexes | `backend/test/integration/api.test.ts` (clock injected for the first) | integration |
 | Link tip on a phone | `e2e/tests/settings.spec.ts` | e2e |
 | Banner of a running deletion, Banner of a Total deletion, No banner on the Data tab, Banner ends with the job, Dismissed banner and a new job | `dashboard-ui/.../shell/banner-slot.spec.ts` | unit |
-| Deletion cadence, Status right after starting a deletion, Deletion ends | `dashboard-ui/.../core/refresh/server-status.spec.ts` | unit |
+| Deletion cadence, Status right after starting a deletion, Deletion during the migration, Deletion ends | `dashboard-ui/.../core/refresh/server-status.spec.ts` | unit |
 | Delete buttons on a phone, Dialog on a phone, Events dialog: flow with axe in both themes | `e2e/tests/settings.spec.ts` | e2e |
 | Events deletion accepted: against the real backend | `e2e/tests-backend/deletions.spec.ts` | e2e (backend) |
 

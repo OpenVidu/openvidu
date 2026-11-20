@@ -63,6 +63,8 @@
 
 - [x] 9.7 Compute `freeBytes` as `storageStats.freeStorageSize` plus the sum, over `storageStats.indexDetails`, of `["block-manager"]["file bytes available for reuse"]`, each missing value counted as 0 (decision of the dashboard's author, 2026-11-20); cover "Free space of the indexes" in `backend/test/integration/api.test.ts` and keep "Free space after deleting documents" and "Storage per collection" green. Verify with `./dashboard.sh test-integration`.
 - [x] 9.8 Make the "Link tip by keyboard" test in `components/info-tip/info-tip.spec.ts` follow the scenario's Shift+Tab and Tab-past-the-link steps if it does not yet; run `./dashboard.sh check` and `./dashboard.sh scenarios delete-stored-data`.
+- [ ] 9.9 Show "Free space updates in about a minute" in the free line's place for the classes a job the Data tab saw complete (and the Total when it completed a class) until the 65 s read, dropped when the tab becomes inactive; cover "Free space pending after an Events deletion", "Free space after the second read", "Free space pending after a Total deletion" and "Free space pending dropped on return" in `settings-page.spec.ts`.
+- [ ] 9.10 Poll the status every 2 s while a deletion runs (a new constant; `STATUS_POLL_FAST_MS` keeps 10 s for the migration and the uninitialized schema), back to the normal cadence when it ends; update "Deletion cadence" and "Status right after starting a deletion" and cover "Deletion during the migration" in `core/refresh/server-status.spec.ts`, keeping "Migration cadence" green. Run `./dashboard.sh check` and `./dashboard.sh scenarios delete-stored-data`.
 
 ## 10. Demo review (owner)
 
