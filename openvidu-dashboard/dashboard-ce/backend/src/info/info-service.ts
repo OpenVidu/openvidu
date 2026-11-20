@@ -153,6 +153,8 @@ export interface StatusFacts {
 /** The info document: public subset before login, every fact after it; `schema_meta` is read on every call. */
 export class InfoService {
 	private storage: { at: number; value: Record<string, InfoStorageEntry> } | undefined;
+	/** Incremented by every clear: a read that started before one does not store its figures. */
+	private storageGeneration = 0;
 	private readonly now: () => number;
 
 	constructor(
@@ -162,6 +164,7 @@ export class InfoService {
 		this.now = options.now ?? Date.now;
 		options.caches?.register(() => {
 			this.storage = undefined;
+			this.storageGeneration++;
 		});
 	}
 
@@ -232,6 +235,8 @@ export class InfoService {
 			return this.storage.value;
 		}
 
+		const generation = this.storageGeneration;
+
 		const existing = new Set(
 			(await this.db.listCollections({}, { nameOnly: true }).toArray()).map((collection) => collection.name)
 		);
@@ -245,7 +250,10 @@ export class InfoService {
 			}
 		}
 
-		this.storage = { at: now, value };
+		// Figures read while a completion cleared the cache may predate it: they answer this read only.
+		if (generation === this.storageGeneration) {
+			this.storage = { at: now, value };
+		}
 
 		return value;
 	}
