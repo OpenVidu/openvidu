@@ -100,6 +100,43 @@ describe('deletion runner', () => {
 		}
 	});
 
+	it('retries a record write that fails once, like a batch', async () => {
+		const clock = { now: 0 };
+		const { db, deletes, remaining } = eventsDb(12_000, clock);
+		const finished: unknown[] = [];
+		let progressWrites = 0;
+		const runner = new DeletionRunner({
+			db,
+			records: {
+				...records,
+				progress: () => {
+					progressWrites++;
+
+					return progressWrites === 2
+						? Promise.reject(new Error('write concern timeout'))
+						: Promise.resolve(true);
+				},
+				finish: (_id, outcome) => {
+					finished.push(outcome);
+
+					return Promise.resolve(true);
+				}
+			},
+			logger: silentLogger(),
+			sleep: (ms) => {
+				clock.now += ms;
+
+				return Promise.resolve();
+			}
+		});
+
+		await runner.run(job());
+
+		expect(remaining()).toBe(0);
+		expect(deletes).toHaveLength(3);
+		expect(finished).toEqual([{ state: 'completed' }]);
+	});
+
 	it('stops when its record is no longer its running job', async () => {
 		const clock = { now: 0 };
 		const { db, deletes } = eventsDb(12_000, clock);

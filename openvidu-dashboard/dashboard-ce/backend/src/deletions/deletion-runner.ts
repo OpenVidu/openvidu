@@ -192,8 +192,9 @@ export class DeletionRunner {
 		let deleted = 0;
 		let lost = false;
 
-		const write = async (written: Promise<boolean>) => {
-			if (!(await written)) {
+		// A record write is retried like a batch; false means the record is no longer this running job.
+		const write = async (attempt: () => Promise<boolean>) => {
+			if (!(await this.retry(attempt, check))) {
 				lost = true;
 				throw new Stop('lost');
 			}
@@ -225,7 +226,7 @@ export class DeletionRunner {
 
 			for (const [index, step] of steps.entries()) {
 				check();
-				await write(
+				await write(() =>
 					records.progress(job.id, {
 						currentClass: step.step,
 						collection: { index: index + 1, total: steps.length }
@@ -246,7 +247,7 @@ export class DeletionRunner {
 
 					deleted += count;
 					deletedBy[step.collection] = (deletedBy[step.collection] ?? 0) + count;
-					await write(records.progress(job.id, { deleted, deletedBy }));
+					await write(() => records.progress(job.id, { deleted, deletedBy }));
 
 					if (step.kind === 'drop') {
 						break;
@@ -259,13 +260,13 @@ export class DeletionRunner {
 					const classes = recordedClasses(step.step);
 
 					if (classes.length > 0) {
-						await write(records.complete(job.id, classes, job.cutoff));
+						await write(() => records.complete(job.id, classes, job.cutoff));
 						classes.forEach((key) => completed.add(key));
 					}
 				}
 			}
 
-			await write(records.finish(job.id, { state: 'completed' }));
+			await write(() => records.finish(job.id, { state: 'completed' }));
 			logger.info('Deletion completed', { ...line, state: 'completed', deletedBy });
 		} catch (error) {
 			if (error instanceof Stop) {
@@ -287,7 +288,10 @@ export class DeletionRunner {
 			});
 
 			try {
-				await records.finish(job.id, { state: 'failed', error: message, incomplete });
+				await this.retry(
+					() => records.finish(job.id, { state: 'failed', error: message, incomplete }),
+					() => undefined
+				);
 			} catch (recordError) {
 				logger.error('Cannot record the failed deletion', {
 					...line,
