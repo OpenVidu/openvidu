@@ -4,7 +4,7 @@ go 1.27
 
 require (
 	github.com/livekit/protocol v1.54.1
-	github.com/livekit/server-sdk-go/v2 v2.19.0
+	github.com/livekit/server-sdk-go/v2 v2.20.0
 	github.com/pion/webrtc/v4 v4.2.26
 )
 
@@ -42,6 +42,7 @@ require (
 	github.com/petermattis/goid v0.0.0-20261109124353-7cfa343ad0ab // indirect
 	github.com/pion/datachannel v1.6.4 // indirect
 	github.com/pion/dtls/v3 v3.1.15 // indirect
+	github.com/pion/dtls/v4 v4.0.0-rc.8 // indirect
 	github.com/pion/ice/v4 v4.4.9 // indirect
 	github.com/pion/interceptor v0.1.51 // indirect
 	github.com/pion/logging v0.2.4 // indirect

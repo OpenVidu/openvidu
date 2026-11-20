@@ -79,8 +79,8 @@ github.com/livekit/protocol v1.54.1 h1:vksNci0cQmQF8X7AFbsIxTLmuO+6EQMcdu5PIZwqa
 github.com/livekit/protocol v1.54.1/go.mod h1:S0AnW03n6zgnWZOq+T4L1PtT9POxTBgrgEH1jyR6fl4=
 github.com/livekit/psrpc v0.8.2 h1:7tbkhBJoYlK5Csfkdv1XYbZjyAQeaEZgupvIXNCv7Dc=
 github.com/livekit/psrpc v0.8.2/go.mod h1:6KnU8vULoizX0Er9NNfeKJDV8ug87j3fuo19M0bhj6Q=
-github.com/livekit/server-sdk-go/v2 v2.19.0 h1:fZ0zmeC/5V+rXiI/MeC05EjwTfXmpaGkr/DXLG3EzgA=
-github.com/livekit/server-sdk-go/v2 v2.19.0/go.mod h1:xhaTFLCodyjIl6HU6DD3stEiLfxDZVZNfItFWYB0Fek=
+github.com/livekit/server-sdk-go/v2 v2.20.0 h1:c6GbM615QgLfBq9lsGiHiGaDniqeRlV9rv5PKMXs9+U=
+github.com/livekit/server-sdk-go/v2 v2.20.0/go.mod h1:D0xpt7o7Rdsz7SPEVOVvmydn88hJmxjtsm/sJZkyR3Q=
 github.com/magefile/mage v1.17.2 h1:fyXVu1eadI8Ap1HCCNgEhJ5McIWiYhLR8uol64ZZc40=
 github.com/magefile/mage v1.17.2/go.mod h1:Yj51kqllmsgFpvvSzgrZPK9WtluG3kUhFaBUVLo4feA=
 github.com/moby/docker-image-spec v1.3.1 h1:jMKff3w6PgbfSa69GfNg+zN/XLhfXJGnEx3Nl2EsFP0=
@@ -111,6 +111,8 @@ github.com/pion/datachannel v1.6.4 h1:yFynqnFQ2Z+R01+kJmcU6SAMemRst972ZjKJVtb8/4
 github.com/pion/datachannel v1.6.4/go.mod h1:AyOmAGX4Y8UHfhGTXwL5bwpIfCD2GPxfm2+h00WJ7nQ=
 github.com/pion/dtls/v3 v3.1.15 h1:okWk5LNwU21DfhvG8z4wm45knHVSPEdkihwp6BxfQcc=
 github.com/pion/dtls/v3 v3.1.15/go.mod h1:iKFQNYrjsN2TiA2YKKMqB9MOZaFpjFULBI/A4sW0eyc=
+github.com/pion/dtls/v4 v4.0.0-rc.8 h1:r0kX03n1nZjv2bu47iqIGKGiTTKJdsPDZIspgilVLVk=
+github.com/pion/dtls/v4 v4.0.0-rc.8/go.mod h1:d0wnjVER+gonPBUifSj6ZeGXClyHxYfctzvOELtsNb4=
 github.com/pion/ice/v4 v4.4.9 h1:lZH1vq+mdXfxuZhcbarK6kcLkBbijgILFN+/CdDi3Ws=
 github.com/pion/ice/v4 v4.4.9/go.mod h1:zCRRg4Mkpdbx9B+75fd4z2APvIXeIraeUOB7IMPt8mU=
 github.com/pion/interceptor v0.1.51 h1:PU09y6RghjWXR4AYJ+AVNyDX7EmgIZuDFMGDl6smKQA=
