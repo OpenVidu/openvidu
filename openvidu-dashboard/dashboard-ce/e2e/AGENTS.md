@@ -6,7 +6,9 @@
   pass; regenerate with `--update-snapshots=all` when a change is intended.
 - `tests-backend/` (`playwright.backend.config.ts`) runs the session flow against the real backend on a MongoDB seeded
   from the contract fixtures (`scripts/serve-dashboard.mjs`, `scripts/seed-rooms.mjs`); `./dashboard.sh e2e` runs it
-  when Docker or `DASHBOARD_TEST_MONGO_URI` is available and reports it skipped otherwise.
+  when Docker or `DASHBOARD_TEST_MONGO_URI` is available and reports it skipped otherwise. The server writes its
+  database to `backendDatabaseFile()` (`seed-rooms.mjs`) for a suite that adds documents of its own; such a suite puts
+  back what it changed of the seed, which the later suites share.
 - The server and the fixtures are exported for the suites of extending applications (`@openvidu-dashboard/e2e/serve`
   with `E2E_APP_ROOT`, `@openvidu-dashboard/e2e/fixtures`): the `routes` option of `MockApi` answers the paths the CE
   mock does not know, and `analytics` adds series values and breakdown keys. `POST deletions` starts a running job that

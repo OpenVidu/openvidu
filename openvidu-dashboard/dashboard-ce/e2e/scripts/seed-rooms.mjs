@@ -8,6 +8,8 @@
 // Usage: node scripts/seed-rooms.mjs --uri <mongodb uri> --db <database>
 import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { parseArgs } from 'node:util';
 
 import { BSON, MongoClient } from 'mongodb';
@@ -92,6 +94,14 @@ async function createContractCollections(db) {
 			...(ttl === undefined ? {} : { expireAfterSeconds: ttl })
 		});
 	}
+}
+
+/**
+ * Where the backend suites find the database of the served dashboard: `serve-dashboard.mjs` writes it there, so a test
+ * can add documents of its own (the deletion suite inserts the events it deletes).
+ */
+export function backendDatabaseFile(port = Number(process.env.E2E_BACKEND_PORT ?? 4320)) {
+	return join(tmpdir(), `openvidu-dashboard-e2e-backend-${String(port)}.json`);
 }
 
 /** Replaces the rooms collections of `db` with the seeded documents. */
