@@ -63,7 +63,7 @@ See proposal.md for the motivation. Facts that shape the approach:
 | Interruption | 60 s without heartbeat reads `interrupted`, frees the lock; a restarted instance marks its own job at once; relaunch takes a new cutoff. |
 | Pace | 5,000 documents per batch, 100 ms pause. |
 | Progress | "Deleting <class>: <n> documents deleted · collection <i> of <total>", no percentage. |
-| Outcome | Toast at the end in sessions with Data open; notice for interrupted or failed until the next deletion; no toast at the start. |
+| Outcome | Toast at the end in sessions with Data open (the Data tab selected, not another Settings tab: code review W1); notice for interrupted or failed until the next deletion; no toast at the start. |
 | Last deletion | Muted "Deleted <date>" under the class name; warning line "Deletion interrupted/failed <date> (incomplete)"; Total stamps each class; Legacy none. |
 | Caches | Dropped on every instance at its next status or info read when a class completes. |
 | Size | Size keeps the disk size; "<X> free for new data" under it; the estimate uses only the space in use. No permanent hint under the table. |
@@ -77,7 +77,7 @@ See proposal.md for the motivation. Facts that shape the approach:
 | Topic | Decision |
 | --- | --- |
 | Free space line | Muted, under the Size, only from 1 MB, and (demo review, 2026-11-20, option b, confirmed by the dashboard's author on Slack at 16:13) only on a class row with a completed deletion record. The Total sums the rows that show one, under the same 1 MB rule; the Legacy data row never shows one; a class whose only deletion is incomplete shows none. The figure is unchanged and still includes the WiredTiger fragmentation that existed before any deletion (copy-on-write at checkpoints, page splits of non-sequential indexes; a fresh demo database showed 14.1 MB free for `events`): MongoDB cannot tell it apart, accepted. |
-| During the 3.9 migration | Every delete button disabled with the tooltip "Available once the migration ends". |
+| During the 3.9 migration | Every delete button disabled with the tooltip "Available once the migration ends"; and (owner, 2026-11-20, from code review S2) `POST /api/v1/deletions` answers `409` `CONFLICT` with the same message for every class while the migration runs. |
 | Empty class | A row with 0 documents keeps its button enabled. |
 | Banner | Dismissible like the migration banner; not shown on the Data tab. |
 | Progress count | The whole job's, naming the class being deleted. |
@@ -157,7 +157,9 @@ interface SchemaMetaDashboard {
   `{ class: DeletionClass, includeLegacy?: boolean }` (strict; `includeLegacy` only with `all`, else `400`).
   `202` → `DeletionJob` (the `deletion` shape, `id` included, without `instance`, `heartbeatAt`, `deletedBy`,
   `requestId`). `409`
-  `CONFLICT` → "A deletion is already running" with `details.job`, or "The data before 3.10 is not kept for rollback".
+  `CONFLICT` → "Available once the migration ends" while the migration of the data before 3.10 runs (checked first, for
+  every class), "A deletion is already running" with `details.job`, or "The data before 3.10 is not kept for rollback".
+  The OpenAPI document of the route lists the `409` with the shared `ApiError` shape.
 - `GET /api/v1/status` adds `deletion?: DeletionJob`; `GET /api/v1/info` adds `deletions` (`{}` when none, dates as ISO
   strings, `endedBefore` = cutoff − 5 min for extending editions) and `storage.<collection>.freeBytes`
   (`storageStats.freeStorageSize` plus, for every entry of `storageStats.indexDetails`, its `["block-manager"]["file
@@ -167,9 +169,10 @@ interface SchemaMetaDashboard {
 ### What each class deletes
 
 T = cutoff − 5 min. At job start the runner snapshots the kept sets: rooms in progress at the cutoff plus rooms closed
-with `endedAt ≥ T` (`rooms` has no `endedAt` index, so they are found through `expiresAt_ttl` with the current entities
-retention, `expiresAt ≥ T + retention.entities`; see Risks), open egresses and egresses ended at or after T (found the
-same way, through `expiresAt_ttl` with the current entities retention), and the kept ingress ids: the ingress
+with `endedAt ≥ T` (`rooms` has no `endedAt` index, so the candidates are read through `expiresAt_ttl` with the current
+entities retention, `expiresAt ≥ T + retention.entities`, and `endedAt ≥ T` is checked on them as a residual
+predicate; see Risks), open egresses and egresses ended at or after T (the same candidate read, with `endedAt`, else
+`updatedAt`, `≥ T` as the residual predicate), and the kept ingress ids: the ingress
 definitions not deleted plus the `ingressId` of the open ingress sessions. Anything created after the cutoff ends after
 T and is excluded by the time filters, so the snapshot does not need refreshing.
 
@@ -234,7 +237,9 @@ the storage cache records a value with the time its read started, `InfoService` 
   service; the first dialog of the library.
 - Data tab: last column of icon buttons; dialogs per class with the approved texts (`features/settings/
   deletion-texts.ts`, class labels in `format/deletions.ts`) and `EXTERNAL_LINKS.freeingDiskSpace`; progress section;
-  outcome notice; toast at the end; "Deleted …" lines; free space lines; estimate from `storage − free`.
+  outcome notice; toast at the end, only while the Data tab is `active()` (the component outlives tab switches, so the
+  job it watches is dropped when the tab becomes inactive); "Deleted …" lines; free space lines; estimate from
+  `storage − free`.
 - Any failed `POST /deletions` shows one dismissible error notice above "Storage", cleared at the next request: the
   message of a `409`, or "The deletion did not start: <message of the error> Request <id>" for any other failure (owner
   decision; requirement "Confirming a deletion", scenario "Deletion not started").
@@ -329,9 +334,9 @@ as the minimum for deleting stats stored as a time series. The exact
 
 | Scenarios | Test file | Level |
 | --- | --- | --- |
-| Events deletion accepted, Legacy flag outside Total, Deletion without a token, Second deletion refused, Refused on another instance | `backend/test/integration/deletions-api.test.ts` | integration |
+| Events deletion accepted, Legacy flag outside Total, Deletion without a token, Second deletion refused, Refused on another instance, Deletion during the migration refused | `backend/test/integration/deletions-api.test.ts` | integration |
 | Legacy dropped during the rollback window, Legacy refused while the migration runs, Legacy refused after its window, Total without legacy, Total with legacy | `backend/test/integration/deletions-api.test.ts` | integration |
-| Room in progress kept whole, Recent data kept, Open entities without a room kept, Nodes never deleted, Room ending during the job, Data after the cutoff untouched | `backend/test/integration/deletions-rules.test.ts` | integration |
+| Room in progress kept whole, Recent data kept, Room ended under a longer retention, Open entities without a room kept, Nodes never deleted, Room ending during the job, Data after the cutoff untouched | `backend/test/integration/deletions-rules.test.ts` | integration |
 | Events deletion leaves entities, Per-track stats go with the tracks, Entities with their data, Entities deletion run again, Rollup buckets kept at 10:07, Entities deletion keeps rollups | `backend/test/integration/deletions-rules.test.ts` | integration |
 | Batches of a large collection | `backend/test/unit/deletion-runner.test.ts` | unit |
 | Status of a running job, Status without any job, Instance gone mid-job, Instance restarted mid-job, Database user without delete rights | `backend/test/integration/deletions-jobs.test.ts` | integration |
@@ -341,7 +346,7 @@ as the minimum for deleting stats stored as a time series. The exact
 | Records accepted by the validator, Contract unchanged | `backend/test/integration/deletions-jobs.test.ts`, `typings` contract test | integration, unit |
 | Sub-resource path, Unknown API path (unchanged) | existing tests | — |
 | Estimate after a deletion, Free space after a deletion, Little free space | `dashboard-ui/.../settings/storage-classes.spec.ts` | unit |
-| Buttons of the table, Legacy row without a button, Buttons while a deletion runs, Buttons while the migration runs, Empty class deletable, the four detail dialogs, the three rollup dialogs, Total dialog, Total with the legacy checkbox, Total with the checkbox left unchecked, Legacy dialog, Deletion confirmed, Deletion refused, Deletion not started, Deletion cancelled in the dialog, Progress of an Entities deletion, Progress follows the status, Deletion completed while watching, Interrupted deletion notice, Failed deletion notice, Class deleted, Class left incomplete | `dashboard-ui/.../settings/settings-page.spec.ts` | unit |
+| Buttons of the table, Legacy row without a button, Buttons while a deletion runs, Buttons while the migration runs, Empty class deletable, the four detail dialogs, the three rollup dialogs, Total dialog, Total with the legacy checkbox, Total with the checkbox left unchecked, Legacy dialog, Deletion confirmed, Deletion refused, Deletion not started, Deletion cancelled in the dialog, Progress of an Entities deletion, Progress follows the status, Deletion completed while watching, No completion toast on Preferences, Interrupted deletion notice, Failed deletion notice, Class deleted, Class left incomplete | `dashboard-ui/.../settings/settings-page.spec.ts` | unit |
 | Keyboard confirmation, Escape cancels | `dashboard-ui/.../components/confirm-dialog/confirm-dialog.spec.ts` | unit |
 | Link tip by keyboard | `dashboard-ui/.../components/info-tip/info-tip.spec.ts` | unit |
 | Free space tip of a class, Free space tip of the Total, Data tab opened, Second read after a deletion, No further reads, Free space pending after an Events deletion, Free space after the second read, Free space pending after a Total deletion, Free space pending dropped on return, No pending notice after a reload, No free line before any deletion, Total sums the rows with a free line, Free line after an incomplete deletion, Legacy row without a free line | `dashboard-ui/.../settings/settings-page.spec.ts` | unit |
@@ -361,11 +366,20 @@ CHANGELOG lines were written in the commit of each observable change (owner deci
 
 - [Late writes after a deletion recreate a partial document] → 5-minute grace, kept rollup buckets; a reconciler
   closure of a crashed node's room older than ~10 minutes can still bring back a small 5-minute document (accepted).
-- [Rooms ended in the 5-minute grace window are found through `expiresAt` with the current entities retention] → if
-  the writer restarted with a new entities retention within those same 5 minutes, one recently ended room, with its
-  data, can be kept or deleted wrongly. Accepted by the dashboard's author, to whom the owner delegated the decision
-  (Slack, 2026-11-19 15:31); the alternative, an index on the end time of rooms, would contradict "Rooms end time not
-  indexed" and change the contract.
+- [Rooms and egresses ended in the 5-minute grace window are found through `expiresAt` with the current entities
+  retention] → the dashboard's author accepted (Slack, 2026-11-19 15:31, on the owner's delegation) the risk of a
+  retention change within the same 5 minutes, assuming the effect stayed inside that window. The code review of
+  2026-11-20 (C1) found that it does not: with `expiresAt` alone, a retention shortened from 90 to 30 days kept every
+  room and egress ended in the previous 60 days, while the job still recorded `endedBefore`. The residual check of the
+  end time (`endedAt ≥ T`, egress `endedAt` else `updatedAt`) removes that and restores the stated behaviour (only
+  data that ended in the last 5 minutes is kept), so no owner decision was needed. What remains is the case the author
+  accepted: a retention lengthened within the last 5 minutes can miss a room that ended in that window, which is then
+  deleted with its data. An index on the end time of rooms would avoid it but contradicts "Rooms end time not indexed"
+  and changes the contract.
+- [Restart detection by host name] → at startup an instance marks interrupted a running job whose `instance` has its
+  host name and is not this process, so two dashboards sharing a host name and a database (host networking, for
+  example) could interrupt each other's job. Accepted (code review S1, 2026-11-20): containers and pods have unique
+  host names in the deployments, and the affected job only needs to be started again.
 - [A large deletion loads MongoDB and the replica set] → batches with pauses; documented.
 - [Deleted space is not returned to the system] → said in every dialog and documented with `compact`.
 - [Unique identities of the deletion day undercounted] → accepted by the owner.

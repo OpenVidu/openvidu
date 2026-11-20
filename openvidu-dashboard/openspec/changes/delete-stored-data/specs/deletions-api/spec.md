@@ -56,12 +56,22 @@ that window it SHALL answer `409` `CONFLICT` with "The data before 3.10 is not k
 #### Scenario: Legacy refused while the migration runs
 - **GIVEN** a running migration
 - **WHEN** the client asks for a `legacy` deletion, or for `all` with `includeLegacy`
-- **THEN** the response is `409` `CONFLICT` and nothing is dropped
+- **THEN** the response is `409` `CONFLICT` with "Available once the migration ends" and nothing is dropped
 
 #### Scenario: Legacy refused after its window
 - **GIVEN** a completed migration whose `legacyRetainedUntil` passed an hour ago
 - **WHEN** the client asks for a `legacy` deletion
 - **THEN** the response is `409` `CONFLICT`
+
+### Requirement: No deletion during the migration
+Edition: CE. While the migration of the data before 3.10 runs, a deletion request of any class SHALL answer `409`
+`CONFLICT` with the message "Available once the migration ends" and start nothing; this check comes before the legacy
+window and the single-job lock.
+
+#### Scenario: Deletion during the migration refused
+- **GIVEN** a running migration and no deletion running
+- **WHEN** the client asks for an `events` deletion, or for `all`
+- **THEN** the response is `409` `CONFLICT` with "Available once the migration ends" and no job starts
 
 ### Requirement: Data kept by every deletion
 Edition: CE. A deletion SHALL keep rooms in progress with all their data (sessions, ended ones included, tracks,
@@ -80,6 +90,12 @@ document of what was in progress at the cutoff, even if it ends while the job ru
   and a room that ended 6 minutes before it
 - **WHEN** an Entities deletion runs
 - **THEN** the first room with its data and the event exist and the room ended 6 minutes before is gone
+
+#### Scenario: Room ended under a longer retention
+- **GIVEN** an entities retention changed from 90 to 30 days, and a room and an egress that ended 40 days before the
+  cutoff, closed under the 90-day retention, with their sessions, events and stats
+- **WHEN** an Entities deletion runs
+- **THEN** none of those documents remains
 
 #### Scenario: Open entities without a room kept
 - **GIVEN** an active web egress, a publishing ingress session and a reusable ingress not deleted whose last session

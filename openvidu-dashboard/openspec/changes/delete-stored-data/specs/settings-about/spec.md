@@ -338,15 +338,21 @@ no progress bar, updated with every status response.
 - **THEN** the line names Stats and the new count without a reload
 
 ### Requirement: Deletion outcome on the Data tab
-Edition: CE. When a status reports that the deletion Data showed running has completed, Data SHALL show the toast
-"<Class> deleted: <n> documents" ("All analytics data", "Data before 3.10" for Total and Legacy) and refresh the table.
-An interrupted or failed latest job SHALL show a warning notice, its texts in the scenarios, until a deletion starts.
+Edition: CE. When a status reports that the deletion the open Data tab showed running has completed, Data SHALL show
+the toast "<Class> deleted: <n> documents" ("All analytics data", "Data before 3.10" for Total and Legacy) and refresh
+the table; no toast shows while another Settings tab is selected. An interrupted or failed latest job SHALL show a
+warning notice, its texts in the scenarios, until a deletion starts.
 
 #### Scenario: Deletion completed while watching
 - **GIVEN** Data showing a running Events deletion
 - **WHEN** a status reports it completed with 1,250,312 documents deleted
 - **THEN** the toast "Events deleted: 1,250,312 documents" shows and the Storage table shows the figures read after
   the deletion
+
+#### Scenario: No completion toast on Preferences
+- **GIVEN** Settings open on Preferences while an Events deletion runs, or on Data and then switched to Preferences
+- **WHEN** a status reports the deletion completed
+- **THEN** no toast shows
 
 #### Scenario: Interrupted deletion notice
 - **GIVEN** a session in UTC and a status whose latest deletion, of Events, was interrupted at 10:20 after deleting
