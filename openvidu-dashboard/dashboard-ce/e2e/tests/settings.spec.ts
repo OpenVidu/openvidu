@@ -264,6 +264,7 @@ for (const scheme of ['light', 'dark'] as const) {
 			const data = page.locator('ovd-data-tab');
 
 			await expect(data.getByRole('heading', { name: 'Deleting analytics data' })).toBeVisible();
+			await expect(data.getByRole('progressbar', { name: 'Deletion progress' })).toBeVisible();
 			await expect(data).toContainText('Deleting Events: 0 documents deleted · collection 1 of 1');
 			await expect(page.getByRole('button', { name: 'Delete Stats' })).toHaveAttribute('aria-disabled', 'true');
 			await expect(page.getByText('Lists and figures may change.')).toHaveCount(0);

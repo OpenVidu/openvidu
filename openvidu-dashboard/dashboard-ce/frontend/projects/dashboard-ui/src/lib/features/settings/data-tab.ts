@@ -13,6 +13,7 @@ import {
 import { MatIconButton } from '@angular/material/button';
 import { MatIcon } from '@angular/material/icon';
 import { MatProgressBar } from '@angular/material/progress-bar';
+import { MatProgressSpinner } from '@angular/material/progress-spinner';
 import { MatTooltip } from '@angular/material/tooltip';
 import type {
 	DeletionClass,
@@ -86,6 +87,7 @@ export function migrationLine(migration: InfoMigration, tz: string): string | nu
 		MatIcon,
 		MatIconButton,
 		MatProgressBar,
+		MatProgressSpinner,
 		MatTooltip,
 		Notice,
 		Skeleton

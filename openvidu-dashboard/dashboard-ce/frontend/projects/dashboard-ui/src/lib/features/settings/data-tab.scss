@@ -12,6 +12,13 @@ h2 {
 	margin: 8px 0 0;
 }
 
+/* The spinner of a running deletion sits before its line, centred on it. */
+.progress {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
 .deletion-notice {
 	max-width: 72ch;
 	margin-top: 16px;

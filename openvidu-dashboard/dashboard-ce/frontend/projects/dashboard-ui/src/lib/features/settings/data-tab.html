@@ -24,8 +24,10 @@
 	@if (deletionProgress(); as progress) {
 		<section class="deletion" aria-labelledby="ovd-data-deletion">
 			<h2 id="ovd-data-deletion">Deleting analytics data</h2>
-			<mat-progress-bar mode="indeterminate" aria-label="Deletion progress" />
-			<p class="ovd-tabular">{{ progress }}</p>
+			<p class="progress ovd-tabular">
+				<mat-progress-spinner mode="indeterminate" diameter="20" aria-label="Deletion progress" />
+				<span>{{ progress }}</span>
+			</p>
 		</section>
 	}
 

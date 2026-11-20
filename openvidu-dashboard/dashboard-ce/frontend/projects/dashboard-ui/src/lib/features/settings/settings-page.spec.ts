@@ -1206,10 +1206,17 @@ describe('SettingsPage', () => {
 			const section = element.querySelector('ovd-data-tab section.deletion');
 
 			expect(text(section?.querySelector('h2'))).toBe('Deleting analytics data');
-			expect(section?.querySelector('mat-progress-bar')?.getAttribute('mode')).toBe('indeterminate');
+			const spinner = section?.querySelector('p mat-progress-spinner');
+
+			expect(section?.querySelector('mat-progress-bar')).toBeNull();
+			expect(spinner?.getAttribute('role')).toBe('progressbar');
+			expect(spinner?.getAttribute('aria-label')).toBe('Deletion progress');
+			expect(spinner?.getAttribute('mode')).toBe('indeterminate');
 			expect(text(section?.querySelector('p'))).toBe(
 				'Deleting Entities: 1,234,000 documents deleted · collection 2 of 9'
 			);
+			// The spinner comes before the line, beside it.
+			expect(section?.querySelector('p')?.firstElementChild?.tagName).toBe('MAT-PROGRESS-SPINNER');
 		});
 
 		it('Progress follows the status', async () => {
@@ -1241,6 +1248,7 @@ describe('SettingsPage', () => {
 			);
 			await harness.fixture.whenStable();
 			expect(line()).toBe('Deleting Stats: 9,100 documents deleted · collection 2 of 17');
+			expect(element.querySelector('ovd-data-tab section.deletion mat-progress-spinner')).not.toBeNull();
 		});
 
 		it('Deletion completed while watching', async () => {
