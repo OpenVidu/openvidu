@@ -141,7 +141,7 @@ export async function planContext(db: Db, cutoff: Date): Promise<PlanContext> {
 
 export interface DeletionRunnerOptions {
 	db: Db;
-	records: Pick<DeletionRecordsStore, 'heartbeat' | 'progress' | 'complete' | 'finish'>;
+	records: Pick<DeletionRecordsStore, 'heartbeat' | 'progress' | 'complete' | 'finish' | 'read'>;
 	logger: Logger;
 	/** Replaced in tests by a fake clock. */
 	sleep?: (ms: number) => Promise<void>;
@@ -266,7 +266,17 @@ export class DeletionRunner {
 				}
 			}
 
-			await write(() => records.finish(job.id, { state: 'completed' }));
+			// A retried finish finds the job no longer running when an earlier attempt applied but its reply was lost: the
+			// record tells that apart from another instance taking it over.
+			await write(async () => {
+				if (await records.finish(job.id, { state: 'completed' })) {
+					return true;
+				}
+
+				const recorded = (await records.read())?.deletion;
+
+				return recorded?.id === job.id && recorded.state === 'completed';
+			});
 			logger.info('Deletion completed', { ...line, state: 'completed', deletedBy });
 		} catch (error) {
 			if (error instanceof Stop) {

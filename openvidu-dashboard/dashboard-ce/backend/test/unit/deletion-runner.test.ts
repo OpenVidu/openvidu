@@ -67,6 +67,7 @@ function eventsDb(count: number, clock: { now: number }) {
 }
 
 const records = {
+	read: () => Promise.resolve(undefined),
 	heartbeat: () => Promise.resolve(true),
 	progress: () => Promise.resolve(true),
 	complete: () => Promise.resolve(true),
@@ -135,6 +136,40 @@ describe('deletion runner', () => {
 		expect(remaining()).toBe(0);
 		expect(deletes).toHaveLength(3);
 		expect(finished).toEqual([{ state: 'completed' }]);
+	});
+
+	it('logs a completion whose finish applied though its reply was lost, and a takeover only when there is one', async () => {
+		for (const [recorded, expected] of [
+			[{ id: 'job-1', state: 'completed' }, 'info: Deletion completed'],
+			[{ id: 'job-2', state: 'running' }, 'another instance took over its record']
+		] as const) {
+			const clock = { now: 0 };
+			const { db } = eventsDb(10, clock);
+			const logger = silentLogger();
+			let finishes = 0;
+			const runner = new DeletionRunner({
+				db,
+				records: {
+					...records,
+					// The first finish applies but its reply is lost; the retry finds the job no longer running.
+					finish: () =>
+						++finishes === 1 ? Promise.reject(new Error('connection reset')) : Promise.resolve(false),
+					read: () => Promise.resolve({ _id: 'dashboard', deletion: { ...job(), ...recorded } })
+				},
+				logger,
+				sleep: () => Promise.resolve()
+			});
+
+			await runner.run(job());
+
+			expect(
+				logger.lines.some((line) => line.includes(expected)),
+				expected
+			).toBe(true);
+			expect(logger.lines.filter((line) => line.includes('took over')).length, expected).toBe(
+				recorded.id === 'job-1' ? 0 : 1
+			);
+		}
 	});
 
 	it('stops when its record is no longer its running job', async () => {
