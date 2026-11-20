@@ -272,7 +272,8 @@ the storage cache records a value with the time its read started, `InfoService` 
 - Total dialog scroll (demo review, 2026-11-20): with the "Also delete the data before 3.10" checkbox the dialog content
   showed a vertical scrollbar at desktop sizes, probably the checkbox touch target or ripple overflowing the dialog
   content; the fix keeps the content from scrolling at normal desktop sizes while it can still scroll on a short
-  viewport.
+  viewport. As built, the checkbox has `margin-block: 4px 12px`, so its 48 px touch target fits inside the content at
+  any zoom (measured at DPR 1–1.5, from 1067 × 600 to 1920 × 1080).
 - Free space tip: the shared info tip gains an optional link; with one, the icon toggles a small non-modal panel (CDK
   overlay) with the text and a focusable link instead of a tooltip, because a tooltip cannot hold a reachable link, and
   shows no tooltip on hover. Escape, a click outside or a second activation closes it and focus returns to the icon.
@@ -286,6 +287,15 @@ the storage cache records a value with the time its read started, `InfoService` 
   incomplete ones in the warning colour; the progress section styled like the migration one, with a spinner instead of
   a bar since the demo review; the interrupted and failed warning notice without dismiss and the refused error notice with dismiss, both at
   most 72 characters wide; the banner in the info style with the `delete` icon.
+- Storage table layout (style, under the owner's delegation): `.table-wrap` has `overflow-y: hidden` beside
+  `overflow-x: auto`, and the Total row cells have 10 px of bottom padding, because the touch target of the Total's free
+  space tip (`::after`, inset −10 px) overflowed by 4 px and made the wrap scroll vertically. From 1280 px wide the
+  table uses `table-layout: fixed`, 59.25rem wide, with columns of 17 / 14 / 6.5 / 15 / 2.5 rem (Data, Retention,
+  Documents, Size, delete), so the columns stay put when the Legacy row, the "Deleted …" lines, the pending notice or
+  the free lines come and go; below 1280 px it keeps the automatic layout with sideways scroll and the sticky delete
+  column.
+- Status poll cadence, as built: the refresh scheduler's `delay()` gives the interval actually polled (2 s while a
+  deletion runs), separate from `interval()`, the user's refresh preference shown in the header.
 
 ### Documentation (openvidu.io, branch `next`)
 
