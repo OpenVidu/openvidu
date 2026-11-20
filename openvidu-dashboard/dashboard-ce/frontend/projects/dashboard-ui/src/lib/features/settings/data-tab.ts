@@ -215,7 +215,10 @@ export class DataTab {
 
 	constructor() {
 		let secondRead: ReturnType<typeof setTimeout> | undefined;
-		/** The deletion job and state of the last status this tab saw; `undefined` before the first. */
+		/**
+		 * The deletion job and state of the last status the open tab saw; `undefined` until the first status after a load
+		 * or an opening, which only sets this baseline (never the empty state before any status).
+		 */
 		let seen: string | undefined;
 
 		inject(DestroyRef).onDestroy(() => {
@@ -224,7 +227,12 @@ export class DataTab {
 		// Each opening of the tab reads the storage figures again; closing it cancels the second read below.
 		effect(() => {
 			if (this.active()) {
-				untracked(() => void this.service.load());
+				untracked(() => {
+					const status = this.server.status();
+
+					seen = status === null ? undefined : deletionKey(status.deletion);
+					void this.service.load();
+				});
 			} else {
 				clearTimeout(secondRead);
 				this.freePending.set(null);
@@ -235,6 +243,11 @@ export class DataTab {
 		effect(() => {
 			const job = this.deletion();
 			const key = deletionKey(job);
+
+			// Before the first status there is no job to compare with: a job reported by it is not a change.
+			if (untracked(() => this.server.status()) === null) {
+				return;
+			}
 
 			if (
 				seen !== undefined &&

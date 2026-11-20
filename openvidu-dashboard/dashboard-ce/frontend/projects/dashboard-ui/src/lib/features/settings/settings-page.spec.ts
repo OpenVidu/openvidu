@@ -1686,6 +1686,33 @@ describe('SettingsPage', () => {
 			expect(freeLine(element, 'Events')).toBe('5 MB free for new data');
 		});
 
+		it('No pending notice after a reload', async () => {
+			const completed = job({ state: 'completed', deleted: 10, finishedAt: '2026-11-19T08:31:12.000Z' });
+			const { harness, http, element } = await settings(
+				'/settings?tab=data',
+				infoResponse({ retention: DEFAULT_RETENTION, deletions: DELETED, storage: pendingStorage })
+			);
+
+			try {
+				vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+				http.expectOne('api/v1/status').flush(statusResponse({ deletion: completed }));
+				await vi.advanceTimersByTimeAsync(0);
+				await harness.fixture.whenStable();
+
+				expect(element.querySelector('ovd-data-tab')?.textContent).not.toContain(PENDING);
+				expect(freeLine(element, 'Events')).toBe('2 MB free for new data');
+				http.expectNone('api/v1/info');
+
+				await vi.advanceTimersByTimeAsync(SECOND_READ_MS);
+				http.match('api/v1/status').forEach((request) => {
+					request.flush(statusResponse({ deletion: completed }));
+				});
+				http.expectNone('api/v1/info');
+			} finally {
+				vi.useRealTimers();
+			}
+		});
+
 		it('No free line before any deletion', async () => {
 			const { element } = await dataTab({
 				deletions: {},
