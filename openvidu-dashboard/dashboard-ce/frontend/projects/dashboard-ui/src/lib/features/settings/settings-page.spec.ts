@@ -18,7 +18,7 @@ import { SessionZoneService } from '../../core/state/session-zone.js';
 import { ToastService } from '../../core/ui/toast.js';
 import { DASHBOARD_ROUTES } from '../../routes.js';
 import { composeRoutes } from '../../routing/compose-routes.js';
-import { migrationLine } from './data-tab.js';
+import { migrationLine, SECOND_READ_MS } from './data-tab.js';
 
 const DAY = 86_400_000;
 const DEFAULT_RETENTION: InfoRetention = {
@@ -161,6 +161,17 @@ describe('SettingsPage', () => {
 		}
 
 		const harness = await RouterTestingHarness.create(path);
+
+		// Opening the Data tab reads the info document again: it answers the same.
+		for (const read of http.match('api/v1/info')) {
+			if (info === null) {
+				read.flush(null, { status: 503, statusText: 'Unavailable' });
+			} else {
+				read.flush(info);
+			}
+		}
+
+		await settle();
 
 		return { harness, http, element: harness.fixture.nativeElement as HTMLElement };
 	}
@@ -1384,6 +1395,129 @@ describe('SettingsPage', () => {
 			expect(
 				element.querySelector('ovd-data-tab tfoot .sub ovd-info-tip button')?.getAttribute('aria-label')
 			).toBe('About free space');
+		});
+
+		it('Data tab opened', async () => {
+			const { harness, http } = await settings('/overview', infoResponse({ retention: DEFAULT_RETENTION }));
+			const reads = async (url: string) => {
+				await harness.navigateByUrl(url);
+
+				// The tab group renders the selected tab's content once the switch has settled.
+				for (let wait = 0; wait < 3; wait++) {
+					await harness.fixture.whenStable();
+					await settle();
+				}
+
+				const requests = http.match('api/v1/info');
+
+				for (const request of requests) {
+					request.flush(infoResponse({ retention: DEFAULT_RETENTION }));
+				}
+
+				await settle();
+
+				return requests.length;
+			};
+
+			expect(await reads('/settings?tab=data')).toBe(1);
+			expect(await reads('/settings?tab=preferences')).toBe(0);
+			expect(await reads('/settings?tab=data')).toBe(1);
+		});
+
+		/** Fakes the timers, answers a status reporting the Events deletion completed and the shell's read after it. */
+		async function completeWithFakeTimers(
+			harness: RouterTestingHarness,
+			http: HttpTestingController
+		): Promise<void> {
+			vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+
+			const load = TestBed.inject(ServerStatusService).load();
+
+			http.expectOne('api/v1/status').flush(
+				statusResponse({ deletion: job({ state: 'completed', deleted: 10 }) })
+			);
+			await load;
+			await vi.advanceTimersByTimeAsync(0);
+			await harness.fixture.whenStable();
+
+			const reread = http.match('api/v1/info');
+
+			expect(reread).toHaveLength(1);
+			reread[0]?.flush(
+				infoResponse({ retention: DEFAULT_RETENTION, storage: { events: freeEvents(1_000_000) } })
+			);
+			await vi.advanceTimersByTimeAsync(0);
+		}
+
+		function freeEvents(freeBytes: number): InfoStorageEntry {
+			return { documents: 12, storageBytes: 30_000_000, indexBytes: 0, freeBytes };
+		}
+
+		it('Second read after a deletion', async () => {
+			const { harness, http, element } = await dataTab({}, { deletion: job() });
+
+			try {
+				await completeWithFakeTimers(harness, http);
+				await vi.advanceTimersByTimeAsync(SECOND_READ_MS - 1);
+				http.match('api/v1/status').forEach((request) => {
+					request.flush(statusResponse({ deletion: job({ state: 'completed', deleted: 10 }) }));
+				});
+				http.expectNone('api/v1/info');
+
+				await vi.advanceTimersByTimeAsync(1);
+				http.expectOne('api/v1/info').flush(
+					infoResponse({ retention: DEFAULT_RETENTION, storage: { events: freeEvents(16_000_000) } })
+				);
+				await vi.advanceTimersByTimeAsync(0);
+				await harness.fixture.whenStable();
+
+				expect(text(classRow(element, 'Events')?.querySelector('td:nth-child(4) .sub'))).toBe(
+					'16 MB free for new data'
+				);
+			} finally {
+				vi.useRealTimers();
+			}
+		});
+
+		it('Second read after a deletion: closing the tab cancels it', async () => {
+			const { harness, http } = await dataTab({}, { deletion: job() });
+
+			try {
+				await completeWithFakeTimers(harness, http);
+				await harness.navigateByUrl('/settings?tab=preferences');
+				await vi.advanceTimersByTimeAsync(SECOND_READ_MS);
+				http.match('api/v1/status').forEach((request) => {
+					request.flush(statusResponse({ deletion: job({ state: 'completed', deleted: 10 }) }));
+				});
+				http.expectNone('api/v1/info');
+			} finally {
+				vi.useRealTimers();
+			}
+		});
+
+		it('No further reads', async () => {
+			const { harness, http } = await dataTab({}, { deletion: job() });
+			const completed = statusResponse({ deletion: job({ state: 'completed', deleted: 10 }) });
+
+			try {
+				await completeWithFakeTimers(harness, http);
+				await vi.advanceTimersByTimeAsync(SECOND_READ_MS);
+				http.match('api/v1/status').forEach((request) => {
+					request.flush(completed);
+				});
+				http.expectOne('api/v1/info').flush(infoResponse({ retention: DEFAULT_RETENTION }));
+
+				for (let tick = 0; tick < 20; tick++) {
+					await vi.advanceTimersByTimeAsync(30_000);
+					http.match('api/v1/status').forEach((request) => {
+						request.flush(completed);
+					});
+				}
+
+				http.expectNone('api/v1/info');
+			} finally {
+				vi.useRealTimers();
+			}
 		});
 
 		it('Little free space', async () => {

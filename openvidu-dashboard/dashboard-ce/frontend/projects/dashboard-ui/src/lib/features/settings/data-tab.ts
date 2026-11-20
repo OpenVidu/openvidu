@@ -1,4 +1,15 @@
-import { Component, computed, effect, inject, signal, type TemplateRef, untracked, viewChild } from '@angular/core';
+import {
+	Component,
+	computed,
+	DestroyRef,
+	effect,
+	inject,
+	input,
+	signal,
+	type TemplateRef,
+	untracked,
+	viewChild
+} from '@angular/core';
 import { MatIconButton } from '@angular/material/button';
 import { MatIcon } from '@angular/material/icon';
 import { MatProgressBar } from '@angular/material/progress-bar';
@@ -32,6 +43,11 @@ import { LEGACY_LABEL, storageClasses } from './storage-classes.js';
 
 /** The free space line shows from 1 MB. */
 const FREE_LINE_MIN_BYTES = 1_000_000;
+/**
+ * The second read of the info document after a deletion ends: after the MongoDB checkpoint (60 s) that releases the
+ * space it freed, plus the delay of the status poll and small clock differences.
+ */
+export const SECOND_READ_MS = 65_000;
 
 /** The progress of a running migration, or the outcome of one that ended; `null` for none or pending. */
 export function migrationLine(migration: InfoMigration, tz: string): string | null {
@@ -85,6 +101,12 @@ export class DataTab {
 	private readonly seenRunning = signal(false);
 	/** Labels of the classes whose collections show; kept out of the URL. */
 	protected readonly expanded = signal<ReadonlySet<string>>(new Set());
+
+	/**
+	 * Whether the Data tab is the selected one: the tab group keeps the content of a tab it leaves, so opening the tab
+	 * and closing it are changes of this input rather than of the component's life.
+	 */
+	readonly active = input(true);
 
 	protected readonly configurationReference = EXTERNAL_LINKS.analyticsSettings;
 	protected readonly freeingDiskSpace = EXTERNAL_LINKS.freeingDiskSpace;
@@ -175,6 +197,42 @@ export class DataTab {
 	});
 
 	constructor() {
+		let secondRead: ReturnType<typeof setTimeout> | undefined;
+		/** The deletion job and state of the last status this tab saw; `undefined` before the first. */
+		let seen: string | undefined;
+
+		inject(DestroyRef).onDestroy(() => {
+			clearTimeout(secondRead);
+		});
+		// Each opening of the tab reads the storage figures again; closing it cancels the second read below.
+		effect(() => {
+			if (this.active()) {
+				untracked(() => void this.service.load());
+			} else {
+				clearTimeout(secondRead);
+			}
+		});
+		// When a status reports that a deletion ended, the shell reads the info document; the open tab reads it once
+		// more after the checkpoint that releases the freed space.
+		effect(() => {
+			const job = this.deletion();
+			const key = job === null ? 'none' : `${job.id}|${job.state}`;
+
+			if (
+				seen !== undefined &&
+				key !== seen &&
+				job !== null &&
+				job.state !== 'running' &&
+				untracked(() => this.active())
+			) {
+				clearTimeout(secondRead);
+				secondRead = setTimeout(() => {
+					void this.service.load();
+				}, SECOND_READ_MS);
+			}
+
+			seen = key;
+		});
 		effect(() => {
 			if (this.running()) {
 				this.seenRunning.set(true);
