@@ -53,8 +53,10 @@ h2 {
 	margin-top: 16px;
 }
 
+/* Scrolls sideways on a phone; never vertically, which `overflow-x: auto` would otherwise allow. */
 .table-wrap {
 	overflow-x: auto;
+	overflow-y: hidden;
 }
 
 table {
@@ -117,8 +119,10 @@ td {
 	text-align: end;
 }
 
+/* The bottom padding holds the 10 px touch target around the info tip of the Total's free line. */
 tfoot th,
 tfoot td {
+	padding-bottom: 10px;
 	border-bottom: none;
 	font-weight: 500;
 }

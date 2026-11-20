@@ -9,6 +9,20 @@ function keptUntil(): string {
 	return `Kept until ${(legacyMigration(Date.now()).legacyRetainedUntil ?? '').slice(0, 10)} for rollback`;
 }
 
+/** The Storage table scrolls sideways on a phone but never vertically: nothing in it overflows its wrap's height. */
+async function expectNoVerticalOverflow(page: Page): Promise<void> {
+	const wrap = page.locator('ovd-data-tab .table-wrap');
+
+	await expect(wrap).toBeVisible();
+
+	const { scrollHeight, clientHeight } = await wrap.evaluate((element) => ({
+		scrollHeight: element.scrollHeight,
+		clientHeight: element.clientHeight
+	}));
+
+	expect(scrollHeight).toBeLessThanOrEqual(clientHeight);
+}
+
 function legacyRow(page: Page) {
 	return page.locator('ovd-data-tab table.classes > tbody > tr').filter({
 		has: page.getByRole('rowheader', { name: LEGACY_LABEL })
@@ -180,6 +194,7 @@ test.describe('on a phone', () => {
 			}
 
 			expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(375);
+			await expectNoVerticalOverflow(page);
 		});
 
 		test.describe('in the dark theme', () => {
@@ -296,6 +311,8 @@ for (const scheme of ['light', 'dark'] as const) {
 			const link = panel.getByRole('link', { name: /Freeing disk space/ });
 
 			await expect(icon).toHaveAttribute('aria-expanded', 'false');
+			// The info tips of the free lines, the Total's in the last row, fit inside the table wrap.
+			await expectNoVerticalOverflow(page);
 			await icon.tap();
 			await expect(icon).toHaveAttribute('aria-expanded', 'true');
 			await expect(panel).toContainText('MongoDB reuses this space for new data.');
@@ -319,6 +336,26 @@ for (const scheme of ['light', 'dark'] as const) {
 		});
 	});
 }
+
+test.describe('free space at a desktop width', () => {
+	test.use({
+		viewport: { width: 1800, height: 1000 },
+		apiOptions: {
+			info: {
+				storage: {
+					events: { documents: 28, storageBytes: 20_000_000, indexBytes: 600_000, freeBytes: 14_000_000 },
+					rooms: { documents: 1_203, storageBytes: 1_175_307, indexBytes: 293_827, freeBytes: 0 }
+				}
+			}
+		}
+	});
+
+	test('the Storage table with free lines does not scroll vertically', async ({ page }) => {
+		await page.goto('/settings?tab=data');
+		await expect(page.locator('ovd-data-tab tfoot ovd-info-tip')).toHaveCount(1);
+		await expectNoVerticalOverflow(page);
+	});
+});
 
 test.describe('incompatible writer', () => {
 	test.use({
