@@ -58,7 +58,7 @@
 - [x] 9.2 Add the optional link to the shared info tip (a panel instead of a tooltip, `aria-expanded`, Escape, click outside and second activation close it, focus back to the icon); cover "Link tip by keyboard" in `components/info-tip/info-tip.spec.ts`, keep the existing info tip scenarios green, and document it in the library README.
 - [x] 9.3 Put the free space tip after each free line with `EXTERNAL_LINKS.freeingDiskSpace`; cover "Free space tip of a class" and "Free space tip of the Total" in `settings-page.spec.ts`.
 - [x] 9.4 Read the info document when the Data tab opens and 65 s after the reported end of a deletion while the tab stays open (timer cancelled when it closes); cover "Data tab opened", "Second read after a deletion" and "No further reads" in `settings-page.spec.ts`, and keep "Steady server" and "Deletion ends" green in `server-status.spec.ts`.
-- [ ] 9.5 Cover "Link tip on a phone" in `e2e/tests/settings.spec.ts` (375 px, axe in both themes).
+- [x] 9.5 Cover "Link tip on a phone" in `e2e/tests/settings.spec.ts` (375 px, axe in both themes).
 - [ ] 9.6 Run `./dashboard.sh check` and `./dashboard.sh scenarios delete-stored-data`; refactor review of the info tip and the Data tab reads, recorded in the report.
 
 Pending the dashboard's author: whether `freeBytes` adds the reusable bytes of every index (design, Open Questions);

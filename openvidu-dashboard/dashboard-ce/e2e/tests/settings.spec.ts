@@ -268,6 +268,58 @@ for (const scheme of ['light', 'dark'] as const) {
 	});
 }
 
+for (const scheme of ['light', 'dark'] as const) {
+	test.describe(`free space on a phone in the ${scheme} theme`, () => {
+		const entry = (documents: number, bytes: number, freeBytes: number) => ({
+			documents,
+			storageBytes: Math.round(bytes * 0.8),
+			indexBytes: Math.round(bytes * 0.2),
+			freeBytes
+		});
+
+		test.use({
+			viewport: { width: 375, height: 740 },
+			hasTouch: true,
+			colorScheme: scheme,
+			apiOptions: {
+				info: {
+					storage: { events: entry(1_200, 36_000_000, 16_000_000), rooms: entry(1_203, 1_469_134, 0) }
+				}
+			}
+		});
+
+		test('Link tip on a phone', async ({ page }) => {
+			await page.goto('/settings?tab=data');
+
+			const icon = page.getByRole('button', { name: 'About free space of Events' });
+			const panel = page.locator('.link-tip');
+			const link = panel.getByRole('link', { name: /Freeing disk space/ });
+
+			await expect(icon).toHaveAttribute('aria-expanded', 'false');
+			await icon.tap();
+			await expect(icon).toHaveAttribute('aria-expanded', 'true');
+			await expect(panel).toContainText('MongoDB reuses this space for new data.');
+			await expect(link).toHaveAttribute(
+				'href',
+				'https://openvidu.io/latest/docs/self-hosting/production-ready/observability/openvidu-dashboard/#freeing-disk-space'
+			);
+			await expect(link).toHaveAttribute('target', '_blank');
+			await link.tap({ trial: true });
+
+			const box = await panel.boundingBox();
+
+			expect(box?.x).toBeGreaterThanOrEqual(0);
+			expect((box?.x ?? 0) + (box?.width ?? 0)).toBeLessThanOrEqual(375);
+			await expectNoViolations(page);
+
+			await page.getByRole('heading', { level: 1, name: 'Settings' }).tap();
+			await expect(panel).toHaveCount(0);
+			await expect(icon).toHaveAttribute('aria-expanded', 'false');
+			expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(375);
+		});
+	});
+}
+
 test.describe('incompatible writer', () => {
 	test.use({
 		apiOptions: {
