@@ -376,6 +376,33 @@ test.describe('free space at a desktop width', () => {
 	});
 });
 
+test.describe('Total dialog at a desktop size', () => {
+	test.use({ viewport: { width: 1280, height: 800 }, apiOptions: { legacy: true } });
+
+	test('Total with the legacy checkbox: the dialog content does not scroll at 1280 × 800', async ({ page }) => {
+		await page.goto('/settings?tab=data');
+		await page.getByRole('button', { name: 'Delete all analytics data' }).click();
+
+		const dialog = page.getByRole('dialog', { name: 'Delete all analytics data?' });
+		const content = dialog.locator('mat-dialog-content');
+		const overflow = () =>
+			content.evaluate((element) => ({ scrollHeight: element.scrollHeight, clientHeight: element.clientHeight }));
+
+		await expect(dialog.getByRole('checkbox', { name: 'Also delete the data before 3.10' })).toBeVisible();
+
+		const unchecked = await overflow();
+
+		expect(unchecked.scrollHeight).toBeLessThanOrEqual(unchecked.clientHeight);
+
+		await dialog.getByRole('checkbox', { name: 'Also delete the data before 3.10' }).check();
+		await expect(dialog).toContainText('A rollback to 3.9 will find no analytics data.');
+
+		const checked = await overflow();
+
+		expect(checked.scrollHeight).toBeLessThanOrEqual(checked.clientHeight);
+	});
+});
+
 test.describe('incompatible writer', () => {
 	test.use({
 		apiOptions: {
