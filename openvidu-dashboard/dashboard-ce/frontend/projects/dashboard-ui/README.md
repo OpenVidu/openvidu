@@ -75,6 +75,10 @@ loadComponent: … }] }] }`. The locked `tracks/:trackSid` route, outside the si
   `warningWhen`, the rows a column warning applies to on phone cards); the Analytics page context exposes
   `mediaStats()` and `mediaStatsWarning()` for the cards of its seams, and a card whose content is unavailable sets the
   `exportDisabled` input of `ovd-analytics-card`.
+- **Info tips.** `ovd-info-tip` (`subject`, `text`, `variant`) explains a term in a tooltip; with `href` and
+  `linkText`, words of its text that link to a page (new tab), the icon toggles a small non-modal panel instead, with
+  `aria-expanded`: Tab moves from the icon to the link, and Escape, a click outside or a second activation closes it and
+  returns focus to the icon.
 - **Confirmation dialog.** `ConfirmDialogService.confirm({ title, body, confirmLabel, checkbox? })` confirms a
   destructive action in a modal dialog: a text or template body, an optional unchecked checkbox with a note shown while
   checked, then Cancel (focused first) and the confirm button in the error colour. It resolves to `{ checked }` when
