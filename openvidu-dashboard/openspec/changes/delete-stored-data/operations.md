@@ -38,3 +38,20 @@ The owner delegated these to the dashboard's author, who answered in a Slack dir
 
 - PR #160 of OpenVidu/openvidu.io was merged into `next` (merge commit `75e6aa101`) by the dashboard's author, who asked
   for the documentation of this change to be committed directly on `next`, without a branch or PR.
+- Commit `39bc15b87` on `next` of OpenVidu/openvidu.io: the page sections and the two Settings → Data screenshots,
+  retaken at 1920 × 1080 from `./dashboard.sh demo pro` with the PRO workspace's `ce/` temporarily at this change's
+  local head (restored to `ce.ref` afterwards). The `compact` forms were checked on a throwaway MongoDB 8.0.29 replica
+  set: a primary refuses `compact` without `force: true`, and `compact: "track_stats"` works on the time-series name.
+  `ovweb lint` reported no errors (two warnings in other pages), and the build ran as `CI=false mkdocs build --strict`
+  (exit 0, no WARNING), since `.cache/` of that checkout is owned by root and the privacy plugin cannot write there.
+
+## Publish
+
+- Local master was rebased onto `origin/master` (11 commits, among them the archive of `analytics-batch-retry` and
+  `b2df5b2ce`, the 3.10 CHANGELOG written against 3.9); the CHANGELOG lines of this change became one line in that
+  style. `check`, `test-integration` (334) and `scenarios` (125, none without a test) passed on the rebased tree.
+- Pushed `b2df5b2ce..91c617816` to `master` of OpenVidu/openvidu. CI run
+  https://github.com/OpenVidu/openvidu/actions/runs/44813167029: success. Jobs: lint, format, type check and spec
+  validation, success; unit tests, success; integration tests (MongoDB), success; data model contract with the writer,
+  success; end-to-end tests (Playwright), success, the first run of this change's e2e tests, which cannot run on the
+  owner's machine.
