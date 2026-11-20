@@ -136,7 +136,7 @@ export function deletionCompleted(job: DeletionJob): string {
 	return `${jobSubject(job.class)} deleted: ${documentCount(job.deleted)}`;
 }
 
-/** The line of a running deletion: "Deleting Entities: 1,234,000 documents deleted · collection 2 of 5". */
+/** The line of a running deletion: "Deleting Entities: 1,234,000 documents deleted · collection 2 of 9". */
 export function deletionProgress(job: DeletionJob): string {
 	const step = job.currentClass ?? (job.class === 'all' ? 'events' : job.class);
 
