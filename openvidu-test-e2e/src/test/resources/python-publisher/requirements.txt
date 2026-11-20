@@ -1,1 +1,1 @@
-livekit==1.2.1
+livekit==1.3.0
