@@ -803,6 +803,15 @@ describe('SettingsPage', () => {
 		const DOCS_LINK =
 			'https://openvidu.io/latest/docs/self-hosting/production-ready/observability/openvidu-dashboard/#freeing-disk-space';
 		const kept = { state: 'completed', legacyRetainedUntil: RETAINED_UNTIL } as const;
+		/** A completed deletion record: the classes that have one show their free space. */
+		const COMPLETED = {
+			completed: {
+				cutoff: '2026-11-19T10:07:00Z',
+				endedBefore: '2026-11-19T10:02:00Z',
+				finishedAt: '2026-11-19T10:31:12Z'
+			}
+		};
+		const DELETED = { events: COMPLETED, entities: COMPLETED };
 
 		const job = deletionJob;
 
@@ -1337,6 +1346,7 @@ describe('SettingsPage', () => {
 
 		it('Free space after a deletion', async () => {
 			const { element } = await dataTab({
+				deletions: { events: COMPLETED },
 				storage: {
 					events: {
 						documents: 1_200,
@@ -1351,11 +1361,12 @@ describe('SettingsPage', () => {
 
 			expect(cells(events).slice(2)).toEqual(['1,200', '2 GB']);
 			expect(text(events?.querySelector('td:nth-child(4) .sub'))).toBe('1.8 GB free for new data');
-			expect(text(element.querySelector('ovd-data-tab tfoot .sub'))).toBe('2 GB free for new data');
+			expect(text(element.querySelector('ovd-data-tab tfoot .sub'))).toBe('1.8 GB free for new data');
 		});
 
 		it('Free space tip of a class', async () => {
 			const { harness, element } = await dataTab({
+				deletions: { events: COMPLETED },
 				storage: {
 					events: {
 						documents: 1_200,
@@ -1388,6 +1399,7 @@ describe('SettingsPage', () => {
 
 		it('Free space tip of the Total', async () => {
 			const { element } = await dataTab({
+				deletions: { events: COMPLETED },
 				storage: {
 					events: {
 						documents: 1_200,
@@ -1450,7 +1462,11 @@ describe('SettingsPage', () => {
 
 			expect(reread).toHaveLength(1);
 			reread[0]?.flush(
-				infoResponse({ retention: DEFAULT_RETENTION, storage: { events: freeEvents(1_000_000) } })
+				infoResponse({
+					retention: DEFAULT_RETENTION,
+					deletions: DELETED,
+					storage: { events: freeEvents(1_000_000) }
+				})
 			);
 			await vi.advanceTimersByTimeAsync(0);
 		}
@@ -1472,7 +1488,11 @@ describe('SettingsPage', () => {
 
 				await vi.advanceTimersByTimeAsync(1);
 				http.expectOne('api/v1/info').flush(
-					infoResponse({ retention: DEFAULT_RETENTION, storage: { events: freeEvents(16_000_000) } })
+					infoResponse({
+						retention: DEFAULT_RETENTION,
+						deletions: DELETED,
+						storage: { events: freeEvents(16_000_000) }
+					})
 				);
 				await vi.advanceTimersByTimeAsync(0);
 				await harness.fixture.whenStable();
@@ -1545,14 +1565,17 @@ describe('SettingsPage', () => {
 			await loadStatus(http, statusResponse({ deletion: completed }));
 			await harness.fixture.whenStable();
 			http.match('api/v1/info').forEach((request) => {
-				request.flush(infoResponse({ retention: DEFAULT_RETENTION, storage }));
+				request.flush(infoResponse({ retention: DEFAULT_RETENTION, deletions: DELETED, storage }));
 			});
 			await settle();
 			await harness.fixture.whenStable();
 		}
 
 		it('Free space pending after an Events deletion', async () => {
-			const { harness, http, element } = await dataTab({ storage: pendingStorage }, { deletion: job() });
+			const { harness, http, element } = await dataTab(
+				{ deletions: DELETED, storage: pendingStorage },
+				{ deletion: job() }
+			);
 
 			expect(freeLine(element, 'Events')).toBe('2 MB free for new data');
 			await reportCompleted(harness, http, job({ state: 'completed', deleted: 10 }), pendingStorage);
@@ -1564,7 +1587,10 @@ describe('SettingsPage', () => {
 		});
 
 		it('Free space after the second read', async () => {
-			const { harness, http, element } = await dataTab({ storage: pendingStorage }, { deletion: job() });
+			const { harness, http, element } = await dataTab(
+				{ deletions: DELETED, storage: pendingStorage },
+				{ deletion: job() }
+			);
 
 			try {
 				await completeWithFakeTimers(harness, http);
@@ -1576,7 +1602,11 @@ describe('SettingsPage', () => {
 					request.flush(statusResponse({ deletion: job({ state: 'completed', deleted: 10 }) }));
 				});
 				http.expectOne('api/v1/info').flush(
-					infoResponse({ retention: DEFAULT_RETENTION, storage: { events: freeEvents(17_200_000) } })
+					infoResponse({
+						retention: DEFAULT_RETENTION,
+						deletions: DELETED,
+						storage: { events: freeEvents(17_200_000) }
+					})
 				);
 				await vi.advanceTimersByTimeAsync(0);
 				await harness.fixture.whenStable();
@@ -1610,7 +1640,7 @@ describe('SettingsPage', () => {
 
 		it('Free space pending after a Total deletion: a Legacy deletion completes no class and shows none', async () => {
 			const { harness, http, element } = await dataTab(
-				{ storage: pendingStorage },
+				{ deletions: DELETED, storage: pendingStorage },
 				{ deletion: job({ class: 'legacy', currentClass: 'legacy' }) }
 			);
 
@@ -1625,7 +1655,10 @@ describe('SettingsPage', () => {
 		});
 
 		it('Free space pending dropped on return', async () => {
-			const { harness, http, element } = await dataTab({ storage: pendingStorage }, { deletion: job() });
+			const { harness, http, element } = await dataTab(
+				{ deletions: DELETED, storage: pendingStorage },
+				{ deletion: job() }
+			);
 
 			await reportCompleted(harness, http, job({ state: 'completed', deleted: 10 }), pendingStorage);
 			expect(freeLine(element, 'Events')).toBe(PENDING);
@@ -1640,7 +1673,11 @@ describe('SettingsPage', () => {
 			}
 
 			http.expectOne('api/v1/info').flush(
-				infoResponse({ retention: DEFAULT_RETENTION, storage: { events: freeEvents(5_000_000) } })
+				infoResponse({
+					retention: DEFAULT_RETENTION,
+					deletions: DELETED,
+					storage: { events: freeEvents(5_000_000) }
+				})
 			);
 			await settle();
 			await harness.fixture.whenStable();
@@ -1649,8 +1686,67 @@ describe('SettingsPage', () => {
 			expect(freeLine(element, 'Events')).toBe('5 MB free for new data');
 		});
 
+		it('No free line before any deletion', async () => {
+			const { element } = await dataTab({
+				deletions: {},
+				storage: { events: freeEvents(14_100_000), track_stats: { ...freeEvents(40_000_000) } }
+			});
+
+			expect(element.querySelector('ovd-data-tab tbody .sub')).toBeNull();
+			expect(element.querySelector('ovd-data-tab tfoot .sub')).toBeNull();
+		});
+
+		it('Total sums the rows with a free line', async () => {
+			const { element } = await dataTab({
+				deletions: { events: COMPLETED },
+				storage: {
+					events: {
+						documents: 1_200,
+						storageBytes: 1_500_000_000,
+						indexBytes: 500_000_000,
+						freeBytes: 1_800_000_000
+					},
+					track_stats: freeEvents(40_000_000)
+				}
+			});
+
+			expect(freeLine(element, 'Stats')).toBe('');
+			expect(totalLine(element)).toBe('1.8 GB free for new data');
+		});
+
+		it('Free line after an incomplete deletion', async () => {
+			const interrupted = { incomplete: { state: 'interrupted', at: '2026-11-19T11:00:00Z' } } as const;
+			const { element } = await dataTab({
+				deletions: { events: { ...COMPLETED, ...interrupted }, stats: interrupted },
+				storage: { events: freeEvents(50_000_000), track_stats: freeEvents(50_000_000) }
+			});
+
+			expect(freeLine(element, 'Events')).toBe('50 MB free for new data');
+			expect(freeLine(element, 'Stats')).toBe('');
+		});
+
+		it('Legacy row without a free line', async () => {
+			const { element } = await dataTab(
+				{
+					migration: kept,
+					deletions: { events: COMPLETED },
+					storage: {
+						...LEGACY_STORAGE,
+						legacy_events: { ...LEGACY_STORAGE.legacy_events, freeBytes: 1_000_000_000 },
+						stats: { ...LEGACY_STORAGE.stats, freeBytes: 1_000_000_000 },
+						events: freeEvents(3_000_000)
+					}
+				},
+				{ migration: kept }
+			);
+
+			expect(classRow(element, LEGACY_LABEL)?.querySelector('.sub')).toBeNull();
+			expect(totalLine(element)).toBe('3 MB free for new data');
+		});
+
 		it('Little free space', async () => {
 			const { element } = await dataTab({
+				deletions: DELETED,
 				storage: {
 					events: { documents: 1_200, storageBytes: 1_500_000, indexBytes: 500_000, freeBytes: 200_000 },
 					rooms: { documents: 4, storageBytes: 36_864, indexBytes: 344_136, freeBytes: 100_000 }

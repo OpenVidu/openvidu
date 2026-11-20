@@ -32,6 +32,15 @@ const DEFAULT_RETENTION: InfoRetention = {
 	rollupsDailyMs: null
 };
 
+/** A completed deletion record of a class. */
+const COMPLETED = {
+	completed: {
+		cutoff: '2026-11-16T10:07:00.000Z',
+		endedBefore: '2026-11-16T10:02:00.000Z',
+		finishedAt: '2026-11-16T10:31:12.000Z'
+	}
+};
+
 /** An entry of `bytes` (all storage) whose oldest document is `ageMs` before the read; undated without `ageMs`. */
 function entry(bytes: number, ageMs?: number, documents = 1): InfoStorageEntry {
 	return {
@@ -126,7 +135,7 @@ describe('storageClasses', () => {
 			NO_MIGRATION
 		);
 
-		expect(total).toEqual({ documents: 289, bytes: 737_000, freeBytes: 0 });
+		expect(total).toEqual({ documents: 289, bytes: 737_000, freeBytes: 0, free: null });
 	});
 
 	it('Span rounded down', () => {
@@ -281,14 +290,18 @@ describe('storageClasses', () => {
 			},
 			DEFAULT_RETENTION,
 			READ_AT,
-			NO_MIGRATION
+			NO_MIGRATION,
+			{ events: COMPLETED }
 		);
 
 		expect(rows.find((row) => row.label === 'Events')).toMatchObject({
 			bytes: 2_000_000_000,
-			freeBytes: 1_800_000_000
+			freeBytes: 1_800_000_000,
+			free: 1_800_000_000
 		});
+		expect(rows.find((row) => row.label === 'Entities')?.free).toBeNull();
 		expect(total.freeBytes).toBe(1_800_200_000);
+		expect(total.free).toBe(1_800_000_000);
 	});
 
 	it('names the deletion class of every class row and deletes the Legacy row only while kept for rollback', () => {

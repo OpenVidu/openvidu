@@ -49,8 +49,6 @@ import {
 } from './deletion-texts.js';
 import { LEGACY_LABEL, storageClasses } from './storage-classes.js';
 
-/** The free space line shows from 1 MB. */
-const FREE_LINE_MIN_BYTES = 1_000_000;
 /**
  * The second read of the info document after a deletion ends: after the MongoDB checkpoint (60 s) that releases the
  * space it freed, plus the delay of the status poll and small clock differences.
@@ -182,12 +180,14 @@ export class DataTab {
 
 		const { info, readAt } = read;
 		const tz = this.tz();
-		const { rows, total } = storageClasses(info.storage, info.retention, readAt, {
-			migration: this.migrationState(),
-			tz
-		});
-		const free = (bytes: number) =>
-			bytes >= FREE_LINE_MIN_BYTES ? `${formatBytes(bytes)} free for new data` : null;
+		const { rows, total } = storageClasses(
+			info.storage,
+			info.retention,
+			readAt,
+			{ migration: this.migrationState(), tz },
+			info.deletions
+		);
+		const free = (bytes: number | null) => (bytes === null ? null : `${formatBytes(bytes)} free for new data`);
 		const pending = this.freePending();
 
 		return {
@@ -195,7 +195,7 @@ export class DataTab {
 				...row,
 				documentsText: formatNumber(row.documents),
 				size: formatBytes(row.bytes),
-				free: free(row.freeBytes),
+				free: free(row.free),
 				freePending: row.deletionClass !== undefined && pending?.has(row.deletionClass) === true,
 				deleted:
 					row.deletionClass === undefined ? null : deletionRecordLine(info.deletions[row.deletionClass], tz),
@@ -205,7 +205,7 @@ export class DataTab {
 			total: {
 				documents: formatNumber(total.documents),
 				size: formatBytes(total.bytes),
-				free: free(total.freeBytes),
+				free: free(total.free),
 				freePending: pending !== null
 			},
 			retentionReported: info.retention !== undefined,

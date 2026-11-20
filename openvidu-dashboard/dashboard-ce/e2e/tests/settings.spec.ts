@@ -298,6 +298,15 @@ for (const scheme of ['light', 'dark'] as const) {
 			colorScheme: scheme,
 			apiOptions: {
 				info: {
+					deletions: {
+						events: {
+							completed: {
+								cutoff: '2026-11-19T10:07:00.000Z',
+								endedBefore: '2026-11-19T10:02:00.000Z',
+								finishedAt: '2026-11-19T10:31:12.000Z'
+							}
+						}
+					},
 					storage: { events: entry(1_200, 36_000_000, 16_000_000), rooms: entry(1_203, 1_469_134, 0) }
 				}
 			}
@@ -342,6 +351,15 @@ test.describe('free space at a desktop width', () => {
 		viewport: { width: 1800, height: 1000 },
 		apiOptions: {
 			info: {
+				deletions: {
+					events: {
+						completed: {
+							cutoff: '2026-11-19T10:07:00.000Z',
+							endedBefore: '2026-11-19T10:02:00.000Z',
+							finishedAt: '2026-11-19T10:31:12.000Z'
+						}
+					}
+				},
 				storage: {
 					events: { documents: 28, storageBytes: 20_000_000, indexBytes: 600_000, freeBytes: 14_000_000 },
 					rooms: { documents: 1_203, storageBytes: 1_175_307, indexBytes: 293_827, freeBytes: 0 }
