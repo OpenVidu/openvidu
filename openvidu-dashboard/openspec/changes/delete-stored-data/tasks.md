@@ -62,7 +62,7 @@
 - [x] 9.6 Run `./dashboard.sh check` and `./dashboard.sh scenarios delete-stored-data`; refactor review of the info tip and the Data tab reads, recorded in the report. Applied: one `deletionKey()` for the status poll and the Data tab; the info tip keeps both modes in one component (the link mode adds a panel, no larger refactor to propose).
 
 - [x] 9.7 Compute `freeBytes` as `storageStats.freeStorageSize` plus the sum, over `storageStats.indexDetails`, of `["block-manager"]["file bytes available for reuse"]`, each missing value counted as 0 (decision of the dashboard's author, 2026-11-20); cover "Free space of the indexes" in `backend/test/integration/api.test.ts` and keep "Free space after deleting documents" and "Storage per collection" green. Verify with `./dashboard.sh test-integration`.
-- [ ] 9.8 Make the "Link tip by keyboard" test in `components/info-tip/info-tip.spec.ts` follow the scenario's Shift+Tab and Tab-past-the-link steps if it does not yet; run `./dashboard.sh check` and `./dashboard.sh scenarios delete-stored-data`.
+- [x] 9.8 Make the "Link tip by keyboard" test in `components/info-tip/info-tip.spec.ts` follow the scenario's Shift+Tab and Tab-past-the-link steps if it does not yet; run `./dashboard.sh check` and `./dashboard.sh scenarios delete-stored-data`.
 
 ## 10. Demo review (owner)
 

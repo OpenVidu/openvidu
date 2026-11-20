@@ -161,13 +161,32 @@ describe('InfoTip', () => {
 			return event;
 		}
 
+		/**
+		 * Presses Tab (or Shift+Tab) on the focused element and, unless the page handled it, moves focus as the browser
+		 * would: to the next or previous button or link in document order (the panel's overlay comes last).
+		 */
+		function tab(shiftKey = false): void {
+			const from = document.activeElement;
+
+			if (!(from instanceof HTMLElement) || key(from, 'Tab', shiftKey).defaultPrevented) {
+				return;
+			}
+
+			const order = [...document.querySelectorAll<HTMLElement>('button, a[href]')];
+			const current = document.activeElement instanceof HTMLElement ? document.activeElement : from;
+
+			order[order.indexOf(current) + (shiftKey ? -1 : 1)]?.focus();
+		}
+
 		it('Link tip by keyboard', async () => {
-			const { button, stable, panel } = await renderLink();
+			const { element, button, stable, panel } = await renderLink();
+			const after = element.querySelector<HTMLButtonElement>('.after');
+			const link = () => panel()?.querySelector('a') ?? null;
 
 			expect(button.getAttribute('aria-label')).toBe('About free space of Events');
 			expect(button.getAttribute('aria-expanded')).toBe('false');
 
-			// Enter on a focused button activates it.
+			// Tab reaches the icon; Enter on a focused button activates it.
 			button.focus();
 			button.click();
 			await stable();
@@ -175,48 +194,41 @@ describe('InfoTip', () => {
 			expect(button.getAttribute('aria-expanded')).toBe('true');
 			// The link adds a hidden "(opens in a new tab)" for screen readers.
 			expect(panel()?.textContent.replace('(opens in a new tab)', '').replace(/\s+/g, ' ').trim()).toBe(FREE_TIP);
+			expect(link()?.getAttribute('href')).toBe('https://example.org/#freeing-disk-space');
+			expect(link()?.getAttribute('target')).toBe('_blank');
 
-			const link = panel()?.querySelector('a');
+			tab();
+			expect(document.activeElement).toBe(link());
 
-			expect(link?.textContent).toContain('Freeing disk space');
-			expect(link?.getAttribute('href')).toBe('https://example.org/#freeing-disk-space');
-			expect(link?.getAttribute('target')).toBe('_blank');
+			tab(true);
+			expect(document.activeElement).toBe(button);
+			expect(panel()).not.toBeNull();
 
-			expect(key(button, 'Tab').defaultPrevented).toBe(true);
-			expect(document.activeElement).toBe(link);
+			tab();
+			expect(document.activeElement).toBe(link());
 
-			key(link as Element, 'Escape');
+			tab();
+			await stable();
+			expect(panel()).toBeNull();
+			expect(button.getAttribute('aria-expanded')).toBe('false');
+			expect(document.activeElement).toBe(after);
+
+			// Second pass: Escape closes the panel and returns focus to the icon.
+			button.focus();
+			button.click();
+			await stable();
+			tab();
+
+			const escape = link();
+
+			expect(document.activeElement).toBe(escape);
+			key(escape as Element, 'Escape');
 			await stable();
 
 			expect(panel()).toBeNull();
 			expect(button.getAttribute('aria-expanded')).toBe('false');
 			expect(document.activeElement).toBe(button);
 			expect(document.querySelector('.mat-mdc-tooltip')).toBeNull();
-		});
-
-		it('Link tip by keyboard: Tab leaves the link for what follows the icon, Shift+Tab goes back to it', async () => {
-			const { button, stable, panel } = await renderLink();
-
-			button.focus();
-			button.click();
-			await stable();
-			key(button, 'Tab');
-
-			const link = panel()?.querySelector('a') as Element;
-
-			expect(key(link, 'Tab', true).defaultPrevented).toBe(true);
-			expect(document.activeElement).toBe(button);
-			expect(panel()).not.toBeNull();
-
-			key(button, 'Tab');
-
-			const tab = key(link, 'Tab');
-
-			await stable();
-			// The browser then moves focus from the icon to the element after it.
-			expect(tab.defaultPrevented).toBe(false);
-			expect(document.activeElement).toBe(button);
-			expect(panel()).toBeNull();
 		});
 
 		it('Link tip by keyboard: a second activation and a click outside close it', async () => {
