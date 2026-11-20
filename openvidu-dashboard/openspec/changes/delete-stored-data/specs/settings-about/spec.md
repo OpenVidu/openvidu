@@ -109,10 +109,10 @@ documentation section the deletion dialogs link to.
 - **THEN** the line ends with an info icon named "About free space"
 
 ### Requirement: Free space pending after a deletion
-Edition: CE. When the Data tab sees a deletion complete, it SHALL show "Free space updates in about a minute" in place
-of the free line of every class that job completed and, if it completed one, of the Total, until its second read after the deletion
-replaces it with the free line, or nothing under 1 MB. Leaving the tab drops the notice: the read when the tab opens
-again shows the figures as they are.
+Edition: CE. When the open Data tab sees through the status poll a job it had seen in another state, or another job,
+reach completed, it SHALL show "Free space updates in about a minute" in place of the free line of each class that job
+completed and, if any, of the Total, until the second read replaces it. The first status after a load or opening only
+sets that baseline, so a reload never shows it; leaving the tab drops it.
 
 #### Scenario: Free space pending after an Events deletion
 - **GIVEN** the Data tab open while an Events deletion runs
@@ -135,10 +135,17 @@ again shows the figures as they are.
 - **WHEN** the user switches to Preferences and back to Data before the second read
 - **THEN** no row shows the notice and the free lines are those of the read made when Data opened again
 
+#### Scenario: No pending notice after a reload
+- **GIVEN** an Events deletion that completed two hours ago
+- **WHEN** the user reloads `/settings?tab=data` and the first status reports that completed job
+- **THEN** no row shows "Free space updates in about a minute", the free lines are those of the read at opening and no
+  second read follows 65 s later
+
 ### Requirement: Storage figures re-read
 Edition: CE. Data SHALL read the info document each time the Data tab is opened, when a status reports that a
-deletion ended, and once more 65 s after that report while the tab stays open, so that it shows the space MongoDB
-releases at its next checkpoint; it SHALL NOT read it periodically otherwise.
+deletion it had seen in another state, or another job, ended, and once more 65 s after that report while the tab stays
+open, so that it shows the space MongoDB releases at its next checkpoint; the first status after a load or opening
+only sets that baseline, and it SHALL NOT read the info document periodically otherwise.
 
 #### Scenario: Data tab opened
 - **GIVEN** a session that read the info document on the Overview
@@ -315,14 +322,15 @@ other failure. Cancel and Escape close the dialog and send nothing.
 
 ### Requirement: Deletion progress on the Data tab
 Edition: CE. While the status reports a running deletion, Data SHALL show above the Storage table a section "Deleting
-analytics data" with an indeterminate progress bar and the line "Deleting <class being deleted>: <n> documents deleted
-· collection <i> of <total>", n counting the whole job, updated with every status response.
+analytics data" with the line "Deleting <class being deleted>: <n> documents deleted · collection <i> of <total>", n
+counting the whole job, preceded by a small indeterminate spinner named "Deletion progress" (role `progressbar`), and
+no progress bar, updated with every status response.
 
 #### Scenario: Progress of an Entities deletion
 - **GIVEN** a status reporting an Entities deletion with 1,234,000 documents deleted at its second of nine collections
 - **WHEN** Data renders
-- **THEN** the section "Deleting analytics data" shows an indeterminate progress bar and "Deleting Entities: 1,234,000
-  documents deleted · collection 2 of 9"
+- **THEN** the section "Deleting analytics data" shows an indeterminate spinner named "Deletion progress" beside
+  "Deleting Entities: 1,234,000 documents deleted · collection 2 of 9", and no progress bar
 
 #### Scenario: Progress follows the status
 - **GIVEN** Data showing a running Total deletion at Events

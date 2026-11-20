@@ -83,7 +83,8 @@ See proposal.md for the motivation. Facts that shape the approach:
 | Progress count | The whole job's, naming the class being deleted. |
 | Wording | Banner, end toasts and interrupted and failed notices as in the scenarios of `ui-shell` and `settings-about`. |
 | Entities stamps | An Entities deletion stamps Entities, Events, Stats and Tracks and subscriptions. |
-| Progress section | An indeterminate (animated) bar above the line. |
+| Progress section | An indeterminate (animated) bar above the line; replaced in the demo review (2026-11-20) by a small indeterminate spinner beside the line, named "Deletion progress". |
+| Pending notice and second read after a reload (demo review, 2026-11-20) | Never on a reload or an opening of the tab: only when the open tab sees, through the status poll, a job it had seen in another state, or another job, reach completed; the first status only sets the baseline. |
 | MongoDB before 7.0 | A time-series `track_stats` cannot be deleted by filter: the job fails with "A database error stopped it" and the documentation names MongoDB 7.0 as the minimum for deleting stats. |
 | Records | The job, lock and last deletions in the reserved `schema_meta` `_id: "dashboard"` document. |
 | Stuck jobs | Judged by the MongoDB clock (`$$NOW`). |
@@ -254,14 +255,24 @@ the storage cache records a value with the time its read started, `InfoService` 
   keeps it after a later incomplete one) and the class's `freeBytes` reaches 1 MB; the Total sums the free figures of
   the rows that show one and applies the same 1 MB rule; the Legacy data row never shows one. `freeBytes` stays in the
   info document for every collection: only what the Data tab shows changes.
+- Baseline after a load (demo review, 2026-11-20): the Data tab keeps the deletion job id and state it last saw; the
+  first status after a load or an opening of the tab only records it, so neither the pending notice nor the 65 s second
+  read follows a reload. The bug found in the demo was a baseline taken from the empty state before the first status
+  (`none`), which made a job completed hours earlier count as a change.
 - Free space pending: when the Data tab sees a job complete, the classes it completed (Entities also its detail classes,
   Total all seven) and the Total show "Free space updates in about a minute" in the free line's place, muted and
   without a tip, until the 65 s read; then the normal free line, or nothing under 1 MB. Becoming inactive drops the
   notice with the timer, so a return shows the open read's figures. A Legacy job completes no class, so no notice. The
   Total shows it after any job that completed a class, since its free figure sums them (decided under the owner's
   delegation of style and consistency).
-- Progress: the bar stays indeterminate (style, decided under the owner's delegation); with the 2 s poll the document
-  counter and "collection X of Y" show the progress.
+- Progress (demo review, 2026-11-20): no progress bar, which looked like loading with nothing filling. A small
+  indeterminate Material progress spinner (about 20 px, style decided under the owner's delegation) sits beside the
+  progress line, aligned with it, named "Deletion progress" with the `progressbar` role; with the 2 s poll the
+  document counter and "collection X of Y" show the progress.
+- Total dialog scroll (demo review, 2026-11-20): with the "Also delete the data before 3.10" checkbox the dialog content
+  showed a vertical scrollbar at desktop sizes, probably the checkbox touch target or ripple overflowing the dialog
+  content; the fix keeps the content from scrolling at normal desktop sizes while it can still scroll on a short
+  viewport.
 - Free space tip: the shared info tip gains an optional link; with one, the icon toggles a small non-modal panel (CDK
   overlay) with the text and a focusable link instead of a tooltip, because a tooltip cannot hold a reachable link, and
   shows no tooltip on hover. Escape, a click outside or a second activation closes it and focus returns to the icon.
@@ -272,8 +283,8 @@ the storage cache records a value with the time its read started, `InfoService` 
   error colour; the "How to free disk space" link on its own line; the `delete` icon in the default colour, its tooltip
   being its name; the delete column `position: sticky` at the end of the table so the buttons stay visible at 375 px,
   with a visually empty header holding a hidden "Delete"; the second lines in body-small on-surface-variant, the
-  incomplete ones in the warning colour; the progress section styled like the migration one, with an indeterminate
-  bar; the interrupted and failed warning notice without dismiss and the refused error notice with dismiss, both at
+  incomplete ones in the warning colour; the progress section styled like the migration one, with a spinner instead of
+  a bar since the demo review; the interrupted and failed warning notice without dismiss and the refused error notice with dismiss, both at
   most 72 characters wide; the banner in the info style with the `delete` icon.
 
 ### Documentation (openvidu.io, branch `next`)
@@ -323,7 +334,7 @@ as the minimum for deleting stats stored as a time series. The exact
 | Buttons of the table, Legacy row without a button, Buttons while a deletion runs, Buttons while the migration runs, Empty class deletable, the four detail dialogs, the three rollup dialogs, Total dialog, Total with the legacy checkbox, Total with the checkbox left unchecked, Legacy dialog, Deletion confirmed, Deletion refused, Deletion not started, Deletion cancelled in the dialog, Progress of an Entities deletion, Progress follows the status, Deletion completed while watching, Interrupted deletion notice, Failed deletion notice, Class deleted, Class left incomplete | `dashboard-ui/.../settings/settings-page.spec.ts` | unit |
 | Keyboard confirmation, Escape cancels | `dashboard-ui/.../components/confirm-dialog/confirm-dialog.spec.ts` | unit |
 | Link tip by keyboard | `dashboard-ui/.../components/info-tip/info-tip.spec.ts` | unit |
-| Free space tip of a class, Free space tip of the Total, Data tab opened, Second read after a deletion, No further reads, Free space pending after an Events deletion, Free space after the second read, Free space pending after a Total deletion, Free space pending dropped on return, No free line before any deletion, Total sums the rows with a free line, Free line after an incomplete deletion, Legacy row without a free line | `dashboard-ui/.../settings/settings-page.spec.ts` | unit |
+| Free space tip of a class, Free space tip of the Total, Data tab opened, Second read after a deletion, No further reads, Free space pending after an Events deletion, Free space after the second read, Free space pending after a Total deletion, Free space pending dropped on return, No pending notice after a reload, No free line before any deletion, Total sums the rows with a free line, Free line after an incomplete deletion, Legacy row without a free line | `dashboard-ui/.../settings/settings-page.spec.ts` | unit |
 | Storage read again after the release, Free space of the indexes | `backend/test/integration/api.test.ts` (clock injected for the first) | integration |
 | Link tip on a phone | `e2e/tests/settings.spec.ts` | e2e |
 | Banner of a running deletion, Banner of a Total deletion, No banner on the Data tab, Banner ends with the job, Dismissed banner and a new job | `dashboard-ui/.../shell/banner-slot.spec.ts` | unit |
