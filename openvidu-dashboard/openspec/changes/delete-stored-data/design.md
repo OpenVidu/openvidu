@@ -159,7 +159,9 @@ interface SchemaMetaDashboard {
   `requestId`). `409`
   `CONFLICT` → "Available once the migration ends" while the migration of the data before 3.10 runs (checked first, for
   every class), "A deletion is already running" with `details.job`, or "The data before 3.10 is not kept for rollback".
-  The OpenAPI document of the route lists the `409` with the shared `ApiError` shape.
+  The OpenAPI document of the route lists the `409` with the shared `ApiError` shape, described as "The migration of
+  the data before 3.10 is running, a deletion is already running, or the data before 3.10 is not kept for rollback
+  (CONFLICT)".
 - `GET /api/v1/status` adds `deletion?: DeletionJob`; `GET /api/v1/info` adds `deletions` (`{}` when none, dates as ISO
   strings, `endedBefore` = cutoff − 5 min for extending editions) and `storage.<collection>.freeBytes`
   (`storageStats.freeStorageSize` plus, for every entry of `storageStats.indexDetails`, its `["block-manager"]["file
@@ -174,7 +176,9 @@ entities retention, `expiresAt ≥ T + retention.entities`, and `endedAt ≥ T` 
 predicate; see Risks), open egresses and egresses ended at or after T (the same candidate read, with `endedAt`, else
 `updatedAt`, `≥ T` as the residual predicate), and the kept ingress ids: the ingress
 definitions not deleted plus the `ingressId` of the open ingress sessions. Anything created after the cutoff ends after
-T and is excluded by the time filters, so the snapshot does not need refreshing.
+T and is excluded by the time filters, so the snapshot does not need refreshing. As built, the kept sets come from the
+exported `keptSetQueries()` and `keptSetCursor()`; rooms and egresses are read through `expiresAt_ttl` only, with the
+end-time check as a residual predicate, which a query-plan test asserts.
 
 | Class | Collections in order | Filter of a deletable document | Index |
 | --- | --- | --- | --- |
@@ -208,7 +212,8 @@ Rejected: drop and recreate collections (owned by the writer, and active documen
   `_id` batches with the `ts_ttl` hint.
 - A batch error is retried three times with 1 s between tries; an authorization error (code 13) fails at once with
   "The database user cannot delete data"; any other final error with "A database error stopped it". The cause goes to
-  the log, never to the API.
+  the log, never to the API. The record writes (progress, class completion, finish, and the final record of a failed
+  job) are retried the same way, so the three retries hold for the whole job (code review S4).
 - Logs: one start line and one end line (`deletions` logger) with class, `includeLegacy`, cutoff, state, `deletedBy`
   and the request id.
 - Rejected: an automatic takeover by another instance (a watchdog on every instance, for a rare case the admin
@@ -326,6 +331,11 @@ as the minimum for deleting stats stored as a time series. The exact
   `totalDocsExamined` bounded by the batch plus the kept documents met), in `deletions-query-plan.test.ts` on a
   scenario S dataset by default and on scenario M with `DELETIONS_PLAN_SCENARIO=M`. The time-series `track_stats` find
   runs without a hint on the buckets' clustered index.
+- Time-series stats batches have their own bound, because the bucket cursor reads ahead in batches: at most twice the
+  buckets that start before the batch's 5,000th measurement plus one bucket span (the kept rooms' buckets included),
+  and under the collection's bucket count. Measured at scenario S: 480 of 21,268 buckets; a run examined 992 against a
+  one-span bound of 872. Its `deleteMany` is explained once: `TS_MODIFY` over `CLUSTERED_IXSCAN`, about 287 buckets,
+  no collection scan (code review W2).
 - Pace: unit test of the runner with a fake clock (batches ≤ 5,000, ≥ 100 ms apart).
 - The status keeps its command budget (`find` on `schema_meta` and `nodes` only), checked by the existing command
   monitoring test extended with a running job.
@@ -356,6 +366,16 @@ as the minimum for deleting stats stored as a time series. The exact
 | Deletion cadence, Status right after starting a deletion, Deletion during the migration, Deletion ends | `dashboard-ui/.../core/refresh/server-status.spec.ts` | unit |
 | Delete buttons on a phone, Dialog on a phone, Events dialog: flow with axe in both themes | `e2e/tests/settings.spec.ts` | e2e |
 | Events deletion accepted: against the real backend | `e2e/tests-backend/deletions.spec.ts` | e2e (backend) |
+
+The backend e2e deletion test inserts 12 events of its own, with ids unique per attempt, snapshots the seeded events of
+the closed room and puts the missing ones back in `finally`, so a CI retry passes and later suites keep their data; it
+no longer compares the UI document count, which the storage cache can hold. `serve-dashboard.mjs` writes its MongoDB
+URI and database to a temporary file keyed by port (`backendDatabaseFile()` in `seed-rooms.mjs`), documented in
+`e2e/AGENTS.md` (verification S2).
+
+"Contract unchanged" checks that `schema/` equals what the contract sources generate, that `contract_version.txt`
+equals `SCHEMA_VERSION` and that the `schema_meta` dashboard document stays open, instead of a pinned digest, so it
+does not block the next real contract change (verification S4).
 
 The e2e suites cannot run on the owner's machine (Ubuntu 20.04: Playwright 1.65 ships no Chromium for it); they are
 validated by the `e2e` job of CI. No baseline screenshot of the Data tab existed, so none was added.
