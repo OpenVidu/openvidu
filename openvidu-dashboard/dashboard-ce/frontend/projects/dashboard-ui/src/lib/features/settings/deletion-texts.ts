@@ -92,6 +92,12 @@ export const DELETION_DIALOGS: Readonly<Record<DeletionClass, { title: string; b
 	}
 };
 
+/** The tip after a free space line; its last words link to the documentation on freeing disk space. */
+export const FREE_SPACE_TIP = {
+	text: 'MongoDB reuses this space for new data. The rest of the space the deleted data used stays reserved until the collection is compacted; see Freeing disk space.',
+	link: 'Freeing disk space'
+};
+
 /** The checkbox of the Total dialog while the legacy data is kept for a rollback. */
 export const LEGACY_CHECKBOX = {
 	label: 'Also delete the data before 3.10',

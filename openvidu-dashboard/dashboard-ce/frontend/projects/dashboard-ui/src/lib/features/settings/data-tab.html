@@ -77,7 +77,15 @@
 						<td class="end ovd-tabular">
 							{{ row.size }}
 							@if (row.free; as free) {
-								<span class="sub">{{ free }}</span>
+								<span class="sub free">
+									{{ free }}
+									<ovd-info-tip
+										[subject]="'free space of ' + row.label"
+										[text]="freeSpaceTip"
+										[linkText]="freeSpaceLink"
+										[href]="freeingDiskSpace"
+									/>
+								</span>
 							}
 						</td>
 						<td class="action">
@@ -113,7 +121,15 @@
 					<td class="end ovd-tabular">
 						{{ classes.total.size }}
 						@if (classes.total.free; as free) {
-							<span class="sub">{{ free }}</span>
+							<span class="sub free">
+								{{ free }}
+								<ovd-info-tip
+									subject="free space"
+									[text]="freeSpaceTip"
+									[linkText]="freeSpaceLink"
+									[href]="freeingDiskSpace"
+								/>
+							</span>
 						}
 					</td>
 					<td class="action">

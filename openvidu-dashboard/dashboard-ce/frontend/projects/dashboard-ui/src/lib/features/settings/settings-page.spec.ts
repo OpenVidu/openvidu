@@ -1337,6 +1337,55 @@ describe('SettingsPage', () => {
 			expect(text(element.querySelector('ovd-data-tab tfoot .sub'))).toBe('2 GB free for new data');
 		});
 
+		it('Free space tip of a class', async () => {
+			const { harness, element } = await dataTab({
+				storage: {
+					events: {
+						documents: 1_200,
+						storageBytes: 1_500_000_000,
+						indexBytes: 500_000_000,
+						freeBytes: 1_800_000_000
+					}
+				}
+			});
+			const icon = classRow(element, 'Events')?.querySelector<HTMLButtonElement>(
+				'td:nth-child(4) .sub ovd-info-tip button'
+			);
+
+			expect(icon?.getAttribute('aria-label')).toBe('About free space of Events');
+			icon?.click();
+			await settle();
+			await harness.fixture.whenStable();
+
+			const panel = document.querySelector('.link-tip');
+			const link = panel?.querySelector('a');
+
+			expect(icon?.getAttribute('aria-expanded')).toBe('true');
+			expect(text(panel).replace('(opens in a new tab)', '').replace(/\s+\./, '.')).toBe(
+				'MongoDB reuses this space for new data. The rest of the space the deleted data used stays reserved until the collection is compacted; see Freeing disk space.'
+			);
+			expect(text(link)).toContain('Freeing disk space');
+			expect(link?.getAttribute('href')).toBe(DOCS_LINK);
+			expect(link?.getAttribute('target')).toBe('_blank');
+		});
+
+		it('Free space tip of the Total', async () => {
+			const { element } = await dataTab({
+				storage: {
+					events: {
+						documents: 1_200,
+						storageBytes: 1_500_000_000,
+						indexBytes: 500_000_000,
+						freeBytes: 1_800_000_000
+					}
+				}
+			});
+
+			expect(
+				element.querySelector('ovd-data-tab tfoot .sub ovd-info-tip button')?.getAttribute('aria-label')
+			).toBe('About free space');
+		});
+
 		it('Little free space', async () => {
 			const { element } = await dataTab({
 				storage: {

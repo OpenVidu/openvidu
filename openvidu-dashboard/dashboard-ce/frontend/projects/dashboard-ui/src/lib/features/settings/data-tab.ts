@@ -25,6 +25,7 @@ import {
 	deletionProgress,
 	deletionRecordLine,
 	deletionRefusal,
+	FREE_SPACE_TIP,
 	LEGACY_CHECKBOX
 } from './deletion-texts.js';
 import { LEGACY_LABEL, storageClasses } from './storage-classes.js';
@@ -87,6 +88,8 @@ export class DataTab {
 
 	protected readonly configurationReference = EXTERNAL_LINKS.analyticsSettings;
 	protected readonly freeingDiskSpace = EXTERNAL_LINKS.freeingDiskSpace;
+	protected readonly freeSpaceTip = FREE_SPACE_TIP.text;
+	protected readonly freeSpaceLink = FREE_SPACE_TIP.link;
 	protected readonly legacyName = `Delete ${LEGACY_LABEL}`;
 	protected readonly info = this.service.info;
 	protected readonly unavailable = computed(() => this.info() === null && this.service.error() !== null);
