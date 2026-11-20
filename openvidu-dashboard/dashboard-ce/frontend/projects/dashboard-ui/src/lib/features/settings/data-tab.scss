@@ -133,3 +133,34 @@ tfoot td {
 	border-bottom: none;
 	font-weight: 500;
 }
+
+/* On a desktop the columns keep their widths whatever rows and second lines come and go (the Legacy data row, the
+   last deletion and free space lines); narrower screens keep the automatic layout and scroll sideways. The table width
+   is the sum of the columns and their padding (16 px after each, 4 px before the delete column), within the content
+   area of a 1280 px window with the sidenav open. */
+@media (min-width: 1280px) {
+	table.classes {
+		table-layout: fixed;
+		width: 59.25rem;
+
+		> thead th:nth-child(1) {
+			width: 17rem;
+		}
+
+		> thead th:nth-child(2) {
+			width: 14rem;
+		}
+
+		> thead th:nth-child(3) {
+			width: 6.5rem;
+		}
+
+		> thead th:nth-child(4) {
+			width: 15rem;
+		}
+
+		> thead th:nth-child(5) {
+			width: 2.5rem;
+		}
+	}
+}

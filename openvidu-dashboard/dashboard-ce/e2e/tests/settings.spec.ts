@@ -422,6 +422,30 @@ for (const screen of DIALOG_SCREENS) {
 	});
 }
 
+test.describe('Storage table at a desktop width', () => {
+	test.use({ viewport: { width: 1800, height: 1000 }, apiOptions: { legacy: true } });
+
+	test('the columns keep their positions when the Legacy data row goes away', async ({ page, api }) => {
+		await page.goto('/settings?tab=data');
+
+		const headers = page.locator('ovd-data-tab table.classes > thead th');
+		const positions = () =>
+			headers.evaluateAll((cells) => cells.map((cell) => Math.round(cell.getBoundingClientRect().left)));
+
+		await expect(legacyRow(page)).toHaveCount(1);
+
+		const before = await positions();
+
+		// The next read of the info document, when the Data tab opens again, no longer reports the legacy data.
+		api.options.legacy = false;
+		await page.getByRole('tab', { name: 'Preferences' }).click();
+		await page.getByRole('tab', { name: 'Data' }).click();
+		await expect(legacyRow(page)).toHaveCount(0);
+
+		expect(await positions()).toEqual(before);
+	});
+});
+
 test.describe('incompatible writer', () => {
 	test.use({
 		apiOptions: {
