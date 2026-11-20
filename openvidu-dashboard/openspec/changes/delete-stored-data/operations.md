@@ -44,6 +44,9 @@ The owner delegated these to the dashboard's author, who answered in a Slack dir
   set: a primary refuses `compact` without `force: true`, and `compact: "track_stats"` works on the time-series name.
   `ovweb lint` reported no errors (two warnings in other pages), and the build ran as `CI=false mkdocs build --strict`
   (exit 0, no WARNING), since `.cache/` of that checkout is owned by root and the privacy plugin cannot write there.
+- The manager session reviewed `39bc15b87` with no blocking findings, and the owner approved pushing it as it was.
+  `origin/next` was still at `75e6aa101`, so no rebase was needed. Pushed `75e6aa101..39bc15b87` to `next` of
+  OpenVidu/openvidu.io on 2026-11-20.
 
 ## Publish
 

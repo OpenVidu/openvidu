@@ -89,11 +89,11 @@
 
 ## 12. Documentation on `next` of OpenVidu/openvidu.io (orchestrator)
 
-- [ ] 12.1 Notify the manager session that the documentation work of this change on `next` of OpenVidu/openvidu.io starts.
-- [ ] 12.2 Pull `next` of OpenVidu/openvidu.io (PR #160 is merged there, merge commit 75e6aa101) and read the whole current `docs/docs/self-hosting/production-ready/observability/openvidu-dashboard.md`, which the dashboard's author has changed, before writing.
-- [ ] 12.3 On `next`, without a new branch or PR, write in that page the "Settings" line about the delete buttons, the legacy paragraph line, `### Deleting analytics data` and `#### Freeing disk space` (why MongoDB keeps the space, `dryRun`, `compact` for every collection including `track_stats`, Single Node, Elastic, High Availability member by member, external MongoDB, MongoDB 7.0 as the minimum for deleting stats), after checking the `compact` form for a time-series collection on MongoDB 8.0; verify the anchor `#freeing-disk-space` matches the dialog link.
-- [ ] 12.4 Take again `docs/assets/images/platform/self-hosting/production-ready/observability/openvidu-dashboard/settings-data-light.png` and `settings-data-dark.png` with the delete buttons and the new UI, at the same size and framing and with the same demo data style as the current ones.
-- [ ] 12.5 Run `ovweb lint` and `mkdocs build --strict`, commit the page and the screenshots on `next`, warn the owner and the manager session, and push `next` after their go-ahead. Record the commit in `operations.md`.
+- [x] 12.1 Notify the manager session that the documentation work of this change on `next` of OpenVidu/openvidu.io starts.
+- [x] 12.2 Pull `next` of OpenVidu/openvidu.io (PR #160 is merged there, merge commit 75e6aa101) and read the whole current `docs/docs/self-hosting/production-ready/observability/openvidu-dashboard.md`, which the dashboard's author has changed, before writing.
+- [x] 12.3 On `next`, without a new branch or PR, write in that page the "Settings" line about the delete buttons, the legacy paragraph line, `### Deleting analytics data` and `#### Freeing disk space` (why MongoDB keeps the space, `dryRun`, `compact` for every collection including `track_stats`, Single Node, Elastic, High Availability member by member, external MongoDB, MongoDB 7.0 as the minimum for deleting stats), after checking the `compact` form for a time-series collection on MongoDB 8.0; verify the anchor `#freeing-disk-space` matches the dialog link.
+- [x] 12.4 Take again `docs/assets/images/platform/self-hosting/production-ready/observability/openvidu-dashboard/settings-data-light.png` and `settings-data-dark.png` with the delete buttons and the new UI, at the same size and framing and with the same demo data style as the current ones.
+- [x] 12.5 Run `ovweb lint` and `mkdocs build --strict`, commit the page and the screenshots on `next`, warn the owner and the manager session, and push `next` after their go-ahead. Record the commit in `operations.md`.
 
 ## Workflow follow-up
 
