@@ -85,7 +85,7 @@
 - [x] 11.7 Verification S1: change the example in the comment of `features/settings/deletion-texts.ts:139` to "collection 2 of 9".
 - [x] 11.8 Verification S2: make `e2e/tests-backend/deletions.spec.ts` insert its own deletable events before it starts, so it passes on a CI retry and leaves the seeded events of the later suites alone.
 - [x] 11.9 Verification S4: make `typings/test/contract.test.ts` "Contract unchanged" not block the next real contract change (compare `schema/` and the version with `origin/master` or the generator's own check instead of a pinned digest), or remove the pin and keep the scenario covered by the generated-file checks.
-- [ ] 11.10 Run `./dashboard.sh check`, `./dashboard.sh test-integration` and `./dashboard.sh scenarios delete-stored-data`.
+- [x] 11.10 Run `./dashboard.sh check`, `./dashboard.sh test-integration` and `./dashboard.sh scenarios delete-stored-data`.
 
 ## 12. Documentation on `next` of OpenVidu/openvidu.io (orchestrator)
 
