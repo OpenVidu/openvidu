@@ -1,5 +1,10 @@
 import { computed, DestroyRef, effect, inject, Service, signal, untracked } from '@angular/core';
-import { freshnessWindows, type RefreshIntervalMs, type StatusResponse } from '@openvidu-dashboard/typings';
+import {
+	type DeletionJob,
+	freshnessWindows,
+	type RefreshIntervalMs,
+	type StatusResponse
+} from '@openvidu-dashboard/typings';
 
 import { HttpService } from '../http/http.js';
 import { InfoService } from '../info.js';
@@ -10,6 +15,11 @@ export const STATUS_POLL_MS: RefreshIntervalMs = 30_000;
 export const STATUS_POLL_FAST_MS: RefreshIntervalMs = 10_000;
 /** Consecutive silent statuses before the silent writer banner shows. */
 const SILENT_STATUSES = 2;
+
+/** The job and state of a deletion, `none` without one: a change of it is a deletion that started or ended. */
+export function deletionKey(job: DeletionJob | null | undefined): string {
+	return job === null || job === undefined ? 'none' : `${job.id}|${job.state}`;
+}
 
 /** The last status body and when the browser received it. */
 export interface StatusSnapshot {
@@ -118,7 +128,7 @@ export function injectServerStatusPoll(): RefreshScheduler {
 			return;
 		}
 
-		const deletion = body.deletion === undefined ? 'none' : `${body.deletion.id}|${body.deletion.state}`;
+		const deletion = deletionKey(body.deletion);
 		const key = `${body.schema.status}|${body.migration.state}`;
 		const deletionChanged = deletionRead !== undefined && deletion !== deletionRead;
 

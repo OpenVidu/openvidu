@@ -24,7 +24,7 @@ import { InfoTip } from '../../components/info-tip/info-tip.js';
 import { HttpService } from '../../core/http/http.js';
 import { InfoService } from '../../core/info.js';
 import { EXTERNAL_LINKS } from '../../core/links.js';
-import { ServerStatusService } from '../../core/refresh/server-status.js';
+import { deletionKey, ServerStatusService } from '../../core/refresh/server-status.js';
 import { QueryStateService } from '../../core/state/query-state.js';
 import { ToastService } from '../../core/ui/toast.js';
 import { formatBytes, formatNumber, formatTimestamp } from '../../format/formatters.js';
@@ -216,7 +216,7 @@ export class DataTab {
 		// more after the checkpoint that releases the freed space.
 		effect(() => {
 			const job = this.deletion();
-			const key = job === null ? 'none' : `${job.id}|${job.state}`;
+			const key = deletionKey(job);
 
 			if (
 				seen !== undefined &&
