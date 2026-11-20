@@ -208,6 +208,12 @@ export class DeletionRunner {
 				throw new Stop('shutdown');
 			}
 		};
+		/** The record shows this job completed: its finish applied, whatever the reply or a heartbeat said. */
+		const completedHere = async () => {
+			const recorded = (await records.read())?.deletion;
+
+			return recorded?.id === job.id && recorded.state === 'completed';
+		};
 		const heartbeat = setInterval(() => {
 			records.heartbeat(job.id).then(
 				(alive) => {
@@ -268,19 +274,14 @@ export class DeletionRunner {
 
 			// A retried finish finds the job no longer running when an earlier attempt applied but its reply was lost: the
 			// record tells that apart from another instance taking it over.
-			await write(async () => {
-				if (await records.finish(job.id, { state: 'completed' })) {
-					return true;
-				}
-
-				const recorded = (await records.read())?.deletion;
-
-				return recorded?.id === job.id && recorded.state === 'completed';
-			});
+			await write(async () => (await records.finish(job.id, { state: 'completed' })) || (await completedHere()));
 			logger.info('Deletion completed', { ...line, state: 'completed', deletedBy });
 		} catch (error) {
 			if (error instanceof Stop) {
-				if (error.reason === 'lost') {
+				// A heartbeat during a slow finish that applied also finds the job no longer running.
+				if (error.reason === 'lost' && (await completedHere().catch(() => false))) {
+					logger.info('Deletion completed', { ...line, state: 'completed', deletedBy });
+				} else if (error.reason === 'lost') {
 					logger.warn(`Deletion ${job.id} stopped: another instance took over its record`, line);
 				}
 

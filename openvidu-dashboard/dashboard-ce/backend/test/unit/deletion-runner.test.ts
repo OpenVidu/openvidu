@@ -1,11 +1,11 @@
 import type { Db, Document } from 'mongodb';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import { Collection, type DashboardDeletionJob } from '@openvidu-dashboard/typings';
 
 import { jobRecordedClasses, planSteps, stepCount } from '../../src/deletions/deletion-plan.js';
 import { judgeJob, toDeletionRecords } from '../../src/deletions/deletion-records.js';
-import { BATCH_PAUSE_MS, BATCH_SIZE, DeletionRunner } from '../../src/deletions/deletion-runner.js';
+import { BATCH_PAUSE_MS, BATCH_SIZE, DeletionRunner, HEARTBEAT_MS } from '../../src/deletions/deletion-runner.js';
 import { silentLogger } from '../support/silent-logger.js';
 
 const CUTOFF = new Date('2026-11-19T10:07:00Z');
@@ -169,6 +169,45 @@ describe('deletion runner', () => {
 			expect(logger.lines.filter((line) => line.includes('took over')).length, expected).toBe(
 				recorded.id === 'job-1' ? 0 : 1
 			);
+		}
+	});
+
+	it('logs a completion whose slow finish applied while a heartbeat found the job no longer running', async () => {
+		vi.useFakeTimers();
+
+		try {
+			const { db } = eventsDb(10, { now: 0 });
+			const logger = silentLogger();
+			let finishes = 0;
+			const runner = new DeletionRunner({
+				db,
+				records: {
+					...records,
+					// The finish applies, then fails after more than a heartbeat period; the heartbeat finds the job ended.
+					heartbeat: () => Promise.resolve(false),
+					finish: () =>
+						++finishes === 1
+							? new Promise<boolean>((_resolve, reject) => {
+									setTimeout(() => {
+										reject(new Error('socket timeout'));
+									}, HEARTBEAT_MS + 1_000);
+								})
+							: Promise.resolve(false),
+					read: () => Promise.resolve({ _id: 'dashboard', deletion: { ...job(), state: 'completed' } })
+				},
+				logger,
+				sleep: () => Promise.resolve()
+			});
+			const run = runner.run(job());
+
+			await vi.advanceTimersByTimeAsync(HEARTBEAT_MS + 1_000);
+			await run;
+
+			expect(finishes).toBe(1);
+			expect(logger.lines.some((line) => line.startsWith('info: Deletion completed'))).toBe(true);
+			expect(logger.lines.some((line) => line.includes('took over'))).toBe(false);
+		} finally {
+			vi.useRealTimers();
 		}
 	});
 
