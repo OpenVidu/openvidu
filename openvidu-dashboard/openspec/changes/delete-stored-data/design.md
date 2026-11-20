@@ -70,13 +70,13 @@ See proposal.md for the motivation. Facts that shape the approach:
 | Dialogs | Cancel and a red Delete; no count; the approved texts (specs of `settings-about`). |
 | API | `POST /api/v1/deletions`, `202`, `409 CONFLICT`; `deletion` in the status, `deletions` in the info; no cancel endpoint. |
 | Audit | One log line at start and end; the last deletion per class on the Data tab. |
-| Docs | `### Deleting analytics data` with `#### Freeing disk space` after `### Retention` in PR #160; every deployment type; `track_stats` and `dryRun` covered; `autoCompact` not mentioned; link through `latest`. |
+| Docs | `### Deleting analytics data` with `#### Freeing disk space` after `### Retention` on the dashboard page (committed on `next` of openvidu.io, where PR #160 was merged); every deployment type; `track_stats` and `dryRun` covered; `autoCompact` not mentioned; link through `latest`. |
 
 ### Owner decisions on the details
 
 | Topic | Decision |
 | --- | --- |
-| Free space line | Muted, under the Size of each class and of the Total, only from 1 MB. |
+| Free space line | Muted, under the Size, only from 1 MB, and (demo review, 2026-11-20, option b, confirmed by the dashboard's author on Slack at 16:13) only on a class row with a completed deletion record. The Total sums the rows that show one, under the same 1 MB rule; the Legacy data row never shows one; a class whose only deletion is incomplete shows none. The figure is unchanged and still includes the WiredTiger fragmentation that existed before any deletion (copy-on-write at checkpoints, page splits of non-sequential indexes; a fresh demo database showed 14.1 MB free for `events`): MongoDB cannot tell it apart, accepted. |
 | During the 3.9 migration | Every delete button disabled with the tooltip "Available once the migration ends". |
 | Empty class | A row with 0 documents keeps its button enabled. |
 | Banner | Dismissible like the migration banner; not shown on the Data tab. |
@@ -250,6 +250,10 @@ the storage cache records a value with the time its read started, `InfoService` 
   the Data tab component alive across tab switches: becoming active reads the info document, becoming inactive or being
   destroyed cancels the timer. The timer starts on any change of the deletion job or state to an ended state seen while
   the tab is open, a job the tab never saw running included; the tab's first status only sets the baseline.
+- Free space line: shown on a class row only when `deletions.<class>.completed` exists (an earlier completed record
+  keeps it after a later incomplete one) and the class's `freeBytes` reaches 1 MB; the Total sums the free figures of
+  the rows that show one and applies the same 1 MB rule; the Legacy data row never shows one. `freeBytes` stays in the
+  info document for every collection: only what the Data tab shows changes.
 - Free space pending: when the Data tab sees a job complete, the classes it completed (Entities also its detail classes,
   Total all seven) and the Total show "Free space updates in about a minute" in the free line's place, muted and
   without a tip, until the 65 s read; then the normal free line, or nothing under 1 MB. Becoming inactive drops the
@@ -272,7 +276,13 @@ the storage cache records a value with the time its read started, `InfoService` 
   bar; the interrupted and failed warning notice without dismiss and the refused error notice with dismiss, both at
   most 72 characters wide; the banner in the info style with the `delete` icon.
 
-### Documentation (PR #160)
+### Documentation (openvidu.io, branch `next`)
+
+PR #160 is merged into `next` (merge commit 75e6aa101) and the dashboard's author has changed the page since, so the
+orchestrator pulls `next` fresh, reads the whole current page first, commits directly on `next` (no branch, no PR,
+owner's decision of 2026-11-20) and pushes after warning the owner and the manager session. The Settings → Data
+screenshots (`settings-data-light.png`, `settings-data-dark.png`) are taken again with the delete buttons and the new
+UI, at the same size and framing and with the same demo data style.
 
 `openvidu-dashboard.md`: one line in "Settings" about the delete buttons; in "Analytics data", one line in the legacy
 paragraph ("You can also drop them from the **Data** tab of Settings."); after "Retention", `### Deleting analytics
@@ -313,7 +323,7 @@ as the minimum for deleting stats stored as a time series. The exact
 | Buttons of the table, Legacy row without a button, Buttons while a deletion runs, Buttons while the migration runs, Empty class deletable, the four detail dialogs, the three rollup dialogs, Total dialog, Total with the legacy checkbox, Total with the checkbox left unchecked, Legacy dialog, Deletion confirmed, Deletion refused, Deletion not started, Deletion cancelled in the dialog, Progress of an Entities deletion, Progress follows the status, Deletion completed while watching, Interrupted deletion notice, Failed deletion notice, Class deleted, Class left incomplete | `dashboard-ui/.../settings/settings-page.spec.ts` | unit |
 | Keyboard confirmation, Escape cancels | `dashboard-ui/.../components/confirm-dialog/confirm-dialog.spec.ts` | unit |
 | Link tip by keyboard | `dashboard-ui/.../components/info-tip/info-tip.spec.ts` | unit |
-| Free space tip of a class, Free space tip of the Total, Data tab opened, Second read after a deletion, No further reads, Free space pending after an Events deletion, Free space after the second read, Free space pending after a Total deletion, Free space pending dropped on return | `dashboard-ui/.../settings/settings-page.spec.ts` | unit |
+| Free space tip of a class, Free space tip of the Total, Data tab opened, Second read after a deletion, No further reads, Free space pending after an Events deletion, Free space after the second read, Free space pending after a Total deletion, Free space pending dropped on return, No free line before any deletion, Total sums the rows with a free line, Free line after an incomplete deletion, Legacy row without a free line | `dashboard-ui/.../settings/settings-page.spec.ts` | unit |
 | Storage read again after the release, Free space of the indexes | `backend/test/integration/api.test.ts` (clock injected for the first) | integration |
 | Link tip on a phone | `e2e/tests/settings.spec.ts` | e2e |
 | Banner of a running deletion, Banner of a Total deletion, No banner on the Data tab, Banner ends with the job, Dismissed banner and a new job | `dashboard-ui/.../shell/banner-slot.spec.ts` | unit |

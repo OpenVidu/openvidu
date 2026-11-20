@@ -26,16 +26,16 @@ administrator learns there that MongoDB keeps the freed disk space and how to re
   a 100 ms pause: progress on the Data tab ("Deleting Events: 1,234,000 documents deleted · collection 2 of 5"), a
   banner on every page, delete buttons disabled while it runs, a toast and a refreshed table when it ends, a notice when
   it is interrupted (its dashboard instance stopped) or fails, and "Deleted <date>" under each class name.
-- **Free space**: each class shows the space MongoDB keeps free for new data, and the size estimate at full retention
+- **Free space**: each deleted class shows the space MongoDB keeps free for new data, and the size estimate at full retention
   uses only the space in use, so a deletion no longer inflates it.
 - **API**: `POST /api/v1/deletions` starts a job (`202`, `409 CONFLICT` while one runs or for Legacy data outside its
   rollback window); `GET /api/v1/status` reports the job (`deletion`), `GET /api/v1/info` the last deletion of each
   class (`deletions`) and the free space of each collection (`storage.<collection>.freeBytes`). No cancel.
 - **Records**: the job, its lock and the last deletion of each class live in the dashboard's reserved `schema_meta`
   document (`_id: "dashboard"`), whose validator already accepts them; one server log line per deletion.
-- **Documentation** (OpenVidu/openvidu.io, PR #160, branch `docs/openvidu-dashboard-3.10`): a "Deleting analytics
+- **Documentation** (OpenVidu/openvidu.io, committed on `next`, where PR #160 was merged): a "Deleting analytics
   data" section with "Freeing disk space" (why MongoDB keeps the space, `compact` per deployment type), the target of
-  the dialog link.
+  the dialog link, and new Settings → Data screenshots.
 
 No breaking change: the API only gains a route and response fields, the data contract and its schema version are
 unchanged, and the writer (openvidu-livekit) is not touched.
@@ -44,7 +44,7 @@ CHANGELOG lines (`Added`, `UI`):
 - Delete stored analytics data per class, or all of it, from the Storage table of Settings → Data; data in progress
   is kept.
 - Drop the data kept for a rollback to 3.9 from Settings → Data once the migration has completed.
-- Show the space MongoDB keeps free for new data in each class of the Storage table.
+- Show the space MongoDB keeps free for new data in each class deleted from the Storage table.
 
 `Improved`, `UI`: The size estimate at full retention counts only the space in use.
 
@@ -84,4 +84,4 @@ change that builds on `deletions` of the info document.
 - `dashboard-ce/frontend/projects/dashboard-ui`: confirmation dialog, Data tab, banner, status cadence, links.
 - `dashboard-ce/e2e`: Data tab deletion flows with axe and both themes.
 - `CHANGELOG.md`, `AGENTS.md` of the backend and the library.
-- openvidu.io PR #160: the documentation section.
+- openvidu.io `next`: the documentation section and the Settings → Data screenshots.

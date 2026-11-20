@@ -52,20 +52,42 @@ far. The Total row carries no tip.
 ## ADDED Requirements
 
 ### Requirement: Free space of a class
-Edition: CE. Under the Size of a class row and of the Total, Data SHALL show a muted line "<size> free for new data",
-the space MongoDB keeps free for new documents in the collections of the row and their indexes (`freeBytes` of the info
-document), in the shared byte formatter, when it reaches 1 MB; Size keeps reading storage plus indexes.
+Edition: CE. Under the Size of a class row with a completed deletion, Data SHALL show a muted line "<size> free for new
+data", the space MongoDB keeps free for new documents in its collections and their indexes (`freeBytes`), in the shared
+byte formatter, when it reaches 1 MB; the Total sums the free figures of the rows that show one, under the same rule.
+Other rows, the Legacy data row included, show none; Size keeps reading storage plus indexes.
 
 #### Scenario: Free space after a deletion
-- **GIVEN** an `events` entry of 1,200 documents, 2 GB with indexes and 1.8 GB free
+- **GIVEN** a completed Events deletion and an `events` entry of 1,200 documents, 2 GB with indexes and 1.8 GB free
 - **WHEN** Data renders
 - **THEN** the Events row reads "1,200" and "2 GB" with "1.8 GB free for new data" under the size, and the Total adds
   1.8 GB to its own free line
 
 #### Scenario: Little free space
-- **GIVEN** class rows whose collections have 300 kB free in all
+- **GIVEN** class rows with completed deletions whose collections have 300 kB free in all
 - **WHEN** Data renders
 - **THEN** no row and not the Total shows a free line
+
+#### Scenario: No free line before any deletion
+- **GIVEN** a freshly generated database with no deletion record and an `events` entry with 14.1 MB free
+- **WHEN** Data renders
+- **THEN** no class row and not the Total shows a free line
+
+#### Scenario: Total sums the rows with a free line
+- **GIVEN** a completed Events deletion with 1.8 GB free, and no deletion of Stats, whose `track_stats` has 40 MB free
+- **WHEN** Data renders
+- **THEN** the Stats row shows no free line and the Total reads "1.8 GB free for new data"
+
+#### Scenario: Free line after an incomplete deletion
+- **GIVEN** Events with a completed deletion followed by an interrupted one, Stats with only an interrupted deletion,
+  and both with 50 MB free
+- **WHEN** Data renders
+- **THEN** the Events row shows "50 MB free for new data" and the Stats row shows no free line
+
+#### Scenario: Legacy row without a free line
+- **GIVEN** a Legacy data row kept for rollback whose collections have 2 GB free
+- **WHEN** Data renders
+- **THEN** the Legacy data row shows no free line and the Total does not count those 2 GB
 
 ### Requirement: Free space tip
 Edition: CE. Each free line SHALL end with an info tip with a link, named "About free space of <class>" ("About free
