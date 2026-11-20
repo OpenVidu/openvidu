@@ -237,13 +237,13 @@ describe('injectServerStatusPoll', () => {
 		await poll(statusResponse({ deletion: deletion('running') }));
 
 		for (let tick = 0; tick < 3; tick++) {
-			await vi.advanceTimersByTimeAsync(9_999);
+			await vi.advanceTimersByTimeAsync(1_999);
 			controller.expectNone('api/v1/status');
 			await vi.advanceTimersByTimeAsync(1);
 			await poll(statusResponse({ deletion: deletion('running') }));
 		}
 
-		await vi.advanceTimersByTimeAsync(10_000);
+		await vi.advanceTimersByTimeAsync(2_000);
 		await poll(statusResponse({ deletion: deletion('completed') }));
 		controller.expectOne('api/v1/info').flush(infoResponse());
 		await vi.advanceTimersByTimeAsync(29_999);
@@ -260,10 +260,34 @@ describe('injectServerStatusPoll', () => {
 		void TestBed.inject(ServerStatusService).pollNow();
 		await poll(statusResponse({ deletion: deletion('running') }));
 		controller.expectOne('api/v1/info').flush(infoResponse());
-		await vi.advanceTimersByTimeAsync(9_999);
+		await vi.advanceTimersByTimeAsync(1_999);
 		controller.expectNone('api/v1/status');
 		await vi.advanceTimersByTimeAsync(1);
 		await poll(statusResponse({ deletion: deletion('running') }));
+	});
+
+	it('Deletion during the migration', async () => {
+		const migrating = { migration: { state: 'running', progress: { processed: 1, total: 4 } } } as const;
+
+		await start(infoResponse(migrating));
+		await poll(statusResponse({ ...migrating, deletion: deletion('running') }));
+
+		for (let tick = 0; tick < 2; tick++) {
+			await vi.advanceTimersByTimeAsync(1_999);
+			controller.expectNone('api/v1/status');
+			await vi.advanceTimersByTimeAsync(1);
+			await poll(statusResponse({ ...migrating, deletion: deletion('running') }));
+		}
+
+		await vi.advanceTimersByTimeAsync(2_000);
+		await poll(statusResponse({ ...migrating, deletion: deletion('completed') }));
+		controller.match('api/v1/info').forEach((request) => {
+			request.flush(infoResponse(migrating));
+		});
+		await vi.advanceTimersByTimeAsync(9_999);
+		controller.expectNone('api/v1/status');
+		await vi.advanceTimersByTimeAsync(1);
+		await poll(statusResponse({ ...migrating, deletion: deletion('completed') }));
 	});
 
 	it('Deletion ends', async () => {
@@ -271,11 +295,11 @@ describe('injectServerStatusPoll', () => {
 		await poll(statusResponse({ deletion: deletion('running') }));
 		controller.expectNone('api/v1/info');
 
-		await vi.advanceTimersByTimeAsync(10_000);
+		await vi.advanceTimersByTimeAsync(2_000);
 		await poll(statusResponse({ deletion: { ...deletion('running'), deleted: 5_000 } }));
 		controller.expectNone('api/v1/info');
 
-		await vi.advanceTimersByTimeAsync(10_000);
+		await vi.advanceTimersByTimeAsync(2_000);
 		await poll(statusResponse({ deletion: deletion('completed') }));
 		controller.expectOne('api/v1/info').flush(
 			infoResponse({

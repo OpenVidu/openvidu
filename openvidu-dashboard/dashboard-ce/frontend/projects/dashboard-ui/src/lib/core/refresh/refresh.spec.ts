@@ -1,6 +1,5 @@
 import { DestroyRef, Injector, runInInjectionContext, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import type { RefreshIntervalMs } from '@openvidu-dashboard/typings';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { PreferencesService } from '../preferences/preferences.js';
@@ -195,7 +194,7 @@ describe('injectRefreshScheduler', () => {
 		TestBed.inject(PreferencesService).setRefreshInterval('live', 0);
 
 		const load = vi.fn(() => Promise.resolve());
-		const interval = signal<RefreshIntervalMs>(30_000);
+		const interval = signal(30_000);
 		const injector = Injector.create({ providers: [], parent: TestBed.inject(Injector) });
 		const scheduler = runInInjectionContext(injector, () =>
 			injectRefreshScheduler({ load, register: false, interval })
@@ -204,7 +203,9 @@ describe('injectRefreshScheduler', () => {
 		TestBed.tick();
 		await vi.advanceTimersByTimeAsync(0);
 		expect(load).toHaveBeenCalledTimes(1);
-		expect(scheduler.interval()).toBe(30_000);
+		expect(scheduler.delay()).toBe(30_000);
+		// The header control shows the viewer's interval, which this poll does not follow.
+		expect(scheduler.interval()).toBe(0);
 		expect(TestBed.inject(RefreshRegistry).active()).toBeNull();
 
 		await vi.advanceTimersByTimeAsync(30_000);

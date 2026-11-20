@@ -1,18 +1,15 @@
 import { computed, DestroyRef, effect, inject, Service, signal, untracked } from '@angular/core';
-import {
-	type DeletionJob,
-	freshnessWindows,
-	type RefreshIntervalMs,
-	type StatusResponse
-} from '@openvidu-dashboard/typings';
+import { type DeletionJob, freshnessWindows, type StatusResponse } from '@openvidu-dashboard/typings';
 
 import { HttpService } from '../http/http.js';
 import { InfoService } from '../info.js';
 import { injectRefreshScheduler, type RefreshScheduler } from './refresh.js';
 
-export const STATUS_POLL_MS: RefreshIntervalMs = 30_000;
-/** Poll while the migration or a deletion runs or the schema is uninitialized, so their banners follow the server. */
-export const STATUS_POLL_FAST_MS: RefreshIntervalMs = 10_000;
+export const STATUS_POLL_MS = 30_000;
+/** Poll while the migration runs or the schema is uninitialized, so their banners follow the server. */
+export const STATUS_POLL_FAST_MS = 10_000;
+/** Poll while a deletion runs, so its progress and its end show at once. */
+export const STATUS_POLL_DELETION_MS = 2_000;
 /** Consecutive silent statuses before the silent writer banner shows. */
 const SILENT_STATUSES = 2;
 
@@ -78,12 +75,14 @@ export class ServerStatusService {
 	 * the writer writes no batch until it ends.
 	 */
 	readonly writerSilent = computed(() => this.silentStreak() >= SILENT_STATUSES);
-	readonly pollInterval = computed<RefreshIntervalMs>(() => {
+	readonly pollInterval = computed<number>(() => {
 		const status = this.status();
 
-		return status?.migration.state === 'running' ||
-			status?.deletion?.state === 'running' ||
-			status?.schema.status === 'uninitialized'
+		if (status?.deletion?.state === 'running') {
+			return STATUS_POLL_DELETION_MS;
+		}
+
+		return status?.migration.state === 'running' || status?.schema.status === 'uninitialized'
 			? STATUS_POLL_FAST_MS
 			: STATUS_POLL_MS;
 	});

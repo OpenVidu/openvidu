@@ -26,7 +26,7 @@ test('Events deletion accepted: against the real backend', async ({ page }) => {
 		.getByRole('button', { name: 'Delete', exact: true })
 		.click();
 
-	// The status follows the job every 10 s while it runs, and the info document is read again once it ends.
+	// The status follows the job every 2 s while it runs, and the info document is read again once it ends.
 	await expect(events.locator('th .sub')).toHaveText(/^Deleted \d{4}-\d{2}-\d{2} \d{2}:\d{2}$/, { timeout: 30_000 });
 	expect(await count()).toBeLessThan(before);
 	await expect(page.locator('ovd-data-tab section.deletion')).toHaveCount(0);
