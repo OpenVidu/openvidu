@@ -1,11 +1,10 @@
-# Spec Delta
+# deletions-api Specification
 
 ## Purpose
-
 Lets the administrator delete stored analytics data by class, or all of it, through one background job at a time,
 keeping the data in progress, and records the outcome of each class for the UI and for extending editions.
 
-## ADDED Requirements
+## Requirements
 
 ### Requirement: Start a deletion
 Edition: CE. With a valid bearer token `POST /api/v1/deletions` SHALL take `{ class, includeLegacy? }`, `class` one of
