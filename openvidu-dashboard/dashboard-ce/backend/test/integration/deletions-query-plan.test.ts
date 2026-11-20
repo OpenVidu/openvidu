@@ -1,4 +1,5 @@
 import { generate } from '@openvidu-dashboard/data-generator/generator';
+import { summarizeExplain } from '@openvidu-dashboard/data-generator/plan';
 import { type Db, type Document, MongoClient } from 'mongodb';
 import { afterAll, beforeAll, describe, expect, inject, it } from 'vitest';
 
@@ -103,19 +104,44 @@ describe.skipIf(mongoUri === '')(`deletion batch query plans at scenario ${scena
 
 	it('reads time-series stats through the clustered buckets, without an index hint', async () => {
 		const timeseries = steps.filter((step) => step.collection === Collection.TRACK_STATS);
-		const buckets = await db.collection(`system.buckets.${Collection.TRACK_STATS}`).estimatedDocumentCount();
+		const buckets = db.collection(`system.buckets.${Collection.TRACK_STATS}`);
+		const [info] = await db.listCollections({ name: Collection.TRACK_STATS }, { nameOnly: false }).toArray();
+		const options = (info as { options?: { timeseries?: { bucketMaxSpanSeconds?: number } } } | undefined)?.options;
+		const maxSpanMs = (options?.timeseries?.bucketMaxSpanSeconds ?? 3_600) * 1_000;
 
 		expect(timeseries).toHaveLength(2);
 
 		for (const step of timeseries) {
 			expect(step.byTime).toBe(true);
 
+			// A batch reads the buckets in the order of their start up to the 5,000th deletable measurement, kept rooms'
+			// included, plus those that start within a bucket span after it, which the bounded sort reads ahead; never
+			// the rest of the collection. Its delete reads the same buckets.
+			const [bound] = await batchQuery(db, step).toArray();
+			const until = (bound?.ts as Date | undefined) ?? (step.filter.ts as { $lt: Date }).$lt;
+			const readAhead = await buckets.countDocuments({
+				'control.min.ts': { $lte: new Date(until.getTime() + maxSpanMs) }
+			});
 			const plan = await expectIndexBacked(db, batchQuery(db, step), {
-				maxDocsExamined: buckets,
+				maxDocsExamined: readAhead,
 				collscanThreshold: 0
 			});
+			const deletion = summarizeExplain(
+				await db.command({
+					explain: {
+						delete: Collection.TRACK_STATS,
+						deletes: [
+							{ q: { ...step.filter, ts: { ...(step.filter.ts as Document), $lte: until } }, limit: 0 }
+						]
+					},
+					verbosity: 'executionStats'
+				})
+			);
 
 			expect(plan.collscan).toBe(false);
+			expect(readAhead).toBeLessThan(await buckets.estimatedDocumentCount());
+			expect(deletion.collscan).toBe(false);
+			expect(deletion.totalDocsExamined ?? Number.POSITIVE_INFINITY).toBeLessThanOrEqual(readAhead);
 		}
 	});
 
