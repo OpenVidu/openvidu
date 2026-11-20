@@ -14,7 +14,13 @@ import { MatIconButton } from '@angular/material/button';
 import { MatIcon } from '@angular/material/icon';
 import { MatProgressBar } from '@angular/material/progress-bar';
 import { MatTooltip } from '@angular/material/tooltip';
-import type { DeletionClass, DeletionJob, InfoMigration, StartDeletionRequest } from '@openvidu-dashboard/typings';
+import type {
+	DeletionClass,
+	DeletionClassKey,
+	DeletionJob,
+	InfoMigration,
+	StartDeletionRequest
+} from '@openvidu-dashboard/typings';
 
 import { ConfirmDialogService } from '../../components/confirm-dialog/confirm-dialog.js';
 import { ExternalLink } from '../../components/external-link/external-link.js';
@@ -27,6 +33,7 @@ import { EXTERNAL_LINKS } from '../../core/links.js';
 import { deletionKey, ServerStatusService } from '../../core/refresh/server-status.js';
 import { QueryStateService } from '../../core/state/query-state.js';
 import { ToastService } from '../../core/ui/toast.js';
+import { completedClasses } from '../../format/deletions.js';
 import { formatBytes, formatNumber, formatTimestamp } from '../../format/formatters.js';
 import { CollectionBreakdown } from './collection-breakdown.js';
 import {
@@ -36,6 +43,7 @@ import {
 	deletionProgress,
 	deletionRecordLine,
 	deletionRefusal,
+	FREE_SPACE_PENDING,
 	FREE_SPACE_TIP,
 	LEGACY_CHECKBOX
 } from './deletion-texts.js';
@@ -112,6 +120,7 @@ export class DataTab {
 	protected readonly freeingDiskSpace = EXTERNAL_LINKS.freeingDiskSpace;
 	protected readonly freeSpaceTip = FREE_SPACE_TIP.text;
 	protected readonly freeSpaceLink = FREE_SPACE_TIP.link;
+	protected readonly freePendingText = FREE_SPACE_PENDING;
 	protected readonly legacyName = `Delete ${LEGACY_LABEL}`;
 	protected readonly info = this.service.info;
 	protected readonly unavailable = computed(() => this.info() === null && this.service.error() !== null);
@@ -149,6 +158,11 @@ export class DataTab {
 
 		return job === null ? null : deletionOutcome(job, this.tz(), Date.now());
 	});
+	/**
+	 * The classes of a deletion this tab saw complete, whose free space MongoDB reports only after its next checkpoint:
+	 * they and the Total show a notice instead of their free line until the second read.
+	 */
+	private readonly freePending = signal<ReadonlySet<DeletionClassKey> | null>(null);
 	/** The message of a refused deletion request, until the next request. */
 	protected readonly refused = signal<string | null>(null);
 
@@ -174,6 +188,7 @@ export class DataTab {
 		});
 		const free = (bytes: number) =>
 			bytes >= FREE_LINE_MIN_BYTES ? `${formatBytes(bytes)} free for new data` : null;
+		const pending = this.freePending();
 
 		return {
 			rows: rows.map((row) => ({
@@ -181,6 +196,7 @@ export class DataTab {
 				documentsText: formatNumber(row.documents),
 				size: formatBytes(row.bytes),
 				free: free(row.freeBytes),
+				freePending: row.deletionClass !== undefined && pending?.has(row.deletionClass) === true,
 				deleted:
 					row.deletionClass === undefined ? null : deletionRecordLine(info.deletions[row.deletionClass], tz),
 				deletion: row.deletionClass ?? (row.rollback ? ('legacy' as const) : null),
@@ -189,7 +205,8 @@ export class DataTab {
 			total: {
 				documents: formatNumber(total.documents),
 				size: formatBytes(total.bytes),
-				free: free(total.freeBytes)
+				free: free(total.freeBytes),
+				freePending: pending !== null
 			},
 			retentionReported: info.retention !== undefined,
 			legacyKept: rows.some((row) => row.rollback)
@@ -210,6 +227,7 @@ export class DataTab {
 				untracked(() => void this.service.load());
 			} else {
 				clearTimeout(secondRead);
+				this.freePending.set(null);
 			}
 		});
 		// When a status reports that a deletion ended, the shell reads the info document; the open tab reads it once
@@ -225,9 +243,16 @@ export class DataTab {
 				job.state !== 'running' &&
 				untracked(() => this.active())
 			) {
+				const completed = job.state === 'completed' ? completedClasses(job.class) : [];
+
 				clearTimeout(secondRead);
+				untracked(() => {
+					this.freePending.set(completed.length > 0 ? new Set(completed) : null);
+				});
 				secondRead = setTimeout(() => {
-					void this.service.load();
+					void this.service.load().then(() => {
+						this.freePending.set(null);
+					});
 				}, SECOND_READ_MS);
 			}
 

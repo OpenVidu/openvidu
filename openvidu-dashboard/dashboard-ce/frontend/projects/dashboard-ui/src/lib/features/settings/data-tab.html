@@ -76,7 +76,9 @@
 						<td class="end ovd-tabular">{{ row.documentsText }}</td>
 						<td class="end ovd-tabular">
 							{{ row.size }}
-							@if (row.free; as free) {
+							@if (row.freePending) {
+								<span class="sub">{{ freePendingText }}</span>
+							} @else if (row.free; as free) {
 								<span class="sub free">
 									{{ free }}
 									<ovd-info-tip
@@ -120,7 +122,9 @@
 					<td class="end ovd-tabular">{{ classes.total.documents }}</td>
 					<td class="end ovd-tabular">
 						{{ classes.total.size }}
-						@if (classes.total.free; as free) {
+						@if (classes.total.freePending) {
+							<span class="sub">{{ freePendingText }}</span>
+						} @else if (classes.total.free; as free) {
 							<span class="sub free">
 								{{ free }}
 								<ovd-info-tip

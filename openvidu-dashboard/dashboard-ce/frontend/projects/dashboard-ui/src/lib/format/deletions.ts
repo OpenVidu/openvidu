@@ -1,4 +1,9 @@
-import type { DeletionClass, DeletionClassKey, DeletionStep } from '@openvidu-dashboard/typings';
+import {
+	DELETION_CLASS_KEYS,
+	type DeletionClass,
+	type DeletionClassKey,
+	type DeletionStep
+} from '@openvidu-dashboard/typings';
 
 import { formatNumber } from './formatters.js';
 
@@ -21,6 +26,20 @@ export function deletionStepLabel(step: DeletionStep): string {
 /** The class of a job inside a sentence: "Entities", "all classes", "data before 3.10". */
 export function deletionClassLabel(deletionClass: DeletionClass): string {
 	return deletionClass === 'all' ? 'all classes' : deletionStepLabel(deletionClass);
+}
+
+/** The classes a completed job of `deletionClass` completed: Entities also its detail classes, Total all seven. */
+export function completedClasses(deletionClass: DeletionClass): readonly DeletionClassKey[] {
+	switch (deletionClass) {
+		case 'all':
+			return DELETION_CLASS_KEYS;
+		case 'entities':
+			return ['entities', 'events', 'stats', 'tracks'];
+		case 'legacy':
+			return [];
+		default:
+			return [deletionClass];
+	}
 }
 
 /** `1 document`, `1,250,312 documents`. */

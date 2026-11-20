@@ -98,6 +98,9 @@ export const FREE_SPACE_TIP = {
 	link: 'Freeing disk space'
 };
 
+/** In place of a free line until MongoDB reports the space a deletion freed, after its next checkpoint. */
+export const FREE_SPACE_PENDING = 'Free space updates in about a minute';
+
 /** The checkbox of the Total dialog while the legacy data is kept for a rollback. */
 export const LEGACY_CHECKBOX = {
 	label: 'Also delete the data before 3.10',

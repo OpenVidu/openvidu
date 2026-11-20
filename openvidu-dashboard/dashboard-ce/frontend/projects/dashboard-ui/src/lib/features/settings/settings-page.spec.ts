@@ -5,7 +5,13 @@ import { MatTooltip } from '@angular/material/tooltip';
 import { By } from '@angular/platform-browser';
 import { provideRouter, Router } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
-import type { InfoResponse, InfoRetention, InfoStorageEntry, StatusResponse } from '@openvidu-dashboard/typings';
+import type {
+	DeletionJob,
+	InfoResponse,
+	InfoRetention,
+	InfoStorageEntry,
+	StatusResponse
+} from '@openvidu-dashboard/typings';
 import { describe, expect, it, vi } from 'vitest';
 
 import { deletionJob, infoResponse, settle, signIn, statusResponse } from '../../../testing/fixtures.js';
@@ -1518,6 +1524,129 @@ describe('SettingsPage', () => {
 			} finally {
 				vi.useRealTimers();
 			}
+		});
+
+		const PENDING = 'Free space updates in about a minute';
+		const pendingStorage = {
+			events: freeEvents(2_000_000),
+			rooms: { documents: 4, storageBytes: 36_864, indexBytes: 344_136, freeBytes: 3_000_000 }
+		};
+		const freeLine = (element: HTMLElement, label: string) =>
+			text(classRow(element, label)?.querySelector('td:nth-child(4) .sub'));
+		const totalLine = (element: HTMLElement) => text(element.querySelector('ovd-data-tab tfoot .sub'));
+
+		/** Answers a status reporting `completed` and the shell's read after it, with `storage`. */
+		async function reportCompleted(
+			harness: RouterTestingHarness,
+			http: HttpTestingController,
+			completed: DeletionJob,
+			storage: InfoResponse['storage']
+		): Promise<void> {
+			await loadStatus(http, statusResponse({ deletion: completed }));
+			await harness.fixture.whenStable();
+			http.match('api/v1/info').forEach((request) => {
+				request.flush(infoResponse({ retention: DEFAULT_RETENTION, storage }));
+			});
+			await settle();
+			await harness.fixture.whenStable();
+		}
+
+		it('Free space pending after an Events deletion', async () => {
+			const { harness, http, element } = await dataTab({ storage: pendingStorage }, { deletion: job() });
+
+			expect(freeLine(element, 'Events')).toBe('2 MB free for new data');
+			await reportCompleted(harness, http, job({ state: 'completed', deleted: 10 }), pendingStorage);
+
+			expect(freeLine(element, 'Events')).toBe(PENDING);
+			expect(totalLine(element)).toBe(PENDING);
+			expect(classRow(element, 'Events')?.querySelector('td:nth-child(4) ovd-info-tip')).toBeNull();
+			expect(freeLine(element, 'Entities')).toBe('3 MB free for new data');
+		});
+
+		it('Free space after the second read', async () => {
+			const { harness, http, element } = await dataTab({ storage: pendingStorage }, { deletion: job() });
+
+			try {
+				await completeWithFakeTimers(harness, http);
+				await harness.fixture.whenStable();
+				expect(freeLine(element, 'Events')).toBe(PENDING);
+
+				await vi.advanceTimersByTimeAsync(SECOND_READ_MS);
+				http.match('api/v1/status').forEach((request) => {
+					request.flush(statusResponse({ deletion: job({ state: 'completed', deleted: 10 }) }));
+				});
+				http.expectOne('api/v1/info').flush(
+					infoResponse({ retention: DEFAULT_RETENTION, storage: { events: freeEvents(17_200_000) } })
+				);
+				await vi.advanceTimersByTimeAsync(0);
+				await harness.fixture.whenStable();
+
+				expect(freeLine(element, 'Events')).toBe('17.2 MB free for new data');
+				expect(totalLine(element)).toBe('17.2 MB free for new data');
+				expect(element.querySelector('ovd-data-tab')?.textContent).not.toContain(PENDING);
+			} finally {
+				vi.useRealTimers();
+			}
+		});
+
+		it('Free space pending after a Total deletion', async () => {
+			const { harness, http, element } = await dataTab({ storage: {} }, { deletion: job({ class: 'all' }) });
+
+			await reportCompleted(harness, http, job({ class: 'all', state: 'completed', deleted: 10 }), {});
+
+			const classes = [
+				'Events',
+				'Stats',
+				'Tracks and subscriptions',
+				'Entities',
+				'5-minute rollups',
+				'Hourly rollups',
+				'Daily rollups'
+			];
+
+			expect(classes.map((label) => freeLine(element, label))).toEqual(classes.map(() => PENDING));
+			expect(totalLine(element)).toBe(PENDING);
+		});
+
+		it('Free space pending after a Total deletion: a Legacy deletion completes no class and shows none', async () => {
+			const { harness, http, element } = await dataTab(
+				{ storage: pendingStorage },
+				{ deletion: job({ class: 'legacy', currentClass: 'legacy' }) }
+			);
+
+			await reportCompleted(
+				harness,
+				http,
+				job({ class: 'legacy', currentClass: 'legacy', state: 'completed', deleted: 5 }),
+				pendingStorage
+			);
+
+			expect(element.querySelector('ovd-data-tab')?.textContent).not.toContain(PENDING);
+		});
+
+		it('Free space pending dropped on return', async () => {
+			const { harness, http, element } = await dataTab({ storage: pendingStorage }, { deletion: job() });
+
+			await reportCompleted(harness, http, job({ state: 'completed', deleted: 10 }), pendingStorage);
+			expect(freeLine(element, 'Events')).toBe(PENDING);
+
+			await harness.navigateByUrl('/settings?tab=preferences');
+			await harness.fixture.whenStable();
+			await harness.navigateByUrl('/settings?tab=data');
+
+			for (let wait = 0; wait < 3; wait++) {
+				await harness.fixture.whenStable();
+				await settle();
+			}
+
+			http.expectOne('api/v1/info').flush(
+				infoResponse({ retention: DEFAULT_RETENTION, storage: { events: freeEvents(5_000_000) } })
+			);
+			await settle();
+			await harness.fixture.whenStable();
+
+			expect(element.querySelector('ovd-data-tab')?.textContent).not.toContain(PENDING);
+			expect(freeLine(element, 'Events')).toBe('5 MB free for new data');
 		});
 
 		it('Little free space', async () => {
