@@ -19,7 +19,7 @@ export function registerDeletionRoutes(registry: RouteRegistry, deletions: () =>
 			202: { description: 'The deletion job started', schema: deletionJob },
 			409: {
 				description:
-					'A deletion is already running, or the data before 3.10 is not kept for rollback (CONFLICT)'
+					'The migration of the data before 3.10 is running, a deletion is already running, or the data before 3.10 is not kept for rollback (CONFLICT)'
 			}
 		},
 		handler: async ({ body, req, res }) => {

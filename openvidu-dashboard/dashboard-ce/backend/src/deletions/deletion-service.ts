@@ -15,6 +15,7 @@ import { type DeletionRecordsStore, toDeletionJob } from './deletion-records.js'
 import type { DeletionRunner } from './deletion-runner.js';
 
 export const ALREADY_RUNNING = 'A deletion is already running';
+export const MIGRATION_RUNNING = 'Available once the migration ends';
 export const LEGACY_NOT_KEPT = 'The data before 3.10 is not kept for rollback';
 
 export interface DeletionServiceOptions {
@@ -24,7 +25,10 @@ export interface DeletionServiceOptions {
 	now: () => Date;
 }
 
-/** Starts deletion jobs: one at a time across the instances, the legacy data only while kept for rollback. */
+/**
+ * Starts deletion jobs: none while the migration of the data before 3.10 runs, one at a time across the instances, the
+ * legacy data only while kept for rollback.
+ */
 export class DeletionService {
 	constructor(
 		private readonly db: Db,
@@ -33,8 +37,16 @@ export class DeletionService {
 
 	async start(request: StartDeletionRequest, requestId: string): Promise<DeletionJob> {
 		const includeLegacy = request.includeLegacy === true;
+		const migration = await this.db
+			.collection<SchemaMetaMigration>(Collection.SCHEMA_META)
+			.findOne({ _id: 'migration' }, { projection: { state: 1, legacyRetainedUntil: 1 } });
 
-		if ((request.class === 'legacy' || includeLegacy) && !(await this.legacyKept())) {
+		// The migration still inserts the data it replays: a deletion would miss it and record itself complete.
+		if (migration?.state === 'running') {
+			throw new ApiError('CONFLICT', MIGRATION_RUNNING);
+		}
+
+		if ((request.class === 'legacy' || includeLegacy) && !this.legacyKept(migration)) {
 			throw new ApiError('CONFLICT', LEGACY_NOT_KEPT);
 		}
 
@@ -57,11 +69,7 @@ export class DeletionService {
 	}
 
 	/** The migration has completed and keeps the legacy collections for a rollback until a later time. */
-	private async legacyKept(): Promise<boolean> {
-		const migration = await this.db
-			.collection<SchemaMetaMigration>(Collection.SCHEMA_META)
-			.findOne({ _id: 'migration' }, { projection: { state: 1, legacyRetainedUntil: 1 } });
-
+	private legacyKept(migration: Pick<SchemaMetaMigration, 'state' | 'legacyRetainedUntil'> | null): boolean {
 		return (
 			migration?.state === 'completed' &&
 			migration.legacyRetainedUntil instanceof Date &&

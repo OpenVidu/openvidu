@@ -276,6 +276,56 @@ describe.skipIf(mongoUri === '')('deletions API', () => {
 		expect(await remaining(db, ended)).toEqual(sizes(ended));
 	});
 
+	it('Deletion during the migration refused', async () => {
+		await reset(db, [{ _id: 'migration', state: 'running', ...migrationFields }]);
+		await insertWorld(db, room('RM_migrating', { endedAt: ago(DAY), events: 3 }));
+
+		for (const body of [{ class: 'events' }, { class: 'all' }]) {
+			const response = await postDeletion(ce, body);
+
+			expect(response.status, body.class).toBe(409);
+			expect(((await response.json()) as { error: unknown }).error).toEqual({
+				code: 'CONFLICT',
+				message: 'Available once the migration ends'
+			});
+		}
+
+		expect((await json<StatusResponse>(ce, '/status')).deletion).toBeUndefined();
+		expect(await db.collection(Collection.EVENTS).countDocuments({ roomSid: 'RM_migrating' })).toBe(3);
+	});
+
+	it('Deletion during the migration refused: before the lock of a running deletion', async () => {
+		await reset(db, [
+			{ _id: 'migration', state: 'running', ...migrationFields },
+			{
+				_id: 'dashboard',
+				deletion: {
+					id: 'job-running',
+					class: 'events',
+					includeLegacy: false,
+					state: 'running',
+					cutoff: ago(MINUTE),
+					startedAt: ago(MINUTE),
+					heartbeatAt: new Date(),
+					instance: 'elsewhere@2026-11-19T09:00:00.000Z',
+					currentClass: 'events',
+					collection: { index: 1, total: 1 },
+					deleted: 0,
+					deletedBy: {},
+					requestId: 'other'
+				}
+			}
+		]);
+
+		const response = await postDeletion(ce, { class: 'stats' });
+
+		expect(response.status).toBe(409);
+		expect(((await response.json()) as { error: { message: string } }).error.message).toBe(
+			'Available once the migration ends'
+		);
+		await db.collection(Collection.SCHEMA_META).deleteOne({ _id: 'dashboard' } as Document);
+	});
+
 	it('Legacy refused while the migration runs', async () => {
 		await reset(db, [{ _id: 'migration', state: 'running', ...migrationFields }]);
 		await seedLegacy(db);
@@ -285,7 +335,7 @@ describe.skipIf(mongoUri === '')('deletions API', () => {
 			const error = ((await response.json()) as { error: { code: string; message: string } }).error;
 
 			expect(response.status).toBe(409);
-			expect(error).toEqual({ code: 'CONFLICT', message: 'The data before 3.10 is not kept for rollback' });
+			expect(error).toEqual({ code: 'CONFLICT', message: 'Available once the migration ends' });
 		}
 
 		expect(await collectionNames(db)).toEqual(
