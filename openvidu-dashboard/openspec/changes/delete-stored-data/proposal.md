@@ -40,13 +40,9 @@ administrator learns there that MongoDB keeps the freed disk space and how to re
 No breaking change: the API only gains a route and response fields, the data contract and its schema version are
 unchanged, and the writer (openvidu-livekit) is not touched.
 
-CHANGELOG lines (`Added`, `UI`):
-- Delete stored analytics data per class, or all of it, from the Storage table of Settings → Data; data in progress
-  is kept.
-- Drop the data kept for a rollback to 3.9 from Settings → Data once the migration has completed.
-- Show the space MongoDB keeps free for new data in each class deleted from the Storage table.
-
-`Improved`, `UI`: The size estimate at full retention counts only the space in use.
+CHANGELOG line (`Added`, `UI`; the 3.10 CHANGELOG is written against 3.9, so no API line and no line for the size
+estimate, an intermediate step):
+- Deletion of stored analytics data from the Data tab of Settings: one class, every class or the data before 3.10, after a confirmation, as a background job with its progress, a banner on every page and a notice at its end. Data in progress is kept, and each deleted class shows when it was deleted and the space MongoDB keeps free for new data, with how to free that disk space.
 
 Edition: CE, and PRO through the CE packages. Repositories: this one (OpenVidu/openvidu, `openvidu-dashboard/`) and
 the documentation PR in OpenVidu/openvidu.io. Track: full (new API, several capabilities, background job, other

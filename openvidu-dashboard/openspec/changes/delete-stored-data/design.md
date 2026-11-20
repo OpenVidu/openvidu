@@ -380,7 +380,9 @@ does not block the next real contract change (verification S4).
 The e2e suites cannot run on the owner's machine (Ubuntu 20.04: Playwright 1.65 ships no Chromium for it); they are
 validated by the `e2e` job of CI. No baseline screenshot of the Data tab existed, so none was added.
 
-CHANGELOG lines were written in the commit of each observable change (owner decision), not in a final group.
+The CHANGELOG has one line under `Added` › `UI` (the proposal's), replacing, after the rebase onto the 3.10 CHANGELOG
+written against 3.9, the lines first written in the commit of each observable change; no API line and no `Improved`
+line.
 
 ## Risks / Trade-offs
 
