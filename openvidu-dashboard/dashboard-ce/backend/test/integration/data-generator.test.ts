@@ -26,6 +26,11 @@ import { afterAll, beforeAll, describe, expect, inject, it, vi } from 'vitest';
 const mongoUri = inject('mongoUri');
 const DAY = 86_400_000;
 
+/** A generated document: every entity is keyed by a string identifier. */
+interface Keyed extends Document {
+	_id: string;
+}
+
 describe.skipIf(mongoUri === '')('data generator', () => {
 	let client: MongoClient;
 
@@ -101,8 +106,11 @@ describe.skipIf(mongoUri === '')('data generator', () => {
 
 			expect(outOfRangeCounts).toEqual(Object.fromEntries(Object.keys(outOfRange).map((name) => [name, 0])));
 
-			// Each ingress session has the INGRESS participant the ingress sessions API links to.
-			for (const session of await db.collection<IngressSessionDocument>('ingress_sessions').find({}).toArray()) {
+			// Each ingress session that published has the INGRESS participant the ingress sessions API links to.
+			for (const session of await db
+				.collection<IngressSessionDocument>('ingress_sessions')
+				.find({ roomSid: { $exists: true } })
+				.toArray()) {
 				const joined = await db.collection('participants').countDocuments({
 					roomSid: session.roomSid,
 					identityLower: session.participantIdentity?.toLowerCase(),
@@ -116,10 +124,11 @@ describe.skipIf(mongoUri === '')('data generator', () => {
 				expect(joined, session._id).toBeGreaterThan(0);
 			}
 
-			// Each egress with a room has the EGRESS session the egress detail resolves: identity = egress id.
+			// Each egress with a room that went active has the EGRESS session the egress detail resolves: identity =
+			// egress id.
 			for (const egress of await db
 				.collection<EgressDocument>('egresses')
-				.find({ roomSid: { $exists: true } })
+				.find({ roomSid: { $exists: true }, 'statusHistory.status': 'active' })
 				.toArray()) {
 				const joined = await db.collection('participants').countDocuments({
 					roomSid: egress.roomSid,
@@ -521,12 +530,13 @@ describe.skipIf(mongoUri === '')('data generator', () => {
 			expect([...byTopology.keys()].sort()).toEqual(Object.values(RoomTopology).sort());
 			expect(ranked.slice(0, 2).sort()).toEqual(['many_to_many', 'one_to_one']);
 
-			// A room is recorded when one of its egresses has a file or segments output, all of which went active.
+			// A room is recorded when one of its egresses requested a file or segments output and went active.
 			const recordingRooms = new Set(
 				(
-					(await db
-						.collection('egresses')
-						.distinct('roomSid', { 'outputs.kind': { $in: ['file', 'segments'] } })) as string[]
+					(await db.collection('egresses').distinct('roomSid', {
+						'request.outputs': { $in: ['file', 'segments'] },
+						'statusHistory.status': 'active'
+					})) as string[]
 				).filter(Boolean)
 			);
 			const allRooms = await db.collection<RoomDocument>('rooms').find().toArray();
@@ -661,76 +671,6 @@ describe.skipIf(mongoUri === '')('data generator', () => {
 		}
 	});
 
-	it('Ingress definition: generated ingresses expire only once deleted', async () => {
-		const db = client.db('dashboard_test_generator_ingresses');
-		await db.dropDatabase();
-		const entitiesDays = 20;
-
-		try {
-			await generate(db, {
-				scenario: 'S',
-				days: 30,
-				statsMode: 'participant',
-				seed: 1,
-				retentionDays: { events: 30, stats: 1, tracks: 1, entities: entitiesDays },
-				timeseries: true,
-				rollups: { fiveMinute: false, nodes: false, roomSums: false }
-			});
-
-			const now = Date.now();
-			const week = now - 7 * DAY;
-			const ingresses = await db.collection<IngressDocument>('ingresses').find({}).toArray();
-			const existing = ingresses.filter((ingress) => ingress.status !== 'deleted');
-			const deleted = ingresses.filter((ingress) => ingress.status === 'deleted');
-			const events = db.collection<EventDocument>('events');
-			const sessions = db.collection<IngressSessionDocument>('ingress_sessions');
-
-			expect(existing.length).toBeGreaterThan(0);
-			expect(
-				existing.map((ingress) => [ingress._id, ingress.deletedAt ?? null, ingress.expiresAt ?? null])
-			).toEqual(existing.map((ingress) => [ingress._id, null, null]));
-			expect(
-				await events.countDocuments({ type: 'INGRESS_DELETED', ingressId: { $in: existing.map((i) => i._id) } })
-			).toBe(0);
-
-			// Deleted more than a week ago and recently, every one after its last session ended.
-			expect(deleted.some((ingress) => (ingress.deletedAt?.getTime() ?? now) < week)).toBe(true);
-			expect(deleted.some((ingress) => (ingress.deletedAt?.getTime() ?? 0) > week)).toBe(true);
-
-			for (const ingress of deleted) {
-				const deletedAt = ingress.deletedAt ?? new Date(0);
-
-				expect(ingress.expiresAt, ingress._id).toEqual(new Date(deletedAt.getTime() + entitiesDays * DAY));
-				expect(ingress.expiresAt?.getTime() ?? 0, ingress._id).toBeGreaterThan(now);
-				expect(
-					await sessions.countDocuments({
-						ingressId: ingress._id,
-						endedAt: { $not: { $lt: deletedAt } }
-					}),
-					ingress._id
-				).toBe(0);
-				expect(
-					await events.countDocuments({ type: 'INGRESS_DELETED', ingressId: ingress._id, ts: deletedAt }),
-					ingress._id
-				).toBe(1);
-			}
-
-			// A definition deleted longer ago than the entities retention is gone, as the TTL monitor leaves it.
-			const expired = await events
-				.find({ type: 'INGRESS_DELETED', ts: { $lte: new Date(now - entitiesDays * DAY) } })
-				.toArray();
-
-			expect(expired.length).toBeGreaterThan(0);
-			expect(
-				await db
-					.collection<IngressDocument>('ingresses')
-					.countDocuments({ _id: { $in: expired.map((event) => event.ingressId ?? '') } })
-			).toBe(0);
-		} finally {
-			await db.dropDatabase();
-		}
-	});
-
 	it('generates a legacy history with a completed migration', async () => {
 		const plain = client.db('dashboard_test_generator_without_legacy');
 		const db = client.db('dashboard_test_generator_legacy');
@@ -844,6 +784,425 @@ describe.skipIf(mongoUri === '')('data generator', () => {
 		} finally {
 			await db.dropDatabase();
 		}
+	});
+
+	/**
+	 * One month of scenario S with the events kept for the whole month and the entities for 20 days, read by the checks
+	 * that the generated scenarios are the ones a deployment really stores.
+	 */
+	describe('generated scenarios', () => {
+		const entitiesDays = 20;
+		const dbName = 'dashboard_test_generator_scenarios';
+		let generatedAt = 0;
+
+		const docs = async <T>(name: string, filter: Filter<Keyed> = {}): Promise<T[]> =>
+			(await client.db(dbName).collection<Keyed>(name).find(filter).toArray()) as unknown as T[];
+		const count = (name: string, filter: Filter<Keyed> = {}) =>
+			client.db(dbName).collection<Keyed>(name).countDocuments(filter);
+		const countBy = async (name: string, field: string, filter: Filter<Keyed> = {}) =>
+			Object.fromEntries(
+				(
+					await client
+						.db(dbName)
+						.collection<Keyed>(name)
+						.aggregate<{ _id: unknown; n: number }>([
+							{ $match: filter },
+							{ $group: { _id: `$${field}`, n: { $sum: 1 } } }
+						])
+						.toArray()
+				).map((row) => [String(row._id), row.n])
+			);
+
+		beforeAll(async () => {
+			const db = client.db(dbName);
+			await db.dropDatabase();
+			// The generator dates everything up to the start of its minute, and leaves out what expired by then.
+			generatedAt = Math.floor(Date.now() / 60_000) * 60_000;
+			await generate(db, {
+				scenario: 'S',
+				days: 30,
+				statsMode: 'participant',
+				seed: 1,
+				retentionDays: { events: 30, stats: 1, tracks: 7, entities: entitiesDays },
+				timeseries: true,
+				rollups: { fiveMinute: false, nodes: true, roomSums: false },
+				mediaNodes: true
+			});
+		}, 600_000);
+
+		afterAll(async () => {
+			await client.db(dbName).dropDatabase();
+		});
+
+		it('Ingress definition: generated ingresses expire only once deleted', async () => {
+			const week = generatedAt - 7 * DAY;
+			const ingresses = await docs<IngressDocument>('ingresses');
+			const existing = ingresses.filter((ingress) => ingress.status !== 'deleted');
+			const deleted = ingresses.filter((ingress) => ingress.status === 'deleted');
+
+			expect(existing.length).toBeGreaterThan(0);
+			expect(
+				existing.map((ingress) => [ingress._id, ingress.deletedAt ?? null, ingress.expiresAt ?? null])
+			).toEqual(existing.map((ingress) => [ingress._id, null, null]));
+			expect(
+				await count('events', { type: 'INGRESS_DELETED', ingressId: { $in: existing.map((i) => i._id) } })
+			).toBe(0);
+			expect(deleted.some((ingress) => (ingress.deletedAt?.getTime() ?? generatedAt) < week)).toBe(true);
+			expect(deleted.some((ingress) => (ingress.deletedAt?.getTime() ?? 0) > week)).toBe(true);
+
+			for (const ingress of deleted) {
+				const deletedAt = ingress.deletedAt ?? new Date(0);
+
+				expect(ingress.expiresAt, ingress._id).toEqual(new Date(deletedAt.getTime() + entitiesDays * DAY));
+				expect(ingress.expiresAt?.getTime() ?? 0, ingress._id).toBeGreaterThan(generatedAt);
+				expect(
+					await count('ingress_sessions', { ingressId: ingress._id, endedAt: { $not: { $lt: deletedAt } } }),
+					ingress._id
+				).toBe(0);
+				expect(
+					await count('events', { type: 'INGRESS_DELETED', ingressId: ingress._id, ts: deletedAt }),
+					ingress._id
+				).toBe(1);
+			}
+
+			// A definition deleted longer ago than the entities retention is gone, as the TTL monitor leaves it.
+			const expired = await docs<EventDocument>('events', {
+				type: 'INGRESS_DELETED',
+				ts: { $lte: new Date(generatedAt - entitiesDays * DAY) }
+			});
+
+			expect(expired.length).toBeGreaterThan(0);
+			const ids = expired.map((event) => event.ingressId ?? '');
+
+			expect(await count('ingresses', { _id: { $in: ids } })).toBe(0);
+		});
+
+		it('Fields of ingress documents: sessions and ingresses take the statuses the writer stores for each stop', async () => {
+			const sessions = await docs<IngressSessionDocument>('ingress_sessions');
+			const ended = sessions.filter((s) => s.closedBy === 'event');
+
+			expect(Object.keys(await countBy('ingress_sessions', 'status')).sort()).toEqual([
+				'buffering',
+				'complete',
+				'error',
+				'inactive',
+				'publishing'
+			]);
+
+			for (const session of ended) {
+				const expected =
+					session.error === undefined ? (session.inputType === 'url' ? 'complete' : 'inactive') : 'error';
+
+				expect(session.status, session._id).toBe(expected);
+			}
+
+			// The stored INGRESS_ENDED leaves out ENDPOINT_INACTIVE, the zero value of the state.
+			const inactive = ended.find((s) => s.status === 'inactive');
+			const event = (await client
+				.db(dbName)
+				.collection('events')
+				.findOne({ type: 'INGRESS_ENDED', ingressSessionId: inactive?._id })) as EventDocument | null;
+
+			expect(
+				(event?.payload as { ingress?: { state?: { status?: string } } } | undefined)?.ingress?.state
+			).toBeDefined();
+			expect(
+				(event?.payload as { ingress?: { state?: { status?: string } } } | undefined)?.ingress?.state?.status
+			).toBeUndefined();
+
+			// An ingress takes the status of its latest session until it is deleted.
+			for (const ingress of await docs<IngressDocument>('ingresses', { status: { $ne: 'deleted' } })) {
+				const last = sessions
+					.filter((s) => s.ingressId === ingress._id)
+					.sort((a, b) => a.startedAt.getTime() - b.startedAt.getTime())
+					.at(-1);
+				const all = sessions.filter((s) => s.ingressId === ingress._id);
+
+				if (all.length === ingress.sessions) {
+					expect(ingress.status, ingress._id).toBe(last?.status ?? 'inactive');
+				}
+			}
+		});
+
+		it('Reusable ingress with two sessions: generated ingresses have none, one or several sessions', async () => {
+			const sessions = await docs<IngressSessionDocument>('ingress_sessions');
+			const ingresses = await docs<IngressDocument>('ingresses');
+			const several = ingresses.filter((ingress) => ingress.sessions >= 2);
+
+			expect(several.length).toBeGreaterThan(0);
+
+			for (const ingress of several) {
+				const own = sessions.filter((s) => s.ingressId === ingress._id);
+
+				if (own.length === ingress.sessions) {
+					expect(ingress.totalDurationMs, ingress._id).toBe(
+						own.reduce((sum, s) => sum + (s.durationMs ?? 0), 0)
+					);
+					expect(ingress.reusable, ingress._id).toBe(true);
+				}
+			}
+
+			const unused = ingresses.filter((ingress) => ingress.sessions === 0);
+
+			expect(unused.length).toBeGreaterThan(0);
+			expect(unused.filter((ingress) => ingress.lastSessionAt !== undefined)).toEqual([]);
+			expect(ingresses.some((ingress) => !ingress.enabled)).toBe(true);
+		});
+
+		it('Fields of ingress documents: buffering and reconciled sessions as the writer stores them', async () => {
+			const buffering = await docs<IngressSessionDocument>('ingress_sessions', { status: 'buffering' });
+
+			expect(buffering.length).toBeGreaterThan(0);
+
+			for (const session of buffering) {
+				expect(session.roomSid, session._id).toBeUndefined();
+				expect(session.endedAt, session._id).toBeUndefined();
+				expect(await count('events', { type: 'INGRESS_STARTED', ingressSessionId: session._id })).toBe(0);
+			}
+
+			expect(
+				await count('events', {
+					type: 'INGRESS_UPDATED',
+					ingressSessionId: { $in: buffering.map((s) => s._id) }
+				})
+			).toBe(buffering.length);
+
+			const reconciled = await docs<IngressSessionDocument>('ingress_sessions', { closedBy: 'reconciler' });
+
+			expect(reconciled.length).toBeGreaterThan(0);
+
+			for (const session of reconciled) {
+				expect([session.status, session.error], session._id).toEqual(['error', 'ingress lost (reconciled)']);
+			}
+
+			const synthetic = await docs<EventDocument>('events', {
+				type: 'INGRESS_ENDED',
+				synthetic: true,
+				ingressSessionId: { $in: reconciled.map((s) => s._id) }
+			});
+
+			expect(synthetic.length).toBeGreaterThan(0);
+			expect(synthetic.filter((event) => event._id !== `AE_SYN_${event.ingressSessionId ?? ''}`)).toEqual([]);
+		});
+
+		it("Generated data follows the writer's shape: ingress events carry no participant and no room until it publishes", async () => {
+			expect(await count('events', { type: /^INGRESS_/, identity: { $exists: true } })).toBe(0);
+			expect(
+				await count('events', {
+					type: { $in: ['INGRESS_CREATED', 'INGRESS_STARTED'] },
+					roomSid: { $exists: true }
+				})
+			).toBe(0);
+			expect(await count('events', { type: 'INGRESS_ENDED', synthetic: false })).toBeGreaterThan(0);
+			expect(await count('events', { type: 'INGRESS_ENDED', roomSid: { $exists: false } })).toBe(0);
+		});
+
+		it('Expiry of closed entities: no ingress session outlives its room', async () => {
+			const rooms = new Map(
+				(await docs<RoomDocument>('rooms', { status: 'closed' })).map((room) => [room._id, room])
+			);
+			const late = (
+				await docs<IngressSessionDocument>('ingress_sessions', { roomSid: { $exists: true } })
+			).filter((session) => {
+				const room = rooms.get(session.roomSid ?? '');
+
+				return room?.endedAt !== undefined && (session.endedAt === undefined || session.endedAt > room.endedAt);
+			});
+
+			expect(late.map((session) => session._id)).toEqual([]);
+		});
+
+		it('Web egress without room: generated web egresses name no room and have no participant', async () => {
+			const web = await docs<EgressDocument>('egresses', { type: 'web' });
+
+			expect(web.length).toBeGreaterThan(0);
+			expect(web.filter((egress) => egress.roomSid !== undefined || egress.roomName !== undefined)).toEqual([]);
+			expect(
+				await count('events', { egressId: { $in: web.map((e) => e._id) }, roomSid: { $exists: true } })
+			).toBe(0);
+			expect(
+				await count('participants', {
+					kind: 'EGRESS',
+					identityLower: { $in: web.map((e) => e._id.toLowerCase()) }
+				})
+			).toBe(0);
+			expect(await count('rooms', { egressIds: { $exists: true } })).toBe(0);
+		});
+
+		it('Fields of an egress document: generated egresses in every status, with several outputs and retries', async () => {
+			expect(Object.keys(await countBy('egresses', 'status')).sort()).toEqual([
+				'aborted',
+				'active',
+				'complete',
+				'ending',
+				'failed',
+				'limit_reached',
+				'starting'
+			]);
+
+			const reconciled = await docs<EgressDocument>('egresses', { closedBy: 'reconciler' });
+
+			expect(reconciled.length).toBeGreaterThan(0);
+			expect(reconciled.filter((e) => e.status !== 'failed' || e.error !== 'egress lost (reconciled)')).toEqual(
+				[]
+			);
+			expect(await count('egresses', { 'outputs.1': { $exists: true } })).toBeGreaterThan(0);
+			expect(await count('egresses', { 'outputs.kind': 'images' })).toBeGreaterThan(0);
+			expect(await count('egresses', { retryCount: { $gt: 0 } })).toBeGreaterThan(0);
+			expect(await count('egresses', { backupStorageUsed: true })).toBeGreaterThan(0);
+			expect(await count('egresses', { status: 'starting', 'outputs.0': { $exists: true } })).toBe(0);
+			// Only streams report a status of their own, and the summary lists every requested output once.
+			expect(
+				await count('egresses', {
+					outputs: { $elemMatch: { kind: { $ne: 'stream' }, status: { $exists: true } } }
+				})
+			).toBe(0);
+			expect(await count('egresses', { 'request.audioOnly': false })).toBe(0);
+			expect(await count('rooms', { 'egress.total': { $gte: 2 } })).toBeGreaterThan(0);
+		});
+
+		it("Rollups: API calls and errors counted by method in the server's scopes", async () => {
+			const hourly = await docs<HourlyRollupDocument>('analytics_hourly', { 'apiCalls.total': { $gt: 0 } });
+
+			expect(hourly.some((doc) => doc.scope === 'global')).toBe(true);
+			expect(hourly.some((doc) => doc.scope.startsWith('node:'))).toBe(true);
+			expect(await count('analytics_hourly', { 'apiErrors.total': { $gt: 0 } })).toBeGreaterThan(0);
+
+			for (const doc of hourly) {
+				const calls = doc.apiCalls;
+				const errors = doc.apiErrors;
+
+				expect(
+					Object.values(calls?.byMethod ?? {}).reduce((sum, n) => sum + n, 0),
+					doc._id
+				).toBe(calls?.total);
+				expect(errors?.total ?? 0, doc._id).toBeLessThanOrEqual(calls?.total ?? 0);
+			}
+
+			expect(await count('analytics_5min', { apiCalls: { $exists: true } })).toBe(0);
+		});
+
+		it('Raw event documents: the events agree with the resume, mute and publish counters', async () => {
+			const from = new Date(generatedAt - 29 * DAY);
+			const resumed = await docs<ParticipantDocument>('participants', {
+				joinedAt: { $gte: from },
+				resumes: { $gt: 0 }
+			});
+
+			expect(resumed.length).toBeGreaterThan(0);
+			expect(
+				await count('events', {
+					type: 'PARTICIPANT_RESUMED',
+					participantSid: { $in: resumed.map((p) => p._id) }
+				})
+			).toBe(resumed.reduce((sum, p) => sum + p.resumes, 0));
+			const steady = await docs<ParticipantDocument>('participants', { joinedAt: { $gte: from }, resumes: 0 });
+
+			expect(
+				await count('events', {
+					type: 'PARTICIPANT_RESUMED',
+					participantSid: { $in: steady.map((p) => p._id) }
+				})
+			).toBe(0);
+
+			const published = await count('events', { type: 'TRACK_PUBLISHED', ts: { $gte: from } });
+			const requested = await count('events', { type: 'TRACK_PUBLISH_REQUESTED', ts: { $gte: from } });
+
+			expect(Math.abs(published - requested)).toBeLessThanOrEqual(1);
+
+			// Every toggle ends as it started: a track unmuted at publish ends unmuted.
+			const muted = await countBy('events', 'trackSid', { type: 'TRACK_MUTED' });
+			const unmuted = await countBy('events', 'trackSid', { type: 'TRACK_UNMUTED' });
+
+			expect(Object.keys(muted).length).toBeGreaterThan(0);
+			expect(muted).toEqual(unmuted);
+			expect(await count('events', { type: 'TRACK_SUBSCRIBE_REQUESTED' })).toBe(0);
+		});
+
+		it('Fields of a participant document: sessions with stats have lastStatsAt, and their room the latest', async () => {
+			const rooms = await docs<RoomDocument>('rooms', {
+				createdAt: { $gte: new Date(generatedAt - 2 * DAY) }
+			});
+
+			for (const room of rooms) {
+				const participants = await docs<ParticipantDocument>('participants', { roomSid: room._id });
+				const latest = Math.max(0, ...participants.map((p) => p.lastStatsAt?.getTime() ?? 0));
+
+				expect(room.lastStatsAt?.getTime() ?? 0, room._id).toBe(latest);
+
+				for (const p of participants.filter((s) => s.quality.scoreCount > 0)) {
+					expect(p.lastStatsAt, p._id).toEqual(p.quality.lastScoreAt);
+				}
+			}
+
+			expect(await count('participants', { status: 'aborted', lastStatsAt: { $exists: true } })).toBe(0);
+			expect(await count('participants', { lastStatsAt: { $exists: true } })).toBeGreaterThan(0);
+		});
+
+		it('Track closed by participant leave: closed tracks and subscriptions name what closed them', async () => {
+			expect(await count('tracks', { status: 'unpublished', closedBy: { $exists: false } })).toBe(0);
+			expect(await count('track_subscriptions', { status: 'unsubscribed', closedBy: { $exists: false } })).toBe(
+				0
+			);
+			expect(await count('track_subscriptions', { status: 'failed', closedBy: { $exists: true } })).toBe(0);
+
+			const cascaded = await docs<Keyed>('tracks', { closedBy: 'reconciler' });
+
+			expect(cascaded.length).toBeGreaterThan(0);
+			expect(await count('track_subscriptions', { closedBy: 'reconciler' })).toBeGreaterThan(0);
+			expect(
+				await count('events', { type: 'TRACK_UNPUBLISHED', trackSid: { $in: cascaded.map((t) => t._id) } })
+			).toBe(0);
+		});
+
+		it('Fields of track and subscription documents: screen shares, encrypted rooms and joining sessions', async () => {
+			expect(Object.keys(await countBy('tracks', 'source')).sort()).toEqual([
+				'CAMERA',
+				'MICROPHONE',
+				'SCREEN_SHARE',
+				'SCREEN_SHARE_AUDIO'
+			]);
+			expect(await count('tracks', { encryption: 'GCM' })).toBeGreaterThan(0);
+
+			const joining = await docs<ParticipantDocument>('participants', { status: 'joining' });
+
+			expect(joining.length).toBeGreaterThan(0);
+			expect(joining.filter((p) => p.activeAt !== undefined || p.leftAt !== undefined)).toEqual([]);
+
+			// A session still connecting is in the room but not active in it.
+			for (const p of joining.slice(0, 20)) {
+				const room = (await client
+					.db(dbName)
+					.collection('rooms')
+					.findOne({ _id: p.roomSid as never })) as RoomDocument | null;
+				const active = await count('participants', { roomSid: p.roomSid, kind: 'STANDARD', status: 'active' });
+
+				expect(room?.participants.active, p._id).toBe(active);
+			}
+		});
+
+		it('Expiry of closed entities: no entity past its expiry is written, as the TTL monitor removes it', async () => {
+			const now = new Date(generatedAt);
+
+			for (const name of [
+				'rooms',
+				'participants',
+				'tracks',
+				'track_subscriptions',
+				'egresses',
+				'ingresses',
+				'ingress_sessions'
+			]) {
+				expect(await count(name, { expiresAt: { $lte: now } }), name).toBe(0);
+			}
+
+			expect(await count('rooms', { endedAt: { $lt: new Date(generatedAt - (entitiesDays + 1) * DAY) } })).toBe(
+				0
+			);
+			expect(
+				await count('analytics_hourly', { scope: 'global', bucket: { $lt: new Date(generatedAt - 25 * DAY) } })
+			).toBeGreaterThan(0);
+		});
 	});
 });
 

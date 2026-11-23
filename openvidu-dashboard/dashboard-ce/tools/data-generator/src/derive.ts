@@ -32,8 +32,8 @@ export interface EventDoc {
 	_id: string;
 	type: string;
 	ts: Date;
-	roomSid: string;
-	roomName: string;
+	roomSid?: string;
+	roomName?: string;
 	participantSid?: string;
 	identity?: string;
 	trackSid?: string;
@@ -78,18 +78,23 @@ export function deriveEvents(
 ): void {
 	const { room } = bundle;
 	const base = { roomSid: room._id, roomName: room.name, nodeId: room.nodeId };
+	/** `closed` names the entity a synthetic event closes: the writer keys the event by it. */
 	const push = (
 		type: string,
 		ts: Date | null,
-		extra: Partial<EventDoc>,
+		extra: Partial<Omit<EventDoc, 'roomSid' | 'roomName'>> & { roomSid?: string | null; roomName?: string | null },
 		payload: Record<string, unknown>,
-		synthetic = false
+		closed?: string
 	): void => {
 		if (ts === null || ts.getTime() < windows.eventsFrom) {
 			return;
 		}
 
-		emit({ _id: rng.id(synthetic ? 'AE_SYN_' : 'AE_'), type, ts, ...base, ...extra, synthetic, payload });
+		const _id = closed === undefined ? rng.id('AE_') : `AE_SYN_${closed}`;
+		const doc = { _id, type, ts, ...base, ...extra, synthetic: closed !== undefined, payload };
+
+		// An event of no room, or of a state that names none yet, has no room fields.
+		emit({ ...doc, roomSid: doc.roomSid ?? undefined, roomName: doc.roomName ?? undefined } as EventDoc);
 	};
 	const roomMin = { sid: room._id, name: room.name };
 	const roomFull = {
@@ -109,8 +114,8 @@ export function deriveEvents(
 			'ROOM_ENDED',
 			room.endedAt,
 			{},
-			{ room: roomMin, room_end_reason: RECONCILED, reconciler: { reason: 'node-dead' } },
-			true
+			{ room: roomMin, room_end_reason: RECONCILED, reconciler: { reason: room.reconcilerReason ?? NODE_DEAD } },
+			room._id
 		);
 	} else {
 		push('ROOM_ENDED', room.endedAt, {}, { room: roomFull, ...enumField('room_end_reason', roomEndReason(room)) });
@@ -134,6 +139,10 @@ export function deriveEvents(
 			}
 		});
 
+		for (const at of p.resumedAt) {
+			push('PARTICIPANT_RESUMED', at, ref, { room: roomMin, participant: { ...info, state: 'ACTIVE' } });
+		}
+
 		if (p.closedBy === 'reconciler') {
 			push(
 				p.status === 'aborted' ? 'PARTICIPANT_CONNECTION_ABORTED' : 'PARTICIPANT_LEFT',
@@ -142,9 +151,9 @@ export function deriveEvents(
 				{
 					room: roomMin,
 					participant: { sid: p._id, identity: p.identity, disconnect_reason: RECONCILED },
-					reconciler: { reason: 'node-dead' }
+					reconciler: { reason: room.reconcilerReason ?? NODE_DEAD }
 				},
-				true
+				p._id
 			);
 		} else {
 			push(p.status === 'aborted' ? 'PARTICIPANT_CONNECTION_ABORTED' : 'PARTICIPANT_LEFT', p.leftAt, ref, {
@@ -162,12 +171,30 @@ export function deriveEvents(
 	for (const t of bundle.tracks) {
 		const ref = { participantSid: t.participantSid, identity: t.identity, trackSid: t._id };
 		const participant = { sid: t.participantSid, identity: t.identity };
-		push('TRACK_PUBLISHED', t.publishedAt, ref, { room: roomMin, participant, track: trackInfo(t) });
-		push('TRACK_UNPUBLISHED', t.unpublishedAt, ref, {
+		const { muted: _muted, ...requested } = trackInfo(t);
+		push('TRACK_PUBLISH_REQUESTED', new Date(t.publishedAt.getTime() - 100), ref, {
 			room: roomMin,
-			participant: { sid: t.participantSid },
-			track: trackInfo(t)
+			participant,
+			track: requested
 		});
+		push('TRACK_PUBLISHED', t.publishedAt, ref, { room: roomMin, participant, track: trackInfo(t) });
+
+		for (const change of t.muteChanges) {
+			push(change.muted ? 'TRACK_MUTED' : 'TRACK_UNMUTED', change.at, ref, {
+				room: roomMin,
+				participant: { sid: t.participantSid },
+				track: { ...requested, ...(change.muted ? { muted: true } : {}) }
+			});
+		}
+
+		// What the reconciler's cascade closed has no event of its own.
+		if (t.closedBy === 'event') {
+			push('TRACK_UNPUBLISHED', t.unpublishedAt, ref, {
+				room: roomMin,
+				participant: { sid: t.participantSid },
+				track: trackInfo(t)
+			});
+		}
 	}
 
 	for (const s of bundle.subscriptions) {
@@ -189,16 +216,20 @@ export function deriveEvents(
 				track: track === undefined ? { sid: s.trackSid } : trackInfo(track),
 				publisher: { sid: s.publisherSid, identity: s.publisherIdentity }
 			});
-			push('TRACK_UNSUBSCRIBED', s.unsubscribedAt, ref, {
-				room: roomMin,
-				participant,
-				track: { sid: s.trackSid, ...(track === undefined ? {} : trackType(track)) }
-			});
+
+			if (s.closedBy === 'event') {
+				push('TRACK_UNSUBSCRIBED', s.unsubscribedAt, ref, {
+					room: roomMin,
+					participant,
+					track: { sid: s.trackSid, ...(track === undefined ? {} : trackType(track)) }
+				});
+			}
 		}
 	}
 
 	for (const e of bundle.egresses) {
-		const ref = { egressId: e._id };
+		// A web egress has no room: neither its events nor their payload name one.
+		const ref = { egressId: e._id, roomSid: e.roomSid, roomName: e.roomName };
 		const egress = egressInfo(e);
 
 		push('EGRESS_STARTED', e.startedAt, ref, { egress: { ...egress, updated_at: unixNs(e.startedAt) } });
@@ -209,75 +240,142 @@ export function deriveEvents(
 			});
 		}
 
-		if (e.endedAt !== null) {
+		if (e.endedAt !== null && e.closedBy === 'reconciler') {
 			push(
 				'EGRESS_ENDED',
 				e.endedAt,
 				ref,
 				{
 					egress: {
-						...egress,
-						...egressStatus(e.status),
-						ended_at: unixNs(e.endedAt),
-						updated_at: unixNs(e.endedAt),
-						...(e.error === null ? {} : { error: e.error }),
-						...(e.errorCode === null ? {} : { error_code: e.errorCode }),
-						...egressResults(e)
+						egress_id: e._id,
+						...(e.roomSid === null ? {} : { room_id: e.roomSid }),
+						...(e.roomName === null ? {} : { room_name: e.roomName }),
+						status: 'EGRESS_FAILED',
+						error: e.error
 					},
-					...(e.closedBy === 'reconciler' ? { reconciler: { reason: 'node-dead' } } : {})
+					reconciler: { reason: ROOM_CLOSED_NODE_DEAD }
 				},
-				e.closedBy === 'reconciler'
+				e._id
 			);
+		} else if (e.endedAt !== null) {
+			push('EGRESS_ENDED', e.endedAt, ref, {
+				egress: {
+					...egress,
+					...egressStatus(e.status),
+					ended_at: unixNs(e.endedAt),
+					updated_at: unixNs(e.endedAt),
+					...(e.error === null ? {} : { error: e.error }),
+					...(e.errorCode === null ? {} : { error_code: e.errorCode }),
+					...(e.retryCount === 0 ? {} : { retry_count: e.retryCount }),
+					...(e.backupStorageUsed ? { backup_storage_used: true } : {}),
+					...egressResults(e)
+				}
+			});
 		}
 	}
 
+	// Ingress events carry no participant, and the state names its room only once the session publishes, so
+	// INGRESS_CREATED, the buffering INGRESS_UPDATED and INGRESS_STARTED have no room SID.
+	const noRoom = { roomSid: null };
+
 	for (const i of bundle.ingresses) {
-		push('INGRESS_CREATED', i.createdAt, { ingressId: i._id }, { ingress: { ...ingressInfo(i), state: {} } });
+		push(
+			'INGRESS_CREATED',
+			i.createdAt,
+			{ ...noRoom, ingressId: i._id },
+			{ ingress: { ...ingressInfo(i), state: {} } }
+		);
 	}
 
 	const ingressesById = new Map(bundle.ingresses.map((i) => [i._id, i]));
 
 	for (const s of bundle.ingressSessions) {
-		const ref = { ingressId: s.ingressId, ingressSessionId: s._id, identity: s.participantIdentity };
+		const ref = { ingressId: s.ingressId, ingressSessionId: s._id };
 		const ingress = ingressesById.get(s.ingressId);
 		const definition = ingress === undefined ? { ingress_id: s.ingressId } : ingressInfo(ingress);
-		const state = {
-			room_id: s.roomSid,
-			started_at: unixNs(s.startedAt),
-			resource_id: s._id
+		const media = {
+			...(s.video === null
+				? {}
+				: {
+						video: {
+							mime_type: s.video.mimeType,
+							average_bitrate: s.video.averageBitrate,
+							width: s.video.width,
+							height: s.video.height,
+							framerate: s.video.framerate
+						}
+					}),
+			...(s.audio === null
+				? {}
+				: {
+						audio: {
+							mime_type: s.audio.mimeType,
+							average_bitrate: s.audio.averageBitrate,
+							channels: s.audio.channels,
+							sample_rate: s.audio.sampleRate
+						}
+					})
 		};
-		push('INGRESS_STARTED', s.startedAt, ref, {
-			ingress: {
-				...definition,
-				state: {
-					status: 'ENDPOINT_PUBLISHING',
-					video: {
-						mime_type: s.video.mimeType,
-						average_bitrate: s.video.averageBitrate,
-						width: s.video.width,
-						height: s.video.height,
-						framerate: s.video.framerate
-					},
-					audio: {
-						mime_type: s.audio.mimeType,
-						average_bitrate: s.audio.averageBitrate,
-						channels: s.audio.channels,
-						sample_rate: s.audio.sampleRate
-					},
-					...state,
-					updated_at: unixNs(s.startedAt)
+		const started = { started_at: unixNs(s.startedAt), resource_id: s._id };
+		push(
+			'INGRESS_UPDATED',
+			s.startedAt,
+			{ ...ref, ...noRoom },
+			{
+				ingress: {
+					...definition,
+					state: { status: 'ENDPOINT_BUFFERING', ...started, updated_at: unixNs(s.startedAt) }
 				}
 			}
-		});
+		);
 
-		if (s.endedAt !== null) {
+		if (s.status === 'buffering') {
+			continue;
+		}
+
+		const publishedAt = new Date(s.startedAt.getTime() + 500);
+		push(
+			'INGRESS_STARTED',
+			publishedAt,
+			{ ...ref, ...noRoom },
+			{
+				ingress: {
+					...definition,
+					state: { status: 'ENDPOINT_PUBLISHING', ...media, ...started, updated_at: unixNs(publishedAt) }
+				}
+			}
+		);
+
+		if (s.endedAt !== null && s.closedBy === 'reconciler') {
+			push(
+				'INGRESS_ENDED',
+				s.endedAt,
+				ref,
+				{
+					ingress: {
+						ingress_id: s.ingressId,
+						room_name: s.roomName,
+						state: {
+							status: 'ENDPOINT_ERROR',
+							error: s.error,
+							...(s.roomSid === null ? {} : { room_id: s.roomSid }),
+							resource_id: s._id
+						}
+					},
+					reconciler: { reason: ROOM_CLOSED_NODE_DEAD }
+				},
+				s._id
+			);
+		} else if (s.endedAt !== null) {
 			push('INGRESS_ENDED', s.endedAt, ref, {
 				ingress: {
 					...definition,
 					state: {
 						...enumField('status', INGRESS_STATES[s.status]),
 						...(s.error === null ? {} : { error: s.error }),
-						...state,
+						...media,
+						...(s.roomSid === null ? {} : { room_id: s.roomSid }),
+						...started,
 						ended_at: unixNs(s.endedAt),
 						updated_at: unixNs(s.endedAt)
 					}
@@ -287,14 +385,14 @@ export function deriveEvents(
 	}
 
 	// The server sends the definition with the state of its last session, ended before the deletion, so the writer
-	// stores the room and the session of that state on the event.
+	// stores the room and the session of that state on the event; an ingress never used names no room.
 	for (const i of bundle.ingresses) {
 		const last = bundle.ingressSessions.filter((s) => s.ingressId === i._id).at(-1);
 		const ended = last === undefined || last.endedAt === null ? undefined : { ...last, endedAt: last.endedAt };
 		push(
 			'INGRESS_DELETED',
 			i.deletedAt,
-			{ ingressId: i._id, ...(ended === undefined ? {} : { ingressSessionId: ended._id }) },
+			ended === undefined ? { ...noRoom, ingressId: i._id } : { ingressId: i._id, ingressSessionId: ended._id },
 			{
 				ingress: {
 					...ingressInfo(i),
@@ -302,10 +400,9 @@ export function deriveEvents(
 						ended === undefined
 							? {}
 							: {
-									...(ended.error === null
-										? {}
-										: { ...enumField('status', INGRESS_STATES.error), error: ended.error }),
-									room_id: ended.roomSid,
+									...(ended.status === 'error' ? enumField('status', INGRESS_STATES.error) : {}),
+									...(ended.error === null ? {} : { error: ended.error }),
+									...(ended.roomSid === null ? {} : { room_id: ended.roomSid }),
 									started_at: unixNs(ended.startedAt),
 									ended_at: unixNs(ended.endedAt),
 									updated_at: unixNs(ended.endedAt),
@@ -319,9 +416,14 @@ export function deriveEvents(
 
 /** Reason and disconnect reason of the reconciler's synthetic close events. */
 const RECONCILED = 'RECONCILED';
+/** Reasons of the reconciler's closures in their synthetic events. */
+const NODE_DEAD = 'node-dead';
+/** An egress or ingress session the reconciler closes with its room. */
+const ROOM_CLOSED_NODE_DEAD = 'room-closed-node-dead';
 
 /** Protojson names of the ingress session states; the zero value `ENDPOINT_INACTIVE` is never written. */
 const INGRESS_STATES: Record<IngressSessionDoc['status'], string> = {
+	inactive: 'ENDPOINT_INACTIVE',
 	buffering: 'ENDPOINT_BUFFERING',
 	publishing: 'ENDPOINT_PUBLISHING',
 	error: 'ENDPOINT_ERROR',
@@ -329,7 +431,15 @@ const INGRESS_STATES: Record<IngressSessionDoc['status'], string> = {
 };
 
 /** Protojson zero values, which the writer's codec omits. */
-const ZERO_ENUMS = new Set(['STANDARD', 'AUDIO', 'LOW', 'ROOM_END_UNKNOWN', 'UNKNOWN_REASON', 'EGRESS_STARTING']);
+const ZERO_ENUMS = new Set([
+	'STANDARD',
+	'AUDIO',
+	'LOW',
+	'ROOM_END_UNKNOWN',
+	'UNKNOWN_REASON',
+	'EGRESS_STARTING',
+	'ENDPOINT_INACTIVE'
+]);
 
 /** `{ [name]: value }`, or nothing when the value is absent: the driver would store `undefined` as `null`. */
 function defined(name: string, value: string | undefined): Record<string, string> {
@@ -441,15 +551,16 @@ export function egressRawRequest(e: EgressDoc): Record<string, unknown> {
 		layout?: string;
 	};
 	const options = { options: { preset: r.preset ?? 'H264_720P_30' } };
-	const output = e.outputs[0];
-	const outputs =
-		output === undefined
-			? {}
-			: output.kind === 'file'
-				? { file_outputs: [{ file_type: 'MP4', ...defined('filepath', output.filename) }] }
-				: output.kind === 'stream'
-					? { stream_outputs: [{ protocol: 'RTMP', urls: ['rtmps://stream.example.com/live/***'] }] }
-					: { segment_outputs: [defined('playlist_name', output.playlistName)] };
+	const kinds = (e.request.outputs ?? []) as readonly string[];
+	const folder = e.roomName ?? 'web';
+	const outputs = {
+		...(kinds.includes('file') ? { file_outputs: [{ file_type: 'MP4', filepath: `${folder}-${e._id}.mp4` }] } : {}),
+		...(kinds.includes('stream')
+			? { stream_outputs: [{ protocol: 'RTMP', urls: ['rtmps://stream.example.com/live/***'] }] }
+			: {}),
+		...(kinds.includes('segments') ? { segment_outputs: [{ playlist_name: `${e._id}.m3u8` }] } : {}),
+		...(kinds.includes('images') ? { image_outputs: [{ filename_prefix: `${folder}/${e._id}/thumbnail` }] } : {})
+	};
 
 	switch (e.type) {
 		case 'room_composite':
@@ -476,15 +587,22 @@ export function egressRawRequest(e: EgressDoc): Record<string, unknown> {
 				}
 			};
 		case 'track':
-			return { track: { room_name: e.roomName, ...defined('track_id', r.trackId) } };
+			return {
+				track: {
+					room_name: e.roomName,
+					...defined('track_id', r.trackId),
+					...(kinds.includes('file') ? { file: { filepath: `${folder}-${e._id}.ogg` } } : {}),
+					...(kinds.includes('stream') ? { websocket_url: 'wss://stream.example.com/***' } : {})
+				}
+			};
 	}
 }
 
 function egressInfo(e: EgressDoc): Record<string, unknown> {
 	return {
 		egress_id: e._id,
-		room_id: e.roomSid,
-		room_name: e.roomName,
+		...(e.roomSid === null ? {} : { room_id: e.roomSid }),
+		...(e.roomName === null ? {} : { room_name: e.roomName }),
 		...(e.sourceType === 'sdk' ? { source_type: 'EGRESS_SOURCE_TYPE_SDK' } : {}),
 		started_at: unixNs(e.startedAt),
 		request: egressRawRequest(e)
@@ -495,32 +613,43 @@ function egressResults(e: EgressDoc): Record<string, unknown> {
 	const files: Record<string, unknown>[] = [];
 	const streams: Record<string, unknown>[] = [];
 	const segments: Record<string, unknown>[] = [];
+	const images: Record<string, unknown>[] = [];
 
 	for (const o of e.outputs) {
 		const times = {
-			started_at: unixNs(o.startedAt),
-			...(o.endedAt === null ? {} : { ended_at: unixNs(o.endedAt) }),
-			duration: int64(o.durationMs).multiply(1_000_000)
+			...(o.startedAt === undefined ? {} : { started_at: unixNs(o.startedAt) }),
+			...(o.endedAt === undefined ? {} : { ended_at: unixNs(o.endedAt) }),
+			...(o.durationMs === undefined ? {} : { duration: int64(o.durationMs).multiply(1_000_000) })
 		};
+		const size = o.size === undefined ? {} : { size: o.size };
 
 		if (o.kind === 'file') {
-			files.push({ ...defined('filename', o.filename), ...times, size: o.size, location: o.location });
+			files.push({ ...defined('filename', o.filename), ...times, ...size, ...defined('location', o.location) });
 		} else if (o.kind === 'stream') {
-			streams.push({ url: 'rtmps://stream.example.com/live/***', status: o.status, ...times });
-		} else {
+			streams.push({
+				...defined('url', o.url),
+				// ACTIVE is the zero value of the stream status, which protojson omits.
+				...(o.status === 'ACTIVE' ? {} : defined('status', o.status)),
+				...defined('error', o.error),
+				...times
+			});
+		} else if (o.kind === 'segments') {
 			segments.push({
 				...defined('playlist_name', o.playlistName),
-				playlist_location: o.location,
+				...defined('playlist_location', o.location),
 				...times,
-				size: o.size
+				...size
 			});
+		} else {
+			images.push({ ...defined('filename_prefix', o.filenamePrefix), ...times });
 		}
 	}
 
 	return {
 		...(files.length === 0 ? {} : { file_results: files }),
 		...(streams.length === 0 ? {} : { stream_results: streams }),
-		...(segments.length === 0 ? {} : { segment_results: segments })
+		...(segments.length === 0 ? {} : { segment_results: segments }),
+		...(images.length === 0 ? {} : { image_results: images })
 	};
 }
 
@@ -726,6 +855,9 @@ interface Bucket {
 	ingress: Peaks & { sessionsStarted: number; sessionsEnded: number; byInputType: Counter; durationMs: number };
 	bytes: { up: number; down: number };
 	quality: { scoreSum: number; scoreCount: number; poor: number; lost: number };
+	/** Only once an API call was counted, as the writer increments them. */
+	apiCalls?: { total: number; byMethod: Counter };
+	apiErrors?: { total: number; byMethod: Counter };
 	identities?: Set<string>;
 }
 
@@ -766,6 +898,8 @@ export interface CountedRollupDoc {
 	ingress?: Bucket['ingress'];
 	bytes: { up: Long; down: Long };
 	quality: Bucket['quality'];
+	apiCalls?: Bucket['apiCalls'];
+	apiErrors?: Bucket['apiErrors'];
 	mediaStats: MediaStatsMarks;
 	uniqueIdentities?: number;
 }
@@ -913,6 +1047,21 @@ export class Rollups {
 			});
 		}
 
+		// API calls go to the scopes of the server that answered them, the room's.
+		for (const call of bundle.apiCalls) {
+			this.at(call.at, (b) => {
+				b.apiCalls ??= { total: 0, byMethod: {} };
+				b.apiCalls.total += 1;
+				inc(b.apiCalls.byMethod, call.method);
+
+				if (call.error) {
+					b.apiErrors ??= { total: 0, byMethod: {} };
+					b.apiErrors.total += 1;
+					inc(b.apiErrors.byMethod, call.method);
+				}
+			});
+		}
+
 		for (const s of bundle.subscriptions) {
 			this.at(s.subscribedAt, (b) => {
 				if (s.status === 'failed') {
@@ -954,10 +1103,15 @@ export class Rollups {
 
 		for (const s of bundle.ingressSessions) {
 			addSpan(this.activeIngress, s.startedAt, s.endedAt);
-			this.at(s.startedAt, (b) => {
-				b.ingress.sessionsStarted += 1;
-				inc(b.ingress.byInputType, s.inputType);
-			});
+
+			// INGRESS_STARTED counts a session once it publishes; one still buffering has not started.
+			if (s.status !== 'buffering') {
+				this.at(s.startedAt, (b) => {
+					b.ingress.sessionsStarted += 1;
+					inc(b.ingress.byInputType, s.inputType);
+				});
+			}
+
 			this.at(s.endedAt, (b) => {
 				b.ingress.sessionsEnded += 1;
 				b.ingress.durationMs += s.durationMs ?? 0;
@@ -1353,6 +1507,8 @@ function toDoc(scope: string, bucket: number, b: Bucket, daily: boolean): Rollup
 		...(scope === GLOBAL ? { egress: b.egress, ingress: b.ingress } : {}),
 		bytes: { up: int64(b.bytes.up), down: int64(b.bytes.down) },
 		quality: { ...b.quality, scoreSum: round2(b.quality.scoreSum) },
+		...(b.apiCalls === undefined ? {} : { apiCalls: b.apiCalls }),
+		...(b.apiErrors === undefined ? {} : { apiErrors: b.apiErrors }),
 		mediaStats: b.mediaStats,
 		...identities
 	};

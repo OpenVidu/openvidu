@@ -65,28 +65,51 @@ What it writes (`analytics_5min` stays empty without `--five-minute-rollups`):
   `topology` and `features.recording` follow the writer's rules: a separate seeded stream picks, by the size of the
   room, which participants send media (an unmuted track) and which publish nothing or tracks muted for good, as
   OpenVidu Meet does; scenario S over 7 days gives about 61 % N:M, 14 % 1:1, 9 % single participant, 8 % 1:N, 5 % no
-  publishers and 3 % empty rooms.
+  publishers and 3 % empty rooms. The 3 % of rooms closed by the reconciler (`absent-live`) stopped reporting while
+  sessions were still in them: those sessions, and their tracks, subscriptions, egresses and ingress sessions, are
+  closed by the reconciler at that instant, with its synthetic events (`AE_SYN_<id>`) and no closing event of their
+  own. `lastStatsAt` is the latest of its sessions'.
 - `participants`: unique identities per room follow a Poisson distribution around the scenario average;
   the difference between sessions/day and rooms/day × average size is produced as reconnects
   (`DUPLICATE_IDENTITY` leave plus a new session of the same identity). Sessions last ~20 min, 3 % are
-  aborted, 95 % are `STANDARD`; rooms with egress/ingress/agent/SIP get the matching participant kinds.
+  aborted, 95 % are `STANDARD`; rooms with egress/ingress/agent/SIP get the matching participant kinds, and 15 % of
+  the active rooms hold a session that joined seconds ago and is still `joining` (not counted as active).
   Client (sdk/os/browser/device/network), connection type, connect time, disconnect reason and resumes
-  follow fixed distributions. Agent sessions carry the `attributes` the writer keeps without `store_metadata`, derived
+  follow fixed distributions; each resume has its `PARTICIPANT_RESUMED`. A session with stats has `lastStatsAt`, its
+  last flush. Agent sessions carry the `attributes` the writer keeps without `store_metadata`, derived
   from their identity: `agent-transcriber` is an OpenVidu agent (`lk.agent_name` and `openvidu.agent`
   `speech-processing`), `agent-recorder` one in automatic dispatch (empty `lk.agent_name`) and `agent-assistant` a
   third-party agent (`lk.agent_name` `assistant` only); no other session has `attributes`.
 - `tracks` (CAMERA video + MICROPHONE audio per publishing participant, with simulcast layers and final
-  publish stats) and `track_subscriptions` (every participant subscribes to the tracks of the other
-  identities present at the same time; 1 % failed).
-- `egresses` (30 % of rooms; mostly `room_composite`; 70 % file, 20 % stream and 10 % segments outputs, so about a
-  quarter of the rooms are recorded; `complete`/`failed`/`aborted`, `active` in active rooms), `ingresses` and
-  `ingress_sessions` (2 % of rooms). An ingress definition keeps `expiresAt: null` while it exists, whatever its
-  sessions; one in ten whose session ended is deleted, most within half an hour of the session and the rest up to three
-  days later, with `status: deleted`, `deletedAt`, an `INGRESS_DELETED` event carrying the state of its last session and
-  `expiresAt = deletedAt + retention.entities` (not written when that has passed). The deletions draw from a random
-  stream of their own, so the rest of a seed's data stays the same.
-- `events`: lifecycle events of rooms, participants, tracks, subscriptions, egresses and ingresses with
-  small payloads, only inside the events retention window.
+  publish stats; 6 % of the senders share their screen for a while, a third of them with its audio; every track of 3 %
+  of the rooms is end-to-end encrypted, `GCM`; a third of the microphones and a tenth of the cameras of senders are
+  muted and unmuted a few times, with their `TRACK_MUTED` and `TRACK_UNMUTED`) and `track_subscriptions` (every
+  participant subscribes to the tracks of the other identities present at the same time; 1 % failed). A closed track
+  or subscription has `closedBy`: `event`, or `reconciler` when the reconciler's close of its participant closed it.
+- `egresses` (30 % of rooms, 15 % of them with a second one; mostly `room_composite`; 70 % file, 20 % stream and
+  10 % segments outputs, a tenth of the file recordings also streamed and 3 % with thumbnails, so about a quarter of
+  the rooms are recorded). Closed rooms: `complete` (5 % of them `limit_reached`), `failed` (a third retried once) and
+  `aborted`, and `failed` by the reconciler (`egress lost (reconciled)`) when still recording as the reconciler closed
+  the room. Active rooms: mostly `active`, some just `starting` (no output, no participant yet), `ending` or
+  `complete` after a stop. The request summary and the outputs have the fields the writer stores; a `web` egress has no
+  room, no room counter and no participant.
+- `ingresses` and `ingress_sessions` (2 % of rooms). A reusable ingress publishes one to three sessions in a row, each
+  with its INGRESS participant; a session ends as the room ends it, `inactive` when an RTMP or WHIP publisher stops,
+  `complete` when a URL input ends, `error` when it fails or the reconciler closes it (`ingress lost (reconciled)`),
+  and the ingress takes the status of its latest session. Some rooms also have an ingress created and never used
+  (`sessions: 0`, enabled or not) and, in active rooms, one still `buffering`, whose session names no room yet.
+  An ingress definition keeps `expiresAt: null` while it exists, whatever its sessions; one in ten whose session ended
+  is deleted, most within half an hour of the session and the rest up to three days later, with `status: deleted`,
+  `deletedAt`, an `INGRESS_DELETED` event carrying the state of its last session and
+  `expiresAt = deletedAt + retention.entities`.
+- Entities whose `expiresAt` has passed are not written, as the TTL monitor would have removed them.
+- The ingress, egress, media (screen shares, encryption, mutes, resumes, joining sessions) and API call draws, and the
+  event and stats values, use random streams of their own, so the rooms of a seed do not depend on them.
+- `events`: lifecycle events of rooms, participants, tracks (`TRACK_PUBLISH_REQUESTED` before each publication),
+  subscriptions, egresses and ingresses (the buffering `INGRESS_UPDATED` of each session; no room on
+  `INGRESS_CREATED`, the buffering update and `INGRESS_STARTED`, and no participant identity, as the writer stores
+  them) with the payloads of the writer, only inside the events retention window, and never the types the writer
+  leaves out by default.
 - `track_stats`: one document per 30 s per participant and direction (`participant` mode) or per track and
   direction (`track` mode), only inside the stats retention window, with plausible score/bytes/rtt/jitter.
   Time-series collection (`timeField: ts`, `metaField: meta`, `granularity: seconds`) with
@@ -97,6 +120,9 @@ What it writes (`analytics_5min` stays empty without `--five-minute-rollups`):
   `rooms.byTopology`, `rooms.recorded` and `rooms.bySize`; `--five-minute-rollups`
   adds `analytics_5min` (lifecycle counters, the `participants.connected` gauge, bytes and quality per five minutes)
   inside the 5-minute rollup window. `analytics_daily` gets no TTL index: daily rollups are kept forever.
+  The hourly and daily documents of the room's scopes also count the server API calls of its application
+  (`apiCalls`, `apiErrors`, total and by `<Service>_<Method>`): room creations and deletions, egress starts and stops,
+  ingress creations and deletions, participant removals, track mutes and participant listings, 1 % of them failed.
   `generate()` takes the same switches as `rollups: { fiveMinute, nodes, roomSums }` and `mediaNodes`.
   Every rollup gets `rooms.peakActive` and `participants.peakActive`, the most rooms and active STANDARD sessions
   at any minute of its bucket, as the server's aggregator samples them: every bucket of the range has a global

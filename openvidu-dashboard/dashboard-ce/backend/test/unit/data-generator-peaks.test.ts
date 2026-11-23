@@ -55,7 +55,8 @@ function room(sid: string, start: Date, end: Date, mediaNode?: string): Bundle {
 		egresses: [],
 		ingresses: [],
 		ingressSessions: [],
-		meanScores: new Map()
+		meanScores: new Map(),
+		apiCalls: []
 	} as unknown as Bundle;
 }
 

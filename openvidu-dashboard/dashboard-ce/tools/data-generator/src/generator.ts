@@ -280,8 +280,12 @@ export async function generate(db: Db, options: GenerateOptions): Promise<Genera
 		rng,
 		shapeRng: new Rng(options.seed + 3_000_017),
 		ingressRng: new Rng(options.seed + 6_000_011),
+		egressRng: new Rng(options.seed + 7_000_003),
+		mediaRng: new Rng(options.seed + 8_000_009),
+		apiRng: new Rng(options.seed + 9_000_011),
 		scenario,
 		now,
+		windowStart,
 		nodeIds,
 		retentionEntitiesMs: retentionDays.entities * DAY,
 		retentionTracksMs: retentionDays.tracks * DAY,
@@ -296,6 +300,10 @@ export async function generate(db: Db, options: GenerateOptions): Promise<Genera
 		fiveMinuteFrom: now - rollups5MinDays * DAY,
 		statsMode
 	};
+	// Event and stats identifiers and values take streams of their own: how many fall in their retention windows
+	// changes with the clock, and it must not change the rooms.
+	const eventsRng = new Rng(options.seed + 10_000_019);
+	const statsRng = new Rng(options.seed + 11_000_027);
 	const rollups = new Rollups(options.rollups ?? BASE_ROLLUPS);
 	const writer = new BatchWriter(db);
 	const started = performance.now();
@@ -331,9 +339,12 @@ export async function generate(db: Db, options: GenerateOptions): Promise<Genera
 			reconciled.set(bundle.room.nodeId, (reconciled.get(bundle.room.nodeId) ?? 0) + 1);
 		}
 
-		writer.add(COLLECTIONS.rooms, bundle.room);
+		// Entities whose expiry has passed are gone, as the TTL monitor leaves them.
+		if (alive(bundle.room)) {
+			writer.add(COLLECTIONS.rooms, bundle.room);
+		}
 
-		for (const doc of bundle.participants) {
+		for (const doc of bundle.participants.filter(alive)) {
 			writer.add(COLLECTIONS.participants, doc);
 		}
 
@@ -345,7 +356,7 @@ export async function generate(db: Db, options: GenerateOptions): Promise<Genera
 			writer.add(COLLECTIONS.trackSubscriptions, doc);
 		}
 
-		for (const doc of bundle.egresses) {
+		for (const doc of bundle.egresses.filter(alive)) {
 			writer.add(COLLECTIONS.egresses, { ...doc, rawRequest: egressRawRequest(doc) });
 		}
 
@@ -353,14 +364,14 @@ export async function generate(db: Db, options: GenerateOptions): Promise<Genera
 			writer.add(COLLECTIONS.ingresses, doc);
 		}
 
-		for (const doc of bundle.ingressSessions) {
+		for (const doc of bundle.ingressSessions.filter(alive)) {
 			writer.add(COLLECTIONS.ingressSessions, doc);
 		}
 
-		deriveEvents(rng, bundle, windows, (doc) => {
+		deriveEvents(eventsRng, bundle, windows, (doc) => {
 			writer.add(COLLECTIONS.events, doc);
 		});
-		deriveStats(rng, bundle, windows, (doc) => {
+		deriveStats(statsRng, bundle, windows, (doc) => {
 			writer.add(COLLECTIONS.trackStats, doc);
 		});
 		rollups.add(bundle, windows);
