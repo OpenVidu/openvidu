@@ -28,8 +28,8 @@ What the writer does, checked in `openvidu-livekit/openvidu/analytics` and `open
 ## Goals / Non-Goals
 
 **Goals:** server timelines (start, drain, stop or silence) that hold for any `--days` from 1 to 30; rooms that follow
-their server; the same content draws for each room of a seed, so that only its host, its end and the node documents
-change.
+their server; the same data for the same seed and mode. Room content is not kept across modes or across this change:
+a seed's rooms differ between single-node and multi-node data, and from what the seed produced before this change.
 
 **Non-Goals:** room migration on node death (LiveKit may recreate the room on another node; here it ends with its
 server). Refusing joins to rooms of a draining server: the CE writer spec says a draining server takes no new
@@ -79,10 +79,12 @@ range is shorter than 3 days. With the option, server 1 of the single node and s
 `schema_meta.schema.writerVersion` is the newest server's version. The legacy `migration` document keeps `3.10.0` and
 names the server running at the start of the range.
 
-**Host choice keeps the draws.** A room still takes exactly one draw from `rng`, now an index into the machines that
-take rooms at its `createdAt` (from `firstSeenAt` to before `drainingAt` and the end). For an active room, the list is
-limited to servers alive at E. Every other draw of the room is unchanged. Node ids come from a stream of their own
-(`seed + 11_000_027`), so the number of servers does not shift any room. In single-node mode, a room planned while no
+**Host choice: one draw per room.** A room still takes exactly one draw from `rng` for its host, now an index into the
+machines that take rooms at its `createdAt` (from `firstSeenAt` to before `drainingAt` and the end). For an active
+room, the list is limited to servers alive at E. Node ids come from a stream of their own (`seed + 11_000_027`), so the
+number of servers draws nothing from the room streams. Rooms still draw from shared streams in plan order, though. The
+rooms `hostRooms` adds (one pinned room per lost server, below) or drops (the single-node gaps, below) shift the draws,
+and so the content, of every later room. In single-node mode, a room planned while no
 server takes rooms (the drain and the restart gaps, a few minutes) is not generated. Nor is an active room planned
 before the third single-node server started (Q + 2 min), since no server alive at E took rooms then. This happens only
 on short ranges where the latest 10 % of the rooms, which stay active, reach back past Q (for example `--days 1` early
