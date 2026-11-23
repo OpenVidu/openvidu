@@ -96,8 +96,9 @@ that reason. A room open when its server goes silent SHALL be closed by the reco
 - **GIVEN** a database generated with `--media-nodes --node-rollups` over 2 days
 - **WHEN** `nodes`, `rooms`, `participants` and the room events are read
 - **THEN**:
-  - every room and session has the `nodeId` and `mediaNode` of one document, and was created at or after its
-    `firstSeenAt` and before its `drainingAt`, `stoppedAt` and `lastSeenAt`;
+  - every room was created at or after the `firstSeenAt` of the document whose `nodeId` and `mediaNode` it has, and
+    before its `drainingAt`, `stoppedAt` and `lastSeenAt`; its sessions have the same `nodeId` and `mediaNode` and
+    joined at or after that `firstSeenAt`;
   - no active room belongs to a stopped or silent server, and no room of such a server ended after its `stoppedAt` or
     `lastSeenAt`;
   - the second `-1` server and `-4` each have a room with `closedBy: "reconciler"`, whose synthetic `ROOM_ENDED` event

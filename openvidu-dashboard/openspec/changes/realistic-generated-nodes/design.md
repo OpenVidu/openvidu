@@ -33,7 +33,9 @@ change.
 
 **Non-Goals:** room migration on node death (LiveKit may recreate the room on another node; here it ends with its
 server). Refusing joins to rooms of a draining server: the CE writer spec says a draining server takes no new
-participants, LiveKit was not checked, and the owner asked only for "no new rooms". Per-process scopes and unlabelled
+participants, LiveKit was not checked, and the owner asked only for "no new rooms". The drain rule therefore applies to
+room creation only. Sessions share their room's `nodeId` and `mediaNode` and join at or after the server's
+`firstSeenAt`, and they may still join a room after its server starts draining. Per-process scopes and unlabelled
 rooms in multi-node data, which the writer cannot produce. No contract, typings or writer change.
 
 ## Decisions
@@ -81,27 +83,33 @@ names the server running at the start of the range.
 take rooms at its `createdAt` (from `firstSeenAt` to before `drainingAt` and the end). For an active room, the list is
 limited to servers alive at E. Every other draw of the room is unchanged. Node ids come from a stream of their own
 (`seed + 11_000_027`), so the number of servers does not shift any room. In single-node mode, a room planned while no
-server takes rooms (the drain and the restart gaps, a few minutes) is not generated.
+server takes rooms (the drain and the restart gaps, a few minutes) is not generated. Nor is an active room planned
+before the third single-node server started (Q + 2 min), since no server alive at E took rooms then. This happens only
+on short ranges where the latest 10 % of the rooms, which stay active, reach back past Q (for example `--days 1` early
+in the morning).
 Alternative rejected: shifting those rooms to the next server's start, which changes `createdAt` and the plan order.
 
 **The end of a room follows its server.** `generateRoom` receives its server and closes the room at the server's end
 when the room is still open then. At a `stoppedAt` it closes with `SERVER_SHUTDOWN` and `closedBy: event`. At a silence
 it closes with `RECONCILED`, `closedBy: reconciler` and `reconcilerReason: node-dead`, the existing synthetic event path
 of `derive.ts`, with `endedAt` at the last signal no later than the silence. The existing `closeSessions` and
-late-session rules apply unchanged.
+late-session rules apply unchanged. Rooms that draw `RECONCILED` at random (3 %) keep `absent-live`; only rooms closed
+by a silence carry `node-dead`.
 
 **A room on every lost server.** At night the scenario S creates about one room an hour, so a crash may find none open.
 `planRooms` adds one closed room on each server that goes silent inside the range, 10 minutes before the server stops
-taking rooms (its `drainingAt` or its silence). The room is pinned to that server and kept open to the silence, so the
-reconciler closes it with `node-dead`. This adds one or two rooms per database. Alternative rejected: forcing an
+taking rooms (its `drainingAt` or its silence). The room is pinned to that server. Its first participant's first session lasts until the
+silence and the room's end is forced to the silence, so the reconciler closes it with `node-dead`. Its empty-room draw
+is skipped, so the room always has that session. This adds one or two rooms per database. Alternative rejected: forcing an
 existing room, which changes its draws and may pick an empty room.
 
 **Engine per server.** `applyStats` and `deriveStats` take the engine of the room's server (by `nodeId`), since `-1`
 changes engine.
 
-**Option bounds.** `nodesWithoutMediaStats` above 1 throws with a message naming the 0 or 1 bound, in both modes.
+**Option bounds.** Any `nodesWithoutMediaStats` other than 0 or 1 throws with a message naming that bound, in both
+modes. With 1 in single-node mode, all three servers run mediasoup and server 1 reports no media statistics.
 
-**Keep-alive.** It refreshes only the unstopped servers whose `lastSeenAt` is within one minute of the freshest one. All
+**Keep-alive.** `keepLive` refreshes only the unstopped servers whose `lastSeenAt` is within one minute of the freshest one. All
 alive servers share E at generation and are refreshed together, so they stay together. It sets `lastSeenAt` only, so
 each server keeps its `batchIntervalMs`. This also fixes a server lost a few minutes ago coming back to life under the
 current one-hour threshold.
