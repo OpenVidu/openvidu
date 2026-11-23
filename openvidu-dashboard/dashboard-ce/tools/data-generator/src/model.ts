@@ -1,6 +1,7 @@
 import { AGENT_NAME_ATTRIBUTE, OPENVIDU_AGENT_ATTRIBUTE } from '@openvidu-dashboard/typings';
 import { Long } from 'mongodb';
 import type { Rng } from './random.js';
+import type { FlushTraffic } from './samples.js';
 import { SCHEMA_VERSION } from './schema.js';
 
 export type ScenarioName = 'S' | 'M' | 'L';
@@ -75,10 +76,11 @@ export interface ClientInfo {
 	version: string;
 	os: string;
 	osVersion: string;
-	browser: string;
-	browserVersion: string;
-	deviceModel: string;
-	network: string;
+	/** Like every client field the writer keeps, absent when the client leaves it empty. */
+	browser?: string;
+	browserVersion?: string;
+	deviceModel?: string;
+	network?: string;
 }
 
 export interface ParticipantDoc {
@@ -89,7 +91,8 @@ export interface ParticipantDoc {
 	roomSid: string;
 	roomName: string;
 	kind: ParticipantKind;
-	kindDetails: string[];
+	/** Absent without details, as the writer leaves it. */
+	kindDetails?: string[];
 	status: 'joining' | 'active' | 'left' | 'aborted';
 	joinedAt: Date;
 	activeAt: Date | null;
@@ -99,7 +102,8 @@ export interface ParticipantDoc {
 	closedBy: 'event' | 'reconciler' | null;
 	connectTimeMs: number | null;
 	connectionType: string | null;
-	region: string;
+	/** Absent without a region, as on a self-hosted server. */
+	region?: string;
 	nodeId: string;
 	mediaNode?: string;
 	resumes: number;
@@ -304,7 +308,8 @@ export interface RoomBundle {
 	/** Mean MOS of each participant session, used by the stats and rollup derivation. */
 	meanScores: Map<string, number>;
 	/** Server API calls about the room, counted in the hourly and daily rollups; the writer never stores them raw. */
-	apiCalls: ApiCall[];
+	apiCalls: ApiCall[]; /** What each participant flushed, period by period, once the stats are applied (`applyStats`). */
+	traffic?: Map<string, FlushTraffic[]>;
 }
 
 export interface ApiCall {
@@ -529,6 +534,18 @@ export function generateRoom(ctx: GeneratorContext, plan: RoomPlan): RoomBundle 
 		sessions.push(joiningSession(mediaCtx, base));
 	}
 
+	// Most applications keep the server's timeouts; some set their own.
+	const emptyTimeoutMs = ctx.mediaRng.weighted<number>([
+		[EMPTY_TIMEOUT_MS, 70],
+		[60_000, 10],
+		[600_000, 10],
+		[1_200_000, 10]
+	]);
+	const departureTimeoutMs = ctx.mediaRng.weighted<number>([
+		[DEPARTURE_TIMEOUT_MS, 70],
+		[10_000, 15],
+		[60_000, 15]
+	]);
 	let egresses: EgressDoc[] = [];
 	const ingresses: IngressDoc[] = [];
 	const ingressSessions: IngressSessionDoc[] = [];
@@ -582,11 +599,11 @@ export function generateRoom(ctx: GeneratorContext, plan: RoomPlan): RoomBundle 
 	// Natural end: the last participant leaves, or the empty timeout of a room nobody joined; API deletions and
 	// reconciliation move it.
 	const naturalEnd =
-		sessions.length === 0 ? plan.createdAt + EMPTY_TIMEOUT_MS : Math.max(...sessions.map((s) => s.leftAt ?? now));
+		sessions.length === 0 ? plan.createdAt + emptyTimeoutMs : Math.max(...sessions.map((s) => s.leftAt ?? now));
 	let endedAt: number | null = null;
 
 	if (!plan.active) {
-		endedAt = naturalEnd + DEPARTURE_TIMEOUT_MS;
+		endedAt = naturalEnd + departureTimeoutMs;
 
 		if (endReason === 'API_DELETE') {
 			endedAt = plan.createdAt + Math.round((naturalEnd - plan.createdAt) * rng.float(0.5, 1));
@@ -705,6 +722,9 @@ export function generateRoom(ctx: GeneratorContext, plan: RoomPlan): RoomBundle 
 	);
 	const peakActive = peakConcurrency(sessions.filter((s) => s.doc.kind === 'STANDARD'));
 	const withoutMediaStats = ctx.withoutMediaStats.has(nodeId);
+	// A share of the rooms caps its participants, above the most it ever held at once.
+	const capped = ctx.mediaRng.chance(0.3);
+	const maxParticipants = capped ? ([10, 25, 50, 100].find((n) => n >= sessions.length) ?? 0) : 0;
 	const statsAts = participants.flatMap((p) => (p.lastStatsAt === null ? [] : [p.lastStatsAt.getTime()]));
 	const lastStatsAt = statsAts.length === 0 ? null : Math.max(...statsAts);
 	const room: RoomDoc = {
@@ -719,7 +739,7 @@ export function generateRoom(ctx: GeneratorContext, plan: RoomPlan): RoomBundle 
 		closedBy,
 		nodeId,
 		...(mediaNode === undefined ? {} : { mediaNode }),
-		config: { maxParticipants: 0, emptyTimeoutMs: 300_000, departureTimeoutMs: DEPARTURE_TIMEOUT_MS },
+		config: { maxParticipants, emptyTimeoutMs, departureTimeoutMs },
 		participantSids: participants.map((p) => p._id),
 		activeParticipantSids: activeStandard.map((s) => s.doc._id),
 		identities: [...new Set(standard.map((p) => p.identity))],
@@ -1016,11 +1036,7 @@ function serviceSession(
 		sdk: kind === 'AGENT' ? 'PYTHON' : 'GO',
 		version: kind === 'AGENT' ? '1.2.0' : '2.4.1',
 		os: 'linux',
-		osVersion: '6.12',
-		browser: '',
-		browserVersion: '',
-		deviceModel: '',
-		network: ''
+		osVersion: '6.12'
 	};
 	const session = newSession(ctx, base, kind, identity, joinedAt, Math.max(5_000, length), client, false);
 
@@ -1070,7 +1086,6 @@ function newSession(
 		roomSid: base.roomSid,
 		roomName: base.roomName,
 		kind,
-		kindDetails: [],
 		status,
 		joinedAt: new Date(joinedAt),
 		activeAt: aborted ? null : new Date(activeAt),
@@ -1080,7 +1095,6 @@ function newSession(
 		closedBy: leftAt === null ? null : 'event',
 		connectTimeMs: aborted ? null : connectTimeMs,
 		connectionType: aborted ? null : rng.weighted(CONNECTION_TYPES),
-		region: '',
 		nodeId: base.nodeId,
 		...(base.mediaNode === undefined ? {} : { mediaNode: base.mediaNode }),
 		resumes: aborted ? 0 : rng.poisson(0.2),
@@ -1134,7 +1148,7 @@ function clientInfo(rng: Rng): ClientInfo {
 			osVersion,
 			browser,
 			browserVersion,
-			deviceModel: mobile ? rng.pick(['Pixel 9', 'iPhone16,2', 'SM-S938B']) : '',
+			...(mobile ? { deviceModel: rng.pick(['Pixel 9', 'iPhone16,2', 'SM-S938B']) } : {}),
 			network: rng.pick(['wifi', 'wifi', 'ethernet', 'cellular'])
 		};
 	}
@@ -1154,8 +1168,6 @@ function clientInfo(rng: Rng): ClientInfo {
 		version: '2.9.0',
 		os,
 		osVersion,
-		browser: '',
-		browserVersion: '',
 		deviceModel: os === 'ios' ? 'iPhone16,2' : 'SM-S938B',
 		network: rng.pick(['wifi', 'cellular'])
 	};

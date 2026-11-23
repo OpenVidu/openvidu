@@ -18,6 +18,7 @@ import {
 	type ScenarioName
 } from './model.js';
 import { toStored } from './contract.js';
+import { applyStats } from './samples.js';
 import { LEGACY_EVENTS, LEGACY_STATS, writeLegacy } from './legacy.js';
 import { Rng } from './random.js';
 import { BATCH_INTERVAL_MS, COLLECTIONS, createCollections, SCHEMA_VERSION, type CollectionName } from './schema.js';
@@ -303,7 +304,10 @@ export async function generate(db: Db, options: GenerateOptions): Promise<Genera
 	// Event and stats identifiers and values take streams of their own: how many fall in their retention windows
 	// changes with the clock, and it must not change the rooms.
 	const eventsRng = new Rng(options.seed + 10_000_019);
-	const statsRng = new Rng(options.seed + 11_000_027);
+	// The servers that run mediasoup measure media without padding, the reading's jitter and RTT.
+	const mediasoupNodes = new Set(
+		[...mediaNodes].flatMap(([id, label]) => (label === MEDIASOUP_MEDIA_NODE ? [id] : []))
+	);
 	const rollups = new Rollups(options.rollups ?? BASE_ROLLUPS);
 	const writer = new BatchWriter(db);
 	const started = performance.now();
@@ -339,6 +343,9 @@ export async function generate(db: Db, options: GenerateOptions): Promise<Genera
 			reconciled.set(bundle.room.nodeId, (reconciled.get(bundle.room.nodeId) ?? 0) + 1);
 		}
 
+		const engine = mediasoupNodes.has(bundle.room.nodeId) ? 'mediasoup' : 'pion';
+		applyStats(bundle, engine, now, statsMode);
+
 		// Entities whose expiry has passed are gone, as the TTL monitor leaves them.
 		if (alive(bundle.room)) {
 			writer.add(COLLECTIONS.rooms, bundle.room);
@@ -371,7 +378,7 @@ export async function generate(db: Db, options: GenerateOptions): Promise<Genera
 		deriveEvents(eventsRng, bundle, windows, (doc) => {
 			writer.add(COLLECTIONS.events, doc);
 		});
-		deriveStats(statsRng, bundle, windows, (doc) => {
+		deriveStats(bundle, windows, engine, (doc) => {
 			writer.add(COLLECTIONS.trackStats, doc);
 		});
 		rollups.add(bundle, windows);

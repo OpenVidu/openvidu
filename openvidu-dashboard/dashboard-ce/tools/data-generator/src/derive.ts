@@ -2,18 +2,16 @@ import { type Long } from 'mongodb';
 import {
 	int64,
 	roomSizeRange,
-	subscriptionBitrate,
-	trackBitrate,
 	type EgressDoc,
 	type IngressDoc,
 	type IngressSessionDoc,
 	type ParticipantDoc,
 	type RoomBundle,
 	type RoomDoc,
-	type SubscriptionDoc,
 	type TrackDoc
 } from './model.js';
 import type { Rng } from './random.js';
+import { LOST_SCORE, POOR_SCORE, RoomMedia, statsDocuments, type Engine } from './samples.js';
 
 export type StatsMode = 'participant' | 'track';
 
@@ -66,9 +64,6 @@ export interface StatsDoc {
 const MINUTE = 60_000;
 const HOUR = 3_600_000;
 const DAY = 86_400_000;
-const FLUSH_MS = 30_000;
-const POOR_SCORE = 3.1;
-const LOST_SCORE = 2.1;
 
 export function deriveEvents(
 	rng: Rng,
@@ -128,7 +123,7 @@ export function deriveEvents(
 			room: roomMin,
 			participant: info,
 			client_info: clientInfo(p),
-			client_meta: { region: p.region, node: p.nodeId }
+			client_meta: { ...(p.region === undefined ? {} : { region: p.region }), node: p.nodeId }
 		});
 		push('PARTICIPANT_ACTIVE', p.activeAt, ref, {
 			room: roomMin,
@@ -472,7 +467,7 @@ function participantInfo(p: ParticipantDoc): Record<string, unknown> {
 		identity: p.identity,
 		...(p.name === '' ? {} : { name: p.name }),
 		...enumField('kind', p.kind),
-		...(p.kindDetails.length === 0 ? {} : { kind_details: p.kindDetails }),
+		...(p.kindDetails === undefined || p.kindDetails.length === 0 ? {} : { kind_details: p.kindDetails }),
 		joined_at: unixSeconds(p.joinedAt),
 		joined_at_ms: unixMs(p.joinedAt),
 		permission: {
@@ -481,13 +476,13 @@ function participantInfo(p: ParticipantDoc): Record<string, unknown> {
 			...(p.permission.canPublishData ? { can_publish_data: true } : {}),
 			...(p.permission.hidden ? { hidden: true } : {})
 		},
-		region: p.region
+		...(p.region === undefined ? {} : { region: p.region })
 	};
 }
 
 function clientInfo(p: ParticipantDoc): Record<string, unknown> {
 	const c = p.client;
-	const fields: [string, string][] = [
+	const fields: [string, string | undefined][] = [
 		['sdk', c.sdk],
 		['version', c.version],
 		['os', c.os],
@@ -498,7 +493,7 @@ function clientInfo(p: ParticipantDoc): Record<string, unknown> {
 		['network', c.network]
 	];
 
-	return Object.fromEntries(fields.filter(([, value]) => value !== ''));
+	return Object.fromEntries(fields.filter(([, value]) => value !== undefined && value !== ''));
 }
 
 function trackType(t: TrackDoc): Record<string, string> {
@@ -668,144 +663,53 @@ function ingressInfo(i: IngressDoc): Record<string, unknown> {
 	};
 }
 
-export function deriveStats(rng: Rng, bundle: RoomBundle, windows: DeriveWindows, emit: (doc: StatsDoc) => void): void {
+/** The `track_stats` documents inside the stats window: the samples `applyStats` summed, as the writer stores them. */
+export function deriveStats(
+	bundle: RoomBundle,
+	windows: DeriveWindows,
+	engine: Engine,
+	emit: (doc: StatsDoc) => void
+): void {
 	if (bundle.room.mediaStats === false) {
 		return;
 	}
 
-	const tracksById = new Map(bundle.tracks.map((t) => [t._id, t]));
-	const tracksByParticipant = groupBy(bundle.tracks, (t) => t.participantSid);
-	const subsBySubscriber = groupBy(
-		bundle.subscriptions.filter((s) => s.status !== 'failed'),
-		(s) => s.subscriberSid
-	);
+	const media = new RoomMedia(bundle, engine, windows.now);
 	const nodeId = bundle.room.nodeId;
 
 	for (const p of bundle.participants) {
-		if (p.status === 'aborted' || p.activeAt === null) {
-			continue;
-		}
-
-		const meanScore = bundle.meanScores.get(p._id) ?? 4;
-		const start = p.activeAt.getTime();
-		const end = p.leftAt?.getTime() ?? windows.now;
-		const tracks = tracksByParticipant.get(p._id) ?? [];
-		const subs = subsBySubscriber.get(p._id) ?? [];
-		const meta = { roomSid: p.roomSid, participantSid: p._id, nodeId };
-
-		for (let ts = start + FLUSH_MS; ts <= end; ts += FLUSH_MS) {
+		for (const ts of media.flushes(p)) {
 			if (ts < windows.statsFrom) {
 				continue;
 			}
 
-			const published = tracks.filter(
-				(t) => t.publishedAt.getTime() <= ts && (t.unpublishedAt === null || t.unpublishedAt.getTime() >= ts)
-			);
-			const open = subs.filter(
-				(s) => s.subscribedAt.getTime() <= ts && (s.unsubscribedAt === null || s.unsubscribedAt.getTime() >= ts)
-			);
-
-			if (windows.statsMode === 'track') {
-				for (const t of published) {
-					emit(
-						sample(rng, new Date(ts), { ...meta, trackSid: t._id, kind: 'up' }, [t], meanScore, t.mimeType)
-					);
-				}
-
-				for (const s of open) {
-					const t = tracksById.get(s.trackSid);
-
-					if (t !== undefined) {
-						emit(
-							sample(
-								rng,
-								new Date(ts),
-								{ ...meta, trackSid: t._id, kind: 'down' },
-								[[s, t]],
-								meanScore,
-								t.mimeType
-							)
-						);
-					}
-				}
-			} else {
-				if (published.length > 0) {
-					emit(sample(rng, new Date(ts), { ...meta, kind: 'up' }, published, meanScore));
-				}
-
-				if (open.length > 0) {
-					const pairs: [SubscriptionDoc, TrackDoc][] = [];
-
-					for (const s of open) {
-						const t = tracksById.get(s.trackSid);
-
-						if (t !== undefined) {
-							pairs.push([s, t]);
-						}
-					}
-
-					emit(sample(rng, new Date(ts), { ...meta, kind: 'down' }, pairs, meanScore));
-				}
+			for (const doc of statsDocuments(media.samples(p, ts), windows.statsMode)) {
+				emit({
+					ts: new Date(ts),
+					meta: {
+						roomSid: p.roomSid,
+						participantSid: p._id,
+						...(doc.trackSid === undefined ? {} : { trackSid: doc.trackSid }),
+						kind: doc.kind,
+						nodeId
+					},
+					score: doc.score,
+					minScore: doc.minScore,
+					medianScore: doc.medianScore,
+					bytes: int64(doc.bytes),
+					packets: doc.packets,
+					packetsLost: doc.packetsLost,
+					rttMs: doc.rttMs,
+					jitterMs: doc.jitterMs,
+					nacks: doc.nacks,
+					plis: doc.plis,
+					firs: doc.firs,
+					layers: doc.layers.map((l) => ({ layer: l.layer, bytes: int64(l.bytes), packets: l.packets })),
+					...(doc.mimeType === undefined ? {} : { mimeType: doc.mimeType })
+				});
 			}
 		}
 	}
-}
-
-function sample(
-	rng: Rng,
-	ts: Date,
-	meta: StatsDoc['meta'],
-	sources: readonly (TrackDoc | [SubscriptionDoc, TrackDoc])[],
-	meanScore: number,
-	mimeType?: string
-): StatsDoc {
-	let bytes = 0;
-	const layers = new Map<number, { bytes: number; packets: number }>();
-
-	for (const source of sources) {
-		const track = Array.isArray(source) ? source[1] : source;
-		const bitrate = Array.isArray(source)
-			? subscriptionBitrate(source[0].source, source[0].maxVideoQuality, trackBitrate(track))
-			: trackBitrate(track);
-		const flushBytes = (bitrate / 8) * (FLUSH_MS / 1000) * rng.float(0.85, 1.15);
-		bytes += flushBytes;
-
-		if (track.type === 'VIDEO') {
-			const layerCount = Array.isArray(source) ? 1 : (track.codecs[0]?.layers.length ?? 1);
-
-			for (let i = 0; i < layerCount; i += 1) {
-				const layer = layers.get(i) ?? { bytes: 0, packets: 0 };
-				layer.bytes += flushBytes / layerCount;
-				layer.packets += Math.round(flushBytes / layerCount / 1_100);
-				layers.set(i, layer);
-			}
-		}
-	}
-
-	const packets = Math.round(bytes / 1_100);
-	const score = round2(Math.min(4.5, Math.max(1, meanScore + rng.gaussian(0, 0.15))));
-
-	return {
-		ts,
-		meta,
-		score,
-		minScore: round2(Math.max(1, score - rng.float(0, 0.4))),
-		medianScore: score,
-		bytes: int64(bytes),
-		packets,
-		packetsLost: Math.round(packets * rng.clampedGaussian(0.005, 0.006, 0, 0.08)),
-		rttMs: Math.round(rng.clampedGaussian(90, 50, 5, 800)),
-		jitterMs: Math.round(rng.clampedGaussian(12, 8, 1, 120)),
-		nacks: rng.int(0, 3),
-		plis: rng.chance(0.05) ? 1 : 0,
-		firs: 0,
-		layers: [...layers.entries()].map(([layer, l]) => ({
-			layer,
-			bytes: int64(l.bytes),
-			packets: l.packets
-		})),
-		...(mimeType === undefined ? {} : { mimeType })
-	};
 }
 
 type Counter = Record<string, number>;
@@ -1038,7 +942,7 @@ export class Rollups {
 		);
 
 		for (const p of bundle.participants) {
-			this.addParticipant(p, bundle, windows);
+			this.addParticipant(p, bundle);
 		}
 
 		for (const t of bundle.tracks) {
@@ -1235,12 +1139,12 @@ export class Rollups {
 		}
 	}
 
-	private addParticipant(p: ParticipantDoc, bundle: RoomBundle, windows: DeriveWindows): void {
+	private addParticipant(p: ParticipantDoc, bundle: RoomBundle): void {
 		if (p.kind !== 'STANDARD') {
 			this.at(p.joinedAt, (b) => {
 				inc(b.participants.byKind, p.kind);
 			});
-			this.addTraffic(p, bundle, windows);
+			this.addTraffic(p, bundle);
 
 			return;
 		}
@@ -1252,7 +1156,7 @@ export class Rollups {
 				inc(b.participants.byKind, p.kind);
 				inc(b.participants.bySdk, p.client.sdk || 'UNKNOWN');
 				inc(b.participants.byOs, p.client.os || 'UNKNOWN');
-				inc(b.participants.byBrowser, browserKey(p.client.browser));
+				inc(b.participants.byBrowser, browserKey(p.client.browser ?? ''));
 
 				if (daily) {
 					(b.identities ??= new Set()).add(p.identity);
@@ -1300,56 +1204,38 @@ export class Rollups {
 			}
 		);
 
-		this.addTraffic(p, bundle, windows);
+		this.addTraffic(p, bundle);
 	}
 
-	/** Bytes and quality of every kind, as `track_stats` carries no participant kind. */
-	private addTraffic(p: ParticipantDoc, bundle: RoomBundle, windows: DeriveWindows): void {
-		if (p.status === 'aborted' || p.activeAt === null) {
-			return;
-		}
-
-		// Bytes and quality are spread over the time the session was connected, as stats flushes would do.
-		const start = p.activeAt.getTime();
-		const end = p.leftAt?.getTime() ?? windows.now;
-		const total = Math.max(1, end - start);
-		const meanScore = bundle.meanScores.get(p._id) ?? 4;
-		const directions =
-			p.mediaStats === false ? 0 : (p.tracks.published > 0 ? 1 : 0) + (p.tracks.subscribed > 0 ? 1 : 0);
-		const spread = (slot: number, size: number, apply: (share: number, flushes: number) => void) => {
-			const overlap = Math.min(end, slot + size) - Math.max(start, slot);
-
-			apply(overlap / total, Math.floor(overlap / FLUSH_MS) * directions);
+	/**
+	 * Bytes and quality of every kind, as `track_stats` carries no participant kind: each flush of the participant
+	 * counts its documents' bytes and scores in its hour, day and five minutes, and the participant as connected.
+	 */
+	private addTraffic(p: ParticipantDoc, bundle: RoomBundle): void {
+		const addQuality = (quality: Bucket['quality'], scores: readonly number[]) => {
+			for (const score of scores) {
+				quality.scoreSum += score;
+				quality.scoreCount += 1;
+				quality.poor += score < POOR_SCORE ? 1 : 0;
+				quality.lost += score < LOST_SCORE ? 1 : 0;
+			}
 		};
-		const addQuality = (quality: Bucket['quality'], flushes: number) => {
-			quality.scoreSum += meanScore * flushes;
-			quality.scoreCount += flushes;
-			quality.poor += meanScore < POOR_SCORE && meanScore >= LOST_SCORE ? flushes : 0;
-			quality.lost += meanScore < LOST_SCORE ? flushes : 0;
-		};
+		const connected = new Set<number>();
 
-		for (let hour = Math.floor(start / HOUR) * HOUR; hour < end; hour += HOUR) {
-			spread(hour, HOUR, (share, flushes) => {
-				this.at(new Date(hour), (b) => {
-					b.bytes.up += p.bytes.up.toNumber() * share;
-					b.bytes.down += p.bytes.down.toNumber() * share;
-					addQuality(b.quality, flushes);
-				});
+		for (const flush of bundle.traffic?.get(p._id) ?? []) {
+			this.at(new Date(flush.ts), (b) => {
+				b.bytes.up += flush.up;
+				b.bytes.down += flush.down;
+				addQuality(b.quality, flush.scores);
 			});
-		}
-
-		if (!this.options.fiveMinute) {
-			return;
-		}
-
-		for (let slot = Math.floor(start / FIVE_MINUTES) * FIVE_MINUTES; slot < end; slot += FIVE_MINUTES) {
-			spread(slot, FIVE_MINUTES, (share, flushes) => {
-				this.atFiveMinutes(slot, (f) => {
-					f.participants.connected += 1;
-					f.bytes.up += p.bytes.up.toNumber() * share;
-					f.bytes.down += p.bytes.down.toNumber() * share;
-					addQuality(f.quality, flushes);
-				});
+			const slot = Math.floor(flush.ts / FIVE_MINUTES) * FIVE_MINUTES;
+			const first = !connected.has(slot);
+			connected.add(slot);
+			this.atFiveMinutes(flush.ts, (f) => {
+				f.participants.connected += first ? 1 : 0;
+				f.bytes.up += flush.up;
+				f.bytes.down += flush.down;
+				addQuality(f.quality, flush.scores);
 			});
 		}
 	}
@@ -1540,23 +1426,6 @@ function countRoomClass(b: Bucket, room: RoomDoc): void {
 
 function inc(counter: Counter, key: string): void {
 	counter[key] = (counter[key] ?? 0) + 1;
-}
-
-function groupBy<T>(items: readonly T[], key: (item: T) => string): Map<string, T[]> {
-	const map = new Map<string, T[]>();
-
-	for (const item of items) {
-		const k = key(item);
-		const list = map.get(k);
-
-		if (list === undefined) {
-			map.set(k, [item]);
-		} else {
-			list.push(item);
-		}
-	}
-
-	return map;
 }
 
 function round2(value: number): number {

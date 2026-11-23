@@ -68,13 +68,15 @@ What it writes (`analytics_5min` stays empty without `--five-minute-rollups`):
   publishers and 3 % empty rooms. The 3 % of rooms closed by the reconciler (`absent-live`) stopped reporting while
   sessions were still in them: those sessions, and their tracks, subscriptions, egresses and ingress sessions, are
   closed by the reconciler at that instant, with its synthetic events (`AE_SYN_<id>`) and no closing event of their
-  own. `lastStatsAt` is the latest of its sessions'.
+  own. `lastStatsAt` is the latest of its sessions'. Most rooms keep the server's empty and departure timeouts, the
+  others set their own, and 30 % cap their participants above the most they hold.
 - `participants`: unique identities per room follow a Poisson distribution around the scenario average;
   the difference between sessions/day and rooms/day × average size is produced as reconnects
   (`DUPLICATE_IDENTITY` leave plus a new session of the same identity). Sessions last ~20 min, 3 % are
   aborted, 95 % are `STANDARD`; rooms with egress/ingress/agent/SIP get the matching participant kinds, and 15 % of
   the active rooms hold a session that joined seconds ago and is still `joining` (not counted as active).
-  Client (sdk/os/browser/device/network), connection type, connect time, disconnect reason and resumes
+  Client (sdk/os/browser/device/network; the fields a client leaves empty, the region and the kind details are absent,
+  as the writer leaves them), connection type, connect time, disconnect reason and resumes
   follow fixed distributions; each resume has its `PARTICIPANT_RESUMED`. A session with stats has `lastStatsAt`, its
   last flush. Agent sessions carry the `attributes` the writer keeps without `store_metadata`, derived
   from their identity: `agent-transcriber` is an OpenVidu agent (`lk.agent_name` and `openvidu.agent`
@@ -111,12 +113,19 @@ What it writes (`analytics_5min` stays empty without `--five-minute-rollups`):
   them) with the payloads of the writer, only inside the events retention window, and never the types the writer
   leaves out by default.
 - `track_stats`: one document per 30 s per participant and direction (`participant` mode) or per track and
-  direction (`track` mode), only inside the stats retention window, with plausible score/bytes/rtt/jitter.
+  direction (`track` mode), only inside the stats retention window. Each stat a server flushes, one per track and
+  period, is a deterministic function of the session, the track and the instant, so the same samples give the
+  documents, the bytes and quality of participants and rooms (`scoreCount`, `poor`, `lost` and `minScore` count every
+  document, as the writer does; participants also count the signal channel's bytes), the final publish and subscribe
+  stats and the rollups. Most sessions are on a good network, a tenth on a fair one, 5 % on a bad one, and 3 % of the
+  rooms on a bad network, so some samples fall in the poor and lost bands. A muted track, or one a subscriber does not
+  receive, flushes nothing. Pion servers add padding to the video sent to subscribers and keep the period's highest
+  jitter and RTT; the mediasoup server counts no padding and reports those of the reading.
   Time-series collection (`timeField: ts`, `metaField: meta`, `granularity: seconds`) with
   `expireAfterSeconds`; plain collection with a TTL index on `ts` when the server rejects time-series.
 - `analytics_hourly` and `analytics_daily` (global scope, plus one scope per media node label with
-  `--media-nodes --node-rollups`) aggregated from the generated entities; bytes and quality are spread over the
-  hours each session was connected. `--room-sums` adds the room size and duration sums and, at each room's end,
+  `--media-nodes --node-rollups`) aggregated from the generated entities; bytes and quality are those of the stats
+  each session flushed in each hour. `--room-sums` adds the room size and duration sums and, at each room's end,
   `rooms.byTopology`, `rooms.recorded` and `rooms.bySize`; `--five-minute-rollups`
   adds `analytics_5min` (lifecycle counters, the `participants.connected` gauge, bytes and quality per five minutes)
   inside the 5-minute rollup window. `analytics_daily` gets no TTL index: daily rollups are kept forever.
@@ -159,7 +168,8 @@ keeps only one room in memory at a time, so scenario L fits in a few hundred MB 
 | `src/schema.ts`    | Collections, indexes and validators of the contract, `createCollections()` with the fallback |
 | `src/contract.ts`  | Stored shape of a model document: bookkeeping removed, nulls omitted, BSON numeric types     |
 | `src/model.ts`     | Scenarios, document types and the per-room entity generator                                  |
-| `src/derive.ts`    | Raw events, stats samples and rollups derived from a generated room                          |
+| `src/derive.ts`    | Raw events, `track_stats` documents and rollups derived from a generated room                |
+| `src/samples.ts`   | The stats each session flushes, and their sums on participants, rooms, tracks and rollups    |
 | `src/generator.ts` | `generate(db, options)` and the batched writer                                               |
 | `src/legacy.ts`    | Legacy collections of the writer before 3.10 (`--legacy`)                                    |
 | `src/generate.ts`  | Generator CLI                                                                                |

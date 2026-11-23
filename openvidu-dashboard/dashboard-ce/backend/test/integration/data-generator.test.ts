@@ -967,9 +967,15 @@ describe.skipIf(mongoUri === '')('data generator', () => {
 				})
 			).toBe(buffering.length);
 
+			// A session still publishing when the reconciler closed its room is closed with it, as lost.
+			const reconciledRooms = await docs<RoomDocument>('rooms', { closedBy: 'reconciler' });
+			const open = await docs<IngressSessionDocument>('ingress_sessions', {
+				$or: reconciledRooms.map((room) => ({ roomSid: room._id, endedAt: room.endedAt }))
+			});
 			const reconciled = await docs<IngressSessionDocument>('ingress_sessions', { closedBy: 'reconciler' });
 
-			expect(reconciled.length).toBeGreaterThan(0);
+			expect(reconciledRooms.length).toBeGreaterThan(0);
+			expect(reconciled.map((s) => s._id).sort()).toEqual(open.map((s) => s._id).sort());
 
 			for (const session of reconciled) {
 				expect([session.status, session.error], session._id).toEqual(['error', 'ingress lost (reconciled)']);
@@ -981,7 +987,7 @@ describe.skipIf(mongoUri === '')('data generator', () => {
 				ingressSessionId: { $in: reconciled.map((s) => s._id) }
 			});
 
-			expect(synthetic.length).toBeGreaterThan(0);
+			expect(synthetic.length).toBe(reconciled.length);
 			expect(synthetic.filter((event) => event._id !== `AE_SYN_${event.ingressSessionId ?? ''}`)).toEqual([]);
 		});
 
@@ -1130,8 +1136,17 @@ describe.skipIf(mongoUri === '')('data generator', () => {
 
 				expect(room.lastStatsAt?.getTime() ?? 0, room._id).toBe(latest);
 
-				for (const p of participants.filter((s) => s.quality.scoreCount > 0)) {
-					expect(p.lastStatsAt, p._id).toEqual(p.quality.lastScoreAt);
+				// Signal statistics flow every period: the last flush of a session, whatever its media.
+				for (const p of participants.filter((s) => s.activeAt !== undefined && s.leftAt !== undefined)) {
+					const activeAt = p.activeAt?.getTime() ?? 0;
+					const end = p.leftAt?.getTime() ?? 0;
+					const flushes = Math.floor((end - activeAt) / 30_000);
+					const last = flushes > 0 ? activeAt + flushes * 30_000 : undefined;
+
+					expect(p.lastStatsAt?.getTime(), p._id).toBe(last);
+					expect(p.lastStatsAt?.getTime() ?? 0, p._id).toBeGreaterThanOrEqual(
+						p.quality.lastScoreAt?.getTime() ?? 0
+					);
 				}
 			}
 
@@ -1202,6 +1217,201 @@ describe.skipIf(mongoUri === '')('data generator', () => {
 			expect(
 				await count('analytics_hourly', { scope: 'global', bucket: { $lt: new Date(generatedAt - 25 * DAY) } })
 			).toBeGreaterThan(0);
+		});
+	});
+
+	/** Two days of scenario S with per-track stats kept for the whole range, read by the checks of the stats. */
+	describe('generated stats', () => {
+		const dbName = 'dashboard_test_generator_stats';
+		const db = () => client.db(dbName);
+
+		beforeAll(async () => {
+			await db().dropDatabase();
+			await generate(db(), {
+				scenario: 'S',
+				days: 2,
+				statsMode: 'track',
+				seed: 3,
+				retentionDays: { events: 7, stats: 7, tracks: 7, entities: 90 },
+				timeseries: true,
+				rollups: { fiveMinute: true, nodes: true, roomSums: false },
+				mediaNodes: true,
+				nodesWithoutMediaStats: 1
+			});
+		}, 600_000);
+
+		afterAll(async () => {
+			await db().dropDatabase();
+		});
+
+		it('Quality counters: participants, rooms and rollups count every track_stats document, sample by sample', async () => {
+			const stats = db().collection('track_stats');
+			const participants = await db()
+				.collection<ParticipantDocument>('participants')
+				.find({ 'quality.scoreCount': { $gt: 0 } })
+				.limit(300)
+				.toArray();
+
+			expect(participants.length).toBeGreaterThan(0);
+
+			for (const p of participants) {
+				const [own] = await stats
+					.aggregate<{ n: number; min: number; poor: number; lost: number }>([
+						{ $match: { 'meta.participantSid': p._id } },
+						{
+							$group: {
+								_id: null,
+								n: { $sum: 1 },
+								min: { $min: '$score' },
+								poor: { $sum: { $cond: [{ $lt: ['$score', 2.06] }, 1, 0] } },
+								lost: { $sum: { $cond: [{ $lt: ['$score', 1.25] }, 1, 0] } }
+							}
+						}
+					])
+					.toArray();
+
+				expect([own?.n, own?.min, own?.poor, own?.lost], p._id).toEqual([
+					p.quality.scoreCount,
+					p.quality.minScore,
+					p.quality.poor,
+					p.quality.lost
+				]);
+			}
+
+			for (const room of await db()
+				.collection<RoomDocument>('rooms')
+				.find({ mediaStats: { $exists: false } })
+				.limit(100)
+				.toArray()) {
+				const [sums] = await stats
+					.aggregate<{ up: number; n: number }>([
+						{ $match: { 'meta.roomSid': room._id } },
+						{
+							$group: {
+								_id: null,
+								up: { $sum: { $cond: [{ $eq: ['$meta.kind', 'up'] }, '$bytes', 0] } },
+								n: { $sum: 1 }
+							}
+						}
+					])
+					.toArray();
+
+				expect([sums?.up ?? 0, sums?.n ?? 0], room._id).toEqual([room.bytes.up, room.quality.scoreCount]);
+			}
+
+			const [hourly] = await db()
+				.collection('analytics_hourly')
+				.aggregate<{ n: number; poor: number; lost: number }>([
+					{ $match: { scope: 'global' } },
+					{
+						$group: {
+							_id: null,
+							n: { $sum: '$quality.scoreCount' },
+							poor: { $sum: '$quality.poor' },
+							lost: { $sum: '$quality.lost' }
+						}
+					}
+				])
+				.toArray();
+
+			expect([hourly?.n, hourly?.poor, hourly?.lost]).toEqual([
+				await stats.countDocuments({}),
+				await stats.countDocuments({ score: { $lt: 2.06 } }),
+				await stats.countDocuments({ score: { $lt: 1.25 } })
+			]);
+			// Some sessions and rooms are on bad networks: poor and lost samples, not only good ones.
+			expect((hourly?.poor ?? 0) / (hourly?.n ?? 1)).toBeGreaterThan(0.02);
+			expect(hourly?.lost ?? 0).toBeGreaterThan(0);
+		});
+
+		it('Muted tracks: no track_stats document of a track while it is muted', async () => {
+			const toggled = new Set(
+				(await db().collection('events').distinct('trackSid', { type: 'TRACK_MUTED' })) as string[]
+			);
+			const mutedForGood = (
+				await db()
+					.collection<{ _id: string }>('tracks')
+					.find({ muted: true }, { projection: { _id: 1 } })
+					.toArray()
+			)
+				.map((t) => t._id)
+				.filter((sid) => !toggled.has(sid));
+
+			expect(mutedForGood.length).toBeGreaterThan(0);
+			expect(
+				await db()
+					.collection('track_stats')
+					.countDocuments({ 'meta.trackSid': { $in: mutedForGood } })
+			).toBe(0);
+
+			// A track muted for a whole flush period has no document at its end.
+			for (const sid of [...toggled].slice(0, 100)) {
+				const changes = await db()
+					.collection<EventDocument>('events')
+					.find({ trackSid: sid, type: { $in: ['TRACK_MUTED', 'TRACK_UNMUTED'] } })
+					.sort({ ts: 1 })
+					.toArray();
+
+				for (let i = 0; i + 1 < changes.length; i += 2) {
+					const from = (changes[i]?.ts.getTime() ?? 0) + 30_000;
+					const to = changes[i + 1]?.ts.getTime() ?? 0;
+
+					expect(
+						await db()
+							.collection('track_stats')
+							.countDocuments({
+								'meta.trackSid': sid,
+								'meta.kind': 'up',
+								ts: { $gte: new Date(from), $lte: new Date(to) }
+							}),
+						sid
+					).toBe(0);
+				}
+			}
+		});
+
+		it('Media statistics of mediasoup servers: no padding in the bytes of a video subscriber', async () => {
+			const roomsOf = async (mediaNode: string) => db().collection<Keyed>('rooms').distinct('_id', { mediaNode });
+			// Video bytes per packet: about 1 100 for media alone, less with the small padding packets of Pion.
+			const padded = (roomSids: string[]) =>
+				db()
+					.collection('track_stats')
+					.countDocuments({
+						'meta.roomSid': { $in: roomSids },
+						'meta.kind': 'down',
+						mimeType: /^video\//,
+						packets: { $gt: 50 },
+						$expr: { $lt: [{ $divide: ['$bytes', '$packets'] }, 1_000] }
+					});
+
+			expect(await padded(await roomsOf('media-node-10-0-0-2'))).toBe(0);
+			expect(await padded(await roomsOf('media-node-10-0-0-1'))).toBeGreaterThan(0);
+		});
+
+		it('Fields of a participant document: the client fields, region and kind details the writer leaves out when empty', async () => {
+			const participants = db().collection('participants');
+
+			expect(await participants.countDocuments({ region: { $exists: true } })).toBe(0);
+			expect(await participants.countDocuments({ kindDetails: { $exists: true } })).toBe(0);
+
+			for (const field of ['browser', 'browserVersion', 'deviceModel', 'network']) {
+				expect(await participants.countDocuments({ [`client.${field}`]: '' }), field).toBe(0);
+			}
+
+			expect(await participants.countDocuments({ 'client.browser': { $exists: false } })).toBeGreaterThan(0);
+
+			// Rooms keep the server's timeouts or set their own, and some cap their participants.
+			const rooms = db().collection('rooms');
+
+			expect((await rooms.distinct('config.emptyTimeoutMs')).length).toBeGreaterThan(1);
+			expect((await rooms.distinct('config.departureTimeoutMs')).length).toBeGreaterThan(1);
+			expect(await rooms.countDocuments({ 'config.maxParticipants': { $gt: 0 } })).toBeGreaterThan(0);
+			expect(
+				await rooms.countDocuments({
+					'config.maxParticipants': { $gt: 0 },
+					$expr: { $gt: ['$participants.peakActive', '$config.maxParticipants'] }
+				})
+			).toBe(0);
 		});
 	});
 });
