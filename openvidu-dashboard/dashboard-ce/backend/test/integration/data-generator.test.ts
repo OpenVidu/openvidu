@@ -270,16 +270,25 @@ describe.skipIf(mongoUri === '')('data generator', () => {
 
 		beforeAll(async () => {
 			await db().dropDatabase();
-			await generate(db(), {
-				scenario: 'S',
-				days: 2,
-				statsMode: 'participant',
-				seed: 3,
-				retentionDays: { events: 7, stats: 7, tracks: 7, entities: 90 },
-				timeseries: true,
-				rollups: { fiveMinute: true, nodes: true, roomSums: true },
-				mediaNodes: true
-			});
+			// Generated at 14:00 UTC, the peak of the day, so that rooms are open when the servers stop at the middle of
+			// the range: the same data whatever the hour the suite runs.
+			const clock = vi.spyOn(Date, 'now').mockReturnValue(peakOfToday());
+
+			try {
+				await generate(db(), {
+					scenario: 'S',
+					days: 2,
+					statsMode: 'participant',
+					seed: 3,
+					retentionDays: { events: 7, stats: 7, tracks: 7, entities: 90 },
+					timeseries: true,
+					rollups: { fiveMinute: true, nodes: true, roomSums: true },
+					mediaNodes: true
+				});
+			} finally {
+				clock.mockRestore();
+			}
+
 			generated = await db().collection<NodeDocument>('nodes').find().sort({ firstSeenAt: 1, _id: 1 }).toArray();
 			end = Math.max(...generated.map((node) => node.lastSeenAt.getTime()));
 		}, 600_000);
@@ -458,6 +467,17 @@ describe.skipIf(mongoUri === '')('data generator', () => {
 			}
 
 			// A room still open at a stop ends with the shutdown; one open at a silence, closed by the reconciler.
+			expect(
+				rooms.filter((room) =>
+					generated.some(
+						(node) =>
+							node._id === room.nodeId &&
+							node.stoppedAt?.getTime() === room.endedAt?.getTime() &&
+							room.endReason === 'SERVER_SHUTDOWN'
+					)
+				).length
+			).toBeGreaterThan(0);
+
 			for (const node of generated.filter((server) => server.lastSeenAt.getTime() < end)) {
 				const atEnd = rooms.filter(
 					(room) => room.nodeId === node._id && room.endedAt?.getTime() === node.lastSeenAt.getTime()
@@ -540,6 +560,8 @@ describe.skipIf(mongoUri === '')('data generator', () => {
 				node.mediaNode === 'media-node-10-0-0-6' ? 30_000 : 10_000
 			]);
 
+			await restoreNodes(db(), generated);
+
 			expect(await intervals()).toEqual(expected);
 			await keepLive(db(), new Date(end + 5 * MINUTE));
 			await keepLive(db(), new Date(end + 5 * MINUTE + 15_000));
@@ -549,6 +571,7 @@ describe.skipIf(mongoUri === '')('data generator', () => {
 		it('Keep-alive of generated servers', async () => {
 			const later = new Date(end + 10 * MINUTE);
 
+			await restoreNodes(db(), generated);
 			await keepLive(db(), later);
 			await expectKeptAlive(db(), generated, later, [
 				servers(1)[2]?._id,
@@ -682,6 +705,7 @@ describe.skipIf(mongoUri === '')('data generator', () => {
 			const intervals = async () =>
 				(await db().collection<NodeDocument>('nodes').find().toArray()).map((node) => node.batchIntervalMs);
 
+			await restoreNodes(db(), generated);
 			expect(await intervals()).toEqual([10_000, 10_000, 10_000]);
 			await keepLive(db(), new Date(end + 5 * MINUTE));
 			expect(await intervals()).toEqual([10_000, 10_000, 10_000]);
@@ -690,6 +714,7 @@ describe.skipIf(mongoUri === '')('data generator', () => {
 		it('Keep-alive of generated servers: the single node', async () => {
 			const later = new Date(end + 10 * MINUTE);
 
+			await restoreNodes(db(), generated);
 			await keepLive(db(), later);
 			await expectKeptAlive(db(), generated, later, [generated[2]?._id]);
 		});
@@ -1925,6 +1950,22 @@ function rangeOf(end: number, days: number): { windowStart: number; middle: numb
 		middle: floor(windowStart + (end - windowStart) / 2),
 		quarter: floor(windowStart + ((end - windowStart) * 3) / 4)
 	};
+}
+
+/** 14:00 UTC of today, or of yesterday before that hour: the clock of a generation at the peak of the day. */
+function peakOfToday(): number {
+	const now = Date.now();
+	const peak = Math.floor(now / DAY) * DAY + 14 * HOUR;
+
+	return peak <= now ? peak : peak - DAY;
+}
+
+/** Puts back the `nodes` documents as generated, undoing the keep-alive ticks of an earlier test. */
+async function restoreNodes(db: Db, generated: readonly NodeDocument[]): Promise<void> {
+	const nodes = db.collection<NodeDocument>('nodes');
+
+	await nodes.deleteMany({});
+	await nodes.insertMany(generated.map((node) => ({ ...node })));
 }
 
 /**
