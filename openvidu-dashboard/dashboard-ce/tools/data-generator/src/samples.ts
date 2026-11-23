@@ -474,14 +474,18 @@ export function applyStats(bundle: RoomBundle, engine: Engine, now: number, mode
 		};
 	}
 
+	// The final stats come in TRACK_PUBLISH_STATS and TRACK_SUBSCRIBE_STATS as the track or subscription closes; what
+	// the reconciler closed sends none.
 	for (const t of bundle.tracks) {
 		if (t.publishStats !== null) {
-			t.publishStats = finalStats(t.publishStats, tracks.get(t._id), true);
+			t.publishStats = t.closedBy === 'reconciler' ? null : finalStats(t.publishStats, tracks.get(t._id), true);
 		}
 	}
 
 	for (const s of bundle.subscriptions) {
-		if (s.subscribeStats !== null) {
+		if (s.subscribeStats !== null && s.closedBy === 'reconciler') {
+			s.subscribeStats = null;
+		} else if (s.subscribeStats !== null) {
 			const totals = finalStats({ ...s.subscribeStats, layers: [] }, subscriptions.get(s._id), false);
 			s.subscribeStats = totals === null ? null : withoutLayers(totals);
 		}
@@ -525,28 +529,85 @@ function addTotals(map: Map<string, StreamTotals>, key: string, sample: TrackSam
 	}
 }
 
+/** The final stats of one layer of a stream: what one TRACK_PUBLISH_STATS or TRACK_SUBSCRIBE_STATS reports. */
+export interface LayerStats {
+	layer: number;
+	bytes: number;
+	packets: number;
+	packetsLost: number;
+	nacks: number;
+	plis: number;
+	firs: number;
+}
+
+/**
+ * The final stats of a stream by layer, one per simulcast layer of a video track and one for the rest: the counters
+ * shared by the bytes of each layer, so that they add up to the stream's.
+ */
+export function layerStats(stats: Omit<RtpStats, 'layers'> & { layers?: RtpStats['layers'] }): LayerStats[] {
+	const layers = stats.layers ?? [];
+
+	if (layers.length === 0) {
+		return [
+			{
+				layer: 0,
+				bytes: stats.bytes.toNumber(),
+				packets: stats.packets,
+				packetsLost: stats.packetsLost,
+				nacks: stats.nacks,
+				plis: stats.plis,
+				firs: stats.firs
+			}
+		];
+	}
+
+	const total = layers.reduce((sum, l) => sum + l.bytes.toNumber(), 0);
+	const split = (value: number, index: number): number => {
+		const shares = layers.map((l) => (total === 0 ? 0 : Math.floor((value * l.bytes.toNumber()) / total)));
+		const given = shares.reduce((sum, share) => sum + share, 0);
+
+		return index === layers.length - 1 ? (shares[index] ?? 0) + value - given : (shares[index] ?? 0);
+	};
+
+	return layers.map((l, index) => ({
+		layer: l.layer,
+		bytes: l.bytes.toNumber(),
+		packets: l.packets,
+		packetsLost: split(stats.packetsLost, index),
+		nacks: split(stats.nacks, index),
+		plis: split(stats.plis, index),
+		firs: split(stats.firs, index)
+	}));
+}
+
 /** The final stats of a stream from the sum of its samples; none when it never sent a packet, as the server reports. */
 function finalStats(stats: RtpStats, totals: StreamTotals | undefined, withLayers: boolean): RtpStats | null {
 	if (totals === undefined || totals.packets === 0) {
 		return null;
 	}
 
-	return {
-		...stats,
-		bytes: int64(totals.bytes),
-		packets: totals.packets,
-		packetsLost: totals.packetsLost,
-		packetLossPct: round2((totals.packetsLost / (totals.packets + totals.packetsLost)) * 100),
-		nacks: totals.nacks,
-		plis: totals.plis,
-		firs: totals.firs,
-		jitterMaxMs: Math.round(totals.jitterMaxMs),
-		rttMaxMs: totals.rttMaxMs,
-		layers: withLayers
+	const layers =
+		withLayers && totals.layers.size > 0
 			? [...totals.layers.entries()]
 					.sort((a, b) => a[0] - b[0])
 					.map(([layer, l]) => ({ layer, bytes: int64(l.bytes), packets: l.packets }))
-			: []
+			: [];
+	// The writer adds up the stats of the layers of a video track.
+	const bytes = layers.length === 0 ? totals.bytes : layers.reduce((sum, l) => sum + l.bytes.toNumber(), 0);
+	const packets = layers.length === 0 ? totals.packets : layers.reduce((sum, l) => sum + l.packets, 0);
+
+	return {
+		...stats,
+		bytes: int64(bytes),
+		packets,
+		packetsLost: totals.packetsLost,
+		packetLossPct: round2((totals.packetsLost / (packets + totals.packetsLost)) * 100),
+		nacks: totals.nacks,
+		plis: totals.plis,
+		firs: totals.firs,
+		jitterMaxMs: Math.round(totals.jitterMaxMs * 1000) / 1000,
+		rttMaxMs: totals.rttMaxMs,
+		layers
 	};
 }
 

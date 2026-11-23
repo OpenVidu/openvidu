@@ -616,9 +616,9 @@ export function generateRoom(ctx: GeneratorContext, plan: RoomPlan): RoomBundle 
 		endedAt = Math.min(endedAt, now - MINUTE);
 		const roomEnd = endedAt;
 
-		// An ingress that would start publishing after the room was deleted never does.
-		for (const participant of ingressParticipants.filter((p) => p.doc.joinedAt.getTime() >= roomEnd - 1_000)) {
-			sessions.splice(sessions.indexOf(participant), 1);
+		// Nobody joins a room once it has ended, a deleted one included: those sessions never happen.
+		for (const late of sessions.filter((s) => s.doc.joinedAt.getTime() >= roomEnd - 1_000)) {
+			sessions.splice(sessions.indexOf(late), 1);
 		}
 
 		closeSessions(ctx, sessions, endedAt, endReason === 'API_DELETE' ? 'ROOM_DELETED' : 'ROOM_CLOSED', closedBy);
@@ -644,11 +644,25 @@ export function generateRoom(ctx: GeneratorContext, plan: RoomPlan): RoomBundle 
 			egresses.push(buildEgress(egressCtx, base, plan.active, endedAt, closedBy, sessions));
 		}
 
+		// An egress requested once the room had ended never starts.
+		const roomEnd = endedAt;
+		egresses = egresses.filter((e) => roomEnd === null || e.startedAt.getTime() < roomEnd - 10_000);
+
 		for (const [index, egress] of egresses.entries()) {
 			const participant = egressParticipant(index === 0 ? ctx : egressCtx, base, egress);
 
 			if (participant !== undefined) {
 				sessions.push(participant);
+
+				if (roomEnd !== null) {
+					closeSessions(
+						ctx,
+						[participant],
+						roomEnd,
+						endReason === 'API_DELETE' ? 'ROOM_DELETED' : 'ROOM_CLOSED',
+						closedBy
+					);
+				}
 			}
 		}
 	}
@@ -1292,23 +1306,39 @@ function closeSessions(
 			continue;
 		}
 
-		// A session never leaves before it is active.
-		s.leftAt = Math.max((s.doc.activeAt ?? s.doc.joinedAt).getTime() + 1_000, endedAt);
-		s.doc.leftAt = new Date(s.leftAt);
+		// A session still connecting when the room ends aborts; nothing leaves after the room's end.
+		const connected = s.doc.status !== 'aborted' && s.activeAt < endedAt;
+		s.leftAt = endedAt;
+		s.doc.leftAt = new Date(endedAt);
 		s.doc.lastEventAt = s.doc.leftAt;
-		s.doc.durationMs = s.leftAt - s.doc.joinedAt.getTime();
-		s.doc.status = s.doc.status === 'aborted' ? 'aborted' : 'left';
+		s.doc.durationMs = endedAt - s.doc.joinedAt.getTime();
+		s.doc.status = connected ? 'left' : 'aborted';
 		s.doc.disconnectReason = closedBy === 'reconciler' ? RECONCILED : reason;
 		s.doc.closedBy = closedBy;
-		s.doc.expiresAt = s.doc.expiresAt ?? expiresAt(ctx, s.leftAt);
+		s.doc.expiresAt = expiresAt(ctx, endedAt);
+
+		if (!connected) {
+			s.doc.activeAt = null;
+			s.doc.connectTimeMs = null;
+			s.doc.connectionType = null;
+			s.doc.resumes = 0;
+		}
+
+		// A track published at or after the end never was.
+		s.tracks = s.tracks.filter((t) => t.publishedAt.getTime() < endedAt);
+		s.doc.trackSids = s.tracks.map((t) => t._id);
+		s.doc.tracks.published = s.tracks.length;
+		s.doc.tracks.bySource = {};
+		s.doc.isPublisher = s.tracks.length > 0;
 
 		for (const t of s.tracks) {
-			if (t.unpublishedAt === null || t.unpublishedAt.getTime() > s.leftAt) {
-				const unpublishedAt = Math.max(t.publishedAt.getTime(), s.leftAt);
-				t.unpublishedAt = new Date(unpublishedAt);
-				t.durationMs = unpublishedAt - t.publishedAt.getTime();
+			s.doc.tracks.bySource[t.source] = (s.doc.tracks.bySource[t.source] ?? 0) + 1;
+
+			if (t.unpublishedAt === null || t.unpublishedAt.getTime() > endedAt) {
+				t.unpublishedAt = new Date(endedAt);
+				t.durationMs = endedAt - t.publishedAt.getTime();
 				t.status = 'unpublished';
-				t.expiresAt = t.expiresAt ?? tracksExpiresAt(ctx, unpublishedAt);
+				t.expiresAt = tracksExpiresAt(ctx, endedAt);
 			}
 		}
 	}
@@ -1567,6 +1597,8 @@ function buildEgress(
 				? naturalEnd
 				: Math.round(startedAt + (naturalEnd - startedAt) * rng.float(0.05, 0.9));
 		endedAt = Math.max(startedAt + 1_000, Math.min(endedAt, now - MINUTE));
+		// It never outlives its room.
+		endedAt = roomEndedAt === null ? endedAt : Math.min(endedAt, roomEndedAt);
 		error =
 			status === 'failed'
 				? rng.pick([
@@ -1784,6 +1816,12 @@ function egressParticipant(ctx: GeneratorContext, base: RoomBase, egress: Egress
 	return session;
 }
 
+/**
+ * Prefix of the `resource_id` of an ingress session: the server's `RT_` for RTMP and `UR_` for URL inputs; no WHIP
+ * session was observed, so WHIP keeps a prefix of its own.
+ */
+const INGRESS_SESSION_PREFIXES: Record<IngressDoc['inputType'], string> = { rtmp: 'RT_', whip: 'IR_', url: 'UR_' };
+
 interface IngressPlan {
 	id: string;
 	firstSessionId: string;
@@ -1813,7 +1851,7 @@ function planIngress(ctx: GeneratorContext, base: RoomBase, roomActive: boolean)
 	const failed = !roomActive && rng.chance(0.05);
 	let endedAt = roomActive ? null : Math.min(now - MINUTE, startedAt + sessionDuration(rng));
 	const identity = `ingress-${String(rng.int(1, 9_999)).padStart(4, '0')}`;
-	const firstSessionId = rng.id('IR_');
+	const firstSessionId = rng.id(INGRESS_SESSION_PREFIXES[inputType]);
 	const extra = inputType !== 'url' && more.chance(0.35) ? (more.chance(0.3) ? 2 : 1) : 0;
 	const firstLength = sessionDuration(more);
 
@@ -1878,7 +1916,7 @@ function finishIngress(
 						? 'complete'
 						: 'inactive';
 		sessions.push({
-			_id: index === 0 ? plan.firstSessionId : ctx.ingressRng.id('IR_'),
+			_id: index === 0 ? plan.firstSessionId : ctx.ingressRng.id(INGRESS_SESSION_PREFIXES[plan.inputType]),
 			ingressId: plan.id,
 			ingressName: plan.name,
 			inputType: plan.inputType,
@@ -1988,7 +2026,7 @@ function extraIngresses(
 	if (buffering) {
 		const plan: IngressPlan = {
 			id: rng.id('IN_'),
-			firstSessionId: rng.id('IR_'),
+			firstSessionId: rng.id(INGRESS_SESSION_PREFIXES.rtmp),
 			inputType: 'rtmp',
 			createdAt: base.createdAt - rng.int(MINUTE, 10 * MINUTE),
 			identity: `ingress-${String(rng.int(1, 9_999)).padStart(4, '0')}`,

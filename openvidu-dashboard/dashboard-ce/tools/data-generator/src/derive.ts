@@ -11,7 +11,15 @@ import {
 	type TrackDoc
 } from './model.js';
 import type { Rng } from './random.js';
-import { LOST_SCORE, POOR_SCORE, RoomMedia, statsDocuments, type Engine } from './samples.js';
+import {
+	layerStats,
+	LOST_SCORE,
+	POOR_SCORE,
+	RoomMedia,
+	statsDocuments,
+	type Engine,
+	type LayerStats
+} from './samples.js';
 
 export type StatsMode = 'participant' | 'track';
 
@@ -190,6 +198,18 @@ export function deriveEvents(
 				track: trackInfo(t)
 			});
 		}
+
+		// The final stats of each layer as the track closes.
+		if (t.publishStats !== null && t.unpublishedAt !== null) {
+			for (const layer of layerStats(t.publishStats)) {
+				push('TRACK_PUBLISH_STATS', t.unpublishedAt, ref, {
+					room: roomMin,
+					mime: t.mimeType,
+					...(layer.layer === 0 ? {} : { video_layer: layer.layer }),
+					rtp_stats: rtpStatsPayload(t.publishedAt, t.unpublishedAt, layer, t.publishStats)
+				});
+			}
+		}
 	}
 
 	for (const s of bundle.subscriptions) {
@@ -218,6 +238,18 @@ export function deriveEvents(
 					participant,
 					track: { sid: s.trackSid, ...(track === undefined ? {} : trackType(track)) }
 				});
+			}
+
+			if (s.subscribeStats !== null && s.unsubscribedAt !== null) {
+				const [layer] = layerStats(s.subscribeStats);
+
+				if (layer !== undefined) {
+					push('TRACK_SUBSCRIBE_STATS', s.unsubscribedAt, ref, {
+						room: roomMin,
+						...(track === undefined ? {} : { mime: track.mimeType }),
+						rtp_stats: rtpStatsPayload(s.subscribedAt, s.unsubscribedAt, layer, s.subscribeStats)
+					});
+				}
 			}
 		}
 	}
@@ -527,6 +559,36 @@ function trackInfo(t: TrackDoc): Record<string, unknown> {
 			...(c.layers.length === 0 ? {} : { layers: trackLayers(c.layers) })
 		})),
 		...(t.encryption === 'GCM' ? { encryption: 'GCM' } : {})
+	};
+}
+
+/** The `rtp_stats` of a final stats event, as protojson: the zero values left out, 64-bit bytes. */
+function rtpStatsPayload(
+	start: Date,
+	end: Date,
+	layer: LayerStats,
+	stats: { jitterMaxMs: number; rttMaxMs: number }
+): Record<string, unknown> {
+	const seconds = Math.max(0.001, (end.getTime() - start.getTime()) / 1000);
+	const nonZero = (name: string, value: number): Record<string, number> => (value === 0 ? {} : { [name]: value });
+	const sent = layer.packets + layer.packetsLost;
+
+	return {
+		start_time: start,
+		end_time: end,
+		duration: seconds,
+		...nonZero('packets', layer.packets),
+		...nonZero('packet_rate', Math.round((layer.packets / seconds) * 100) / 100),
+		bytes: int64(layer.bytes),
+		...nonZero('bitrate', Math.round(((layer.bytes * 8) / seconds) * 100) / 100),
+		...nonZero('packets_lost', layer.packetsLost),
+		...nonZero('packet_loss_rate', Math.round((layer.packetsLost / seconds) * 1000) / 1000),
+		...nonZero('packet_loss_percentage', sent === 0 ? 0 : Math.round((layer.packetsLost / sent) * 10_000) / 100),
+		...nonZero('jitter_max', Math.round(stats.jitterMaxMs * 1000)),
+		...nonZero('nacks', layer.nacks),
+		...nonZero('plis', layer.plis),
+		...nonZero('firs', layer.firs),
+		...nonZero('rtt_max', stats.rttMaxMs)
 	};
 }
 

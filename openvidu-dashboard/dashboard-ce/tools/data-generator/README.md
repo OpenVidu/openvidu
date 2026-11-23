@@ -68,7 +68,9 @@ What it writes (`analytics_5min` stays empty without `--five-minute-rollups`):
   publishers and 3 % empty rooms. The 3 % of rooms closed by the reconciler (`absent-live`) stopped reporting while
   sessions were still in them: those sessions, and their tracks, subscriptions, egresses and ingress sessions, are
   closed by the reconciler at that instant, with its synthetic events (`AE_SYN_<id>`) and no closing event of their
-  own. `lastStatsAt` is the latest of its sessions'. Most rooms keep the server's empty and departure timeouts, the
+  own. Nobody joins a room once it has ended: when a room ends before its participants leave, as an API deletion
+  does, they leave at its end, those still connecting abort, and those that would have joined later never do.
+  `lastStatsAt` is the latest of its sessions'. Most rooms keep the server's empty and departure timeouts, the
   others set their own, and 30 % cap their participants above the most they hold.
 - `participants`: unique identities per room follow a Poisson distribution around the scenario average;
   the difference between sessions/day and rooms/day × average size is produced as reconnects
@@ -98,7 +100,8 @@ What it writes (`analytics_5min` stays empty without `--five-minute-rollups`):
 - `ingresses` and `ingress_sessions` (2 % of rooms). A reusable ingress publishes one to three sessions in a row, each
   with its INGRESS participant; a session ends as the room ends it, `inactive` when an RTMP or WHIP publisher stops,
   `complete` when a URL input ends, `error` when it fails or the reconciler closes it (`ingress lost (reconciled)`),
-  and the ingress takes the status of its latest session. Some rooms also have an ingress created and never used
+  and the ingress takes the status of its latest session. Session IDs take the server's prefixes, `RT_` for RTMP and
+  `UR_` for URL inputs (WHIP keeps `IR_`). Some rooms also have an ingress created and never used
   (`sessions: 0`, enabled or not) and, in active rooms, one still `buffering`, whose session names no room yet.
   An ingress definition keeps `expiresAt: null` while it exists, whatever its sessions; one in ten whose session ended
   is deleted, most within half an hour of the session and the rest up to three days later, with `status: deleted`,
@@ -107,7 +110,9 @@ What it writes (`analytics_5min` stays empty without `--five-minute-rollups`):
 - Entities whose `expiresAt` has passed are not written, as the TTL monitor would have removed them.
 - The ingress, egress, media (screen shares, encryption, mutes, resumes, joining sessions) and API call draws, and the
   event and stats values, use random streams of their own, so the rooms of a seed do not depend on them.
-- `events`: lifecycle events of rooms, participants, tracks (`TRACK_PUBLISH_REQUESTED` before each publication),
+- `events`: lifecycle events of rooms, participants, tracks (`TRACK_PUBLISH_REQUESTED` before each publication, and as
+  each track and subscription closes its final stats, `TRACK_PUBLISH_STATS` per simulcast layer and
+  `TRACK_SUBSCRIBE_STATS`, unless the reconciler closed it),
   subscriptions, egresses and ingresses (the buffering `INGRESS_UPDATED` of each session; no room on
   `INGRESS_CREATED`, the buffering update and `INGRESS_STARTED`, and no participant identity, as the writer stores
   them) with the payloads of the writer, only inside the events retention window, and never the types the writer

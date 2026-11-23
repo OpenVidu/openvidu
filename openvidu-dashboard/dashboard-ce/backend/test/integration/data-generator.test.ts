@@ -1196,6 +1196,40 @@ describe.skipIf(mongoUri === '')('data generator', () => {
 			}
 		});
 
+		it('Room lifecycle: nobody joins, publishes or stays in a room after it ended', async () => {
+			const afterEnd = (field: string, operator: '$gt' | '$gte') =>
+				client
+					.db(dbName)
+					.collection(field === 'publishedAt' ? 'tracks' : 'participants')
+					.aggregate<{ n: number }>([
+						{ $lookup: { from: 'rooms', localField: 'roomSid', foreignField: '_id', as: 'room' } },
+						{ $unwind: '$room' },
+						{
+							$match: {
+								'room.endedAt': { $exists: true },
+								$expr: { [operator]: [`$${field}`, '$room.endedAt'] }
+							}
+						},
+						{ $count: 'n' }
+					])
+					.toArray();
+
+			expect(await afterEnd('joinedAt', '$gte')).toEqual([]);
+			expect(await afterEnd('leftAt', '$gt')).toEqual([]);
+			expect(await afterEnd('publishedAt', '$gte')).toEqual([]);
+			expect(await count('rooms', { endReason: 'API_DELETE' })).toBeGreaterThan(0);
+		});
+
+		it('Fields of ingress documents: session IDs take the prefix the server gives each input', async () => {
+			const sessions = await docs<IngressSessionDocument>('ingress_sessions');
+			const prefixes = new Set(sessions.map((s) => `${s.inputType}:${s._id.slice(0, 3)}`));
+
+			expect(prefixes.has('rtmp:RT_')).toBe(true);
+			expect(prefixes.has('url:UR_')).toBe(true);
+			expect([...prefixes].filter((p) => p.startsWith('rtmp:') && p !== 'rtmp:RT_')).toEqual([]);
+			expect([...prefixes].filter((p) => p.startsWith('url:') && p !== 'url:UR_')).toEqual([]);
+		});
+
 		it('Expiry of closed entities: no entity past its expiry is written, as the TTL monitor removes it', async () => {
 			const now = new Date(generatedAt);
 
@@ -1322,6 +1356,65 @@ describe.skipIf(mongoUri === '')('data generator', () => {
 			// Some sessions and rooms are on bad networks: poor and lost samples, not only good ones.
 			expect((hourly?.poor ?? 0) / (hourly?.n ?? 1)).toBeGreaterThan(0.02);
 			expect(hourly?.lost ?? 0).toBeGreaterThan(0);
+		});
+
+		it('Raw event documents: TRACK_PUBLISH_STATS and TRACK_SUBSCRIBE_STATS carry the final stats tracks and subscriptions keep', async () => {
+			interface Final {
+				_id: string;
+				publishStats?: { bytes: number; packets: number; layers: unknown[] };
+			}
+			interface RtpPayload {
+				rtp_stats: { bytes: number; packets?: number };
+			}
+			const events = db().collection<EventDocument>('events');
+			const tracks = await db()
+				.collection<Final>('tracks')
+				.find({ publishStats: { $exists: true } })
+				.limit(200)
+				.toArray();
+
+			expect(tracks.length).toBeGreaterThan(0);
+
+			for (const t of tracks) {
+				const own = await events.find({ type: 'TRACK_PUBLISH_STATS', trackSid: t._id }).toArray();
+				const sums = own.map((e) => (e.payload as unknown as RtpPayload).rtp_stats);
+
+				expect(own.length, t._id).toBe(Math.max(1, t.publishStats?.layers.length ?? 0));
+				expect(
+					[sums.reduce((n, s) => n + s.bytes, 0), sums.reduce((n, s) => n + (s.packets ?? 0), 0)],
+					t._id
+				).toEqual([t.publishStats?.bytes, t.publishStats?.packets]);
+			}
+
+			expect(
+				await db()
+					.collection('tracks')
+					.countDocuments({ closedBy: 'reconciler', publishStats: { $exists: true } })
+			).toBe(0);
+
+			const subscriptions = await db()
+				.collection<{
+					_id: string;
+					trackSid: string;
+					subscriberSid: string;
+					subscribeStats?: { bytes: number };
+				}>('track_subscriptions')
+				.find({ subscribeStats: { $exists: true } })
+				.limit(200)
+				.toArray();
+
+			expect(subscriptions.length).toBeGreaterThan(0);
+
+			for (const s of subscriptions) {
+				const own = await events
+					.find({ type: 'TRACK_SUBSCRIBE_STATS', trackSid: s.trackSid, participantSid: s.subscriberSid })
+					.toArray();
+
+				expect(
+					own.map((e) => (e.payload as unknown as RtpPayload).rtp_stats.bytes),
+					s._id
+				).toEqual([s.subscribeStats?.bytes]);
+			}
 		});
 
 		it('Muted tracks: no track_stats document of a track while it is muted', async () => {
