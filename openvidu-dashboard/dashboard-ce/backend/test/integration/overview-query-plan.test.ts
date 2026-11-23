@@ -138,10 +138,10 @@ describe.skipIf(mongoUri === '')(`overview query plan at scenario ${scenario}`, 
 			.collection(Collection.NODES)
 			.find({ mediaNode: 'media-node-10-0-0-1' })
 			.sort({ firstSeenAt: -1 });
-		const plan = await expectIndexBacked(db, servers, { maxDocsExamined: 2 });
+		const plan = await expectIndexBacked(db, servers, { maxDocsExamined: 3 });
 
 		expectIndexes(plan, ['mediaNode_firstSeenAt']);
-		expect(plan.nReturned).toBe(2);
+		expect(plan.nReturned).toBe(3);
 	});
 
 	it('reports the p95 of every budgeted query and fails above its budget', async () => {

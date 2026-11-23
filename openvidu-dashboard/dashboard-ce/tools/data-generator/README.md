@@ -26,28 +26,28 @@ pnpm generate --uri "$MONGO_URI" --db ov_data_m --scenario M --days 7 --drop
 pnpm generate --uri "$MONGO_URI" --db ov_data_l --scenario L --days 1 --drop --stats-mode track
 ```
 
-| Option                              | Default       | Meaning                                                                                                                   |
-| ----------------------------------- | ------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| `--uri`, `--db`                     | required      | Connection string and target database                                                                                     |
-| `--scenario S\|M\|L`                | required      | Rooms per day, sessions per day and average room size (table below)                                                       |
-| `--days <n>`                        | required      | Days of history ending now                                                                                                |
-| `--stats-mode participant\|track`   | `participant` | One `track_stats` document per participant and direction, or per track                                                    |
-| `--seed <n>`                        | `1`           | Seed of the pseudo-random generator (mulberry32); same seed, same data                                                    |
-| `--retention-events-days <n>`       | `7`           | Only raw events inside this window are written (TTL index on `ts`)                                                        |
-| `--retention-stats-days <n>`        | `7`           | Only stats inside this window are written (`expireAfterSeconds`)                                                          |
-| `--retention-tracks-days <n>`       | `7`           | `expiresAt` of tracks and subscriptions; expired ones are not written                                                     |
-| `--retention-entities-days <n>`     | `90`          | `expiresAt = closedAt + retention` on closed entities, `deletedAt + retention` on deleted ingresses                       |
-| `--retention-rollups-5min-days <n>` | `7`           | Only 5-minute rollups inside this window are written (TTL index on `bucket`)                                              |
-| `--drop`                            | off           | Drop the database first                                                                                                   |
-| `--plain-stats`                     | off           | Force the plain-collection fallback for `track_stats`                                                                     |
-| `--five-minute-rollups`             | off           | Write `analytics_5min` inside the 5-minute rollup window                                                                  |
-| `--node-rollups`                    | off           | With `--media-nodes`: write the `node:<label>` scope beside `global` in every rollup                                      |
-| `--room-sums`                       | off           | At room end, write the room sums and the topology, recording and size range counters                                      |
-| `--active-window <minutes>`         | off           | Rooms created in the last minutes stay active (two of three); without it, the most recent 10 % of the rooms are active    |
-| `--min-active-rooms <n>`            | 0             | With `--active-window`: rooms added to the window when the hour of day leaves fewer than `n` active rooms                 |
-| `--nodes-without-media-stats <n>`   | 0             | The last `n` of the three nodes report no media statistics: `mediaStats: false`, no media `track_stats`, bytes or quality |
-| `--media-nodes`                     | off           | Five labelled media nodes `media-node-10-0-0-1` to `-5`, one per state (see Output)                                       |
-| `--legacy`                          | off           | The legacy collections of the writer before 3.10 and a completed migration (see Output)                                   |
+| Option                              | Default       | Meaning                                                                                                                |
+| ----------------------------------- | ------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `--uri`, `--db`                     | required      | Connection string and target database                                                                                  |
+| `--scenario S\|M\|L`                | required      | Rooms per day, sessions per day and average room size (table below)                                                    |
+| `--days <n>`                        | required      | Days of history ending now                                                                                             |
+| `--stats-mode participant\|track`   | `participant` | One `track_stats` document per participant and direction, or per track                                                 |
+| `--seed <n>`                        | `1`           | Seed of the pseudo-random generator (mulberry32); same seed, same data                                                 |
+| `--retention-events-days <n>`       | `7`           | Only raw events inside this window are written (TTL index on `ts`)                                                     |
+| `--retention-stats-days <n>`        | `7`           | Only stats inside this window are written (`expireAfterSeconds`)                                                       |
+| `--retention-tracks-days <n>`       | `7`           | `expiresAt` of tracks and subscriptions; expired ones are not written                                                  |
+| `--retention-entities-days <n>`     | `90`          | `expiresAt = closedAt + retention` on closed entities, `deletedAt + retention` on deleted ingresses                    |
+| `--retention-rollups-5min-days <n>` | `7`           | Only 5-minute rollups inside this window are written (TTL index on `bucket`)                                           |
+| `--drop`                            | off           | Drop the database first                                                                                                |
+| `--plain-stats`                     | off           | Force the plain-collection fallback for `track_stats`                                                                  |
+| `--five-minute-rollups`             | off           | Write `analytics_5min` inside the 5-minute rollup window                                                               |
+| `--node-rollups`                    | off           | With `--media-nodes` (rejected without it): write the `node:<label>` scope beside `global` in every rollup             |
+| `--room-sums`                       | off           | At room end, write the room sums and the topology, recording and size range counters                                   |
+| `--active-window <minutes>`         | off           | Rooms created in the last minutes stay active (two of three); without it, the most recent 10 % of the rooms are active |
+| `--min-active-rooms <n>`            | 0             | With `--active-window`: rooms added to the window when the hour of day leaves fewer than `n` active rooms              |
+| `--nodes-without-media-stats <n>`   | 0             | 0 or 1. With 1, the mediasoup machine runs an earlier version without media statistics until the upgrade (see Output)  |
+| `--media-nodes`                     | off           | A multi-node deployment (Elastic or HA): seven media nodes and ten servers; without it, a single node (see Output)     |
+| `--legacy`                          | off           | The legacy collections of the writer before 3.10 and a completed migration (see Output)                                |
 
 | Scenario | Rooms per day | Sessions per day | Average room size |
 | -------- | ------------- | ---------------- | ----------------- |
@@ -68,7 +68,11 @@ What it writes (`analytics_5min` stays empty without `--five-minute-rollups`):
   publishers and 3 % empty rooms. The 3 % of rooms closed by the reconciler (`absent-live`) stopped reporting while
   sessions were still in them: those sessions, and their tracks, subscriptions, egresses and ingress sessions, are
   closed by the reconciler at that instant, with its synthetic events (`AE_SYN_<id>`) and no closing event of their
-  own. Nobody joins a room once it has ended: when a room ends before its participants leave, as an API deletion
+  own. Each room is hosted on a server taking rooms at its creation (see `nodes`), an active room only on a server
+  alive at the end, and ends with its server when still open then: at a graceful stop with `SERVER_SHUTDOWN`, beside
+  the 2 % of rooms that keep that reason anyway, and at a lost server's last heartbeat closed by the reconciler
+  (`node-dead`). Each server lost inside the range also hosts one room created 10 minutes before it stops taking
+  rooms and held open until its silence. Nobody joins a room once it has ended: when a room ends before its participants leave, as an API deletion
   does, they leave at its end, those still connecting abort, and those that would have joined later never do.
   `lastStatsAt` is the latest of its sessions'. Most rooms keep the server's empty and departure timeouts, the
   others set their own, and 30 % cap their participants above the most they hold.
@@ -125,7 +129,7 @@ What it writes (`analytics_5min` stays empty without `--five-minute-rollups`):
   stats and the rollups. Most sessions are on a good network, a tenth on a fair one, 5 % on a bad one, and 3 % of the
   rooms on a bad network, so some samples fall in the poor and lost bands. A muted track, or one a subscriber does not
   receive, flushes nothing. Pion servers add padding to the video sent to subscribers and keep the period's highest
-  jitter and RTT; the mediasoup server counts no padding and reports those of the reading.
+  jitter and RTT; mediasoup servers count no padding and reports those of the reading.
   Time-series collection (`timeField: ts`, `metaField: meta`, `granularity: seconds`) with
   `expireAfterSeconds`; plain collection with a TTL index on `ts` when the server rejects time-series.
 - `analytics_hourly` and `analytics_daily` (global scope, plus one scope per media node label with
@@ -145,14 +149,41 @@ What it writes (`analytics_5min` stays empty without `--five-minute-rollups`):
   in the hourly and daily ones, `ingress.peakActive`, from the generated egresses and ingress sessions. Egress and
   ingress counters and peaks are written in the global scope only, never in a media node scope, and egresses and
   ingress sessions carry no `mediaNode`, as the writer does.
-- `nodes`, with `rtcEngine` (`mediasoup` for `-2`, `pion` for the others), `ip` and the room counters
-  `rooms.hosted` and `rooms.reconciled`: 3 nodes, or with `--media-nodes` five media nodes, one per state:
-  - `-1` restarted: an earlier, stopped process hosts its older rooms;
-  - `-2` alive;
-  - `-3` draining for the last 20 minutes;
-  - `-4` not reporting for the last 3 hours, host of rooms that ended before;
-  - `-5` stopped 30 minutes before the end, after draining for 10.
-    The keep-alive refreshes only the nodes within an hour of the freshest one, so `-4` stays silent.
+- `nodes`: one document per server process, with `serverVersion`, `rtcEngine`, `mediaStats`, `batchIntervalMs`,
+  `drainingAt` and `stoppedAt` when the server drained or stopped, and the room counters `rooms.hosted` and
+  `rooms.reconciled`. Each server is a new node id, drawn from a stream of its own. A server takes rooms from its
+  `firstSeenAt` until its `drainingAt` or its end; a stopped server's `lastSeenAt` is its `stoppedAt`, a lost one's
+  its last heartbeat without `stoppedAt`. The cluster is upgraded halfway through the range (M): servers started
+  before it run `3.10.0`, later ones `3.10.1`, and `schema_meta.schema.writerVersion` is the newest. Instants, floored
+  to the minute, are relative to M, three quarters of the range (Q) and the end (E); "before" is a day before the
+  range, or before the server's end when that is earlier.
+
+  | Machine | Server | `firstSeenAt` | `drainingAt` | End                   | Engine    |
+  | ------- | ------ | ------------- | ------------ | --------------------- | --------- |
+  | single  | 1      | before        | M − 2 min    | stopped at M          | pion      |
+  | single  | 2      | M + 1 min     |              | lost at Q             | pion      |
+  | single  | 3      | Q + 2 min     |              | alive                 | pion      |
+  | `-1`    | a      | before        | M − 10 min   | stopped at M          | pion      |
+  | `-1`    | b      | M + 1 min     |              | lost at E − 5 h 2 min | mediasoup |
+  | `-1`    | c      | E − 5 h       |              | alive                 | mediasoup |
+  | `-2`    | a      | before        | M + 20 min   | stopped at M + 30 min | mediasoup |
+  | `-2`    | b      | M + 31 min    |              | alive                 | mediasoup |
+  | `-3`    |        | before        | E − 20 min   | alive                 | pion      |
+  | `-4`    |        | before        | E − 3 h 10 m | lost at E − 3 h       | pion      |
+  | `-5`    |        | before        | E − 40 min   | stopped at E − 30 min | pion      |
+  | `-6`    |        | Q             |              | alive, 30 s heartbeat | pion      |
+  | `-7`    |        | before        |              | lost at E − 3 days    | pion      |
+
+  Without `--media-nodes`, a single node: one machine without `mediaNode` or `ip` and the three servers of the first
+  rows, with no node scope; no room is created in the minutes when none of them takes rooms. With `--media-nodes`,
+  the seven media nodes `media-node-10-0-0-1` to `-7` (`ip` `10.0.0.1` to `.7`) and their ten servers; every
+  heartbeat interval is 10 s but that of `-6`. With `--nodes-without-media-stats 1`, the servers of the mediasoup
+  machine started before the upgrade (server a of `-2`, or server 1 of the single node, whose three servers then run
+  mediasoup) report no media statistics: `mediaStats: false` on them, their rooms and sessions, no bytes, quality or
+  `track_stats`, and rollups marked `missing`. That stands for an earlier version; every released 3.10 server reports
+  them. The keep-alive refreshes only the servers alive at generation: the unstopped ones whose `lastSeenAt` is
+  within a minute of the freshest one. It moves their `lastSeenAt` alone, so each keeps its interval and its drain.
+
 - `schema_meta` (`schema`, `retention`, `capabilities`, `config`, and `migration` with `--legacy`).
 - With `--legacy` (`legacy: true` in `generate()`), what an upgrade from 3.9 leaves behind: `legacy_events` and `stats`
   with the legacy indexes (`timestamp.seconds`, `time_stamp.seconds`, TTL on `openvidu_expire_at`), 50 events and

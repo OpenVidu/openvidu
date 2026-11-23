@@ -15,7 +15,7 @@ import {
 	type RoomDocument,
 	RoomTopology
 } from '@openvidu-dashboard/typings';
-import { type Document, type Filter, MongoClient } from 'mongodb';
+import { type Db, type Document, type Filter, MongoClient } from 'mongodb';
 import { afterAll, beforeAll, describe, expect, inject, it, vi } from 'vitest';
 
 /**
@@ -24,6 +24,8 @@ import { afterAll, beforeAll, describe, expect, inject, it, vi } from 'vitest';
  */
 
 const mongoUri = inject('mongoUri');
+const MINUTE = 60_000;
+const HOUR = 3_600_000;
 const DAY = 86_400_000;
 
 /** A generated document: every entity is keyed by a string identifier. */
@@ -42,11 +44,12 @@ describe.skipIf(mongoUri === '')('data generator', () => {
 		await client.close();
 	});
 
-	it.each(['participant', 'track'] as const)('writes documents of the contract in %s mode', async (statsMode) => {
-		const db = client.db(`dashboard_test_generator_${statsMode}`);
-		await db.dropDatabase();
+	describe.each(['participant', 'track'] as const)('generated in %s mode', (statsMode) => {
+		let db: Db;
 
-		try {
+		beforeAll(async () => {
+			db = client.db(`dashboard_test_generator_${statsMode}`);
+			await db.dropDatabase();
 			await generate(db, {
 				scenario: 'S',
 				days: 2,
@@ -59,7 +62,13 @@ describe.skipIf(mongoUri === '')('data generator', () => {
 				activeWindowMinutes: 60,
 				minActiveRooms: 10
 			});
+		}, 600_000);
 
+		afterAll(async () => {
+			await db.dropDatabase();
+		});
+
+		it('writes documents of the contract', async () => {
 			const invalid: Record<string, number> = {};
 
 			for (const name of COLLECTION_NAMES) {
@@ -154,22 +163,6 @@ describe.skipIf(mongoUri === '')('data generator', () => {
 				})
 			).toBe(0);
 
-			// The search fields are the lower-cased names.
-			expect(
-				await db
-					.collection('ingresses')
-					.countDocuments({ $expr: { $ne: ['$nameLower', { $toLower: '$name' }] } })
-			).toBe(0);
-			expect(
-				await db.collection('egresses').countDocuments({
-					roomName: { $exists: true },
-					$expr: { $ne: ['$roomNameLower', { $toLower: '$roomName' }] }
-				})
-			).toBe(0);
-
-			// Node heartbeats report the writer's default batch interval.
-			expect(await db.collection('nodes').countDocuments({ batchIntervalMs: { $ne: 10_000 } })).toBe(0);
-
 			// Every ingress session started is counted once by input type.
 			let started = 0;
 			let byInputType = 0;
@@ -218,7 +211,24 @@ describe.skipIf(mongoUri === '')('data generator', () => {
 					.collection('analytics_hourly')
 					.countDocuments({ scope: 'global', 'rooms.peakActive': { $gt: 0 } })
 			).toBeGreaterThan(0);
+		});
 
+		it('Lower-cased search fields', async () => {
+			// The search fields are the lower-cased names.
+			expect(
+				await db
+					.collection('ingresses')
+					.countDocuments({ $expr: { $ne: ['$nameLower', { $toLower: '$name' }] } })
+			).toBe(0);
+			expect(
+				await db.collection('egresses').countDocuments({
+					roomName: { $exists: true },
+					$expr: { $ne: ['$roomNameLower', { $toLower: '$roomName' }] }
+				})
+			).toBe(0);
+		});
+
+		it('Generated event payload', async () => {
 			// Event payloads follow the writer's protojson shape: snake_case names nested by entity.
 			const camelCase = new Set<string>();
 
@@ -248,17 +258,19 @@ describe.skipIf(mongoUri === '')('data generator', () => {
 					joined?.client_info?.sdk
 				].map((value) => typeof value)
 			).toEqual(['string', 'string', 'string', 'string']);
-		} finally {
-			await db.dropDatabase();
-		}
+		});
 	});
 
-	it('generates five media nodes, one per state, with media nodes', async () => {
-		const db = client.db('dashboard_test_generator_media_nodes');
-		await db.dropDatabase();
+	/** Two days of scenario S on seven media nodes with the node scopes, read by the checks of the server timeline. */
+	describe('generated multi-node deployment', () => {
+		const dbName = 'dashboard_test_generator_media_nodes';
+		const db = () => client.db(dbName);
+		let generated: NodeDocument[] = [];
+		let end = 0;
 
-		try {
-			await generate(db, {
+		beforeAll(async () => {
+			await db().dropDatabase();
+			await generate(db(), {
 				scenario: 'S',
 				days: 2,
 				statsMode: 'participant',
@@ -268,125 +280,467 @@ describe.skipIf(mongoUri === '')('data generator', () => {
 				rollups: { fiveMinute: true, nodes: true, roomSums: true },
 				mediaNodes: true
 			});
+			generated = await db().collection<NodeDocument>('nodes').find().sort({ firstSeenAt: 1, _id: 1 }).toArray();
+			end = Math.max(...generated.map((node) => node.lastSeenAt.getTime()));
+		}, 600_000);
 
-			const nodes = await db.collection<NodeDocument>('nodes').find().toArray();
-			const first = nodes.filter((node) => node.mediaNode === 'media-node-10-0-0-1');
-			const stopped = first.find((node) => node.stoppedAt !== undefined);
-			const current = first.find((node) => node.stoppedAt === undefined);
+		afterAll(async () => {
+			await db().dropDatabase();
+		});
 
-			const label = (n: number) => nodes.find((node) => node.mediaNode === `media-node-10-0-0-${String(n)}`);
-			const end = Math.max(...nodes.map((node) => node.lastSeenAt.getTime()));
+		/** The servers of media node `-<n>`, oldest first. */
+		const servers = (n: number) => generated.filter((node) => node.mediaNode === `media-node-10-0-0-${String(n)}`);
 
-			expect(nodes).toHaveLength(6);
-			expect(new Set(nodes.map((node) => node.mediaNode))).toEqual(
-				new Set([1, 2, 3, 4, 5].map((n) => `media-node-10-0-0-${String(n)}`))
+		it('Generated media node servers', async () => {
+			const { windowStart, middle, quarter } = rangeOf(end, 2);
+			const times = (node: NodeDocument | undefined) => ({
+				engine: node?.rtcEngine,
+				firstSeenAt: node?.firstSeenAt.getTime(),
+				lastSeenAt: node?.lastSeenAt.getTime(),
+				drainingAt: node?.drainingAt?.getTime(),
+				stoppedAt: node?.stoppedAt?.getTime()
+			});
+			const before = (node: NodeDocument | undefined) => node?.firstSeenAt.getTime() ?? 0;
+
+			expect(generated).toHaveLength(10);
+			expect(new Set(generated.map((node) => node.mediaNode))).toEqual(
+				new Set([1, 2, 3, 4, 5, 6, 7].map((n) => `media-node-10-0-0-${String(n)}`))
 			);
 			expect(
-				nodes.every((node) => node.ip === node.mediaNode?.replace('media-node-', '').replaceAll('-', '.'))
+				generated.every((node) => node.ip === node.mediaNode?.replace('media-node-', '').replaceAll('-', '.'))
 			).toBe(true);
-			expect(
-				nodes.every(
-					(node) => node.rtcEngine === (node.mediaNode === 'media-node-10-0-0-2' ? 'mediasoup' : 'pion')
-				)
-			).toBe(true);
-			expect(first).toHaveLength(2);
-			expect(label(2)?.drainingAt).toBeUndefined();
-			expect(end - (label(3)?.drainingAt?.getTime() ?? 0)).toBe(20 * 60_000);
-			expect(label(4)?.stoppedAt).toBeUndefined();
-			expect(end - (label(4)?.lastSeenAt.getTime() ?? 0)).toBe(3 * 3_600_000);
-			expect(end - (label(5)?.stoppedAt?.getTime() ?? 0)).toBe(30 * 60_000);
-			expect(end - (label(5)?.drainingAt?.getTime() ?? 0)).toBe(40 * 60_000);
-			expect(stopped?.lastSeenAt.getTime()).toBeLessThan(current?.firstSeenAt.getTime() ?? 0);
-			expect(await db.collection('rooms').countDocuments({ nodeId: stopped?._id })).toBeGreaterThan(0);
 
-			for (const node of nodes) {
-				const rooms = db.collection('rooms');
-
-				expect(node.rooms?.hosted).toBe(await rooms.countDocuments({ nodeId: node._id }));
-				expect(node.rooms?.reconciled).toBe(
-					await rooms.countDocuments({ nodeId: node._id, closedBy: 'reconciler' })
-				);
-				expect(
-					await db
-						.collection('rooms')
-						.countDocuments({ nodeId: node._id, mediaNode: { $ne: node.mediaNode } })
-				).toBe(0);
-				expect(
-					await db
-						.collection('participants')
-						.countDocuments({ nodeId: node._id, mediaNode: { $ne: node.mediaNode } })
-				).toBe(0);
+			for (const node of generated.filter((server) => server.firstSeenAt.getTime() < windowStart)) {
+				expect(node.firstSeenAt.getTime(), node._id).toBeLessThan(node.lastSeenAt.getTime());
 			}
 
-			const scopes = (await db.collection('analytics_hourly').distinct('scope')) as string[];
+			const [a1, b1, c1] = servers(1);
+			const [a2, b2] = servers(2);
+
+			expect(servers(1)).toHaveLength(3);
+			expect(before(a1)).toBeLessThan(windowStart);
+			expect(times(a1)).toEqual({
+				engine: 'pion',
+				firstSeenAt: before(a1),
+				lastSeenAt: middle,
+				drainingAt: middle - 10 * MINUTE,
+				stoppedAt: middle
+			});
+			expect(times(b1)).toEqual({
+				engine: 'mediasoup',
+				firstSeenAt: middle + MINUTE,
+				lastSeenAt: end - 5 * HOUR - 2 * MINUTE,
+				drainingAt: undefined,
+				stoppedAt: undefined
+			});
+			expect(times(c1)).toEqual({
+				engine: 'mediasoup',
+				firstSeenAt: end - 5 * HOUR,
+				lastSeenAt: end,
+				drainingAt: undefined,
+				stoppedAt: undefined
+			});
+			expect(servers(2)).toHaveLength(2);
+			expect(before(a2)).toBeLessThan(windowStart);
+			expect(times(a2)).toEqual({
+				engine: 'mediasoup',
+				firstSeenAt: before(a2),
+				lastSeenAt: middle + 30 * MINUTE,
+				drainingAt: middle + 20 * MINUTE,
+				stoppedAt: middle + 30 * MINUTE
+			});
+			expect(times(b2)).toEqual({
+				engine: 'mediasoup',
+				firstSeenAt: middle + 31 * MINUTE,
+				lastSeenAt: end,
+				drainingAt: undefined,
+				stoppedAt: undefined
+			});
+
+			const single = (n: number) => {
+				expect(servers(n), `-${String(n)}`).toHaveLength(1);
+
+				return servers(n)[0];
+			};
+
+			expect(times(single(3))).toEqual({
+				engine: 'pion',
+				firstSeenAt: before(single(3)),
+				lastSeenAt: end,
+				drainingAt: end - 20 * MINUTE,
+				stoppedAt: undefined
+			});
+			expect(times(single(4))).toEqual({
+				engine: 'pion',
+				firstSeenAt: before(single(4)),
+				lastSeenAt: end - 3 * HOUR,
+				drainingAt: end - 3 * HOUR - 10 * MINUTE,
+				stoppedAt: undefined
+			});
+			expect(times(single(5))).toEqual({
+				engine: 'pion',
+				firstSeenAt: before(single(5)),
+				lastSeenAt: end - 30 * MINUTE,
+				drainingAt: end - 40 * MINUTE,
+				stoppedAt: end - 30 * MINUTE
+			});
+			expect(times(single(6))).toEqual({
+				engine: 'pion',
+				firstSeenAt: quarter,
+				lastSeenAt: end,
+				drainingAt: undefined,
+				stoppedAt: undefined
+			});
+			expect(times(single(7))).toEqual({
+				engine: 'pion',
+				firstSeenAt: before(single(7)),
+				lastSeenAt: end - 3 * DAY,
+				drainingAt: undefined,
+				stoppedAt: undefined
+			});
+
+			for (const n of [3, 4, 5, 7]) {
+				expect(before(single(n)), `-${String(n)}`).toBeLessThan(windowStart);
+			}
+
+			const scopes = (await db().collection('analytics_hourly').distinct('scope')) as string[];
+			const hostingLabels = (await db()
+				.collection('rooms')
+				.distinct('mediaNode', { createdAt: { $gte: new Date(windowStart) } })) as string[];
 
 			expect(scopes.filter((scope) => scope !== 'global').sort()).toEqual(
-				[1, 2, 3, 4, 5].map((n) => `node:media-node-10-0-0-${String(n)}`)
+				hostingLabels.map((label) => `node:${label}`).sort()
 			);
+			expect(
+				await db()
+					.collection('nodes')
+					.countDocuments({ $nor: [{ $jsonSchema: CONTRACT_SCHEMAS.nodes }] })
+			).toBe(0);
+		});
 
-			// Egress and ingress stay in the global rollups and carry no media node.
+		it('Rooms of generated servers', async () => {
+			const byId = new Map(generated.map((node) => [node._id, node]));
+			const rooms = await db().collection<RoomDocument>('rooms').find().toArray();
+			const roomsById = new Map(rooms.map((room) => [room._id, room]));
+			const misplaced: string[] = [];
+
+			for (const room of rooms) {
+				const node = byId.get(room.nodeId);
+				const created = room.createdAt.getTime();
+				const serverEnd =
+					node?.stoppedAt ?? (node?.lastSeenAt.getTime() === end ? undefined : node?.lastSeenAt);
+
+				if (
+					node === undefined ||
+					room.mediaNode !== node.mediaNode ||
+					created < node.firstSeenAt.getTime() ||
+					created >= Math.min(node.drainingAt?.getTime() ?? end, node.lastSeenAt.getTime()) ||
+					(serverEnd !== undefined && (room.endedAt ?? new Date(end)) > serverEnd)
+				) {
+					misplaced.push(room._id);
+				}
+			}
+
+			expect(misplaced).toEqual([]);
+
+			for (const session of await db().collection<ParticipantDocument>('participants').find().toArray()) {
+				const room = roomsById.get(session.roomSid);
+				const node = byId.get(session.nodeId);
+
+				if (room === undefined) {
+					continue;
+				}
+
+				expect(
+					[session.nodeId, session.mediaNode, node?.mediaNode, session.joinedAt >= (node?.firstSeenAt ?? 0)],
+					session._id
+				).toEqual([room.nodeId, room.mediaNode, room.mediaNode, true]);
+			}
+
+			// A room still open at a stop ends with the shutdown; one open at a silence, closed by the reconciler.
+			for (const node of generated.filter((server) => server.lastSeenAt.getTime() < end)) {
+				const atEnd = rooms.filter(
+					(room) => room.nodeId === node._id && room.endedAt?.getTime() === node.lastSeenAt.getTime()
+				);
+
+				for (const room of atEnd) {
+					expect([room.endReason, room.closedBy], room._id).toEqual(
+						node.stoppedAt === undefined ? ['RECONCILED', 'reconciler'] : ['SERVER_SHUTDOWN', 'event']
+					);
+				}
+			}
+
+			for (const lost of [servers(1)[1], servers(4)[0]]) {
+				const reconciled = rooms.filter((room) => room.nodeId === lost?._id && room.closedBy === 'reconciler');
+				const reasons = await db()
+					.collection<EventDocument>('events')
+					.find({ type: 'ROOM_ENDED', synthetic: true, roomSid: { $in: reconciled.map((room) => room._id) } })
+					.toArray();
+
+				expect(reconciled.length, lost?._id).toBeGreaterThan(0);
+				expect(
+					reasons.some(
+						(event) =>
+							(event.payload as { reconciler?: { reason?: string } }).reconciler?.reason === 'node-dead'
+					),
+					lost?._id
+				).toBe(true);
+			}
+
+			for (const node of generated) {
+				expect(node.rooms, node._id).toEqual({
+					hosted: rooms.filter((room) => room.nodeId === node._id).length,
+					reconciled: rooms.filter((room) => room.nodeId === node._id && room.closedBy === 'reconciler')
+						.length
+				});
+			}
+		});
+
+		it('keeps egress and ingress in the global scope with media nodes', async () => {
 			for (const collection of ['analytics_5min', 'analytics_hourly', 'analytics_daily']) {
 				expect(
-					await db.collection(collection).countDocuments({
-						scope: { $ne: 'global' },
-						$or: [{ egress: { $exists: true } }, { ingress: { $exists: true } }]
-					}),
+					await db()
+						.collection(collection)
+						.countDocuments({
+							scope: { $ne: 'global' },
+							$or: [{ egress: { $exists: true } }, { ingress: { $exists: true } }]
+						}),
 					collection
 				).toBe(0);
 			}
 
 			for (const collection of ['egresses', 'ingress_sessions']) {
 				expect(
-					await db.collection(collection).countDocuments({ mediaNode: { $exists: true } }),
+					await db()
+						.collection(collection)
+						.countDocuments({ mediaNode: { $exists: true } }),
 					collection
 				).toBe(0);
 			}
 
-			const globalEgress = await db
+			const globalEgress = await db()
 				.collection<HourlyRollupDocument>('analytics_hourly')
 				.find({ scope: 'global' })
 				.toArray();
 
 			expect(globalEgress.reduce((sum, hour) => sum + (hour.egress?.started ?? 0), 0)).toBe(
-				await db
+				await db()
 					.collection('egresses')
 					.countDocuments({ startedAt: { $gte: globalEgress[0]?.bucket ?? new Date(0) } })
 			);
+		});
 
-			// The media nodes gone before the end host only rooms that ended before they went silent or drained.
-			for (const gone of [label(4), label(5)]) {
-				const rooms = db.collection('rooms');
+		it('Generated node heartbeats', async () => {
+			const intervals = async () =>
+				(await db().collection<NodeDocument>('nodes').find().sort({ firstSeenAt: 1, _id: 1 }).toArray()).map(
+					(node) => [node._id, node.batchIntervalMs]
+				);
+			const expected = generated.map((node) => [
+				node._id,
+				node.mediaNode === 'media-node-10-0-0-6' ? 30_000 : 10_000
+			]);
 
-				expect(await rooms.countDocuments({ nodeId: gone?._id })).toBeGreaterThan(0);
-				expect(
-					await rooms.countDocuments({
-						nodeId: gone?._id,
-						$or: [{ endedAt: null }, { endedAt: { $gt: gone?.drainingAt ?? gone?.lastSeenAt } }]
-					})
-				).toBe(0);
+			expect(await intervals()).toEqual(expected);
+			await keepLive(db(), new Date(end + 5 * MINUTE));
+			await keepLive(db(), new Date(end + 5 * MINUTE + 15_000));
+			expect(await intervals()).toEqual(expected);
+		});
+
+		it('Keep-alive of generated servers', async () => {
+			const later = new Date(end + 10 * MINUTE);
+
+			await keepLive(db(), later);
+			await expectKeptAlive(db(), generated, later, [
+				servers(1)[2]?._id,
+				servers(2)[1]?._id,
+				servers(3)[0]?._id,
+				servers(6)[0]?._id
+			]);
+		});
+	});
+
+	/** Two days of scenario S on a single node, read by the checks of its servers. */
+	describe('generated single node', () => {
+		const dbName = 'dashboard_test_generator_single_node';
+		const db = () => client.db(dbName);
+		let generated: NodeDocument[] = [];
+		let end = 0;
+
+		beforeAll(async () => {
+			await db().dropDatabase();
+			await generate(db(), {
+				scenario: 'S',
+				days: 2,
+				statsMode: 'participant',
+				seed: 3,
+				retentionDays: { events: 7, stats: 7, tracks: 7, entities: 90 },
+				timeseries: true,
+				rollups: { fiveMinute: true, nodes: false, roomSums: true }
+			});
+			generated = await db().collection<NodeDocument>('nodes').find().sort({ firstSeenAt: 1, _id: 1 }).toArray();
+			end = Math.max(...generated.map((node) => node.lastSeenAt.getTime()));
+		}, 600_000);
+
+		afterAll(async () => {
+			await db().dropDatabase();
+		});
+
+		it('Generated single node', async () => {
+			const { windowStart, middle, quarter } = rangeOf(end, 2);
+			const [first, second, third] = generated;
+
+			expect(generated).toHaveLength(3);
+			expect(
+				generated.map((node) => [node.mediaNode, node.ip, node.rtcEngine, node.mediaStats, node.serverVersion])
+			).toEqual([
+				[undefined, undefined, 'pion', true, '3.10.0'],
+				[undefined, undefined, 'pion', true, '3.10.1'],
+				[undefined, undefined, 'pion', true, '3.10.1']
+			]);
+			expect(first?.firstSeenAt.getTime()).toBeLessThan(windowStart);
+			expect([first?.drainingAt?.getTime(), first?.stoppedAt?.getTime(), first?.lastSeenAt.getTime()]).toEqual([
+				middle - 2 * MINUTE,
+				middle,
+				middle
+			]);
+			expect([second?.firstSeenAt.getTime(), second?.lastSeenAt.getTime(), second?.stoppedAt]).toEqual([
+				middle + MINUTE,
+				quarter,
+				undefined
+			]);
+			expect([third?.firstSeenAt.getTime(), third?.lastSeenAt.getTime(), third?.stoppedAt]).toEqual([
+				quarter + 2 * MINUTE,
+				end,
+				undefined
+			]);
+
+			for (const collection of ['analytics_5min', 'analytics_hourly', 'analytics_daily']) {
+				expect(await db().collection(collection).distinct('scope'), collection).toEqual(['global']);
 			}
 
 			expect(
-				await db.collection('nodes').countDocuments({ $nor: [{ $jsonSchema: CONTRACT_SCHEMAS.nodes }] })
+				await db()
+					.collection('nodes')
+					.countDocuments({ $nor: [{ $jsonSchema: CONTRACT_SCHEMAS.nodes }] })
 			).toBe(0);
+		});
 
-			const later = new Date(Date.now() + 10 * 60_000);
-
-			await keepLive(db, later);
-			const kept = await db.collection<NodeDocument>('nodes').find().toArray();
+		it('Generated single node: no room in the restart gaps', async () => {
+			const [first, second, third] = generated;
+			const rooms = db().collection('rooms');
 
 			expect(
-				kept
-					.filter((node) => node.lastSeenAt.getTime() === later.getTime())
-					.map((node) => node._id)
-					.sort()
-			).toEqual([current?._id, label(2)?._id, label(3)?._id].sort());
-			expect(kept.find((node) => node._id === stopped?._id)?.lastSeenAt).toEqual(stopped?.lastSeenAt);
-			expect(kept.find((node) => node._id === label(4)?._id)?.lastSeenAt).toEqual(label(4)?.lastSeenAt);
-			expect(kept.find((node) => node._id === label(3)?._id)?.drainingAt).toEqual(label(3)?.drainingAt);
+				await rooms.countDocuments({ createdAt: { $gte: first?.drainingAt, $lt: second?.firstSeenAt } })
+			).toBe(0);
+			expect(
+				await rooms.countDocuments({ createdAt: { $gte: second?.lastSeenAt, $lt: third?.firstSeenAt } })
+			).toBe(0);
+			expect(await rooms.countDocuments({ createdAt: { $lt: second?.firstSeenAt } })).toBeGreaterThan(0);
+		});
+
+		it('Rooms of generated servers: the single node', async () => {
+			const [first, second, third] = generated;
+			const rooms = await db().collection<RoomDocument>('rooms').find().toArray();
+			const host = (room: RoomDocument) =>
+				room.createdAt < (first?.drainingAt ?? 0)
+					? first
+					: room.createdAt < (second?.lastSeenAt ?? 0)
+						? second
+						: third;
+
+			expect(rooms.filter((room) => room.nodeId !== host(room)?._id).map((room) => room._id)).toEqual([]);
+			expect(rooms.filter((room) => room.status === 'active' && room.nodeId !== third?._id)).toEqual([]);
+			expect(
+				rooms.filter(
+					(room) =>
+						room.nodeId !== third?._id && (room.endedAt ?? new Date(end)) > (host(room)?.lastSeenAt ?? 0)
+				)
+			).toEqual([]);
+
+			const lost = rooms.filter((room) => room.nodeId === second?._id && room.closedBy === 'reconciler');
+			const deadReasons = await db()
+				.collection<EventDocument>('events')
+				.countDocuments({
+					type: 'ROOM_ENDED',
+					synthetic: true,
+					roomSid: { $in: lost.map((room) => room._id) },
+					'payload.reconciler.reason': 'node-dead'
+				});
+
+			expect(deadReasons).toBeGreaterThan(0);
+
+			for (const node of generated) {
+				expect(node.rooms, node._id).toEqual({
+					hosted: rooms.filter((room) => room.nodeId === node._id).length,
+					reconciled: rooms.filter((room) => room.nodeId === node._id && room.closedBy === 'reconciler')
+						.length
+				});
+			}
+		});
+
+		it('Generated node heartbeats: without media nodes', async () => {
+			const intervals = async () =>
+				(await db().collection<NodeDocument>('nodes').find().toArray()).map((node) => node.batchIntervalMs);
+
+			expect(await intervals()).toEqual([10_000, 10_000, 10_000]);
+			await keepLive(db(), new Date(end + 5 * MINUTE));
+			expect(await intervals()).toEqual([10_000, 10_000, 10_000]);
+		});
+
+		it('Keep-alive of generated servers: the single node', async () => {
+			const later = new Date(end + 10 * MINUTE);
+
+			await keepLive(db(), later);
+			await expectKeptAlive(db(), generated, later, [generated[2]?._id]);
+		});
+	});
+
+	it('Generated server versions: the single node runs mediasoup with the option', async () => {
+		const db = client.db('dashboard_test_generator_single_node_media_stats');
+		await db.dropDatabase();
+
+		try {
+			await generate(db, {
+				scenario: 'S',
+				days: 1,
+				statsMode: 'track',
+				seed: 7,
+				retentionDays: { events: 7, stats: 7, tracks: 7, entities: 90 },
+				timeseries: true,
+				nodesWithoutMediaStats: 1
+			});
+
+			const nodes = await db.collection<NodeDocument>('nodes').find().sort({ firstSeenAt: 1, _id: 1 }).toArray();
+
+			expect(nodes.map((node) => [node.rtcEngine, node.mediaStats, node.serverVersion])).toEqual([
+				['mediasoup', false, '3.10.0'],
+				['mediasoup', true, '3.10.1'],
+				['mediasoup', true, '3.10.1']
+			]);
+			expect(await db.collection('schema_meta').findOne({ _id: 'schema' as never })).toMatchObject({
+				writerVersion: '3.10.1'
+			});
 		} finally {
 			await db.dropDatabase();
 		}
+	});
+
+	it.each([false, true])('Generated server versions: 2 is rejected, media nodes %s', async (mediaNodes) => {
+		const db = client.db('dashboard_test_generator_media_stats_rejected');
+
+		await expect(
+			generate(db, {
+				scenario: 'S',
+				days: 1,
+				statsMode: 'participant',
+				seed: 3,
+				retentionDays: { events: 7, stats: 7, tracks: 7, entities: 90 },
+				timeseries: true,
+				mediaNodes,
+				nodesWithoutMediaStats: 2
+			})
+		).rejects.toThrow('0 or 1');
+		await db.dropDatabase();
 	});
 
 	it('rejects node rollups without media nodes', async () => {
@@ -404,98 +758,6 @@ describe.skipIf(mongoUri === '')('data generator', () => {
 			})
 		).rejects.toThrow('mediaNodes');
 		await db.dropDatabase();
-	});
-
-	it('generates a node without media statistics on request', async () => {
-		const db = client.db('dashboard_test_generator_media_stats');
-		await db.dropDatabase();
-
-		try {
-			await generate(db, {
-				scenario: 'S',
-				days: 1,
-				statsMode: 'track',
-				seed: 7,
-				retentionDays: { events: 7, stats: 7, tracks: 7, entities: 90 },
-				timeseries: true,
-				rollups: { fiveMinute: true, nodes: true, roomSums: true },
-				mediaNodes: true,
-				nodesWithoutMediaStats: 1
-			});
-
-			const nodes = await db
-				.collection<{ _id: string; mediaStats: boolean; rtcEngine: string; mediaNode?: string }>('nodes')
-				.find()
-				.toArray();
-			const unmarked = nodes.filter((node) => !node.mediaStats).map((node) => node._id);
-
-			expect(nodes.find((node) => !node.mediaStats)?.mediaNode).toBe('media-node-10-0-0-3');
-			// Engines of the generated nodes: the engine follows the media node, not the media statistics.
-			expect(nodes.filter((node) => !node.mediaStats).every((node) => node.rtcEngine === 'pion')).toBe(true);
-			expect(
-				nodes
-					.filter((node) => node.mediaNode === 'media-node-10-0-0-2')
-					.map((node) => [node.rtcEngine, node.mediaStats])
-			).toEqual([['mediasoup', true]]);
-
-			expect(nodes.filter((node) => node.mediaStats)).toHaveLength(nodes.length - 1);
-			expect(unmarked).toHaveLength(1);
-
-			const rooms = db.collection<{ mediaStats?: boolean; quality: { scoreCount: number } }>('rooms');
-			const marked = await rooms.find({ nodeId: unmarked[0] }).toArray();
-
-			expect(marked.length).toBeGreaterThan(0);
-			expect(marked.every((room) => room.mediaStats === false && room.quality.scoreCount === 0)).toBe(true);
-			expect(await rooms.countDocuments({ nodeId: unmarked[0], 'bytes.up': { $ne: 0 } })).toBe(0);
-			expect(await rooms.countDocuments({ nodeId: { $ne: unmarked[0] }, mediaStats: { $exists: true } })).toBe(0);
-			expect(
-				await db.collection('participants').countDocuments({ nodeId: unmarked[0], mediaStats: { $ne: false } })
-			).toBe(0);
-			expect(await db.collection('track_stats').countDocuments({ 'meta.nodeId': unmarked[0] })).toBe(0);
-			expect(await db.collection('track_stats').countDocuments({})).toBeGreaterThan(0);
-			expect(
-				await db.collection('rooms').countDocuments({ $nor: [{ $jsonSchema: CONTRACT_SCHEMAS.rooms }] })
-			).toBe(0);
-
-			// Rollups carry the media statistics marks of the nodes of the rooms they count; those holding only the
-			// aggregator's samples carry none.
-			const label = nodes.find((node) => node._id === unmarked[0]) as { mediaNode?: string } | undefined;
-			const hourly = db.collection('analytics_hourly');
-			const counted = { 'rooms.created': { $exists: true } };
-
-			expect(
-				await hourly.countDocuments({
-					scope: 'global',
-					'mediaStats.reported': true,
-					'mediaStats.missing': true
-				})
-			).toBeGreaterThan(0);
-			expect(await hourly.countDocuments({ scope: `node:${String(label?.mediaNode)}` })).toBeGreaterThan(0);
-			expect(
-				await hourly.countDocuments({
-					...counted,
-					scope: `node:${String(label?.mediaNode)}`,
-					$or: [{ 'mediaStats.reported': true }, { 'mediaStats.missing': { $ne: true } }]
-				})
-			).toBe(0);
-			expect(
-				await hourly.countDocuments({
-					...counted,
-					scope: { $nin: ['global', `node:${String(label?.mediaNode)}`] },
-					$or: [{ 'mediaStats.missing': true }, { 'mediaStats.reported': { $ne: true } }]
-				})
-			).toBe(0);
-
-			for (const collection of ['analytics_5min', 'analytics_hourly', 'analytics_daily']) {
-				expect(
-					await db
-						.collection(collection)
-						.countDocuments({ $nor: [{ $jsonSchema: CONTRACT_SCHEMAS[collection as 'analytics_hourly'] }] })
-				).toBe(0);
-			}
-		} finally {
-			await db.dropDatabase();
-		}
 	});
 
 	it('generates every room topology and counts it at room end with the room sums', async () => {
@@ -753,7 +1015,7 @@ describe.skipIf(mongoUri === '')('data generator', () => {
 		}
 	});
 
-	it('marks every rollup as reported when every node reports media statistics', async () => {
+	it('Generated rollups of servers reporting media statistics', async () => {
 		const db = client.db('dashboard_test_generator_media_stats_reported');
 		await db.dropDatabase();
 
@@ -1116,9 +1378,16 @@ describe.skipIf(mongoUri === '')('data generator', () => {
 
 			expect(Math.abs(published - requested)).toBeLessThanOrEqual(1);
 
-			// Every toggle ends as it started: a track unmuted at publish ends unmuted.
-			const muted = await countBy('events', 'trackSid', { type: 'TRACK_MUTED' });
-			const unmuted = await countBy('events', 'trackSid', { type: 'TRACK_UNMUTED' });
+			// Every toggle ends as it started: a track unmuted at publish ends unmuted. The tracks published within the
+			// window keep all their events while the TTL monitor removes those past the events retention.
+			const recent = {
+				$in: await client
+					.db(dbName)
+					.collection('events')
+					.distinct('trackSid', { type: 'TRACK_PUBLISHED', ts: { $gte: from } })
+			};
+			const muted = await countBy('events', 'trackSid', { type: 'TRACK_MUTED', trackSid: recent });
+			const unmuted = await countBy('events', 'trackSid', { type: 'TRACK_UNMUTED', trackSid: recent });
 
 			expect(Object.keys(muted).length).toBeGreaterThan(0);
 			expect(muted).toEqual(unmuted);
@@ -1276,6 +1545,123 @@ describe.skipIf(mongoUri === '')('data generator', () => {
 
 		afterAll(async () => {
 			await db().dropDatabase();
+		});
+
+		it('Generated server versions', async () => {
+			const nodes = await db()
+				.collection<NodeDocument>('nodes')
+				.find()
+				.sort({ firstSeenAt: 1, _id: 1 })
+				.toArray();
+			const end = Math.max(...nodes.map((node) => node.lastSeenAt.getTime()));
+			const { middle } = rangeOf(end, 2);
+			const label = (n: number) => nodes.filter((node) => node.mediaNode === `media-node-10-0-0-${String(n)}`);
+			const [unreported] = label(2);
+			const unreportedId = unreported?._id ?? '';
+
+			expect(
+				nodes.filter(
+					(node) => node.serverVersion !== (node.firstSeenAt.getTime() < middle ? '3.10.0' : '3.10.1')
+				)
+			).toEqual([]);
+			expect(
+				await db()
+					.collection('schema_meta')
+					.findOne({ _id: 'schema' as never })
+			).toMatchObject({
+				writerVersion: '3.10.1'
+			});
+			expect([unreported?.rtcEngine, unreported?.mediaStats]).toEqual(['mediasoup', false]);
+			expect(nodes.filter((node) => node._id !== unreportedId && !node.mediaStats)).toEqual([]);
+			expect(label(1).map((node) => node.rtcEngine)).toEqual(['pion', 'mediasoup', 'mediasoup']);
+
+			const rooms = db().collection<RoomDocument>('rooms');
+			const marked = await rooms.find({ nodeId: unreportedId }).toArray();
+
+			expect(marked.length).toBeGreaterThan(0);
+			expect(marked.every((room) => room.mediaStats === false && room.quality.scoreCount === 0)).toBe(true);
+			expect(await rooms.countDocuments({ nodeId: unreportedId, 'bytes.up': { $ne: 0 } })).toBe(0);
+			expect(await rooms.countDocuments({ nodeId: { $ne: unreportedId }, mediaStats: { $exists: true } })).toBe(
+				0
+			);
+
+			const participants = db().collection('participants');
+
+			expect(await participants.countDocuments({ nodeId: unreportedId, mediaStats: { $ne: false } })).toBe(0);
+			expect(await participants.countDocuments({ nodeId: unreportedId, 'quality.scoreCount': { $gt: 0 } })).toBe(
+				0
+			);
+			expect(await participants.countDocuments({ nodeId: { $ne: unreportedId }, mediaStats: false })).toBe(0);
+			expect(await db().collection('track_stats').countDocuments({ 'meta.nodeId': unreportedId })).toBe(0);
+			expect(await db().collection('track_stats').countDocuments({})).toBeGreaterThan(0);
+		});
+
+		it('Generated rollups of nodes without media statistics', async () => {
+			const nodes = await db()
+				.collection<NodeDocument>('nodes')
+				.find()
+				.sort({ firstSeenAt: 1, _id: 1 })
+				.toArray();
+			const [first, second] = nodes.filter((node) => node.mediaNode === 'media-node-10-0-0-2');
+			const stoppedAt = first?.stoppedAt?.getTime() ?? 0;
+			const hourly = db().collection<HourlyRollupDocument>('analytics_hourly');
+			const counted = { 'rooms.created': { $exists: true } };
+			const rooms = await db().collection<RoomDocument>('rooms').find().toArray();
+
+			// A global bucket that counts the creation of a room of the first -2 server and of another has both marks.
+			const mixed = (await hourly.find({ ...counted, scope: 'global' }).toArray()).filter((doc) => {
+				const created = rooms.filter(
+					(room) => room.createdAt >= doc.bucket && room.createdAt.getTime() < doc.bucket.getTime() + HOUR
+				);
+
+				return (
+					created.some((room) => room.nodeId === first?._id) &&
+					created.some((room) => room.nodeId !== first?._id)
+				);
+			});
+
+			expect(mixed.length).toBeGreaterThan(0);
+
+			for (const doc of mixed) {
+				expect(doc.mediaStats, doc._id).toEqual({ reported: true, missing: true });
+			}
+
+			expect(
+				await hourly.countDocuments({ bucket: { $gte: new Date(stoppedAt) }, 'mediaStats.missing': true })
+			).toBe(0);
+
+			const scope = 'node:media-node-10-0-0-2';
+			const beforeStop = await hourly
+				.find({ ...counted, scope, bucket: { $lte: new Date(stoppedAt - HOUR) } })
+				.toArray();
+			const afterStart = await hourly
+				.find({ ...counted, scope, bucket: { $gte: second?.firstSeenAt ?? new Date() } })
+				.toArray();
+
+			expect(beforeStop.length).toBeGreaterThan(0);
+			expect(afterStart.length).toBeGreaterThan(0);
+			expect(
+				beforeStop.filter((doc) => doc.mediaStats?.missing !== true || doc.mediaStats.reported === true)
+			).toEqual([]);
+			expect(
+				afterStart.filter((doc) => doc.mediaStats?.reported !== true || doc.mediaStats.missing === true)
+			).toEqual([]);
+			expect(
+				await hourly.countDocuments({
+					...counted,
+					scope: { $nin: ['global', scope] },
+					$or: [{ 'mediaStats.missing': true }, { 'mediaStats.reported': { $ne: true } }]
+				})
+			).toBe(0);
+
+			for (const collection of ['analytics_5min', 'analytics_hourly', 'analytics_daily'] as const) {
+				expect(
+					await db()
+						.collection(collection)
+						.countDocuments({ $nor: [{ $jsonSchema: CONTRACT_SCHEMAS[collection] }] }),
+					collection
+				).toBe(0);
+			}
 		});
 
 		it('Quality counters: participants, rooms and rollups count every track_stats document, sample by sample', async () => {
@@ -1464,7 +1850,20 @@ describe.skipIf(mongoUri === '')('data generator', () => {
 		});
 
 		it('Media statistics of mediasoup servers: no padding in the bytes of a video subscriber', async () => {
-			const roomsOf = async (mediaNode: string) => db().collection<Keyed>('rooms').distinct('_id', { mediaNode });
+			const nodes = await db().collection<NodeDocument>('nodes').find().toArray();
+			const roomsOf = async (engine: string, mediaNode?: string) =>
+				db()
+					.collection<Keyed>('rooms')
+					.distinct('_id', {
+						nodeId: {
+							$in: nodes
+								.filter(
+									(node) =>
+										node.rtcEngine === engine && (mediaNode ?? node.mediaNode) === node.mediaNode
+								)
+								.map((node) => node._id)
+						}
+					});
 			// Video bytes per packet: about 1 100 for media alone, less with the small padding packets of Pion.
 			const padded = (roomSids: string[]) =>
 				db()
@@ -1477,8 +1876,15 @@ describe.skipIf(mongoUri === '')('data generator', () => {
 						$expr: { $lt: [{ $divide: ['$bytes', '$packets'] }, 1_000] }
 					});
 
-			expect(await padded(await roomsOf('media-node-10-0-0-2'))).toBe(0);
-			expect(await padded(await roomsOf('media-node-10-0-0-1'))).toBeGreaterThan(0);
+			const mediasoup = await roomsOf('mediasoup');
+
+			expect(
+				await db()
+					.collection('track_stats')
+					.countDocuments({ 'meta.roomSid': { $in: mediasoup }, 'meta.kind': 'down', mimeType: /^video\// })
+			).toBeGreaterThan(0);
+			expect(await padded(mediasoup)).toBe(0);
+			expect(await padded(await roomsOf('pion', 'media-node-10-0-0-3'))).toBeGreaterThan(0);
 		});
 
 		it('Fields of a participant document: the client fields, region and kind details the writer leaves out when empty', async () => {
@@ -1508,6 +1914,53 @@ describe.skipIf(mongoUri === '')('data generator', () => {
 		});
 	});
 });
+
+/** The range of a database generated over `days` ending at `end`, with its middle and three quarters, as the generator floors them. */
+function rangeOf(end: number, days: number): { windowStart: number; middle: number; quarter: number } {
+	const windowStart = end - days * DAY;
+	const floor = (at: number) => Math.floor(at / MINUTE) * MINUTE;
+
+	return {
+		windowStart,
+		middle: floor(windowStart + (end - windowStart) / 2),
+		quarter: floor(windowStart + ((end - windowStart) * 3) / 4)
+	};
+}
+
+/**
+ * Checks a keep-alive tick at `later`: only the `alive` servers have it as their last heartbeat, each keeping its batch
+ * interval and drain, and every other server keeps its last heartbeat, drain and stop.
+ */
+async function expectKeptAlive(
+	db: Db,
+	generated: readonly NodeDocument[],
+	later: Date,
+	alive: readonly (string | undefined)[]
+): Promise<void> {
+	const kept = new Map((await db.collection<NodeDocument>('nodes').find().toArray()).map((node) => [node._id, node]));
+
+	expect(alive.every((id) => id !== undefined)).toBe(true);
+
+	for (const node of generated) {
+		const now = kept.get(node._id);
+		const fresh = alive.includes(node._id);
+
+		expect(
+			{
+				lastSeenAt: now?.lastSeenAt,
+				batchIntervalMs: now?.batchIntervalMs,
+				drainingAt: now?.drainingAt,
+				stoppedAt: now?.stoppedAt
+			},
+			node._id
+		).toEqual({
+			lastSeenAt: fresh ? later : node.lastSeenAt,
+			batchIntervalMs: node.batchIntervalMs,
+			drainingAt: node.drainingAt,
+			stoppedAt: node.stoppedAt
+		});
+	}
+}
 
 /** The topology the writer gives a room of these peaks. */
 function expectedTopology(peakActive: number, peakPublishers: number): string {

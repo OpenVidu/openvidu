@@ -7,9 +7,6 @@ import { CONTRACT_SCHEMAS } from './contract.js';
 export { SCHEMA_VERSION } from '@openvidu-dashboard/typings';
 
 /** Collections of the data model, keyed for the generator. Names, indexes and TTLs come from the typings contract. */
-/** Batch interval of the generated node heartbeats: the writer's default. */
-export const BATCH_INTERVAL_MS = 10_000;
-
 export const COLLECTIONS = {
 	rooms: 'rooms',
 	participants: 'participants',
@@ -164,12 +161,13 @@ function describe(error: unknown): string {
 	return error instanceof Error ? error.message : String(error);
 }
 
-/** Nodes silent for longer than this before the freshest one stay silent: the not reporting media node. */
-const SILENT_NODE_MS = 3_600_000;
+/** Servers whose last heartbeat is this close to the freshest one are the alive ones; the others are lost. */
+const ALIVE_NODE_MS = 60_000;
 
 /**
- * One keep-alive tick at `now`: the heartbeats of the node processes still reporting (not the stopped or silent ones)
- * and the stats time of the active rooms and sessions move to `now`, as a running server would keep them.
+ * One keep-alive tick at `now`: the heartbeats of the servers still reporting (not the stopped or lost ones) and the
+ * stats time of the active rooms and sessions move to `now`, as a running server would keep them. Each server keeps
+ * its batch interval and its drain.
  */
 export async function keepLive(db: Db, now: Date): Promise<void> {
 	const nodes = db.collection<{ lastSeenAt: Date }>(COLLECTIONS.nodes);
@@ -179,9 +177,9 @@ export async function keepLive(db: Db, now: Date): Promise<void> {
 		await nodes.updateMany(
 			{
 				stoppedAt: { $exists: false },
-				lastSeenAt: { $gte: new Date(freshest.lastSeenAt.getTime() - SILENT_NODE_MS) }
+				lastSeenAt: { $gte: new Date(freshest.lastSeenAt.getTime() - ALIVE_NODE_MS) }
 			},
-			{ $set: { lastSeenAt: now, batchIntervalMs: BATCH_INTERVAL_MS } }
+			{ $set: { lastSeenAt: now } }
 		);
 	}
 

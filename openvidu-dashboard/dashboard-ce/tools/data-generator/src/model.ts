@@ -336,22 +336,30 @@ export interface GeneratorContext {
 	now: number;
 	/** Start of the generated range (ms): no API call is counted before it. */
 	windowStart: number;
-	nodeIds: readonly string[];
 	retentionEntitiesMs: number;
 	/** Retention of tracks and subscriptions (`retention.tracks`). */
 	retentionTracksMs: number;
 	/** Nodes that report no media statistics: their sessions carry no bytes, quality or `track_stats`. */
 	withoutMediaStats: ReadonlySet<string>;
-	/** Media node label of each node id (the previous process of a restarted node included); empty without labels. */
-	mediaNodes: ReadonlyMap<string, string>;
-	/** The restart of the first node: its rooms created before `at` were hosted by `previousNodeId`. */
-	restart?: { nodeId: string; previousNodeId: string; at: number };
+}
+
+/** A server that can host a room: its node id, its media node label and how it ends. */
+export interface RoomHost {
+	nodeId: string;
+	/** Media node label; absent in a single-node deployment. */
+	mediaNode?: string;
+	/** The graceful stop (`stopped`) or the last heartbeat of a lost server; absent while it runs. */
+	end?: { at: number; stopped: boolean };
 }
 
 export interface RoomPlan {
 	index: number;
 	createdAt: number;
 	active: boolean;
+	/** The servers taking rooms at `createdAt`, at most one per machine; the room draws its host among them. */
+	hosts: readonly RoomHost[];
+	/** Kept open until its server ends: the room of a lost server that the reconciler closes. */
+	heldOpen?: boolean;
 }
 
 const MINUTE = 60_000;
@@ -467,22 +475,22 @@ export function generateRoom(ctx: GeneratorContext, plan: RoomPlan): RoomBundle 
 	const { rng, now } = ctx;
 	const roomSid = rng.id('RM_');
 	const name = `room-${String(plan.index + 1).padStart(6, '0')}`;
-	const picked = rng.pick(ctx.nodeIds);
-	const nodeId =
-		picked === ctx.restart?.nodeId && plan.createdAt < ctx.restart.at ? ctx.restart.previousNodeId : picked;
-	const mediaNode = ctx.mediaNodes.get(nodeId);
+	const host = rng.pick(plan.hosts);
+	const { nodeId, mediaNode } = host;
 	// Rooms created and never joined, as an application that prepares its rooms ahead does.
-	const empty = !plan.active && ctx.shapeRng.chance(0.03);
+	const empty = !plan.active && ctx.shapeRng.chance(0.03) && plan.heldOpen !== true;
 	const hasEgress = rng.chance(0.3) && !empty;
 	const hasIngress = rng.chance(0.02) && !empty;
 	const hasAgent = rng.chance(0.05) && !empty;
 	const hasSip = rng.chance(0.01) && !empty;
-	const endReason = plan.active ? null : pickEndReason(rng);
-	const closedBy: 'event' | 'reconciler' | null = plan.active
+	let endReason = plan.active ? null : pickEndReason(rng);
+	let closedBy: 'event' | 'reconciler' | null = plan.active
 		? null
-		: endReason === 'RECONCILED'
+		: endReason === RECONCILED
 			? 'reconciler'
 			: 'event';
+	// A room the reconciler closes while its server runs is no longer listed by it; one of a lost server, dead.
+	let reconcilerReason = closedBy === 'reconciler' ? 'absent-live' : null;
 
 	const base: RoomBase = { roomSid, roomName: name, nodeId, mediaNode, createdAt: plan.createdAt };
 	const sessions: Session[] = [];
@@ -509,9 +517,11 @@ export function generateRoom(ctx: GeneratorContext, plan: RoomPlan): RoomBundle 
 			const last = hop === chain;
 			let length = last ? remaining : Math.round(remaining * rng.float(0.2, 0.8));
 
-			// An active room keeps at least its last participant connected.
+			// An active room keeps at least its last participant connected, a held one its first until its server ends.
 			if (plan.active && last && i === identityCount - 1) {
 				length = Math.max(length, now - Math.min(joinedAt, now) + 5 * MINUTE);
+			} else if (plan.heldOpen === true && hop === 0 && i === 0) {
+				length = Math.max(length, (host.end?.at ?? now) - joinedAt + 5 * MINUTE);
 			}
 
 			remaining = last ? 0 : remaining - length + rng.int(0, 5 * MINUTE);
@@ -614,6 +624,17 @@ export function generateRoom(ctx: GeneratorContext, plan: RoomPlan): RoomBundle 
 		}
 
 		endedAt = Math.min(endedAt, now - MINUTE);
+		const serverEnd = host.end;
+
+		// A room still open when its server ends ends with it: at a stop with the shutdown, at a silence by the
+		// reconciler, at the server's last signal.
+		if (serverEnd !== undefined && (plan.heldOpen === true || endedAt > serverEnd.at)) {
+			endedAt = serverEnd.at;
+			endReason = serverEnd.stopped ? 'SERVER_SHUTDOWN' : RECONCILED;
+			closedBy = serverEnd.stopped ? 'event' : 'reconciler';
+			reconcilerReason = serverEnd.stopped ? null : 'node-dead';
+		}
+
 		const roomEnd = endedAt;
 
 		// Nobody joins a room once it has ended, a deleted one included: those sessions never happen.
@@ -791,7 +812,7 @@ export function generateRoom(ctx: GeneratorContext, plan: RoomPlan): RoomBundle 
 		},
 		lastEventAt: new Date(lastEventAt),
 		lastStatsAt: lastStatsAt === null ? null : new Date(lastStatsAt),
-		reconcilerReason: closedBy === 'reconciler' ? 'absent-live' : null,
+		reconcilerReason,
 		...(withoutMediaStats ? { mediaStats: false as const } : {}),
 		schemaVersion: SCHEMA_VERSION,
 		expiresAt: expiresAt(ctx, endedAt)

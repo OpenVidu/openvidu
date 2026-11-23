@@ -158,7 +158,7 @@ describe('schema files', () => {
 	});
 
 	it.each([Collection.ANALYTICS_5MIN, Collection.ANALYTICS_HOURLY, Collection.ANALYTICS_DAILY])(
-		'accepts both media statistics marks on %s and nothing else under mediaStats',
+		'Validator: accepts both media statistics marks on %s and nothing else under mediaStats',
 		(collection) => {
 			const [rollup] = readFixtures(collection);
 			expect(validate(collection, { ...rollup, mediaStats: { reported: true, missing: true } })).toBeNull();
