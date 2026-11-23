@@ -279,6 +279,7 @@ export async function generate(db: Db, options: GenerateOptions): Promise<Genera
 	const ctx: GeneratorContext = {
 		rng,
 		shapeRng: new Rng(options.seed + 3_000_017),
+		ingressRng: new Rng(options.seed + 6_000_011),
 		scenario,
 		now,
 		nodeIds,
@@ -348,7 +349,7 @@ export async function generate(db: Db, options: GenerateOptions): Promise<Genera
 			writer.add(COLLECTIONS.egresses, { ...doc, rawRequest: egressRawRequest(doc) });
 		}
 
-		for (const doc of bundle.ingresses) {
+		for (const doc of bundle.ingresses.filter(alive)) {
 			writer.add(COLLECTIONS.ingresses, doc);
 		}
 

@@ -285,6 +285,36 @@ export function deriveEvents(
 			});
 		}
 	}
+
+	// The server sends the definition with the state of its last session, ended before the deletion, so the writer
+	// stores the room and the session of that state on the event.
+	for (const i of bundle.ingresses) {
+		const last = bundle.ingressSessions.filter((s) => s.ingressId === i._id).at(-1);
+		const ended = last === undefined || last.endedAt === null ? undefined : { ...last, endedAt: last.endedAt };
+		push(
+			'INGRESS_DELETED',
+			i.deletedAt,
+			{ ingressId: i._id, ...(ended === undefined ? {} : { ingressSessionId: ended._id }) },
+			{
+				ingress: {
+					...ingressInfo(i),
+					state:
+						ended === undefined
+							? {}
+							: {
+									...(ended.error === null
+										? {}
+										: { ...enumField('status', INGRESS_STATES.error), error: ended.error }),
+									room_id: ended.roomSid,
+									started_at: unixNs(ended.startedAt),
+									ended_at: unixNs(ended.endedAt),
+									updated_at: unixNs(ended.endedAt),
+									resource_id: ended._id
+								}
+				}
+			}
+		);
+	}
 }
 
 /** Reason and disconnect reason of the reconciler's synthetic close events. */

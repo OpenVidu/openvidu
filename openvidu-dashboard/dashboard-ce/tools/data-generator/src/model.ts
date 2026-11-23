@@ -292,6 +292,8 @@ export interface GeneratorContext {
 	rng: Rng;
 	/** Draws of the room shapes (empty rooms, media senders), apart from `rng` so that they leave the rest unchanged. */
 	shapeRng: Rng;
+	/** Draws of the ingress deletions, apart from `rng` so that they leave the rest unchanged. */
+	ingressRng: Rng;
 	scenario: Scenario;
 	/** Generation instant (ms); nothing is dated after it. */
 	now: number;
@@ -1508,6 +1510,7 @@ function buildIngress(
 	const identity = `ingress-${String(rng.int(1, 9_999)).padStart(4, '0')}`;
 	const sessionStatus: IngressSessionDoc['status'] = endedAt === null ? 'publishing' : failed ? 'error' : 'complete';
 	const name = `ingress-${base.roomName}`;
+	const deletedAt = ingressDeletion(ctx, endedAt);
 
 	return {
 		ingress: {
@@ -1528,14 +1531,22 @@ function buildIngress(
 			enabled: true,
 			enableTranscoding: inputType !== 'whip',
 			createdAt: new Date(createdAt),
-			deletedAt: null,
-			status: sessionStatus === 'publishing' ? 'publishing' : sessionStatus === 'error' ? 'error' : 'inactive',
+			deletedAt: deletedAt === null ? null : new Date(deletedAt),
+			status:
+				deletedAt !== null
+					? 'deleted'
+					: sessionStatus === 'publishing'
+						? 'publishing'
+						: sessionStatus === 'error'
+							? 'error'
+							: 'inactive',
 			lastError: failed ? 'input disconnected' : null,
 			sessions: 1,
 			totalDurationMs: durationMs ?? 0,
 			lastSessionAt: new Date(startedAt),
 			schemaVersion: SCHEMA_VERSION,
-			expiresAt: expiresAt(ctx, endedAt)
+			// An ingress definition expires only once deleted, whatever its sessions.
+			expiresAt: expiresAt(ctx, deletedAt)
 		},
 		session: {
 			_id: rng.id('IR_'),
@@ -1557,6 +1568,22 @@ function buildIngress(
 			expiresAt: expiresAt(ctx, endedAt)
 		}
 	};
+}
+
+/**
+ * Deletion instant of an ingress whose session ended, or null while it still exists: one in ten is deleted, most
+ * within half an hour of their session and the rest up to three days later, never after the end of the data.
+ */
+function ingressDeletion(ctx: GeneratorContext, sessionEndedAt: number | null): number | null {
+	const { ingressRng: rng, now } = ctx;
+	const deleted = rng.chance(0.1);
+	const delay = rng.chance(0.6) ? rng.int(MINUTE, 30 * MINUTE) : rng.int(60 * MINUTE, 3 * 24 * 60 * MINUTE);
+
+	if (!deleted || sessionEndedAt === null || sessionEndedAt + delay >= now - MINUTE) {
+		return null;
+	}
+
+	return sessionEndedAt + delay;
 }
 
 /** Subscriber-side RTP stats carry no simulcast layers. */

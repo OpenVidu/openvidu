@@ -36,7 +36,7 @@ pnpm generate --uri "$MONGO_URI" --db ov_data_l --scenario L --days 1 --drop --s
 | `--retention-events-days <n>`       | `7`           | Only raw events inside this window are written (TTL index on `ts`)                                                        |
 | `--retention-stats-days <n>`        | `7`           | Only stats inside this window are written (`expireAfterSeconds`)                                                          |
 | `--retention-tracks-days <n>`       | `7`           | `expiresAt` of tracks and subscriptions; expired ones are not written                                                     |
-| `--retention-entities-days <n>`     | `90`          | `expiresAt = closedAt + retention` on closed entities                                                                     |
+| `--retention-entities-days <n>`     | `90`          | `expiresAt = closedAt + retention` on closed entities, `deletedAt + retention` on deleted ingresses                       |
 | `--retention-rollups-5min-days <n>` | `7`           | Only 5-minute rollups inside this window are written (TTL index on `bucket`)                                              |
 | `--drop`                            | off           | Drop the database first                                                                                                   |
 | `--plain-stats`                     | off           | Force the plain-collection fallback for `track_stats`                                                                     |
@@ -80,7 +80,11 @@ What it writes (`analytics_5min` stays empty without `--five-minute-rollups`):
   identities present at the same time; 1 % failed).
 - `egresses` (30 % of rooms; mostly `room_composite`; 70 % file, 20 % stream and 10 % segments outputs, so about a
   quarter of the rooms are recorded; `complete`/`failed`/`aborted`, `active` in active rooms), `ingresses` and
-  `ingress_sessions` (2 % of rooms).
+  `ingress_sessions` (2 % of rooms). An ingress definition keeps `expiresAt: null` while it exists, whatever its
+  sessions; one in ten whose session ended is deleted, most within half an hour of the session and the rest up to three
+  days later, with `status: deleted`, `deletedAt`, an `INGRESS_DELETED` event carrying the state of its last session and
+  `expiresAt = deletedAt + retention.entities` (not written when that has passed). The deletions draw from a random
+  stream of their own, so the rest of a seed's data stays the same.
 - `events`: lifecycle events of rooms, participants, tracks, subscriptions, egresses and ingresses with
   small payloads, only inside the events retention window.
 - `track_stats`: one document per 30 s per participant and direction (`participant` mode) or per track and

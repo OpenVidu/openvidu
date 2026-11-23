@@ -6,6 +6,7 @@ import {
 	type EgressDocument,
 	type EventDocument,
 	type HourlyRollupDocument,
+	type IngressDocument,
 	type IngressSessionDocument,
 	LegacyCollection,
 	type NodeDocument,
@@ -23,6 +24,7 @@ import { afterAll, beforeAll, describe, expect, inject, it, vi } from 'vitest';
  */
 
 const mongoUri = inject('mongoUri');
+const DAY = 86_400_000;
 
 describe.skipIf(mongoUri === '')('data generator', () => {
 	let client: MongoClient;
@@ -654,6 +656,76 @@ describe.skipIf(mongoUri === '')('data generator', () => {
 			expect(await participants.countDocuments({ $nor: [{ $jsonSchema: CONTRACT_SCHEMAS.participants }] })).toBe(
 				0
 			);
+		} finally {
+			await db.dropDatabase();
+		}
+	});
+
+	it('Ingress definition: generated ingresses expire only once deleted', async () => {
+		const db = client.db('dashboard_test_generator_ingresses');
+		await db.dropDatabase();
+		const entitiesDays = 20;
+
+		try {
+			await generate(db, {
+				scenario: 'S',
+				days: 30,
+				statsMode: 'participant',
+				seed: 1,
+				retentionDays: { events: 30, stats: 1, tracks: 1, entities: entitiesDays },
+				timeseries: true,
+				rollups: { fiveMinute: false, nodes: false, roomSums: false }
+			});
+
+			const now = Date.now();
+			const week = now - 7 * DAY;
+			const ingresses = await db.collection<IngressDocument>('ingresses').find({}).toArray();
+			const existing = ingresses.filter((ingress) => ingress.status !== 'deleted');
+			const deleted = ingresses.filter((ingress) => ingress.status === 'deleted');
+			const events = db.collection<EventDocument>('events');
+			const sessions = db.collection<IngressSessionDocument>('ingress_sessions');
+
+			expect(existing.length).toBeGreaterThan(0);
+			expect(
+				existing.map((ingress) => [ingress._id, ingress.deletedAt ?? null, ingress.expiresAt ?? null])
+			).toEqual(existing.map((ingress) => [ingress._id, null, null]));
+			expect(
+				await events.countDocuments({ type: 'INGRESS_DELETED', ingressId: { $in: existing.map((i) => i._id) } })
+			).toBe(0);
+
+			// Deleted more than a week ago and recently, every one after its last session ended.
+			expect(deleted.some((ingress) => (ingress.deletedAt?.getTime() ?? now) < week)).toBe(true);
+			expect(deleted.some((ingress) => (ingress.deletedAt?.getTime() ?? 0) > week)).toBe(true);
+
+			for (const ingress of deleted) {
+				const deletedAt = ingress.deletedAt ?? new Date(0);
+
+				expect(ingress.expiresAt, ingress._id).toEqual(new Date(deletedAt.getTime() + entitiesDays * DAY));
+				expect(ingress.expiresAt?.getTime() ?? 0, ingress._id).toBeGreaterThan(now);
+				expect(
+					await sessions.countDocuments({
+						ingressId: ingress._id,
+						endedAt: { $not: { $lt: deletedAt } }
+					}),
+					ingress._id
+				).toBe(0);
+				expect(
+					await events.countDocuments({ type: 'INGRESS_DELETED', ingressId: ingress._id, ts: deletedAt }),
+					ingress._id
+				).toBe(1);
+			}
+
+			// A definition deleted longer ago than the entities retention is gone, as the TTL monitor leaves it.
+			const expired = await events
+				.find({ type: 'INGRESS_DELETED', ts: { $lte: new Date(now - entitiesDays * DAY) } })
+				.toArray();
+
+			expect(expired.length).toBeGreaterThan(0);
+			expect(
+				await db
+					.collection<IngressDocument>('ingresses')
+					.countDocuments({ _id: { $in: expired.map((event) => event.ingressId ?? '') } })
+			).toBe(0);
 		} finally {
 			await db.dropDatabase();
 		}
