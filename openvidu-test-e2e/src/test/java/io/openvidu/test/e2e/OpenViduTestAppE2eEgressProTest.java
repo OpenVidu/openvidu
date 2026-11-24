@@ -76,9 +76,12 @@ import okhttp3.Response;
  * the camera file (camera and microphone), the screen file (screen share and
  * its audio) and a file for every other track (OpenVidu egress fork: the
  * PASSTHROUGH preset extended from one track to the participant). It is
- * requested with
- * StartParticipantEgress, or with StartEgress and a MediaSource, and preset
- * PASSTHROUGH. Video VP8, VP9 and AV1 (SVC included) and H.264, audio Opus.
+ * requested with StartEgress, preset PASSTHROUGH and a MediaSource whose
+ * participant_video and only audio route name the same participant, or with
+ * the deprecated StartParticipantEgress and preset PASSTHROUGH, which Auto
+ * Egress sends. Any other MediaSource with preset PASSTHROUGH and more than one
+ * track records the tracks it chooses. Video VP8, VP9 and AV1 (SVC included)
+ * and H.264, audio Opus.
  *
  * Publishers are openvidu-testapp instances whose camera, screen and microphone
  * are replaced (src/test/resources/participant-passthrough-sync-media.js) by
@@ -2169,8 +2172,10 @@ public class OpenViduTestAppE2eEgressProTest extends AbstractOpenViduTestappE2eT
 		String room = uniqueRoom("media-two-audios");
 		Publisher alice = joinPublisher("chrome", room, "alice", "vp8", true, true, true);
 		alice.addScreen(true);
+		// the screen by track id: participant_video with an audio route of the same
+		// identity would be the whole participant
 		JsonObject media = new JsonObject();
-		media.add("participant_video", participantVideo("alice", true));
+		media.addProperty("video_track_id", publishedTrack(room, "alice", TrackSource.SCREEN_SHARE).getSid());
 		media.add("audio", audioRoutes(audioRoute("participant_identity", "alice")));
 		String egressId = startMediaRecording(room, media, filepath(room, "alice", "mkv"));
 		waitUntilEgressStatus(egressId, "EGRESS_ACTIVE", 20);
@@ -2570,31 +2575,37 @@ public class OpenViduTestAppE2eEgressProTest extends AbstractOpenViduTestappE2eT
 	// ------------------------------------------------------------------------
 
 	@Test
-	@DisplayName("MediaSource: participant video and participant audio")
-	void mediaSourceParticipantVideoAndAudioTest() throws Exception {
-		log.info("Participant Passthrough: MediaSource with participant video and participant audio");
-		String room = uniqueRoom("media-participant");
-		Publisher alice = joinPublisher("chrome", room, "alice", "h264", true, true, true);
+	@DisplayName("Deprecated StartParticipantEgress records the whole participant too")
+	void deprecatedStartParticipantEgressTest() throws Exception {
+		log.info("Participant Passthrough: deprecated StartParticipantEgress");
+		String room = uniqueRoom("deprecated-request");
+		Publisher alice = joinPublisher("chrome", room, "alice", "vp8", true, true, true);
+		alice.addScreen();
 
-		JsonObject media = new JsonObject();
-		media.add("participant_video", participantVideo("alice", false));
-		media.add("audio", audioRoutes(audioRoute("participant_identity", "alice")));
-		String egressId = startMediaRecording(room, media, filepath(room, "alice", "mkv"));
+		String egressId = startDeprecatedParticipantRecording(room, "alice", filepath(room, "alice", "mkv"));
 		waitUntilEgressStatus(egressId, "EGRESS_ACTIVE", 20);
 		Thread.sleep(5000);
-		// the participant's tracks as they come and go, like StartParticipantEgress
+		// the participant's tracks as they come and go, until the participant leaves
 		alice.unpublishVideo();
 		Thread.sleep(3000);
 		alice.addVideo();
 		Thread.sleep(5000);
+		alice.leave();
 
-		Recording recording = stopAndGetRecording(egressId);
-		recording.assertFinalized();
-		recording.assertTracks("audio:opus", "video:h264");
-		recording.assertHealthy();
-		recording.assertStartTogether();
-		recording.video(0).assertOneGap(2.5, 7);
-		recording.assertAvSync(6);
+		Recordings recordings = getRecordings(waitUntilEgressStatus(egressId, "EGRESS_COMPLETE", 40));
+		recordings.assertFiles("camera", "screen");
+		Recording camera = recordings.camera();
+		camera.assertFinalized();
+		camera.assertTracks("audio:opus", "video:vp8");
+		camera.assertHealthy();
+		camera.assertStartTogether();
+		camera.video(0).assertOneGap(2.5, 7);
+		camera.assertAvSync(6);
+		Recording screen = recordings.screen();
+		screen.assertFinalized();
+		screen.assertTracks("video:vp8");
+		screen.assertHealthy();
+		screen.named("screen_share").assertReachedSize(SCREEN_WIDTH, SCREEN_HEIGHT);
 	}
 
 	@Test
@@ -2680,7 +2691,7 @@ public class OpenViduTestAppE2eEgressProTest extends AbstractOpenViduTestappE2eT
 		alice.addScreen();
 
 		JsonObject media = new JsonObject();
-		media.add("participant_video", participantVideo("alice", true));
+		media.addProperty("video_track_id", publishedTrack(room, "alice", TrackSource.SCREEN_SHARE).getSid());
 		media.add("audio", audioRoutes(audioRoute("participant_identity", "alice")));
 		String egressId = startMediaRecording(room, media, filepath(room, "alice", "mkv"));
 		waitUntilEgressStatus(egressId, "EGRESS_ACTIVE", 20);
@@ -4977,7 +4988,8 @@ public class OpenViduTestAppE2eEgressProTest extends AbstractOpenViduTestappE2eT
 	}
 
 	/**
-	 * StartParticipantEgress with preset PASSTHROUGH.
+	 * StartEgress with preset PASSTHROUGH and a MediaSource naming a whole
+	 * participant: participant_video and an audio route of the same identity.
 	 */
 	private String startParticipantRecording(String room, String identity, String filepath) throws IOException {
 		return startParticipantRecording(room, identity, filepath, false);
@@ -4985,12 +4997,25 @@ public class OpenViduTestAppE2eEgressProTest extends AbstractOpenViduTestappE2eT
 
 	private String startParticipantRecording(String room, String identity, String filepath, boolean screenShare)
 			throws IOException {
-		JsonObject request = participantRecordingRequest(room, identity, filepath);
-		if (screenShare) {
-			request.addProperty("screen_share", true);
-		}
-		String egressId = egressApi("StartParticipantEgress", request).get("egress_id").getAsString();
+		JsonObject media = new JsonObject();
+		media.add("participant_video", participantVideo(identity, screenShare));
+		media.add("audio", audioRoutes(audioRoute("participant_identity", identity)));
+		String egressId = egressApi("StartEgress", mediaRecordingRequest(room, media, filepath)).get("egress_id")
+				.getAsString();
 		log.info("Started Participant Passthrough egress {} of {} in room {}", egressId, identity, room);
+		return egressId;
+	}
+
+	/**
+	 * The deprecated StartParticipantEgress with preset PASSTHROUGH, which Auto
+	 * Egress sends.
+	 */
+	private String startDeprecatedParticipantRecording(String room, String identity, String filepath)
+			throws IOException {
+		String egressId = egressApi("StartParticipantEgress", participantRecordingRequest(room, identity, filepath))
+				.get("egress_id").getAsString();
+		log.info("Started Participant Passthrough egress {} of {} in room {} with StartParticipantEgress", egressId,
+				identity, room);
 		return egressId;
 	}
 
@@ -5031,7 +5056,7 @@ public class OpenViduTestAppE2eEgressProTest extends AbstractOpenViduTestappE2eT
 	}
 
 	/**
-	 * StartEgress with a MediaSource and preset PASSTHROUGH.
+	 * StartEgress with a MediaSource of chosen tracks and preset PASSTHROUGH.
 	 */
 	private String startMediaRecording(String room, JsonObject media, String filepath) throws IOException {
 		String egressId = egressApi("StartEgress", mediaRecordingRequest(room, media, filepath)).get("egress_id")

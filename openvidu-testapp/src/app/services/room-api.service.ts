@@ -8,7 +8,6 @@ import {
   DirectFileOutput,
   EgressClient,
   EgressInfo,
-  EncodedFileOutput,
   EncodedFileType,
   EncodedOutputs,
   EncodingOptions,
@@ -21,6 +20,7 @@ import {
   Room,
   RoomCompositeOptions,
   RoomServiceClient,
+  StartEgressRequest,
   TrackCompositeOptions,
   TrackInfo,
   VideoGrant,
@@ -212,26 +212,44 @@ export class RoomApiService {
   }
 
   /**
-   * The participant's audio and video tracks, as they are published, without
-   * transcoding, in one Matroska file (OpenVidu egress: PASSTHROUGH for an
-   * audio track plus a video track). Needs exactly one file output of the
-   * default file type: ".webm" filepaths give WebM, anything else Matroska.
+   * Participant Passthrough Egress (OpenVidu PRO): every track the participant
+   * publishes, without transcoding, in WebM or Matroska files on one timeline.
+   * StartEgress with preset PASSTHROUGH, a MediaSource whose participant video
+   * and only audio route name the participant, and exactly one file output of
+   * the default file type. The egress picks the extension.
    */
   async startParticipantPassthroughEgress(
     roomName: string,
     identity: string
   ): Promise<EgressInfo> {
-    const file = new EncodedFileOutput({
-      fileType: EncodedFileType.DEFAULT_FILETYPE,
-      filepath:
-        'ParticipantPassthrough-{room_id}-{room_name}-{time}-{publisher_identity}.mkv',
-    });
-    return await this.egressClient.startParticipantEgress(
+    const request = new StartEgressRequest({
       roomName,
-      identity,
-      { file },
-      { encodingOptions: EncodingOptionsPreset.PASSTHROUGH }
-    );
+      source: {
+        case: 'media',
+        value: {
+          video: { case: 'participantVideo', value: { identity } },
+          audio: {
+            routes: [
+              { match: { case: 'participantIdentity', value: identity } },
+            ],
+          },
+        },
+      },
+      encoding: { case: 'preset', value: EncodingOptionsPreset.PASSTHROUGH },
+      outputs: [
+        {
+          config: {
+            case: 'file',
+            value: {
+              fileType: EncodedFileType.DEFAULT_FILETYPE,
+              filepath:
+                'ParticipantPassthrough-{room_id}-{room_name}-{time}-{publisher_identity}.mkv',
+            },
+          },
+        },
+      ],
+    });
+    return await this.egressClient.startEgress(request);
   }
 
   async stopEgress(egressId: string): Promise<EgressInfo> {
