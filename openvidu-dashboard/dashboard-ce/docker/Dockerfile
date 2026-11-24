@@ -5,7 +5,7 @@ ARG SAFE_CHAIN_VERSION=1.5.29
 
 # Workspace manifests and the lockfile, shared by the install stages. They run on the build platform, so no package is
 # installed, nor checked by safe-chain, under emulation; a --platform on a FROM that names a stage would be ignored.
-FROM --platform=$BUILDPLATFORM node:26.13.0-trixie-slim AS base
+FROM --platform=$BUILDPLATFORM node:26.13.1-trixie-slim AS base
 ARG SAFE_CHAIN_VERSION
 RUN apt-get update \
 	&& apt-get install -y --no-install-recommends ca-certificates curl \
@@ -44,7 +44,7 @@ RUN pnpm --filter "@openvidu-dashboard/backend..." run build \
 	&& pnpm --filter @openvidu-dashboard/backend --prod deploy /out/app
 COPY --from=frontend /workspace/dashboard-ce/frontend/dist/frontend/browser /out/app/dist/public
 
-FROM node:26.13.0-trixie-slim
+FROM node:26.13.1-trixie-slim
 # Debian fixes published after the base image was built. Node bundles its own time zone data; npm, npx, corepack and
 # yarn are not needed to run the backend.
 RUN apt-get update \
