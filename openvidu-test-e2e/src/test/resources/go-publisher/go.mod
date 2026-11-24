@@ -84,3 +84,9 @@ require (
 	google.golang.org/protobuf v1.36.12 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
+
+// Go ignores the replace directives of dependencies: keep these equal to the
+// ones in server-sdk-go's go.mod (LiveKit's WARP forks), or the SDK does not compile.
+replace github.com/pion/webrtc/v4 => github.com/livekit/webrtc-pion/v4 v4.2.25-warp.3
+
+replace github.com/pion/ice/v4 => github.com/livekit/ice/v4 v4.4.8-warp.4
