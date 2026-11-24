@@ -16,8 +16,8 @@ export interface RefreshSchedulerOptions {
 	manual?: boolean;
 	/** Shows the scheduler in the header refresh control; false for a secondary poll of the page. Default true. */
 	register?: boolean;
-	/** Fixed interval that replaces the viewer preference, for a poll the viewer does not control. */
-	interval?: Signal<RefreshIntervalMs>;
+	/** Fixed interval in ms that replaces the viewer preference, for a poll the viewer does not control. */
+	interval?: Signal<number>;
 }
 
 /**
@@ -49,8 +49,14 @@ export class RefreshScheduler {
 		this.manual = options.manual ?? false;
 	}
 
+	/** The viewer's interval, which the header refresh control shows; 0 for an on-demand page. */
 	interval(): RefreshIntervalMs {
-		return this.manual ? 0 : (this.options.interval?.() ?? this.preferences.refreshInterval('live'));
+		return this.manual ? 0 : this.preferences.refreshInterval('live');
+	}
+
+	/** The interval the scheduler polls at: the fixed one of a poll the viewer does not control, else the viewer's. */
+	delay(): number {
+		return this.manual ? 0 : (this.options.interval?.() ?? this.interval());
 	}
 
 	/** Why the page cannot poll now, or `null`. */
@@ -110,7 +116,7 @@ export class RefreshScheduler {
 		this.clearTimer();
 	}
 
-	private schedule(interval: number = this.interval()): void {
+	private schedule(interval: number = this.delay()): void {
 		this.clearTimer();
 
 		if (!this.active || this.destroyed || this.running() || this.document.hidden) {
@@ -161,7 +167,7 @@ export function injectRefreshScheduler(options: RefreshSchedulerOptions): Refres
 	};
 
 	effect(() => {
-		scheduler.configure(scheduler.pausedReason() === null, scheduler.interval());
+		scheduler.configure(scheduler.pausedReason() === null, scheduler.delay());
 	});
 	document.addEventListener('visibilitychange', onVisibility);
 

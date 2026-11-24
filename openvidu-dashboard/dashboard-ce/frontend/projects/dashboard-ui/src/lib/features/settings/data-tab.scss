@@ -7,8 +7,42 @@ h2 {
 	margin: 24px 0 8px;
 }
 
-.migration p {
+.migration p,
+.deletion p {
 	margin: 8px 0 0;
+}
+
+/* The spinner of a running deletion sits before its line, centred on it. */
+.progress {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.deletion-notice {
+	max-width: 72ch;
+	margin-top: 16px;
+}
+
+/* A second line under a cell value: the last deletion of a class, the space free for new data. */
+.sub {
+	display: block;
+	color: var(--mat-sys-on-surface-variant);
+	font: var(--mat-sys-body-small);
+}
+
+.incomplete {
+	color: var(--ovd-status-warning-fg);
+}
+
+/* The delete column stays in view while the table scrolls sideways inside its wrap on a phone. */
+.action {
+	position: sticky;
+	inset-inline-end: 0;
+	width: 40px;
+	padding-inline: 4px 0;
+	background: var(--mat-sys-surface);
+	text-align: end;
 }
 
 .failed {
@@ -26,8 +60,10 @@ h2 {
 	margin-top: 16px;
 }
 
+/* Scrolls sideways on a phone; never vertically, which `overflow-x: auto` would otherwise allow. */
 .table-wrap {
 	overflow-x: auto;
+	overflow-y: hidden;
 }
 
 table {
@@ -90,8 +126,41 @@ td {
 	text-align: end;
 }
 
+/* The bottom padding holds the 10 px touch target around the info tip of the Total's free line. */
 tfoot th,
 tfoot td {
+	padding-bottom: 10px;
 	border-bottom: none;
 	font-weight: 500;
+}
+
+/* On a desktop the columns keep their widths whatever rows and second lines come and go (the Legacy data row, the
+   last deletion and free space lines); narrower screens keep the automatic layout and scroll sideways. The table width
+   is the sum of the columns and their padding (16 px after each, 4 px before the delete column), within the content
+   area of a 1280 px window with the sidenav open. */
+@media (min-width: 1280px) {
+	table.classes {
+		table-layout: fixed;
+		width: 59.25rem;
+
+		> thead th:nth-child(1) {
+			width: 17rem;
+		}
+
+		> thead th:nth-child(2) {
+			width: 14rem;
+		}
+
+		> thead th:nth-child(3) {
+			width: 6.5rem;
+		}
+
+		> thead th:nth-child(4) {
+			width: 15rem;
+		}
+
+		> thead th:nth-child(5) {
+			width: 2.5rem;
+		}
+	}
 }

@@ -1,6 +1,7 @@
 import { AGENT_NAME_ATTRIBUTE, OPENVIDU_AGENT_ATTRIBUTE } from '@openvidu-dashboard/typings';
 import { Long } from 'mongodb';
 import type { Rng } from './random.js';
+import type { FlushTraffic } from './samples.js';
 import { SCHEMA_VERSION } from './schema.js';
 
 export type ScenarioName = 'S' | 'M' | 'L';
@@ -62,6 +63,8 @@ export interface RoomDoc {
 	features: { egress: boolean; ingress: boolean; agent: boolean; sip: boolean; recording: boolean };
 	lastEventAt: Date;
 	lastStatsAt: Date | null;
+	/** Model only: why the reconciler closed the room and its sessions, as its synthetic events say. */
+	reconcilerReason: string | null;
 	/** Only `false`, on the rooms of a node without media statistics. */
 	mediaStats?: false;
 	schemaVersion: number;
@@ -73,10 +76,11 @@ export interface ClientInfo {
 	version: string;
 	os: string;
 	osVersion: string;
-	browser: string;
-	browserVersion: string;
-	deviceModel: string;
-	network: string;
+	/** Like every client field the writer keeps, absent when the client leaves it empty. */
+	browser?: string;
+	browserVersion?: string;
+	deviceModel?: string;
+	network?: string;
 }
 
 export interface ParticipantDoc {
@@ -87,7 +91,8 @@ export interface ParticipantDoc {
 	roomSid: string;
 	roomName: string;
 	kind: ParticipantKind;
-	kindDetails: string[];
+	/** Absent without details, as the writer leaves it. */
+	kindDetails?: string[];
 	status: 'joining' | 'active' | 'left' | 'aborted';
 	joinedAt: Date;
 	activeAt: Date | null;
@@ -97,7 +102,8 @@ export interface ParticipantDoc {
 	closedBy: 'event' | 'reconciler' | null;
 	connectTimeMs: number | null;
 	connectionType: string | null;
-	region: string;
+	/** Absent without a region, as on a self-hosted server. */
+	region?: string;
 	nodeId: string;
 	mediaNode?: string;
 	resumes: number;
@@ -126,6 +132,9 @@ export interface ParticipantDoc {
 		lastScoreAt: Date | null;
 	};
 	lastEventAt: Date;
+	lastStatsAt: Date | null;
+	/** Model only: the instants of its `PARTICIPANT_RESUMED` events, one per resume. */
+	resumedAt: Date[];
 	schemaVersion: number;
 	expiresAt: Date | null;
 }
@@ -164,7 +173,10 @@ export interface TrackDoc {
 	publishedAt: Date;
 	unpublishedAt: Date | null;
 	durationMs: number | null;
+	closedBy: 'event' | 'reconciler' | null;
 	muted: boolean;
+	/** Model only: the `TRACK_MUTED` and `TRACK_UNMUTED` of the track, in order; the last one leaves `muted`. */
+	muteChanges: { muted: boolean; at: Date }[];
 	width: number;
 	height: number;
 	simulcast: boolean;
@@ -190,6 +202,7 @@ export interface SubscriptionDoc {
 	subscribedAt: Date;
 	unsubscribedAt: Date | null;
 	durationMs: number | null;
+	closedBy: 'event' | 'reconciler' | null;
 	maxVideoQuality: 'LOW' | 'MEDIUM' | 'HIGH' | 'OFF' | null;
 	subscribeStats: Omit<RtpStats, 'layers'> | null;
 	schemaVersion: number;
@@ -198,9 +211,10 @@ export interface SubscriptionDoc {
 
 export interface EgressDoc {
 	_id: string;
-	roomSid: string;
-	roomName: string;
-	roomNameLower: string;
+	/** Absent on a web egress, which records a URL and has no room. */
+	roomSid: string | null;
+	roomName: string | null;
+	roomNameLower: string | null;
 	type: EgressType;
 	sourceType: 'web' | 'sdk';
 	status: EgressStatus;
@@ -212,24 +226,29 @@ export interface EgressDoc {
 	error: string | null;
 	errorCode: number | null;
 	request: Record<string, unknown>;
-	outputs: {
-		kind: 'file' | 'stream' | 'segments' | 'images';
-		filename?: string;
-		url?: string;
-		playlistName?: string;
-		location: string;
-		size: Long;
-		durationMs: number;
-		status: string;
-		error: string | null;
-		startedAt: Date;
-		endedAt: Date | null;
-	}[];
+	/** The results of the egress as the writer stores them: only the fields each kind of result carries. */
+	outputs: EgressOutput[];
 	statusHistory: { status: EgressStatus; at: Date }[];
 	retryCount: number;
 	backupStorageUsed: boolean;
 	schemaVersion: number;
 	expiresAt: Date | null;
+}
+
+export interface EgressOutput {
+	kind: 'file' | 'stream' | 'segments' | 'images';
+	filename?: string;
+	url?: string;
+	playlistName?: string;
+	filenamePrefix?: string;
+	location?: string;
+	size?: Long;
+	durationMs?: number;
+	/** Streams only. */
+	status?: 'ACTIVE' | 'FINISHED' | 'FAILED';
+	error?: string;
+	startedAt?: Date;
+	endedAt?: Date;
 }
 
 export interface IngressDoc {
@@ -250,7 +269,7 @@ export interface IngressDoc {
 	lastError: string | null;
 	sessions: number;
 	totalDurationMs: number;
-	lastSessionAt: Date;
+	lastSessionAt: Date | null;
 	schemaVersion: number;
 	expiresAt: Date | null;
 }
@@ -260,17 +279,19 @@ export interface IngressSessionDoc {
 	ingressId: string;
 	ingressName: string;
 	inputType: IngressDoc['inputType'];
-	roomSid: string;
+	/** Absent while buffering: the state carries no room until it publishes. */
+	roomSid: string | null;
 	roomName: string;
 	participantIdentity: string;
-	status: 'buffering' | 'publishing' | 'error' | 'complete';
+	status: 'buffering' | 'publishing' | 'inactive' | 'error' | 'complete';
 	error: string | null;
 	closedBy: 'event' | 'reconciler' | null;
 	startedAt: Date;
 	endedAt: Date | null;
 	durationMs: number | null;
-	video: { mimeType: string; averageBitrate: number; width: number; height: number; framerate: number };
-	audio: { mimeType: string; averageBitrate: number; channels: number; sampleRate: number };
+	/** Absent while buffering: the state reports the negotiated media once it publishes. */
+	video: { mimeType: string; averageBitrate: number; width: number; height: number; framerate: number } | null;
+	audio: { mimeType: string; averageBitrate: number; channels: number; sampleRate: number } | null;
 	schemaVersion: number;
 	expiresAt: Date | null;
 }
@@ -286,31 +307,59 @@ export interface RoomBundle {
 	ingressSessions: IngressSessionDoc[];
 	/** Mean MOS of each participant session, used by the stats and rollup derivation. */
 	meanScores: Map<string, number>;
+	/** Server API calls about the room, counted in the hourly and daily rollups; the writer never stores them raw. */
+	apiCalls: ApiCall[]; /** What each participant flushed, period by period, once the stats are applied (`applyStats`). */
+	traffic?: Map<string, FlushTraffic[]>;
+}
+
+export interface ApiCall {
+	at: Date;
+	/** `<Service>_<Method>`, the key of the rollup counters. */
+	method: string;
+	error: boolean;
 }
 
 export interface GeneratorContext {
 	rng: Rng;
 	/** Draws of the room shapes (empty rooms, media senders), apart from `rng` so that they leave the rest unchanged. */
 	shapeRng: Rng;
+	/** Draws of the ingress sessions, statuses and deletions, apart from `rng` so that they leave the rest unchanged. */
+	ingressRng: Rng;
+	/** Draws of the egress variety (statuses, second egresses, outputs), apart from `rng`. */
+	egressRng: Rng;
+	/** Draws of screen shares, encryption, mutes, resumes and joining sessions, apart from `rng`. */
+	mediaRng: Rng;
+	/** Draws of the server API calls, apart from `rng`. */
+	apiRng: Rng;
 	scenario: Scenario;
 	/** Generation instant (ms); nothing is dated after it. */
 	now: number;
-	nodeIds: readonly string[];
+	/** Start of the generated range (ms): no API call is counted before it. */
+	windowStart: number;
 	retentionEntitiesMs: number;
 	/** Retention of tracks and subscriptions (`retention.tracks`). */
 	retentionTracksMs: number;
 	/** Nodes that report no media statistics: their sessions carry no bytes, quality or `track_stats`. */
 	withoutMediaStats: ReadonlySet<string>;
-	/** Media node label of each node id (the previous process of a restarted node included); empty without labels. */
-	mediaNodes: ReadonlyMap<string, string>;
-	/** The restart of the first node: its rooms created before `at` were hosted by `previousNodeId`. */
-	restart?: { nodeId: string; previousNodeId: string; at: number };
+}
+
+/** A server that can host a room: its node id, its media node label and how it ends. */
+export interface RoomHost {
+	nodeId: string;
+	/** Media node label; absent in a single-node deployment. */
+	mediaNode?: string;
+	/** The graceful stop (`stopped`) or the last heartbeat of a lost server; absent while it runs. */
+	end?: { at: number; stopped: boolean };
 }
 
 export interface RoomPlan {
 	index: number;
 	createdAt: number;
 	active: boolean;
+	/** The servers taking rooms at `createdAt`, at most one per machine; the room draws its host among them. */
+	hosts: readonly RoomHost[];
+	/** Kept open until its server ends: the room of a lost server that the reconciler closes. */
+	heldOpen?: boolean;
 }
 
 const MINUTE = 60_000;
@@ -321,6 +370,8 @@ const FLUSH_MS = 30_000;
 const POOR_SCORE = 2.06;
 const LOST_SCORE = 1.25;
 const AUDIO_BITRATE = 32_000;
+/** End and disconnect reason of a reconciler closure. */
+const RECONCILED = 'RECONCILED';
 
 const FIRST_NAMES = [
 	'alice',
@@ -424,22 +475,22 @@ export function generateRoom(ctx: GeneratorContext, plan: RoomPlan): RoomBundle 
 	const { rng, now } = ctx;
 	const roomSid = rng.id('RM_');
 	const name = `room-${String(plan.index + 1).padStart(6, '0')}`;
-	const picked = rng.pick(ctx.nodeIds);
-	const nodeId =
-		picked === ctx.restart?.nodeId && plan.createdAt < ctx.restart.at ? ctx.restart.previousNodeId : picked;
-	const mediaNode = ctx.mediaNodes.get(nodeId);
+	const host = rng.pick(plan.hosts);
+	const { nodeId, mediaNode } = host;
 	// Rooms created and never joined, as an application that prepares its rooms ahead does.
-	const empty = !plan.active && ctx.shapeRng.chance(0.03);
+	const empty = !plan.active && ctx.shapeRng.chance(0.03) && plan.heldOpen !== true;
 	const hasEgress = rng.chance(0.3) && !empty;
 	const hasIngress = rng.chance(0.02) && !empty;
 	const hasAgent = rng.chance(0.05) && !empty;
 	const hasSip = rng.chance(0.01) && !empty;
-	const endReason = plan.active ? null : pickEndReason(rng);
-	const closedBy: 'event' | 'reconciler' | null = plan.active
+	let endReason = plan.active ? null : pickEndReason(rng);
+	let closedBy: 'event' | 'reconciler' | null = plan.active
 		? null
-		: endReason === 'RECONCILED'
+		: endReason === RECONCILED
 			? 'reconciler'
 			: 'event';
+	// A room the reconciler closes while its server runs is no longer listed by it; one of a lost server, dead.
+	let reconcilerReason = closedBy === 'reconciler' ? 'absent-live' : null;
 
 	const base: RoomBase = { roomSid, roomName: name, nodeId, mediaNode, createdAt: plan.createdAt };
 	const sessions: Session[] = [];
@@ -466,9 +517,11 @@ export function generateRoom(ctx: GeneratorContext, plan: RoomPlan): RoomBundle 
 			const last = hop === chain;
 			let length = last ? remaining : Math.round(remaining * rng.float(0.2, 0.8));
 
-			// An active room keeps at least its last participant connected.
+			// An active room keeps at least its last participant connected, a held one its first until its server ends.
 			if (plan.active && last && i === identityCount - 1) {
 				length = Math.max(length, now - Math.min(joinedAt, now) + 5 * MINUTE);
+			} else if (plan.heldOpen === true && hop === 0 && i === 0) {
+				length = Math.max(length, (host.end?.at ?? now) - joinedAt + 5 * MINUTE);
 			}
 
 			remaining = last ? 0 : remaining - length + rng.int(0, 5 * MINUTE);
@@ -484,9 +537,28 @@ export function generateRoom(ctx: GeneratorContext, plan: RoomPlan): RoomBundle 
 		}
 	}
 
+	const mediaCtx: GeneratorContext = { ...ctx, rng: ctx.mediaRng };
+
+	// A participant of an active room that has just joined and is still connecting.
+	if (plan.active && identityCount > 0 && ctx.mediaRng.chance(0.15)) {
+		sessions.push(joiningSession(mediaCtx, base));
+	}
+
+	// Most applications keep the server's timeouts; some set their own.
+	const emptyTimeoutMs = ctx.mediaRng.weighted<number>([
+		[EMPTY_TIMEOUT_MS, 70],
+		[60_000, 10],
+		[600_000, 10],
+		[1_200_000, 10]
+	]);
+	const departureTimeoutMs = ctx.mediaRng.weighted<number>([
+		[DEPARTURE_TIMEOUT_MS, 70],
+		[10_000, 15],
+		[60_000, 15]
+	]);
 	let egresses: EgressDoc[] = [];
-	let ingresses: IngressDoc[] = [];
-	let ingressSessions: IngressSessionDoc[] = [];
+	const ingresses: IngressDoc[] = [];
+	const ingressSessions: IngressSessionDoc[] = [];
 
 	if (hasAgent) {
 		sessions.push(
@@ -516,71 +588,142 @@ export function generateRoom(ctx: GeneratorContext, plan: RoomPlan): RoomBundle 
 		);
 	}
 
-	if (hasIngress) {
-		const built = buildIngress(ctx, base, plan.active);
-		ingresses = [built.ingress];
-		ingressSessions = [built.session];
-		sessions.push(
-			serviceSession(
-				ctx,
-				base,
-				'INGRESS',
-				built.ingress.participantIdentity,
-				built.session.startedAt.getTime() + 1_000,
-				(built.session.endedAt?.getTime() ?? now + 10 * MINUTE) - built.session.startedAt.getTime() - 1_000,
-				true
-			)
+	const ingressPlan = hasIngress ? planIngress(ctx, base, plan.active) : undefined;
+	const ingressParticipants: Session[] = [];
+
+	for (const [index, planned] of (ingressPlan?.sessions ?? []).entries()) {
+		const participant = serviceSession(
+			// The first session draws from the room's stream, as it always did; the later ones from the ingress stream.
+			index === 0 ? ctx : { ...ctx, rng: ctx.ingressRng },
+			base,
+			'INGRESS',
+			ingressPlan?.identity ?? '',
+			planned.startedAt + 1_000,
+			(planned.endedAt ?? now + 10 * MINUTE) - planned.startedAt - 1_000,
+			true
 		);
+		ingressParticipants.push(participant);
+		sessions.push(participant);
 	}
 
 	// Natural end: the last participant leaves, or the empty timeout of a room nobody joined; API deletions and
 	// reconciliation move it.
 	const naturalEnd =
-		sessions.length === 0 ? plan.createdAt + EMPTY_TIMEOUT_MS : Math.max(...sessions.map((s) => s.leftAt ?? now));
+		sessions.length === 0 ? plan.createdAt + emptyTimeoutMs : Math.max(...sessions.map((s) => s.leftAt ?? now));
 	let endedAt: number | null = null;
 
 	if (!plan.active) {
-		endedAt = naturalEnd + DEPARTURE_TIMEOUT_MS;
+		endedAt = naturalEnd + departureTimeoutMs;
 
 		if (endReason === 'API_DELETE') {
 			endedAt = plan.createdAt + Math.round((naturalEnd - plan.createdAt) * rng.float(0.5, 1));
 		} else if (endReason === 'RECONCILED') {
-			endedAt = naturalEnd + 5 * MINUTE;
+			// The room and the sessions still in it stopped reporting without their closing events, and the server no
+			// longer lists them: the reconciler closes them at their last signal.
+			endedAt = plan.createdAt + Math.round((naturalEnd - plan.createdAt) * ctx.mediaRng.float(0.5, 0.95));
 		}
 
 		endedAt = Math.min(endedAt, now - MINUTE);
+		const serverEnd = host.end;
+
+		// A room still open when its server ends ends with it: at a stop with the shutdown, at a silence by the
+		// reconciler, at the server's last signal.
+		if (serverEnd !== undefined && (plan.heldOpen === true || endedAt > serverEnd.at)) {
+			endedAt = serverEnd.at;
+			endReason = serverEnd.stopped ? 'SERVER_SHUTDOWN' : RECONCILED;
+			closedBy = serverEnd.stopped ? 'event' : 'reconciler';
+			reconcilerReason = serverEnd.stopped ? null : 'node-dead';
+		}
+
+		const roomEnd = endedAt;
+
+		// Nobody joins a room once it has ended, a deleted one included: those sessions never happen.
+		for (const late of sessions.filter((s) => s.doc.joinedAt.getTime() >= roomEnd - 1_000)) {
+			sessions.splice(sessions.indexOf(late), 1);
+		}
+
 		closeSessions(ctx, sessions, endedAt, endReason === 'API_DELETE' ? 'ROOM_DELETED' : 'ROOM_CLOSED', closedBy);
 	}
 
+	if (ingressPlan !== undefined) {
+		const kept = ingressParticipants.map((p) => (sessions.includes(p) ? p : undefined));
+		const built = finishIngress(ctx, base, ingressPlan, kept);
+		ingresses.push(built.ingress);
+		ingressSessions.push(...built.sessions);
+	}
+
+	const extra = extraIngresses(ctx, base, plan.active);
+	ingresses.push(...extra.ingresses);
+	ingressSessions.push(...extra.sessions);
+
 	if (hasEgress) {
-		const egress = buildEgress(ctx, base, plan.active, endedAt, sessions);
-		egresses = [egress];
-		sessions.push(
-			serviceSession(
-				ctx,
-				base,
-				'EGRESS',
-				egress._id,
-				egress.startedAt.getTime() + 1_000,
-				(egress.endedAt?.getTime() ?? now + 10 * MINUTE) - egress.startedAt.getTime() - 1_000,
-				false
-			)
-		);
+		const egressCtx: GeneratorContext = { ...ctx, rng: ctx.egressRng };
+		egresses = [buildEgress(ctx, base, plan.active, endedAt, closedBy, sessions)];
+
+		// A second egress beside the first, a recording and a stream or the other way round.
+		if (ctx.egressRng.chance(0.15)) {
+			egresses.push(buildEgress(egressCtx, base, plan.active, endedAt, closedBy, sessions));
+		}
+
+		// An egress requested once the room had ended never starts.
+		const roomEnd = endedAt;
+		egresses = egresses.filter((e) => roomEnd === null || e.startedAt.getTime() < roomEnd - 10_000);
+
+		for (const [index, egress] of egresses.entries()) {
+			const participant = egressParticipant(index === 0 ? ctx : egressCtx, base, egress);
+
+			if (participant !== undefined) {
+				sessions.push(participant);
+
+				if (roomEnd !== null) {
+					closeSessions(
+						ctx,
+						[participant],
+						roomEnd,
+						endReason === 'API_DELETE' ? 'ROOM_DELETED' : 'ROOM_CLOSED',
+						closedBy
+					);
+				}
+			}
+		}
 	}
 
 	const peakPublishers = pickSenders(ctx, sessions);
+	const encrypted = ctx.mediaRng.chance(0.03);
+	addScreenShares(mediaCtx, base, sessions);
+
+	for (const session of sessions) {
+		if (encrypted && session.doc.kind === 'STANDARD') {
+			for (const track of session.tracks) {
+				track.encryption = 'GCM';
+			}
+		}
+
+		addMuteChanges(mediaCtx, session);
+		addResumes(mediaCtx, session);
+	}
+
 	const tracks = sessions.flatMap((s) => s.tracks);
-	const subscriptions = buildSubscriptions(ctx, roomSid, sessions);
+	const closers = reconcilerClosures(sessions);
+
+	for (const track of tracks) {
+		track.closedBy = closedByOf(track.unpublishedAt, closers.get(track.participantSid));
+	}
+
+	const subscriptions = buildSubscriptions(ctx, roomSid, sessions, closers);
 	finalizeSessions(ctx, sessions);
 
 	const participants = sessions.map((s) => s.doc);
-	const activeSessions = sessions.filter((s) => s.doc.status === 'active' || s.doc.status === 'joining');
+	const activeSessions = sessions.filter((s) => s.doc.status === 'active');
 	// Participant counters count STANDARD sessions only; byKind counts every kind.
 	const standard = participants.filter((p) => p.kind === 'STANDARD');
 	const activeStandard = activeSessions.filter((s) => s.doc.kind === 'STANDARD');
 	const byKind: Record<ParticipantKind, number> = { STANDARD: 0, EGRESS: 0, INGRESS: 0, SIP: 0, AGENT: 0 };
 	const bySource: Partial<Record<TrackSource, number>> = {};
 	const byType: Partial<Record<EgressType, number>> = {};
+	// A web egress records a URL: it belongs to no room.
+	const roomEgresses = egresses.filter((e) => e.roomSid !== null);
+	const roomIngressSessions = ingressSessions.filter((s) => s.roomSid !== null);
 	let scoreSum = 0;
 	let scoreCount = 0;
 	let minScore: number | null = null;
@@ -604,7 +747,7 @@ export function generateRoom(ctx: GeneratorContext, plan: RoomPlan): RoomBundle 
 		bySource[t.source] = (bySource[t.source] ?? 0) + 1;
 	}
 
-	for (const e of egresses) {
+	for (const e of roomEgresses) {
 		byType[e.type] = (byType[e.type] ?? 0) + 1;
 	}
 
@@ -614,9 +757,11 @@ export function generateRoom(ctx: GeneratorContext, plan: RoomPlan): RoomBundle 
 	);
 	const peakActive = peakConcurrency(sessions.filter((s) => s.doc.kind === 'STANDARD'));
 	const withoutMediaStats = ctx.withoutMediaStats.has(nodeId);
-	// Signal statistics keep flowing on a node without media statistics.
-	const flushed = scoreCount > 0 || (withoutMediaStats && sessions.some((s) => s.doc.status !== 'aborted'));
-	const lastStatsAt = flushed ? Math.min(now, Math.max(...sessions.map((s) => s.leftAt ?? now))) : null;
+	// A share of the rooms caps its participants, above the most it ever held at once.
+	const capped = ctx.mediaRng.chance(0.3);
+	const maxParticipants = capped ? ([10, 25, 50, 100].find((n) => n >= sessions.length) ?? 0) : 0;
+	const statsAts = participants.flatMap((p) => (p.lastStatsAt === null ? [] : [p.lastStatsAt.getTime()]));
+	const lastStatsAt = statsAts.length === 0 ? null : Math.max(...statsAts);
 	const room: RoomDoc = {
 		_id: roomSid,
 		name,
@@ -629,7 +774,7 @@ export function generateRoom(ctx: GeneratorContext, plan: RoomPlan): RoomBundle 
 		closedBy,
 		nodeId,
 		...(mediaNode === undefined ? {} : { mediaNode }),
-		config: { maxParticipants: 0, emptyTimeoutMs: 300_000, departureTimeoutMs: DEPARTURE_TIMEOUT_MS },
+		config: { maxParticipants, emptyTimeoutMs, departureTimeoutMs },
 		participantSids: participants.map((p) => p._id),
 		activeParticipantSids: activeStandard.map((s) => s.doc._id),
 		identities: [...new Set(standard.map((p) => p.identity))],
@@ -645,27 +790,34 @@ export function generateRoom(ctx: GeneratorContext, plan: RoomPlan): RoomBundle 
 		topology: roomTopology(peakActive, peakPublishers),
 		trackSids: tracks.map((t) => t._id),
 		tracks: { published: tracks.length, bySource },
-		egressIds: egresses.map((e) => e._id),
-		egress: { total: egresses.length, byType, active: egresses.filter((e) => isEgressActive(e.status)).length },
-		ingressSessionIds: ingressSessions.map((s) => s._id),
-		ingress: { sessions: ingressSessions.length, active: ingressSessions.filter((s) => s.endedAt === null).length },
+		egressIds: roomEgresses.map((e) => e._id),
+		egress: {
+			total: roomEgresses.length,
+			byType,
+			active: roomEgresses.filter((e) => isEgressActive(e.status)).length
+		},
+		ingressSessionIds: roomIngressSessions.map((s) => s._id),
+		ingress: {
+			sessions: roomIngressSessions.length,
+			active: roomIngressSessions.filter((s) => s.endedAt === null).length
+		},
 		bytes: { up: int64(up), down: int64(down) },
 		quality: { scoreSum: round2(scoreSum), scoreCount, minScore, poor, lost },
 		features: {
-			egress: hasEgress,
-			ingress: hasIngress,
+			egress: roomEgresses.length > 0 || byKind.EGRESS > 0,
+			ingress: roomIngressSessions.length > 0 || byKind.INGRESS > 0,
 			agent: hasAgent,
 			sip: hasSip,
-			recording: egresses.some(isRecording)
+			recording: roomEgresses.some(isRecording)
 		},
 		lastEventAt: new Date(lastEventAt),
 		lastStatsAt: lastStatsAt === null ? null : new Date(lastStatsAt),
+		reconcilerReason,
 		...(withoutMediaStats ? { mediaStats: false as const } : {}),
 		schemaVersion: SCHEMA_VERSION,
 		expiresAt: expiresAt(ctx, endedAt)
 	};
-
-	return {
+	const bundle: RoomBundle = {
 		room,
 		participants,
 		tracks,
@@ -673,8 +825,12 @@ export function generateRoom(ctx: GeneratorContext, plan: RoomPlan): RoomBundle 
 		egresses,
 		ingresses,
 		ingressSessions,
-		meanScores: new Map(sessions.map((s) => [s.doc._id, s.meanScore]))
+		meanScores: new Map(sessions.map((s) => [s.doc._id, s.meanScore])),
+		apiCalls: []
 	};
+	bundle.apiCalls = apiCalls(ctx, bundle);
+
+	return bundle;
 }
 
 /** Class of a room from its most STANDARD sessions active at once and the most of them sending media at once. */
@@ -711,10 +867,12 @@ export function roomSizeRange(peakActive: number): string {
 	return ranges.find(([max]) => peakActive <= max)?.[1] ?? '101+';
 }
 
-/** An egress with a file or segments output that went active, as every generated egress does. */
+/** An egress whose request has a file or segments output and that went active, as the writer reads a recording. */
 function isRecording(egress: EgressDoc): boolean {
+	const kinds = (egress.request.outputs ?? []) as readonly string[];
+
 	return (
-		egress.outputs.some((output) => output.kind === 'file' || output.kind === 'segments') &&
+		(kinds.includes('file') || kinds.includes('segments')) &&
 		egress.statusHistory.some((entry) => entry.status === 'active')
 	);
 }
@@ -726,7 +884,7 @@ function isRecording(egress: EgressDoc): boolean {
  */
 function pickSenders(ctx: GeneratorContext, sessions: readonly Session[]): number {
 	const { shapeRng } = ctx;
-	const standard = sessions.filter((s) => s.doc.kind === 'STANDARD' && s.doc.status !== 'aborted');
+	const standard = sessions.filter((s) => s.doc.kind === 'STANDARD' && !neverActive(s));
 	const publishing = [...new Set(standard.filter((s) => s.tracks.length > 0).map((s) => s.doc.identity))];
 	const [host, ...others] = publishing;
 	const size = peakConcurrency(standard);
@@ -913,11 +1071,7 @@ function serviceSession(
 		sdk: kind === 'AGENT' ? 'PYTHON' : 'GO',
 		version: kind === 'AGENT' ? '1.2.0' : '2.4.1',
 		os: 'linux',
-		osVersion: '6.12',
-		browser: '',
-		browserVersion: '',
-		deviceModel: '',
-		network: ''
+		osVersion: '6.12'
 	};
 	const session = newSession(ctx, base, kind, identity, joinedAt, Math.max(5_000, length), client, false);
 
@@ -967,7 +1121,6 @@ function newSession(
 		roomSid: base.roomSid,
 		roomName: base.roomName,
 		kind,
-		kindDetails: [],
 		status,
 		joinedAt: new Date(joinedAt),
 		activeAt: aborted ? null : new Date(activeAt),
@@ -977,7 +1130,6 @@ function newSession(
 		closedBy: leftAt === null ? null : 'event',
 		connectTimeMs: aborted ? null : connectTimeMs,
 		connectionType: aborted ? null : rng.weighted(CONNECTION_TYPES),
-		region: '',
 		nodeId: base.nodeId,
 		...(base.mediaNode === undefined ? {} : { mediaNode: base.mediaNode }),
 		resumes: aborted ? 0 : rng.poisson(0.2),
@@ -994,6 +1146,8 @@ function newSession(
 		bytes: { up: int64(0), down: int64(0) },
 		quality: { scoreSum: 0, scoreCount: 0, minScore: null, poor: 0, lost: 0, lastScore: null, lastScoreAt: null },
 		lastEventAt: new Date(leftAt ?? (aborted ? joinedAt : activeAt)),
+		lastStatsAt: null,
+		resumedAt: [],
 		schemaVersion: SCHEMA_VERSION,
 		expiresAt: expiresAt(ctx, leftAt)
 	};
@@ -1029,7 +1183,7 @@ function clientInfo(rng: Rng): ClientInfo {
 			osVersion,
 			browser,
 			browserVersion,
-			deviceModel: mobile ? rng.pick(['Pixel 9', 'iPhone16,2', 'SM-S938B']) : '',
+			...(mobile ? { deviceModel: rng.pick(['Pixel 9', 'iPhone16,2', 'SM-S938B']) } : {}),
 			network: rng.pick(['wifi', 'wifi', 'ethernet', 'cellular'])
 		};
 	}
@@ -1049,8 +1203,6 @@ function clientInfo(rng: Rng): ClientInfo {
 		version: '2.9.0',
 		os,
 		osVersion,
-		browser: '',
-		browserVersion: '',
 		deviceModel: os === 'ios' ? 'iPhone16,2' : 'SM-S938B',
 		network: rng.pick(['wifi', 'cellular'])
 	};
@@ -1103,7 +1255,9 @@ function publishTracks(
 			publishedAt: new Date(publishedAt),
 			unpublishedAt: unpublishedAt === null ? null : new Date(unpublishedAt),
 			durationMs: unpublishedAt === null ? null : durationMs,
+			closedBy: null,
 			muted: rng.chance(0.1),
+			muteChanges: [],
 			width: preset.width,
 			height: preset.height,
 			simulcast: video,
@@ -1173,34 +1327,55 @@ function closeSessions(
 			continue;
 		}
 
-		// A session never leaves before it is active.
-		s.leftAt = Math.max((s.doc.activeAt ?? s.doc.joinedAt).getTime() + 1_000, endedAt);
-		s.doc.leftAt = new Date(s.leftAt);
+		// A session still connecting when the room ends aborts; nothing leaves after the room's end.
+		const connected = s.doc.status !== 'aborted' && s.activeAt < endedAt;
+		s.leftAt = endedAt;
+		s.doc.leftAt = new Date(endedAt);
 		s.doc.lastEventAt = s.doc.leftAt;
-		s.doc.durationMs = s.leftAt - s.doc.joinedAt.getTime();
-		s.doc.status = s.doc.status === 'aborted' ? 'aborted' : 'left';
-		s.doc.disconnectReason = closedBy === 'reconciler' ? 'RECONCILED' : reason;
+		s.doc.durationMs = endedAt - s.doc.joinedAt.getTime();
+		s.doc.status = connected ? 'left' : 'aborted';
+		s.doc.disconnectReason = closedBy === 'reconciler' ? RECONCILED : reason;
 		s.doc.closedBy = closedBy;
-		s.doc.expiresAt = s.doc.expiresAt ?? expiresAt(ctx, s.leftAt);
+		s.doc.expiresAt = expiresAt(ctx, endedAt);
+
+		if (!connected) {
+			s.doc.activeAt = null;
+			s.doc.connectTimeMs = null;
+			s.doc.connectionType = null;
+			s.doc.resumes = 0;
+		}
+
+		// A track published at or after the end never was.
+		s.tracks = s.tracks.filter((t) => t.publishedAt.getTime() < endedAt);
+		s.doc.trackSids = s.tracks.map((t) => t._id);
+		s.doc.tracks.published = s.tracks.length;
+		s.doc.tracks.bySource = {};
+		s.doc.isPublisher = s.tracks.length > 0;
 
 		for (const t of s.tracks) {
-			if (t.unpublishedAt === null || t.unpublishedAt.getTime() > s.leftAt) {
-				const unpublishedAt = Math.max(t.publishedAt.getTime(), s.leftAt);
-				t.unpublishedAt = new Date(unpublishedAt);
-				t.durationMs = unpublishedAt - t.publishedAt.getTime();
+			s.doc.tracks.bySource[t.source] = (s.doc.tracks.bySource[t.source] ?? 0) + 1;
+
+			if (t.unpublishedAt === null || t.unpublishedAt.getTime() > endedAt) {
+				t.unpublishedAt = new Date(endedAt);
+				t.durationMs = endedAt - t.publishedAt.getTime();
 				t.status = 'unpublished';
-				t.expiresAt = t.expiresAt ?? tracksExpiresAt(ctx, unpublishedAt);
+				t.expiresAt = tracksExpiresAt(ctx, endedAt);
 			}
 		}
 	}
 }
 
-function buildSubscriptions(ctx: GeneratorContext, roomSid: string, sessions: Session[]): SubscriptionDoc[] {
+function buildSubscriptions(
+	ctx: GeneratorContext,
+	roomSid: string,
+	sessions: Session[],
+	closers: ReadonlyMap<string, number>
+): SubscriptionDoc[] {
 	const { rng, now } = ctx;
 	const subscriptions: SubscriptionDoc[] = [];
 
 	for (const subscriber of sessions) {
-		if (subscriber.doc.status === 'aborted' || subscriber.doc.kind === 'INGRESS') {
+		if (neverActive(subscriber) || subscriber.doc.kind === 'INGRESS') {
 			continue;
 		}
 
@@ -1249,6 +1424,13 @@ function buildSubscriptions(ctx: GeneratorContext, roomSid: string, sessions: Se
 					subscribedAt: new Date(subscribedAt),
 					unsubscribedAt: failed ? null : unsubscribedAt === null ? null : new Date(unsubscribedAt),
 					durationMs: failed ? null : durationMs,
+					closedBy: failed
+						? null
+						: closedByOf(
+								unsubscribedAt === null ? null : new Date(unsubscribedAt),
+								closers.get(publisher.doc._id),
+								closers.get(subscriber.doc._id)
+							),
 					maxVideoQuality,
 					subscribeStats:
 						failed || durationMs === null || ctx.withoutMediaStats.has(publisher.doc.nodeId)
@@ -1278,7 +1460,12 @@ function finalizeSessions(ctx: GeneratorContext, sessions: Session[]): void {
 	const { rng, now } = ctx;
 
 	for (const s of sessions) {
+		const end = s.leftAt ?? now;
+		const flushes = neverActive(s) ? 0 : Math.max(0, Math.floor((end - s.activeAt) / FLUSH_MS));
+
 		if (ctx.withoutMediaStats.has(s.doc.nodeId)) {
+			// Signal statistics keep flowing, without bytes or quality.
+			s.doc.lastStatsAt = flushes > 0 ? new Date(s.activeAt + flushes * FLUSH_MS) : null;
 			s.upBytes = 0;
 			s.downBytes = 0;
 			s.doc.mediaStats = false;
@@ -1295,12 +1482,10 @@ function finalizeSessions(ctx: GeneratorContext, sessions: Session[]): void {
 			continue;
 		}
 
-		if (s.doc.status === 'aborted') {
+		if (neverActive(s)) {
 			continue;
 		}
 
-		const end = s.leftAt ?? now;
-		const flushes = Math.max(0, Math.floor((end - s.activeAt) / FLUSH_MS));
 		const directions = (s.tracks.length > 0 ? 1 : 0) + (s.doc.tracks.subscribed > 0 ? 1 : 0);
 		const scoreCount = flushes * directions;
 		const minScore = scoreCount === 0 ? null : round2(Math.max(1, s.meanScore - rng.float(0.2, 1.2)));
@@ -1315,6 +1500,7 @@ function finalizeSessions(ctx: GeneratorContext, sessions: Session[]): void {
 			lastScore: scoreCount === 0 ? null : round2(s.meanScore),
 			lastScoreAt: lastScoreAt === null ? null : new Date(lastScoreAt)
 		};
+		s.doc.lastStatsAt = lastScoreAt === null ? null : new Date(lastScoreAt);
 	}
 }
 
@@ -1322,7 +1508,7 @@ function peakConcurrency(sessions: Session[]): number {
 	const edges: [number, number][] = [];
 
 	for (const s of sessions) {
-		if (s.doc.status === 'aborted') {
+		if (neverActive(s)) {
 			continue;
 		}
 
@@ -1379,14 +1565,29 @@ function egressSource(
 	}
 }
 
+/** Error the reconciler gives an egress lost with its node. */
+const LOST_EGRESS_ERROR = 'egress lost (reconciled)';
+/** Error the reconciler gives an ingress session lost with its node. */
+const LOST_INGRESS_ERROR = 'ingress lost (reconciled)';
+
+const EGRESS_START_METHODS: Record<EgressType, string> = {
+	room_composite: 'EgressService_StartRoomCompositeEgress',
+	web: 'EgressService_StartWebEgress',
+	participant: 'EgressService_StartParticipantEgress',
+	track_composite: 'EgressService_StartTrackCompositeEgress',
+	track: 'EgressService_StartTrackEgress'
+};
+
 function buildEgress(
 	ctx: GeneratorContext,
 	base: RoomBase,
 	roomActive: boolean,
 	roomEndedAt: number | null,
+	roomClosedBy: 'event' | 'reconciler' | null,
 	sessions: readonly Session[]
 ): EgressDoc {
 	const { rng, now } = ctx;
+	const variety = ctx.egressRng;
 	const type = rng.weighted<EgressType>([
 		['room_composite', 80],
 		['participant', 8],
@@ -1394,7 +1595,7 @@ function buildEgress(
 		['web', 4],
 		['track', 2]
 	]);
-	const startedAt = base.createdAt + rng.int(30_000, 120_000);
+	let startedAt = base.createdAt + rng.int(30_000, 120_000);
 	const outputKind = rng.weighted<'file' | 'stream' | 'segments'>([
 		['file', 70],
 		['stream', 20],
@@ -1403,6 +1604,7 @@ function buildEgress(
 	let status: EgressStatus = 'active';
 	let endedAt: number | null = null;
 	let error: string | null = null;
+	let closedBy: 'event' | 'reconciler' | null = null;
 
 	if (!roomActive) {
 		status = rng.weighted<EgressStatus>([
@@ -1416,6 +1618,8 @@ function buildEgress(
 				? naturalEnd
 				: Math.round(startedAt + (naturalEnd - startedAt) * rng.float(0.05, 0.9));
 		endedAt = Math.max(startedAt + 1_000, Math.min(endedAt, now - MINUTE));
+		// It never outlives its room.
+		endedAt = roomEndedAt === null ? endedAt : Math.min(endedAt, roomEndedAt);
 		error =
 			status === 'failed'
 				? rng.pick([
@@ -1426,74 +1630,237 @@ function buildEgress(
 				: null;
 	}
 
-	const durationMs = endedAt === null ? null : endedAt - startedAt;
-	const history: { status: EgressStatus; at: Date }[] = [
-		{ status: 'starting', at: new Date(startedAt) },
-		{ status: 'active', at: new Date(startedAt + rng.int(2_000, 6_000)) }
-	];
+	let activeAt: number | null = startedAt + rng.int(2_000, 6_000);
+	const id = rng.id('EG_');
+	const source = egressSource(type, sessions, startedAt, rng.chance(0.3));
+	let endingAt: number | null = null;
 
-	if (endedAt !== null) {
-		history.push({ status: 'ending', at: new Date(endedAt - 1_000) }, { status, at: new Date(endedAt) });
+	if (!roomActive) {
+		closedBy = 'event';
+
+		if (status === 'complete' && roomClosedBy === 'reconciler') {
+			// Still recording when its node died: the reconciler fails it at the room's end.
+			status = 'failed';
+			error = LOST_EGRESS_ERROR;
+			closedBy = 'reconciler';
+		} else if (status === 'complete' && variety.chance(0.05) && endedAt !== null) {
+			status = 'limit_reached';
+			endedAt = Math.max(
+				activeAt + 1_000,
+				Math.round(startedAt + (endedAt - startedAt) * variety.float(0.5, 0.9))
+			);
+		}
+
+		endingAt = status === 'complete' || status === 'limit_reached' ? (endedAt ?? now) - 1_000 : null;
+	} else {
+		const draw = variety.next();
+		const stopAt = Math.round(activeAt + (now - MINUTE - activeAt) * variety.float(0.2, 0.9));
+		const endingFrom = now - variety.int(5_000, 30_000);
+
+		if (draw < 0.05) {
+			// Requested seconds ago, not recording yet.
+			status = 'starting';
+			startedAt = Math.max(base.createdAt + 1_000, now - variety.int(2_000, 8_000));
+			activeAt = null;
+		} else if (draw < 0.09 && endingFrom > activeAt + MINUTE) {
+			// Stopped, finishing its upload.
+			status = 'ending';
+			endingAt = endingFrom;
+		} else if (draw < 0.31 && stopAt > activeAt + MINUTE) {
+			// Stopped by the application while the room goes on.
+			status = 'complete';
+			endedAt = stopAt;
+			endingAt = stopAt - 1_000;
+			closedBy = 'event';
+		}
 	}
 
-	const id = rng.id('EG_');
+	const kinds: EgressOutput['kind'][] = [outputKind];
+
+	if ((type === 'room_composite' || type === 'web') && outputKind === 'file' && variety.chance(0.1)) {
+		kinds.push('stream');
+	}
+
+	if ((type === 'room_composite' || type === 'web') && variety.chance(0.03)) {
+		kinds.push('images');
+	}
+
+	const retryCount = status === 'failed' && variety.chance(0.3) ? 1 : 0;
+	const backupStorageUsed = kinds.includes('file') && status === 'complete' && variety.chance(0.02);
+	const history: { status: EgressStatus; at: Date }[] = [{ status: 'starting', at: new Date(startedAt) }];
+
+	if (activeAt !== null && status !== 'starting') {
+		history.push({ status: 'active', at: new Date(activeAt) });
+	}
+
+	if (endingAt !== null) {
+		history.push({ status: 'ending', at: new Date(endingAt) });
+	}
+
+	if (endedAt !== null) {
+		history.push({ status, at: new Date(endedAt) });
+	}
+
+	const durationMs = endedAt === null ? null : endedAt - startedAt;
+	const web = type === 'web';
+	const roomName = web ? null : base.roomName;
+	const folder = roomName ?? 'web';
 	const size = (2_000_000 / 8) * ((durationMs ?? now - startedAt) / 1000);
+	const recorded = endedAt !== null && status !== 'failed';
+	const updatedAt = history.at(-1)?.at ?? new Date(startedAt);
+	const outputs: EgressOutput[] =
+		activeAt === null
+			? []
+			: kinds.map((kind): EgressOutput => {
+					const times: Pick<EgressOutput, 'startedAt' | 'endedAt' | 'durationMs'> =
+						endedAt === null
+							? { startedAt: new Date(activeAt) }
+							: {
+									startedAt: new Date(activeAt),
+									endedAt: new Date(endedAt),
+									durationMs: endedAt - activeAt
+								};
+
+					switch (kind) {
+						case 'file':
+							return {
+								kind,
+								filename: `${folder}-${id}.mp4`,
+								location: `s3://recordings/${folder}/${folder}-${id}.mp4`,
+								...(recorded ? { size: int64(size) } : {}),
+								...times
+							};
+						case 'stream':
+							return {
+								kind,
+								url: 'rtmps://stream.example.com/live/***',
+								status: endedAt === null ? 'ACTIVE' : status === 'failed' ? 'FAILED' : 'FINISHED',
+								...(status === 'failed' && error !== null ? { error } : {}),
+								...times
+							};
+						case 'segments':
+							return {
+								kind,
+								playlistName: `${id}.m3u8`,
+								location: `s3://recordings/${folder}/${id}.m3u8`,
+								...(recorded ? { size: int64(size) } : {}),
+								...times
+							};
+						case 'images':
+							return {
+								kind,
+								filenamePrefix: `${folder}/${id}/thumbnail`,
+								...(endedAt === null
+									? { startedAt: new Date(activeAt) }
+									: { startedAt: new Date(activeAt), endedAt: new Date(endedAt) })
+							};
+					}
+				});
 
 	return {
 		_id: id,
-		roomSid: base.roomSid,
-		roomName: base.roomName,
-		roomNameLower: base.roomName.toLowerCase(),
+		roomSid: web ? null : base.roomSid,
+		roomName,
+		roomNameLower: roomName === null ? null : roomName.toLowerCase(),
 		type,
-		sourceType: type === 'web' ? 'web' : 'sdk',
+		sourceType: web ? 'web' : 'sdk',
 		status,
-		closedBy: endedAt === null ? null : 'event',
+		closedBy,
 		startedAt: new Date(startedAt),
-		updatedAt: new Date(endedAt ?? history.at(-1)?.at.getTime() ?? startedAt),
+		updatedAt,
 		endedAt: endedAt === null ? null : new Date(endedAt),
 		durationMs,
 		error,
-		errorCode: status === 'failed' ? 1 : null,
-		request: {
-			layout: 'grid',
-			preset: 'H264_720P_30',
-			audioOnly: false,
-			videoOnly: false,
-			outputs: [outputKind],
-			...egressSource(type, sessions, startedAt, rng.chance(0.3))
-		},
-		outputs: [
-			{
-				kind: outputKind,
-				...(outputKind === 'file'
-					? { filename: `${base.roomName}-${id}.mp4` }
-					: outputKind === 'stream'
-						? { url: 'rtmps://stream.example.com/live/[redacted]' }
-						: { playlistName: `${id}.m3u8` }),
-				location:
-					outputKind === 'stream' ? 'rtmps://stream.example.com/live' : `s3://recordings/${base.roomName}/`,
-				size: int64(outputKind === 'stream' ? 0 : size),
-				durationMs: durationMs ?? 0,
-				status: status === 'complete' ? 'FINISHED' : status === 'active' ? 'ACTIVE' : 'FAILED',
-				error,
-				startedAt: new Date(startedAt),
-				endedAt: endedAt === null ? null : new Date(endedAt)
-			}
-		],
+		errorCode: status === 'failed' && closedBy === 'event' ? 1 : null,
+		request: egressRequest(type, source, kinds),
+		outputs,
 		statusHistory: history,
-		retryCount: 0,
-		backupStorageUsed: false,
+		retryCount,
+		backupStorageUsed,
 		schemaVersion: SCHEMA_VERSION,
-		expiresAt: expiresAt(ctx, endedAt)
+		expiresAt: isEgressActive(status) ? null : expiresAt(ctx, endedAt ?? updatedAt.getTime())
 	};
 }
 
-function buildIngress(
-	ctx: GeneratorContext,
-	base: RoomBase,
-	roomActive: boolean
-): { ingress: IngressDoc; session: IngressSessionDoc } {
+/** The sanitized request summary the writer keeps: the fields of the request type that are set, and the outputs. */
+function egressRequest(
+	type: EgressType,
+	source: Record<string, unknown>,
+	kinds: readonly EgressOutput['kind'][]
+): Record<string, unknown> {
+	const preset = typeof source.preset === 'string' ? source.preset : 'H264_720P_30';
+
+	switch (type) {
+		case 'room_composite':
+			return { layout: 'grid', preset, outputs: kinds };
+		case 'web':
+			return { url: 'https://app.example.com/***', preset, outputs: kinds };
+		case 'participant':
+			return { ...pick(source, 'participantIdentity'), preset, outputs: kinds };
+		case 'track_composite':
+			return { ...pick(source, 'audioTrackId'), ...pick(source, 'videoTrackId'), preset, outputs: kinds };
+		case 'track':
+			return { ...pick(source, 'trackId'), outputs: kinds };
+	}
+}
+
+function pick(source: Record<string, unknown>, key: string): Record<string, unknown> {
+	return source[key] === undefined ? {} : { [key]: source[key] };
+}
+
+/** The EGRESS participant of an egress with a room, joined once it records and gone once it stops. */
+function egressParticipant(ctx: GeneratorContext, base: RoomBase, egress: EgressDoc): Session | undefined {
+	const activeAt = egress.statusHistory.find((h) => h.status === 'active')?.at.getTime();
+
+	if (egress.roomSid === null || activeAt === undefined) {
+		return undefined;
+	}
+
+	const endingAt = egress.statusHistory.find((h) => h.status === 'ending')?.at.getTime();
+	const leftAt = egress.endedAt?.getTime() ?? endingAt ?? ctx.now + 10 * MINUTE;
+	const startedAt = egress.startedAt.getTime();
+	const session = serviceSession(
+		ctx,
+		base,
+		'EGRESS',
+		egress._id,
+		startedAt + 1_000,
+		leftAt - startedAt - 1_000,
+		false
+	);
+
+	if (egress.closedBy === 'reconciler' && session.leftAt !== null) {
+		session.doc.closedBy = 'reconciler';
+		session.doc.disconnectReason = RECONCILED;
+	}
+
+	return session;
+}
+
+/**
+ * Prefix of the `resource_id` of an ingress session: the server's `RT_` for RTMP and `UR_` for URL inputs; no WHIP
+ * session was observed, so WHIP keeps a prefix of its own.
+ */
+const INGRESS_SESSION_PREFIXES: Record<IngressDoc['inputType'], string> = { rtmp: 'RT_', whip: 'IR_', url: 'UR_' };
+
+interface IngressPlan {
+	id: string;
+	firstSessionId: string;
+	inputType: IngressDoc['inputType'];
+	createdAt: number;
+	identity: string;
+	name: string;
+	roomName: string;
+	sessions: { startedAt: number; endedAt: number | null; failed: boolean }[];
+}
+
+/**
+ * The ingress of a room and the sessions it publishes: one, or for a reusable ingress up to three in a row, as a
+ * publisher that stops and starts again does. The first session takes the room's draws.
+ */
+function planIngress(ctx: GeneratorContext, base: RoomBase, roomActive: boolean): IngressPlan {
 	const { rng, now } = ctx;
+	const more = ctx.ingressRng;
 	const id = rng.id('IN_');
 	const inputType = rng.weighted<IngressDoc['inputType']>([
 		['rtmp', 60],
@@ -1503,60 +1870,477 @@ function buildIngress(
 	const createdAt = base.createdAt - rng.int(60_000, 600_000);
 	const startedAt = base.createdAt + rng.int(5_000, 60_000);
 	const failed = !roomActive && rng.chance(0.05);
-	const endedAt = roomActive ? null : Math.min(now - MINUTE, startedAt + sessionDuration(rng));
-	const durationMs = endedAt === null ? null : endedAt - startedAt;
+	let endedAt = roomActive ? null : Math.min(now - MINUTE, startedAt + sessionDuration(rng));
 	const identity = `ingress-${String(rng.int(1, 9_999)).padStart(4, '0')}`;
-	const sessionStatus: IngressSessionDoc['status'] = endedAt === null ? 'publishing' : failed ? 'error' : 'complete';
-	const name = `ingress-${base.roomName}`;
+	const firstSessionId = rng.id(INGRESS_SESSION_PREFIXES[inputType]);
+	const extra = inputType !== 'url' && more.chance(0.35) ? (more.chance(0.3) ? 2 : 1) : 0;
+	const firstLength = sessionDuration(more);
+
+	if (roomActive && extra > 0 && startedAt + firstLength < now - 2 * MINUTE) {
+		endedAt = startedAt + firstLength;
+	}
+
+	const sessions: IngressPlan['sessions'] = [{ startedAt, endedAt, failed }];
+
+	for (let i = 0; i < extra; i += 1) {
+		const previous = sessions[sessions.length - 1];
+		const gap = more.int(MINUTE, 15 * MINUTE);
+		const length = sessionDuration(more);
+		const sessionFailed = more.chance(0.05);
+
+		if (previous === undefined || previous.endedAt === null || previous.endedAt + gap >= now - 2 * MINUTE) {
+			break;
+		}
+
+		const start = previous.endedAt + gap;
+		const end = start + length >= now - MINUTE ? (roomActive ? null : now - MINUTE) : start + length;
+		sessions.push({ startedAt: start, endedAt: end, failed: end !== null && sessionFailed });
+	}
 
 	return {
-		ingress: {
-			_id: id,
-			name,
-			nameLower: name.toLowerCase(),
-			inputType,
-			url:
-				inputType === 'rtmp'
-					? 'rtmps://ingress.example.com/x'
-					: inputType === 'whip'
-						? 'https://ingress.example.com/w'
-						: 'https://media.example.com/source.mp4',
-			roomName: base.roomName,
-			participantIdentity: identity,
-			participantName: displayName('INGRESS', identity),
-			reusable: inputType !== 'url',
-			enabled: true,
-			enableTranscoding: inputType !== 'whip',
-			createdAt: new Date(createdAt),
-			deletedAt: null,
-			status: sessionStatus === 'publishing' ? 'publishing' : sessionStatus === 'error' ? 'error' : 'inactive',
-			lastError: failed ? 'input disconnected' : null,
-			sessions: 1,
-			totalDurationMs: durationMs ?? 0,
-			lastSessionAt: new Date(startedAt),
-			schemaVersion: SCHEMA_VERSION,
-			expiresAt: expiresAt(ctx, endedAt)
-		},
-		session: {
-			_id: rng.id('IR_'),
-			ingressId: id,
-			ingressName: name,
-			inputType,
+		id,
+		firstSessionId,
+		inputType,
+		createdAt,
+		identity,
+		name: `ingress-${base.roomName}`,
+		roomName: base.roomName,
+		sessions
+	};
+}
+
+/** The ingress and its sessions as the room ended them: each session lasts what its INGRESS participant did. */
+function finishIngress(
+	ctx: GeneratorContext,
+	base: RoomBase,
+	plan: IngressPlan,
+	participants: readonly (Session | undefined)[]
+): { ingress: IngressDoc; sessions: IngressSessionDoc[] } {
+	const sessions: IngressSessionDoc[] = [];
+
+	for (const [index, planned] of plan.sessions.entries()) {
+		const participant = participants[index];
+
+		if (participant === undefined) {
+			continue;
+		}
+
+		const startedAt = Math.min(planned.startedAt, participant.doc.joinedAt.getTime() - 1_000);
+		const endedAt = participant.leftAt;
+		const reconciled = participant.doc.closedBy === 'reconciler';
+		const status: IngressSessionDoc['status'] =
+			endedAt === null
+				? 'publishing'
+				: reconciled || planned.failed
+					? 'error'
+					: plan.inputType === 'url'
+						? 'complete'
+						: 'inactive';
+		sessions.push({
+			_id: index === 0 ? plan.firstSessionId : ctx.ingressRng.id(INGRESS_SESSION_PREFIXES[plan.inputType]),
+			ingressId: plan.id,
+			ingressName: plan.name,
+			inputType: plan.inputType,
 			roomSid: base.roomSid,
 			roomName: base.roomName,
-			participantIdentity: identity,
-			status: sessionStatus,
-			error: failed ? 'input disconnected' : null,
-			closedBy: endedAt === null ? null : 'event',
+			participantIdentity: plan.identity,
+			status,
+			error: reconciled ? LOST_INGRESS_ERROR : status === 'error' ? 'input disconnected' : null,
+			closedBy: endedAt === null ? null : reconciled ? 'reconciler' : 'event',
 			startedAt: new Date(startedAt),
 			endedAt: endedAt === null ? null : new Date(endedAt),
-			durationMs,
+			durationMs: endedAt === null ? null : endedAt - startedAt,
 			video: { mimeType: 'video/H264', averageBitrate: 2_500_000, width: 1280, height: 720, framerate: 30 },
 			audio: { mimeType: 'audio/opus', averageBitrate: 128_000, channels: 2, sampleRate: 48_000 },
 			schemaVersion: SCHEMA_VERSION,
 			expiresAt: expiresAt(ctx, endedAt)
+		});
+	}
+
+	const last = sessions.at(-1);
+	const deletedAt = ingressDeletion(ctx, last === undefined ? null : (last.endedAt?.getTime() ?? null));
+
+	return {
+		ingress: ingressDefinition(ctx, plan, sessions, deletedAt, true),
+		sessions
+	};
+}
+
+/** An ingress document as the writer derives it from its sessions, its last state and its deletion. */
+function ingressDefinition(
+	ctx: GeneratorContext,
+	plan: IngressPlan,
+	sessions: readonly IngressSessionDoc[],
+	deletedAt: number | null,
+	enabled: boolean
+): IngressDoc {
+	const last = sessions.at(-1);
+	const lastError = sessions.reduce<string | null>((error, s) => s.error ?? error, null);
+
+	return {
+		_id: plan.id,
+		name: plan.name,
+		nameLower: plan.name.toLowerCase(),
+		inputType: plan.inputType,
+		url:
+			plan.inputType === 'rtmp'
+				? 'rtmps://ingress.example.com/x'
+				: plan.inputType === 'whip'
+					? 'https://ingress.example.com/w'
+					: 'https://media.example.com/source.mp4',
+		roomName: plan.roomName,
+		participantIdentity: plan.identity,
+		participantName: displayName('INGRESS', plan.identity),
+		reusable: plan.inputType !== 'url',
+		enabled,
+		enableTranscoding: plan.inputType !== 'whip',
+		createdAt: new Date(plan.createdAt),
+		deletedAt: deletedAt === null ? null : new Date(deletedAt),
+		status: deletedAt !== null ? 'deleted' : (last?.status ?? 'inactive'),
+		lastError,
+		sessions: sessions.length,
+		totalDurationMs: sessions.reduce((sum, s) => sum + (s.durationMs ?? 0), 0),
+		lastSessionAt: last?.startedAt ?? null,
+		schemaVersion: SCHEMA_VERSION,
+		// An ingress definition expires only once deleted, whatever its sessions.
+		expiresAt: expiresAt(ctx, deletedAt)
+	};
+}
+
+/**
+ * Ingresses created for the room that never published into it: one left unused, enabled or not and sometimes
+ * deleted, and, in an active room, one whose session is still buffering, so its state names no room yet.
+ */
+function extraIngresses(
+	ctx: GeneratorContext,
+	base: RoomBase,
+	roomActive: boolean
+): { ingresses: IngressDoc[]; sessions: IngressSessionDoc[] } {
+	const { now } = ctx;
+	const rng = ctx.ingressRng;
+	const unused = rng.chance(0.004);
+	const buffering = roomActive && rng.chance(0.03);
+	const ingresses: IngressDoc[] = [];
+	const sessions: IngressSessionDoc[] = [];
+
+	if (unused) {
+		const createdAt = Math.max(ctx.windowStart, base.createdAt - rng.int(10 * MINUTE, 3 * 24 * 60 * MINUTE));
+		const plan: IngressPlan = {
+			id: rng.id('IN_'),
+			firstSessionId: '',
+			inputType: rng.weighted<IngressDoc['inputType']>([
+				['rtmp', 60],
+				['whip', 40]
+			]),
+			createdAt,
+			identity: `ingress-${String(rng.int(1, 9_999)).padStart(4, '0')}`,
+			name: `ingress-${base.roomName}-standby`,
+			roomName: base.roomName,
+			sessions: []
+		};
+		const enabled = rng.chance(0.7);
+		const deleteAt = createdAt + rng.int(10 * MINUTE, 2 * 24 * 60 * MINUTE);
+		const deletedAt = rng.chance(0.25) && deleteAt < now - MINUTE ? deleteAt : null;
+		ingresses.push(ingressDefinition(ctx, plan, [], deletedAt, enabled));
+	}
+
+	if (buffering) {
+		const plan: IngressPlan = {
+			id: rng.id('IN_'),
+			firstSessionId: rng.id(INGRESS_SESSION_PREFIXES.rtmp),
+			inputType: 'rtmp',
+			createdAt: base.createdAt - rng.int(MINUTE, 10 * MINUTE),
+			identity: `ingress-${String(rng.int(1, 9_999)).padStart(4, '0')}`,
+			name: `ingress-${base.roomName}-backup`,
+			roomName: base.roomName,
+			sessions: []
+		};
+		const startedAt = Math.max(base.createdAt + 1_000, now - rng.int(10_000, 40_000));
+		const session: IngressSessionDoc = {
+			_id: plan.firstSessionId,
+			ingressId: plan.id,
+			ingressName: plan.name,
+			inputType: plan.inputType,
+			roomSid: null,
+			roomName: base.roomName,
+			participantIdentity: plan.identity,
+			status: 'buffering',
+			error: null,
+			closedBy: null,
+			startedAt: new Date(startedAt),
+			endedAt: null,
+			durationMs: null,
+			video: null,
+			audio: null,
+			schemaVersion: SCHEMA_VERSION,
+			expiresAt: null
+		};
+		sessions.push(session);
+		ingresses.push(ingressDefinition(ctx, plan, [session], null, true));
+	}
+
+	return { ingresses, sessions };
+}
+
+/**
+ * Deletion instant of an ingress whose session ended, or null while it still exists: one in ten is deleted, most
+ * within half an hour of their session and the rest up to three days later, never after the end of the data.
+ */
+function ingressDeletion(ctx: GeneratorContext, sessionEndedAt: number | null): number | null {
+	const { ingressRng: rng, now } = ctx;
+	const deleted = rng.chance(0.1);
+	const delay = rng.chance(0.6) ? rng.int(MINUTE, 30 * MINUTE) : rng.int(60 * MINUTE, 3 * 24 * 60 * MINUTE);
+
+	if (!deleted || sessionEndedAt === null || sessionEndedAt + delay >= now - MINUTE) {
+		return null;
+	}
+
+	return sessionEndedAt + delay;
+}
+
+/** A STANDARD participant of an active room that joined seconds ago and has not connected yet. */
+function joiningSession(ctx: GeneratorContext, base: RoomBase): Session {
+	const { rng, now } = ctx;
+	const identity = `${rng.pick(FIRST_NAMES)}-${String(rng.int(1, 99_999)).padStart(5, '0')}`;
+	const session = newSession(
+		ctx,
+		base,
+		'STANDARD',
+		identity,
+		now - rng.int(2_000, 8_000),
+		MINUTE,
+		clientInfo(rng),
+		false
+	);
+	session.leftAt = null;
+	session.doc.status = 'joining';
+	session.doc.activeAt = null;
+	session.doc.leftAt = null;
+	session.doc.durationMs = null;
+	session.doc.closedBy = null;
+	session.doc.connectTimeMs = null;
+	session.doc.connectionType = null;
+	session.doc.resumes = 0;
+	session.doc.lastEventAt = session.doc.joinedAt;
+	session.doc.expiresAt = null;
+
+	return session;
+}
+
+/** Never active: aborted before connecting, or still connecting. */
+function neverActive(session: Session): boolean {
+	return session.doc.status === 'aborted' || session.doc.status === 'joining';
+}
+
+/** Some media senders share their screen for a while, a few with its audio. */
+function addScreenShares(ctx: GeneratorContext, base: RoomBase, sessions: readonly Session[]): void {
+	const { rng, now } = ctx;
+
+	for (const session of sessions) {
+		const shares = rng.chance(0.06);
+		const withAudio = rng.chance(0.35);
+		const position = rng.float(0.1, 0.6);
+		const length = rng.int(2 * MINUTE, 15 * MINUTE);
+		const end = session.leftAt ?? now;
+		const sends = session.tracks.some((t) => !t.muted);
+
+		if (!shares || session.doc.kind !== 'STANDARD' || neverActive(session) || !sends) {
+			continue;
+		}
+
+		if (end - session.activeAt < 4 * MINUTE) {
+			continue;
+		}
+
+		const publishedAt = Math.round(session.activeAt + (end - session.activeAt) * position);
+		const stop = publishedAt + length;
+		const unpublishedAt = stop < end ? stop : session.leftAt;
+		const added = [screenTrack(ctx, base, session, 'SCREEN_SHARE', publishedAt, unpublishedAt)];
+
+		if (withAudio) {
+			added.push(screenTrack(ctx, base, session, 'SCREEN_SHARE_AUDIO', publishedAt + 200, unpublishedAt));
+		}
+
+		session.tracks.push(...added);
+		session.doc.trackSids = session.tracks.map((t) => t._id);
+		session.doc.tracks.published = session.tracks.length;
+
+		for (const t of added) {
+			session.doc.tracks.bySource[t.source] = (session.doc.tracks.bySource[t.source] ?? 0) + 1;
+		}
+	}
+}
+
+function screenTrack(
+	ctx: GeneratorContext,
+	base: RoomBase,
+	session: Session,
+	source: 'SCREEN_SHARE' | 'SCREEN_SHARE_AUDIO',
+	publishedAt: number,
+	unpublishedAt: number | null
+): TrackDoc {
+	const { rng, now } = ctx;
+	const video = source === 'SCREEN_SHARE';
+	const layers: TrackLayer[] = video ? [{ quality: 'HIGH', width: 1920, height: 1080, bitrate: 2_000_000 }] : [];
+	const mimeType = video ? 'video/VP8' : 'audio/opus';
+	const bitrate = video ? 2_000_000 : AUDIO_BITRATE;
+	const durationMs = (unpublishedAt ?? now) - publishedAt;
+	session.upBytes += (bitrate / 8) * (durationMs / 1000);
+
+	return {
+		_id: rng.id('TR_'),
+		roomSid: base.roomSid,
+		participantSid: session.doc._id,
+		identity: session.doc.identity,
+		type: video ? 'VIDEO' : 'AUDIO',
+		source,
+		name: video ? 'screen_share' : 'screen_share_audio',
+		mimeType,
+		status: unpublishedAt === null ? 'published' : 'unpublished',
+		publishedAt: new Date(publishedAt),
+		unpublishedAt: unpublishedAt === null ? null : new Date(unpublishedAt),
+		durationMs: unpublishedAt === null ? null : durationMs,
+		closedBy: null,
+		muted: false,
+		muteChanges: [],
+		width: video ? 1920 : 0,
+		height: video ? 1080 : 0,
+		simulcast: false,
+		codecs: [{ mimeType, layers }],
+		encryption: 'NONE',
+		subscribers: { current: 0, total: 0, failed: 0 },
+		publishStats:
+			unpublishedAt === null || ctx.withoutMediaStats.has(session.doc.nodeId)
+				? null
+				: rtpStats(rng, bitrate, durationMs, layers.length),
+		schemaVersion: SCHEMA_VERSION,
+		expiresAt: tracksExpiresAt(ctx, unpublishedAt)
+	};
+}
+
+/** Senders that mute and unmute their microphone, or less often their camera, and end as they were. */
+function addMuteChanges(ctx: GeneratorContext, session: Session): void {
+	const { rng, now } = ctx;
+
+	for (const track of session.tracks) {
+		const toggles = rng.chance(track.source === 'MICROPHONE' ? 0.35 : track.source === 'CAMERA' ? 0.1 : 0);
+		const pairs = rng.int(1, 3);
+		const from = track.publishedAt.getTime() + 5_000;
+		const to = (track.unpublishedAt?.getTime() ?? now) - 5_000;
+
+		if (!toggles || track.muted || session.doc.kind !== 'STANDARD' || to - from < pairs * 2 * 20_000) {
+			continue;
+		}
+
+		const instants = Array.from({ length: pairs * 2 }, () => rng.int(from, to)).sort((a, b) => a - b);
+		track.muteChanges = instants.map((at, index) => ({ muted: index % 2 === 0, at: new Date(at) }));
+	}
+}
+
+/** The instant of each resume of a session, while it was connected. */
+function addResumes(ctx: GeneratorContext, session: Session): void {
+	const { rng, now } = ctx;
+	const from = session.activeAt + 1_000;
+	const to = (session.leftAt ?? now) - 1_000;
+
+	if (neverActive(session) || session.doc.resumes === 0) {
+		return;
+	}
+
+	if (to <= from) {
+		session.doc.resumes = 0;
+
+		return;
+	}
+
+	session.doc.resumedAt = Array.from({ length: session.doc.resumes }, () => rng.int(from, to))
+		.sort((a, b) => a - b)
+		.map((at) => new Date(at));
+}
+
+/** The close instant of each session the reconciler closed: what was still open in it closes with it. */
+function reconcilerClosures(sessions: readonly Session[]): Map<string, number> {
+	return new Map(
+		sessions.flatMap((s) => (s.doc.closedBy === 'reconciler' && s.leftAt !== null ? [[s.doc._id, s.leftAt]] : []))
+	);
+}
+
+/** `closedBy` of a track or subscription closed at `closedAt`: by the reconciler's cascade at its close, else by its event. */
+function closedByOf(closedAt: Date | null, ...reconcilerAt: (number | undefined)[]): 'event' | 'reconciler' | null {
+	if (closedAt === null) {
+		return null;
+	}
+
+	return reconcilerAt.includes(closedAt.getTime()) ? 'reconciler' : 'event';
+}
+
+/** The server API calls an application makes about a room, as the writer counts them from `API_CALL` events. */
+function apiCalls(ctx: GeneratorContext, bundle: RoomBundle): ApiCall[] {
+	const rng = ctx.apiRng;
+	const { room } = bundle;
+	const calls: ApiCall[] = [];
+	const add = (at: number, method: string, failed = false): void => {
+		const error = failed || rng.chance(0.01);
+
+		if (at >= ctx.windowStart && at <= ctx.now) {
+			calls.push({ at: new Date(at), method, error });
 		}
 	};
+	const createdAt = room.createdAt.getTime();
+	const end = room.endedAt?.getTime() ?? ctx.now;
+
+	if (rng.chance(0.55)) {
+		add(createdAt - 30, 'RoomService_CreateRoom');
+	}
+
+	if (room.endReason === 'API_DELETE' && room.endedAt !== null) {
+		add(end - 20, 'RoomService_DeleteRoom');
+
+		// The application deletes it again: the room no longer exists.
+		if (rng.chance(0.05)) {
+			add(end + rng.int(1_000, 60_000), 'RoomService_DeleteRoom', true);
+		}
+	}
+
+	for (const e of bundle.egresses) {
+		add(e.startedAt.getTime() - 50, EGRESS_START_METHODS[e.type]);
+		const endingAt = e.statusHistory.find((h) => h.status === 'ending')?.at.getTime();
+		const stopped =
+			e.status === 'ending' ||
+			(e.status === 'complete' && e.endedAt !== null && (room.endedAt === null || e.endedAt < room.endedAt));
+
+		if (stopped && endingAt !== undefined) {
+			add(endingAt - 20, 'EgressService_StopEgress');
+		}
+	}
+
+	for (const i of bundle.ingresses) {
+		add(i.createdAt.getTime(), 'IngressService_CreateIngress');
+
+		if (i.deletedAt !== null) {
+			add(i.deletedAt.getTime() - 20, 'IngressService_DeleteIngress');
+		}
+	}
+
+	for (const p of bundle.participants) {
+		if (p.disconnectReason === 'PARTICIPANT_REMOVED' && p.leftAt !== null) {
+			add(p.leftAt.getTime() - 30, 'RoomService_RemoveParticipant');
+		}
+	}
+
+	for (const t of bundle.tracks) {
+		for (const change of t.muteChanges) {
+			if (change.muted && rng.chance(0.2)) {
+				add(change.at.getTime() - 20, 'RoomService_MutePublishedTrack');
+			}
+		}
+	}
+
+	for (let i = rng.poisson(2); i > 0; i -= 1) {
+		add(rng.int(createdAt, end), 'RoomService_ListParticipants');
+	}
+
+	return calls.sort((a, b) => a.at.getTime() - b.at.getTime());
 }
 
 /** Subscriber-side RTP stats carry no simulcast layers. */

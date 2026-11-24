@@ -2,6 +2,7 @@ import * as z from 'zod';
 
 import { isoDate } from '../api/responses.js';
 import type { RouteRegistry } from '../api/route-registry.js';
+import { deletionJob } from '../deletions/deletion-schemas.js';
 import { healthFactsShape } from '../info/info-routes.js';
 import type { StatusService } from './status-service.js';
 
@@ -20,7 +21,8 @@ export const statusResponse = z
 			batchIntervalMs: count.optional().meta({
 				description: 'Largest batch interval of the nodes seen in the last hour; absent reads as 10 s'
 			})
-		})
+		}),
+		deletion: deletionJob.optional()
 	})
 	.meta({ id: 'StatusResponse', description: 'Writer schema, migration and writer health' });
 

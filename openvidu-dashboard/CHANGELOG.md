@@ -44,6 +44,10 @@ queried) and `Deployment` (running the service). One line per observable change,
   Data tab: the retention and storage of each class of data and of its collections, an estimate of the size of the
   classes that have not reached their retention yet, the migration progress, and the analytics data of versions before
   3.10 with the date until which the server keeps it for a rollback.
+- Deletion of stored analytics data from the Data tab of Settings: one class, every class or the data before 3.10,
+  after a confirmation, as a background job with its progress, a banner on every page and a notice at its end. Data in
+  progress is kept, and each deleted class shows when it was deleted and the space MongoDB keeps free for new data,
+  with how to free that disk space.
 - PRO features appear locked in CE with a short explanation and a link.
 
 #### Data

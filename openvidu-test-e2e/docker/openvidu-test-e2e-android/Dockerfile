@@ -11,7 +11,7 @@
 # Node.js for Appium, taken from the official image so that its version is pinned here. Only
 # its binary and npm are copied, which run on any glibc distribution, so the tag names no
 # Debian release (Dependabot updates the version of a tag, never its suffix)
-FROM node:26.13.0-slim AS node
+FROM node:26.13.1-slim AS node
 
 FROM ubuntu:26.04
 

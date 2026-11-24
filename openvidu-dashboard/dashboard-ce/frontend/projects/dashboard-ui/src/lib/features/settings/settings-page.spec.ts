@@ -5,10 +5,16 @@ import { MatTooltip } from '@angular/material/tooltip';
 import { By } from '@angular/platform-browser';
 import { provideRouter, Router } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
-import type { InfoResponse, InfoRetention, InfoStorageEntry, StatusResponse } from '@openvidu-dashboard/typings';
+import type {
+	DeletionJob,
+	InfoResponse,
+	InfoRetention,
+	InfoStorageEntry,
+	StatusResponse
+} from '@openvidu-dashboard/typings';
 import { describe, expect, it, vi } from 'vitest';
 
-import { infoResponse, settle, signIn, statusResponse } from '../../../testing/fixtures.js';
+import { deletionJob, infoResponse, settle, signIn, statusResponse } from '../../../testing/fixtures.js';
 import { InfoTip } from '../../components/info-tip/info-tip.js';
 import { AuthService } from '../../core/auth/auth.js';
 import { InfoService } from '../../core/info.js';
@@ -18,7 +24,7 @@ import { SessionZoneService } from '../../core/state/session-zone.js';
 import { ToastService } from '../../core/ui/toast.js';
 import { DASHBOARD_ROUTES } from '../../routes.js';
 import { composeRoutes } from '../../routing/compose-routes.js';
-import { migrationLine } from './data-tab.js';
+import { migrationLine, SECOND_READ_MS } from './data-tab.js';
 
 const DAY = 86_400_000;
 const DEFAULT_RETENTION: InfoRetention = {
@@ -68,6 +74,7 @@ function entry(bytes: number, ageMs?: number, documents = 1): InfoStorageEntry {
 		documents,
 		storageBytes: bytes,
 		indexBytes: 0,
+		freeBytes: 0,
 		...(ageMs === undefined ? {} : { oldest: new Date(Date.now() - ageMs).toISOString() })
 	};
 }
@@ -76,8 +83,24 @@ function text(element: Element | null | undefined): string {
 	return (element?.textContent ?? '').replace(/\s+/g, ' ').trim();
 }
 
+/** The text of a cell without its second lines (last deletion, free space). */
+function main(cell: Element | null | undefined): string {
+	if (cell === null || cell === undefined) {
+		return '';
+	}
+
+	const copy = cell.cloneNode(true) as Element;
+
+	copy.querySelectorAll('.sub').forEach((sub) => {
+		sub.remove();
+	});
+
+	return text(copy);
+}
+
+/** The texts of the cells of a row, without the delete column and the second lines. */
 function cells(row: Element | null | undefined): string[] {
-	return [...(row?.querySelectorAll(':scope > th, :scope > td') ?? [])].map((cell) => text(cell));
+	return [...(row?.querySelectorAll(':scope > th, :scope > td:not(.action)') ?? [])].map((cell) => main(cell));
 }
 
 function classRows(element: HTMLElement): HTMLTableRowElement[] {
@@ -89,7 +112,7 @@ function classRows(element: HTMLElement): HTMLTableRowElement[] {
 }
 
 function classRow(element: HTMLElement, label: string): HTMLTableRowElement | undefined {
-	return classRows(element).find((row) => text(row.querySelector('th')) === label);
+	return classRows(element).find((row) => main(row.querySelector('th')) === label);
 }
 
 /** The accessible name and the text of the info tip of a class row; `null` without one. */
@@ -145,6 +168,17 @@ describe('SettingsPage', () => {
 
 		const harness = await RouterTestingHarness.create(path);
 
+		// Opening the Data tab reads the info document again: it answers the same.
+		for (const read of http.match('api/v1/info')) {
+			if (info === null) {
+				read.flush(null, { status: 503, statusText: 'Unavailable' });
+			} else {
+				read.flush(info);
+			}
+		}
+
+		await settle();
+
 		return { harness, http, element: harness.fixture.nativeElement as HTMLElement };
 	}
 
@@ -170,7 +204,7 @@ describe('SettingsPage', () => {
 		reread[0]?.flush(
 			infoResponse({
 				retention: DEFAULT_RETENTION,
-				storage: { rooms: { documents: 4, storageBytes: 36_864, indexBytes: 344_136 } }
+				storage: { rooms: { documents: 4, storageBytes: 36_864, indexBytes: 344_136, freeBytes: 0 } }
 			})
 		);
 		await settle();
@@ -322,12 +356,9 @@ describe('SettingsPage', () => {
 	it('Class rows', async () => {
 		const { element } = await settings('/settings?tab=data', infoResponse({ retention: DEFAULT_RETENTION }));
 
-		expect([...element.querySelectorAll('ovd-data-tab table.classes thead th')].map((cell) => text(cell))).toEqual([
-			'Data',
-			'Retention',
-			'Documents',
-			'Size'
-		]);
+		expect(
+			[...element.querySelectorAll('ovd-data-tab table.classes thead th:not(.action)')].map((cell) => text(cell))
+		).toEqual(['Data', 'Retention', 'Documents', 'Size']);
 		expect(classRows(element).map((row) => cells(row).slice(0, 2).join(' '))).toEqual([
 			'Events 7 days',
 			'Stats 7 days',
@@ -364,9 +395,9 @@ describe('SettingsPage', () => {
 			infoResponse({
 				retention: DEFAULT_RETENTION,
 				storage: {
-					rooms: { documents: 4, storageBytes: 36_864, indexBytes: 344_136 },
-					events: { documents: 285, storageBytes: 65_536, indexBytes: 290_464 },
-					schema_meta: { documents: 4, storageBytes: 20_480, indexBytes: 20_520 }
+					rooms: { documents: 4, storageBytes: 36_864, indexBytes: 344_136, freeBytes: 0 },
+					events: { documents: 285, storageBytes: 65_536, indexBytes: 290_464, freeBytes: 0 },
+					schema_meta: { documents: 4, storageBytes: 20_480, indexBytes: 20_520, freeBytes: 0 }
 				}
 			})
 		);
@@ -474,7 +505,13 @@ describe('SettingsPage', () => {
 		track_stats: entry(1_000),
 		tracks: entry(1_000),
 		track_subscriptions: entry(1_000),
-		rooms: { documents: 1_203, storageBytes: 1_200_000, indexBytes: 270_000, oldest: '2026-09-01T00:00:00Z' },
+		rooms: {
+			documents: 1_203,
+			storageBytes: 1_200_000,
+			indexBytes: 270_000,
+			freeBytes: 0,
+			oldest: '2026-09-01T00:00:00Z'
+		},
 		participants: entry(1_000, DAY),
 		egresses: entry(1_000, DAY),
 		ingresses: entry(1_000, DAY),
@@ -585,14 +622,21 @@ describe('SettingsPage', () => {
 
 	const LEGACY_LABEL = 'Legacy data (before 3.10)';
 	const LEGACY_STORAGE = {
-		rooms: { documents: 4, storageBytes: 36_864, indexBytes: 344_136 },
+		rooms: { documents: 4, storageBytes: 36_864, indexBytes: 344_136, freeBytes: 0 },
 		legacy_events: {
 			documents: 120_000,
 			storageBytes: 30_000_000,
 			indexBytes: 10_000_000,
+			freeBytes: 0,
 			oldest: '2026-10-13T09:25:55Z'
 		},
-		stats: { documents: 300_000, storageBytes: 80_000_000, indexBytes: 10_000_000, oldest: '2026-10-13T09:26:09Z' }
+		stats: {
+			documents: 300_000,
+			storageBytes: 80_000_000,
+			indexBytes: 10_000_000,
+			freeBytes: 0,
+			oldest: '2026-10-13T09:26:09Z'
+		}
 	};
 	/** A date after any read of the test, so that the row keeps the data for rollback. */
 	const RETAINED_UNTIL = new Date(Date.now() + 30 * DAY).toISOString();
@@ -749,5 +793,1030 @@ describe('SettingsPage', () => {
 		await harness.fixture.whenStable();
 		expect(element.querySelector<HTMLInputElement>('ovd-preferences-tab ovd-zone-select input')?.value).toBe('UTC');
 		localStorage.removeItem(PREFERENCES_KEY);
+	});
+
+	describe('deletions', () => {
+		const DISK =
+			'MongoDB keeps the freed disk space for new data of the same collections and does not return it to the system.';
+		const KEPT =
+			'Data of rooms in progress and data that ended in the last 5 minutes are kept. This cannot be undone.';
+		const DOCS_LINK =
+			'https://openvidu.io/latest/docs/self-hosting/production-ready/observability/openvidu-dashboard/#freeing-disk-space';
+		const kept = { state: 'completed', legacyRetainedUntil: RETAINED_UNTIL } as const;
+		/** A completed deletion record: the classes that have one show their free space. */
+		const COMPLETED = {
+			completed: {
+				cutoff: '2026-11-19T10:07:00Z',
+				endedBefore: '2026-11-19T10:02:00Z',
+				finishedAt: '2026-11-19T10:31:12Z'
+			}
+		};
+		const DELETED = { events: COMPLETED, entities: COMPLETED };
+
+		const job = deletionJob;
+
+		/** The Data tab after the info document and the first status. */
+		async function dataTab(info: Partial<InfoResponse> = {}, status: Partial<StatusResponse> = {}) {
+			const opened = await settings(
+				'/settings?tab=data',
+				infoResponse({ retention: DEFAULT_RETENTION, storage: LEGACY_STORAGE, ...info })
+			);
+
+			opened.http.expectOne('api/v1/status').flush(statusResponse(status));
+			TestBed.inject(SessionZoneService).set('UTC');
+			await opened.harness.fixture.whenStable();
+
+			return opened;
+		}
+
+		function deleteButton(element: HTMLElement, name: string): HTMLButtonElement {
+			const button = element.querySelector<HTMLButtonElement>(`ovd-data-tab button[aria-label="${name}"]`);
+
+			if (button === null) {
+				throw new Error(`no button ${name}`);
+			}
+
+			return button;
+		}
+
+		function deleteButtons(element: HTMLElement): HTMLButtonElement[] {
+			return [...element.querySelectorAll<HTMLButtonElement>('ovd-data-tab td.action button')];
+		}
+
+		function tooltipOf(harness: RouterTestingHarness, button: HTMLElement): string | undefined {
+			return harness.routeDebugElement
+				?.queryAll(By.directive(MatTooltip))
+				.find((candidate) => candidate.nativeElement === button)
+				?.injector.get(MatTooltip).message;
+		}
+
+		function dialog(): HTMLElement | null {
+			return document.querySelector<HTMLElement>('mat-dialog-container');
+		}
+
+		async function open(harness: RouterTestingHarness, element: HTMLElement, name: string): Promise<HTMLElement> {
+			deleteButton(element, name).click();
+			await settle();
+			await harness.fixture.whenStable();
+
+			const opened = dialog();
+
+			if (opened === null) {
+				throw new Error(`${name} opened no dialog`);
+			}
+
+			return opened;
+		}
+
+		async function cancel(harness: RouterTestingHarness): Promise<void> {
+			dialog()?.querySelector<HTMLButtonElement>('.ovd-confirm-cancel')?.click();
+			await settle();
+			await harness.fixture.whenStable();
+		}
+
+		async function confirmDialog(harness: RouterTestingHarness): Promise<void> {
+			dialog()?.querySelector<HTMLButtonElement>('.confirm')?.click();
+			await settle();
+			await harness.fixture.whenStable();
+		}
+
+		function paragraphs(opened: HTMLElement): string[] {
+			return [...opened.querySelectorAll('mat-dialog-content p')].map((paragraph) => text(paragraph));
+		}
+
+		it('Buttons of the table', async () => {
+			const { element } = await dataTab({ migration: kept }, { migration: kept });
+
+			expect(deleteButtons(element).map((button) => button.getAttribute('aria-label'))).toEqual([
+				'Delete Events',
+				'Delete Stats',
+				'Delete Tracks and subscriptions',
+				'Delete Entities',
+				'Delete 5-minute rollups',
+				'Delete Hourly rollups',
+				'Delete Daily rollups',
+				'Delete Legacy data (before 3.10)',
+				'Delete all analytics data'
+			]);
+			expect(text(element.querySelector('ovd-data-tab thead th.action'))).toBe('Delete');
+		});
+
+		it('Legacy row without a button', async () => {
+			for (const migration of [
+				{ state: 'running', progress: { processed: 1, total: 4 } },
+				{ state: 'completed', legacyRetainedUntil: new Date(Date.now() - DAY).toISOString() },
+				{ state: 'none' }
+			] as const) {
+				TestBed.resetTestingModule();
+
+				const { element } = await dataTab({ migration }, { migration });
+				const row = classRow(element, LEGACY_LABEL);
+
+				expect(row, migration.state).toBeDefined();
+				expect(row?.querySelector('td.action button'), migration.state).toBeNull();
+				expect(deleteButtons(element)).toHaveLength(8);
+			}
+		});
+
+		it('Buttons while a deletion runs', async () => {
+			const { harness, element } = await dataTab(
+				{},
+				{ deletion: job({ class: 'stats', currentClass: 'stats' }) }
+			);
+			const events = deleteButton(element, 'Delete Events');
+
+			events.focus();
+			expect(document.activeElement).toBe(events);
+			expect(events.getAttribute('aria-disabled')).toBe('true');
+			expect(tooltipOf(harness, events)).toBe('A deletion is running');
+
+			events.click();
+			await settle();
+			expect(dialog()).toBeNull();
+		});
+
+		it('Buttons while the migration runs', async () => {
+			const running = { state: 'running', progress: { processed: 1, total: 4 } } as const;
+			const { harness, element } = await dataTab({ migration: running }, { migration: running });
+
+			for (const button of deleteButtons(element)) {
+				expect(button.getAttribute('aria-disabled')).toBe('true');
+				expect(tooltipOf(harness, button)).toBe('Available once the migration ends');
+			}
+		});
+
+		it('Empty class deletable', async () => {
+			const { harness, element } = await dataTab({
+				storage: { track_stats: { documents: 0, storageBytes: 4_096, indexBytes: 4_096, freeBytes: 0 } }
+			});
+			const stats = deleteButton(element, 'Delete Stats');
+
+			expect(stats.getAttribute('aria-disabled')).not.toBe('true');
+			expect(tooltipOf(harness, stats)).toBe('Delete Stats');
+		});
+
+		it('Events dialog', async () => {
+			const { harness, element } = await dataTab();
+			const opened = await open(harness, element, 'Delete Events');
+			const link = opened.querySelector<HTMLAnchorElement>('ovd-external-link a');
+
+			expect(text(opened.querySelector('h2'))).toBe('Delete events?');
+			expect(paragraphs(opened).slice(0, 2)).toEqual([
+				'Deletes the stored events of rooms, participant sessions, egresses and ingresses that have ended. Their records stay, but their event timelines become empty.',
+				`${KEPT} ${DISK}`
+			]);
+			expect(text(link)).toContain('How to free disk space');
+			expect(link?.getAttribute('href')).toBe(DOCS_LINK);
+			expect(link?.getAttribute('target')).toBe('_blank');
+			expect([...opened.querySelectorAll('mat-dialog-actions button')].map((button) => text(button))).toEqual([
+				'Cancel',
+				'Delete'
+			]);
+			await cancel(harness);
+		});
+
+		it.each([
+			[
+				'Stats dialog',
+				'Delete Stats',
+				'Delete stats?',
+				'Deletes the media statistics (quality, bitrate, packet loss) of sessions and tracks that have ended. Their charts become empty; Analytics keeps its figures.',
+				`${KEPT} ${DISK}`
+			],
+			[
+				'Tracks dialog',
+				'Delete Tracks and subscriptions',
+				'Delete tracks and subscriptions?',
+				'Deletes the published tracks and subscriptions that have ended, with the statistics stored per track. Statistics stored per participant are kept.',
+				`${KEPT} ${DISK}`
+			],
+			[
+				'Entities dialog',
+				'Delete Entities',
+				'Delete entities?',
+				'Deletes rooms, participant sessions, egresses and ingress sessions that have ended, with their events, stats, tracks and subscriptions. Ingresses that are not deleted and media node records are kept; Analytics keeps its figures.',
+				`${KEPT} ${DISK}`
+			],
+			[
+				'5-minute rollups dialog',
+				'Delete 5-minute rollups',
+				'Delete 5-minute rollups?',
+				'Deletes the 5-minute rollups before the previous 5 minutes. Analytics charts of ranges up to one day become empty for that time.',
+				`This cannot be undone. ${DISK}`
+			],
+			[
+				'Hourly rollups dialog',
+				'Delete Hourly rollups',
+				'Delete hourly rollups?',
+				'Deletes the hourly rollups before the previous hour. Overview figures of today, list summaries and Analytics of ranges up to 90 days become empty for that time.',
+				`This cannot be undone. ${DISK}`
+			],
+			[
+				'Daily rollups dialog',
+				'Delete Daily rollups',
+				'Delete daily rollups?',
+				'Deletes the daily rollups before yesterday. Analytics of ranges over 90 days and unique identities become empty for that time.',
+				`This cannot be undone. ${DISK}`
+			]
+		])('%s', async (_scenario, name, title, lead, rest) => {
+			const { harness, element } = await dataTab();
+			const opened = await open(harness, element, name);
+
+			expect(text(opened.querySelector('h2'))).toBe(title);
+			expect(paragraphs(opened).slice(0, 2)).toEqual([lead, rest]);
+			expect(opened.querySelector('ovd-external-link a')?.getAttribute('href')).toBe(DOCS_LINK);
+			await cancel(harness);
+		});
+
+		it('Total dialog', async () => {
+			const { harness, element } = await dataTab({ storage: {} });
+			const opened = await open(harness, element, 'Delete all analytics data');
+
+			expect(text(opened.querySelector('h2'))).toBe('Delete all analytics data?');
+			expect(paragraphs(opened).slice(0, 2)).toEqual([
+				'Deletes events, stats, tracks and subscriptions, entities and the 5-minute, hourly and daily rollups: Analytics loses its history.',
+				`Data of rooms in progress, data that ended in the last 5 minutes, the latest rollups, ingresses that are not deleted and media node records are kept. This cannot be undone. ${DISK}`
+			]);
+			expect(opened.querySelector('ovd-external-link a')?.getAttribute('href')).toBe(DOCS_LINK);
+			expect(opened.querySelector('mat-checkbox')).toBeNull();
+			await cancel(harness);
+		});
+
+		it('Total with the legacy checkbox', async () => {
+			const { harness, http, element } = await dataTab({ migration: kept }, { migration: kept });
+			const opened = await open(harness, element, 'Delete all analytics data');
+			const checkbox = opened.querySelector<HTMLInputElement>('mat-checkbox input');
+			const note =
+				'The data before 3.10 is dropped and its disk space freed at once. A rollback to 3.9 will find no analytics data.';
+
+			expect(text(opened.querySelector('mat-checkbox'))).toBe('Also delete the data before 3.10');
+			expect(checkbox?.checked).toBe(false);
+			expect(opened.textContent).not.toContain(note);
+
+			checkbox?.click();
+			await harness.fixture.whenStable();
+			expect(text(opened)).toContain(note);
+
+			await confirmDialog(harness);
+
+			const request = http.expectOne('api/v1/deletions');
+
+			expect(request.request.body).toEqual({ class: 'all', includeLegacy: true });
+			request.flush(job({ class: 'all', includeLegacy: true }), { status: 202, statusText: 'Accepted' });
+		});
+
+		it('Total with the checkbox left unchecked', async () => {
+			const { harness, http, element } = await dataTab({ migration: kept }, { migration: kept });
+
+			await open(harness, element, 'Delete all analytics data');
+			await confirmDialog(harness);
+
+			const request = http.expectOne('api/v1/deletions');
+
+			expect(request.request.body).toEqual({ class: 'all' });
+			request.flush(job({ class: 'all' }), { status: 202, statusText: 'Accepted' });
+		});
+
+		it('Legacy dialog', async () => {
+			const { harness, http, element } = await dataTab({ migration: kept }, { migration: kept });
+			const opened = await open(harness, element, 'Delete Legacy data (before 3.10)');
+
+			expect(text(opened.querySelector('h2'))).toBe('Delete data before 3.10?');
+			expect(paragraphs(opened)).toEqual([
+				'Deletes the analytics data of OpenVidu before 3.10. Its disk space is freed at once. A rollback to 3.9 will find no analytics data. This cannot be undone.'
+			]);
+			expect(opened.querySelector('ovd-external-link')).toBeNull();
+
+			await confirmDialog(harness);
+			expect(http.expectOne('api/v1/deletions').request.body).toEqual({ class: 'legacy' });
+		});
+
+		it('Deletion confirmed', async () => {
+			const { harness, http, element } = await dataTab();
+
+			await open(harness, element, 'Delete Events');
+			await confirmDialog(harness);
+			expect(dialog()).toBeNull();
+
+			http.expectOne('api/v1/deletions').flush(job(), { status: 202, statusText: 'Accepted' });
+			await settle();
+			http.expectOne('api/v1/status').flush(statusResponse({ deletion: job({ deleted: 5_000 }) }));
+			await settle();
+			await harness.fixture.whenStable();
+
+			expect(vi.mocked(TestBed.inject(ToastService)).show.mock.calls).toEqual([]);
+			expect(text(element.querySelector('ovd-data-tab section.deletion p'))).toBe(
+				'Deleting Events: 5,000 documents deleted · collection 1 of 1'
+			);
+		});
+
+		it('Deletion refused', async () => {
+			const { harness, http, element } = await dataTab();
+
+			await open(harness, element, 'Delete Stats');
+			await confirmDialog(harness);
+			http.expectOne('api/v1/deletions').flush(
+				{ error: { code: 'CONFLICT', message: 'A deletion is already running', details: { job: job() } } },
+				{ status: 409, statusText: 'Conflict' }
+			);
+			await settle();
+			http.expectOne('api/v1/status').flush(statusResponse({ deletion: job() }));
+			await settle();
+			await harness.fixture.whenStable();
+
+			expect(text(element.querySelector('ovd-data-tab ovd-notice.deletion-notice'))).toBe(
+				'A deletion is already running'
+			);
+			expect(deleteButtons(element).every((button) => button.getAttribute('aria-disabled') === 'true')).toBe(
+				true
+			);
+		});
+
+		it('Deletion not started', async () => {
+			const { harness, http, element } = await dataTab();
+			const notice = () => text(element.querySelector('ovd-data-tab ovd-notice.deletion-notice'));
+
+			await open(harness, element, 'Delete Events');
+			await confirmDialog(harness);
+			http.expectOne('api/v1/deletions').flush(
+				{ error: { code: 'INTERNAL_ERROR', message: 'Internal server error' } },
+				{ status: 500, statusText: 'Server Error', headers: { 'X-Request-Id': 'caddy-7f3a' } }
+			);
+			await settle();
+			http.expectOne('api/v1/status').flush(statusResponse());
+			await settle();
+			await harness.fixture.whenStable();
+
+			expect(notice()).toBe(
+				'The deletion did not start: Something went wrong while loading the data. Request caddy-7f3a'
+			);
+			expect(vi.mocked(TestBed.inject(ToastService)).show.mock.calls).toEqual([]);
+
+			await open(harness, element, 'Delete Events');
+			await confirmDialog(harness);
+			// The next request clears the notice of the previous one.
+			expect(element.querySelector('ovd-data-tab ovd-notice.deletion-notice')).toBeNull();
+			http.expectOne('api/v1/deletions').error(new ProgressEvent('error'), {
+				status: 0,
+				statusText: 'Unknown Error'
+			});
+			await settle();
+			http.expectOne('api/v1/status').flush(statusResponse());
+			await settle();
+			await harness.fixture.whenStable();
+
+			expect(notice()).toBe('The deletion did not start: The server is unreachable.');
+
+			element.querySelector<HTMLButtonElement>('ovd-data-tab ovd-notice.deletion-notice button')?.click();
+			await harness.fixture.whenStable();
+			expect(element.querySelector('ovd-data-tab ovd-notice.deletion-notice')).toBeNull();
+		});
+
+		it('Deletion cancelled in the dialog', async () => {
+			const { harness, http, element } = await dataTab();
+
+			await open(harness, element, 'Delete Entities');
+			await cancel(harness);
+			expect(dialog()).toBeNull();
+
+			const opened = await open(harness, element, 'Delete Entities');
+			const escape = new KeyboardEvent('keydown', { key: 'Escape', bubbles: true });
+
+			Object.defineProperty(escape, 'keyCode', { value: 27 });
+			opened.dispatchEvent(escape);
+			await settle();
+			await harness.fixture.whenStable();
+
+			expect(dialog()).toBeNull();
+			http.expectNone('api/v1/deletions');
+		});
+
+		it('Progress of an Entities deletion', async () => {
+			const { element } = await dataTab(
+				{},
+				{
+					deletion: job({
+						class: 'entities',
+						currentClass: 'entities',
+						deleted: 1_234_000,
+						collection: { index: 2, total: 9 }
+					})
+				}
+			);
+			const section = element.querySelector('ovd-data-tab section.deletion');
+
+			expect(text(section?.querySelector('h2'))).toBe('Deleting analytics data');
+			const spinner = section?.querySelector('p mat-progress-spinner');
+
+			expect(section?.querySelector('mat-progress-bar')).toBeNull();
+			expect(spinner?.getAttribute('role')).toBe('progressbar');
+			expect(spinner?.getAttribute('aria-label')).toBe('Deletion progress');
+			expect(spinner?.getAttribute('mode')).toBe('indeterminate');
+			expect(text(section?.querySelector('p'))).toBe(
+				'Deleting Entities: 1,234,000 documents deleted · collection 2 of 9'
+			);
+			// The spinner comes before the line, beside it.
+			expect(section?.querySelector('p')?.firstElementChild?.tagName).toBe('MAT-PROGRESS-SPINNER');
+		});
+
+		it('Progress follows the status', async () => {
+			const { harness, http, element } = await dataTab(
+				{},
+				{
+					deletion: job({
+						class: 'all',
+						currentClass: 'events',
+						deleted: 100,
+						collection: { index: 1, total: 17 }
+					})
+				}
+			);
+			const line = () => text(element.querySelector('ovd-data-tab section.deletion p'));
+
+			expect(line()).toBe('Deleting Events: 100 documents deleted · collection 1 of 17');
+
+			await loadStatus(
+				http,
+				statusResponse({
+					deletion: job({
+						class: 'all',
+						currentClass: 'stats',
+						deleted: 9_100,
+						collection: { index: 2, total: 17 }
+					})
+				})
+			);
+			await harness.fixture.whenStable();
+			expect(line()).toBe('Deleting Stats: 9,100 documents deleted · collection 2 of 17');
+			expect(element.querySelector('ovd-data-tab section.deletion mat-progress-spinner')).not.toBeNull();
+		});
+
+		it('Deletion completed while watching', async () => {
+			const { harness, http, element } = await dataTab({}, { deletion: job({ deleted: 1_000_000 }) });
+
+			await loadStatus(http, statusResponse({ deletion: job({ state: 'completed', deleted: 1_250_312 }) }));
+			await harness.fixture.whenStable();
+
+			expect(vi.mocked(TestBed.inject(ToastService)).show.mock.calls).toEqual([
+				['Events deleted: 1,250,312 documents']
+			]);
+
+			const reread = http.match('api/v1/info');
+
+			expect(reread).toHaveLength(1);
+			reread[0]?.flush(
+				infoResponse({
+					retention: DEFAULT_RETENTION,
+					storage: { events: { documents: 12, storageBytes: 2_000_000, indexBytes: 0, freeBytes: 1_500_000 } }
+				})
+			);
+			await settle();
+			await harness.fixture.whenStable();
+			expect(cells(classRow(element, 'Events')).slice(2)).toEqual(['12', '2 MB']);
+			expect(element.querySelector('ovd-data-tab section.deletion')).toBeNull();
+		});
+
+		it('No completion toast on Preferences', async () => {
+			const { harness, http } = await settings(
+				'/settings?tab=preferences',
+				infoResponse({ retention: DEFAULT_RETENTION })
+			);
+			const toasts = vi.mocked(TestBed.inject(ToastService));
+
+			http.expectOne('api/v1/status').flush(statusResponse({ deletion: job() }));
+			await harness.fixture.whenStable();
+			await loadStatus(http, statusResponse({ deletion: job({ state: 'completed', deleted: 10 }) }));
+			await harness.fixture.whenStable();
+
+			expect(toasts.show.mock.calls).toEqual([]);
+		});
+
+		it('No completion toast on Preferences: Data left for Preferences before the end', async () => {
+			const { harness, http } = await dataTab({}, { deletion: job() });
+			const toasts = vi.mocked(TestBed.inject(ToastService));
+
+			await harness.navigateByUrl('/settings?tab=preferences');
+			await harness.fixture.whenStable();
+			await loadStatus(http, statusResponse({ deletion: job({ state: 'completed', deleted: 10 }) }));
+			await harness.fixture.whenStable();
+
+			expect(toasts.show.mock.calls).toEqual([]);
+		});
+
+		it('Interrupted deletion notice', async () => {
+			const today = new Date().toISOString().slice(0, 10);
+			const interrupted = job({ state: 'interrupted', finishedAt: `${today}T10:20:00.000Z`, deleted: 400_000 });
+			const expected =
+				'Deleting Events was interrupted at 10:20: the dashboard stopped while running it. 400,000 documents were deleted. Start it again to finish.';
+
+			for (let load = 0; load < 2; load++) {
+				TestBed.resetTestingModule();
+
+				const { element } = await dataTab({}, { deletion: interrupted });
+
+				expect(text(element.querySelector('ovd-data-tab ovd-notice.deletion-notice'))).toBe(expected);
+				expect(element.querySelector('ovd-data-tab ovd-notice.deletion-notice button')).toBeNull();
+			}
+		});
+
+		it('Interrupted deletion notice: a job of another day names its date', async () => {
+			const { element } = await dataTab(
+				{},
+				{ deletion: job({ state: 'interrupted', finishedAt: '2026-11-18T10:20:00.000Z', deleted: 1 }) }
+			);
+
+			expect(text(element.querySelector('ovd-data-tab ovd-notice.deletion-notice'))).toBe(
+				'Deleting Events was interrupted at 2026-11-18 10:20: the dashboard stopped while running it. 1 document was deleted. Start it again to finish.'
+			);
+		});
+
+		it('Failed deletion notice', async () => {
+			const today = new Date().toISOString().slice(0, 10);
+			const { element } = await dataTab(
+				{},
+				{
+					deletion: job({
+						class: 'all',
+						state: 'failed',
+						finishedAt: `${today}T10:20:00.000Z`,
+						error: 'The database user cannot delete data'
+					})
+				}
+			);
+
+			expect(text(element.querySelector('ovd-data-tab ovd-notice.deletion-notice'))).toBe(
+				'Deleting all analytics data failed at 10:20: The database user cannot delete data. 0 documents were deleted. Start it again to finish.'
+			);
+		});
+
+		it('Class deleted', async () => {
+			const { element } = await dataTab({
+				deletions: {
+					events: {
+						completed: {
+							cutoff: '2026-11-19T10:07:00Z',
+							endedBefore: '2026-11-19T10:02:00Z',
+							finishedAt: '2026-11-19T10:31:12Z'
+						}
+					}
+				}
+			});
+			const line = classRow(element, 'Events')?.querySelector('th .sub');
+
+			expect(text(line)).toBe('Deleted 2026-11-19 10:31');
+			expect(line?.classList.contains('incomplete')).toBe(false);
+		});
+
+		it('Class left incomplete', async () => {
+			const { element } = await dataTab({
+				deletions: { entities: { incomplete: { state: 'interrupted', at: '2026-11-19T10:20:00Z' } } }
+			});
+			const line = classRow(element, 'Entities')?.querySelector('th .sub');
+
+			expect(text(line)).toBe('Deletion interrupted 2026-11-19 10:20 (incomplete)');
+			expect(line?.classList.contains('incomplete')).toBe(true);
+			expect(element.querySelector('ovd-data-tab tfoot th .sub')).toBeNull();
+			expect(classRow(element, LEGACY_LABEL)?.querySelector('th .sub')).toBeNull();
+		});
+
+		it('Free space after a deletion', async () => {
+			const { element } = await dataTab({
+				deletions: { events: COMPLETED },
+				storage: {
+					events: {
+						documents: 1_200,
+						storageBytes: 1_500_000_000,
+						indexBytes: 500_000_000,
+						freeBytes: 1_800_000_000
+					},
+					rooms: { documents: 4, storageBytes: 36_864, indexBytes: 344_136, freeBytes: 200_000_000 }
+				}
+			});
+			const events = classRow(element, 'Events');
+
+			expect(cells(events).slice(2)).toEqual(['1,200', '2 GB']);
+			expect(text(events?.querySelector('td:nth-child(4) .sub'))).toBe('1.8 GB free for new data');
+			expect(text(element.querySelector('ovd-data-tab tfoot .sub'))).toBe('1.8 GB free for new data');
+		});
+
+		it('Free space tip of a class', async () => {
+			const { harness, element } = await dataTab({
+				deletions: { events: COMPLETED },
+				storage: {
+					events: {
+						documents: 1_200,
+						storageBytes: 1_500_000_000,
+						indexBytes: 500_000_000,
+						freeBytes: 1_800_000_000
+					}
+				}
+			});
+			const icon = classRow(element, 'Events')?.querySelector<HTMLButtonElement>(
+				'td:nth-child(4) .sub ovd-info-tip button'
+			);
+
+			expect(icon?.getAttribute('aria-label')).toBe('About free space of Events');
+			icon?.click();
+			await settle();
+			await harness.fixture.whenStable();
+
+			const panel = document.querySelector('.link-tip');
+			const link = panel?.querySelector('a');
+
+			expect(icon?.getAttribute('aria-expanded')).toBe('true');
+			expect(text(panel).replace('(opens in a new tab)', '').replace(/\s+\./, '.')).toBe(
+				'MongoDB reuses this space for new data. The rest of the space the deleted data used stays reserved until the collection is compacted; see Freeing disk space.'
+			);
+			expect(text(link)).toContain('Freeing disk space');
+			expect(link?.getAttribute('href')).toBe(DOCS_LINK);
+			expect(link?.getAttribute('target')).toBe('_blank');
+		});
+
+		it('Free space tip of the Total', async () => {
+			const { element } = await dataTab({
+				deletions: { events: COMPLETED },
+				storage: {
+					events: {
+						documents: 1_200,
+						storageBytes: 1_500_000_000,
+						indexBytes: 500_000_000,
+						freeBytes: 1_800_000_000
+					}
+				}
+			});
+
+			expect(
+				element.querySelector('ovd-data-tab tfoot .sub ovd-info-tip button')?.getAttribute('aria-label')
+			).toBe('About free space');
+		});
+
+		it('Data tab opened', async () => {
+			const { harness, http } = await settings('/overview', infoResponse({ retention: DEFAULT_RETENTION }));
+			const reads = async (url: string) => {
+				await harness.navigateByUrl(url);
+
+				// The tab group renders the selected tab's content once the switch has settled.
+				for (let wait = 0; wait < 3; wait++) {
+					await harness.fixture.whenStable();
+					await settle();
+				}
+
+				const requests = http.match('api/v1/info');
+
+				for (const request of requests) {
+					request.flush(infoResponse({ retention: DEFAULT_RETENTION }));
+				}
+
+				await settle();
+
+				return requests.length;
+			};
+
+			expect(await reads('/settings?tab=data')).toBe(1);
+			expect(await reads('/settings?tab=preferences')).toBe(0);
+			expect(await reads('/settings?tab=data')).toBe(1);
+		});
+
+		/** Fakes the timers, answers a status reporting the Events deletion completed and the shell's read after it. */
+		async function completeWithFakeTimers(
+			harness: RouterTestingHarness,
+			http: HttpTestingController
+		): Promise<void> {
+			vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+
+			const load = TestBed.inject(ServerStatusService).load();
+
+			http.expectOne('api/v1/status').flush(
+				statusResponse({ deletion: job({ state: 'completed', deleted: 10 }) })
+			);
+			await load;
+			await vi.advanceTimersByTimeAsync(0);
+			await harness.fixture.whenStable();
+
+			const reread = http.match('api/v1/info');
+
+			expect(reread).toHaveLength(1);
+			reread[0]?.flush(
+				infoResponse({
+					retention: DEFAULT_RETENTION,
+					deletions: DELETED,
+					storage: { events: freeEvents(1_000_000) }
+				})
+			);
+			await vi.advanceTimersByTimeAsync(0);
+		}
+
+		function freeEvents(freeBytes: number): InfoStorageEntry {
+			return { documents: 12, storageBytes: 30_000_000, indexBytes: 0, freeBytes };
+		}
+
+		it('Second read after a deletion', async () => {
+			const { harness, http, element } = await dataTab({}, { deletion: job() });
+
+			try {
+				await completeWithFakeTimers(harness, http);
+				await vi.advanceTimersByTimeAsync(SECOND_READ_MS - 1);
+				http.match('api/v1/status').forEach((request) => {
+					request.flush(statusResponse({ deletion: job({ state: 'completed', deleted: 10 }) }));
+				});
+				http.expectNone('api/v1/info');
+
+				await vi.advanceTimersByTimeAsync(1);
+				http.expectOne('api/v1/info').flush(
+					infoResponse({
+						retention: DEFAULT_RETENTION,
+						deletions: DELETED,
+						storage: { events: freeEvents(16_000_000) }
+					})
+				);
+				await vi.advanceTimersByTimeAsync(0);
+				await harness.fixture.whenStable();
+
+				expect(text(classRow(element, 'Events')?.querySelector('td:nth-child(4) .sub'))).toBe(
+					'16 MB free for new data'
+				);
+			} finally {
+				vi.useRealTimers();
+			}
+		});
+
+		it('Second read after a deletion: closing the tab cancels it', async () => {
+			const { harness, http } = await dataTab({}, { deletion: job() });
+
+			try {
+				await completeWithFakeTimers(harness, http);
+				await harness.navigateByUrl('/settings?tab=preferences');
+				await vi.advanceTimersByTimeAsync(SECOND_READ_MS);
+				http.match('api/v1/status').forEach((request) => {
+					request.flush(statusResponse({ deletion: job({ state: 'completed', deleted: 10 }) }));
+				});
+				http.expectNone('api/v1/info');
+			} finally {
+				vi.useRealTimers();
+			}
+		});
+
+		it('No further reads', async () => {
+			const { harness, http } = await dataTab({}, { deletion: job() });
+			const completed = statusResponse({ deletion: job({ state: 'completed', deleted: 10 }) });
+
+			try {
+				await completeWithFakeTimers(harness, http);
+				await vi.advanceTimersByTimeAsync(SECOND_READ_MS);
+				http.match('api/v1/status').forEach((request) => {
+					request.flush(completed);
+				});
+				http.expectOne('api/v1/info').flush(infoResponse({ retention: DEFAULT_RETENTION }));
+
+				for (let tick = 0; tick < 20; tick++) {
+					await vi.advanceTimersByTimeAsync(30_000);
+					http.match('api/v1/status').forEach((request) => {
+						request.flush(completed);
+					});
+				}
+
+				http.expectNone('api/v1/info');
+			} finally {
+				vi.useRealTimers();
+			}
+		});
+
+		const PENDING = 'Free space updates in about a minute';
+		const pendingStorage = {
+			events: freeEvents(2_000_000),
+			rooms: { documents: 4, storageBytes: 36_864, indexBytes: 344_136, freeBytes: 3_000_000 }
+		};
+		const freeLine = (element: HTMLElement, label: string) =>
+			text(classRow(element, label)?.querySelector('td:nth-child(4) .sub'));
+		const totalLine = (element: HTMLElement) => text(element.querySelector('ovd-data-tab tfoot .sub'));
+
+		/** Answers a status reporting `completed` and the shell's read after it, with `storage`. */
+		async function reportCompleted(
+			harness: RouterTestingHarness,
+			http: HttpTestingController,
+			completed: DeletionJob,
+			storage: InfoResponse['storage']
+		): Promise<void> {
+			await loadStatus(http, statusResponse({ deletion: completed }));
+			await harness.fixture.whenStable();
+			http.match('api/v1/info').forEach((request) => {
+				request.flush(infoResponse({ retention: DEFAULT_RETENTION, deletions: DELETED, storage }));
+			});
+			await settle();
+			await harness.fixture.whenStable();
+		}
+
+		it('Free space pending after an Events deletion', async () => {
+			const { harness, http, element } = await dataTab(
+				{ deletions: DELETED, storage: pendingStorage },
+				{ deletion: job() }
+			);
+
+			expect(freeLine(element, 'Events')).toBe('2 MB free for new data');
+			await reportCompleted(harness, http, job({ state: 'completed', deleted: 10 }), pendingStorage);
+
+			expect(freeLine(element, 'Events')).toBe(PENDING);
+			expect(totalLine(element)).toBe(PENDING);
+			expect(classRow(element, 'Events')?.querySelector('td:nth-child(4) ovd-info-tip')).toBeNull();
+			expect(freeLine(element, 'Entities')).toBe('3 MB free for new data');
+		});
+
+		it('Free space after the second read', async () => {
+			const { harness, http, element } = await dataTab(
+				{ deletions: DELETED, storage: pendingStorage },
+				{ deletion: job() }
+			);
+
+			try {
+				await completeWithFakeTimers(harness, http);
+				await harness.fixture.whenStable();
+				expect(freeLine(element, 'Events')).toBe(PENDING);
+
+				await vi.advanceTimersByTimeAsync(SECOND_READ_MS);
+				http.match('api/v1/status').forEach((request) => {
+					request.flush(statusResponse({ deletion: job({ state: 'completed', deleted: 10 }) }));
+				});
+				http.expectOne('api/v1/info').flush(
+					infoResponse({
+						retention: DEFAULT_RETENTION,
+						deletions: DELETED,
+						storage: { events: freeEvents(17_200_000) }
+					})
+				);
+				await vi.advanceTimersByTimeAsync(0);
+				await harness.fixture.whenStable();
+
+				expect(freeLine(element, 'Events')).toBe('17.2 MB free for new data');
+				expect(totalLine(element)).toBe('17.2 MB free for new data');
+				expect(element.querySelector('ovd-data-tab')?.textContent).not.toContain(PENDING);
+			} finally {
+				vi.useRealTimers();
+			}
+		});
+
+		it('Free space pending after a Total deletion', async () => {
+			const { harness, http, element } = await dataTab({ storage: {} }, { deletion: job({ class: 'all' }) });
+
+			await reportCompleted(harness, http, job({ class: 'all', state: 'completed', deleted: 10 }), {});
+
+			const classes = [
+				'Events',
+				'Stats',
+				'Tracks and subscriptions',
+				'Entities',
+				'5-minute rollups',
+				'Hourly rollups',
+				'Daily rollups'
+			];
+
+			expect(classes.map((label) => freeLine(element, label))).toEqual(classes.map(() => PENDING));
+			expect(totalLine(element)).toBe(PENDING);
+		});
+
+		it('Free space pending after a Total deletion: a Legacy deletion completes no class and shows none', async () => {
+			const { harness, http, element } = await dataTab(
+				{ deletions: DELETED, storage: pendingStorage },
+				{ deletion: job({ class: 'legacy', currentClass: 'legacy' }) }
+			);
+
+			await reportCompleted(
+				harness,
+				http,
+				job({ class: 'legacy', currentClass: 'legacy', state: 'completed', deleted: 5 }),
+				pendingStorage
+			);
+
+			expect(element.querySelector('ovd-data-tab')?.textContent).not.toContain(PENDING);
+		});
+
+		it('Free space pending dropped on return', async () => {
+			const { harness, http, element } = await dataTab(
+				{ deletions: DELETED, storage: pendingStorage },
+				{ deletion: job() }
+			);
+
+			await reportCompleted(harness, http, job({ state: 'completed', deleted: 10 }), pendingStorage);
+			expect(freeLine(element, 'Events')).toBe(PENDING);
+
+			await harness.navigateByUrl('/settings?tab=preferences');
+			await harness.fixture.whenStable();
+			await harness.navigateByUrl('/settings?tab=data');
+
+			for (let wait = 0; wait < 3; wait++) {
+				await harness.fixture.whenStable();
+				await settle();
+			}
+
+			http.expectOne('api/v1/info').flush(
+				infoResponse({
+					retention: DEFAULT_RETENTION,
+					deletions: DELETED,
+					storage: { events: freeEvents(5_000_000) }
+				})
+			);
+			await settle();
+			await harness.fixture.whenStable();
+
+			expect(element.querySelector('ovd-data-tab')?.textContent).not.toContain(PENDING);
+			expect(freeLine(element, 'Events')).toBe('5 MB free for new data');
+		});
+
+		it('No pending notice after a reload', async () => {
+			const completed = job({ state: 'completed', deleted: 10, finishedAt: '2026-11-19T08:31:12.000Z' });
+			const { harness, http, element } = await settings(
+				'/settings?tab=data',
+				infoResponse({ retention: DEFAULT_RETENTION, deletions: DELETED, storage: pendingStorage })
+			);
+
+			try {
+				vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+				http.expectOne('api/v1/status').flush(statusResponse({ deletion: completed }));
+				await vi.advanceTimersByTimeAsync(0);
+				await harness.fixture.whenStable();
+
+				expect(element.querySelector('ovd-data-tab')?.textContent).not.toContain(PENDING);
+				expect(freeLine(element, 'Events')).toBe('2 MB free for new data');
+				http.expectNone('api/v1/info');
+
+				await vi.advanceTimersByTimeAsync(SECOND_READ_MS);
+				http.match('api/v1/status').forEach((request) => {
+					request.flush(statusResponse({ deletion: completed }));
+				});
+				http.expectNone('api/v1/info');
+			} finally {
+				vi.useRealTimers();
+			}
+		});
+
+		it('No free line before any deletion', async () => {
+			const { element } = await dataTab({
+				deletions: {},
+				storage: { events: freeEvents(14_100_000), track_stats: { ...freeEvents(40_000_000) } }
+			});
+
+			expect(element.querySelector('ovd-data-tab tbody .sub')).toBeNull();
+			expect(element.querySelector('ovd-data-tab tfoot .sub')).toBeNull();
+		});
+
+		it('Total sums the rows with a free line', async () => {
+			const { element } = await dataTab({
+				deletions: { events: COMPLETED },
+				storage: {
+					events: {
+						documents: 1_200,
+						storageBytes: 1_500_000_000,
+						indexBytes: 500_000_000,
+						freeBytes: 1_800_000_000
+					},
+					track_stats: freeEvents(40_000_000)
+				}
+			});
+
+			expect(freeLine(element, 'Stats')).toBe('');
+			expect(totalLine(element)).toBe('1.8 GB free for new data');
+		});
+
+		it('Free line after an incomplete deletion', async () => {
+			const interrupted = { incomplete: { state: 'interrupted', at: '2026-11-19T11:00:00Z' } } as const;
+			const { element } = await dataTab({
+				deletions: { events: { ...COMPLETED, ...interrupted }, stats: interrupted },
+				storage: { events: freeEvents(50_000_000), track_stats: freeEvents(50_000_000) }
+			});
+
+			expect(freeLine(element, 'Events')).toBe('50 MB free for new data');
+			expect(freeLine(element, 'Stats')).toBe('');
+		});
+
+		it('Legacy row without a free line', async () => {
+			const { element } = await dataTab(
+				{
+					migration: kept,
+					deletions: { events: COMPLETED },
+					storage: {
+						...LEGACY_STORAGE,
+						legacy_events: { ...LEGACY_STORAGE.legacy_events, freeBytes: 1_000_000_000 },
+						stats: { ...LEGACY_STORAGE.stats, freeBytes: 1_000_000_000 },
+						events: freeEvents(3_000_000)
+					}
+				},
+				{ migration: kept }
+			);
+
+			expect(classRow(element, LEGACY_LABEL)?.querySelector('.sub')).toBeNull();
+			expect(totalLine(element)).toBe('3 MB free for new data');
+		});
+
+		it('Little free space', async () => {
+			const { element } = await dataTab({
+				deletions: DELETED,
+				storage: {
+					events: { documents: 1_200, storageBytes: 1_500_000, indexBytes: 500_000, freeBytes: 200_000 },
+					rooms: { documents: 4, storageBytes: 36_864, indexBytes: 344_136, freeBytes: 100_000 }
+				}
+			});
+
+			expect(element.querySelector('ovd-data-tab td .sub')).toBeNull();
+			expect(element.querySelector('ovd-data-tab tfoot .sub')).toBeNull();
+		});
 	});
 });

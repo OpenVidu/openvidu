@@ -195,4 +195,154 @@ describe('injectServerStatusPoll', () => {
 
 		controller.expectNone('api/v1/info');
 	});
+
+	/** A deletion job of `class` in `state`. */
+	function deletion(state: 'running' | 'completed', id = 'job-1', deletionClass: 'events' | 'stats' = 'events') {
+		return {
+			id,
+			class: deletionClass,
+			includeLegacy: false,
+			state,
+			cutoff: '2026-10-13T11:59:00.000Z',
+			startedAt: '2026-10-13T11:59:00.000Z',
+			collection: { index: 1, total: 1 },
+			deleted: 10
+		} as const;
+	}
+
+	it('Migration cadence', async () => {
+		const running = { migration: { state: 'running', progress: { processed: 1, total: 4 } } } as const;
+
+		await start(infoResponse(running));
+		await poll(statusResponse(running));
+
+		for (let tick = 0; tick < 3; tick++) {
+			await vi.advanceTimersByTimeAsync(9_999);
+			controller.expectNone('api/v1/status');
+			await vi.advanceTimersByTimeAsync(1);
+			await poll(statusResponse(running));
+		}
+
+		await vi.advanceTimersByTimeAsync(10_000);
+		await poll(statusResponse());
+		controller.expectOne('api/v1/info').flush(infoResponse());
+		await vi.advanceTimersByTimeAsync(29_999);
+		controller.expectNone('api/v1/status');
+		await vi.advanceTimersByTimeAsync(1);
+		await poll(statusResponse());
+	});
+
+	it('Deletion cadence', async () => {
+		await start();
+		await poll(statusResponse({ deletion: deletion('running') }));
+
+		for (let tick = 0; tick < 3; tick++) {
+			await vi.advanceTimersByTimeAsync(1_999);
+			controller.expectNone('api/v1/status');
+			await vi.advanceTimersByTimeAsync(1);
+			await poll(statusResponse({ deletion: deletion('running') }));
+		}
+
+		await vi.advanceTimersByTimeAsync(2_000);
+		await poll(statusResponse({ deletion: deletion('completed') }));
+		controller.expectOne('api/v1/info').flush(infoResponse());
+		await vi.advanceTimersByTimeAsync(29_999);
+		controller.expectNone('api/v1/status');
+		await vi.advanceTimersByTimeAsync(1);
+		await poll(statusResponse({ deletion: deletion('completed') }));
+	});
+
+	it('Status right after starting a deletion', async () => {
+		await start();
+		await poll(statusResponse());
+		await vi.advanceTimersByTimeAsync(12_000);
+
+		void TestBed.inject(ServerStatusService).pollNow();
+		await poll(statusResponse({ deletion: deletion('running') }));
+		controller.expectOne('api/v1/info').flush(infoResponse());
+		await vi.advanceTimersByTimeAsync(1_999);
+		controller.expectNone('api/v1/status');
+		await vi.advanceTimersByTimeAsync(1);
+		await poll(statusResponse({ deletion: deletion('running') }));
+	});
+
+	it('Deletion during the migration', async () => {
+		const migrating = { migration: { state: 'running', progress: { processed: 1, total: 4 } } } as const;
+
+		await start(infoResponse(migrating));
+		await poll(statusResponse({ ...migrating, deletion: deletion('running') }));
+
+		for (let tick = 0; tick < 2; tick++) {
+			await vi.advanceTimersByTimeAsync(1_999);
+			controller.expectNone('api/v1/status');
+			await vi.advanceTimersByTimeAsync(1);
+			await poll(statusResponse({ ...migrating, deletion: deletion('running') }));
+		}
+
+		await vi.advanceTimersByTimeAsync(2_000);
+		await poll(statusResponse({ ...migrating, deletion: deletion('completed') }));
+		controller.match('api/v1/info').forEach((request) => {
+			request.flush(infoResponse(migrating));
+		});
+		await vi.advanceTimersByTimeAsync(9_999);
+		controller.expectNone('api/v1/status');
+		await vi.advanceTimersByTimeAsync(1);
+		await poll(statusResponse({ ...migrating, deletion: deletion('completed') }));
+	});
+
+	it('Deletion ends', async () => {
+		await start();
+		await poll(statusResponse({ deletion: deletion('running') }));
+		controller.expectNone('api/v1/info');
+
+		await vi.advanceTimersByTimeAsync(2_000);
+		await poll(statusResponse({ deletion: { ...deletion('running'), deleted: 5_000 } }));
+		controller.expectNone('api/v1/info');
+
+		await vi.advanceTimersByTimeAsync(2_000);
+		await poll(statusResponse({ deletion: deletion('completed') }));
+		controller.expectOne('api/v1/info').flush(
+			infoResponse({
+				deletions: { events: { completed: { cutoff: 'a', endedBefore: 'b', finishedAt: 'c' } } }
+			})
+		);
+		await vi.advanceTimersByTimeAsync(0);
+		expect(TestBed.inject(InfoService).info()?.deletions.events?.completed).toBeDefined();
+
+		await vi.advanceTimersByTimeAsync(30_000);
+		await poll(statusResponse({ deletion: deletion('completed') }));
+		controller.expectNone('api/v1/info');
+	});
+
+	it('Hidden tab', async () => {
+		let hidden = false;
+
+		Object.defineProperty(document, 'hidden', { configurable: true, get: () => hidden });
+
+		try {
+			await start();
+			await poll(statusResponse());
+
+			hidden = true;
+			document.dispatchEvent(new Event('visibilitychange'));
+			await vi.advanceTimersByTimeAsync(120_000);
+			controller.expectNone('api/v1/status');
+
+			hidden = false;
+			document.dispatchEvent(new Event('visibilitychange'));
+			await poll(statusResponse());
+		} finally {
+			Object.defineProperty(document, 'hidden', { configurable: true, get: () => false });
+		}
+	});
+
+	it('Signed out', async () => {
+		await start();
+		await poll(statusResponse());
+
+		// Signing out leaves the signed-in frame, whose poll stops with it.
+		(injector.get(DestroyRef) as DestroyRef & { destroy(): void }).destroy();
+		await vi.advanceTimersByTimeAsync(120_000);
+		controller.expectNone('api/v1/status');
+	});
 });

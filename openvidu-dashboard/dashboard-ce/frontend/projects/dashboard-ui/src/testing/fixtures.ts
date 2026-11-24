@@ -1,4 +1,4 @@
-import type { InfoResponse, StatusResponse } from '@openvidu-dashboard/typings';
+import type { DeletionJob, InfoResponse, StatusResponse } from '@openvidu-dashboard/typings';
 
 /** A full CE info document with a completed migration; override any field. */
 export function infoResponse(overrides: Partial<InfoResponse> = {}): InfoResponse {
@@ -9,9 +9,26 @@ export function infoResponse(overrides: Partial<InfoResponse> = {}): InfoRespons
 		migration: { state: 'completed', progress: { processed: 10, total: 10 } },
 		database: { version: '8.0.29', timeseriesSupported: true },
 		storage: {},
+		deletions: {},
 		features: [],
 		limits: { rankedSortMaxRangeMs: 7 * 86_400_000, participantRankedSortMaxRangeMs: 86_400_000 },
 		openapiDocsEnabled: false,
+		...overrides
+	};
+}
+
+/** A running Events deletion job that deleted nothing yet; override any field. */
+export function deletionJob(overrides: Partial<DeletionJob> = {}): DeletionJob {
+	return {
+		id: 'job-1',
+		class: 'events',
+		includeLegacy: false,
+		state: 'running',
+		cutoff: '2026-11-19T10:07:00.000Z',
+		startedAt: '2026-11-19T10:07:00.000Z',
+		currentClass: 'events',
+		collection: { index: 1, total: 1 },
+		deleted: 0,
 		...overrides
 	};
 }

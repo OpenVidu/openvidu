@@ -126,7 +126,9 @@ describe('API contract', () => {
 	});
 
 	it('serves the server status apart from the overview', () => {
-		expectTypeOf<keyof StatusResponse>().toEqualTypeOf<'generatedAt' | 'schema' | 'migration' | 'writer'>();
+		expectTypeOf<keyof StatusResponse>().toEqualTypeOf<
+			'generatedAt' | 'schema' | 'migration' | 'writer' | 'deletion'
+		>();
 		expectTypeOf<OverviewResponse>().not.toHaveProperty('health');
 	});
 });

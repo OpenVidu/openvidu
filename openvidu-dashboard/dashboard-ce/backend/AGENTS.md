@@ -49,6 +49,12 @@ Behaviour is specified in `openspec/specs/*-api`, `api-conventions`, `auth`, `st
   catalogue (summed, or the largest value for the paths of `peak()` metrics), `AnalyticsCache` keeps the folds of
   completed documents and `AnalyticsFeatureGate` rejects PRO metrics, dimensions and node scopes on CE;
   `checkGlobalOnly()` rejects the egress and ingress items of a node scope, which the writer counts globally only.
+- `src/deletions/` deletes stored analytics data (`POST /deletions`): `deletion-plan.ts` (classes, collection steps
+  and the filters of what each keeps), `deletion-records.ts` (the job, its lock and the last deletion of each class in
+  `schema_meta` `_id: "dashboard"`, times by `$$NOW`, a job without a heartbeat for 60 s read interrupted),
+  `deletion-runner.ts` (the background job: batches of 5,000 by `_id`, by time on a time-series `track_stats`, 100 ms
+  apart, heartbeat every 10 s) and `FigureCaches` (`TOKENS.FigureCaches`): the storage and Analytics caches, plus any an
+  extending edition registers, cleared at the first status or info read after a deletion completes.
 - `src/status/freshness.ts` marks active rooms and participants `stale` with the backend clock, from the typings
   `freshnessWindows()`.
 - `src/index.ts` exports what an extending backend builds on: the startup, tokens and registry, the generic query,
@@ -65,6 +71,8 @@ Behaviour is specified in `openspec/specs/*-api`, `api-conventions`, `auth`, `st
 
 ## Rules
 
+- The analytics database belongs to the writer: the dashboard writes only its own collections
+  (`auth/collections.ts`), the `schema_meta` `_id: "dashboard"` document and the deletions of `src/deletions/`.
 - Repositories own the queries. Every list, detail and time-series query is backed by an index and asserted with
   `expectIndexBacked` (`test/support/query-plan.ts`: no COLLSCAN above 1 000 documents, bounded `totalDocsExamined`).
 - Participant `attributes` keys contain dots (`lk.agent_name`, `openvidu.agent`): filter them with `$getField` inside
@@ -92,6 +100,6 @@ Behaviour is specified in `openspec/specs/*-api`, `api-conventions`, `auth`, `st
     test/integration/rooms-query-plan.test.ts
   ```
 
-  The other suites take the prefixes `PARTICIPANTS_PLAN_`, `EGRESS_PLAN_`, `INGRESS_PLAN_`, `OVERVIEW_PLAN_` and
-  `ANALYTICS_PLAN_`. `DASHBOARD_TEST_LATENCY_BUDGETS=report` (set in CI) turns p95 overruns into warnings; plan
-  assertions fail either way.
+  The other suites take the prefixes `PARTICIPANTS_PLAN_`, `EGRESS_PLAN_`, `INGRESS_PLAN_`, `OVERVIEW_PLAN_`,
+  `ANALYTICS_PLAN_` and `DELETIONS_PLAN_`. `DASHBOARD_TEST_LATENCY_BUDGETS=report` (set in CI) turns p95 overruns into
+  warnings; plan assertions fail either way.

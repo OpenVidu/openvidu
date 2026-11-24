@@ -14,3 +14,4 @@ export const INGRESS_USER_INFO: string;
 export const STALE_ROOM: string;
 
 export function seedRooms(db: Db, now?: Date): Promise<void>;
+export function backendDatabaseFile(port?: number): string;

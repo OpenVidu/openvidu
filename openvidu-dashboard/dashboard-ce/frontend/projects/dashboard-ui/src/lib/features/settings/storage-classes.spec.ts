@@ -32,12 +32,22 @@ const DEFAULT_RETENTION: InfoRetention = {
 	rollupsDailyMs: null
 };
 
+/** A completed deletion record of a class. */
+const COMPLETED = {
+	completed: {
+		cutoff: '2026-11-16T10:07:00.000Z',
+		endedBefore: '2026-11-16T10:02:00.000Z',
+		finishedAt: '2026-11-16T10:31:12.000Z'
+	}
+};
+
 /** An entry of `bytes` (all storage) whose oldest document is `ageMs` before the read; undated without `ageMs`. */
 function entry(bytes: number, ageMs?: number, documents = 1): InfoStorageEntry {
 	return {
 		documents,
 		storageBytes: bytes,
 		indexBytes: 0,
+		freeBytes: 0,
 		...(ageMs === undefined ? {} : { oldest: new Date(READ_AT - ageMs).toISOString() })
 	};
 }
@@ -99,9 +109,9 @@ describe('storageClasses', () => {
 	it('Class that sums several collections', () => {
 		const { rows } = storageClasses(
 			{
-				rooms: { documents: 4, storageBytes: 36_864, indexBytes: 344_136 },
-				participants: { documents: 10, storageBytes: 100_000, indexBytes: 100_000 },
-				nodes: { documents: 1, storageBytes: 20_000, indexBytes: 21_000 }
+				rooms: { documents: 4, storageBytes: 36_864, indexBytes: 344_136, freeBytes: 0 },
+				participants: { documents: 10, storageBytes: 100_000, indexBytes: 100_000, freeBytes: 0 },
+				nodes: { documents: 1, storageBytes: 20_000, indexBytes: 21_000, freeBytes: 0 }
 			},
 			DEFAULT_RETENTION,
 			READ_AT,
@@ -116,16 +126,16 @@ describe('storageClasses', () => {
 	it('sums the total over the rows, without schema_meta', () => {
 		const { total } = storageClasses(
 			{
-				rooms: { documents: 4, storageBytes: 36_864, indexBytes: 344_136 },
-				events: { documents: 285, storageBytes: 65_536, indexBytes: 290_464 },
-				schema_meta: { documents: 4, storageBytes: 20_480, indexBytes: 20_520 }
+				rooms: { documents: 4, storageBytes: 36_864, indexBytes: 344_136, freeBytes: 0 },
+				events: { documents: 285, storageBytes: 65_536, indexBytes: 290_464, freeBytes: 0 },
+				schema_meta: { documents: 4, storageBytes: 20_480, indexBytes: 20_520, freeBytes: 0 }
 			},
 			DEFAULT_RETENTION,
 			READ_AT,
 			NO_MIGRATION
 		);
 
-		expect(total).toEqual({ documents: 289, bytes: 737_000 });
+		expect(total).toEqual({ documents: 289, bytes: 737_000, freeBytes: 0, free: null });
 	});
 
 	it('Span rounded down', () => {
@@ -253,6 +263,72 @@ describe('storageClasses', () => {
 		);
 	});
 
+	it('Estimate after a deletion', () => {
+		const events = { ...entry(2_000_000_000, 2 * DAY), freeBytes: 1_900_000_000 };
+
+		expect(tipOf('Events', { events })).toBe('2 of 7 days so far · ≈ 350 MB at full retention (estimate)');
+	});
+
+	it('Estimate after a deletion: unlimited daily rollups scale the space in use too', () => {
+		const daily = { ...entry(2_600_000, 73 * DAY), freeBytes: 2_340_000 };
+
+		expect(tipOf('Daily rollups', { analytics_daily: daily })).toBe(
+			'Grows without limit · ≈ 1.3 MB per year (estimate)'
+		);
+	});
+
+	it('Free space after a deletion', () => {
+		const { rows, total } = storageClasses(
+			{
+				events: {
+					documents: 1_200,
+					storageBytes: 1_500_000_000,
+					indexBytes: 500_000_000,
+					freeBytes: 1_800_000_000
+				},
+				rooms: { ...entry(1_000_000), freeBytes: 200_000 }
+			},
+			DEFAULT_RETENTION,
+			READ_AT,
+			NO_MIGRATION,
+			{ events: COMPLETED }
+		);
+
+		expect(rows.find((row) => row.label === 'Events')).toMatchObject({
+			bytes: 2_000_000_000,
+			freeBytes: 1_800_000_000,
+			free: 1_800_000_000
+		});
+		expect(rows.find((row) => row.label === 'Entities')?.free).toBeNull();
+		expect(total.freeBytes).toBe(1_800_200_000);
+		expect(total.free).toBe(1_800_000_000);
+	});
+
+	it('names the deletion class of every class row and deletes the Legacy row only while kept for rollback', () => {
+		const legacy = { legacy_events: entry(1_000), stats: entry(1_000) };
+		const kept = storageClasses(legacy, DEFAULT_RETENTION, READ_AT, {
+			migration: { state: 'completed', legacyRetainedUntil: new Date(READ_AT + DAY).toISOString() },
+			tz: 'UTC'
+		}).rows;
+		const removed = storageClasses(legacy, DEFAULT_RETENTION, READ_AT, {
+			migration: { state: 'completed', legacyRetainedUntil: new Date(READ_AT - DAY).toISOString() },
+			tz: 'UTC'
+		}).rows;
+
+		expect(kept.map((row) => row.deletionClass ?? null)).toEqual([
+			'events',
+			'stats',
+			'tracks',
+			'entities',
+			'rollups-5min',
+			'rollups-hourly',
+			'rollups-daily',
+			null
+		]);
+		expect(kept.at(-1)?.rollback).toBe(true);
+		expect(removed.at(-1)?.rollback).toBe(false);
+	});
+
 	it('No estimate under one day of data', () => {
 		expect(
 			tipOf(
@@ -285,10 +361,16 @@ describe('storageClasses', () => {
 		const LEGACY_EVENTS: InfoStorageEntry = {
 			documents: 120_000,
 			storageBytes: 30_000_000,
-			indexBytes: 10_000_000
+			indexBytes: 10_000_000,
+			freeBytes: 0
 		};
-		const LEGACY_STATS: InfoStorageEntry = { documents: 300_000, storageBytes: 80_000_000, indexBytes: 10_000_000 };
-		const ROOMS: InfoStorageEntry = { documents: 4, storageBytes: 36_864, indexBytes: 344_136 };
+		const LEGACY_STATS: InfoStorageEntry = {
+			documents: 300_000,
+			storageBytes: 80_000_000,
+			indexBytes: 10_000_000,
+			freeBytes: 0
+		};
+		const ROOMS: InfoStorageEntry = { documents: 4, storageBytes: 36_864, indexBytes: 344_136, freeBytes: 0 };
 
 		/** The Legacy data row of a migration, read in UTC unless `tz` says otherwise. */
 		function legacyOf(
@@ -350,7 +432,7 @@ describe('storageClasses', () => {
 
 		it('Legacy row after its date', () => {
 			const legacy = legacyOf(
-				{ legacy_events: { documents: 0, storageBytes: 2_000_000_000, indexBytes: 100_000_000 } },
+				{ legacy_events: { documents: 0, storageBytes: 2_000_000_000, indexBytes: 100_000_000, freeBytes: 0 } },
 				{ state: 'completed', legacyRetainedUntil: new Date(READ_AT - HOUR).toISOString() }
 			);
 

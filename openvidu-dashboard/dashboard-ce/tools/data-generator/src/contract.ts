@@ -45,8 +45,17 @@ export const CONTRACT_SCHEMAS: Readonly<Record<CollectionName, JsonSchema>> = {
 
 /** Bookkeeping of the model that the events, stats and rollups derive from, and the writer never stores. */
 const MODEL_ONLY: Partial<Record<CollectionName, readonly string[]>> = {
-	rooms: ['participantSids', 'activeParticipantSids', 'identities', 'trackSids', 'egressIds', 'ingressSessionIds'],
-	participants: ['trackSids'],
+	rooms: [
+		'participantSids',
+		'activeParticipantSids',
+		'identities',
+		'trackSids',
+		'egressIds',
+		'ingressSessionIds',
+		'reconcilerReason'
+	],
+	participants: ['trackSids', 'resumedAt'],
+	tracks: ['muteChanges'],
 	track_subscriptions: ['maxVideoQuality']
 };
 

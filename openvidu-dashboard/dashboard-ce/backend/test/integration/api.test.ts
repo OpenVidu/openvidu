@@ -3,13 +3,16 @@ import { afterAll, beforeAll, describe, expect, inject, it } from 'vitest';
 
 import { MIN_SUPPORTED_SCHEMA_VERSION, SCHEMA_VERSION, type SchemaMetaDocument } from '@openvidu-dashboard/typings';
 
+import { rankedSortLimits } from '../../src/api/ranked-limits.js';
 import type { RouteRegistry } from '../../src/api/route-registry.js';
 import { AuthService } from '../../src/auth/auth-service.js';
 import { SessionRepository } from '../../src/auth/session-repository.js';
 import { provisionSigningKey } from '../../src/auth/signing-key.js';
 import { TOKENS } from '../../src/di/tokens.js';
+import { InfoService } from '../../src/info/info-service.js';
 import { silentLogger } from '../support/silent-logger.js';
 import { boot, type BootedDashboard, refreshCookie } from '../support/boot.js';
+import { createContractCollections } from '../support/rooms-seed.js';
 
 const mongoUri = inject('mongoUri');
 
@@ -282,11 +285,29 @@ describe.skipIf(mongoUri === '')('info', () => {
 					rollupsDailyMs: null
 				},
 				database: { timeseriesSupported: true },
+				deletions: {},
 				features: [],
 				limits: { rankedSortMaxRangeMs: 604_800_000, participantRankedSortMaxRangeMs: 86_400_000 },
 				openapiDocsEnabled: false
 			});
-			expect(info.storage).toMatchObject({ rooms: { documents: 12, oldest: '2026-10-01T00:00:00.000Z' } });
+			expect(Object.keys(info).sort()).toEqual(
+				[
+					'edition',
+					'versions',
+					'schema',
+					'migration',
+					'retention',
+					'database',
+					'storage',
+					'deletions',
+					'features',
+					'limits',
+					'openapiDocsEnabled'
+				].sort()
+			);
+			expect(info.storage).toMatchObject({
+				rooms: { documents: 12, oldest: '2026-10-01T00:00:00.000Z', freeBytes: expect.any(Number) as number }
+			});
 		} finally {
 			await dashboard.stop();
 		}
@@ -475,6 +496,7 @@ describe.skipIf(mongoUri === '')('info', () => {
 				documents: 3,
 				storageBytes: expect.any(Number) as number,
 				indexBytes: expect.any(Number) as number,
+				freeBytes: expect.any(Number) as number,
 				oldest: '2026-10-13T09:25:55.000Z'
 			});
 			expect(storage.stats).toMatchObject({ documents: 2, oldest: '2026-10-13T09:26:09.000Z' });
@@ -537,6 +559,340 @@ describe.skipIf(mongoUri === '')('info', () => {
 
 			expect(body.storage).not.toHaveProperty('stats');
 			expect(body.migration).toEqual({ state: 'none' });
+		} finally {
+			await dashboard.stop();
+		}
+	});
+});
+
+describe.skipIf(mongoUri === '')('info storage and deletions', () => {
+	const DAY = 86_400_000;
+	const ago = (ms: number) => new Date(Date.now() - ms);
+
+	async function bearer(dashboard: BootedDashboard): Promise<Record<string, string>> {
+		return { Authorization: `Bearer ${await token(await login(dashboard))}` };
+	}
+
+	it('Deletions before any deletion', async () => {
+		const dashboard = await boot(mongoUri, {}, { seed: (db) => seedSchema(db) });
+
+		try {
+			expect((await info(dashboard)).deletions).toEqual({});
+		} finally {
+			await dashboard.stop();
+		}
+	});
+
+	it('Storage per collection', async () => {
+		const dashboard = await boot(
+			mongoUri,
+			{},
+			{
+				seed: async (db) => {
+					await seedSchema(db);
+					await createContractCollections(db);
+					await db.collection('rooms').insertMany(
+						Array.from({ length: 1_200 }, (_, i) => ({
+							_id: `RM_${String(i)}`,
+							createdAt: ago(DAY)
+						})) as never[]
+					);
+					await db.collection('events').insertMany(
+						Array.from({ length: 20_000 }, (_, i) => ({
+							_id: `AE_${String(i)}`,
+							ts: ago(DAY)
+						})) as never[]
+					);
+				}
+			}
+		);
+
+		try {
+			const body = await info(dashboard);
+			const storage = body.storage as Record<string, Record<string, unknown>>;
+
+			expect(storage.rooms?.documents).toBe(1_200);
+			expect(storage.events?.documents).toBe(20_000);
+
+			for (const [name, entry] of Object.entries(storage)) {
+				expect(entry, name).toMatchObject({
+					storageBytes: expect.any(Number) as number,
+					indexBytes: expect.any(Number) as number,
+					freeBytes: expect.any(Number) as number
+				});
+			}
+
+			expect(typeof (body.database as { version: unknown }).version).toBe('string');
+		} finally {
+			await dashboard.stop();
+		}
+	});
+
+	it('Oldest per collection', async () => {
+		const oldest = new Date('2026-11-01T00:00:00.000Z');
+		const later = new Date('2026-11-02T00:00:00.000Z');
+		const dashboard = await boot(
+			mongoUri,
+			{},
+			{
+				seed: async (db) => {
+					await seedSchema(db);
+					await createContractCollections(db);
+
+					const two = (field: string, extra: Record<string, unknown> = {}) =>
+						[oldest, later].map((value, i) => ({ _id: `${field}_${String(i)}`, [field]: value, ...extra }));
+
+					await db.collection('rooms').insertMany(two('createdAt') as never[]);
+					await db.collection('ingresses').insertMany(two('createdAt') as never[]);
+					await db.collection('participants').insertMany(two('joinedAt') as never[]);
+					await db.collection('egresses').insertMany(two('startedAt') as never[]);
+					await db.collection('ingress_sessions').insertMany(two('startedAt') as never[]);
+					await db.collection('events').insertMany(two('ts') as never[]);
+					await db.collection('analytics_5min').insertMany(two('bucket', { scope: 'global' }) as never[]);
+					await db.collection('analytics_hourly').insertMany(two('bucket', { scope: 'global' }) as never[]);
+					await db
+						.collection('analytics_daily')
+						.insertMany([
+							{ _id: 'node', scope: 'node:ND_a', bucket: new Date('2026-10-01T00:00:00Z') },
+							...two('bucket', { scope: 'global' })
+						] as never[]);
+					await db.collection('nodes').insertMany(two('firstSeenAt', { lastSeenAt: later }) as never[]);
+					await db.collection('tracks').insertOne({ _id: 'TR_1', publishedAt: oldest } as never);
+					await db
+						.collection('track_subscriptions')
+						.insertOne({ _id: 'TR_1:PA_1', subscribedAt: oldest } as never);
+					await db.collection('track_stats').insertOne({
+						ts: oldest,
+						meta: { roomSid: 'RM_1', participantSid: 'PA_1', kind: 'publish', nodeId: 'n' }
+					});
+				}
+			}
+		);
+
+		try {
+			const storage = (await info(dashboard)).storage as Record<string, { oldest?: string }>;
+
+			for (const name of [
+				'rooms',
+				'ingresses',
+				'participants',
+				'egresses',
+				'ingress_sessions',
+				'events',
+				'analytics_5min',
+				'analytics_hourly',
+				'analytics_daily',
+				'nodes'
+			]) {
+				expect(storage[name]?.oldest, name).toBe(oldest.toISOString());
+			}
+
+			for (const name of ['tracks', 'track_subscriptions', 'track_stats']) {
+				expect(storage[name], name).toBeDefined();
+				expect(storage[name], name).not.toHaveProperty('oldest');
+			}
+		} finally {
+			await dashboard.stop();
+		}
+	});
+
+	it('Free space of the indexes', async () => {
+		const client = await MongoClient.connect(mongoUri);
+		const db = client.db(`api_free_${String(Date.now())}`);
+		const stats: Record<string, Record<string, unknown>> = {
+			events: {
+				count: 10,
+				storageSize: 36_200_000,
+				totalIndexSize: 35_400_000,
+				freeStorageSize: 16_000_000,
+				indexDetails: {
+					_id_: { 'block-manager': { 'file bytes available for reuse': 8_000_000 } },
+					ts_ttl: { 'block-manager': { 'file bytes available for reuse': 4_800_000 } }
+				}
+			},
+			rooms: {
+				count: 2,
+				storageSize: 4_096,
+				totalIndexSize: 4_096,
+				freeStorageSize: 1_000_000,
+				indexDetails: { _id_: {} }
+			}
+		};
+		// `$collStats` of the two collections answers the figures above; every other call reaches MongoDB.
+		const reporting = new Proxy(db, {
+			get(target, property, receiver) {
+				if (property !== 'collection') {
+					return Reflect.get(target, property, receiver) as unknown;
+				}
+
+				return (name: string) => {
+					const collection = target.collection(name);
+					const storageStats = stats[name];
+
+					return new Proxy(collection, {
+						get(inner, key, innerReceiver) {
+							if (key === 'aggregate' && storageStats !== undefined) {
+								return () => ({ toArray: () => Promise.resolve([{ storageStats }]) });
+							}
+
+							const value = Reflect.get(inner, key, innerReceiver) as unknown;
+
+							return typeof value === 'function'
+								? (value as (...args: unknown[]) => unknown).bind(inner)
+								: value;
+						}
+					});
+				};
+			}
+		});
+
+		try {
+			await db.createCollection('events');
+			await db.createCollection('rooms');
+
+			const info = await new InfoService(reporting, {
+				edition: 'ce',
+				version: 'test',
+				features: () => [],
+				limits: rankedSortLimits(7 * 86_400_000),
+				openapiDocsEnabled: false
+			}).fullInfo();
+
+			expect(info.storage.events?.freeBytes).toBe(28_800_000);
+			expect(info.storage.rooms?.freeBytes).toBe(1_000_000);
+		} finally {
+			await db.dropDatabase();
+			await client.close();
+		}
+	});
+
+	it('Free space after deleting documents', async () => {
+		const dashboard = await boot(
+			mongoUri,
+			{},
+			{
+				seed: async (db) => {
+					await seedSchema(db);
+					await createContractCollections(db);
+					await db.collection('events').insertMany(
+						Array.from({ length: 50_000 }, (_, i) => ({
+							_id: `AE_${String(i)}`,
+							// 40,000 deletable events and 10,000 recorded in the last minute, which a deletion keeps.
+							ts: i < 40_000 ? ago(DAY) : new Date(),
+							payload: { padding: 'x'.repeat(200) }
+						})) as never[]
+					);
+				}
+			}
+		);
+
+		try {
+			const headers = await bearer(dashboard);
+			const events = async () => {
+				// WiredTiger reports the free space of a collection at its next checkpoint.
+				await dashboard.db.admin().command({ fsync: 1 });
+
+				return (
+					(await info(dashboard)).storage as Record<
+						string,
+						{ documents: number; storageBytes: number; freeBytes: number }
+					>
+				).events;
+			};
+			const before = await events();
+			const started = await fetch(`${dashboard.url}/api/v1/deletions`, {
+				method: 'POST',
+				headers: { ...headers, 'Content-Type': 'application/json' },
+				body: JSON.stringify({ class: 'events' })
+			});
+
+			expect(started.status).toBe(202);
+
+			for (let state = 'running'; state === 'running';) {
+				await new Promise((resolve) => setTimeout(resolve, 100));
+				const status = (await (await fetch(`${dashboard.url}/api/v1/status`, { headers })).json()) as {
+					deletion?: { state: string };
+				};
+
+				state = status.deletion?.state ?? 'running';
+			}
+
+			const after = await events();
+
+			expect(after?.documents).toBe(10_000);
+			expect(after?.storageBytes).toBeGreaterThanOrEqual(before?.storageBytes ?? 0);
+			expect(after?.freeBytes).toBeGreaterThan(before?.freeBytes ?? 0);
+		} finally {
+			await dashboard.stop();
+		}
+	});
+
+	it('Storage read again after the release', async () => {
+		const finishedAt = ago(20_000);
+		const dashboard = await boot(
+			mongoUri,
+			{},
+			{
+				seed: async (db) => {
+					await seedSchema(db);
+					await createContractCollections(db);
+					await db.collection('events').insertMany([{ _id: 'AE_1', ts: ago(DAY) }] as never[]);
+					await db.collection<SchemaMetaDocument>('schema_meta').insertOne({
+						_id: 'dashboard',
+						deletions: { events: { completed: { cutoff: ago(DAY), endedBefore: ago(DAY), finishedAt } } }
+					});
+				}
+			}
+		);
+		const documents = async () =>
+			((await info(dashboard)).storage as Record<string, { documents: number }>).events?.documents;
+
+		try {
+			// Read and cached 20 s after the deletion completed.
+			expect(await documents()).toBe(1);
+			await dashboard.db.collection('events').insertOne({ _id: 'AE_2', ts: ago(DAY) } as never);
+
+			// 50 s after it: the value cached at 20 s is served.
+			dashboard.advance(30_000);
+			expect(await documents()).toBe(1);
+
+			// 65 s after it, past the checkpoint: `$collStats` is read again.
+			dashboard.advance(15_000);
+			expect(await documents()).toBe(2);
+		} finally {
+			await dashboard.stop();
+		}
+	});
+
+	it('Sub-resource path', async () => {
+		const dashboard = await boot(mongoUri, {}, { seed: (db) => seedSchema(db) });
+
+		try {
+			const response = await fetch(`${dashboard.url}/api/v1/rooms/RM_abc/participants`, {
+				headers: await bearer(dashboard)
+			});
+
+			// The CE answers the PRO route it locks at that path, not the 404 of an unknown path.
+			expect(response.status).toBe(403);
+			expect(((await response.json()) as { error: { code: string } }).error.code).toBe('PRO_FEATURE');
+		} finally {
+			await dashboard.stop();
+		}
+	});
+
+	it('Unknown API path', async () => {
+		const dashboard = await boot(mongoUri, {}, { seed: (db) => seedSchema(db) });
+
+		try {
+			for (const path of ['/api/v1/does-not-exist', '/api/anything']) {
+				const response = await fetch(`${dashboard.url}${path}`, { headers: await bearer(dashboard) });
+
+				expect(response.status, path).toBe(404);
+				expect(response.headers.get('content-type'), path).toContain('application/json');
+				expect(await response.json(), path).toEqual({
+					error: { code: 'NOT_FOUND', message: `No API route for GET ${path}` }
+				});
+			}
 		} finally {
 			await dashboard.stop();
 		}

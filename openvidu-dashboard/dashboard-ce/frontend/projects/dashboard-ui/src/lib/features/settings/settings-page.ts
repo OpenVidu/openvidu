@@ -16,7 +16,7 @@ export type SettingsTab = (typeof SETTINGS_TABS)[number];
 		<h1 class="ovd-page-title">Settings</h1>
 		<mat-tab-group [selectedIndex]="index()" (selectedIndexChange)="select($event)" [mat-stretch-tabs]="false">
 			<mat-tab label="Preferences"><ovd-preferences-tab /></mat-tab>
-			<mat-tab label="Data"><ovd-data-tab /></mat-tab>
+			<mat-tab label="Data"><ovd-data-tab [active]="tab() === 'data'" /></mat-tab>
 		</mat-tab-group>
 	`
 })

@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 // The real CE dashboard for the backend end-to-end tests: MongoDB (DASHBOARD_TEST_MONGO_URI or a container), the
 // writer's schema_meta seeded, and the backend serving the production build of the application.
+import { writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -9,7 +10,7 @@ import { SCHEMA_VERSION } from '@openvidu-dashboard/typings';
 import { MongoClient } from 'mongodb';
 import { GenericContainer, Wait } from 'testcontainers';
 
-import { refreshLiveness, seedRooms } from './seed-rooms.mjs';
+import { backendDatabaseFile, refreshLiveness, seedRooms } from './seed-rooms.mjs';
 
 const PORT = Number(process.env.E2E_BACKEND_PORT ?? 4320);
 const DATABASE = 'openvidu_dashboard_e2e';
@@ -64,6 +65,7 @@ await meta.insertMany([
 	}
 ]);
 await seedRooms(client.db(DATABASE), now);
+writeFileSync(backendDatabaseFile(PORT), JSON.stringify({ uri, database: DATABASE }));
 // The seeded heartbeat would turn the LIVE chip stale 25 s after seeding; a slow runner reaches the overview later.
 setInterval(() => {
 	refreshLiveness(client.db(DATABASE)).catch((error) =>

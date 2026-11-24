@@ -1,3 +1,4 @@
+import type { DeletionClass, DeletionClassKey, DeletionState, DeletionStep } from '../api/deletions.js';
 import type { MigrationState, RtcEngine, StatsDetail } from './enums.js';
 
 /** `nodes`: one document per server process, refreshed on every writer batch. `_id` is the node id of the process. */
@@ -123,9 +124,45 @@ export interface SchemaMetaReconciler {
 	lastError?: string;
 }
 
-/** `schema_meta` `_id: "dashboard"`: reserved for non-secret facts written by the dashboard. */
+/** The latest deletion job, written only by the dashboard instance that runs it. Times are the MongoDB clock. */
+export interface DashboardDeletionJob {
+	/** UUID. */
+	id: string;
+	class: DeletionClass;
+	includeLegacy: boolean;
+	state: DeletionState;
+	cutoff: Date;
+	startedAt: Date;
+	/** Written every 10 s while the job runs; a running job without one for 60 s reads interrupted. */
+	heartbeatAt: Date;
+	finishedAt?: Date;
+	/** Host name and process start of the instance running it, to recognise its own job after a restart. */
+	instance: string;
+	currentClass?: DeletionStep;
+	collection: { index: number; total: number };
+	/** Documents deleted by the whole job. */
+	deleted: number;
+	/** Documents deleted per collection, for the log. */
+	deletedBy: Record<string, number>;
+	/** `X-Request-Id` of the request that started it. */
+	requestId: string;
+	error?: string;
+}
+
+/** The last outcome of a deletion class. */
+export interface DashboardDeletionRecord {
+	completed?: { cutoff: Date; endedBefore: Date; finishedAt: Date };
+	incomplete?: { state: 'interrupted' | 'failed'; at: Date };
+}
+
+/**
+ * `schema_meta` `_id: "dashboard"`: reserved for non-secret facts written by the dashboard; the writer never reads or
+ * writes it, and its validator accepts any field.
+ */
 export interface SchemaMetaDashboard {
 	_id: 'dashboard';
+	deletion?: DashboardDeletionJob;
+	deletions?: Partial<Record<DeletionClassKey, DashboardDeletionRecord>>;
 	[key: string]: unknown;
 }
 

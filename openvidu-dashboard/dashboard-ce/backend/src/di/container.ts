@@ -15,6 +15,11 @@ import { registerAuthRoutes } from '../auth/auth-routes.js';
 import { AuthService } from '../auth/auth-service.js';
 import { SessionRepository } from '../auth/session-repository.js';
 import { type DashboardConfig } from '../config/variables.js';
+import { DeletionRecordsStore } from '../deletions/deletion-records.js';
+import { registerDeletionRoutes } from '../deletions/deletion-routes.js';
+import { DeletionRunner } from '../deletions/deletion-runner.js';
+import { DeletionService } from '../deletions/deletion-service.js';
+import { FigureCaches } from '../deletions/figure-caches.js';
 import { registerEgressRoutes } from '../egress/egress-routes.js';
 import { EgressService } from '../egress/egress-service.js';
 import { registerInfoRoute } from '../info/info-routes.js';
@@ -76,19 +81,43 @@ export function buildContainer(inputs: ContainerInputs): Container {
 			[TOKENS.Database, TOKENS.Clock]
 		)
 		.inSingletonScope();
+	container.bind(TOKENS.FigureCaches).toConstantValue(new FigureCaches());
+	container
+		.bind(TOKENS.DeletionRecords)
+		.toResolvedValue((database: Db) => new DeletionRecordsStore(database), [TOKENS.Database])
+		.inSingletonScope();
+	container
+		.bind(TOKENS.DeletionService)
+		.toResolvedValue(
+			(database: Db, records: DeletionRecordsStore, clock: () => Date, log: Logger) => {
+				const runner = new DeletionRunner({
+					db: database,
+					records,
+					logger: log.child({ logger: 'deletions' })
+				});
+
+				shutdown.onShutdown(() => runner.stop());
+
+				return new DeletionService(database, { records, runner, now: clock });
+			},
+			[TOKENS.Database, TOKENS.DeletionRecords, TOKENS.Clock, TOKENS.Logger]
+		)
+		.inSingletonScope();
 	container
 		.bind(TOKENS.InfoService)
 		.toResolvedValue(
-			(database: Db, statsMode: StatsModeReader) =>
+			(database: Db, statsMode: StatsModeReader, caches: FigureCaches, clock: () => Date) =>
 				new InfoService(database, {
 					edition: edition,
 					version: version,
 					features: () => container.get<FeatureKey[]>(TOKENS.Features),
 					limits: rankedSortLimits(config.lists.totalMaxRangeMs),
 					openapiDocsEnabled: inputs.docsEnabled,
-					statsMode
+					statsMode,
+					caches,
+					now: () => clock().getTime()
 				}),
-			[TOKENS.Database, TOKENS.StatsModeReader]
+			[TOKENS.Database, TOKENS.StatsModeReader, TOKENS.FigureCaches, TOKENS.Clock]
 		)
 		.inSingletonScope();
 	container
@@ -169,14 +198,22 @@ export function buildContainer(inputs: ContainerInputs): Container {
 	container
 		.bind(TOKENS.AnalyticsService)
 		.toResolvedValue(
-			(database: Db, clock: () => Date, gate: AnalyticsFeatureGate, catalogue: AnalyticsCatalogue) =>
-				new AnalyticsService(database, {
-					now: clock,
-					gate,
-					catalogue,
-					cache: new AnalyticsCache(config.analytics.cacheTtlSeconds * 1000, clock)
-				}),
-			[TOKENS.Database, TOKENS.Clock, TOKENS.AnalyticsFeatureGate, TOKENS.AnalyticsCatalogue]
+			(
+				database: Db,
+				clock: () => Date,
+				gate: AnalyticsFeatureGate,
+				catalogue: AnalyticsCatalogue,
+				caches: FigureCaches
+			) => {
+				const cache = new AnalyticsCache(config.analytics.cacheTtlSeconds * 1000, clock);
+
+				caches.register(() => {
+					cache.clear();
+				});
+
+				return new AnalyticsService(database, { now: clock, gate, catalogue, cache });
+			},
+			[TOKENS.Database, TOKENS.Clock, TOKENS.AnalyticsFeatureGate, TOKENS.AnalyticsCatalogue, TOKENS.FigureCaches]
 		)
 		.inSingletonScope();
 
@@ -232,6 +269,7 @@ export function buildContainer(inputs: ContainerInputs): Container {
 	registerAnalyticsRoutes(registry, () => container.get<AnalyticsService>(TOKENS.AnalyticsService), now);
 	registerOverviewRoutes(registry, () => container.get<OverviewService>(TOKENS.OverviewService));
 	registerStatusRoutes(registry, () => container.get<StatusService>(TOKENS.StatusService));
+	registerDeletionRoutes(registry, () => container.get<DeletionService>(TOKENS.DeletionService));
 
 	return container;
 }

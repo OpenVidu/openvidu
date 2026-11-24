@@ -1,4 +1,5 @@
 import { expect, legacyMigration, type Page, test } from '../fixtures/api.js';
+import { expectNoViolations } from '../fixtures/axe.js';
 import { activeStatus } from '../fixtures/overview.js';
 
 const LEGACY_LABEL = 'Legacy data (before 3.10)';
@@ -6,6 +7,20 @@ const LEGACY_LABEL = 'Legacy data (before 3.10)';
 /** The retention text of the legacy data the mock keeps, in UTC. */
 function keptUntil(): string {
 	return `Kept until ${(legacyMigration(Date.now()).legacyRetainedUntil ?? '').slice(0, 10)} for rollback`;
+}
+
+/** The Storage table scrolls sideways on a phone but never vertically: nothing in it overflows its wrap's height. */
+async function expectNoVerticalOverflow(page: Page): Promise<void> {
+	const wrap = page.locator('ovd-data-tab .table-wrap');
+
+	await expect(wrap).toBeVisible();
+
+	const { scrollHeight, clientHeight } = await wrap.evaluate((element) => ({
+		scrollHeight: element.scrollHeight,
+		clientHeight: element.clientHeight
+	}));
+
+	expect(scrollHeight).toBeLessThanOrEqual(clientHeight);
 }
 
 function legacyRow(page: Page) {
@@ -107,7 +122,7 @@ test.describe('legacy data', () => {
 		const row = legacyRow(page);
 		const labels = data.locator('table.classes > tbody > tr > th[scope="row"]');
 
-		await expect(row.locator(':scope > th, :scope > td')).toHaveText([
+		await expect(row.locator(':scope > th, :scope > td:not(.action)')).toHaveText([
 			LEGACY_LABEL,
 			keptUntil(),
 			'420,000',
@@ -163,6 +178,271 @@ test.describe('on a phone', () => {
 			expect((box?.x ?? 0) + (box?.width ?? 0)).toBeLessThanOrEqual(375);
 			expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(375);
 		});
+
+		test('Delete buttons on a phone', async ({ page }) => {
+			await page.goto('/settings?tab=data');
+
+			const buttons = page.locator('ovd-data-tab td.action button');
+
+			await expect(buttons).toHaveCount(9);
+
+			for (const button of await buttons.all()) {
+				const box = await button.boundingBox();
+
+				expect(box?.x).toBeGreaterThanOrEqual(0);
+				expect((box?.x ?? 0) + (box?.width ?? 0)).toBeLessThanOrEqual(375);
+			}
+
+			expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(375);
+			await expectNoVerticalOverflow(page);
+		});
+
+		test.describe('in the dark theme', () => {
+			test.use({ colorScheme: 'dark' });
+
+			test('Dialog on a phone', async ({ page }) => {
+				await page.goto('/settings?tab=data');
+				await page.getByRole('button', { name: 'Delete all analytics data' }).click();
+
+				const dialog = page.getByRole('dialog', { name: 'Delete all analytics data?' });
+				const checkbox = dialog.getByRole('checkbox', { name: 'Also delete the data before 3.10' });
+
+				await expect(dialog).toBeVisible();
+				await expect(dialog.getByRole('button', { name: 'Cancel' })).toBeFocused();
+				await checkbox.check();
+				await expect(dialog).toContainText('A rollback to 3.9 will find no analytics data.');
+
+				for (const part of [
+					dialog.getByRole('heading', { name: 'Delete all analytics data?' }),
+					dialog.locator('mat-dialog-content p').first(),
+					dialog.getByRole('link', { name: /How to free disk space/ }),
+					checkbox,
+					dialog.getByRole('button', { name: 'Cancel' }),
+					dialog.getByRole('button', { name: 'Delete', exact: true })
+				]) {
+					await part.scrollIntoViewIfNeeded();
+
+					const box = await part.boundingBox();
+
+					expect(box?.x).toBeGreaterThanOrEqual(0);
+					expect((box?.x ?? 0) + (box?.width ?? 0)).toBeLessThanOrEqual(375);
+				}
+
+				expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(375);
+				await expectNoViolations(page);
+			});
+		});
+	});
+});
+
+for (const scheme of ['light', 'dark'] as const) {
+	test.describe(`deleting in the ${scheme} theme`, () => {
+		test.use({ colorScheme: scheme, timezoneId: 'UTC' });
+
+		test('Events dialog: flow with axe in both themes', async ({ page, api }) => {
+			await page.clock.install();
+			await page.goto('/settings?tab=data');
+			await page.getByRole('button', { name: 'Delete Events' }).click();
+
+			const dialog = page.getByRole('dialog', { name: 'Delete events?' });
+
+			await expect(dialog).toContainText(
+				'Deletes the stored events of rooms, participant sessions, egresses and ingresses that have ended.'
+			);
+			await expect(dialog.getByRole('button', { name: 'Cancel' })).toBeFocused();
+			await expect(dialog.getByRole('link', { name: /How to free disk space/ })).toHaveAttribute(
+				'href',
+				'https://openvidu.io/latest/docs/self-hosting/production-ready/observability/openvidu-dashboard/#freeing-disk-space'
+			);
+			await expectNoViolations(page);
+
+			await dialog.getByRole('button', { name: 'Delete', exact: true }).click();
+			await expect(dialog).toHaveCount(0);
+			await expect(page.getByRole('button', { name: 'Delete Events' })).toBeFocused();
+			await expect.poll(() => api.deletionRequests).toEqual([{ class: 'events' }]);
+
+			const data = page.locator('ovd-data-tab');
+
+			await expect(data.getByRole('heading', { name: 'Deleting analytics data' })).toBeVisible();
+			await expect(data.getByRole('progressbar', { name: 'Deletion progress' })).toBeVisible();
+			await expect(data).toContainText('Deleting Events: 0 documents deleted · collection 1 of 1');
+			await expect(page.getByRole('button', { name: 'Delete Stats' })).toHaveAttribute('aria-disabled', 'true');
+			await expect(page.getByText('Lists and figures may change.')).toHaveCount(0);
+			await expectNoViolations(page);
+
+			api.finishDeletion(48_000);
+			await page.clock.fastForward('00:11');
+			await expect(page.getByText('Events deleted: 48,000 documents')).toBeVisible();
+			await expect(data.getByRole('heading', { name: 'Deleting analytics data' })).toHaveCount(0);
+			await expect(
+				data
+					.locator('table.classes > tbody > tr')
+					.filter({ has: page.getByRole('button', { name: 'Show collections of Events' }) })
+					.locator('th .sub')
+			).toHaveText(/^Deleted \d{4}-\d{2}-\d{2} \d{2}:\d{2}$/);
+		});
+	});
+}
+
+for (const scheme of ['light', 'dark'] as const) {
+	test.describe(`free space on a phone in the ${scheme} theme`, () => {
+		const entry = (documents: number, bytes: number, freeBytes: number) => ({
+			documents,
+			storageBytes: Math.round(bytes * 0.8),
+			indexBytes: Math.round(bytes * 0.2),
+			freeBytes
+		});
+
+		test.use({
+			viewport: { width: 375, height: 740 },
+			hasTouch: true,
+			colorScheme: scheme,
+			apiOptions: {
+				info: {
+					deletions: {
+						events: {
+							completed: {
+								cutoff: '2026-11-19T10:07:00.000Z',
+								endedBefore: '2026-11-19T10:02:00.000Z',
+								finishedAt: '2026-11-19T10:31:12.000Z'
+							}
+						}
+					},
+					storage: { events: entry(1_200, 36_000_000, 16_000_000), rooms: entry(1_203, 1_469_134, 0) }
+				}
+			}
+		});
+
+		test('Link tip on a phone', async ({ page }) => {
+			await page.goto('/settings?tab=data');
+
+			const icon = page.getByRole('button', { name: 'About free space of Events' });
+			const panel = page.locator('.link-tip');
+			const link = panel.getByRole('link', { name: /Freeing disk space/ });
+
+			await expect(icon).toHaveAttribute('aria-expanded', 'false');
+			// The info tips of the free lines, the Total's in the last row, fit inside the table wrap.
+			await expectNoVerticalOverflow(page);
+			await icon.tap();
+			await expect(icon).toHaveAttribute('aria-expanded', 'true');
+			await expect(panel).toContainText('MongoDB reuses this space for new data.');
+			await expect(link).toHaveAttribute(
+				'href',
+				'https://openvidu.io/latest/docs/self-hosting/production-ready/observability/openvidu-dashboard/#freeing-disk-space'
+			);
+			await expect(link).toHaveAttribute('target', '_blank');
+			await link.tap({ trial: true });
+
+			const box = await panel.boundingBox();
+
+			expect(box?.x).toBeGreaterThanOrEqual(0);
+			expect((box?.x ?? 0) + (box?.width ?? 0)).toBeLessThanOrEqual(375);
+			await expectNoViolations(page);
+
+			await page.getByRole('heading', { level: 1, name: 'Settings' }).tap();
+			await expect(panel).toHaveCount(0);
+			await expect(icon).toHaveAttribute('aria-expanded', 'false');
+			expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(375);
+		});
+	});
+}
+
+test.describe('free space at a desktop width', () => {
+	test.use({
+		viewport: { width: 1800, height: 1000 },
+		apiOptions: {
+			info: {
+				deletions: {
+					events: {
+						completed: {
+							cutoff: '2026-11-19T10:07:00.000Z',
+							endedBefore: '2026-11-19T10:02:00.000Z',
+							finishedAt: '2026-11-19T10:31:12.000Z'
+						}
+					}
+				},
+				storage: {
+					events: { documents: 28, storageBytes: 20_000_000, indexBytes: 600_000, freeBytes: 14_000_000 },
+					rooms: { documents: 1_203, storageBytes: 1_175_307, indexBytes: 293_827, freeBytes: 0 }
+				}
+			}
+		}
+	});
+
+	test('the Storage table with free lines does not scroll vertically', async ({ page }) => {
+		await page.goto('/settings?tab=data');
+		await expect(page.locator('ovd-data-tab tfoot ovd-info-tip')).toHaveCount(1);
+		await expectNoVerticalOverflow(page);
+	});
+});
+
+/** Desktop sizes, plain and zoomed: a 120 % page zoom is a 1.2 device scale with a CSS viewport 1/1.2 of the window. */
+const DIALOG_SCREENS = [
+	{ name: '1280 × 800', viewport: { width: 1280, height: 800 }, deviceScaleFactor: 1 },
+	{ name: '1920 × 1080 at 1.25', viewport: { width: 1920, height: 1080 }, deviceScaleFactor: 1.25 },
+	{ name: 'a 1280 × 800 window zoomed to 120 %', viewport: { width: 1067, height: 667 }, deviceScaleFactor: 1.2 },
+	{ name: 'a 1920 × 1080 window zoomed to 120 %', viewport: { width: 1600, height: 900 }, deviceScaleFactor: 1.2 }
+] as const;
+
+for (const screen of DIALOG_SCREENS) {
+	test.describe(`Total dialog on ${screen.name}`, () => {
+		test.use({
+			viewport: screen.viewport,
+			deviceScaleFactor: screen.deviceScaleFactor,
+			apiOptions: { legacy: true }
+		});
+
+		test(`Total with the legacy checkbox: the dialog content does not scroll on ${screen.name}`, async ({
+			page
+		}) => {
+			await page.goto('/settings?tab=data');
+			await page.getByRole('button', { name: 'Delete all analytics data' }).click();
+
+			const dialog = page.getByRole('dialog', { name: 'Delete all analytics data?' });
+			const checkbox = dialog.getByRole('checkbox', { name: 'Also delete the data before 3.10' });
+			const overflow = () =>
+				dialog.locator('mat-dialog-content').evaluate((element) => ({
+					scrollHeight: element.scrollHeight,
+					clientHeight: element.clientHeight
+				}));
+
+			await expect(checkbox).toBeVisible();
+
+			const unchecked = await overflow();
+
+			expect(unchecked.scrollHeight).toBeLessThanOrEqual(unchecked.clientHeight);
+
+			await checkbox.check();
+			await expect(dialog).toContainText('A rollback to 3.9 will find no analytics data.');
+
+			const checked = await overflow();
+
+			expect(checked.scrollHeight).toBeLessThanOrEqual(checked.clientHeight);
+		});
+	});
+}
+
+test.describe('Storage table at a desktop width', () => {
+	test.use({ viewport: { width: 1800, height: 1000 }, apiOptions: { legacy: true } });
+
+	test('the columns keep their positions when the Legacy data row goes away', async ({ page, api }) => {
+		await page.goto('/settings?tab=data');
+
+		const headers = page.locator('ovd-data-tab table.classes > thead th');
+		const positions = () =>
+			headers.evaluateAll((cells) => cells.map((cell) => Math.round(cell.getBoundingClientRect().left)));
+
+		await expect(legacyRow(page)).toHaveCount(1);
+
+		const before = await positions();
+
+		// The next read of the info document, when the Data tab opens again, no longer reports the legacy data.
+		api.options.legacy = false;
+		await page.getByRole('tab', { name: 'Preferences' }).click();
+		await page.getByRole('tab', { name: 'Data' }).click();
+		await expect(legacyRow(page)).toHaveCount(0);
+
+		expect(await positions()).toEqual(before);
 	});
 });
 

@@ -11,7 +11,7 @@ health probes, so that each resource endpoint only specifies what is particular 
 
 Edition: CE. Every dashboard API route SHALL live under `/api/v1`, use lower-case plural nouns for resources
 (`rooms`, `participants`, `agents`, `tracks`, `egresses`, `ingresses`, `analytics`, `overview`, `status`, `auth`,
-`info`), nest
+`info`, `deletions`), nest
 sub-resources at most one level under the parent identifier, and answer every unknown `/api` path with a JSON
 `404` instead of the SPA fallback.
 

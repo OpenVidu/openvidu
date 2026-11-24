@@ -1,21 +1,25 @@
 import { Component, computed, effect, inject, signal, untracked } from '@angular/core';
-import { MatButton, MatIconButton } from '@angular/material/button';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { MatAnchor, MatButton, MatIconButton } from '@angular/material/button';
 import { MatIcon } from '@angular/material/icon';
 import { MatProgressBar } from '@angular/material/progress-bar';
+import { NavigationEnd, Router, RouterLink } from '@angular/router';
+import { filter } from 'rxjs';
 
 import { ConnectivityService } from '../core/http/connectivity.js';
 import { InfoService } from '../core/info.js';
 import { ServerStatusService } from '../core/refresh/server-status.js';
+import { deletionClassLabel } from '../format/deletions.js';
 import { formatNumber } from '../format/formatters.js';
 
 /**
- * Non-blocking banners under the header on every page: writer schema warnings, migration progress and the silent
- * writer from the server status, connectivity errors, plus any banner a shell projects (`[ovdBanner]`). Every banner
- * can be dismissed except the schema mismatch.
+ * Non-blocking banners under the header on every page: writer schema warnings, migration progress, a running deletion
+ * (except on the Data tab, which shows its progress) and the silent writer from the server status, connectivity errors,
+ * plus any banner a shell projects (`[ovdBanner]`). Every banner can be dismissed except the schema mismatch.
  */
 @Component({
 	selector: 'ovd-banner-slot',
-	imports: [MatButton, MatIcon, MatIconButton, MatProgressBar],
+	imports: [MatAnchor, MatButton, MatIcon, MatIconButton, MatProgressBar, RouterLink],
 	template: `
 		@if (schemaWarning(); as warning) {
 			<div class="banner warning" role="alert">
@@ -40,6 +44,16 @@ import { formatNumber } from '../format/formatters.js';
 					</button>
 				</div>
 			}
+		}
+		@if (deletion(); as job) {
+			<div class="banner info deletion" role="status">
+				<mat-icon svgIcon="delete" aria-hidden="true" />
+				<span class="text">Deleting analytics data ({{ job.label }})… Lists and figures may change.</span>
+				<a matButton routerLink="/settings" [queryParams]="{ tab: 'data' }">View progress</a>
+				<button matIconButton type="button" aria-label="Dismiss" (click)="dismissedDeletion.set(job.id)">
+					<mat-icon svgIcon="close" />
+				</button>
+			</div>
 		}
 		@if (!online() && !dismissed().has('connectivity')) {
 			<div class="banner error" role="alert">
@@ -105,6 +119,8 @@ export class BannerSlot {
 	private readonly info = inject(InfoService);
 	private readonly status = inject(ServerStatusService);
 	private readonly connectivity = inject(ConnectivityService);
+	private readonly router = inject(Router);
+	private readonly url = signal(this.router.url);
 
 	protected readonly dismissed = signal<ReadonlySet<string>>(new Set());
 	protected readonly online = computed(
@@ -139,6 +155,25 @@ export class BannerSlot {
 		};
 	});
 
+	/** The job whose deletion banner was dismissed; the banner shows again for the next job. */
+	protected readonly dismissedDeletion = signal<string | null>(null);
+	/** The Data tab of Settings, which shows the progress of a deletion instead of its banner. */
+	private readonly onDataTab = computed(() => {
+		const tree = this.router.parseUrl(this.url());
+		const segments = tree.root.children['primary']?.segments ?? [];
+
+		return segments.at(-1)?.path === 'settings' && tree.queryParams['tab'] === 'data';
+	});
+	protected readonly deletion = computed(() => {
+		const job = this.status.status()?.deletion;
+
+		if (job?.state !== 'running' || job.id === this.dismissedDeletion() || this.onDataTab()) {
+			return null;
+		}
+
+		return { id: job.id, label: deletionClassLabel(job.class) };
+	});
+
 	protected readonly writerWarning = computed(() => {
 		if (!this.status.writerSilent()) {
 			return null;
@@ -152,6 +187,15 @@ export class BannerSlot {
 	});
 
 	constructor() {
+		this.router.events
+			.pipe(
+				filter((event) => event instanceof NavigationEnd),
+				takeUntilDestroyed()
+			)
+			.subscribe(() => {
+				this.url.set(this.router.url);
+			});
+
 		// A dismissed writer banner comes back the next time the writer goes silent.
 		effect(() => {
 			if (this.writerWarning() === null) {

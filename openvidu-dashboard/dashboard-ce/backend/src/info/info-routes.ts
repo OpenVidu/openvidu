@@ -3,6 +3,7 @@ import * as z from 'zod';
 import { FeatureKey, MigrationState, WriterSchemaStatus } from '@openvidu-dashboard/typings';
 
 import type { RouteRegistry } from '../api/route-registry.js';
+import { deletionRecords } from '../deletions/deletion-schemas.js';
 import type { InfoService } from './info-service.js';
 
 const versions = z.object({ dashboard: z.string(), server: z.string().optional() });
@@ -55,9 +56,14 @@ const infoResponse = z
 				documents: z.number(),
 				storageBytes: z.number(),
 				indexBytes: z.number(),
+				freeBytes: z.number().meta({
+					description:
+						'Space free for new data in the collection and its indexes; 0 when MongoDB does not report it'
+				}),
 				oldest: z.iso.datetime().optional()
 			})
 		),
+		deletions: deletionRecords,
 		features: z.array(z.enum(FeatureKey)),
 		limits: z.object({
 			rankedSortMaxRangeMs: z.number().int().meta({ description: 'Rooms, egresses and ingresses' }),

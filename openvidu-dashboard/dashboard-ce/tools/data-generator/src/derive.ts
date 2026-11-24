@@ -2,18 +2,24 @@ import { type Long } from 'mongodb';
 import {
 	int64,
 	roomSizeRange,
-	subscriptionBitrate,
-	trackBitrate,
 	type EgressDoc,
 	type IngressDoc,
 	type IngressSessionDoc,
 	type ParticipantDoc,
 	type RoomBundle,
 	type RoomDoc,
-	type SubscriptionDoc,
 	type TrackDoc
 } from './model.js';
 import type { Rng } from './random.js';
+import {
+	layerStats,
+	LOST_SCORE,
+	POOR_SCORE,
+	RoomMedia,
+	statsDocuments,
+	type Engine,
+	type LayerStats
+} from './samples.js';
 
 export type StatsMode = 'participant' | 'track';
 
@@ -32,8 +38,8 @@ export interface EventDoc {
 	_id: string;
 	type: string;
 	ts: Date;
-	roomSid: string;
-	roomName: string;
+	roomSid?: string;
+	roomName?: string;
 	participantSid?: string;
 	identity?: string;
 	trackSid?: string;
@@ -66,9 +72,6 @@ export interface StatsDoc {
 const MINUTE = 60_000;
 const HOUR = 3_600_000;
 const DAY = 86_400_000;
-const FLUSH_MS = 30_000;
-const POOR_SCORE = 3.1;
-const LOST_SCORE = 2.1;
 
 export function deriveEvents(
 	rng: Rng,
@@ -78,18 +81,23 @@ export function deriveEvents(
 ): void {
 	const { room } = bundle;
 	const base = { roomSid: room._id, roomName: room.name, nodeId: room.nodeId };
+	/** `closed` names the entity a synthetic event closes: the writer keys the event by it. */
 	const push = (
 		type: string,
 		ts: Date | null,
-		extra: Partial<EventDoc>,
+		extra: Partial<Omit<EventDoc, 'roomSid' | 'roomName'>> & { roomSid?: string | null; roomName?: string | null },
 		payload: Record<string, unknown>,
-		synthetic = false
+		closed?: string
 	): void => {
 		if (ts === null || ts.getTime() < windows.eventsFrom) {
 			return;
 		}
 
-		emit({ _id: rng.id(synthetic ? 'AE_SYN_' : 'AE_'), type, ts, ...base, ...extra, synthetic, payload });
+		const _id = closed === undefined ? rng.id('AE_') : `AE_SYN_${closed}`;
+		const doc = { _id, type, ts, ...base, ...extra, synthetic: closed !== undefined, payload };
+
+		// An event of no room, or of a state that names none yet, has no room fields.
+		emit({ ...doc, roomSid: doc.roomSid ?? undefined, roomName: doc.roomName ?? undefined } as EventDoc);
 	};
 	const roomMin = { sid: room._id, name: room.name };
 	const roomFull = {
@@ -109,8 +117,8 @@ export function deriveEvents(
 			'ROOM_ENDED',
 			room.endedAt,
 			{},
-			{ room: roomMin, room_end_reason: RECONCILED, reconciler: { reason: 'node-dead' } },
-			true
+			{ room: roomMin, room_end_reason: RECONCILED, reconciler: { reason: room.reconcilerReason ?? NODE_DEAD } },
+			room._id
 		);
 	} else {
 		push('ROOM_ENDED', room.endedAt, {}, { room: roomFull, ...enumField('room_end_reason', roomEndReason(room)) });
@@ -123,7 +131,7 @@ export function deriveEvents(
 			room: roomMin,
 			participant: info,
 			client_info: clientInfo(p),
-			client_meta: { region: p.region, node: p.nodeId }
+			client_meta: { ...(p.region === undefined ? {} : { region: p.region }), node: p.nodeId }
 		});
 		push('PARTICIPANT_ACTIVE', p.activeAt, ref, {
 			room: roomMin,
@@ -134,6 +142,10 @@ export function deriveEvents(
 			}
 		});
 
+		for (const at of p.resumedAt) {
+			push('PARTICIPANT_RESUMED', at, ref, { room: roomMin, participant: { ...info, state: 'ACTIVE' } });
+		}
+
 		if (p.closedBy === 'reconciler') {
 			push(
 				p.status === 'aborted' ? 'PARTICIPANT_CONNECTION_ABORTED' : 'PARTICIPANT_LEFT',
@@ -142,9 +154,9 @@ export function deriveEvents(
 				{
 					room: roomMin,
 					participant: { sid: p._id, identity: p.identity, disconnect_reason: RECONCILED },
-					reconciler: { reason: 'node-dead' }
+					reconciler: { reason: room.reconcilerReason ?? NODE_DEAD }
 				},
-				true
+				p._id
 			);
 		} else {
 			push(p.status === 'aborted' ? 'PARTICIPANT_CONNECTION_ABORTED' : 'PARTICIPANT_LEFT', p.leftAt, ref, {
@@ -162,12 +174,42 @@ export function deriveEvents(
 	for (const t of bundle.tracks) {
 		const ref = { participantSid: t.participantSid, identity: t.identity, trackSid: t._id };
 		const participant = { sid: t.participantSid, identity: t.identity };
-		push('TRACK_PUBLISHED', t.publishedAt, ref, { room: roomMin, participant, track: trackInfo(t) });
-		push('TRACK_UNPUBLISHED', t.unpublishedAt, ref, {
+		const { muted: _muted, ...requested } = trackInfo(t);
+		push('TRACK_PUBLISH_REQUESTED', new Date(t.publishedAt.getTime() - 100), ref, {
 			room: roomMin,
-			participant: { sid: t.participantSid },
-			track: trackInfo(t)
+			participant,
+			track: requested
 		});
+		push('TRACK_PUBLISHED', t.publishedAt, ref, { room: roomMin, participant, track: trackInfo(t) });
+
+		for (const change of t.muteChanges) {
+			push(change.muted ? 'TRACK_MUTED' : 'TRACK_UNMUTED', change.at, ref, {
+				room: roomMin,
+				participant: { sid: t.participantSid },
+				track: { ...requested, ...(change.muted ? { muted: true } : {}) }
+			});
+		}
+
+		// What the reconciler's cascade closed has no event of its own.
+		if (t.closedBy === 'event') {
+			push('TRACK_UNPUBLISHED', t.unpublishedAt, ref, {
+				room: roomMin,
+				participant: { sid: t.participantSid },
+				track: trackInfo(t)
+			});
+		}
+
+		// The final stats of each layer as the track closes.
+		if (t.publishStats !== null && t.unpublishedAt !== null) {
+			for (const layer of layerStats(t.publishStats)) {
+				push('TRACK_PUBLISH_STATS', t.unpublishedAt, ref, {
+					room: roomMin,
+					mime: t.mimeType,
+					...(layer.layer === 0 ? {} : { video_layer: layer.layer }),
+					rtp_stats: rtpStatsPayload(t.publishedAt, t.unpublishedAt, layer, t.publishStats)
+				});
+			}
+		}
 	}
 
 	for (const s of bundle.subscriptions) {
@@ -189,16 +231,32 @@ export function deriveEvents(
 				track: track === undefined ? { sid: s.trackSid } : trackInfo(track),
 				publisher: { sid: s.publisherSid, identity: s.publisherIdentity }
 			});
-			push('TRACK_UNSUBSCRIBED', s.unsubscribedAt, ref, {
-				room: roomMin,
-				participant,
-				track: { sid: s.trackSid, ...(track === undefined ? {} : trackType(track)) }
-			});
+
+			if (s.closedBy === 'event') {
+				push('TRACK_UNSUBSCRIBED', s.unsubscribedAt, ref, {
+					room: roomMin,
+					participant,
+					track: { sid: s.trackSid, ...(track === undefined ? {} : trackType(track)) }
+				});
+			}
+
+			if (s.subscribeStats !== null && s.unsubscribedAt !== null) {
+				const [layer] = layerStats(s.subscribeStats);
+
+				if (layer !== undefined) {
+					push('TRACK_SUBSCRIBE_STATS', s.unsubscribedAt, ref, {
+						room: roomMin,
+						...(track === undefined ? {} : { mime: track.mimeType }),
+						rtp_stats: rtpStatsPayload(s.subscribedAt, s.unsubscribedAt, layer, s.subscribeStats)
+					});
+				}
+			}
 		}
 	}
 
 	for (const e of bundle.egresses) {
-		const ref = { egressId: e._id };
+		// A web egress has no room: neither its events nor their payload name one.
+		const ref = { egressId: e._id, roomSid: e.roomSid, roomName: e.roomName };
 		const egress = egressInfo(e);
 
 		push('EGRESS_STARTED', e.startedAt, ref, { egress: { ...egress, updated_at: unixNs(e.startedAt) } });
@@ -209,75 +267,142 @@ export function deriveEvents(
 			});
 		}
 
-		if (e.endedAt !== null) {
+		if (e.endedAt !== null && e.closedBy === 'reconciler') {
 			push(
 				'EGRESS_ENDED',
 				e.endedAt,
 				ref,
 				{
 					egress: {
-						...egress,
-						...egressStatus(e.status),
-						ended_at: unixNs(e.endedAt),
-						updated_at: unixNs(e.endedAt),
-						...(e.error === null ? {} : { error: e.error }),
-						...(e.errorCode === null ? {} : { error_code: e.errorCode }),
-						...egressResults(e)
+						egress_id: e._id,
+						...(e.roomSid === null ? {} : { room_id: e.roomSid }),
+						...(e.roomName === null ? {} : { room_name: e.roomName }),
+						status: 'EGRESS_FAILED',
+						error: e.error
 					},
-					...(e.closedBy === 'reconciler' ? { reconciler: { reason: 'node-dead' } } : {})
+					reconciler: { reason: ROOM_CLOSED_NODE_DEAD }
 				},
-				e.closedBy === 'reconciler'
+				e._id
 			);
+		} else if (e.endedAt !== null) {
+			push('EGRESS_ENDED', e.endedAt, ref, {
+				egress: {
+					...egress,
+					...egressStatus(e.status),
+					ended_at: unixNs(e.endedAt),
+					updated_at: unixNs(e.endedAt),
+					...(e.error === null ? {} : { error: e.error }),
+					...(e.errorCode === null ? {} : { error_code: e.errorCode }),
+					...(e.retryCount === 0 ? {} : { retry_count: e.retryCount }),
+					...(e.backupStorageUsed ? { backup_storage_used: true } : {}),
+					...egressResults(e)
+				}
+			});
 		}
 	}
 
+	// Ingress events carry no participant, and the state names its room only once the session publishes, so
+	// INGRESS_CREATED, the buffering INGRESS_UPDATED and INGRESS_STARTED have no room SID.
+	const noRoom = { roomSid: null };
+
 	for (const i of bundle.ingresses) {
-		push('INGRESS_CREATED', i.createdAt, { ingressId: i._id }, { ingress: { ...ingressInfo(i), state: {} } });
+		push(
+			'INGRESS_CREATED',
+			i.createdAt,
+			{ ...noRoom, ingressId: i._id },
+			{ ingress: { ...ingressInfo(i), state: {} } }
+		);
 	}
 
 	const ingressesById = new Map(bundle.ingresses.map((i) => [i._id, i]));
 
 	for (const s of bundle.ingressSessions) {
-		const ref = { ingressId: s.ingressId, ingressSessionId: s._id, identity: s.participantIdentity };
+		const ref = { ingressId: s.ingressId, ingressSessionId: s._id };
 		const ingress = ingressesById.get(s.ingressId);
 		const definition = ingress === undefined ? { ingress_id: s.ingressId } : ingressInfo(ingress);
-		const state = {
-			room_id: s.roomSid,
-			started_at: unixNs(s.startedAt),
-			resource_id: s._id
+		const media = {
+			...(s.video === null
+				? {}
+				: {
+						video: {
+							mime_type: s.video.mimeType,
+							average_bitrate: s.video.averageBitrate,
+							width: s.video.width,
+							height: s.video.height,
+							framerate: s.video.framerate
+						}
+					}),
+			...(s.audio === null
+				? {}
+				: {
+						audio: {
+							mime_type: s.audio.mimeType,
+							average_bitrate: s.audio.averageBitrate,
+							channels: s.audio.channels,
+							sample_rate: s.audio.sampleRate
+						}
+					})
 		};
-		push('INGRESS_STARTED', s.startedAt, ref, {
-			ingress: {
-				...definition,
-				state: {
-					status: 'ENDPOINT_PUBLISHING',
-					video: {
-						mime_type: s.video.mimeType,
-						average_bitrate: s.video.averageBitrate,
-						width: s.video.width,
-						height: s.video.height,
-						framerate: s.video.framerate
-					},
-					audio: {
-						mime_type: s.audio.mimeType,
-						average_bitrate: s.audio.averageBitrate,
-						channels: s.audio.channels,
-						sample_rate: s.audio.sampleRate
-					},
-					...state,
-					updated_at: unixNs(s.startedAt)
+		const started = { started_at: unixNs(s.startedAt), resource_id: s._id };
+		push(
+			'INGRESS_UPDATED',
+			s.startedAt,
+			{ ...ref, ...noRoom },
+			{
+				ingress: {
+					...definition,
+					state: { status: 'ENDPOINT_BUFFERING', ...started, updated_at: unixNs(s.startedAt) }
 				}
 			}
-		});
+		);
 
-		if (s.endedAt !== null) {
+		if (s.status === 'buffering') {
+			continue;
+		}
+
+		const publishedAt = new Date(s.startedAt.getTime() + 500);
+		push(
+			'INGRESS_STARTED',
+			publishedAt,
+			{ ...ref, ...noRoom },
+			{
+				ingress: {
+					...definition,
+					state: { status: 'ENDPOINT_PUBLISHING', ...media, ...started, updated_at: unixNs(publishedAt) }
+				}
+			}
+		);
+
+		if (s.endedAt !== null && s.closedBy === 'reconciler') {
+			push(
+				'INGRESS_ENDED',
+				s.endedAt,
+				ref,
+				{
+					ingress: {
+						ingress_id: s.ingressId,
+						room_name: s.roomName,
+						state: {
+							status: 'ENDPOINT_ERROR',
+							error: s.error,
+							...(s.roomSid === null ? {} : { room_id: s.roomSid }),
+							resource_id: s._id
+						}
+					},
+					reconciler: { reason: ROOM_CLOSED_NODE_DEAD }
+				},
+				s._id
+			);
+		} else if (s.endedAt !== null) {
 			push('INGRESS_ENDED', s.endedAt, ref, {
 				ingress: {
 					...definition,
 					state: {
 						...enumField('status', INGRESS_STATES[s.status]),
 						...(s.error === null ? {} : { error: s.error }),
-						...state,
+						...media,
+						...(s.roomSid === null ? {} : { room_id: s.roomSid }),
+						...started,
 						ended_at: unixNs(s.endedAt),
 						updated_at: unixNs(s.endedAt)
 					}
@@ -285,13 +410,47 @@ export function deriveEvents(
 			});
 		}
 	}
+
+	// The server sends the definition with the state of its last session, ended before the deletion, so the writer
+	// stores the room and the session of that state on the event; an ingress never used names no room.
+	for (const i of bundle.ingresses) {
+		const last = bundle.ingressSessions.filter((s) => s.ingressId === i._id).at(-1);
+		const ended = last === undefined || last.endedAt === null ? undefined : { ...last, endedAt: last.endedAt };
+		push(
+			'INGRESS_DELETED',
+			i.deletedAt,
+			ended === undefined ? { ...noRoom, ingressId: i._id } : { ingressId: i._id, ingressSessionId: ended._id },
+			{
+				ingress: {
+					...ingressInfo(i),
+					state:
+						ended === undefined
+							? {}
+							: {
+									...(ended.status === 'error' ? enumField('status', INGRESS_STATES.error) : {}),
+									...(ended.error === null ? {} : { error: ended.error }),
+									...(ended.roomSid === null ? {} : { room_id: ended.roomSid }),
+									started_at: unixNs(ended.startedAt),
+									ended_at: unixNs(ended.endedAt),
+									updated_at: unixNs(ended.endedAt),
+									resource_id: ended._id
+								}
+				}
+			}
+		);
+	}
 }
 
 /** Reason and disconnect reason of the reconciler's synthetic close events. */
 const RECONCILED = 'RECONCILED';
+/** Reasons of the reconciler's closures in their synthetic events. */
+const NODE_DEAD = 'node-dead';
+/** An egress or ingress session the reconciler closes with its room. */
+const ROOM_CLOSED_NODE_DEAD = 'room-closed-node-dead';
 
 /** Protojson names of the ingress session states; the zero value `ENDPOINT_INACTIVE` is never written. */
 const INGRESS_STATES: Record<IngressSessionDoc['status'], string> = {
+	inactive: 'ENDPOINT_INACTIVE',
 	buffering: 'ENDPOINT_BUFFERING',
 	publishing: 'ENDPOINT_PUBLISHING',
 	error: 'ENDPOINT_ERROR',
@@ -299,7 +458,15 @@ const INGRESS_STATES: Record<IngressSessionDoc['status'], string> = {
 };
 
 /** Protojson zero values, which the writer's codec omits. */
-const ZERO_ENUMS = new Set(['STANDARD', 'AUDIO', 'LOW', 'ROOM_END_UNKNOWN', 'UNKNOWN_REASON', 'EGRESS_STARTING']);
+const ZERO_ENUMS = new Set([
+	'STANDARD',
+	'AUDIO',
+	'LOW',
+	'ROOM_END_UNKNOWN',
+	'UNKNOWN_REASON',
+	'EGRESS_STARTING',
+	'ENDPOINT_INACTIVE'
+]);
 
 /** `{ [name]: value }`, or nothing when the value is absent: the driver would store `undefined` as `null`. */
 function defined(name: string, value: string | undefined): Record<string, string> {
@@ -332,7 +499,7 @@ function participantInfo(p: ParticipantDoc): Record<string, unknown> {
 		identity: p.identity,
 		...(p.name === '' ? {} : { name: p.name }),
 		...enumField('kind', p.kind),
-		...(p.kindDetails.length === 0 ? {} : { kind_details: p.kindDetails }),
+		...(p.kindDetails === undefined || p.kindDetails.length === 0 ? {} : { kind_details: p.kindDetails }),
 		joined_at: unixSeconds(p.joinedAt),
 		joined_at_ms: unixMs(p.joinedAt),
 		permission: {
@@ -341,13 +508,13 @@ function participantInfo(p: ParticipantDoc): Record<string, unknown> {
 			...(p.permission.canPublishData ? { can_publish_data: true } : {}),
 			...(p.permission.hidden ? { hidden: true } : {})
 		},
-		region: p.region
+		...(p.region === undefined ? {} : { region: p.region })
 	};
 }
 
 function clientInfo(p: ParticipantDoc): Record<string, unknown> {
 	const c = p.client;
-	const fields: [string, string][] = [
+	const fields: [string, string | undefined][] = [
 		['sdk', c.sdk],
 		['version', c.version],
 		['os', c.os],
@@ -358,7 +525,7 @@ function clientInfo(p: ParticipantDoc): Record<string, unknown> {
 		['network', c.network]
 	];
 
-	return Object.fromEntries(fields.filter(([, value]) => value !== ''));
+	return Object.fromEntries(fields.filter(([, value]) => value !== undefined && value !== ''));
 }
 
 function trackType(t: TrackDoc): Record<string, string> {
@@ -395,6 +562,36 @@ function trackInfo(t: TrackDoc): Record<string, unknown> {
 	};
 }
 
+/** The `rtp_stats` of a final stats event, as protojson: the zero values left out, 64-bit bytes. */
+function rtpStatsPayload(
+	start: Date,
+	end: Date,
+	layer: LayerStats,
+	stats: { jitterMaxMs: number; rttMaxMs: number }
+): Record<string, unknown> {
+	const seconds = Math.max(0.001, (end.getTime() - start.getTime()) / 1000);
+	const nonZero = (name: string, value: number): Record<string, number> => (value === 0 ? {} : { [name]: value });
+	const sent = layer.packets + layer.packetsLost;
+
+	return {
+		start_time: start,
+		end_time: end,
+		duration: seconds,
+		...nonZero('packets', layer.packets),
+		...nonZero('packet_rate', Math.round((layer.packets / seconds) * 100) / 100),
+		bytes: int64(layer.bytes),
+		...nonZero('bitrate', Math.round(((layer.bytes * 8) / seconds) * 100) / 100),
+		...nonZero('packets_lost', layer.packetsLost),
+		...nonZero('packet_loss_rate', Math.round((layer.packetsLost / seconds) * 1000) / 1000),
+		...nonZero('packet_loss_percentage', sent === 0 ? 0 : Math.round((layer.packetsLost / sent) * 10_000) / 100),
+		...nonZero('jitter_max', Math.round(stats.jitterMaxMs * 1000)),
+		...nonZero('nacks', layer.nacks),
+		...nonZero('plis', layer.plis),
+		...nonZero('firs', layer.firs),
+		...nonZero('rtt_max', stats.rttMaxMs)
+	};
+}
+
 function egressStatus(status: EgressDoc['status']): Record<string, string> {
 	return enumField('status', `EGRESS_${status.toUpperCase()}`);
 }
@@ -411,15 +608,16 @@ export function egressRawRequest(e: EgressDoc): Record<string, unknown> {
 		layout?: string;
 	};
 	const options = { options: { preset: r.preset ?? 'H264_720P_30' } };
-	const output = e.outputs[0];
-	const outputs =
-		output === undefined
-			? {}
-			: output.kind === 'file'
-				? { file_outputs: [{ file_type: 'MP4', ...defined('filepath', output.filename) }] }
-				: output.kind === 'stream'
-					? { stream_outputs: [{ protocol: 'RTMP', urls: ['rtmps://stream.example.com/live/***'] }] }
-					: { segment_outputs: [defined('playlist_name', output.playlistName)] };
+	const kinds = (e.request.outputs ?? []) as readonly string[];
+	const folder = e.roomName ?? 'web';
+	const outputs = {
+		...(kinds.includes('file') ? { file_outputs: [{ file_type: 'MP4', filepath: `${folder}-${e._id}.mp4` }] } : {}),
+		...(kinds.includes('stream')
+			? { stream_outputs: [{ protocol: 'RTMP', urls: ['rtmps://stream.example.com/live/***'] }] }
+			: {}),
+		...(kinds.includes('segments') ? { segment_outputs: [{ playlist_name: `${e._id}.m3u8` }] } : {}),
+		...(kinds.includes('images') ? { image_outputs: [{ filename_prefix: `${folder}/${e._id}/thumbnail` }] } : {})
+	};
 
 	switch (e.type) {
 		case 'room_composite':
@@ -446,15 +644,22 @@ export function egressRawRequest(e: EgressDoc): Record<string, unknown> {
 				}
 			};
 		case 'track':
-			return { track: { room_name: e.roomName, ...defined('track_id', r.trackId) } };
+			return {
+				track: {
+					room_name: e.roomName,
+					...defined('track_id', r.trackId),
+					...(kinds.includes('file') ? { file: { filepath: `${folder}-${e._id}.ogg` } } : {}),
+					...(kinds.includes('stream') ? { websocket_url: 'wss://stream.example.com/***' } : {})
+				}
+			};
 	}
 }
 
 function egressInfo(e: EgressDoc): Record<string, unknown> {
 	return {
 		egress_id: e._id,
-		room_id: e.roomSid,
-		room_name: e.roomName,
+		...(e.roomSid === null ? {} : { room_id: e.roomSid }),
+		...(e.roomName === null ? {} : { room_name: e.roomName }),
 		...(e.sourceType === 'sdk' ? { source_type: 'EGRESS_SOURCE_TYPE_SDK' } : {}),
 		started_at: unixNs(e.startedAt),
 		request: egressRawRequest(e)
@@ -465,32 +670,43 @@ function egressResults(e: EgressDoc): Record<string, unknown> {
 	const files: Record<string, unknown>[] = [];
 	const streams: Record<string, unknown>[] = [];
 	const segments: Record<string, unknown>[] = [];
+	const images: Record<string, unknown>[] = [];
 
 	for (const o of e.outputs) {
 		const times = {
-			started_at: unixNs(o.startedAt),
-			...(o.endedAt === null ? {} : { ended_at: unixNs(o.endedAt) }),
-			duration: int64(o.durationMs).multiply(1_000_000)
+			...(o.startedAt === undefined ? {} : { started_at: unixNs(o.startedAt) }),
+			...(o.endedAt === undefined ? {} : { ended_at: unixNs(o.endedAt) }),
+			...(o.durationMs === undefined ? {} : { duration: int64(o.durationMs).multiply(1_000_000) })
 		};
+		const size = o.size === undefined ? {} : { size: o.size };
 
 		if (o.kind === 'file') {
-			files.push({ ...defined('filename', o.filename), ...times, size: o.size, location: o.location });
+			files.push({ ...defined('filename', o.filename), ...times, ...size, ...defined('location', o.location) });
 		} else if (o.kind === 'stream') {
-			streams.push({ url: 'rtmps://stream.example.com/live/***', status: o.status, ...times });
-		} else {
+			streams.push({
+				...defined('url', o.url),
+				// ACTIVE is the zero value of the stream status, which protojson omits.
+				...(o.status === 'ACTIVE' ? {} : defined('status', o.status)),
+				...defined('error', o.error),
+				...times
+			});
+		} else if (o.kind === 'segments') {
 			segments.push({
 				...defined('playlist_name', o.playlistName),
-				playlist_location: o.location,
+				...defined('playlist_location', o.location),
 				...times,
-				size: o.size
+				...size
 			});
+		} else {
+			images.push({ ...defined('filename_prefix', o.filenamePrefix), ...times });
 		}
 	}
 
 	return {
 		...(files.length === 0 ? {} : { file_results: files }),
 		...(streams.length === 0 ? {} : { stream_results: streams }),
-		...(segments.length === 0 ? {} : { segment_results: segments })
+		...(segments.length === 0 ? {} : { segment_results: segments }),
+		...(images.length === 0 ? {} : { image_results: images })
 	};
 }
 
@@ -509,144 +725,53 @@ function ingressInfo(i: IngressDoc): Record<string, unknown> {
 	};
 }
 
-export function deriveStats(rng: Rng, bundle: RoomBundle, windows: DeriveWindows, emit: (doc: StatsDoc) => void): void {
+/** The `track_stats` documents inside the stats window: the samples `applyStats` summed, as the writer stores them. */
+export function deriveStats(
+	bundle: RoomBundle,
+	windows: DeriveWindows,
+	engine: Engine,
+	emit: (doc: StatsDoc) => void
+): void {
 	if (bundle.room.mediaStats === false) {
 		return;
 	}
 
-	const tracksById = new Map(bundle.tracks.map((t) => [t._id, t]));
-	const tracksByParticipant = groupBy(bundle.tracks, (t) => t.participantSid);
-	const subsBySubscriber = groupBy(
-		bundle.subscriptions.filter((s) => s.status !== 'failed'),
-		(s) => s.subscriberSid
-	);
+	const media = new RoomMedia(bundle, engine, windows.now);
 	const nodeId = bundle.room.nodeId;
 
 	for (const p of bundle.participants) {
-		if (p.status === 'aborted' || p.activeAt === null) {
-			continue;
-		}
-
-		const meanScore = bundle.meanScores.get(p._id) ?? 4;
-		const start = p.activeAt.getTime();
-		const end = p.leftAt?.getTime() ?? windows.now;
-		const tracks = tracksByParticipant.get(p._id) ?? [];
-		const subs = subsBySubscriber.get(p._id) ?? [];
-		const meta = { roomSid: p.roomSid, participantSid: p._id, nodeId };
-
-		for (let ts = start + FLUSH_MS; ts <= end; ts += FLUSH_MS) {
+		for (const ts of media.flushes(p)) {
 			if (ts < windows.statsFrom) {
 				continue;
 			}
 
-			const published = tracks.filter(
-				(t) => t.publishedAt.getTime() <= ts && (t.unpublishedAt === null || t.unpublishedAt.getTime() >= ts)
-			);
-			const open = subs.filter(
-				(s) => s.subscribedAt.getTime() <= ts && (s.unsubscribedAt === null || s.unsubscribedAt.getTime() >= ts)
-			);
-
-			if (windows.statsMode === 'track') {
-				for (const t of published) {
-					emit(
-						sample(rng, new Date(ts), { ...meta, trackSid: t._id, kind: 'up' }, [t], meanScore, t.mimeType)
-					);
-				}
-
-				for (const s of open) {
-					const t = tracksById.get(s.trackSid);
-
-					if (t !== undefined) {
-						emit(
-							sample(
-								rng,
-								new Date(ts),
-								{ ...meta, trackSid: t._id, kind: 'down' },
-								[[s, t]],
-								meanScore,
-								t.mimeType
-							)
-						);
-					}
-				}
-			} else {
-				if (published.length > 0) {
-					emit(sample(rng, new Date(ts), { ...meta, kind: 'up' }, published, meanScore));
-				}
-
-				if (open.length > 0) {
-					const pairs: [SubscriptionDoc, TrackDoc][] = [];
-
-					for (const s of open) {
-						const t = tracksById.get(s.trackSid);
-
-						if (t !== undefined) {
-							pairs.push([s, t]);
-						}
-					}
-
-					emit(sample(rng, new Date(ts), { ...meta, kind: 'down' }, pairs, meanScore));
-				}
+			for (const doc of statsDocuments(media.samples(p, ts), windows.statsMode)) {
+				emit({
+					ts: new Date(ts),
+					meta: {
+						roomSid: p.roomSid,
+						participantSid: p._id,
+						...(doc.trackSid === undefined ? {} : { trackSid: doc.trackSid }),
+						kind: doc.kind,
+						nodeId
+					},
+					score: doc.score,
+					minScore: doc.minScore,
+					medianScore: doc.medianScore,
+					bytes: int64(doc.bytes),
+					packets: doc.packets,
+					packetsLost: doc.packetsLost,
+					rttMs: doc.rttMs,
+					jitterMs: doc.jitterMs,
+					nacks: doc.nacks,
+					plis: doc.plis,
+					firs: doc.firs,
+					layers: doc.layers.map((l) => ({ layer: l.layer, bytes: int64(l.bytes), packets: l.packets })),
+					...(doc.mimeType === undefined ? {} : { mimeType: doc.mimeType })
+				});
 			}
 		}
 	}
-}
-
-function sample(
-	rng: Rng,
-	ts: Date,
-	meta: StatsDoc['meta'],
-	sources: readonly (TrackDoc | [SubscriptionDoc, TrackDoc])[],
-	meanScore: number,
-	mimeType?: string
-): StatsDoc {
-	let bytes = 0;
-	const layers = new Map<number, { bytes: number; packets: number }>();
-
-	for (const source of sources) {
-		const track = Array.isArray(source) ? source[1] : source;
-		const bitrate = Array.isArray(source)
-			? subscriptionBitrate(source[0].source, source[0].maxVideoQuality, trackBitrate(track))
-			: trackBitrate(track);
-		const flushBytes = (bitrate / 8) * (FLUSH_MS / 1000) * rng.float(0.85, 1.15);
-		bytes += flushBytes;
-
-		if (track.type === 'VIDEO') {
-			const layerCount = Array.isArray(source) ? 1 : (track.codecs[0]?.layers.length ?? 1);
-
-			for (let i = 0; i < layerCount; i += 1) {
-				const layer = layers.get(i) ?? { bytes: 0, packets: 0 };
-				layer.bytes += flushBytes / layerCount;
-				layer.packets += Math.round(flushBytes / layerCount / 1_100);
-				layers.set(i, layer);
-			}
-		}
-	}
-
-	const packets = Math.round(bytes / 1_100);
-	const score = round2(Math.min(4.5, Math.max(1, meanScore + rng.gaussian(0, 0.15))));
-
-	return {
-		ts,
-		meta,
-		score,
-		minScore: round2(Math.max(1, score - rng.float(0, 0.4))),
-		medianScore: score,
-		bytes: int64(bytes),
-		packets,
-		packetsLost: Math.round(packets * rng.clampedGaussian(0.005, 0.006, 0, 0.08)),
-		rttMs: Math.round(rng.clampedGaussian(90, 50, 5, 800)),
-		jitterMs: Math.round(rng.clampedGaussian(12, 8, 1, 120)),
-		nacks: rng.int(0, 3),
-		plis: rng.chance(0.05) ? 1 : 0,
-		firs: 0,
-		layers: [...layers.entries()].map(([layer, l]) => ({
-			layer,
-			bytes: int64(l.bytes),
-			packets: l.packets
-		})),
-		...(mimeType === undefined ? {} : { mimeType })
-	};
 }
 
 type Counter = Record<string, number>;
@@ -696,6 +821,9 @@ interface Bucket {
 	ingress: Peaks & { sessionsStarted: number; sessionsEnded: number; byInputType: Counter; durationMs: number };
 	bytes: { up: number; down: number };
 	quality: { scoreSum: number; scoreCount: number; poor: number; lost: number };
+	/** Only once an API call was counted, as the writer increments them. */
+	apiCalls?: { total: number; byMethod: Counter };
+	apiErrors?: { total: number; byMethod: Counter };
 	identities?: Set<string>;
 }
 
@@ -736,6 +864,8 @@ export interface CountedRollupDoc {
 	ingress?: Bucket['ingress'];
 	bytes: { up: Long; down: Long };
 	quality: Bucket['quality'];
+	apiCalls?: Bucket['apiCalls'];
+	apiErrors?: Bucket['apiErrors'];
 	mediaStats: MediaStatsMarks;
 	uniqueIdentities?: number;
 }
@@ -874,12 +1004,27 @@ export class Rollups {
 		);
 
 		for (const p of bundle.participants) {
-			this.addParticipant(p, bundle, windows);
+			this.addParticipant(p, bundle);
 		}
 
 		for (const t of bundle.tracks) {
 			this.at(t.publishedAt, (b) => {
 				b.tracks.published += 1;
+			});
+		}
+
+		// API calls go to the scopes of the server that answered them, the room's.
+		for (const call of bundle.apiCalls) {
+			this.at(call.at, (b) => {
+				b.apiCalls ??= { total: 0, byMethod: {} };
+				b.apiCalls.total += 1;
+				inc(b.apiCalls.byMethod, call.method);
+
+				if (call.error) {
+					b.apiErrors ??= { total: 0, byMethod: {} };
+					b.apiErrors.total += 1;
+					inc(b.apiErrors.byMethod, call.method);
+				}
 			});
 		}
 
@@ -924,10 +1069,15 @@ export class Rollups {
 
 		for (const s of bundle.ingressSessions) {
 			addSpan(this.activeIngress, s.startedAt, s.endedAt);
-			this.at(s.startedAt, (b) => {
-				b.ingress.sessionsStarted += 1;
-				inc(b.ingress.byInputType, s.inputType);
-			});
+
+			// INGRESS_STARTED counts a session once it publishes; one still buffering has not started.
+			if (s.status !== 'buffering') {
+				this.at(s.startedAt, (b) => {
+					b.ingress.sessionsStarted += 1;
+					inc(b.ingress.byInputType, s.inputType);
+				});
+			}
+
 			this.at(s.endedAt, (b) => {
 				b.ingress.sessionsEnded += 1;
 				b.ingress.durationMs += s.durationMs ?? 0;
@@ -1051,12 +1201,12 @@ export class Rollups {
 		}
 	}
 
-	private addParticipant(p: ParticipantDoc, bundle: RoomBundle, windows: DeriveWindows): void {
+	private addParticipant(p: ParticipantDoc, bundle: RoomBundle): void {
 		if (p.kind !== 'STANDARD') {
 			this.at(p.joinedAt, (b) => {
 				inc(b.participants.byKind, p.kind);
 			});
-			this.addTraffic(p, bundle, windows);
+			this.addTraffic(p, bundle);
 
 			return;
 		}
@@ -1068,7 +1218,7 @@ export class Rollups {
 				inc(b.participants.byKind, p.kind);
 				inc(b.participants.bySdk, p.client.sdk || 'UNKNOWN');
 				inc(b.participants.byOs, p.client.os || 'UNKNOWN');
-				inc(b.participants.byBrowser, browserKey(p.client.browser));
+				inc(b.participants.byBrowser, browserKey(p.client.browser ?? ''));
 
 				if (daily) {
 					(b.identities ??= new Set()).add(p.identity);
@@ -1116,56 +1266,38 @@ export class Rollups {
 			}
 		);
 
-		this.addTraffic(p, bundle, windows);
+		this.addTraffic(p, bundle);
 	}
 
-	/** Bytes and quality of every kind, as `track_stats` carries no participant kind. */
-	private addTraffic(p: ParticipantDoc, bundle: RoomBundle, windows: DeriveWindows): void {
-		if (p.status === 'aborted' || p.activeAt === null) {
-			return;
-		}
-
-		// Bytes and quality are spread over the time the session was connected, as stats flushes would do.
-		const start = p.activeAt.getTime();
-		const end = p.leftAt?.getTime() ?? windows.now;
-		const total = Math.max(1, end - start);
-		const meanScore = bundle.meanScores.get(p._id) ?? 4;
-		const directions =
-			p.mediaStats === false ? 0 : (p.tracks.published > 0 ? 1 : 0) + (p.tracks.subscribed > 0 ? 1 : 0);
-		const spread = (slot: number, size: number, apply: (share: number, flushes: number) => void) => {
-			const overlap = Math.min(end, slot + size) - Math.max(start, slot);
-
-			apply(overlap / total, Math.floor(overlap / FLUSH_MS) * directions);
+	/**
+	 * Bytes and quality of every kind, as `track_stats` carries no participant kind: each flush of the participant
+	 * counts its documents' bytes and scores in its hour, day and five minutes, and the participant as connected.
+	 */
+	private addTraffic(p: ParticipantDoc, bundle: RoomBundle): void {
+		const addQuality = (quality: Bucket['quality'], scores: readonly number[]) => {
+			for (const score of scores) {
+				quality.scoreSum += score;
+				quality.scoreCount += 1;
+				quality.poor += score < POOR_SCORE ? 1 : 0;
+				quality.lost += score < LOST_SCORE ? 1 : 0;
+			}
 		};
-		const addQuality = (quality: Bucket['quality'], flushes: number) => {
-			quality.scoreSum += meanScore * flushes;
-			quality.scoreCount += flushes;
-			quality.poor += meanScore < POOR_SCORE && meanScore >= LOST_SCORE ? flushes : 0;
-			quality.lost += meanScore < LOST_SCORE ? flushes : 0;
-		};
+		const connected = new Set<number>();
 
-		for (let hour = Math.floor(start / HOUR) * HOUR; hour < end; hour += HOUR) {
-			spread(hour, HOUR, (share, flushes) => {
-				this.at(new Date(hour), (b) => {
-					b.bytes.up += p.bytes.up.toNumber() * share;
-					b.bytes.down += p.bytes.down.toNumber() * share;
-					addQuality(b.quality, flushes);
-				});
+		for (const flush of bundle.traffic?.get(p._id) ?? []) {
+			this.at(new Date(flush.ts), (b) => {
+				b.bytes.up += flush.up;
+				b.bytes.down += flush.down;
+				addQuality(b.quality, flush.scores);
 			});
-		}
-
-		if (!this.options.fiveMinute) {
-			return;
-		}
-
-		for (let slot = Math.floor(start / FIVE_MINUTES) * FIVE_MINUTES; slot < end; slot += FIVE_MINUTES) {
-			spread(slot, FIVE_MINUTES, (share, flushes) => {
-				this.atFiveMinutes(slot, (f) => {
-					f.participants.connected += 1;
-					f.bytes.up += p.bytes.up.toNumber() * share;
-					f.bytes.down += p.bytes.down.toNumber() * share;
-					addQuality(f.quality, flushes);
-				});
+			const slot = Math.floor(flush.ts / FIVE_MINUTES) * FIVE_MINUTES;
+			const first = !connected.has(slot);
+			connected.add(slot);
+			this.atFiveMinutes(flush.ts, (f) => {
+				f.participants.connected += first ? 1 : 0;
+				f.bytes.up += flush.up;
+				f.bytes.down += flush.down;
+				addQuality(f.quality, flush.scores);
 			});
 		}
 	}
@@ -1323,6 +1455,8 @@ function toDoc(scope: string, bucket: number, b: Bucket, daily: boolean): Rollup
 		...(scope === GLOBAL ? { egress: b.egress, ingress: b.ingress } : {}),
 		bytes: { up: int64(b.bytes.up), down: int64(b.bytes.down) },
 		quality: { ...b.quality, scoreSum: round2(b.quality.scoreSum) },
+		...(b.apiCalls === undefined ? {} : { apiCalls: b.apiCalls }),
+		...(b.apiErrors === undefined ? {} : { apiErrors: b.apiErrors }),
 		mediaStats: b.mediaStats,
 		...identities
 	};
@@ -1354,23 +1488,6 @@ function countRoomClass(b: Bucket, room: RoomDoc): void {
 
 function inc(counter: Counter, key: string): void {
 	counter[key] = (counter[key] ?? 0) + 1;
-}
-
-function groupBy<T>(items: readonly T[], key: (item: T) => string): Map<string, T[]> {
-	const map = new Map<string, T[]>();
-
-	for (const item of items) {
-		const k = key(item);
-		const list = map.get(k);
-
-		if (list === undefined) {
-			map.set(k, [item]);
-		} else {
-			list.push(item);
-		}
-	}
-
-	return map;
 }
 
 function round2(value: number): number {

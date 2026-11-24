@@ -3,6 +3,8 @@ import { createHash } from 'node:crypto';
 import { test as base, type Page, type Route } from '@playwright/test';
 import {
 	type AnalyticsSummary,
+	type DeletionJob,
+	type DeletionRecords,
 	type EgressListItem,
 	type EgressSummary,
 	FeatureKey,
@@ -17,6 +19,7 @@ import {
 	type ParticipantsSummary,
 	type RoomListItem,
 	type RoomSummary,
+	type StartDeletionRequest,
 	type StatusResponse
 } from '@openvidu-dashboard/typings';
 
@@ -150,6 +153,7 @@ function storage(now: number): InfoResponse['storage'] {
 		documents,
 		storageBytes: Math.round(bytes * 0.8),
 		indexBytes: Math.round(bytes * 0.2),
+		freeBytes: 0,
 		...(ageMs === undefined ? {} : { oldest: new Date(now - ageMs).toISOString() })
 	});
 
@@ -174,8 +178,8 @@ export function legacyStorage(now: number): InfoResponse['storage'] {
 	const oldest = new Date(now - 30 * DAY_MS).toISOString();
 
 	return {
-		legacy_events: { documents: 120_000, storageBytes: 32_000_000, indexBytes: 8_000_000, oldest },
-		stats: { documents: 300_000, storageBytes: 72_000_000, indexBytes: 18_000_000, oldest }
+		legacy_events: { documents: 120_000, storageBytes: 32_000_000, indexBytes: 8_000_000, freeBytes: 0, oldest },
+		stats: { documents: 300_000, storageBytes: 72_000_000, indexBytes: 18_000_000, freeBytes: 0, oldest }
 	};
 }
 
@@ -195,6 +199,12 @@ export class MockApi {
 	private accessToken = TOKEN;
 	private readonly proOnly = new Set<string>();
 	private roomsFail = false;
+	/** The latest deletion job: started by `POST deletions`, ended by `finishDeletion()`; reported by the status. */
+	private deletion: DeletionJob | undefined;
+	/** The last deletion of each class, reported by the info document. */
+	private readonly deletionRecords: DeletionRecords = {};
+	/** Bodies of the `POST deletions` requests, in order. */
+	readonly deletionRequests: StartDeletionRequest[] = [];
 
 	constructor(
 		private readonly page: Page,
@@ -227,6 +237,38 @@ export class MockApi {
 		this.proOnly.add(path);
 	}
 
+	/** Completes the running deletion job with `deleted` documents and records its classes in the info document. */
+	finishDeletion(deleted: number): void {
+		const job = this.deletion;
+
+		if (job?.state !== 'running') {
+			return;
+		}
+
+		const finishedAt = new Date().toISOString();
+		const endedBefore = new Date(Date.parse(job.cutoff) - 5 * 60_000).toISOString();
+		const classes =
+			job.class === 'all'
+				? ([
+						'events',
+						'stats',
+						'tracks',
+						'entities',
+						'rollups-5min',
+						'rollups-hourly',
+						'rollups-daily'
+					] as const)
+				: job.class === 'legacy'
+					? []
+					: [job.class];
+
+		this.deletion = { ...job, state: 'completed', finishedAt, deleted };
+
+		for (const key of classes) {
+			this.deletionRecords[key] = { completed: { cutoff: job.cutoff, endedBefore, finishedAt } };
+		}
+	}
+
 	fullInfo(): InfoResponse {
 		const edition = this.proOnly.size > 0 ? 'ce' : this.options.edition;
 
@@ -253,6 +295,7 @@ export class MockApi {
 				...storage(Date.now()),
 				...(this.options.legacy === true ? legacyStorage(Date.now()) : {})
 			},
+			deletions: { ...this.deletionRecords },
 			features: edition === 'pro' ? Object.values(FeatureKey) : [],
 			limits: { rankedSortMaxRangeMs: 7 * 86_400_000, participantRankedSortMaxRangeMs: 86_400_000 },
 			openapiDocsEnabled: false,
@@ -341,7 +384,11 @@ export class MockApi {
 				} else if (method === 'GET' && path === 'overview') {
 					await this.overview(route);
 				} else if (method === 'GET' && path === 'status') {
-					await route.fulfill({ json: this.status() });
+					await route.fulfill({
+						json: { ...this.status(), ...(this.deletion === undefined ? {} : { deletion: this.deletion }) }
+					});
+				} else if (method === 'POST' && path === 'deletions') {
+					await this.startDeletion(route);
 				} else if (method === 'GET' && path.startsWith('analytics/')) {
 					await this.analytics(route, path.slice('analytics/'.length), url.searchParams);
 				} else {
@@ -359,6 +406,43 @@ export class MockApi {
 		const now = Date.now();
 
 		return this.options.legacy === true ? activeStatus(now, 4_000, legacyMigration(now)) : activeStatus(now);
+	}
+
+	/** `POST deletions`: a running job of the requested class, or `409` while one runs. */
+	private async startDeletion(route: Route): Promise<void> {
+		const body = route.request().postDataJSON() as StartDeletionRequest;
+
+		this.deletionRequests.push(body);
+
+		if (this.deletion?.state === 'running') {
+			await route.fulfill({
+				status: 409,
+				json: {
+					error: {
+						code: 'CONFLICT',
+						message: 'A deletion is already running',
+						details: { job: this.deletion }
+					}
+				}
+			});
+
+			return;
+		}
+
+		const now = new Date().toISOString();
+
+		this.deletion = {
+			id: `job-${String(this.deletionRequests.length)}`,
+			class: body.class,
+			includeLegacy: body.includeLegacy === true,
+			state: 'running',
+			cutoff: now,
+			startedAt: now,
+			currentClass: body.class === 'all' ? 'events' : body.class,
+			collection: { index: 1, total: 1 },
+			deleted: 0
+		};
+		await route.fulfill({ status: 202, json: this.deletion });
 	}
 
 	/** A one-line CSV under the file name of the list export, cut when `listExportTruncated` says so. */

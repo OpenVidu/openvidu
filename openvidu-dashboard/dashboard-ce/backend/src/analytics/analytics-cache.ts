@@ -37,6 +37,11 @@ export class AnalyticsCache {
 		return entry.value;
 	}
 
+	/** Drops every entry: a deletion changed the rollups they were folded from. */
+	clear(): void {
+		this.entries.clear();
+	}
+
 	set(key: string, value: BucketCounters): void {
 		if (!this.enabled) {
 			return;

@@ -64,6 +64,30 @@ describe('generated contract files', () => {
 	});
 });
 
+describe('contract of the dashboard deletion records', () => {
+	// The deletion records live in `schema_meta` `_id: "dashboard"`, whose validator accepts any field: `schema/` stays
+	// what the contract sources generate and `contract_version.txt` the schema version, without a contract change.
+	it('Contract unchanged', () => {
+		for (const [relativePath, expected] of buildArtifacts()) {
+			if (relativePath.startsWith('schema/')) {
+				if (typeof expected === 'string') {
+					expect(readText(relativePath), relativePath).toBe(expected);
+				} else {
+					expect(readJson(relativePath), relativePath).toEqual(JSON.parse(JSON.stringify(expected)));
+				}
+			}
+		}
+
+		expect(readText('schema/contract_version.txt').trim()).toBe(String(SCHEMA_VERSION));
+		// The dashboard document accepts any field next to its `_id`.
+		const dashboard = (readSchema(Collection.SCHEMA_META).oneOf ?? []).find(
+			(variant) => variant.properties?._id !== undefined && variant.additionalProperties === true
+		);
+
+		expect(dashboard?.required).toEqual(['_id']);
+	});
+});
+
 describe('schema files', () => {
 	const MONGODB_KEYWORDS = new Set([
 		'bsonType',
@@ -134,7 +158,7 @@ describe('schema files', () => {
 	});
 
 	it.each([Collection.ANALYTICS_5MIN, Collection.ANALYTICS_HOURLY, Collection.ANALYTICS_DAILY])(
-		'accepts both media statistics marks on %s and nothing else under mediaStats',
+		'Validator: accepts both media statistics marks on %s and nothing else under mediaStats',
 		(collection) => {
 			const [rollup] = readFixtures(collection);
 			expect(validate(collection, { ...rollup, mediaStats: { reported: true, missing: true } })).toBeNull();
