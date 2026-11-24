@@ -28,6 +28,8 @@ export default defineConfig([
 		rules: {
 			'@typescript-eslint/consistent-type-imports': ['error', { fixStyle: 'inline-type-imports' }],
 			'@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
+			// Off: it flags library typings, such as winston's transports and Angular Material's config literals.
+			'@typescript-eslint/no-unsafe-class-instance-assignment': 'off',
 			curly: 'error',
 			eqeqeq: ['error', 'always'],
 			'padding-line-between-statements': [
