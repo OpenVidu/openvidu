@@ -3,9 +3,13 @@
 # these packages: a MongoDB replica set (a container, or DASHBOARD_DEMO_MONGO_URI), 30 days of generated data kept live,
 # and the backend and frontend development servers of dev-lib.sh. The caller sets DATABASE and STATS_MODE, and
 # optionally the array GENERATOR_ARGS of extra data generator options, and runs from the root of its workspace.
+#   DASHBOARD_DEMO_DATA         frozen (default): the generated data, with only the heartbeats and stats times kept
+#                               live; live: the data generator's live writer goes on writing it every 10 s (rooms
+#                               start and end, stats, rollups, server operations)
 #   DASHBOARD_DEMO_MONGO_URI    MongoDB to use instead of the container
 #   DASHBOARD_DEMO_MONGO_PORT   host port of the container (default 27018)
-#   DASHBOARD_DEMO_KEEP_DATA    true reuses the demo database instead of generating it again
+#   DASHBOARD_DEMO_KEEP_DATA    true reuses the demo database instead of generating it again; in live mode, the time
+#                               since its last heartbeat is an outage that closes what was open
 #   DASHBOARD_DEMO_LEGACY       true also generates the legacy collections of an upgrade from 3.9 and their completed
 #                               migration (data generator --legacy)
 
@@ -39,8 +43,46 @@ start_mongo() {
 	exit 1
 }
 
-# prepare_data: MongoDB, the generated database (unless kept) and the keep-alive of its active sessions; sets MONGO_URI.
+# demo_data_mode: frozen or live, from DASHBOARD_DEMO_DATA, in DEMO_DATA; exits on any other value.
+demo_data_mode() {
+	DEMO_DATA="${DASHBOARD_DEMO_DATA:-frozen}"
+
+	case "$DEMO_DATA" in
+		frozen | live) ;;
+		*)
+			echo "DASHBOARD_DEMO_DATA must be frozen or live, not '$DEMO_DATA'" >&2
+			exit 1
+			;;
+	esac
+}
+
+# start_live_generation <generator options...>: the generation, then its live writer in the background; returns once
+# the generation is written.
+start_live_generation() {
+	local log="$WORK_DIR/generate.log"
+	local pid
+
+	pnpm --silent --dir "$TOOLS_DIR/data-generator" run generate "$@" --live >"$log" 2>&1 &
+	pid=$!
+	PIDS+=("$pid")
+
+	until grep -q '^Writing live' "$log"; do
+		if ! kill -0 "$pid" 2>/dev/null; then
+			cat "$log" >&2
+			exit 1
+		fi
+
+		sleep 1
+	done
+
+	grep -E '^(  total|Elapsed)' "$log" || true
+}
+
+# prepare_data: MongoDB, the generated database (unless kept), and the keep-alive of its active sessions (frozen) or the
+# live writer (live); sets MONGO_URI.
 prepare_data() {
+	demo_data_mode
+
 	if [ -n "${DASHBOARD_DEMO_MONGO_URI:-}" ]; then
 		MONGO_URI="$DASHBOARD_DEMO_MONGO_URI"
 	else
@@ -52,22 +94,35 @@ prepare_data() {
 		MONGO_URI="mongodb://127.0.0.1:$MONGO_PORT/?directConnection=true"
 	fi
 
+	# The options of the world, which the live writer goes on with.
+	local world=(--uri "$MONGO_URI" --db "$DATABASE" --scenario S --stats-mode "$STATS_MODE" --five-minute-rollups
+		--room-sums ${GENERATOR_ARGS[@]+"${GENERATOR_ARGS[@]}"})
+
 	if [ "${DASHBOARD_DEMO_KEEP_DATA:-false}" != true ]; then
-		local legacy_args=()
+		local generation=(--days 30 --drop --active-window 60 --min-active-rooms 10)
+		local legacy=""
 
 		if [ "${DASHBOARD_DEMO_LEGACY:-false}" = true ]; then
-			legacy_args=(--legacy)
+			generation+=(--legacy)
+			legacy=", legacy data"
 		fi
 
-		echo "Generating $DATABASE (scenario S, 30 days, $STATS_MODE stats${legacy_args[*]:+, legacy data})"
-		pnpm --silent --dir "$TOOLS_DIR/data-generator" run generate --uri "$MONGO_URI" --db "$DATABASE" \
-			--scenario S --days 30 --stats-mode "$STATS_MODE" --drop --five-minute-rollups --room-sums \
-			--active-window 60 --min-active-rooms 10 ${legacy_args[@]+"${legacy_args[@]}"} \
-			${GENERATOR_ARGS[@]+"${GENERATOR_ARGS[@]}"} | tail -2
+		echo "Generating $DATABASE (scenario S, 30 days, $STATS_MODE stats, $DEMO_DATA data$legacy)"
+
+		if [ "$DEMO_DATA" = live ]; then
+			start_live_generation "${world[@]}" "${generation[@]}"
+		else
+			pnpm --silent --dir "$TOOLS_DIR/data-generator" run generate "${world[@]}" "${generation[@]}" | tail -2
+		fi
+	elif [ "$DEMO_DATA" = live ]; then
+		pnpm --silent --dir "$TOOLS_DIR/data-generator" run live "${world[@]}" &
+		PIDS+=("$!")
 	fi
 
-	pnpm --silent --dir "$TOOLS_DIR/data-generator" run keep-alive --uri "$MONGO_URI" --db "$DATABASE" &
-	PIDS+=("$!")
+	if [ "$DEMO_DATA" = frozen ]; then
+		pnpm --silent --dir "$TOOLS_DIR/data-generator" run keep-alive --uri "$MONGO_URI" --db "$DATABASE" &
+		PIDS+=("$!")
+	fi
 }
 
 # start_backend <package directory> <port> [VAR=value...]: the backend development server on the demo database, in
@@ -80,3 +135,6 @@ start_backend() {
 	start_dev_backend "$directory" "$port" DASHBOARD_BASE_PATH=/ ADMIN_USERNAME=admin ADMIN_PASSWORD=admin \
 		DATABASE_URL="$MONGO_URI" DATABASE_NAME="$DATABASE" "$@"
 }
+
+# The data mode is checked as the demo starts, before it starts anything.
+demo_data_mode
