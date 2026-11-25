@@ -19,7 +19,7 @@ import {
 	type ScenarioName
 } from './model.js';
 import { toStored } from './contract.js';
-import { cutRoom, roomLife } from './cut.js';
+import { cutRoom, roomLife, type RoomLife } from './cut.js';
 import type { Engine } from './samples.js';
 import { LEGACY_EVENTS, LEGACY_STATS, writeLegacy } from './legacy.js';
 import { Rng } from './random.js';
@@ -36,7 +36,7 @@ const SLOW_BATCH_INTERVAL_MS = 30_000;
 const VERSION_BEFORE_UPGRADE = '3.10.0';
 const VERSION_AFTER_UPGRADE = '3.10.1';
 // Relative weight of each UTC hour for room creation: office-hours peak around 14:00, quiet nights.
-const HOUR_WEIGHTS: readonly (readonly [number, number])[] = Array.from({ length: 24 }, (_, h) => [
+export const HOUR_WEIGHTS: readonly (readonly [number, number])[] = Array.from({ length: 24 }, (_, h) => [
 	h,
 	0.1 + 0.9 * Math.exp(-((h - 14) ** 2) / 32)
 ]);
@@ -153,7 +153,7 @@ function planRooms(
 type PlannedRoom = Pick<RoomPlan, 'createdAt' | 'active' | 'heldOpen'> & { hosts?: readonly RoomHost[] };
 
 /** One server process of the generated deployment, and its `nodes` document. */
-interface Server extends RoomHost {
+export interface Server extends RoomHost {
 	firstSeenAt: number;
 	drainingAt?: number;
 	rtcEngine: Engine;
@@ -249,7 +249,7 @@ function serverTimeline(
 }
 
 /** Whether a server takes new rooms at `at`: from its first heartbeat until it drains or ends. */
-function takesRooms(server: Server, at: number): boolean {
+export function takesRooms(server: Server, at: number): boolean {
 	return (
 		server.firstSeenAt <= at &&
 		at < Math.min(server.drainingAt ?? Number.POSITIVE_INFINITY, server.end?.at ?? Number.POSITIVE_INFINITY)
@@ -345,6 +345,24 @@ export interface GenerateSummary {
 	inserted: number;
 	elapsedSeconds: number;
 	timeseries: boolean;
+	/** What the live writer goes on writing from the generation instant (`LiveWriter`). */
+	world: World;
+}
+
+/** The generated world at the generation instant, which the live writer goes on writing. */
+export interface World {
+	options: GenerateOptions;
+	scenario: Scenario;
+	/** The generation instant: the live writer's first tick. */
+	start: number;
+	windowStart: number;
+	servers: readonly Server[];
+	/** The rooms whose lives go on after the generation instant. */
+	lives: RoomLife[];
+	/** The number of rooms generated, after which the live writer numbers its own. */
+	rooms: number;
+	/** The node ids of the servers that report no media statistics. */
+	withoutMediaStats: ReadonlySet<string>;
 }
 
 /**
@@ -451,11 +469,17 @@ export async function generate(db: Db, options: GenerateOptions): Promise<Genera
 
 	const hosted = new Map<string, number>();
 	const reconciled = new Map<string, number>();
+	const lives: RoomLife[] = [];
 
 	for (const [i, plan] of plans.entries()) {
 		const generated = generateRoom(ctx, plan);
 		const engine = engines.get(generated.room.nodeId) ?? 'pion';
-		const bundle = cutRoom(roomLife(generated, engine, statsMode), now);
+		const life = roomLife(generated, engine, statsMode);
+		const bundle = cutRoom(life, now);
+
+		if (life.end > now) {
+			lives.push(life);
+		}
 
 		if (bundle === undefined) {
 			throw new Error(`room ${generated.room.name} is created after the generation instant`);
@@ -615,7 +639,17 @@ export async function generate(db: Db, options: GenerateOptions): Promise<Genera
 		counts: writer.counts,
 		inserted: writer.inserted,
 		elapsedSeconds: (performance.now() - started) / 1000,
-		timeseries
+		timeseries,
+		world: {
+			options,
+			scenario,
+			start: now,
+			windowStart,
+			servers,
+			lives,
+			rooms: plans.length,
+			withoutMediaStats: ctx.withoutMediaStats
+		}
 	};
 }
 

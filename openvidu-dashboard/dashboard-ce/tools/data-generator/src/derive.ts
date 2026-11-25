@@ -571,14 +571,20 @@ function trackLayers(layers: TrackDoc['codecs'][number]['layers']): Record<strin
 	}));
 }
 
+/**
+ * The track info of the publication, the state it was published in: a track's mute toggles come in pairs, so a closed
+ * track ends in it, and a track muted for now still reads as published.
+ */
 function trackInfo(t: TrackDoc): Record<string, unknown> {
 	const layers = t.codecs[0]?.layers ?? [];
+	const [toggle] = t.muteChanges;
+	const muted = toggle === undefined ? t.muted : !toggle.muted;
 
 	return {
 		sid: t._id,
 		...trackType(t),
 		name: t.name,
-		...(t.muted ? { muted: true } : {}),
+		...(muted ? { muted: true } : {}),
 		...(t.width > 0 ? { width: t.width, height: t.height } : {}),
 		...(t.simulcast ? { simulcast: true } : {}),
 		source: t.source,
@@ -1184,6 +1190,42 @@ export class Rollups {
 		}
 	}
 
+	/**
+	 * The counters of every bucket, as dotted paths, and its media statistics marks: what the writer's increments of
+	 * the bundles added so far sum to. Peaks and unique identities are the aggregator's, not counters.
+	 */
+	counters(): RollupCounters[] {
+		const entries = (
+			collection: RollupCounters['collection'],
+			map: Map<string, Bucket | FiveMinuteBucket>
+		): RollupCounters[] =>
+			sortedEntries(map).map(([scope, bucket, b]) => {
+				const date = new Date(bucket);
+				const values: Record<string, number> = {};
+
+				for (const [key, value] of Object.entries(b)) {
+					if (key !== 'mediaStats' && key !== 'identities' && (scope === GLOBAL || !GLOBAL_ONLY.has(key))) {
+						flatten(values, key, value);
+					}
+				}
+
+				return {
+					collection,
+					_id: `${scope}:${date.toISOString().replace('.000Z', 'Z')}`,
+					scope,
+					bucket: date,
+					values,
+					marks: { ...b.mediaStats }
+				};
+			});
+
+		return [
+			...entries('analytics_hourly', this.hourly),
+			...entries('analytics_daily', this.daily),
+			...entries('analytics_5min', this.fiveMinute)
+		];
+	}
+
 	hourlyDocs(): RollupDoc[] {
 		return sortedEntries(this.hourly).map(([scope, bucket, b]) => toDoc(scope, bucket, b, false));
 	}
@@ -1386,6 +1428,32 @@ export class Rollups {
 		}
 
 		return five;
+	}
+}
+
+/** The counters of one rollup document, as dotted paths (`participants.byKind.STANDARD`). */
+export interface RollupCounters {
+	collection: 'analytics_hourly' | 'analytics_daily' | 'analytics_5min';
+	_id: string;
+	scope: string;
+	bucket: Date;
+	values: Record<string, number>;
+	marks: MediaStatsMarks;
+}
+
+/** Counters the writer keeps in the global documents only. */
+const GLOBAL_ONLY = new Set(['egress', 'ingress']);
+
+/** Adds the numbers of `value` under `path`, leaving out the aggregator's peaks. */
+function flatten(values: Record<string, number>, path: string, value: unknown): void {
+	if (typeof value === 'number') {
+		values[path] = value;
+	} else if (typeof value === 'object' && value !== null && !(value instanceof Set)) {
+		for (const [key, item] of Object.entries(value)) {
+			if (key !== 'peakActive') {
+				flatten(values, `${path}.${key}`, item);
+			}
+		}
 	}
 }
 

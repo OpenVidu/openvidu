@@ -6,6 +6,7 @@
 	"type": "module",
 	"exports": {
 		"./generator": "./src/generator.ts",
+		"./live": "./src/live.ts",
 		"./context": "./src/context.ts",
 		"./cut": "./src/cut.ts",
 		"./derive": "./src/derive.ts",

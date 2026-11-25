@@ -1,7 +1,10 @@
+import { setTimeout as sleep } from 'node:timers/promises';
+
 import { MongoClient } from 'mongodb';
 import { flag, intOption, parseCli, requireString, stringOption } from './args.js';
 import type { StatsMode } from './derive.js';
-import { generate } from './generator.js';
+import { generate, type World } from './generator.js';
+import { LiveWriter } from './live.js';
 import { SCENARIOS, type ScenarioName } from './model.js';
 
 function parseScenario(value: string): ScenarioName {
@@ -46,7 +49,8 @@ async function main(): Promise<void> {
 		'min-active-rooms': { type: 'string' },
 		'nodes-without-media-stats': { type: 'string' },
 		'media-nodes': { type: 'boolean' },
-		legacy: { type: 'boolean' }
+		legacy: { type: 'boolean' },
+		live: { type: 'boolean' }
 	});
 	const uri = requireString(values, 'uri');
 	const dbName = requireString(values, 'db');
@@ -104,8 +108,42 @@ async function main(): Promise<void> {
 			`Elapsed ${summary.elapsedSeconds.toFixed(1)} s, ` +
 				`${formatInt(Math.round(summary.inserted / Math.max(summary.elapsedSeconds, 0.001)))} inserts/s`
 		);
+
+		if (flag(values, 'live')) {
+			await writeLive(new LiveWriter(db, summary.world), summary.world);
+		}
 	} finally {
 		await client.close();
+	}
+}
+
+/** Live batch interval: the writer's default. */
+const TICK_MS = 10_000;
+
+/**
+ * Ticks the live writer every 10 s from the generation instant, catching up on the ticks due, until `SIGINT` or
+ * `SIGTERM` stops it after the current tick.
+ */
+async function writeLive(writer: LiveWriter, world: World): Promise<void> {
+	const stop = new AbortController();
+
+	for (const signal of ['SIGINT', 'SIGTERM'] as const) {
+		process.once(signal, () => {
+			stop.abort();
+		});
+	}
+
+	console.log('Writing live every 10 s; stop with Ctrl+C');
+
+	// A signal can arrive during any await.
+	const stopped = () => stop.signal.aborted;
+
+	for (let at = world.start + TICK_MS; !stopped(); at += TICK_MS) {
+		await sleep(Math.max(0, at - Date.now()), undefined, { signal: stop.signal }).catch(() => undefined);
+
+		if (!stopped()) {
+			await writer.tick(at);
+		}
 	}
 }
 
