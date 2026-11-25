@@ -977,6 +977,178 @@ describe.skipIf(mongoUri === '')('live data generator', () => {
 		}, 600_000);
 	});
 
+	describe('a live start on kept data at the edges of the server timeline', () => {
+		const db = () => client.db('dashboard_test_live_restart_edges');
+		const ingressCounters = async (bucket: number) => {
+			const hourly = (await db()
+				.collection<Keyed>('analytics_hourly')
+				.findOne({ scope: 'global', bucket: new Date(bucket) })) as HourlyRollupDocument | null;
+			const ingress = hourly?.ingress as
+				{ sessionsStarted?: number; sessionsEnded?: number; byInputType?: Record<string, number> } | undefined;
+
+			return {
+				started: ingress?.sessionsStarted ?? 0,
+				ended: ingress?.sessionsEnded ?? 0,
+				byInputType: ingress?.byInputType ?? {}
+			};
+		};
+
+		afterAll(async () => {
+			await db().dropDatabase();
+		});
+
+		it('Live restart after a stop: a media node lost before the stop returns at a restart over 6 hours after its loss', async () => {
+			const generation = options({ days: 1, seed: 21 });
+			const day = Math.floor(T / DAY) * DAY;
+			const loss = day + 15 * HOUR;
+			const heartbeat = day + 18 * HOUR;
+			const restart = day + DAY + 8 * HOUR;
+
+			await db().dropDatabase();
+			const summary = await generate(db(), generation);
+			await tickUntil(new LiveWriter(db(), summary.world), T, heartbeat, MINUTE);
+
+			const lost = await docs<NodeDocument>(db(), 'nodes', {
+				lastSeenAt: new Date(loss),
+				stoppedAt: { $exists: false }
+			});
+
+			expect(lost).toHaveLength(1);
+
+			const writer = new LiveWriter(db(), await restartLive(db(), generation, restart));
+			await tickUntil(writer, restart, restart + 10 * MINUTE, MINUTE);
+			const label = { mediaNode: lost[0]?.mediaNode };
+			const returned = await docs<NodeDocument>(db(), 'nodes', { ...label, firstSeenAt: new Date(restart) });
+
+			expect(returned).toHaveLength(1);
+			expect(time(returned[0]?.lastSeenAt)).toBeGreaterThanOrEqual(restart + 9 * MINUTE);
+			expect(returned[0]?.stoppedAt).toBeUndefined();
+		}, 600_000);
+
+		it('Live restart after a stop: a restart in the minute of the last heartbeat starts after it, and a session closed while buffering is not counted as started', async () => {
+			const generation = options({ days: 1, seed: 21 });
+			const heartbeat = T + 30 * MINUTE + 40 * SECOND;
+
+			await db().dropDatabase();
+			await generate(db(), generation);
+			await keepLive(db(), new Date(heartbeat));
+
+			// An ingress session of a room in progress that started buffering 30 s before the heartbeat.
+			const room = (await db().collection<Keyed>('rooms').findOne({ status: 'active' })) as RoomDocument | null;
+			const model = await db().collection<Keyed>('ingress_sessions').findOne({});
+
+			if (room === null || model === null) {
+				throw new Error('No room in progress or no ingress session to copy');
+			}
+
+			const {
+				endedAt: _e,
+				durationMs: _d,
+				error: _r,
+				closedBy: _c,
+				roomSid: _s,
+				video: _v,
+				audio: _a,
+				...rest
+			} = model;
+			const buffering = {
+				...rest,
+				_id: 'IS_buffering01',
+				roomName: room.name,
+				status: 'buffering',
+				startedAt: new Date(heartbeat - 30 * SECOND),
+				expiresAt: null
+			};
+			await db().collection<Keyed>('ingress_sessions').insertOne(buffering);
+
+			const bucket = Math.floor(heartbeat / HOUR) * HOUR;
+			const before = await ingressCounters(bucket);
+			const open = await db()
+				.collection<Keyed>('ingress_sessions')
+				.distinct('_id', { status: { $in: ['buffering', 'publishing'] } });
+			const rooms = await db().collection<Keyed>('rooms').distinct('_id');
+			const world = await restartLive(db(), generation, Math.floor(heartbeat / MINUTE) * MINUTE);
+			const writer = new LiveWriter(db(), world);
+			await tickUntil(writer, world.start, world.start + 10 * MINUTE, MINUTE);
+
+			expect(world.start).toBe(T + 31 * MINUTE);
+
+			const fresh = await docs<NodeDocument>(db(), 'nodes', { firstSeenAt: { $gt: new Date(T) } });
+
+			expect(fresh.length).toBeGreaterThan(0);
+			expect(fresh.every((node) => time(node.firstSeenAt) > heartbeat)).toBe(true);
+			expect(
+				await db()
+					.collection<Keyed>('rooms')
+					.countDocuments({ _id: { $nin: rooms }, createdAt: { $lte: new Date(heartbeat) } })
+			).toBe(0);
+
+			const closed = (await db()
+				.collection<Keyed>('ingress_sessions')
+				.findOne({ _id: 'IS_buffering01' })) as IngressSessionDocument | null;
+			const after = await ingressCounters(bucket);
+
+			expect([closed?.status, closed?.closedBy]).toEqual(['error', 'reconciler']);
+			expect(
+				await db()
+					.collection<Keyed>('events')
+					.countDocuments({ type: 'INGRESS_STARTED', ingressSessionId: 'IS_buffering01' })
+			).toBe(0);
+			const endedInBucket = await db()
+				.collection<Keyed>('ingress_sessions')
+				.countDocuments({
+					_id: { $in: open },
+					endedAt: { $gte: new Date(bucket), $lt: new Date(bucket + HOUR) }
+				});
+
+			expect(endedInBucket).toBeGreaterThan(0);
+			expect(after).toEqual({ ...before, ended: before.ended + endedInBucket });
+		}, 600_000);
+
+		it('Live restart after a stop: a single node stopped in its daily restart has a new server at the restart', async () => {
+			const fourOClock = Math.floor(Date.now() / DAY) * DAY - DAY + 4 * HOUR;
+			const generation = options({
+				days: 1,
+				seed: 21,
+				mediaNodes: false,
+				rollups: { fiveMinute: true, nodes: false, roomSums: true },
+				now: fourOClock - MINUTE
+			});
+			const restart = fourOClock + 2 * HOUR;
+
+			await db().dropDatabase();
+			const summary = await generate(db(), generation);
+			await tickUntil(
+				new LiveWriter(db(), summary.world),
+				fourOClock - MINUTE,
+				fourOClock + 150 * SECOND,
+				30 * SECOND
+			);
+
+			// Every server was stopped or lost by then: the last one stopped at 04:02.
+			expect(
+				await db()
+					.collection('nodes')
+					.countDocuments({ stoppedAt: { $exists: false }, lastSeenAt: { $gte: new Date(fourOClock) } })
+			).toBe(0);
+			expect(
+				await db()
+					.collection('nodes')
+					.countDocuments({ stoppedAt: new Date(fourOClock + 2 * MINUTE) })
+			).toBe(1);
+
+			const writer = new LiveWriter(db(), await restartLive(db(), generation, restart));
+			await tickUntil(writer, restart, restart + 15 * MINUTE, MINUTE);
+			const started = await docs<NodeDocument>(db(), 'nodes', { firstSeenAt: new Date(restart) });
+
+			expect(started).toHaveLength(1);
+			expect(time(started[0]?.lastSeenAt)).toBeGreaterThanOrEqual(restart + 14 * MINUTE);
+			expect(
+				await db().collection('rooms').countDocuments({ status: 'active', nodeId: started[0]?._id })
+			).toBeGreaterThan(0);
+		}, 600_000);
+	});
+
 	describe('the frozen mode', () => {
 		const db = () => client.db('dashboard_test_live_frozen');
 		/** Every collection, with the heartbeats and stats times aside. */

@@ -23,6 +23,8 @@ const DAY = 86_400_000;
 const LOST_EGRESS_ERROR = 'egress lost (reconciled)';
 const LOST_INGRESS_ERROR = 'ingress lost (reconciled)';
 const OPEN_EGRESS = ['starting', 'active', 'ending'];
+/** The statuses of an ingress session that has not ended, which the contract index on `status` serves. */
+const OPEN_INGRESS_SESSION = ['buffering', 'publishing'];
 
 /** A stored document of the contract: keyed by a string, its absent fields omitted. */
 type Stored = Record<string, unknown> & { _id: string };
@@ -30,26 +32,34 @@ type Stored = Record<string, unknown> & { _id: string };
 type Fields = Record<string, unknown>;
 
 /**
- * Restarts the live writing of a kept database at `at`, treating the time since its last heartbeat (the freshest
- * `lastSeenAt` of a running server) as an outage:
+ * Restarts the live writing of a kept database at `at`, or at the minute after its last heartbeat when `at` is not
+ * after it, treating the time since that heartbeat (the freshest `lastSeenAt` of any server: a stopped server's is its
+ * stop, a lost one's is older) as an outage:
  * - every room, session, track, subscription, egress and ingress session still open is closed as the reconciler does
  *   after a node-dead confirmation, at its last signal (`max(lastStatsAt, lastEventAt)`, never after the heartbeat),
  *   with its synthetic events, `rooms.reconciled` on its server and the rollups of each closure in its end buckets;
- * - the servers alive at the heartbeat stay lost, and each of their machines gets a new server at `at`;
+ * - the servers alive at the heartbeat stay lost, and each of their machines gets a new server at `at`; the server
+ *   timeline goes on from the heartbeat (`ServerSchedule`), so a machine lost in the 6 hours before it returns 6 hours
+ *   after its loss, or at `at`, and a single node stopped in its restart has a new server at `at`;
  * - a new world is drawn from the seed and `at`, with no room floor for the 10 minutes after it.
  * Nothing is dated between the heartbeat and `at`, whatever wrote the data, a live or a frozen run.
  */
-export async function restartLive(db: Db, options: GenerateOptions, at: number): Promise<World> {
+export async function restartLive(db: Db, options: GenerateOptions, restartAt: number): Promise<World> {
 	const nodes = await db.collection<Stored>(COLLECTIONS.nodes).find().sort({ firstSeenAt: 1, _id: 1 }).toArray();
 	const running = nodes.filter((node) => node.stoppedAt === undefined);
-	const heartbeat = Math.max(...running.map((node) => time(node.lastSeenAt)));
+	// A single node stopped in its daily restart, its next server not written yet, leaves no server running.
+	const heartbeat = Math.max(...nodes.map((node) => time(node.lastSeenAt)));
 
 	if (!Number.isFinite(heartbeat)) {
-		throw new Error('The database has no running server; generate it first');
+		throw new Error('The database has no server; generate it first');
 	}
 
+	// The restart never starts inside the run it follows.
+	const at = Math.max(restartAt, Math.floor(heartbeat / MINUTE) * MINUTE + MINUTE);
 	const alive = running.filter((node) => time(node.lastSeenAt) >= heartbeat - ALIVE_NODE_MS);
-	const reconcilerNode = alive[0]?._id ?? '';
+	const reconcilerNode =
+		alive[0]?._id ??
+		nodes.reduce((latest, node) => (time(node.lastSeenAt) > time(latest.lastSeenAt) ? node : latest))._id;
 
 	await closeOpen(db, options, heartbeat, reconcilerNode);
 
@@ -66,9 +76,18 @@ export async function restartLive(db: Db, options: GenerateOptions, at: number):
 		batchIntervalMs: Number(node.batchIntervalMs)
 	}));
 
-	if (started.length > 0) {
+	servers.push(...started);
+
+	const schedule = new ServerSchedule(servers, at, options.seed, options.mediaNodes === true, heartbeat);
+	schedule.extend(at + SCHEDULE_AHEAD);
+	// The servers that start at the restart, those above and those the timeline returns then; the live writer takes
+	// every server first seen by its start as written.
+	const stored = new Set(nodes.map((node) => node._id));
+	const fresh = servers.filter((server) => server.firstSeenAt <= at && !stored.has(server.nodeId));
+
+	if (fresh.length > 0) {
 		await db.collection<Stored>(COLLECTIONS.nodes).insertMany(
-			started.map(
+			fresh.map(
 				(server) =>
 					toStored(COLLECTIONS.nodes, {
 						...nodeState(server, at),
@@ -78,11 +97,13 @@ export async function restartLive(db: Db, options: GenerateOptions, at: number):
 		);
 	}
 
-	servers.push(...started);
-
-	const schedule = new ServerSchedule(servers, at, options.seed, options.mediaNodes === true);
-	schedule.extend(at + SCHEDULE_AHEAD);
-	const last = await db.collection<Stored>(COLLECTIONS.rooms).find().sort({ name: -1 }).limit(1).next();
+	// Room names are lowercase, so the highest is the last of the contract index on `nameLower`.
+	const last = await db
+		.collection<Stored>(COLLECTIONS.rooms)
+		.find({ nameLower: { $regex: '^room-' } })
+		.sort({ nameLower: -1 })
+		.limit(1)
+		.next();
 
 	return {
 		options,
@@ -125,7 +146,7 @@ async function closeOpen(db: Db, options: GenerateOptions, heartbeat: number, re
 		.find({ status: { $in: OPEN_EGRESS } })
 		.toArray();
 	const sessions = await collection(COLLECTIONS.ingressSessions)
-		.find({ endedAt: { $exists: false } })
+		.find({ status: { $in: OPEN_INGRESS_SESSION } })
 		.toArray();
 	const writes = new Map<string, LiveOp[]>();
 	const events: Document[] = [];
@@ -156,7 +177,10 @@ async function closeOpen(db: Db, options: GenerateOptions, heartbeat: number, re
 		const ref = { roomSid: room._id, roomName: room.name, nodeId: room.nodeId };
 		const participants = await collection(COLLECTIONS.participants).find({ roomSid: room._id }).toArray();
 		const tracks = await collection(COLLECTIONS.tracks).find({ roomSid: room._id }).toArray();
-		const subscriptions = await collection(COLLECTIONS.trackSubscriptions).find({ roomSid: room._id }).toArray();
+		// Through the contract index on `trackSid`: none is on the room.
+		const subscriptions = await collection(COLLECTIONS.trackSubscriptions)
+			.find({ trackSid: { $in: tracks.map((track) => track._id) } })
+			.toArray();
 		const roomEgresses = egresses.filter((e) => e.roomSid === room._id);
 		const roomSessions = sessions.filter((s) => s.roomName === room.name);
 		const closed = {
@@ -252,7 +276,7 @@ async function closeOpen(db: Db, options: GenerateOptions, heartbeat: number, re
 				{ ...room, ...roomFields },
 				closed.participants,
 				closed.egresses,
-				closed.ingressSessions
+				closed.ingressSessions.map((session, index) => counted(roomSessions[index], session))
 			)
 		);
 	}
@@ -279,7 +303,7 @@ async function closeOpen(db: Db, options: GenerateOptions, heartbeat: number, re
 		});
 		closedSessions.push(closed);
 		rollups[0].push(...counters(options, undefined, [], [], [s]));
-		rollups[1].push(...counters(options, undefined, [], [], [closed]));
+		rollups[1].push(...counters(options, undefined, [], [], [counted(s, closed)]));
 	}
 
 	await closeIngresses(db, closedSessions, push);
@@ -371,6 +395,14 @@ function closeIngressSession(
 	});
 
 	return { ...s, ...fields };
+}
+
+/**
+ * A closed ingress session as the rollups count it: one closed while it buffered never had an `INGRESS_STARTED`, so it
+ * counts as ended and not as started, which `Rollups` tells by the status it had.
+ */
+function counted(open: Stored | undefined, closed: Stored): Stored {
+	return open?.status === 'buffering' ? { ...closed, status: 'buffering' } : closed;
 }
 
 /**

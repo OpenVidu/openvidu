@@ -27,8 +27,11 @@ export interface FloorWaiver {
  *   its turn, 30 minutes after that hour. At 15:00 UTC the reporting machine after the last one drained is lost, and
  *   has a new server 6 hours later;
  * - at the start, a draining server stops 20 minutes later and its machine returns 10 minutes after that, a machine
- *   lost in the last 6 hours returns 6 hours after its loss, one lost longer ago stays silent;
- * - a single node drains at 04:00 UTC, stops at 04:02 and has a new server at 04:03.
+ *   lost in the 6 hours before the last heartbeat (`reportedUntil`: the start itself for a generation, the heartbeat
+ *   before the outage for a restart on kept data) returns 6 hours after its loss, or at the start when that is later,
+ *   and one lost longer ago stays silent;
+ * - a single node drains at 04:00 UTC, stops at 04:02 and has a new server at 04:03; one stopped at the start has a
+ *   new server then.
  *
  * New servers run 3.10.1 with the engine and the heartbeat interval of the machine's previous server. Operations are
  * decided in time order, so the timeline does not depend on how far ahead it was extended.
@@ -43,7 +46,8 @@ export class ServerSchedule {
 		private readonly servers: Server[],
 		private readonly start: number,
 		private readonly seed: number,
-		private readonly mediaNodes: boolean
+		private readonly mediaNodes: boolean,
+		reportedUntil = start
 	) {
 		this.until = start;
 
@@ -58,9 +62,17 @@ export class ServerSchedule {
 				current.end = { at: start + 20 * MINUTE, stopped: true };
 				this.spawn(machine, start + 30 * MINUTE);
 			} else if (current.end?.stopped === true && current.end.at <= start) {
-				this.awaitingTurn.add(machine);
-			} else if (current.end !== undefined && current.end.at <= start && start - current.end.at < 6 * HOUR) {
-				this.spawn(machine, current.end.at + 6 * HOUR);
+				if (machine === SINGLE) {
+					this.spawn(machine, start);
+				} else {
+					this.awaitingTurn.add(machine);
+				}
+			} else if (
+				current.end !== undefined &&
+				current.end.at <= start &&
+				reportedUntil - current.end.at < 6 * HOUR
+			) {
+				this.spawn(machine, Math.max(current.end.at + 6 * HOUR, start));
 			}
 		}
 	}
