@@ -481,17 +481,29 @@ describe.skipIf(mongoUri === '')('live data generator', () => {
 			const next = nodes.find(
 				(node) => node.mediaNode === drained?.mediaNode && time(node.firstSeenAt) === turn + 30 * MINUTE
 			);
-			const rooms = await docs<RoomDocument>(db(), 'rooms', { nodeId: drained?._id ?? '' });
-			const atStop = rooms.filter((room) => time(room.endedAt) === turn + 20 * MINUTE);
 
 			expect(time(drained?.stoppedAt)).toBe(turn + 20 * MINUTE);
-			expect(rooms.filter((room) => time(room.createdAt) >= turn)).toEqual([]);
-			expect(
-				rooms.filter((room) => room.endedAt === undefined || time(room.endedAt) > turn + 20 * MINUTE)
-			).toEqual([]);
-			expect(atStop.length).toBeGreaterThan(0);
-			expect(atStop.filter((room) => room.endReason !== 'SERVER_SHUTDOWN')).toEqual([]);
 			expect(next?.stoppedAt === undefined || time(next.stoppedAt) > turn + 40 * MINUTE).toBe(true);
+
+			// The rooms of the node in turn, at 02:00 and at every other turn of the day: whether one is still open at
+			// its stop depends on the draws, so the rule is checked over all of them.
+			let openAtStops = 0;
+
+			for (const node of nodes.filter(
+				(n) => time(n.drainingAt) > T && time(n.drainingAt) + 20 * MINUTE <= T + DAY
+			)) {
+				const stop = time(node.drainingAt) + 20 * MINUTE;
+				const rooms = await docs<RoomDocument>(db(), 'rooms', { nodeId: node._id });
+				const atStop = rooms.filter((room) => time(room.endedAt) === stop);
+
+				expect(time(node.stoppedAt), node._id).toBe(stop);
+				expect(rooms.filter((room) => time(room.createdAt) >= time(node.drainingAt))).toEqual([]);
+				expect(rooms.filter((room) => room.endedAt === undefined || time(room.endedAt) > stop)).toEqual([]);
+				expect(atStop.filter((room) => room.endReason !== 'SERVER_SHUTDOWN')).toEqual([]);
+				openAtStops += atStop.length;
+			}
+
+			expect(openAtStops).toBeGreaterThan(0);
 			expect(time(next?.lastSeenAt)).toBeGreaterThanOrEqual(turn + 40 * MINUTE);
 		});
 
