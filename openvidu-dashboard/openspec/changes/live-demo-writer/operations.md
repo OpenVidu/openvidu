@@ -22,3 +22,9 @@ What only the orchestrator knows: the owner's decisions, the rebase onto other w
 - The change's commits were rebased, without conflicts, onto `origin/master` `fc0ffeff4` (shorter 3.10 changelog, with
   the internal changes apart). The change adds no CHANGELOG line: the demo data generator is internal and already has
   its Internal line.
+
+## Live writer suite
+
+- The verifier's guard comes from the PRO workspace's `ce.ref`, which predates `./dashboard.sh test-live`, so the
+  verifier cannot run that suite. The implementer ran it at `b7efee9d5`, the last code commit: 29 tests passed in
+  15 min.
