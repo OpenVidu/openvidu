@@ -110,7 +110,11 @@ const ID_ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456
 
 /** A generator seeded by a key: the same key always draws the same values, whatever was generated before. */
 export function hashRng(key: string): Rng {
-	// FNV-1a.
+	return new Rng(fnv1a(key));
+}
+
+/** The 32-bit FNV-1a hash of a key. */
+function fnv1a(key: string): number {
 	let hash = 0x811c9dc5;
 
 	for (let i = 0; i < key.length; i += 1) {
@@ -118,7 +122,7 @@ export function hashRng(key: string): Rng {
 		hash = Math.imul(hash, 0x01000193);
 	}
 
-	return new Rng(hash >>> 0);
+	return hash >>> 0;
 }
 
 /**
@@ -137,18 +141,20 @@ export function hashId(prefix: string, key: string, length = 12): string {
 }
 
 /**
- * A generator keyed by a string: seeded from a SHA-256 digest of the key, with identifiers that come from SHA-256
- * digests of the key and their ordinal (`hashId()`), not from its 32-bit state. Streams of many keys can overlap on the
- * cycle of an `Rng`, and would then draw the same identifiers; these never do.
+ * A generator keyed by a string, as `hashRng()`, whose identifiers come from SHA-256 digests of the key and their
+ * ordinal (`hashId()`) instead of its 32-bit state. Streams of many keys can overlap on the cycle of an `Rng`, and would
+ * then draw the same identifiers; these never do. An identifier still takes its draws from the state, so every other
+ * value is the one `hashRng()` draws.
  */
 export class KeyedRng extends Rng {
 	private ids = 0;
 
 	constructor(private readonly key: string) {
-		super(createHash('sha256').update(key).digest().readUInt32BE(0));
+		super(fnv1a(key));
 	}
 
 	override id(prefix: string, length = 12): string {
+		super.id(prefix, length);
 		this.ids += 1;
 
 		return hashId(prefix, `${this.key}|${String(this.ids)}`, length);
