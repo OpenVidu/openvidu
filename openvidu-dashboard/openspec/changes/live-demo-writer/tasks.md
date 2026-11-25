@@ -72,9 +72,9 @@
   Verify by reading that each matches the specs of this change. No CHANGELOG line: this is tooling.
 - [x] 4.4 Run `./dashboard.sh check`, `./dashboard.sh test-integration` and
   `./dashboard.sh scenarios live-demo-writer`. Every scenario of the change has a passing test.
-- [ ] 4.5 Run `./dashboard.sh demo ce` with `DASHBOARD_DEMO_DATA=live` for 15 minutes. Check that rooms end and start,
+- [x] 4.5 Run `./dashboard.sh demo ce` with `DASHBOARD_DEMO_DATA=live` for 15 minutes. Check that rooms end and start,
   charts move and nothing fails in the log. Check that the default `frozen` run behaves as before.
-- [ ] 4.6 Review for refactors:
+- [x] 4.6 Review for refactors:
   - `cutRoom` is the only source of entity state at an instant;
   - `generate()` and `LiveWriter` share the planner, the server timeline and the derivations;
   - `keepLive()` is untouched apart from its callers.
