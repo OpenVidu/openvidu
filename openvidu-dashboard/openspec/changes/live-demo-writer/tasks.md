@@ -2,7 +2,7 @@
 
 ## 1. Complete room lives cut at an instant (implementer)
 
-- [ ] 1.1 In `dashboard-ce/tools/data-generator/src/model.ts`, draw each room's whole life (design decision 1): no
+- [x] 1.1 In `dashboard-ce/tools/data-generator/src/model.ts`, draw each room's whole life (design decision 1): no
   `now`-dependent draw inside a life. A room planned active gets a natural end 10 minutes to 5 hours after the
   generation instant, earlier at its server's stop or loss, and keeps today's transient states at that instant (15 %
   with a participant connecting for the last minute, egresses `starting`, `ending` or stopped, the buffering ingress).
@@ -13,7 +13,7 @@
   from (type, entity id, instant, layer) (decision 2). Verify that `./dashboard.sh test-integration` passes with
   `data-generator.test.ts` and every CE query-plan suite unchanged, the tests of joining sessions, egress and ingress
   statuses in active rooms included.
-- [ ] 1.3 Unit tests of `cutRoom` in `dashboard-ce/backend/test/unit/`: a closed room cut after its end equals its life;
+- [x] 1.3 Unit tests of `cutRoom` in `dashboard-ce/backend/test/unit/`: a closed room cut after its end equals its life;
   cut inside it, open sessions, tracks, egresses and ingress sessions take their state at the instant, with mutes,
   resumes, bytes and `lastStatsAt` up to it, and nothing after it. Verify with `./dashboard.sh check`.
 
