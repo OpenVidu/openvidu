@@ -19,7 +19,8 @@ import {
 	type ScenarioName
 } from './model.js';
 import { toStored } from './contract.js';
-import { applyStats, type Engine } from './samples.js';
+import { cutRoom, roomLife } from './cut.js';
+import type { Engine } from './samples.js';
 import { LEGACY_EVENTS, LEGACY_STATS, writeLegacy } from './legacy.js';
 import { Rng } from './random.js';
 import { COLLECTIONS, createCollections, SCHEMA_VERSION, type CollectionName } from './schema.js';
@@ -301,8 +302,10 @@ function newestVersion(versions: readonly string[]): string {
 
 export interface GenerateOptions {
 	scenario: ScenarioName;
-	/** Days of history ending now. */
+	/** Days of history ending at the generation instant. */
 	days: number;
+	/** Generation instant (ms), floored to the minute; the current time by default. */
+	now?: number;
 	statsMode: StatsMode;
 	seed: number;
 	/** Retention in days per class; documents outside it are not written. 5-minute rollups keep 7 days by default. */
@@ -344,7 +347,10 @@ export interface GenerateSummary {
 	timeseries: boolean;
 }
 
-/** Fills a database with a deterministic scenario: same options and seed, same documents (dates relative to now). */
+/**
+ * Fills a database with a deterministic scenario: same options, seed and generation instant, same documents. Each room
+ * is drawn over its whole life (`generateRoom()`) and written as it is at the generation instant (`cutRoom()`).
+ */
 export async function generate(db: Db, options: GenerateOptions): Promise<GenerateSummary> {
 	const log = options.log ?? (() => undefined);
 	const scenario: Scenario = SCENARIOS[options.scenario];
@@ -382,7 +388,7 @@ export async function generate(db: Db, options: GenerateOptions): Promise<Genera
 		retention,
 		validationAction: 'error'
 	});
-	const now = Math.floor(Date.now() / MINUTE) * MINUTE;
+	const now = Math.floor((options.now ?? Date.now()) / MINUTE) * MINUTE;
 	const windowStart = now - days * DAY;
 	const rng = new Rng(options.seed);
 	const servers = serverTimeline(
@@ -428,9 +434,6 @@ export async function generate(db: Db, options: GenerateOptions): Promise<Genera
 		fiveMinuteFrom: now - rollups5MinDays * DAY,
 		statsMode
 	};
-	// Event and stats identifiers and values take streams of their own: how many fall in their retention windows
-	// changes with the clock, and it must not change the rooms.
-	const eventsRng = new Rng(options.seed + 10_000_019);
 	// The servers that run mediasoup measure media without padding, the reading's jitter and RTT.
 	const engines = new Map(servers.map((server) => [server.nodeId, server.rtcEngine]));
 	const rollups = new Rollups(options.rollups ?? BASE_ROLLUPS);
@@ -450,15 +453,19 @@ export async function generate(db: Db, options: GenerateOptions): Promise<Genera
 	const reconciled = new Map<string, number>();
 
 	for (const [i, plan] of plans.entries()) {
-		const bundle = generateRoom(ctx, plan);
+		const generated = generateRoom(ctx, plan);
+		const engine = engines.get(generated.room.nodeId) ?? 'pion';
+		const bundle = cutRoom(roomLife(generated, engine, statsMode), now);
+
+		if (bundle === undefined) {
+			throw new Error(`room ${generated.room.name} is created after the generation instant`);
+		}
+
 		hosted.set(bundle.room.nodeId, (hosted.get(bundle.room.nodeId) ?? 0) + 1);
 
 		if (bundle.room.closedBy === 'reconciler') {
 			reconciled.set(bundle.room.nodeId, (reconciled.get(bundle.room.nodeId) ?? 0) + 1);
 		}
-
-		const engine = engines.get(bundle.room.nodeId) ?? 'pion';
-		applyStats(bundle, engine, now, statsMode);
 
 		// Entities whose expiry has passed are gone, as the TTL monitor leaves them.
 		if (alive(bundle.room)) {
@@ -489,7 +496,7 @@ export async function generate(db: Db, options: GenerateOptions): Promise<Genera
 			writer.add(COLLECTIONS.ingressSessions, doc);
 		}
 
-		deriveEvents(eventsRng, bundle, windows, (doc) => {
+		deriveEvents(bundle, windows, (doc) => {
 			writer.add(COLLECTIONS.events, doc);
 		});
 		deriveStats(bundle, windows, engine, (doc) => {

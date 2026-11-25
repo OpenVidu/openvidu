@@ -1,3 +1,5 @@
+import { createHash } from 'node:crypto';
+
 /** Deterministic pseudo-random source (mulberry32) with the sampling helpers used by the generator. */
 export class Rng {
 	private state: number;
@@ -105,3 +107,18 @@ export class Rng {
 }
 
 const ID_ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+
+/**
+ * An identifier in the LiveKit style derived from a key: the same key always gives the same identifier. It takes the
+ * characters from a SHA-256 digest, wide enough for millions of distinct keys, unlike the 32-bit state of an `Rng`.
+ */
+export function hashId(prefix: string, key: string, length = 12): string {
+	const digest = createHash('sha256').update(key).digest();
+	let out = prefix;
+
+	for (let i = 0; i < length; i += 1) {
+		out += ID_ALPHABET.charAt((digest[i] ?? 0) % ID_ALPHABET.length);
+	}
+
+	return out;
+}

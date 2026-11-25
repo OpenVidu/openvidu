@@ -56,7 +56,8 @@ const MODEL_ONLY: Partial<Record<CollectionName, readonly string[]>> = {
 	],
 	participants: ['trackSids', 'resumedAt'],
 	tracks: ['muteChanges'],
-	track_subscriptions: ['maxVideoQuality']
+	track_subscriptions: ['maxVideoQuality'],
+	ingress_sessions: ['publishedAt']
 };
 
 const INT32_MAX = 2 ** 31 - 1;

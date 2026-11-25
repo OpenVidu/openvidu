@@ -204,6 +204,7 @@ keeps only one room in memory at a time, so scenario L fits in a few hundred MB 
 | `src/schema.ts`    | Collections, indexes and validators of the contract, `createCollections()` with the fallback |
 | `src/contract.ts`  | Stored shape of a model document: bookkeeping removed, nulls omitted, BSON numeric types     |
 | `src/model.ts`     | Scenarios, document types and the per-room entity generator                                  |
+| `src/cut.ts`       | `cutRoom(life, t)`: a room's documents at an instant, from its whole life                    |
 | `src/derive.ts`    | Raw events, `track_stats` documents and rollups derived from a generated room                |
 | `src/samples.ts`   | The stats each session flushes, and their sums on participants, rooms, tracks and rollups    |
 | `src/generator.ts` | `generate(db, options)` and the batched writer                                               |

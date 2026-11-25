@@ -10,7 +10,7 @@ import {
 	type RoomDoc,
 	type TrackDoc
 } from './model.js';
-import type { Rng } from './random.js';
+import { hashId } from './random.js';
 import {
 	layerStats,
 	LOST_SCORE,
@@ -73,28 +73,37 @@ const MINUTE = 60_000;
 const HOUR = 3_600_000;
 const DAY = 86_400_000;
 
-export function deriveEvents(
-	rng: Rng,
-	bundle: RoomBundle,
-	windows: DeriveWindows,
-	emit: (doc: EventDoc) => void
-): void {
+/**
+ * The events of a room's entities up to `windows.now`, inside the events retention window. Each `_id` is a hash of the
+ * event's type, the identifiers it carries, its instant and its layer (or position among the resumes or mutes of its
+ * entity), so the same event keeps its `_id` whatever the instant the room is cut at; a synthetic event is keyed by
+ * the entity it closes, as the writer keys it.
+ */
+export function deriveEvents(bundle: RoomBundle, windows: DeriveWindows, emit: (doc: EventDoc) => void): void {
 	const { room } = bundle;
 	const base = { roomSid: room._id, roomName: room.name, nodeId: room.nodeId };
-	/** `closed` names the entity a synthetic event closes: the writer keys the event by it. */
+	/** `closed` names the entity a synthetic event closes; `layer` tells apart the events of one entity at one instant. */
 	const push = (
 		type: string,
 		ts: Date | null,
 		extra: Partial<Omit<EventDoc, 'roomSid' | 'roomName'>> & { roomSid?: string | null; roomName?: string | null },
 		payload: Record<string, unknown>,
-		closed?: string
+		key: { closed?: string; layer?: number } = {}
 	): void => {
 		if (ts === null || ts.getTime() < windows.eventsFrom) {
 			return;
 		}
 
-		const _id = closed === undefined ? rng.id('AE_') : `AE_SYN_${closed}`;
-		const doc = { _id, type, ts, ...base, ...extra, synthetic: closed !== undefined, payload };
+		const fields = { type, ts, ...base, ...extra };
+		const ids = [fields.roomSid, fields.participantSid, fields.trackSid, fields.egressId, fields.ingressId];
+		const _id =
+			key.closed === undefined
+				? hashId(
+						'AE_',
+						[type, ...ids, fields.ingressSessionId, String(ts.getTime()), String(key.layer ?? 0)].join('|')
+					)
+				: `AE_SYN_${key.closed}`;
+		const doc = { _id, ...fields, synthetic: key.closed !== undefined, payload };
 
 		// An event of no room, or of a state that names none yet, has no room fields.
 		emit({ ...doc, roomSid: doc.roomSid ?? undefined, roomName: doc.roomName ?? undefined } as EventDoc);
@@ -118,7 +127,7 @@ export function deriveEvents(
 			room.endedAt,
 			{},
 			{ room: roomMin, room_end_reason: RECONCILED, reconciler: { reason: room.reconcilerReason ?? NODE_DEAD } },
-			room._id
+			{ closed: room._id }
 		);
 	} else {
 		push('ROOM_ENDED', room.endedAt, {}, { room: roomFull, ...enumField('room_end_reason', roomEndReason(room)) });
@@ -142,8 +151,14 @@ export function deriveEvents(
 			}
 		});
 
-		for (const at of p.resumedAt) {
-			push('PARTICIPANT_RESUMED', at, ref, { room: roomMin, participant: { ...info, state: 'ACTIVE' } });
+		for (const [index, at] of p.resumedAt.entries()) {
+			push(
+				'PARTICIPANT_RESUMED',
+				at,
+				ref,
+				{ room: roomMin, participant: { ...info, state: 'ACTIVE' } },
+				{ layer: index }
+			);
 		}
 
 		if (p.closedBy === 'reconciler') {
@@ -156,7 +171,7 @@ export function deriveEvents(
 					participant: { sid: p._id, identity: p.identity, disconnect_reason: RECONCILED },
 					reconciler: { reason: room.reconcilerReason ?? NODE_DEAD }
 				},
-				p._id
+				{ closed: p._id }
 			);
 		} else {
 			push(p.status === 'aborted' ? 'PARTICIPANT_CONNECTION_ABORTED' : 'PARTICIPANT_LEFT', p.leftAt, ref, {
@@ -182,12 +197,18 @@ export function deriveEvents(
 		});
 		push('TRACK_PUBLISHED', t.publishedAt, ref, { room: roomMin, participant, track: trackInfo(t) });
 
-		for (const change of t.muteChanges) {
-			push(change.muted ? 'TRACK_MUTED' : 'TRACK_UNMUTED', change.at, ref, {
-				room: roomMin,
-				participant: { sid: t.participantSid },
-				track: { ...requested, ...(change.muted ? { muted: true } : {}) }
-			});
+		for (const [index, change] of t.muteChanges.entries()) {
+			push(
+				change.muted ? 'TRACK_MUTED' : 'TRACK_UNMUTED',
+				change.at,
+				ref,
+				{
+					room: roomMin,
+					participant: { sid: t.participantSid },
+					track: { ...requested, ...(change.muted ? { muted: true } : {}) }
+				},
+				{ layer: index }
+			);
 		}
 
 		// What the reconciler's cascade closed has no event of its own.
@@ -202,12 +223,18 @@ export function deriveEvents(
 		// The final stats of each layer as the track closes.
 		if (t.publishStats !== null && t.unpublishedAt !== null) {
 			for (const layer of layerStats(t.publishStats)) {
-				push('TRACK_PUBLISH_STATS', t.unpublishedAt, ref, {
-					room: roomMin,
-					mime: t.mimeType,
-					...(layer.layer === 0 ? {} : { video_layer: layer.layer }),
-					rtp_stats: rtpStatsPayload(t.publishedAt, t.unpublishedAt, layer, t.publishStats)
-				});
+				push(
+					'TRACK_PUBLISH_STATS',
+					t.unpublishedAt,
+					ref,
+					{
+						room: roomMin,
+						mime: t.mimeType,
+						...(layer.layer === 0 ? {} : { video_layer: layer.layer }),
+						rtp_stats: rtpStatsPayload(t.publishedAt, t.unpublishedAt, layer, t.publishStats)
+					},
+					{ layer: layer.layer }
+				);
 			}
 		}
 	}
@@ -282,7 +309,7 @@ export function deriveEvents(
 					},
 					reconciler: { reason: ROOM_CLOSED_NODE_DEAD }
 				},
-				e._id
+				{ closed: e._id }
 			);
 		} else if (e.endedAt !== null) {
 			push('EGRESS_ENDED', e.endedAt, ref, {
@@ -360,18 +387,21 @@ export function deriveEvents(
 			continue;
 		}
 
-		const publishedAt = new Date(s.startedAt.getTime() + 500);
-		push(
-			'INGRESS_STARTED',
-			publishedAt,
-			{ ...ref, ...noRoom },
-			{
-				ingress: {
-					...definition,
-					state: { status: 'ENDPOINT_PUBLISHING', ...media, ...started, updated_at: unixNs(publishedAt) }
+		const { publishedAt } = s;
+
+		if (publishedAt !== null) {
+			push(
+				'INGRESS_STARTED',
+				publishedAt,
+				{ ...ref, ...noRoom },
+				{
+					ingress: {
+						...definition,
+						state: { status: 'ENDPOINT_PUBLISHING', ...media, ...started, updated_at: unixNs(publishedAt) }
+					}
 				}
-			}
-		);
+			);
+		}
 
 		if (s.endedAt !== null && s.closedBy === 'reconciler') {
 			push(
@@ -391,7 +421,7 @@ export function deriveEvents(
 					},
 					reconciler: { reason: ROOM_CLOSED_NODE_DEAD }
 				},
-				s._id
+				{ closed: s._id }
 			);
 		} else if (s.endedAt !== null) {
 			push('INGRESS_ENDED', s.endedAt, ref, {

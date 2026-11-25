@@ -7,9 +7,12 @@
 	"exports": {
 		"./generator": "./src/generator.ts",
 		"./context": "./src/context.ts",
+		"./cut": "./src/cut.ts",
 		"./derive": "./src/derive.ts",
+		"./model": "./src/model.ts",
 		"./contract": "./src/contract.ts",
 		"./plan": "./src/plan.ts",
+		"./random": "./src/random.ts",
 		"./schema": "./src/schema.ts"
 	},
 	"scripts": {
