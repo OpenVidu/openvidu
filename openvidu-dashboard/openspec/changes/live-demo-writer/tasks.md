@@ -60,7 +60,7 @@
   every mode. Cover "Demo data mode selection" and "Unknown demo data mode" in `test/demo-data-mode.test.mjs`. Cover
   "Frozen keep-alive writes nothing new" and "Frozen restart on kept live data" in `data-generator-live.test.ts`.
   Verify with `./dashboard.sh check` and `./dashboard.sh test-integration`.
-- [ ] 4.3 Document `DASHBOARD_DEMO_DATA` and the live writer:
+- [x] 4.3 Document `DASHBOARD_DEMO_DATA` and the live writer:
   - the header of `demo-lib.sh` and the comment of `demo.sh`;
   - the `demo` line of `./dashboard.sh help`;
   - the CE `AGENTS.md` Commands section, next to `DASHBOARD_DEMO_KEEP_DATA`;
