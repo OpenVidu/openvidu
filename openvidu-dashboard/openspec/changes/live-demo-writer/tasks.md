@@ -8,7 +8,7 @@
   with a participant connecting for the last minute, egresses `starting`, `ending` or stopped, the buffering ingress).
   Move the room's derived fields (counters, peaks, topology, features, id arrays, `lastEventAt`, bytes, quality,
   `lastStatsAt`) into a function of the sessions. Verify with `./dashboard.sh check`.
-- [ ] 1.2 Add the pure function `cutRoom(life, t)` (design decision 1), with `RoomMedia` at `t` for the samples, and make
+- [x] 1.2 Add the pure function `cutRoom(life, t)` (design decision 1), with `RoomMedia` at `t` for the samples, and make
   `generate()` write `cutRoom(life, now)`. Take an optional `now` in `GenerateOptions`. Give events `_id` values hashed
   from (type, entity id, instant, layer) (decision 2). Verify that `./dashboard.sh test-integration` passes with
   `data-generator.test.ts` and every CE query-plan suite unchanged, the tests of joining sessions, egress and ingress
