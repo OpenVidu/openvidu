@@ -162,7 +162,7 @@ function describe(error: unknown): string {
 }
 
 /** Servers whose last heartbeat is this close to the freshest one are the alive ones; the others are lost. */
-const ALIVE_NODE_MS = 60_000;
+export const ALIVE_NODE_MS = 60_000;
 
 /**
  * One keep-alive tick at `now`: the heartbeats of the servers still reporting (not the stopped or lost ones) and the

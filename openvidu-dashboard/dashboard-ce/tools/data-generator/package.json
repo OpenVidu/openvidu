@@ -13,12 +13,14 @@
 		"./model": "./src/model.ts",
 		"./contract": "./src/contract.ts",
 		"./plan": "./src/plan.ts",
+		"./restart": "./src/restart.ts",
 		"./random": "./src/random.ts",
 		"./schema": "./src/schema.ts"
 	},
 	"scripts": {
 		"generate": "tsx --conditions=source src/generate.ts",
 		"keep-alive": "tsx --conditions=source src/keep-alive.ts",
+		"live": "tsx --conditions=source src/live-cli.ts",
 		"typecheck": "tsc --noEmit -p tsconfig.json"
 	},
 	"dependencies": {

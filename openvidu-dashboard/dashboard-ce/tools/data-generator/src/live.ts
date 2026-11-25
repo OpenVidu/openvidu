@@ -22,6 +22,8 @@ import { COLLECTIONS, type CollectionName } from './schema.js';
 /** Every document of the contract is keyed by a string. */
 type Keyed = Document & { _id: string };
 type Op = AnyBulkWriteOperation<Keyed>;
+/** A bulk write of a keyed document. */
+export type LiveOp = Op;
 
 const MINUTE = 60_000;
 const HOUR = 3_600_000;
@@ -190,7 +192,7 @@ export class LiveWriter {
 			);
 
 			for (const counters of after.counters.values()) {
-				const op = rollupIncrement(counters, before?.counters.get(countersKey(counters)));
+				const op = liveRollupIncrement(counters, before?.counters.get(countersKey(counters)));
 
 				if (op !== undefined) {
 					push(rollupOps, counters.collection, op);
@@ -313,9 +315,9 @@ export class LiveWriter {
 	 * starts, and a share of it rising over the 10 minutes after, as people coming back would.
 	 */
 	private floorAt(minute: number): number {
-		const waiver = this.world.schedule
-			.floorWaivers()
-			.find((window) => window.from <= minute && minute < window.until);
+		const waiver = [...this.world.schedule.floorWaivers(), ...(this.world.floorWaivers ?? [])].find(
+			(window) => window.from <= minute && minute < window.until
+		);
 
 		if (waiver === undefined) {
 			return ROOM_FLOOR;
@@ -612,7 +614,7 @@ function entityUpdate(id: string, before: Document | undefined, after: Document)
 }
 
 /** The `$inc` of the counters of a rollup document since they were last written, with its new marks. */
-function rollupIncrement(after: RollupCounters, before: RollupCounters | undefined): Op | undefined {
+export function liveRollupIncrement(after: RollupCounters, before: RollupCounters | undefined): Op | undefined {
 	const increments: Document = {};
 	let changed = false;
 

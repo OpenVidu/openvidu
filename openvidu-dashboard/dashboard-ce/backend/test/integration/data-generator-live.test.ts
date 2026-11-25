@@ -1,5 +1,7 @@
 import { generate, type GenerateOptions } from '@openvidu-dashboard/data-generator/generator';
 import { LiveWriter } from '@openvidu-dashboard/data-generator/live';
+import { restartLive } from '@openvidu-dashboard/data-generator/restart';
+import { COLLECTION_NAMES, keepLive } from '@openvidu-dashboard/data-generator/schema';
 import type {
 	DashboardDeletionJob,
 	EgressDocument,
@@ -881,6 +883,198 @@ describe.skipIf(mongoUri === '')('live data generator', () => {
 			);
 		}, 600_000);
 	});
+	describe.each(['live', 'frozen'] as const)('a live start on kept data after a %s run', (previous) => {
+		const db = () => client.db(`dashboard_test_live_restart_${previous}`);
+
+		afterAll(async () => {
+			await db().dropDatabase();
+		});
+
+		it(`Live restart after a stop: after a ${previous} run`, async () => {
+			const generation = options({ days: 1, seed: 21, minActiveRooms: 20 });
+
+			await db().dropDatabase();
+			const summary = await generate(db(), generation);
+			const heartbeat = previous === 'live' ? T + 2 * HOUR : T + 30 * MINUTE;
+
+			if (previous === 'live') {
+				await tickUntil(new LiveWriter(db(), summary.world), T, heartbeat, MINUTE);
+			} else {
+				for (let at = T + 15 * SECOND; at <= heartbeat; at += 15 * SECOND) {
+					await keepLive(db(), new Date(at));
+				}
+			}
+
+			const restart = heartbeat + 2 * HOUR;
+			const rooms = await db().collection<Keyed>('rooms').distinct('_id', { status: 'active' });
+			const sessions = await db()
+				.collection<Keyed>('participants')
+				.distinct('_id', { leftAt: { $exists: false } });
+			const egresses = await db()
+				.collection<Keyed>('egresses')
+				.distinct('_id', { status: { $in: ['starting', 'active', 'ending'] } });
+			const alive = await docs<NodeDocument>(db(), 'nodes', {
+				stoppedAt: { $exists: false },
+				lastSeenAt: { $gte: new Date(heartbeat - MINUTE) }
+			});
+
+			expect([rooms.length > 0, sessions.length > 0, egresses.length > 0, alive.length > 0]).toEqual([
+				true,
+				true,
+				true,
+				true
+			]);
+
+			const writer = new LiveWriter(db(), await restartLive(db(), generation, restart));
+			let inProgress = 0;
+
+			await tickUntil(writer, restart, restart + 10 * MINUTE, MINUTE, async (at) => {
+				if (at === restart + 10 * MINUTE) {
+					inProgress = await db().collection('rooms').countDocuments({ status: 'active' });
+				}
+			});
+
+			for (const room of await docs<RoomDocument>(db(), 'rooms', { _id: { $in: rooms } })) {
+				const ended = (await db()
+					.collection<Keyed>('events')
+					.findOne({ type: 'ROOM_ENDED', roomSid: room._id })) as EventDocument | null;
+
+				expect([room.closedBy, time(room.endedAt) <= heartbeat], room._id).toEqual(['reconciler', true]);
+				expect(
+					[ended?.synthetic, (ended?.payload as { reconciler?: { reason?: string } }).reconciler?.reason],
+					room._id
+				).toEqual([true, 'node-dead']);
+			}
+
+			for (const p of await docs<ParticipantDocument>(db(), 'participants', { _id: { $in: sessions } })) {
+				expect([p.closedBy, time(p.leftAt) <= heartbeat], p._id).toEqual(['reconciler', true]);
+			}
+
+			for (const e of await docs<EgressDocument>(db(), 'egresses', { _id: { $in: egresses } })) {
+				expect([e.status, e.closedBy, time(e.endedAt) <= heartbeat], e._id).toEqual([
+					'failed',
+					'reconciler',
+					true
+				]);
+			}
+
+			const nodes = await docs<NodeDocument>(db(), 'nodes', {});
+
+			for (const node of alive) {
+				const now = nodes.find((n) => n._id === node._id);
+
+				expect([time(now?.lastSeenAt), now?.stoppedAt], node._id).toEqual([time(node.lastSeenAt), undefined]);
+				expect(
+					nodes.some((n) => n.mediaNode === node.mediaNode && time(n.firstSeenAt) === restart),
+					node._id
+				).toBe(true);
+			}
+
+			const gap = await datedAfter(db(), heartbeat, restart);
+
+			expect(gap).toEqual(Object.fromEntries(Object.keys(gap).map((key) => [key, 0])));
+			expect(inProgress).toBeGreaterThanOrEqual(10);
+		}, 600_000);
+	});
+
+	describe('the frozen mode', () => {
+		const db = () => client.db('dashboard_test_live_frozen');
+		/** Every collection, with the heartbeats and stats times aside. */
+		const snapshot = async (): Promise<Record<string, string[]>> =>
+			Object.fromEntries(
+				await Promise.all(
+					COLLECTION_NAMES.map(async (name): Promise<[string, string[]]> => [
+						name,
+						await canonical(db(), name, ['lastSeenAt', 'lastStatsAt'])
+					])
+				)
+			);
+
+		afterAll(async () => {
+			await db().dropDatabase();
+		});
+
+		it('Frozen keep-alive writes nothing new', async () => {
+			await db().dropDatabase();
+			await generate(db(), options({ days: 1 }));
+
+			const before = await snapshot();
+			const alive = await db()
+				.collection<Keyed>('nodes')
+				.distinct('_id', { stoppedAt: { $exists: false }, lastSeenAt: { $gte: new Date(T - MINUTE) } });
+			const active = await db().collection<Keyed>('rooms').distinct('_id', { status: 'active' });
+			const end = T + 10 * MINUTE;
+
+			for (let at = T + 15 * SECOND; at <= end; at += 15 * SECOND) {
+				await keepLive(db(), new Date(at));
+			}
+
+			expect(await snapshot()).toEqual(before);
+			expect(
+				await db()
+					.collection<Keyed>('nodes')
+					.distinct('_id', { lastSeenAt: new Date(end) })
+			).toEqual(expect.arrayContaining(alive));
+			expect(
+				await db()
+					.collection('nodes')
+					.countDocuments({ lastSeenAt: new Date(end) })
+			).toBe(alive.length);
+			expect(
+				await db()
+					.collection<Keyed>('rooms')
+					.distinct('_id', { lastStatsAt: new Date(end) })
+			).toEqual(expect.arrayContaining(active));
+			expect(
+				await db()
+					.collection('rooms')
+					.countDocuments({ lastStatsAt: new Date(end) })
+			).toBe(active.length);
+			expect(
+				await db()
+					.collection('participants')
+					.countDocuments({ lastStatsAt: new Date(end), status: { $ne: 'active' } })
+			).toBe(0);
+		}, 300_000);
+
+		it('Frozen restart on kept live data', async () => {
+			await db().dropDatabase();
+			const summary = await generate(db(), options({ days: 1 }));
+			const stop = T + 2 * HOUR + 5 * MINUTE;
+
+			await tickUntil(new LiveWriter(db(), summary.world), T, stop, MINUTE);
+
+			const draining = await docs<NodeDocument>(db(), 'nodes', {
+				drainingAt: { $exists: true },
+				stoppedAt: { $exists: false },
+				lastSeenAt: new Date(stop)
+			});
+			const active = await db().collection<Keyed>('rooms').distinct('_id', { status: 'active' });
+			const before = await snapshot();
+			const restart = stop + 2 * HOUR;
+			const end = restart + 5 * MINUTE;
+
+			expect(draining.length).toBeGreaterThan(0);
+			expect(active.length).toBeGreaterThan(0);
+
+			for (let at = restart; at <= end; at += 15 * SECOND) {
+				await keepLive(db(), new Date(at));
+			}
+
+			expect(await snapshot()).toEqual(before);
+			expect(await db().collection<Keyed>('rooms').distinct('_id', { status: 'active' })).toEqual(active);
+
+			for (const node of draining) {
+				const now = (await db().collection<Keyed>('nodes').findOne({ _id: node._id })) as NodeDocument | null;
+
+				expect([time(now?.drainingAt), now?.stoppedAt, time(now?.lastSeenAt)], node._id).toEqual([
+					time(node.drainingAt),
+					undefined,
+					end
+				]);
+			}
+		}, 300_000);
+	});
 });
 
 /** A Total deletion with its cutoff, as the deletion API starts it. */
@@ -902,8 +1096,8 @@ function totalDeletion(cutoff: Date): DashboardDeletionJob {
 	};
 }
 
-/** The documents dated after `at`, by collection and field: none should exist. */
-async function datedAfter(db: Db, at: number): Promise<Record<string, number>> {
+/** The documents dated after `at` (and up to `until`), by collection and field: none should exist. */
+async function datedAfter(db: Db, at: number, until?: number): Promise<Record<string, number>> {
 	const fields: Record<string, string[]> = {
 		rooms: ['createdAt', 'endedAt', 'lastStatsAt', 'lastEventAt'],
 		participants: ['joinedAt', 'activeAt', 'leftAt', 'lastStatsAt'],
@@ -918,7 +1112,9 @@ async function datedAfter(db: Db, at: number): Promise<Record<string, number>> {
 
 	for (const [name, list] of Object.entries(fields)) {
 		for (const field of list) {
-			counts[`${name}.${field}`] = await db.collection(name).countDocuments({ [field]: { $gt: new Date(at) } });
+			counts[`${name}.${field}`] = await db.collection(name).countDocuments({
+				[field]: { $gt: new Date(at), ...(until === undefined ? {} : { $lt: new Date(until) }) }
+			});
 		}
 	}
 
@@ -929,7 +1125,7 @@ async function datedAfter(db: Db, at: number): Promise<Record<string, number>> {
  * A collection's documents in a comparable form: sorted, with their fields in key order (a field added by a later
  * update comes last in the stored document) and numbers rounded past the doubles' last digits.
  */
-async function canonical(db: Db, name: string): Promise<string[]> {
+async function canonical(db: Db, name: string, omit: readonly string[] = []): Promise<string[]> {
 	const round = (_key: string, value: unknown) => {
 		if (typeof value === 'number' && !Number.isInteger(value)) {
 			return Math.round(value * 1e6) / 1e6;
@@ -943,7 +1139,9 @@ async function canonical(db: Db, name: string): Promise<string[]> {
 	return (await db.collection(name).find().toArray())
 		.map((doc) => {
 			const { _id, ...rest } = doc;
-			const keyed = name === 'track_stats' ? rest : doc;
+			const keyed = Object.fromEntries(
+				Object.entries(name === 'track_stats' ? rest : doc).filter(([key]) => !omit.includes(key))
+			);
 
 			return JSON.stringify(BSON.EJSON.serialize(keyed, { relaxed: true }), round);
 		})

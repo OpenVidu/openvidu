@@ -22,7 +22,7 @@ import { toStored } from './contract.js';
 import { cutRoom, roomLife, type RoomLife } from './cut.js';
 import type { Engine } from './samples.js';
 import { LEGACY_EVENTS, LEGACY_STATS, writeLegacy } from './legacy.js';
-import { nodeState, SCHEDULE_AHEAD, ServerSchedule } from './operations.js';
+import { type FloorWaiver, nodeState, SCHEDULE_AHEAD, ServerSchedule } from './operations.js';
 import { Rng } from './random.js';
 import { COLLECTIONS, createCollections, SCHEMA_VERSION, type CollectionName } from './schema.js';
 
@@ -373,6 +373,8 @@ export interface World {
 	rooms: number;
 	/** The node ids of the servers that report no media statistics. */
 	withoutMediaStats: ReadonlySet<string>;
+	/** Minutes without the room floor besides the single-node restarts: the 10 minutes after a restart on kept data. */
+	floorWaivers?: readonly FloorWaiver[];
 }
 
 /**
