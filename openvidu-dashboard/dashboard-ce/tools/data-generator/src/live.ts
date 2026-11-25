@@ -16,7 +16,7 @@ import {
 import { HOUR_WEIGHTS, takesRooms, type Server, type World } from './generator.js';
 import { generateRoom, type GeneratorContext, type RoomBundle } from './model.js';
 import { nodeState, SCHEDULE_AHEAD } from './operations.js';
-import { hashRng, type Rng } from './random.js';
+import { hashRng, KeyedRng, type Rng } from './random.js';
 import { COLLECTIONS, type CollectionName } from './schema.js';
 
 /** Every document of the contract is keyed by a string. */
@@ -81,8 +81,10 @@ export class LiveWriter {
 	private readonly written = new Map<string, Written>();
 	private readonly windows: DeriveWindows;
 	private readonly rollupOptions: RollupOptions;
-	/** The `nodes` documents last written, without their room counters. */
+	/** The `nodes` documents last written, without their room counters, of the servers whose end is not written. */
 	private readonly nodes = new Map<string, Document>();
+	/** The servers whose end was written: nothing of them changes any more. */
+	private readonly endedServers = new Set<string>();
 	private last: number;
 	private plannedUntil: number;
 	private rooms: number;
@@ -104,7 +106,11 @@ export class LiveWriter {
 		};
 
 		for (const server of world.servers.filter((s) => s.firstSeenAt <= start)) {
-			this.nodes.set(server.nodeId, toStored(COLLECTIONS.nodes, nodeState(server, start)));
+			if (server.end !== undefined && server.end.at <= start) {
+				this.endedServers.add(server.nodeId);
+			} else {
+				this.nodes.set(server.nodeId, toStored(COLLECTIONS.nodes, nodeState(server, start)));
+			}
 		}
 
 		this.last = start;
@@ -352,12 +358,15 @@ export class LiveWriter {
 		return life;
 	}
 
-	/** The draws of a room of the live writer: streams of its own, seeded by the seed, the world start and its number. */
+	/**
+	 * The draws of a room of the live writer: streams of its own, keyed by the seed, the world start and its number,
+	 * whose identifiers come from SHA-256 digests, so no two rooms share one however long the writer runs.
+	 */
 	private context(index: number): GeneratorContext {
 		const { world } = this;
 		const { retentionDays } = world.options;
 		const stream = (name: string) =>
-			hashRng(`${String(world.options.seed)}|${String(world.start)}|${String(index)}|${name}`);
+			new KeyedRng(`${String(world.options.seed)}|${String(world.start)}|${String(index)}|${name}`);
 
 		return {
 			rng: stream('rng'),
@@ -417,7 +426,7 @@ export class LiveWriter {
 						.countDocuments({ status: { $in: ['starting', 'active', 'ending'] } }),
 					'ingress.peakActive': await db
 						.collection(COLLECTIONS.ingressSessions)
-						.countDocuments({ endedAt: { $exists: false } })
+						.countDocuments({ status: { $in: ['buffering', 'publishing'] } })
 				}
 			]
 		]);
@@ -500,17 +509,23 @@ export class LiveWriter {
 
 	/**
 	 * The writes of the servers' documents at `at`, from the server timeline: a new server's document, then its
-	 * heartbeats at its own interval, its drain and its stop.
+	 * heartbeats at its own interval, its drain and its stop. A server whose end was written is left alone.
 	 */
 	private nodeUpdates(at: number): Op[] {
 		return this.world.servers.flatMap((server): Op[] => {
-			if (server.firstSeenAt > at) {
+			if (server.firstSeenAt > at || this.endedServers.has(server.nodeId)) {
 				return [];
 			}
 
 			const doc = toStored(COLLECTIONS.nodes, nodeState(server, at));
 			const before = this.nodes.get(server.nodeId);
-			this.nodes.set(server.nodeId, doc);
+
+			if (server.end !== undefined && server.end.at <= at) {
+				this.endedServers.add(server.nodeId);
+				this.nodes.delete(server.nodeId);
+			} else {
+				this.nodes.set(server.nodeId, doc);
+			}
 
 			if (before === undefined) {
 				const { _id: _ignored, ...fields } = doc;

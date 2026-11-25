@@ -135,3 +135,22 @@ export function hashId(prefix: string, key: string, length = 12): string {
 
 	return out;
 }
+
+/**
+ * A generator keyed by a string: seeded from a SHA-256 digest of the key, with identifiers that come from SHA-256
+ * digests of the key and their ordinal (`hashId()`), not from its 32-bit state. Streams of many keys can overlap on the
+ * cycle of an `Rng`, and would then draw the same identifiers; these never do.
+ */
+export class KeyedRng extends Rng {
+	private ids = 0;
+
+	constructor(private readonly key: string) {
+		super(createHash('sha256').update(key).digest().readUInt32BE(0));
+	}
+
+	override id(prefix: string, length = 12): string {
+		this.ids += 1;
+
+		return hashId(prefix, `${this.key}|${String(this.ids)}`, length);
+	}
+}
