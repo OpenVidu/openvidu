@@ -70,7 +70,7 @@
     measured documents and storage of a simulated live day in both stats modes (decision 11).
 
   Verify by reading that each matches the specs of this change. No CHANGELOG line: this is tooling.
-- [ ] 4.4 Run `./dashboard.sh check`, `./dashboard.sh test-integration` and
+- [x] 4.4 Run `./dashboard.sh check`, `./dashboard.sh test-integration` and
   `./dashboard.sh scenarios live-demo-writer`. Every scenario of the change has a passing test.
 - [ ] 4.5 Run `./dashboard.sh demo ce` with `DASHBOARD_DEMO_DATA=live` for 15 minutes. Check that rooms end and start,
   charts move and nothing fails in the log. Check that the default `frozen` run behaves as before.
