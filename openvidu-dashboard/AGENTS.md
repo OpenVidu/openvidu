@@ -113,8 +113,9 @@ published by `docker-release.yaml` in openvidu-deployment.
 ## CHANGELOG
 
 `CHANGELOG.md`, newest release first, sections `Upgrade notes → Breaking changes → Deprecated → Added → Improved →
-Fixed`; `Added`, `Improved` and `Fixed` group entries under `UI`, `Data` and `Deployment`. One present-tense line per
-observable change, written in the same commit as the change; refactors, tests and docs get none.
+Fixed → Internal`. The first six hold what an administrator notices, one short present-tense line per change, written
+in the same commit as the change; extend an existing line rather than adding a near duplicate. `Internal` holds the
+notable changes they do not notice (runtime, build, code moves); refactors, tests and docs get no line.
 
 ## Pointers
 
