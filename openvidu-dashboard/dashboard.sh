@@ -39,7 +39,8 @@ Commands:
                  on port 5000 (DASHBOARD_DEV_PORT, DASHBOARD_DEV_BACKEND_PORT); defaults in
                  dashboard-ce/backend/dev.env, overridden by dashboard-ce/backend/.env and the environment
   demo [ce]      Local demo on generated data: MongoDB (a container, or DASHBOARD_DEMO_MONGO_URI), 30 days of data
-                 kept live, backend and frontend dev servers on http://localhost:4200 (admin / admin)
+                 kept live, backend and frontend dev servers on http://localhost:4200 (admin / admin);
+                 DASHBOARD_DEMO_DATA=live writes the data live (rooms, stats, rollups, servers) instead of frozen
   test           Same as test-unit
   test-unit      Tests of the workspace tooling (test/) and unit tests (Vitest) of every package that defines them
   test-integration  Integration tests against MongoDB (Docker required)

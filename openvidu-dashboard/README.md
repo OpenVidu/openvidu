@@ -38,6 +38,7 @@ All tasks run through `./dashboard.sh`:
 ./dashboard.sh check              # lint + format check + type check + spec validation + unit tests
 ./dashboard.sh dev                # backend and frontend dev servers against openvidu-local-deployment
 ./dashboard.sh demo ce            # local demo on generated data: http://localhost:4200, admin / admin
+DASHBOARD_DEMO_DATA=live ./dashboard.sh demo ce   # the same demo with its data written live
 ./dashboard.sh test-integration   # integration tests against MongoDB (Docker required)
 ./dashboard.sh test-live          # the data generator's live writer over simulated days (Docker, about 10 min)
 ./dashboard.sh e2e                # build the application and run the Playwright tests

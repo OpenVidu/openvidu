@@ -1,8 +1,9 @@
 # Data generator
 
 Fills a MongoDB database with analytics data that follows the data model contract of `@openvidu-dashboard/typings`: a
-deterministic scenario S, M or L over a number of days ending now. The backend integration tests use it for their query
-plan and latency checks, and `./dashboard.sh demo` uses it for the local demo database.
+deterministic scenario S, M or L over a number of days ending at the generation instant (now by default). The backend
+integration tests use it for their query plan and latency checks, and `./dashboard.sh demo` uses it for the local demo
+database, frozen or written live (see Live writing).
 
 Before inserting, `src/schema.ts` creates every collection, index and TTL of the contract and gives the plain
 collections the contract validator with `validationAction: error`, so a document that drifts from the contract fails
@@ -12,7 +13,9 @@ schema declares.
 
 The package is also a library for the backend integration tests (`dashboard-ce/backend/test/`): `./generator`
 (`generate(db, options)`), `./context` (`queryContext(db)`: the data range and sample identifiers), `./plan` (explain
-summaries used by the `expectIndexBacked` harness) and `./schema` (`createCollections()`).
+summaries used by the `expectIndexBacked` harness), `./schema` (`createCollections()`, `keepLive()`), `./live`
+(`LiveWriter`), `./restart` (`restartLive()`), `./cut` (`cutRoom()`, `roomLife()`), and `./model`, `./derive` and
+`./random` for the unit tests.
 
 Requirements: the workspace installed (`./dashboard.sh install`), a reachable MongoDB (8.x; time-series
 collections are used when the server accepts them) and a user allowed to create and drop the target
@@ -24,13 +27,19 @@ database. Run the commands from this directory.
 pnpm generate --uri "$MONGO_URI" --db ov_data_s --scenario S --days 30 --drop
 pnpm generate --uri "$MONGO_URI" --db ov_data_m --scenario M --days 7 --drop
 pnpm generate --uri "$MONGO_URI" --db ov_data_l --scenario L --days 1 --drop --stats-mode track
+pnpm generate --uri "$MONGO_URI" --db ov_demo --scenario S --days 30 --drop --active-window 60 --min-active-rooms 10 --live
+pnpm live --uri "$MONGO_URI" --db ov_demo --scenario S
 ```
+
+`--live` goes on writing the generated world every 10 s until Ctrl+C (`SIGINT` or `SIGTERM`); `pnpm live` restarts that
+writing on a kept database, with the options of its generation (those of the generation alone, such as `--days`,
+`--drop` or `--active-window`, have no effect on it). See Live writing.
 
 | Option                              | Default       | Meaning                                                                                                                |
 | ----------------------------------- | ------------- | ---------------------------------------------------------------------------------------------------------------------- |
 | `--uri`, `--db`                     | required      | Connection string and target database                                                                                  |
 | `--scenario S\|M\|L`                | required      | Rooms per day, sessions per day and average room size (table below)                                                    |
-| `--days <n>`                        | required      | Days of history ending now                                                                                             |
+| `--days <n>`                        | required      | Days of history ending at the generation instant (`now` in `generate()`, the current minute by default)                |
 | `--stats-mode participant\|track`   | `participant` | One `track_stats` document per participant and direction, or per track                                                 |
 | `--seed <n>`                        | `1`           | Seed of the pseudo-random generator (mulberry32); same seed, same data                                                 |
 | `--retention-events-days <n>`       | `7`           | Only raw events inside this window are written (TTL index on `ts`)                                                     |
@@ -48,6 +57,7 @@ pnpm generate --uri "$MONGO_URI" --db ov_data_l --scenario L --days 1 --drop --s
 | `--nodes-without-media-stats <n>`   | 0             | 0 or 1. With 1, the mediasoup machine runs an earlier version without media statistics until the upgrade (see Output)  |
 | `--media-nodes`                     | off           | A multi-node deployment (Elastic or HA): seven media nodes and ten servers; without it, a single node (see Output)     |
 | `--legacy`                          | off           | The legacy collections of the writer before 3.10 and a completed migration (see Output)                                |
+| `--live`                            | off           | After the generation, write the world live every 10 s until stopped (see Live writing)                                 |
 
 | Scenario | Rooms per day | Sessions per day | Average room size |
 | -------- | ------------- | ---------------- | ----------------- |
@@ -80,7 +90,8 @@ What it writes (`analytics_5min` stays empty without `--five-minute-rollups`):
   the difference between sessions/day and rooms/day × average size is produced as reconnects
   (`DUPLICATE_IDENTITY` leave plus a new session of the same identity). Sessions last ~20 min, 3 % are
   aborted, 95 % are `STANDARD`; rooms with egress/ingress/agent/SIP get the matching participant kinds, and 15 % of
-  the active rooms hold a session that joined seconds ago and is still `joining` (not counted as active).
+  the active rooms hold a session that joined less than a minute ago and is still `joining` (not counted as active):
+  it connects 60 to 180 s after joining, or aborts one time in three.
   Client (sdk/os/browser/device/network; the fields a client leaves empty, the region and the kind details are absent,
   as the writer leaves them), connection type, connect time, disconnect reason and resumes
   follow fixed distributions; each resume has its `PARTICIPANT_RESUMED`. A session with stats has `lastStatsAt`, its
@@ -197,20 +208,99 @@ Documents are inserted in batches of 5 000 with `insertMany(ordered: false)`. Th
 and a final summary with documents per collection, elapsed time and inserts per second. The generator
 keeps only one room in memory at a time, so scenario L fits in a few hundred MB of heap.
 
+## Room lives
+
+Each room is drawn over its whole life (`generateRoom()` in `src/model.ts`), every entity closed, then written as it is
+at an instant (`cutRoom(life, t)` in `src/cut.ts`): what starts after `t` is left out, what is open at `t` takes its open
+state (no end, closer, final stats or expiry; a session `joining` until active, an egress status from its history, an
+ingress session `buffering` until it publishes), the mutes and resumes are those up to `t`, and the bytes, quality and
+`lastStatsAt` come from the stats flushed up to `t`. The generation writes every room cut at the generation instant: a
+room that ended before it is its whole life. A room planned active goes on 10 minutes to 5 hours after the generation
+instant, or less when its server stops or is lost first. Event `_id` values are a hash of the event's type, the ids it
+carries, its instant and its layer, so an event keeps its `_id` at any cut.
+
+## Live writing
+
+`--live` (or `LiveWriter` in `src/live.ts`) goes on writing the generated world after the generation instant, every
+10 s, as the OpenVidu writer, aggregator and reconciler would: each tick writes what the cut of every room in progress
+changed since the previous tick, as updates (`$set` of the changed fields, an upsert the first time) and increments
+(`$inc` of the rollup counters), the events and `track_stats` documents written since, the active peaks of each minute
+(`$max`, counted from the database), the unique identities of a closed day after 00:05 UTC, and the servers' documents.
+A room leaves memory once its end and that of everything it holds are written, and nothing is written again for it, so
+a deletion from Settings meets the live data as it meets a deployment's. The data at an instant does not depend on the
+interval between ticks, and a tick of scenario S takes about 60 ms on a single node and 115 ms on media nodes.
+
+- Rooms: drawn a UTC hour at a time, from the seed, the generation instant and the hour, on the daily curve at the
+  pace of the scenario, and rooms added in any minute that would hold fewer than 10 rooms in progress. Their names
+  continue after the generated ones; half of them have an egress and one in ten an ingress (the generation keeps 30 %
+  and 2 %).
+- Short-lived states: half of the STANDARD sessions of a live room connect in 60 to 180 s, a third of those aborting,
+  so about one room in eleven in progress holds a session still connecting; egresses take 20 to 60 s to start and as
+  long to end once stopped; ingress sessions buffer 1 to 2 minutes; ingresses are created with their room.
+- Reconciler: one room per UTC hour stops reporting 5 to 25 minutes after its creation; that room, the 3 % of rooms
+  closed by the reconciler and the rooms of a lost server are closed at their last signal (a stats flush, a session
+  leaving or the room's creation) and the closure is written 3 to 4 minutes later, so the room shows stale for about
+  2 minutes.
+- Server operations (`ServerSchedule` in `src/operations.ts`): with `--media-nodes`, at each even UTC hour the next
+  media node of `-1` to `-6` that is reporting and in no other operation drains, stops 20 minutes later and has a new
+  server 10 minutes after that, and at 15:00 UTC the reporting one after the last drained is lost and returns 6 hours
+  later; at the generation instant `-3` (draining) stops 20 minutes later and returns 10 minutes after, `-4` returns 6
+  hours after its loss, `-5` (stopped) at its turn, and `-7` stays silent. A single node drains at 04:00 UTC, stops at
+  04:02 and has a new server at 04:03, with no room floor from the drain until 10 minutes after. New servers run 3.10.1
+  with the engine and heartbeat interval of the machine's previous server. Rooms open at a stop end with
+  `SERVER_SHUTDOWN`; those of a lost server are closed by the reconciler (`node-dead`).
+- Restart on kept data (`pnpm live`, `restartLive()` in `src/restart.ts`): the time since the last heartbeat (the
+  freshest `lastSeenAt` of a running server) is an outage. Every room, session, track, subscription, egress and ingress
+  session still open is closed as the reconciler does after a `node-dead` confirmation, at the room's last signal and
+  never after that heartbeat, with its synthetic events, `rooms.reconciled` on its server and the rollups of each
+  closure; the servers alive then stay lost and each of their machines gets a new server at the restart; a new world
+  is drawn from the seed and the restart, with no room floor for the 10 minutes after it. Nothing is dated in the gap.
+- Frozen and live demos: `./dashboard.sh demo` takes `DASHBOARD_DEMO_DATA`, `frozen` by default or `live`. `frozen`
+  runs the keep-alive after the generation, which moves only the heartbeats of the alive servers and the stats times of
+  the active rooms and sessions, whatever wrote the data; `live` runs `generate --live`, or `pnpm live` with
+  `DASHBOARD_DEMO_KEEP_DATA=true`.
+- Growth: the writer sets `expiresAt` as the OpenVidu writer does and the TTL monitor removes what expires, so stats,
+  events, tracks and 5-minute rollups stay within 7 days, entities grow up to their 90-day retention and hourly rollups
+  add 24 documents a day. A live day of the CE demo's options (scenario S, five-minute rollups and room sums, a single
+  node), measured after one generated day at 60 s ticks:
+
+  | Collection            | Participant mode | Track mode |
+  | --------------------- | ---------------- | ---------- |
+  | `rooms`               | 535              | 535        |
+  | `participants`        | 2 884            | 2 884      |
+  | `tracks`              | 4 371            | 4 371      |
+  | `track_subscriptions` | 17 616           | 17 616     |
+  | `egresses`            | 291              | 291        |
+  | `ingresses`           | 54               | 54         |
+  | `ingress_sessions`    | 64               | 64         |
+  | `events`              | 77 978           | 77 978     |
+  | `track_stats`         | 110 242          | 328 296    |
+  | `analytics_5min`      | 288              | 288        |
+  | `analytics_hourly`    | 24               | 24         |
+  | `analytics_daily`     | 1                | 1          |
+
+  The database of that generated day and live day takes 15 MiB of storage in participant mode and 27 MiB in track mode
+  (`dbStats().storageSize`), and the ticks take 63 and 73 ms at the median.
+
 ## Files
 
-| File               | Role                                                                                         |
-| ------------------ | -------------------------------------------------------------------------------------------- |
-| `src/schema.ts`    | Collections, indexes and validators of the contract, `createCollections()` with the fallback |
-| `src/contract.ts`  | Stored shape of a model document: bookkeeping removed, nulls omitted, BSON numeric types     |
-| `src/model.ts`     | Scenarios, document types and the per-room entity generator                                  |
-| `src/cut.ts`       | `cutRoom(life, t)`: a room's documents at an instant, from its whole life                    |
-| `src/derive.ts`    | Raw events, `track_stats` documents and rollups derived from a generated room                |
-| `src/samples.ts`   | The stats each session flushes, and their sums on participants, rooms, tracks and rollups    |
-| `src/generator.ts` | `generate(db, options)` and the batched writer                                               |
-| `src/legacy.ts`    | Legacy collections of the writer before 3.10 (`--legacy`)                                    |
-| `src/generate.ts`  | Generator CLI                                                                                |
-| `src/context.ts`   | `queryContext(db)`: data range and sample identifiers for query plan tests                   |
-| `src/plan.ts`      | Explain summaries: plan stages, indexes, documents examined                                  |
-| `src/random.ts`    | mulberry32 generator and sampling helpers                                                    |
-| `src/args.ts`      | CLI argument parsing                                                                         |
+| File                | Role                                                                                         |
+| ------------------- | -------------------------------------------------------------------------------------------- |
+| `src/schema.ts`     | Collections, indexes and validators of the contract, `createCollections()` with the fallback |
+| `src/contract.ts`   | Stored shape of a model document: bookkeeping removed, nulls omitted, BSON numeric types     |
+| `src/model.ts`      | Scenarios, document types and the per-room entity generator                                  |
+| `src/cut.ts`        | `cutRoom(life, t)`: a room's documents at an instant, from its whole life                    |
+| `src/live.ts`       | `LiveWriter`: the live writing of a world, tick by tick, and its room planner                |
+| `src/operations.ts` | `ServerSchedule`: the rolling server operations after the generation instant                 |
+| `src/restart.ts`    | `restartLive()`: the restart of live writing on kept data                                    |
+| `src/derive.ts`     | Raw events, `track_stats` documents and rollups derived from a generated room                |
+| `src/samples.ts`    | The stats each session flushes, and their sums on participants, rooms, tracks and rollups    |
+| `src/generator.ts`  | `generate(db, options)` and the batched writer                                               |
+| `src/legacy.ts`     | Legacy collections of the writer before 3.10 (`--legacy`)                                    |
+| `src/generate.ts`   | Generator CLI (`pnpm generate`)                                                              |
+| `src/live-cli.ts`   | Restart of live writing on kept data (`pnpm live`)                                           |
+| `src/cli.ts`        | Options of both scripts and the 10 s tick loop                                               |
+| `src/context.ts`    | `queryContext(db)`: data range and sample identifiers for query plan tests                   |
+| `src/plan.ts`       | Explain summaries: plan stages, indexes, documents examined                                  |
+| `src/random.ts`     | mulberry32 generator and sampling helpers                                                    |
+| `src/args.ts`       | CLI argument parsing                                                                         |

@@ -4,6 +4,7 @@
 # Usage: dashboard-ce/tools/demo.sh ce
 #   http://localhost:4200, backend on port 5000
 #   DASHBOARD_DEMO_PORT         port of the frontend development server (default 4200)
+#   DASHBOARD_DEMO_DATA         frozen (default) or live: the data written live by the data generator (demo-lib.sh)
 set -euo pipefail
 
 cd "$(dirname "${BASH_SOURCE[0]}")/../.."
