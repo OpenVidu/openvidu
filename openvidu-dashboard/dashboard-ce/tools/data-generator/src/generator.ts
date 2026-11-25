@@ -22,6 +22,7 @@ import { toStored } from './contract.js';
 import { cutRoom, roomLife, type RoomLife } from './cut.js';
 import type { Engine } from './samples.js';
 import { LEGACY_EVENTS, LEGACY_STATS, writeLegacy } from './legacy.js';
+import { nodeState, SCHEDULE_AHEAD, ServerSchedule } from './operations.js';
 import { Rng } from './random.js';
 import { COLLECTIONS, createCollections, SCHEMA_VERSION, type CollectionName } from './schema.js';
 
@@ -261,9 +262,14 @@ export function takesRooms(server: Server, at: number): boolean {
  * (only those alive at the end for an active room), and one room on each server lost inside the range, created 10
  * minutes before it stops taking rooms and held open until its silence.
  */
-function hostRooms(planned: readonly PlannedRoom[], servers: readonly Server[], windowStart: number): RoomPlan[] {
+function hostRooms(
+	planned: readonly PlannedRoom[],
+	servers: readonly Server[],
+	windowStart: number,
+	now: number
+): RoomPlan[] {
 	const lost = servers.flatMap((server): PlannedRoom[] => {
-		if (server.end === undefined || server.end.stopped || server.end.at <= windowStart) {
+		if (server.end === undefined || server.end.stopped || server.end.at <= windowStart || server.end.at > now) {
 			return [];
 		}
 
@@ -280,7 +286,9 @@ function hostRooms(planned: readonly PlannedRoom[], servers: readonly Server[], 
 			hosts:
 				room.hosts ??
 				servers.filter(
-					(server) => takesRooms(server, room.createdAt) && (!room.active || server.end === undefined)
+					(server) =>
+						takesRooms(server, room.createdAt) &&
+						(!room.active || server.end === undefined || server.end.at > now)
 				)
 		}))
 		.filter((room) => room.hosts.length > 0)
@@ -356,7 +364,9 @@ export interface World {
 	/** The generation instant: the live writer's first tick. */
 	start: number;
 	windowStart: number;
-	servers: readonly Server[];
+	/** The servers, with those the operations start after the generation instant, as far as `schedule` decided. */
+	servers: Server[];
+	schedule: ServerSchedule;
 	/** The rooms whose lives go on after the generation instant. */
 	lives: RoomLife[];
 	/** The number of rooms generated, after which the live writer numbers its own. */
@@ -416,6 +426,9 @@ export async function generate(db: Db, options: GenerateOptions): Promise<Genera
 		nodesWithoutMediaStats === 1,
 		options.seed
 	);
+	// The rolling operations after the generation instant end the servers of rooms still in progress at it.
+	const schedule = new ServerSchedule(servers, now, options.seed, options.mediaNodes === true);
+	schedule.extend(now + SCHEDULE_AHEAD);
 	// Creation instants are drawn by rejection inside a window that moves with the clock, so they take their own stream:
 	// the draws of the rooms' content stay the same at any hour.
 	const plans = hostRooms(
@@ -429,7 +442,8 @@ export async function generate(db: Db, options: GenerateOptions): Promise<Genera
 			options.minActiveRooms ?? 0
 		),
 		servers,
-		windowStart
+		windowStart,
+		now
 	);
 	const ctx: GeneratorContext = {
 		rng,
@@ -538,29 +552,20 @@ export async function generate(db: Db, options: GenerateOptions): Promise<Genera
 		}
 	}
 
-	const nodes = servers.map((server) => ({
-		_id: server.nodeId,
-		firstSeenAt: new Date(server.firstSeenAt),
-		lastSeenAt: new Date(server.end?.at ?? now),
-		serverVersion: server.serverVersion,
-		batchIntervalMs: server.batchIntervalMs,
-		mediaStats: server.mediaStats,
-		rtcEngine: server.rtcEngine,
-		...(server.mediaNode === undefined
-			? {}
-			: { mediaNode: server.mediaNode, ip: server.mediaNode.replace('media-node-', '').replaceAll('-', '.') }),
-		...(server.drainingAt === undefined ? {} : { drainingAt: new Date(server.drainingAt) }),
-		...(server.end?.stopped === true ? { stoppedAt: new Date(server.end.at) } : {}),
+	// The servers as they stand at the generation instant: what the operations after it do is the live writer's.
+	const seen = servers.filter((server) => server.firstSeenAt <= now);
+	const nodes = seen.map((server) => ({
+		...nodeState(server, now),
 		rooms: { hosted: hosted.get(server.nodeId) ?? 0, reconciled: reconciled.get(server.nodeId) ?? 0 }
 	}));
 	// A media node label is alive from the first to the last heartbeat of each of its servers.
 	const lifetimes = new Map<string, [number, number][]>();
 
-	for (const server of servers) {
+	for (const server of seen) {
 		if (server.mediaNode !== undefined) {
 			lifetimes.set(server.mediaNode, [
 				...(lifetimes.get(server.mediaNode) ?? []),
-				[server.firstSeenAt, server.end?.at ?? now]
+				[server.firstSeenAt, Math.min(server.end?.at ?? now, now)]
 			]);
 		}
 	}
@@ -587,7 +592,7 @@ export async function generate(db: Db, options: GenerateOptions): Promise<Genera
 	writer.add(COLLECTIONS.schemaMeta, {
 		_id: 'schema',
 		version: SCHEMA_VERSION,
-		writerVersion: newestVersion(servers.map((server) => server.serverVersion)),
+		writerVersion: newestVersion(seen.map((server) => server.serverVersion)),
 		updatedAt: generatedAt
 	});
 	writer.add(COLLECTIONS.schemaMeta, {
@@ -646,6 +651,7 @@ export async function generate(db: Db, options: GenerateOptions): Promise<Genera
 			start: now,
 			windowStart,
 			servers,
+			schedule,
 			lives,
 			rooms: plans.length,
 			withoutMediaStats: ctx.withoutMediaStats

@@ -1,6 +1,6 @@
 import { AGENT_NAME_ATTRIBUTE, OPENVIDU_AGENT_ATTRIBUTE } from '@openvidu-dashboard/typings';
 import { Long } from 'mongodb';
-import type { Rng } from './random.js';
+import { hashRng, type Rng } from './random.js';
 import type { FlushTraffic } from './samples.js';
 import { SCHEMA_VERSION } from './schema.js';
 
@@ -676,7 +676,7 @@ export function generateRoom(ctx: GeneratorContext, plan: RoomPlan): RoomBundle 
 				const stop = live.stale
 					? Math.min(naturalEnd, plan.createdAt + rng.int(5 * MINUTE, 25 * MINUTE))
 					: endedAt;
-				endedAt = lastFlush(sessions, stop) ?? endedAt;
+				endedAt = lastSignal(plan.createdAt, sessions, stop);
 			}
 		}
 
@@ -684,11 +684,13 @@ export function generateRoom(ctx: GeneratorContext, plan: RoomPlan): RoomBundle 
 	}
 
 	const serverEnd = host.end;
+	// The closures the live writer writes, of rooms in progress at the generation instant or created after it.
+	const writtenLive = live !== undefined || plan.active;
 
 	// A room still open when its server ends ends with it: at a stop with the shutdown, at a silence by the
-	// reconciler, at the server's last signal.
+	// reconciler, at the server's last heartbeat or, written live, at the room's last signal before it.
 	if (serverEnd !== undefined && (plan.heldOpen === true || endedAt > serverEnd.at)) {
-		endedAt = serverEnd.at;
+		endedAt = writtenLive && !serverEnd.stopped ? lastSignal(plan.createdAt, sessions, serverEnd.at) : serverEnd.at;
 		endReason = serverEnd.stopped ? 'SERVER_SHUTDOWN' : RECONCILED;
 		closedBy = serverEnd.stopped ? 'event' : 'reconciler';
 		reconcilerReason = serverEnd.stopped ? null : 'node-dead';
@@ -803,28 +805,30 @@ export function generateRoom(ctx: GeneratorContext, plan: RoomPlan): RoomBundle 
 	};
 	bundle.apiCalls = apiCalls(ctx, bundle);
 
-	// The reconciler finds a live room silent after 90 s, confirms it on its next run and writes the closure.
-	if (live !== undefined && closedBy === 'reconciler') {
-		bundle.closureAt = roomEnd + rng.int(3 * MINUTE, 4 * MINUTE);
+	// The reconciler finds a room silent after 90 s, confirms it on its next run and writes the closure.
+	if (writtenLive && closedBy === 'reconciler') {
+		bundle.closureAt = roomEnd + hashRng(`${roomSid}|closure`).int(3 * MINUTE, 4 * MINUTE);
 	}
 
 	return bundle;
 }
 
 /**
- * The last stats flush of a STANDARD session at or before `at`: the last signal of a room that stops reporting at
- * `at`. Undefined when none has flushed by then.
+ * The last signal of a room at or before `at`, where the reconciler dates its closure when it stops reporting then:
+ * its creation, a stats flush of a session connected then, or a session leaving.
  */
-function lastFlush(sessions: readonly Session[], at: number): number | undefined {
-	const flushes = sessions.flatMap((s) => {
+function lastSignal(createdAt: number, sessions: readonly Session[], at: number): number {
+	const signals = sessions.flatMap((s) => {
 		const until = Math.min(at, s.leftAt);
+		const flush =
+			!neverActive(s) && s.activeAt + FLUSH_MS <= until
+				? [s.activeAt + Math.floor((until - s.activeAt) / FLUSH_MS) * FLUSH_MS]
+				: [];
 
-		return s.doc.kind === 'STANDARD' && !neverActive(s) && s.activeAt + FLUSH_MS <= until
-			? [s.activeAt + Math.floor((until - s.activeAt) / FLUSH_MS) * FLUSH_MS]
-			: [];
+		return s.leftAt <= at ? [...flush, s.leftAt] : flush;
 	});
 
-	return flushes.length === 0 ? undefined : Math.max(...flushes);
+	return Math.max(createdAt, ...signals);
 }
 
 /** The fields of a room that `deriveRoom()` computes from the entities in it. */

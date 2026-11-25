@@ -108,6 +108,19 @@ export class Rng {
 
 const ID_ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
 
+/** A generator seeded by a key: the same key always draws the same values, whatever was generated before. */
+export function hashRng(key: string): Rng {
+	// FNV-1a.
+	let hash = 0x811c9dc5;
+
+	for (let i = 0; i < key.length; i += 1) {
+		hash ^= key.charCodeAt(i);
+		hash = Math.imul(hash, 0x01000193);
+	}
+
+	return new Rng(hash >>> 0);
+}
+
 /**
  * An identifier in the LiveKit style derived from a key: the same key always gives the same identifier. It takes the
  * characters from a SHA-256 digest, wide enough for millions of distinct keys, unlike the 32-bit state of an `Rng`.

@@ -8,7 +8,7 @@ import {
 	type SubscriptionDoc,
 	type TrackDoc
 } from './model.js';
-import { Rng } from './random.js';
+import { hashRng } from './random.js';
 
 /** Stats flush period of the server (`telemetryStatsUpdateInterval`). */
 export const FLUSH_MS = 30_000;
@@ -325,19 +325,6 @@ function downLayers(t: TrackDoc, s: SubscriptionDoc): { layer: number; share: nu
 	const layer = s.maxVideoQuality === 'LOW' ? 0 : s.maxVideoQuality === 'MEDIUM' ? 1 : 2;
 
 	return [{ layer: t.simulcast ? layer : 0, share: 1 }];
-}
-
-/** A generator seeded by a key: the same key always draws the same values, whatever was generated before. */
-export function hashRng(key: string): Rng {
-	// FNV-1a.
-	let hash = 0x811c9dc5;
-
-	for (let i = 0; i < key.length; i += 1) {
-		hash ^= key.charCodeAt(i);
-		hash = Math.imul(hash, 0x01000193);
-	}
-
-	return new Rng(hash >>> 0);
 }
 
 function clamp(value: number, min: number, max: number): number {

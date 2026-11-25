@@ -54,8 +54,8 @@ export function cutRoom(life: RoomLife, t: number): RoomBundle | undefined {
 
 	const reported = reportedUntil(life, t);
 
-	// Just before the last signal: what the reconciler closes at it is still open.
-	return reported < t ? cut(life, reported - 1, reported) : cut(life, t, t);
+	// At the last signal, with what the reconciler closes at it still open.
+	return reported < t ? cut(life, reported, true) : cut(life, t, false);
 }
 
 /**
@@ -69,20 +69,23 @@ export function reportedUntil(life: RoomLife, t: number): number {
 	return closureAt !== undefined && endedAt !== undefined && endedAt <= t && t < closureAt ? endedAt : t;
 }
 
-/** The entities as they are at `t`, with the stats flushed up to `statsAt`. */
-function cut(life: RoomLife, t: number, statsAt: number): RoomBundle {
+/** The entities as they are at `t`; `pending`, with the reconciler's closures not written yet. */
+function cut(life: RoomLife, t: number, pending: boolean): RoomBundle {
 	const { bundle } = life;
 	const by = (at: Date | null): at is Date => at !== null && at.getTime() <= t;
-	const subscriptions = bundle.subscriptions.filter((s) => by(s.subscribedAt)).map((s) => cutSubscription(s, by));
-	const tracks = bundle.tracks.filter((tr) => by(tr.publishedAt)).map((tr) => cutTrack(tr, subscriptions, by));
+	const ended: Ended = (at, closedBy) => by(at) && !(pending && closedBy === 'reconciler');
+	const subscriptions = bundle.subscriptions.filter((s) => by(s.subscribedAt)).map((s) => cutSubscription(s, ended));
+	const tracks = bundle.tracks.filter((tr) => by(tr.publishedAt)).map((tr) => cutTrack(tr, subscriptions, by, ended));
 	const participants = bundle.participants
 		.filter((p) => by(p.joinedAt))
-		.map((p) => cutParticipant(p, tracks, subscriptions, by));
-	const egresses = bundle.egresses.filter((e) => by(e.startedAt)).map((e) => cutEgress(e, by));
-	const ingressSessions = bundle.ingressSessions.filter((s) => by(s.startedAt)).map((s) => cutIngressSession(s, by));
+		.map((p) => cutParticipant(p, tracks, subscriptions, by, ended));
+	const egresses = bundle.egresses.filter((e) => by(e.startedAt)).map((e) => cutEgress(e, by, ended));
+	const ingressSessions = bundle.ingressSessions
+		.filter((s) => by(s.startedAt))
+		.map((s) => cutIngressSession(s, by, ended));
 	const ingresses = bundle.ingresses.filter((i) => by(i.createdAt)).map((i) => cutIngress(i, ingressSessions, by));
 	const { room } = bundle;
-	const open = !by(room.endedAt);
+	const open = !ended(room.endedAt, room.closedBy);
 	const result: RoomBundle = {
 		room: deriveRoom(
 			open
@@ -115,7 +118,7 @@ function cut(life: RoomLife, t: number, statsAt: number): RoomBundle {
 		subscriptions.filter((sub) => sub.subscribeStats !== null).map((sub) => [sub, sub.subscribeStats])
 	);
 
-	applyStats(result, life.engine, statsAt, life.statsMode);
+	applyStats(result, life.engine, t, life.statsMode);
 
 	for (const [tr, stats] of published) {
 		tr.publishStats = stats;
@@ -129,9 +132,11 @@ function cut(life: RoomLife, t: number, statsAt: number): RoomBundle {
 }
 
 type Happened = (at: Date | null) => at is Date;
+/** Whether an entity's end, by `closedBy`, is written by the instant of the cut. */
+type Ended = (at: Date | null, closedBy: 'event' | 'reconciler' | null) => boolean;
 
-function cutSubscription(s: SubscriptionDoc, by: Happened): SubscriptionDoc {
-	if (s.status === 'failed' || by(s.unsubscribedAt)) {
+function cutSubscription(s: SubscriptionDoc, ended: Ended): SubscriptionDoc {
+	if (s.status === 'failed' || ended(s.unsubscribedAt, s.closedBy)) {
 		return { ...s };
 	}
 
@@ -146,8 +151,8 @@ function cutSubscription(s: SubscriptionDoc, by: Happened): SubscriptionDoc {
 	};
 }
 
-function cutTrack(tr: TrackDoc, subscriptions: readonly SubscriptionDoc[], by: Happened): TrackDoc {
-	if (by(tr.unpublishedAt)) {
+function cutTrack(tr: TrackDoc, subscriptions: readonly SubscriptionDoc[], by: Happened, ended: Ended): TrackDoc {
+	if (ended(tr.unpublishedAt, tr.closedBy)) {
 		return { ...tr };
 	}
 
@@ -177,9 +182,10 @@ function cutParticipant(
 	p: ParticipantDoc,
 	tracks: readonly TrackDoc[],
 	subscriptions: readonly SubscriptionDoc[],
-	by: Happened
+	by: Happened,
+	ended: Ended
 ): ParticipantDoc {
-	if (by(p.leftAt)) {
+	if (ended(p.leftAt, p.closedBy)) {
 		return { ...p };
 	}
 
@@ -223,12 +229,13 @@ function cutParticipant(
 	};
 }
 
-function cutEgress(e: EgressDoc, by: Happened): EgressDoc {
-	if (by(e.endedAt)) {
+function cutEgress(e: EgressDoc, by: Happened, ended: Ended): EgressDoc {
+	if (ended(e.endedAt, e.closedBy)) {
 		return { ...e };
 	}
 
-	const statusHistory = e.statusHistory.filter((h) => by(h.at));
+	// Its final status, at its end, is not written yet.
+	const statusHistory = e.statusHistory.filter((h) => by(h.at) && h.at.getTime() !== e.endedAt?.getTime());
 	const latest = statusHistory.at(-1);
 	const recording = statusHistory.some((h) => h.status === 'active');
 
@@ -256,8 +263,8 @@ function openOutput(output: EgressOutput): EgressOutput {
 	return output.kind === 'stream' ? { ...open, status: 'ACTIVE' } : open;
 }
 
-function cutIngressSession(s: IngressSessionDoc, by: Happened): IngressSessionDoc {
-	if (by(s.endedAt)) {
+function cutIngressSession(s: IngressSessionDoc, by: Happened, ended: Ended): IngressSessionDoc {
+	if (ended(s.endedAt, s.closedBy)) {
 		return { ...s };
 	}
 

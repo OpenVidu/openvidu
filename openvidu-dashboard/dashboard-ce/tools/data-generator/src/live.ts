@@ -15,8 +15,8 @@ import {
 } from './derive.js';
 import { HOUR_WEIGHTS, takesRooms, type Server, type World } from './generator.js';
 import { generateRoom, type GeneratorContext, type RoomBundle } from './model.js';
-import type { Rng } from './random.js';
-import { hashRng } from './samples.js';
+import { nodeState, SCHEDULE_AHEAD } from './operations.js';
+import { hashRng, type Rng } from './random.js';
 import { COLLECTIONS, type CollectionName } from './schema.js';
 
 /** Every document of the contract is keyed by a string. */
@@ -79,7 +79,8 @@ export class LiveWriter {
 	private readonly written = new Map<string, Written>();
 	private readonly windows: DeriveWindows;
 	private readonly rollupOptions: RollupOptions;
-	private readonly engines: Map<string, Server['rtcEngine']>;
+	/** The `nodes` documents last written, without their room counters. */
+	private readonly nodes = new Map<string, Document>();
 	private last: number;
 	private plannedUntil: number;
 	private rooms: number;
@@ -99,7 +100,11 @@ export class LiveWriter {
 			fiveMinuteFrom: start - (retention.rollups5Min ?? 7) * DAY,
 			statsMode: options.statsMode
 		};
-		this.engines = new Map(world.servers.map((server) => [server.nodeId, server.rtcEngine]));
+
+		for (const server of world.servers.filter((s) => s.firstSeenAt <= start)) {
+			this.nodes.set(server.nodeId, toStored(COLLECTIONS.nodes, nodeState(server, start)));
+		}
+
 		this.last = start;
 		this.plannedUntil = Math.floor(start / HOUR) * HOUR;
 		this.rooms = world.rooms;
@@ -228,8 +233,11 @@ export class LiveWriter {
 			}
 		}
 
-		if (nodeOps.length > 0) {
-			await this.db.collection<Keyed>(COLLECTIONS.nodes).bulkWrite(nodeOps, { ordered: false });
+		// The servers' documents first, so that a server started in this tick exists when its rooms are counted.
+		const allNodeOps = [...this.nodeUpdates(at), ...nodeOps];
+
+		if (allNodeOps.length > 0) {
+			await this.db.collection<Keyed>(COLLECTIONS.nodes).bulkWrite(allNodeOps, { ordered: true });
 		}
 
 		if (Math.floor(at / MINUTE) > Math.floor(previous / MINUTE)) {
@@ -242,7 +250,6 @@ export class LiveWriter {
 			await this.writeUniqueIdentities(closedDay);
 		}
 
-		await this.writeHeartbeats(at);
 		this.last = at;
 
 		return { at, rooms, documents, elapsedMs: performance.now() - started };
@@ -256,6 +263,8 @@ export class LiveWriter {
 	private plan(until: number): void {
 		while (this.plannedUntil < until) {
 			const hour = this.plannedUntil;
+			// The servers' operations are decided past the end of any room drawn now.
+			this.world.schedule.extend(hour + HOUR + SCHEDULE_AHEAD);
 			const rng = hashRng(`${String(this.world.options.seed)}|${String(this.world.start)}|hour|${String(hour)}`);
 			const weight = HOUR_WEIGHTS.find(([h]) => h === new Date(hour).getUTCHours())?.[1] ?? 0;
 			const total = HOUR_WEIGHTS.reduce((sum, [, w]) => sum + w, 0);
@@ -285,9 +294,10 @@ export class LiveWriter {
 
 	/** Adds rooms created in the 30 s before `minute` until it holds the floor of rooms in progress. */
 	private fillFloor(minute: number, rng: Rng): void {
+		const floor = this.floorAt(minute);
 		let active = [...this.lives.values()].filter((life) => inProgress(life, minute)).length;
 
-		for (let attempt = 0; active < ROOM_FLOOR && attempt < 3 * ROOM_FLOOR; attempt += 1) {
+		for (let attempt = 0; active < floor && attempt < 3 * ROOM_FLOOR; attempt += 1) {
 			const life = this.addRoom(Math.max(this.world.start + 1, minute - rng.int(1_000, 30_000)), false);
 
 			if (life === undefined) {
@@ -296,6 +306,24 @@ export class LiveWriter {
 
 			active += inProgress(life, minute) ? 1 : 0;
 		}
+	}
+
+	/**
+	 * The rooms in progress `minute` holds at least: the floor, but none from a single node's drain until its new server
+	 * starts, and a share of it rising over the 10 minutes after, as people coming back would.
+	 */
+	private floorAt(minute: number): number {
+		const waiver = this.world.schedule
+			.floorWaivers()
+			.find((window) => window.from <= minute && minute < window.until);
+
+		if (waiver === undefined) {
+			return ROOM_FLOOR;
+		}
+
+		return minute < waiver.ramp
+			? 0
+			: Math.ceil((ROOM_FLOOR * (minute - waiver.ramp)) / (waiver.until - waiver.ramp));
 	}
 
 	/** Draws the life of a room created at `createdAt` on a server taking rooms then, if any. */
@@ -315,7 +343,8 @@ export class LiveWriter {
 			hosts,
 			live: { egressShare: LIVE_EGRESS_SHARE, ingressShare: LIVE_INGRESS_SHARE, stale }
 		});
-		const life = roomLife(bundle, this.engines.get(bundle.room.nodeId) ?? 'pion', this.world.options.statsMode);
+		const engine = this.world.servers.find((server) => server.nodeId === bundle.room.nodeId)?.rtcEngine ?? 'pion';
+		const life = roomLife(bundle, engine, this.world.options.statsMode);
 		this.lives.set(bundle.room._id, life);
 
 		return life;
@@ -467,28 +496,38 @@ export class LiveWriter {
 		await this.db.collection<Keyed>(COLLECTIONS.analyticsDaily).bulkWrite(ops, { ordered: false });
 	}
 
-	/** The last heartbeat of each server alive at `at`, at its own interval. */
-	private async writeHeartbeats(at: number): Promise<void> {
-		const ops = this.world.servers.flatMap((server): Op[] => {
-			if (!alive(server, at)) {
+	/**
+	 * The writes of the servers' documents at `at`, from the server timeline: a new server's document, then its
+	 * heartbeats at its own interval, its drain and its stop.
+	 */
+	private nodeUpdates(at: number): Op[] {
+		return this.world.servers.flatMap((server): Op[] => {
+			if (server.firstSeenAt > at) {
 				return [];
 			}
 
-			const beats = Math.floor((at - server.firstSeenAt) / server.batchIntervalMs);
+			const doc = toStored(COLLECTIONS.nodes, nodeState(server, at));
+			const before = this.nodes.get(server.nodeId);
+			this.nodes.set(server.nodeId, doc);
 
-			return [
-				{
-					updateOne: {
-						filter: { _id: server.nodeId },
-						update: { $max: { lastSeenAt: new Date(server.firstSeenAt + beats * server.batchIntervalMs) } }
+			if (before === undefined) {
+				const { _id: _ignored, ...fields } = doc;
+
+				return [
+					{
+						updateOne: {
+							filter: { _id: server.nodeId },
+							update: { $set: fields, $setOnInsert: { rooms: { hosted: 0, reconciled: 0 } } },
+							upsert: true
+						}
 					}
-				}
-			];
-		});
+				];
+			}
 
-		if (ops.length > 0) {
-			await this.db.collection<Keyed>(COLLECTIONS.nodes).bulkWrite(ops, { ordered: false });
-		}
+			const op = entityUpdate(server.nodeId, before, doc);
+
+			return op === undefined ? [] : [op];
+		});
 	}
 }
 

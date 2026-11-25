@@ -6,6 +6,7 @@ import type {
 	EventDocument,
 	HourlyRollupDocument,
 	IngressSessionDocument,
+	NodeDocument,
 	ParticipantDocument,
 	RoomDocument
 } from '@openvidu-dashboard/typings';
@@ -98,7 +99,7 @@ describe.skipIf(mongoUri === '')('live data generator', () => {
 		/** Per minute: rooms `active`, active STANDARD sessions, and rooms holding a `joining` session. */
 		const minutes = new Map<number, { rooms: number; sessions: number; joining: number }>();
 		/** The rooms seen in progress with stats older than 90 s, from the ticks of the hour after 11:00 UTC. */
-		const stale = new Map<string, { staleTicks: number; lastStatsAt: number; closedAt?: number }>();
+		const stale = new Map<string, { staleTicks: number; lastSignal: number; closedAt?: number }>();
 		const inProgressAtT: string[] = [];
 		const check = T + 5 * HOUR;
 		let ahead: Record<string, number> = {};
@@ -134,7 +135,7 @@ describe.skipIf(mongoUri === '')('live data generator', () => {
 						if (room.status === 'active' && (seen !== undefined || at <= T + 2 * HOUR)) {
 							stale.set(room._id, {
 								staleTicks: (seen?.staleTicks ?? 0) + (silent ? 1 : 0),
-								lastStatsAt: time(room.lastStatsAt)
+								lastSignal: Math.max(time(room.lastStatsAt), time(room.lastEventAt))
 							});
 						} else if (room.status === 'closed' && seen !== undefined) {
 							seen.closedAt ??= at;
@@ -464,11 +465,87 @@ describe.skipIf(mongoUri === '')('live data generator', () => {
 			for (const [id, seen] of closed) {
 				const room = (await db().collection<Keyed>('rooms').findOne({ _id: id })) as RoomDocument | null;
 
-				expect(time(room?.endedAt), id).toBe(seen.lastStatsAt);
+				expect(time(room?.endedAt), id).toBe(seen.lastSignal);
 				// The closure is first seen at the minute tick after it is written, 3 to 4 minutes after the signal.
 				expect((seen.closedAt ?? 0) - time(room?.endedAt), id).toBeGreaterThanOrEqual(3 * MINUTE);
 				expect((seen.closedAt ?? 0) - time(room?.endedAt), id).toBeLessThanOrEqual(5 * MINUTE);
 			}
+		});
+
+		it('Live rolling restart', async () => {
+			const turn = Math.floor(T / DAY) * DAY + DAY + 2 * HOUR;
+			const nodes = await docs<NodeDocument>(db(), 'nodes', {});
+			const drained = nodes.find((node) => time(node.drainingAt) === turn);
+			const next = nodes.find(
+				(node) => node.mediaNode === drained?.mediaNode && time(node.firstSeenAt) === turn + 30 * MINUTE
+			);
+			const rooms = await docs<RoomDocument>(db(), 'rooms', { nodeId: drained?._id ?? '' });
+			const atStop = rooms.filter((room) => time(room.endedAt) === turn + 20 * MINUTE);
+
+			expect(time(drained?.stoppedAt)).toBe(turn + 20 * MINUTE);
+			expect(rooms.filter((room) => time(room.createdAt) >= turn)).toEqual([]);
+			expect(
+				rooms.filter((room) => room.endedAt === undefined || time(room.endedAt) > turn + 20 * MINUTE)
+			).toEqual([]);
+			expect(atStop.length).toBeGreaterThan(0);
+			expect(atStop.filter((room) => room.endReason !== 'SERVER_SHUTDOWN')).toEqual([]);
+			expect(next?.stoppedAt === undefined || time(next.stoppedAt) > turn + 40 * MINUTE).toBe(true);
+			expect(time(next?.lastSeenAt)).toBeGreaterThanOrEqual(turn + 40 * MINUTE);
+		});
+
+		it('Live lost server', async () => {
+			const loss = Math.floor(T / DAY) * DAY + 15 * HOUR;
+			const nodes = await docs<NodeDocument>(db(), 'nodes', {});
+			const lost = nodes.find((node) => time(node.lastSeenAt) === loss && node.stoppedAt === undefined);
+			const next = nodes.find(
+				(node) => node.mediaNode === lost?.mediaNode && time(node.firstSeenAt) === loss + 6 * HOUR
+			);
+			const rooms = await docs<RoomDocument>(db(), 'rooms', { nodeId: lost?._id ?? '' });
+			const reasons = new Map(
+				(
+					await docs<EventDocument>(db(), 'events', {
+						type: 'ROOM_ENDED',
+						synthetic: true,
+						roomSid: { $in: rooms.map((room) => room._id) }
+					})
+				).map((event) => [
+					event.roomSid,
+					(event.payload as { reconciler?: { reason?: string } }).reconciler?.reason
+				])
+			);
+			// The rooms open at the loss; a room that stopped reporting before it was closed as absent.
+			const nodeDead = rooms.filter((room) => reasons.get(room._id) === 'node-dead');
+
+			expect(lost).toBeDefined();
+			expect(next).toBeDefined();
+			expect(rooms.filter((room) => room.endedAt === undefined || time(room.endedAt) > loss)).toEqual([]);
+			expect(nodeDead.length).toBeGreaterThan(0);
+			expect(rooms.filter((room) => room.closedBy === 'reconciler' && !reasons.has(room._id))).toEqual([]);
+
+			for (const room of nodeDead) {
+				const sessions = await docs<ParticipantDocument>(db(), 'participants', { roomSid: room._id });
+				const left = sessions.filter((p) => p.closedBy === 'event').map((p) => time(p.leftAt));
+
+				expect(room.closedBy, room._id).toBe('reconciler');
+				// Dated at its last signal: a stats flush, a session leaving or its creation.
+				expect(time(room.endedAt), room._id).toBe(
+					Math.max(time(room.createdAt), time(room.lastStatsAt) || 0, ...left)
+				);
+			}
+		});
+
+		it('Live servers of the generation instant', async () => {
+			const nodes = await docs<NodeDocument>(db(), 'nodes', {});
+			const of = (n: number) =>
+				nodes
+					.filter((node) => node.mediaNode === `media-node-10-0-0-${String(n)}`)
+					.sort((a, b) => time(a.firstSeenAt) - time(b.firstSeenAt));
+			const draining = of(3).find((node) => time(node.drainingAt) === T - 20 * MINUTE);
+
+			expect(time(draining?.stoppedAt)).toBe(T + 20 * MINUTE);
+			expect(of(3).some((node) => time(node.firstSeenAt) === T + 30 * MINUTE)).toBe(true);
+			expect(of(4).some((node) => time(node.firstSeenAt) === T + 3 * HOUR)).toBe(true);
+			expect(of(7).map((node) => time(node.lastSeenAt))).toEqual([T - 3 * DAY]);
 		});
 
 		it('No live stats while muted or after leaving', async () => {
@@ -518,26 +595,55 @@ describe.skipIf(mongoUri === '')('live data generator', () => {
 
 	describe('a day of live writing on a single node', () => {
 		const db = () => client.db('dashboard_test_live_single');
+		/** 04:00 UTC of the day after T: the single node's restart. */
+		const restart = Math.floor(T / DAY) * DAY + DAY + 4 * HOUR;
+		const below: number[] = [];
 
-		afterAll(async () => {
-			await db().dropDatabase();
-		});
-
-		it('Live room floor: without media nodes', async () => {
+		beforeAll(async () => {
 			const writer = await live(db(), {
 				mediaNodes: false,
 				rollups: { fiveMinute: false, nodes: false, roomSums: false }
 			});
-			const below: number[] = [];
 
 			await tickUntil(writer, T, T + DAY, MINUTE, async (at) => {
 				if ((await db().collection('rooms').countDocuments({ status: 'active' })) < 10) {
 					below.push(at);
 				}
 			});
-
-			expect(below).toEqual([]);
 		}, 900_000);
+
+		afterAll(async () => {
+			await db().dropDatabase();
+		});
+
+		it('Live room floor: without media nodes, outside the 10 minutes after the restart', () => {
+			// From the drain, no room is created until the new server starts at 04:03, then the floor builds up.
+			expect(below.filter((at) => at < restart || at >= restart + 13 * MINUTE)).toEqual([]);
+		});
+
+		it('Live single node restart', async () => {
+			const nodes = await docs<NodeDocument>(db(), 'nodes', {});
+			const drained = nodes.find((node) => time(node.drainingAt) === restart);
+			const next = nodes.find((node) => time(node.firstSeenAt) === restart + 3 * MINUTE);
+			const rooms = await docs<RoomDocument>(db(), 'rooms', { nodeId: drained?._id ?? '' });
+
+			expect(time(drained?.stoppedAt)).toBe(restart + 2 * MINUTE);
+			expect(next).toBeDefined();
+			expect(rooms.filter((room) => time(room.createdAt) >= restart)).toEqual([]);
+			expect(
+				rooms.filter((room) => room.endedAt === undefined || time(room.endedAt) > restart + 2 * MINUTE)
+			).toEqual([]);
+
+			const atStop = rooms.filter((room) => time(room.endedAt) === restart + 2 * MINUTE);
+
+			expect(atStop.length).toBeGreaterThan(0);
+			expect(atStop.filter((room) => room.endReason !== 'SERVER_SHUTDOWN')).toEqual([]);
+			expect(
+				await db()
+					.collection('rooms')
+					.countDocuments({ createdAt: { $gte: new Date(restart), $lt: new Date(restart + 3 * MINUTE) } })
+			).toBe(0);
+		});
 	});
 
 	describe.each(['track', 'participant'] as const)('two minutes of live writing in %s mode', (statsMode) => {
