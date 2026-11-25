@@ -21,10 +21,9 @@ of the workspace, every command runs there (`cd <checkout> && …`, since `cd` d
    `(orchestrator)` or `(owner)` are not yours.
 2. Name each test after the scenario it covers: `<scenario name>` or `<scenario name>: <detail>`.
 3. Before checking a task, run the tests it names. After the last task of your run, run `./dashboard.sh check`,
-   `./dashboard.sh scenarios <change>` when the group includes tests, `./dashboard.sh test-integration` when you
-   touched a backend, `./dashboard.sh test-live` when you touched the data generator and `./dashboard.sh e2e` when
-   you touched a frontend or the e2e suites. Run one suite at a time,
-   never in the background: they are heavy on memory.
+   `./dashboard.sh scenarios <change>` when the group includes tests, `./dashboard.sh test-integration` when you touched
+   a backend, `./dashboard.sh test-live` when you touched the data generator and `./dashboard.sh e2e` when you touched a
+   frontend or the e2e suites. Run one suite at a time, never in the background: they are heavy on memory.
 4. Commit your work in atomic commits whose subject follows `git log` (`openvidu-dashboard: <what changes, in the
    present tense>, change <name>`), with the CHANGELOG line of an observable change in the same commit and without AI
    attribution lines. Leave the tree clean, except untracked files that were there before you started.

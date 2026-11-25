@@ -47,9 +47,9 @@ configuration variables and exit codes.
 
 - All tasks checked; `./dashboard.sh scenarios <change>` finds a passing test for every delta scenario.
 - `./dashboard.sh check` passes locally and the CI run of the push is green.
-- Backend changes: `test-integration` passes. Data generator changes: `test-live` passes too. UI changes: `e2e` passes, with axe and both themes. Data contract
-  changes: `contract-check` passes against the writer. Image or runtime dependency changes: `build-image` and
-  `smoke-image` pass.
+- Backend changes: `test-integration` passes. Data generator changes: `test-live` passes too. UI changes: `e2e` passes,
+  with axe and both themes. Data contract changes: `contract-check` passes against the writer. Image or runtime
+  dependency changes: `build-image` and `smoke-image` pass.
 - Latest verification reports have no CRITICAL; refactor review applied or recorded.
 - `CHANGELOG.md`, `README.md` and the `AGENTS.md` files reflect the change.
 - Change archived.
@@ -75,16 +75,14 @@ sources through the `source` export condition, so type checking, linting and tes
 ## Commands
 
 Everything runs through `./dashboard.sh` (what CI calls; `help` lists every command, any accepts `--skip-install`):
-`check` (lint, format check, typecheck, spec validation, unit tests), `test-integration` (Docker), `test-live` (the
-data generator's live writer, Docker, about 10 minutes), `e2e` (its
-real-backend suite needs Docker), `scenarios <change>`,
-`contract-check <openvidu-livekit>`, `build-image ce`, `smoke-image ce`, `dev` (backend and frontend development
-servers against openvidu-local-deployment; README "Development") and `demo ce`: a local demo on generated data
+`check` (lint, format check, typecheck, spec validation, unit tests), `test-integration` (Docker), `test-live` (the data
+generator's live writer, Docker, about 10 minutes), `e2e` (its real-backend suite needs Docker), `scenarios <change>`,
+`contract-check <openvidu-livekit>`, `build-image ce`, `smoke-image ce`, `dev` (backend and frontend development servers
+against openvidu-local-deployment; README "Development") and `demo ce`: a local demo on generated data
 (http://localhost:4200, `admin` / `admin`; MongoDB container `openvidu-dashboard-demo-mongo` on port 27018;
-`DASHBOARD_DEMO_DATA=live` writes it live (rooms start and end, stats, rollups, server operations) instead of
-`frozen`, the default; `DASHBOARD_DEMO_KEEP_DATA=true` reuses the data of a running container, in live mode closing
-what the stop left open; `DASHBOARD_DEMO_LEGACY=true` adds the legacy
-data of an upgrade from 3.9).
+`DASHBOARD_DEMO_DATA=live` writes it live (rooms start and end, stats, rollups, server operations) instead of `frozen`,
+the default; `DASHBOARD_DEMO_KEEP_DATA=true` reuses the data of a running container, in live mode closing what the stop
+left open; `DASHBOARD_DEMO_LEGACY=true` adds the legacy data of an upgrade from 3.9).
 
 Node 26 and the pnpm of `packageManager` (Node no longer ships Corepack). A new Node major is adopted once it is LTS and
 the toolchain (Angular, vitest, testcontainers) declares it in its engines; TypeScript stays on 6 until the
