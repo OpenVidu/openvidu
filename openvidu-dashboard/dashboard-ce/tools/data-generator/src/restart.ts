@@ -1,6 +1,16 @@
 import type { Db, Document } from 'mongodb';
 import { toStored } from './contract.js';
-import { Rollups, type RollupCounters } from './derive.js';
+import {
+	NODE_DEAD,
+	RECONCILED,
+	reconciledEgressEnded,
+	reconciledIngressEnded,
+	reconciledParticipantClosed,
+	reconciledRoomEnded,
+	Rollups,
+	syntheticEventId,
+	type RollupCounters
+} from './derive.js';
 import { type GenerateOptions, type Server, type World } from './generator.js';
 import { liveRollupIncrement, type LiveOp } from './live.js';
 import { SCENARIOS, type RoomBundle } from './model.js';
@@ -10,9 +20,6 @@ import { ALIVE_NODE_MS, COLLECTIONS } from './schema.js';
 
 const MINUTE = 60_000;
 const DAY = 86_400_000;
-const RECONCILED = 'RECONCILED';
-const NODE_DEAD = 'node-dead';
-const ROOM_CLOSED_NODE_DEAD = 'room-closed-node-dead';
 const LOST_EGRESS_ERROR = 'egress lost (reconciled)';
 const LOST_INGRESS_ERROR = 'ingress lost (reconciled)';
 const OPEN_EGRESS = ['starting', 'active', 'ending'];
@@ -147,7 +154,6 @@ async function closeOpen(db: Db, options: GenerateOptions, heartbeat: number, re
 		const at = (start: unknown) => Math.max(end, time(start));
 		const roomMin = { sid: room._id, name: room.name };
 		const ref = { roomSid: room._id, roomName: room.name, nodeId: room.nodeId };
-		const reconciler = { reason: NODE_DEAD };
 		const participants = await collection(COLLECTIONS.participants).find({ roomSid: room._id }).toArray();
 		const tracks = await collection(COLLECTIONS.tracks).find({ roomSid: room._id }).toArray();
 		const subscriptions = await collection(COLLECTIONS.trackSubscriptions).find({ roomSid: room._id }).toArray();
@@ -172,18 +178,14 @@ async function closeOpen(db: Db, options: GenerateOptions, heartbeat: number, re
 				};
 				set(COLLECTIONS.participants, p, fields);
 				events.push({
-					_id: `AE_SYN_${p._id}`,
+					_id: syntheticEventId(p._id),
 					type: connected ? 'PARTICIPANT_LEFT' : 'PARTICIPANT_CONNECTION_ABORTED',
 					ts: new Date(leftAt),
 					...ref,
 					participantSid: p._id,
 					identity: p.identity,
 					synthetic: true,
-					payload: {
-						room: roomMin,
-						participant: { sid: p._id, identity: p.identity, disconnect_reason: RECONCILED },
-						reconciler
-					}
+					payload: reconciledParticipantClosed(roomMin, p, NODE_DEAD)
 				});
 
 				return { ...p, ...fields };
@@ -233,12 +235,12 @@ async function closeOpen(db: Db, options: GenerateOptions, heartbeat: number, re
 		};
 		set(COLLECTIONS.rooms, room, roomFields);
 		events.push({
-			_id: `AE_SYN_${room._id}`,
+			_id: syntheticEventId(room._id),
 			type: 'ROOM_ENDED',
 			ts: new Date(end),
 			...ref,
 			synthetic: true,
-			payload: { room: roomMin, room_end_reason: RECONCILED, reconciler }
+			payload: reconciledRoomEnded(roomMin, NODE_DEAD)
 		});
 		push(COLLECTIONS.nodes, {
 			updateOne: { filter: { _id: String(room.nodeId) }, update: { $inc: { 'rooms.reconciled': 1 } } }
@@ -327,22 +329,13 @@ function closeEgress(
 	};
 	set(COLLECTIONS.egresses, e, fields);
 	events.push({
-		_id: `AE_SYN_${e._id}`,
+		_id: syntheticEventId(e._id),
 		type: 'EGRESS_ENDED',
 		ts: end,
 		...ref,
 		egressId: e._id,
 		synthetic: true,
-		payload: {
-			egress: {
-				egress_id: e._id,
-				...(e.roomSid === undefined ? {} : { room_id: e.roomSid }),
-				...(e.roomName === undefined ? {} : { room_name: e.roomName }),
-				status: 'EGRESS_FAILED',
-				error: LOST_EGRESS_ERROR
-			},
-			reconciler: { reason: ROOM_CLOSED_NODE_DEAD }
-		}
+		payload: reconciledEgressEnded({ ...e, error: LOST_EGRESS_ERROR })
 	});
 
 	return { ...e, ...fields };
@@ -367,26 +360,14 @@ function closeIngressSession(
 	};
 	set(COLLECTIONS.ingressSessions, s, fields);
 	events.push({
-		_id: `AE_SYN_${s._id}`,
+		_id: syntheticEventId(s._id),
 		type: 'INGRESS_ENDED',
 		ts: new Date(endedAt),
 		...ref,
 		ingressId: s.ingressId,
 		ingressSessionId: s._id,
 		synthetic: true,
-		payload: {
-			ingress: {
-				ingress_id: s.ingressId,
-				room_name: s.roomName,
-				state: {
-					status: 'ENDPOINT_ERROR',
-					error: LOST_INGRESS_ERROR,
-					...(s.roomSid === undefined ? {} : { room_id: s.roomSid }),
-					resource_id: s._id
-				}
-			},
-			reconciler: { reason: ROOM_CLOSED_NODE_DEAD }
-		}
+		payload: reconciledIngressEnded({ ...s, error: LOST_INGRESS_ERROR })
 	});
 
 	return { ...s, ...fields };

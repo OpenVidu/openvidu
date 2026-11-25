@@ -102,7 +102,7 @@ export function deriveEvents(bundle: RoomBundle, windows: DeriveWindows, emit: (
 						'AE_',
 						[type, ...ids, fields.ingressSessionId, String(ts.getTime()), String(key.layer ?? 0)].join('|')
 					)
-				: `AE_SYN_${key.closed}`;
+				: syntheticEventId(key.closed);
 		const doc = { _id, ...fields, synthetic: key.closed !== undefined, payload };
 
 		// An event of no room, or of a state that names none yet, has no room fields.
@@ -122,13 +122,9 @@ export function deriveEvents(bundle: RoomBundle, windows: DeriveWindows, emit: (
 	push('ROOM_CREATED', room.createdAt, {}, { room: roomFull });
 
 	if (room.closedBy === 'reconciler') {
-		push(
-			'ROOM_ENDED',
-			room.endedAt,
-			{},
-			{ room: roomMin, room_end_reason: RECONCILED, reconciler: { reason: room.reconcilerReason ?? NODE_DEAD } },
-			{ closed: room._id }
-		);
+		push('ROOM_ENDED', room.endedAt, {}, reconciledRoomEnded(roomMin, room.reconcilerReason ?? NODE_DEAD), {
+			closed: room._id
+		});
 	} else {
 		push('ROOM_ENDED', room.endedAt, {}, { room: roomFull, ...enumField('room_end_reason', roomEndReason(room)) });
 	}
@@ -166,11 +162,7 @@ export function deriveEvents(bundle: RoomBundle, windows: DeriveWindows, emit: (
 				p.status === 'aborted' ? 'PARTICIPANT_CONNECTION_ABORTED' : 'PARTICIPANT_LEFT',
 				p.leftAt,
 				ref,
-				{
-					room: roomMin,
-					participant: { sid: p._id, identity: p.identity, disconnect_reason: RECONCILED },
-					reconciler: { reason: room.reconcilerReason ?? NODE_DEAD }
-				},
+				reconciledParticipantClosed(roomMin, p, room.reconcilerReason ?? NODE_DEAD),
 				{ closed: p._id }
 			);
 		} else {
@@ -295,22 +287,7 @@ export function deriveEvents(bundle: RoomBundle, windows: DeriveWindows, emit: (
 		}
 
 		if (e.endedAt !== null && e.closedBy === 'reconciler') {
-			push(
-				'EGRESS_ENDED',
-				e.endedAt,
-				ref,
-				{
-					egress: {
-						egress_id: e._id,
-						...(e.roomSid === null ? {} : { room_id: e.roomSid }),
-						...(e.roomName === null ? {} : { room_name: e.roomName }),
-						status: 'EGRESS_FAILED',
-						error: e.error
-					},
-					reconciler: { reason: ROOM_CLOSED_NODE_DEAD }
-				},
-				{ closed: e._id }
-			);
+			push('EGRESS_ENDED', e.endedAt, ref, reconciledEgressEnded(e), { closed: e._id });
 		} else if (e.endedAt !== null) {
 			push('EGRESS_ENDED', e.endedAt, ref, {
 				egress: {
@@ -404,25 +381,7 @@ export function deriveEvents(bundle: RoomBundle, windows: DeriveWindows, emit: (
 		}
 
 		if (s.endedAt !== null && s.closedBy === 'reconciler') {
-			push(
-				'INGRESS_ENDED',
-				s.endedAt,
-				ref,
-				{
-					ingress: {
-						ingress_id: s.ingressId,
-						room_name: s.roomName,
-						state: {
-							status: 'ENDPOINT_ERROR',
-							error: s.error,
-							...(s.roomSid === null ? {} : { room_id: s.roomSid }),
-							resource_id: s._id
-						}
-					},
-					reconciler: { reason: ROOM_CLOSED_NODE_DEAD }
-				},
-				{ closed: s._id }
-			);
+			push('INGRESS_ENDED', s.endedAt, ref, reconciledIngressEnded(s), { closed: s._id });
 		} else if (s.endedAt !== null) {
 			push('INGRESS_ENDED', s.endedAt, ref, {
 				ingress: {
@@ -472,11 +431,81 @@ export function deriveEvents(bundle: RoomBundle, windows: DeriveWindows, emit: (
 }
 
 /** Reason and disconnect reason of the reconciler's synthetic close events. */
-const RECONCILED = 'RECONCILED';
+export const RECONCILED = 'RECONCILED';
 /** Reasons of the reconciler's closures in their synthetic events. */
-const NODE_DEAD = 'node-dead';
+export const NODE_DEAD = 'node-dead';
 /** An egress or ingress session the reconciler closes with its room. */
 const ROOM_CLOSED_NODE_DEAD = 'room-closed-node-dead';
+
+/*
+ * The reconciler's synthetic close events, shared by the derivation of a room and the restart on kept data, which
+ * builds them from stored documents (their absent fields omitted rather than null).
+ */
+
+/** The `_id` of the synthetic event that closes an entity, keyed by that entity as the writer keys it. */
+export function syntheticEventId(closed: string): string {
+	return `AE_SYN_${closed}`;
+}
+
+/** The payload of a synthetic `ROOM_ENDED`. */
+export function reconciledRoomEnded(room: { sid: unknown; name: unknown }, reason: string): Record<string, unknown> {
+	return { room, room_end_reason: RECONCILED, reconciler: { reason } };
+}
+
+/** The payload of a synthetic `PARTICIPANT_LEFT` or `PARTICIPANT_CONNECTION_ABORTED`. */
+export function reconciledParticipantClosed(
+	room: { sid: unknown; name: unknown },
+	participant: { _id: unknown; identity?: unknown },
+	reason: string
+): Record<string, unknown> {
+	return {
+		room,
+		participant: { sid: participant._id, identity: participant.identity, disconnect_reason: RECONCILED },
+		reconciler: { reason }
+	};
+}
+
+/** The payload of the synthetic `EGRESS_ENDED` of an egress the reconciler closed with its room. */
+export function reconciledEgressEnded(e: {
+	_id: unknown;
+	roomSid?: unknown;
+	roomName?: unknown;
+	error: unknown;
+}): Record<string, unknown> {
+	return {
+		egress: {
+			egress_id: e._id,
+			...present('room_id', e.roomSid),
+			...present('room_name', e.roomName),
+			status: 'EGRESS_FAILED',
+			error: e.error
+		},
+		reconciler: { reason: ROOM_CLOSED_NODE_DEAD }
+	};
+}
+
+/** The payload of the synthetic `INGRESS_ENDED` of an ingress session the reconciler closed with its room. */
+export function reconciledIngressEnded(s: {
+	_id: unknown;
+	ingressId?: unknown;
+	roomName?: unknown;
+	roomSid?: unknown;
+	error: unknown;
+}): Record<string, unknown> {
+	return {
+		ingress: {
+			ingress_id: s.ingressId,
+			room_name: s.roomName,
+			state: { status: 'ENDPOINT_ERROR', error: s.error, ...present('room_id', s.roomSid), resource_id: s._id }
+		},
+		reconciler: { reason: ROOM_CLOSED_NODE_DEAD }
+	};
+}
+
+/** A field that a null or absent value leaves out. */
+function present(name: string, value: unknown): Record<string, unknown> {
+	return value === null || value === undefined ? {} : { [name]: value };
+}
 
 /** Protojson names of the ingress session states; the zero value `ENDPOINT_INACTIVE` is never written. */
 const INGRESS_STATES: Record<IngressSessionDoc['status'], string> = {
