@@ -33,7 +33,7 @@
   live egress and ingress shares (0.5 and 0.1, with the generation keeping 0.3 and 0.02). Cover "Live room floor",
   "Live daily curve" and "Live egress and ingress shares" (24 hours at 60 s ticks) in `data-generator-live.test.ts`,
   and log the time per tick. Verify with `./dashboard.sh test-integration`.
-- [ ] 2.3 Add the short-lived states and the reconciler timing of decision 5 to the lives of live rooms: slow
+- [x] 2.3 Add the short-lived states and the reconciler timing of decision 5 to the lives of live rooms: slow
   connections, egress `starting` and `ending`, ingress buffering, one stale room per UTC hour, and every reconciler
   closure written 3 to 4 minutes after its last signal. Cover "Live connecting participants", "Live egress and ingress
   transitions" and "Live stale room" in `data-generator-live.test.ts`. Verify with `./dashboard.sh test-integration`.
