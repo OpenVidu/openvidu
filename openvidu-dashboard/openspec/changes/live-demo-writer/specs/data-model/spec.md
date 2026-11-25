@@ -93,9 +93,9 @@ and the rollups and move their `lastStatsAt` to it.
 #### Scenario: No live stats while muted or after leaving
 - **GIVEN** a live session that mutes its camera at M, unmutes it at U and leaves at L
 - **WHEN** ticks run past L
-- **THEN** no upstream document of the camera is dated more than 30 s after M and before U, the first flush after M
-  carrying only what the camera sent before the mute, no document of the session is dated after L, and its
-  `lastStatsAt` is at or before L
+- **THEN** no upstream document of the camera is dated more than 30 s after M and before U, a flush of the camera dated
+  after M and before U carries only what the camera sent before the mute, no document of the session is dated after
+  L, and its `lastStatsAt` is at or before L
 
 ### Requirement: Live rollups
 Edition: CE and PRO. In `live` mode the live writer SHALL increment the 5-minute, hourly and daily rollups of the bucket

@@ -63,6 +63,8 @@ Rules the model now follows:
 - An EGRESS participant joins at `max(request + 1 s, active − 5 s)`.
 - Ingress sessions carry a model-only `publishedAt` that is never stored. `INGRESS_STARTED` is dated at it: 500 ms after
   `startedAt`, except for the backup. The rollups count an ingress session at `startedAt`.
+- A closed ingress session that never left `buffering` keeps that status when the rollups count it. It counts as ended,
+  not as started, and gets no `INGRESS_STARTED`.
 
 **Rooms planned active at the generation instant.** Their natural end is 10 minutes to 5 hours after the instant,
 earlier at a server stop or loss. They end with `IDLE_TIMEOUT`, a departure timeout after the later of their last
@@ -82,8 +84,11 @@ The generation writes `cutRoom(life, now)`. A room that ended before `now` cuts 
 
 - The generation keeps its shared streams in creation order. Only the rooms from the first room open at the end onward
   take other values.
-- Rooms created by the live writer draw from streams keyed by (seed, world start, room number). Room numbers follow
-  planning order: an hour's arrivals, then the floor rooms minute by minute.
+- Rooms created by the live writer draw from streams keyed by (seed, world start, room number) through `KeyedRng`
+  (`random.ts`). Room numbers follow planning order: an hour's arrivals, then the floor rooms minute by minute.
+- The ids of live rooms and their entities come from `hashId()`: SHA-256 of the key and an ordinal. The streams stay
+  FNV-seeded, so every other draw is unchanged.
+- Rejected: seeding the streams from SHA-256 as well. It moved the day's statistics out of their bands.
 - Event `_id` values are a SHA-256 hash (`hashId()` in `random.ts`) of (type, entity id, instant, layer).
   `hashRng()`'s 32-bit state would collide. The layer is the event's position among the entity's resumes or mute
   toggles. Every event `_id` of a seed changes; no test or reader depends on them.
@@ -107,7 +112,8 @@ the same process. `tick(t)`:
    counts them.
 4. At the first tick after 00:05 UTC, writes the closed day's `uniqueIdentities`, aggregated from `participants`.
 5. Writes the heartbeats of the servers alive at `t`, at each server's interval, and the `drainingAt`, `stoppedAt` and
-   new `nodes` documents due by `t`.
+   new `nodes` documents due by `t`. `nodeUpdates()` skips the servers whose end it has already written, and drops
+   them.
 
 Every document goes through `toStored()` against collections with the contract validators (`validationAction: error`).
 `generate --live` and the `live` script share their options and their 10 s loop in `src/cli.ts`, and stop after the
@@ -146,9 +152,9 @@ current tick on `SIGINT` or `SIGTERM`.
 
 ### 6. Server operations
 
-`ServerSchedule` (`src/operations.ts`) extends the server timeline from the world start. The generation decides
-operations 12 hours ahead (`SCHEDULE_AHEAD`). The schedule reuses the hosting and room-end rules (`SERVER_SHUTDOWN` at
-a stop, `node-dead` at a loss).
+`ServerSchedule` (`src/operations.ts`) extends the server timeline from the world start. It takes the last heartbeat,
+which for a generation is its start. The generation decides operations 12 hours ahead (`SCHEDULE_AHEAD`). The schedule
+reuses the hosting and room-end rules (`SERVER_SHUTDOWN` at a stop, `node-dead` at a loss).
 
 - **Elastic and HA.** At each even UTC hour, the next machine in the order `-1` … `-6` that is reporting and in no other
   operation drains. It stops 20 minutes later and has a new server 10 minutes after that. At 15:00 UTC the reporting
@@ -165,16 +171,32 @@ This took about 10 to 15 % of the change, as estimated, with no new mechanism.
 ### 7. Restart on kept data
 
 - **`live` restart.** `restartLive()` (`src/restart.ts`, `pnpm live`, `src/live-cli.ts`) works from the stored
-  documents, since the data may come from a `frozen` run. It reads the last heartbeat, the open entities and the alive
-  servers (unstopped, within a minute of that heartbeat). Then:
+  documents, since the data may come from a `frozen` run. It reads three things:
+  - the last heartbeat: the freshest `lastSeenAt` of any server, running or not. A single-node history with an old lost
+    server therefore never takes that server's days-old `lastSeenAt`. The restart throws only when the database has no
+    server.
+  - the open entities;
+  - the alive servers: unstopped, within a minute of that heartbeat.
+
+  The restart instant is `max(requested restart, the minute after the last heartbeat)`. When the restart falls in the
+  heartbeat's minute, the new servers' `firstSeenAt` can be up to 60 s ahead of the wall clock; the ticks still wait
+  for the wall clock. Then:
   - it closes every open room, session, track, subscription, egress and ingress session as the reconciler does after a
     `node-dead` confirmation, at the last signal: never after the heartbeat, never before the entity's own start;
   - the synthetic events come from the builders that `derive.ts` exports (`syntheticEventId`, the reconciled ended and
     closed events, `RECONCILED`, `NODE_DEAD`), with the entity field closures written separately, `rooms.reconciled` on
     the server and the rollups of each closure in its end buckets;
-  - it starts a new server on each of those machines at the restart;
+  - it starts a new server on each of those machines at the restart. A single node caught stopped in its daily restart
+    at the start of the timeline also gets a new server at the restart;
+  - the schedule takes the last heartbeat. A machine lost in the 6 hours before it returns at
+    `max(loss + 6 h, restart)`, and one lost earlier stays silent. `restartLive()` writes the `nodes` document of every
+    server that starts at the restart, the ones the timeline returns then included;
   - it draws a new world from (seed, restart instant) and ticks.
+
   Nothing is dated in the gap.
+- **Restart queries.** The highest stored room name comes from the `nameLower` index (prefix regex, reverse sort). Open
+  ingress sessions are read by `status` in `buffering` or `publishing`, both here and in the peaks. Subscriptions are
+  read by the `trackSid` of the room's tracks (index `trackSid_subscribedAt`).
 - **`frozen` restart.** It runs the keep-alive, whatever wrote the data.
 - **Switching modes.** A `live` restart after a `frozen` run closes the rooms the frozen run kept in progress at its
   last heartbeat, which the owner confirmed. A `frozen` restart after a `live` run freezes the data as it was.
@@ -187,6 +209,10 @@ This took about 10 to 15 % of the change, as estimated, with no new mechanism.
 - `frozen`: `generate` (unless kept), then `keep-alive`.
 - `live`: `generate --live` runs in the background, and `prepare_data` waits for its "Writing live" line. With kept
   data, `live` runs instead.
+- `run_live_writer` in `demo-lib.sh` starts the live writer in both cases (`generate --live`, and `live` on kept data).
+  When the writer exits with a code from 1 to 127, it prints the last 20 lines of the writer's log and sends `TERM` to
+  the demo. Codes of 128 and up come from signals and are ignored.
+- `dev-lib.sh` `start_frontend` runs the development server in the background, in `PIDS`, so the cleanup stops it too.
 - `GENERATOR_ARGS` and `STATS_MODE` go to every mode; the PRO demo needs no change.
 - Documented in `demo-lib.sh`, `demo.sh`, `./dashboard.sh help`, the CE `AGENTS.md`, the CE `README.md` and the
   generator README.
@@ -227,8 +253,9 @@ low hundreds of MiB.
 ### Performance budget
 
 The median tick takes 63 to 73 ms at scenario S, with one 2.4 s spike seen once, against a target of 1 s. The 24-hour
-test logs it without a wall-clock assertion. The live writer adds no index; its queries (peaks, unique identities,
-restart reads) use the contract indexes on `status` and the time fields.
+test logs it without a wall-clock assertion. The live writer adds no index. Its queries use the contract indexes:
+- peaks and unique identities: `status` and the time fields;
+- restart: `nameLower` for the highest room name and `trackSid_subscribedAt` for subscriptions.
 
 ### Test strategy
 
@@ -238,7 +265,9 @@ restart reads) use the contract indexes on `status` and the time fields.
 | Every other scenario of the change | `dashboard-ce/backend/test/integration/data-generator-live.test.ts` | integration (`integration-live`, `test-live`) |
 
 `data-generator.test.ts` (in `test-integration`) keeps covering the generation and its keep-alive scenarios, and the
-unit tests of `cutRoom` cover the cut.
+unit tests of `cutRoom` cover the cut. "Live rolling restart" keeps its 02:00 checks. It also checks the drain rule at
+every rotation turn of the day that stops inside the run, with at least one room open at a stop: no room is created
+after the drain, and the rooms open at the stop end then with `SERVER_SHUTDOWN`.
 
 ## Risks / Trade-offs
 
@@ -246,8 +275,8 @@ unit tests of `cutRoom` cover the cut.
   suites passing before the live code landed.
 - [Rooms open at the end take other values in the CE and PRO query-plan suites] → those suites check plans and bounds;
   CE `test-integration` passes, and PRO `test-integration` runs at the `ce.ref` move.
-- [Increments diverge from the cut when a tick fails halfway] → the demo stops on a write error. The restart on kept
-  data closes what was open.
+- [Increments diverge from the cut when a tick fails halfway] → the writer exits on a write error. `run_live_writer`
+  shows the last lines of its log and stops the demo. The restart on kept data then closes what was open.
 - [The live suite is not in CI, so a regression is caught only when it runs] → the Definition of Done, the implementer
   and the verifier run `test-live` on every data generator change.
 
