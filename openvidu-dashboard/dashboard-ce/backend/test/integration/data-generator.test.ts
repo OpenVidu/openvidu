@@ -1403,8 +1403,9 @@ describe.skipIf(mongoUri === '')('data generator', () => {
 
 			expect(Math.abs(published - requested)).toBeLessThanOrEqual(1);
 
-			// Every toggle ends as it started: a track unmuted at publish ends unmuted. The tracks published within the
-			// window keep all their events while the TTL monitor removes those past the events retention.
+			// Every toggle of a closed track ends as it started: a track unmuted at publish ends unmuted. A track still
+			// published may be muted at the generation instant, its unmute still to come. The tracks published within
+			// the window keep all their events while the TTL monitor removes those past the events retention.
 			const recent = {
 				$in: await client
 					.db(dbName)
@@ -1413,9 +1414,19 @@ describe.skipIf(mongoUri === '')('data generator', () => {
 			};
 			const muted = await countBy('events', 'trackSid', { type: 'TRACK_MUTED', trackSid: recent });
 			const unmuted = await countBy('events', 'trackSid', { type: 'TRACK_UNMUTED', trackSid: recent });
+			const mutedNow = new Set(
+				(await docs<Keyed>('tracks', { status: 'published', muted: true, _id: recent })).map((t) => t._id)
+			);
+			const expected = Object.fromEntries(
+				Object.entries(muted).flatMap(([trackSid, n]) => {
+					const toggled = mutedNow.has(trackSid) ? n - 1 : n;
+
+					return toggled === 0 ? [] : [[trackSid, toggled]];
+				})
+			);
 
 			expect(Object.keys(muted).length).toBeGreaterThan(0);
-			expect(muted).toEqual(unmuted);
+			expect(unmuted).toEqual(expected);
 			expect(await count('events', { type: 'TRACK_SUBSCRIBE_REQUESTED' })).toBe(0);
 		});
 
