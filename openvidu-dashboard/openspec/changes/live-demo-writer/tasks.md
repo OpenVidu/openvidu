@@ -40,7 +40,7 @@
 
 ## 3. Rolling server operations (implementer)
 
-- [ ] 3.1 Extend the server timeline with the schedule of design decision 6: even-hour drains and returns in turn
+- [x] 3.1 Extend the server timeline with the schedule of design decision 6: even-hour drains and returns in turn
   among the reporting machines, the 15:00 UTC loss with its return 6 hours later, the servers of the generation instant
   (`-3`, `-4`, `-5`, `-7`), and the single node's 04:00 UTC restart. Make `LiveWriter` write `drainingAt`, `stoppedAt`,
   new `nodes` documents and heartbeats from it, with rooms hosted and ended by the existing rules. Cover "Live rolling
