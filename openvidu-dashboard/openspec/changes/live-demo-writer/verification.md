@@ -1,9 +1,11 @@
 # Verification Report: live-demo-writer
 
 - Date: 2026-11-25
-- Mode: full
-- Verified commit: `3a5bc0670e3915f6455e847d227fd440973d2108` (`master` of `OpenVidu/openvidu`, 22 local commits on top of
-  `origin/master` `fc0ffeff4`, not pushed); working tree clean.
+- Mode: incremental
+- Verified commit: `930d11d824e40bd2167b7f359d191c379c89b84c` (`master` of `OpenVidu/openvidu`, local commits not
+  pushed); working tree clean.
+- Starts from: `3a5bc0670e3915f6455e847d227fd440973d2108` (the full verification and code review committed at
+  `5195ba348`). This report supersedes both `verification.md` and `code-review.md` of that commit.
 - Session: started from the PRO workspace, change verified in the standalone CE checkout listed in its
   `agent-roots.json`.
 
@@ -12,121 +14,67 @@
 | Dimension    | Status |
 | ------------ | ------ |
 | Completeness | 14/14 implementer tasks checked (groups 1 to 4); 5.1 (owner), 6.1, 7.1 and 7.2 (orchestrator) come after the verification and are pending. 9/9 ADDED requirements implemented. |
-| Correctness  | 9/9 requirements mapped to code; 25/25 scenarios have a test that `./dashboard.sh scenarios` finds. 2 scenarios run and pass (`test/demo-data-mode.test.mjs`, part of `check`). The other 23 live in `integration-live`: read and judged, but **not verified as passing** (`test-live` could not run, see below). 1 scenario's test is looser than its wording (W1). |
-| Coherence    | Design followed (decisions 1 to 11 checked against the code). 2 suggestions. |
+| Correctness  | 25/25 scenarios have a test that `./dashboard.sh scenarios` finds. The 2 scenarios of `test/demo-data-mode.test.mjs` run and pass in `check`. The 23 of `integration-live`: read and judged, **not verified as passing by this report** (`test-live` blocked by the guard; the implementer's run is recorded in `operations.md`). |
+| Coherence    | Design followed, `design.md` updated with what was built. 1 warning (generator README), 1 suggestion. |
 
 ## Commands run
 
 | Command | Result |
 | --- | --- |
-| `./dashboard.sh check` | Passed: lint, format check, typecheck, `openspec validate --all --strict` (32 items, `change/live-demo-writer` included), tooling tests (141, the three demo data mode tests included), unit tests (typings 112, backend 283 with `data-generator-cut.test.ts`, frontend 704 + 1). |
+| `./dashboard.sh check` | Passed: lint, format check, typecheck, `openspec validate --all --strict` (32 items, `change/live-demo-writer` included), tooling tests (144, the five demo data mode tests included), unit tests (typings 112, backend 283, frontend 704 + 1). |
 | `./dashboard.sh scenarios live-demo-writer` | 25 scenarios, 0 without a test. |
-| `./dashboard.sh test-integration` | Passed: 26 files, 372 tests, 394 s (`data-generator.test.ts` with the owner-approved O1 adjustment and every CE query-plan suite). |
-| `./dashboard.sh test-live` | **Not verified.** The verifier guard of this session blocked it. The session runs the guard the PRO workspace derives from CE at its current `ce.ref`, which predates this change and so does not allow `test-live` yet. This change adds `test-live` to the CE guard (`.claude/hooks/spec-verifier-guard.mjs:8`), but a PRO-started verifier only gets it once `ce.ref` moves. |
+| `./dashboard.sh test-integration` | Passed: 26 files, 372 tests, 363 s. The generator's `ServerSchedule` change runs in the generation too. |
+| `./dashboard.sh test-live` | **Not verified.** The verifier guard of this PRO-started session comes from the PRO `ce.ref`, which predates `test-live`. |
 | `./dashboard.sh e2e` | Not applicable: no frontend or e2e change. |
 
-Recorded by the orchestrator in `operations.md`, not checked here: the owner's decisions (track, shares 50 %/10 %, O1,
-O2, O3, the frozen-to-live restart) and the rebase onto `fc0ffeff4`. The CE push and its CI (task 6.1) are not recorded
-yet.
+Recorded in `operations.md`, not checked here: the implementer ran `test-live` at `b7efee9d5`, 29 tests passed in 15 min.
+The commits after `b7efee9d5` (`bea892b1e`, `930d11d82`) change only `design.md` and `operations.md`, so that run
+covers the code at the verified commit. The owner's decisions are also recorded there. The CE push and its CI (task 6.1)
+are not recorded yet.
 
-## Completeness
+## Earlier findings
 
-- Tasks: 1.1 to 4.6 checked. 5.1 (owner review), 6.1 (CE push), 7.1 and 7.2 (PRO follow-up) belong to groups marked
-  `(owner)` and `(orchestrator)` that come after the verification: pending, not findings.
-- Requirements (all ADDED, `specs/data-model/spec.md`):
-  - Demo data modes: `dashboard-ce/tools/demo-lib.sh` (`demo_data_mode`, run when sourced and in `prepare_data`;
-    `start_live_generation`; `live` with kept data; keep-alive only in `frozen`).
-  - Live rooms and sessions: `src/live.ts` (`LiveWriter.tick`), `src/cut.ts` (`cutRoom`), `src/model.ts`
-    (`generateRoom`, rooms planned active end 10 min to 5 h after the instant).
-  - Live room floor: `src/live.ts` (`plan`, `fillFloor`, `floorAt`), `src/operations.ts` (`floorWaivers`), and
-    `src/restart.ts` for the 10-minute waiver after a restart.
-  - Live stats: `src/live.ts` (`deriveStats` from `before.statsUntil`), `src/samples.ts`.
-  - Live rollups: `src/live.ts` (`liveRollupIncrement`, `writePeaks` with `$max`, `writeUniqueIdentities` after
-    00:05 UTC).
-  - Live egress and ingress shares: `src/model.ts:517-518`, `src/live.ts:36-37`.
-  - Live short-lived states: `src/model.ts` (`SLOW_CONNECTIONS`, the stale room, `closureAt` 3 to 4 min after the
-    signal), `src/cut.ts` (`reportedUntil`).
-  - Live server operations: `src/operations.ts` (`ServerSchedule`).
-  - Live restart on kept data: `src/restart.ts` (`restartLive`), `src/live-cli.ts`.
-  - Live writing and deletions: `src/live.ts` (`entityUpdate`, which upserts only on first write; closed rooms dropped
-    from the live set).
-  - Live data is deterministic: `src/live.ts` (rooms keyed by seed, world start and number; state from `cutRoom` only),
-    `src/random.ts` (`hashId` for event ids).
+### Verification report at `3a5bc0670`
 
-## Correctness: scenario coverage
+| Finding | Status | Evidence |
+| --- | --- | --- |
+| W1. "No live stats while muted or after leaving": the test does not assert the scenario | Resolved | `8ad3793df` rewords the THEN (`specs/data-model/spec.md:96-98`): nothing dated more than 30 s after M and before U, and a flush in between carries only what was sent before M. The test (`data-generator-live.test.ts:591-598`) checks the 30-s rule. `:600-646` bounds the first flush after M by the bytes of the previous full flush scaled to the time sent before M (×1.15/0.85), and `bounded > 0` (`:656`) keeps that check from passing vacuously. |
+| S1. Live room streams seeded with a 32-bit hash | Resolved | See review S1. |
+| S2. Lines over 120 columns in the edited Markdown | Resolved | `b90fba08e` re-wraps `AGENTS.md:50`, `:78-85`, `.claude/agents/spec-verifier.md:31-36` and `.claude/agents/change-implementer.md:23-26`. |
 
-I read every test that `scenarios` lists against its scenario.
+### Code review at `3a5bc0670`
 
-- **Demo data mode selection** (`test/demo-data-mode.test.mjs:80`): CE and PRO Elastic options, frozen runs `generate`
-  then `keep-alive`, live runs `generate --live`, kept live runs `live`, all with the stats mode and generator options.
-  Passed in `check`.
-- **Unknown demo data mode** (`test/demo-data-mode.test.mjs:107`): non-zero exit, message naming both values, no
-  `docker run` or dev server. Passed in `check`.
-- **Frozen keep-alive writes nothing new** (`:997`) and **Frozen restart on kept live data** (`:1040`): full collection
-  snapshots minus the two moving fields, plus counts of what moved. Match the scenarios.
-- **Live room lifecycle** (`:178`): checks the closed rooms' fields, events dated at the instants, joins and leaves
-  within the room, and `participants.active` against the active STANDARD sessions of every room. It ticks every 60 s,
-  not 10 s. Design decision 10 accepts that, and the cadence scenario (`:768`) shows the data is the same at 10 s and
-  60 s.
-- **Rooms in progress at generation end** (`:243`), **Nothing written ahead of time** (`:260`), **Live room floor**
-  (`:271`, `:621`, with and without media nodes, waiver 04:00 to 04:13), **Live daily curve** (`:278`), **Live egress
-  and ingress shares** (`:287`), **Live rollups match the entities** (`:309`), **Live active peaks** (`:354`), **Live
-  unique identities at day close** (`:376`), **Live connecting participants** (`:391`), **Live egress and ingress
-  transitions** (`:413`), **Live rolling restart** (`:477`), **Live lost server** (`:498`), **Live servers of the
-  generation instant** (`:539`), **Live single node restart** (`:626`), **Live stats per mode** (`:658`), **Same live
-  data at any tick cadence** (`:768`), **Live writing after a deletion** (`:803`, real `DeletionRunner` then removal
-  of the buckets up to the cutoff), **Live restart after a stop** (`:893`, live and frozen previous runs): each asserts
-  what its scenario states.
-- **Live stale room** (`:454`): closure seen 3 to 5 minutes after the signal, because the samples are taken at 60 s
-  ticks. The 3-to-4-minute delay itself is drawn at `src/model.ts:810`. Acceptable.
-- **No live stats while muted or after leaving** (`:553`): weaker than its scenario, see W1.
+| Finding | Status | Evidence |
+| --- | --- | --- |
+| C1. A media node lost before the stop never comes back after a live restart | Resolved | `ServerSchedule` takes `reportedUntil` (the heartbeat on a restart) and spawns at `max(loss + 6 h, start)` (`src/operations.ts:50`, `:70-75`). `restartLive()` passes the heartbeat and writes every server first seen by the restart, the returned ones included (`src/restart.ts:79-97`). Test: "Live restart after a stop: a media node lost before the stop returns at a restart over 6 hours after its loss" (`data-generator-live.test.ts:1062`): loss at 15:00, heartbeat at 18:00, restart next day at 08:00, the machine has a new server at the restart that is alive 10 minutes later. |
+| W1. A failing live writer is silent and its error is deleted | Resolved | `run_live_writer` (`dashboard-ce/tools/demo-lib.sh:62-89`) runs both live paths. On an exit code from 1 to 127 it prints the last 20 lines of the log and sends `TERM` to the demo. `start_frontend` now waits on a background server in `PIDS` (`dev-lib.sh:83-86`), so the signal interrupts it and the cleanup runs. Tests: the three "Demo data mode selection: a live writer that fails …" cases (`test/demo-data-mode.test.mjs:117-151`), passing in `check`. `design.md` Risks updated. |
+| W2. The restart instant can fall before the last heartbeat | Resolved | `at = max(restartAt, the minute after the heartbeat)` (`src/restart.ts:58`). Test (`data-generator-live.test.ts:1090`): heartbeat at T + 30 min 40 s, restart requested at T + 30 min, `world.start` is T + 31 min, every new server is first seen after the heartbeat, and no new room is created at or before it. |
+| W3. The restart counts a buffering ingress session as started | Resolved | `counted()` keeps `buffering` for the rollups (`src/restart.ts:400-406`), applied to both closure paths (`:279`, `:306`). The index pairing at `:279` is sound because `closed.ingressSessions` is `roomSessions.map(...)` (`:218`). Same test (`:1148-1167`): no `INGRESS_STARTED`, `sessionsStarted` and `byInputType` unchanged, `sessionsEnded` up by the sessions ended in the bucket. |
+| S1. Entity ids of live rooms come from 32-bit streams | Resolved | `KeyedRng` (`src/random.ts:149-162`) keeps the FNV-seeded draws but returns `hashId(prefix, key|ordinal)` for every `id()`. Live rooms use it (`src/live.ts:368-369`), and every entity id in `model.ts` comes from `rng.id()` (`:510`, `:1266`, `:1395`, `:1789`, `:2005`, `:2018`, `:2079`, `:2204`, `:2224-2225`, `:2355`). The decision and the rejected alternative (SHA-256 seeds moved the statistics out of their bands) are in `design.md`. |
+| S2. Reads that skip the contract indexes | Resolved | Highest room via `nameLower` prefix regex and reverse sort (`src/restart.ts:101-106`). Open ingress sessions by `status` (`src/restart.ts:149`, `src/live.ts:429`). Subscriptions by `trackSid` (`src/restart.ts:181-183`). |
+| S3. Every server ever seen is re-diffed on each tick | Resolved | `endedServers` (`src/live.ts:87`, `:108-113`, `:516-528`): the tick that writes a server's end drops it, and later ticks skip it. |
+| S4. A single node stopped mid-restart blocks the live restart | Resolved | The heartbeat is taken over every server (`src/restart.ts:52`). When no server is alive the reconciler node is the freshest one (`:60-62`), and the stopped single node gets a new server at the restart (`src/operations.ts:64-69`). Test: "Live restart after a stop: a single node stopped in its daily restart has a new server at the restart" (`data-generator-live.test.ts:1170`). |
+| S5. Harmless race in the readiness wait | Resolved | `grep -qs` (`dashboard-ce/tools/demo-lib.sh:98`). |
 
-(Line numbers without a file are in `dashboard-ce/backend/test/integration/data-generator-live.test.ts`.)
+### Rolling restart test rework (`9c57aef38`)
 
-All 23 `integration-live` tests are "Not verified" as passing in this report: `test-live` did not run.
+"Live rolling restart" (`data-generator-live.test.ts:477-508`) still checks the 02:00 turn as the scenario states:
+`drainingAt` 02:00, `stoppedAt` 02:20, a new server of the same label first seen at 02:30 and alive past 02:40. The room
+rules (none created after the drain, none open after the stop, those open at the stop ended with `SERVER_SHUTDOWN`) now
+run over every drain of the day whose stop falls inside the run. The 02:00 node is one of them, since T is 10:00 and the
+turn is T + 16 h. The `openAtStops > 0` assertion keeps the `SERVER_SHUTDOWN` check from passing vacuously across the
+day. Before the rework, at least one room had to be open at the 02:20 stop itself. Now that one instance of the rule can
+be empty, but the rule is still exercised and every instance is checked. The test still covers its scenario.
 
-## Coherence
+## New review of the diff since `3a5bc0670`
 
-- Decision 1 (complete lives, cut at an instant): `generate()` writes `cutRoom(life, now)`
-  (`src/generator.ts:493-494`). `LiveWriter` cuts at the tick and diffs against what it last wrote (`src/live.ts:157`,
-  `:173-200`). Unit tests: `dashboard-ce/backend/test/unit/data-generator-cut.test.ts`.
-- Decision 2: live room streams keyed by (seed, start, index) (`src/live.ts:356-360`). Event `_id` values hashed with
-  SHA-256 (`src/derive.ts:99-105`, `src/random.ts` `hashId`). New package exports present.
-- Decisions 3, 4, 5, 6, 7, 8 and 9: implemented as written (see the requirement mapping above). `generate --live` and
-  `live` share `CLI_OPTIONS` and `writeLive` (`src/cli.ts`), which stop on `SIGINT`/`SIGTERM`.
-- Decision 10: separate vitest project `integration-live` (`dashboard-ce/backend/vitest.config.ts`), excluded from
-  `integration`. `test:live` scripts and the `./dashboard.sh test-live` command added. Root `AGENTS.md` Definition of
-  Done, implementer and verifier definitions and the guard updated; the guard test is extended. No CI or `ci` spec
-  change.
-- Decision 11 and the measurements are in the generator README.
-- Edition seams: CE tooling only, nothing PRO. Data contract: unchanged; the only `contract.ts` change marks the
-  model-only `publishedAt` of ingress sessions. No secrets.
-- Language: English. Commits: `openvidu-dashboard: <present tense>, change live-demo-writer`, no AI attribution lines.
-- CHANGELOG: no line, justified (tooling; the existing Internal line "A demo data generator…" covers it).
-- README, `AGENTS.md`, `dashboard-ce/backend/AGENTS.md`, `dashboard.sh help`, `demo-lib.sh`, `demo.sh` and the generator
-  README document `DASHBOARD_DEMO_DATA`, `test-live` and the live writer.
-
-### Refactor review (task 4.6)
-
-I checked the implementer's account against the code and it holds:
-
-- `cutRoom` is the only source of entity state for `generate()` (`cutRoom(life, now)`, `src/generator.ts:494`) and for
-  `LiveWriter`, which cuts at the previous tick and at `t` and diffs the two (`src/live.ts:116`, `:157`, `:173`).
-- Exception: `restartLive()` (`src/restart.ts`) builds its closures from the stored documents, because the data may
-  come from a frozen run or another world.
-  - Its synthetic event payloads and ids come from the same builders as `deriveEvents`: `syntheticEventId`,
-    `reconciledRoomEnded`, `reconciledParticipantClosed`, `reconciledEgressEnded`, `reconciledIngressEnded`,
-    `RECONCILED`, `NODE_DEAD` (`src/restart.ts:3-13`).
-  - Its rollup increments go through `Rollups.counters()` and `liveRollupIncrement` (`src/restart.ts:411-454`,
-    `:457-479`).
-  - The entity field closures (status, `leftAt`, `expiresAt`…) are still written separately
-    (`src/restart.ts:162-236`). Sharing them would need a stored-document version of the model types: not a small
-    change, so it is recorded here and left as is.
-- `generate()` and `LiveWriter` share the server timeline (`serverTimeline` + `ServerSchedule`),
-  `generateRoom`/`roomLife`/`cutRoom`, `deriveEvents`/`deriveStats`/`Rollups`, `HOUR_WEIGHTS` and `takesRooms`
-  (`src/live.ts:3-18`). Their room planners differ by design (decision 4).
-- `keepLive()` is untouched: `keep-alive.ts` is not in the diff. The only change in `schema.ts` exports
-  `ALIVE_NODE_MS` for `restartLive()`.
+- Specs: only the muted-stats THEN changed (see W1 above). It now matches the implementation and stays testable.
+- Design: decisions 2, 5, 6, 7, 8, the performance budget, the test strategy and the risks match the code at the
+  verified commit.
+- Edition seams: CE tooling only, nothing PRO. Data contract: unchanged. No secrets. Language: English.
+- Commits: `openvidu-dashboard: <present tense>, change live-demo-writer`, no attribution lines. CHANGELOG: no line,
+  still justified (internal tooling).
+- Documentation: the generator README was not updated with the restart changes (W1 below).
 
 ## Issues by priority
 
@@ -136,57 +84,48 @@ None.
 
 ### WARNING
 
-- **W1. Scenario "No live stats while muted or after leaving": the test does not assert what the scenario states.**
-  - The scenario (`openspec/changes/live-demo-writer/specs/data-model/spec.md:96`) says no upstream document of the
-    camera is dated between M and U.
-  - The test only counts documents dated after M + 30 s
-    (`dashboard-ce/backend/test/integration/data-generator-live.test.ts:578-585`).
-  - The implementation does emit one flush dated in (M, M + 30 s]: it carries the bytes sent before the mute
-    (`dashboard-ce/tools/data-generator/src/samples.ts:148-162`). That is how a periodic flush behaves, so the code is
-    right and the scenario wording is stricter than the behaviour.
-  - Recommendation: reword the THEN in `spec.md:96`, for example "no upstream document of the camera is dated after
-    the first flush following M and up to U". The test then covers it as written.
+- **W1. The generator README describes the old restart rules.**
+  - `dashboard-ce/tools/data-generator/README.md:252-257` still defines the last heartbeat as "the freshest
+    `lastSeenAt` of a running server".
+  - `restartLive()` now takes it over every server (`src/restart.ts:52`). The README also says nothing about three
+    other changes:
+    - the restart instant moved after the heartbeat's minute (`:58`);
+    - a machine lost in the 6 hours before the heartbeat returns at `max(loss + 6 h, restart)`;
+    - a single node caught stopped gets a new server at the restart.
+  - `design.md` decision 7 states all of this, so only the README is out of date. The Definition of Done item "README
+    reflects the change" is therefore not fully met.
+  - Recommendation: update the restart bullet at `README.md:252-257` to match the docblock of `restartLive()`
+    (`src/restart.ts:34-47`).
 
 ### SUGGESTION
 
-- **S1. Live room streams are seeded with a 32-bit hash.**
-  - `LiveWriter.context()` seeds every stream of a live room with `hashRng()`, FNV-1a to a 32-bit mulberry32 state
-    (`dashboard-ce/tools/data-generator/src/live.ts:359-360`, `src/random.ts` `hashRng`). The room `_id`
-    (`src/model.ts:510`) and every entity id of the room come from those streams.
-  - Two room numbers whose keys collide draw identical ids. By the birthday bound, that has about a 25 % chance over
-    the ~48 000 rooms of 90 days of continuous live writing at scenario S.
-  - The first write of an entity is an upsert with `$set` (`src/live.ts:583`), so a colliding room would silently
-    overwrite the older room's documents instead of failing.
-  - Design decision 2 already rejects this hash for event ids for the same reason.
-  - Recommendation: seed the live room streams from a SHA-256 digest (as `hashId` does), or draw the room id with
-    `hashId`.
-- **S2. Lines over the 120-column wrap in the edited Markdown.**
-  - Prettier (prose preserved) does not flag them: `AGENTS.md:50` runs to about 150 columns, `AGENTS.md:78-87` breaks
-    unevenly, `.claude/agents/spec-verifier.md:33` runs past 120, and `.claude/agents/change-implementer.md:25-27`
-    breaks unevenly.
-  - Recommendation: re-wrap those paragraphs to 120 columns like the rest of each file.
+- **S1. No direct test of `KeyedRng`.**
+  - The distinct-ids property of `KeyedRng` (`dashboard-ce/tools/data-generator/src/random.ts:149-162`) has no direct
+    test. It is exercised only indirectly by the live suite, where a collision is unlikely to occur in the time a test
+    runs.
+  - Recommendation: add a unit test under `dashboard-ce/backend/test/unit/`. Two `KeyedRng` with different keys but the
+    same seed state should draw the same non-id values and different ids. The ids should match `hashId(prefix,
+    key|n)`.
 
-## Definition of Done (CE `AGENTS.md`)
+## Definition of Done (CE `AGENTS.md`), items affected by the diff
 
 | Item | Status |
 | --- | --- |
 | All tasks checked | Met for groups 1 to 4. 5.1, 6.1, 7.1 and 7.2 are pending (owner and orchestrator, after verification). |
-| `scenarios` finds a passing test for every delta scenario | Partly met: 25/25 have a test. 2 run and pass; 23 not verified as passing (`test-live` blocked). |
+| `scenarios` finds a passing test for every delta scenario | Partly verified: 25/25 have a test. 2 pass here; the other 23 passed in the implementer's recorded `test-live` run, not checked here. |
 | `./dashboard.sh check` passes locally | Met. |
-| CI run of the push is green | Pending (task 6.1; not pushed). |
+| CI run of the push is green | Pending (task 6.1). |
 | Backend changes: `test-integration` passes | Met (372 tests). |
-| Data generator changes: `test-live` passes | Not verified: the guard of a PRO-started session does not allow it until `ce.ref` moves. |
-| UI changes: `e2e` | Not applicable. |
-| Data contract changes: `contract-check` | Not applicable (no contract change). |
-| Image or runtime dependency changes: `build-image`, `smoke-image` | Not applicable. |
-| Latest verification report has no CRITICAL; refactor review applied or recorded | Met: no CRITICAL; refactor review recorded above. |
-| `CHANGELOG.md`, `README.md`, `AGENTS.md` files reflect the change | Met (no CHANGELOG line, justified). |
+| Data generator changes: `test-live` passes | Recorded in `operations.md` (29 tests at `b7efee9d5`), not verified here. |
+| Latest verification report has no CRITICAL; refactor review applied or recorded | Met. |
+| `CHANGELOG.md`, `README.md`, `AGENTS.md` files reflect the change | Not met: generator README restart bullet (W1). |
 | Change archived | Pending. |
 
 ## Final assessment
 
-No critical issues found in the checks that ran. 1 warning and 2 suggestions.
+No critical issues found in the checks that ran. 1 warning and 1 suggestion. Every finding of the previous
+verification and code review is resolved.
 
-Not verified: `./dashboard.sh test-live`, and with it 23 of the 25 scenarios as passing. The verifier guard of this
-PRO-started session predates this change and blocks the command. Before archiving, run `./dashboard.sh test-live` in
-the CE checkout from a CE-started session, or have the orchestrator run it and record it in `operations.md`.
+Not verified: `./dashboard.sh test-live`, and with it 23 of the 25 scenarios as passing, because the guard of this
+PRO-started session blocks the command. The implementer's run of 29 passing tests at `b7efee9d5`, which matches the code
+at the verified commit, is recorded in `operations.md`.
