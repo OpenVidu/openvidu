@@ -1,6 +1,8 @@
 import { defineConfig } from 'vitest/config';
 
 const PLANS = 'test/integration/**/*query-plan.test.ts';
+/** The data generator's live writer, ticked over simulated days: a suite of its own for its length. */
+const LIVE = 'test/integration/data-generator-live.test.ts';
 
 export default defineConfig({
 	ssr: {
@@ -21,7 +23,7 @@ export default defineConfig({
 				test: {
 					name: 'integration',
 					include: ['test/integration/**/*.test.ts'],
-					exclude: [PLANS],
+					exclude: [PLANS, LIVE],
 					globalSetup: ['test/support/global-mongo.ts'],
 					testTimeout: 120_000,
 					hookTimeout: 600_000
@@ -38,6 +40,16 @@ export default defineConfig({
 					sequence: { groupOrder: 1 },
 					testTimeout: 120_000,
 					hookTimeout: 600_000
+				}
+			},
+			{
+				extends: true,
+				test: {
+					name: 'integration-live',
+					include: [LIVE],
+					globalSetup: ['test/support/global-mongo.ts'],
+					testTimeout: 600_000,
+					hookTimeout: 900_000
 				}
 			}
 		]

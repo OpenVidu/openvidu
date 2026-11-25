@@ -25,6 +25,7 @@
 		"typecheck": "tsc --noEmit -p tsconfig.json",
 		"test": "vitest run --project unit",
 		"test:integration": "vitest run --project integration --project integration-plans",
+		"test:live": "vitest run --project integration-live",
 		"clean": "rm -rf dist"
 	},
 	"dependencies": {

@@ -83,7 +83,9 @@ Behaviour is specified in `openspec/specs/*-api`, `api-conventions`, `auth`, `st
 
 - Unit tests: Vitest (`pnpm test`).
 - Integration tests: `test/integration/`, Vitest projects `integration` and `integration-plans` (the `*query-plan`
-  suites, run after the rest so their data generation does not skew the latency budgets). `test/support/` starts a
+  suites, run after the rest so their data generation does not skew the latency budgets), and `integration-live`
+  (`data-generator-live.test.ts`, the generator's live writer over simulated days, about 10 minutes:
+  `./dashboard.sh test-live`). `test/support/` starts a
   replica set with Testcontainers on `openvidu/mongodb:8.0.29-r1` (the official `mongo:8.0` refuses Linux kernels 6.19
   and newer), or uses `DASHBOARD_TEST_MONGO_URI`; `DASHBOARD_TEST_MONGO_IMAGE` overrides the image. Through pnpm
   without Docker the suites report themselves skipped; `./dashboard.sh test-integration` fails instead.

@@ -47,7 +47,7 @@ configuration variables and exit codes.
 
 - All tasks checked; `./dashboard.sh scenarios <change>` finds a passing test for every delta scenario.
 - `./dashboard.sh check` passes locally and the CI run of the push is green.
-- Backend changes: `test-integration` passes. UI changes: `e2e` passes, with axe and both themes. Data contract
+- Backend changes: `test-integration` passes. Data generator changes: `test-live` passes too. UI changes: `e2e` passes, with axe and both themes. Data contract
   changes: `contract-check` passes against the writer. Image or runtime dependency changes: `build-image` and
   `smoke-image` pass.
 - Latest verification reports have no CRITICAL; refactor review applied or recorded.
@@ -75,7 +75,8 @@ sources through the `source` export condition, so type checking, linting and tes
 ## Commands
 
 Everything runs through `./dashboard.sh` (what CI calls; `help` lists every command, any accepts `--skip-install`):
-`check` (lint, format check, typecheck, spec validation, unit tests), `test-integration` (Docker), `e2e` (its
+`check` (lint, format check, typecheck, spec validation, unit tests), `test-integration` (Docker), `test-live` (the
+data generator's live writer, Docker, about 10 minutes), `e2e` (its
 real-backend suite needs Docker), `scenarios <change>`,
 `contract-check <openvidu-livekit>`, `build-image ce`, `smoke-image ce`, `dev` (backend and frontend development
 servers against openvidu-local-deployment; README "Development") and `demo ce`: a local demo on generated data

@@ -43,6 +43,8 @@ Commands:
   test           Same as test-unit
   test-unit      Tests of the workspace tooling (test/) and unit tests (Vitest) of every package that defines them
   test-integration  Integration tests against MongoDB (Docker required)
+  test-live      Integration tests of the data generator's live writer over simulated days (Docker required, about
+                 10 minutes)
   e2e            Build the application and run the Playwright tests against it with a mocked API
   spec-validate  openspec validate --all --strict
   scenarios <change> [<openvidu-livekit>]  List the tests of every scenario of the change's delta specs, counting
@@ -163,6 +165,10 @@ case "$COMMAND" in
 	test-integration)
 		require_docker
 		run test:integration
+		;;
+	test-live)
+		require_docker
+		run test:live
 		;;
 	spec-validate) run spec:validate ;;
 	scenarios) node tools/scenario-coverage.mjs ${ARGS[@]+"${ARGS[@]}"} ;;

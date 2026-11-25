@@ -96,6 +96,7 @@ describe('Read-only commands', () => {
 		'./dashboard.sh check --skip-install',
 		'./dashboard.sh test-unit',
 		'./dashboard.sh test-integration',
+		'./dashboard.sh test-live',
 		'./dashboard.sh e2e',
 		'./dashboard.sh spec-validate',
 		'./dashboard.sh scenarios demo',

@@ -29,8 +29,8 @@ implementer.
    of another checkout listed in the workspace's `agent-roots.json` is verified there: `cd <checkout> && openspec …`,
    `cd <checkout> && ./dashboard.sh …` and `git -C <checkout> …`, the only chained forms your guard allows.
 3. Run `./dashboard.sh check`, `./dashboard.sh scenarios <change>` and, once each and one at a time,
-   `./dashboard.sh e2e` when the change touches a frontend or the e2e suites and `./dashboard.sh test-integration`
-   when it touches a backend. A suite that could not run (no Docker, for example) is "Not verified" with the reason;
+   `./dashboard.sh e2e` when the change touches a frontend or the e2e suites, `./dashboard.sh test-integration`
+   when it touches a backend and `./dashboard.sh test-live` when it touches the data generator. A suite that could not run (no Docker, for example) is "Not verified" with the reason;
    never count it as passing. `check` includes the unit tests: do not run `test-unit` again. What only the
    orchestrator can run (the contract check against the writer, image build and smoke test, CI) is recorded in
    `operations.md`: report it as recorded, not checked.

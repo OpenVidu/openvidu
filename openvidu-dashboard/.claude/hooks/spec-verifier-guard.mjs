@@ -5,7 +5,7 @@ import { existsSync, readFileSync, realpathSync } from 'node:fs';
 import { basename, dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
 
 const OPENSPEC = /^openspec (list|status|instructions|show|validate)( |$)/;
-const DASHBOARD = /^\.\/dashboard\.sh (check|lint|format-check|typecheck|spec-validate|scenarios|test|test-unit|test-integration|e2e)( |$)/;
+const DASHBOARD = /^\.\/dashboard\.sh (check|lint|format-check|typecheck|spec-validate|scenarios|test|test-unit|test-integration|test-live|e2e)( |$)/;
 const READ_ONLY_COMMANDS = [
 	OPENSPEC,
 	/^git( -C ("[^"]*"|'[^']*'|\S+))? (diff|log|show|status|ls-files|grep|rev-parse|merge-base)( |$)/,
@@ -134,7 +134,7 @@ if (input.tool_name === 'Bash') {
 
 	if (!READ_ONLY_COMMANDS.some((pattern) => pattern.test(command))) {
 		block(
-			'only `openspec list|status|instructions|show|validate` (after `cd <dir> && ` for an OpenSpec root below the project folder), read-only git commands and `./dashboard.sh check|lint|format-check|typecheck|spec-validate|scenarios|test|test-unit|test-integration|e2e` are allowed.'
+			'only `openspec list|status|instructions|show|validate` (after `cd <dir> && ` for an OpenSpec root below the project folder), read-only git commands and `./dashboard.sh check|lint|format-check|typecheck|spec-validate|scenarios|test|test-unit|test-integration|test-live|e2e` are allowed.'
 		);
 	}
 
