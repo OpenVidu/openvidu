@@ -19,7 +19,7 @@
 
 ## 2. Live writer: rooms, stats, rollups and short-lived states (implementer)
 
-- [ ] 2.1 Add `src/live.ts` with `LiveWriter` and `tick(at)` (design decisions 3 and 9). Per room in the live set: insert
+- [x] 2.1 Add `src/live.ts` with `LiveWriter` and `tick(at)` (design decisions 3 and 9). Per room in the live set: insert
   the events and `track_stats` dated since the previous tick, `$set` the changed entity fields (upsert new entities),
   `$inc` the rollup differences per bucket and scope, and never write an entity again after the tick that wrote its end.
   Write peaks every minute with `$max`, and `uniqueIdentities` after 00:05 UTC. Add `--live` to `generate` (generation,
@@ -28,7 +28,7 @@
   match the entities", "Live active peaks", "Live unique identities at day close", "Live writing after a deletion" and
   "Same live data at any tick cadence" in `dashboard-ce/backend/test/integration/data-generator-live.test.ts`, verified
   by `./dashboard.sh test-integration`.
-- [ ] 2.2 Add the live planner (decision 4): arrivals per UTC hour from (seed, world start, hour) on the daily curve,
+- [x] 2.2 Add the live planner (decision 4): arrivals per UTC hour from (seed, world start, hour) on the daily curve,
   the floor of 10 rooms in progress with its 10-minute exceptions, room names after the highest stored one, and the
   live egress and ingress shares (0.5 and 0.1, with the generation keeping 0.3 and 0.02). Cover "Live room floor",
   "Live daily curve" and "Live egress and ingress shares" (24 hours at 60 s ticks) in `data-generator-live.test.ts`,
