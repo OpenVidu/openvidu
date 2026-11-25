@@ -27,10 +27,13 @@ writer or a room going stale cannot be tried.
 - **Live stats and rollups** (`live`): `track_stats` every 30 s per track (track mode) or per participant (participant
   mode), the bytes, quality and `lastStatsAt` of sessions and rooms, the 5-minute, hourly, daily and media node rollups,
   the active peaks every minute and the daily unique identities after the day closes, all as increments, so a deletion
-  from Settings behaves against the demo as it does against a deployment.
-- **Short-lived states made common** (`live`): about one room in seven in progress holds a participant still connecting,
-  for 1 to 3 minutes; egresses spend 20 to 60 s starting and ending; ingress sessions buffer for 1 to 2 minutes; at least
-  once an hour a room stops reporting, shows as stale for about 2 minutes and is closed by the reconciler.
+  from Settings behaves against the demo as it does against a deployment: what it keeps (rooms in progress, the last 5
+  minutes, the current and previous rollup buckets) goes on growing, and what it removes never comes back.
+- **Short-lived states made common** (`live`): half of the participants take 1 to 3 minutes to connect, a third of
+  them giving up, so about one room in eleven in progress holds a participant still connecting and someone is
+  connecting somewhere in about two minutes of three; egresses spend 20 to 60 s starting and ending; ingress sessions
+  buffer for 1 to 2 minutes; at least once an hour a room stops reporting, shows as stale for about 2 minutes and is
+  closed by the reconciler.
 - **Rolling server operations** (`live`): with media nodes, every 2 hours a media node drains for 20 minutes, stops and
   returns 10 minutes later as a new server, and once a day one is lost, its rooms closed by the reconciler, and returns
   6 hours later; a single node restarts once a day.
@@ -60,8 +63,12 @@ None.
 - Edition: CE tooling, used by the CE and PRO demos. No product code, API, data contract, schema version, image or
   product configuration changes.
 - Repository: dashboard (`OpenVidu/openvidu`, `openvidu-dashboard/`) only: `dashboard-ce/tools/data-generator`,
-  `dashboard-ce/tools/demo-lib.sh` and `demo.sh`, `dashboard.sh` (help text), the CE backend integration tests of the
-  generator, `test/` (demo mode tooling test), `README.md`, `AGENTS.md`, the generator README.
+  `dashboard-ce/tools/demo-lib.sh` and `demo.sh`, `dashboard.sh` (help text and the new `test-live` command), the CE
+  backend tests of the generator, `test/` (demo mode tooling test), `README.md`, `AGENTS.md`, the generator README.
+- The live scenarios run in their own suite, `./dashboard.sh test-live` (vitest project `integration-live`), outside
+  `test-integration` and outside CI, with no workflow or `ci` spec change. The root `AGENTS.md` Definition of Done
+  requires it for data generator changes, and the implementer and verifier agent definitions and the verifier guard
+  run and allow it.
 - PRO follow-up (another workspace, after the CE push): move `ce.ref`. `dashboard-pro/tools/demo.sh` needs no change,
   since `GENERATOR_ARGS` and `STATS_MODE` reach the live writer through `demo-lib.sh`. The PRO README and `AGENTS.md`
   gain the `DASHBOARD_DEMO_DATA` line next to `DASHBOARD_DEMO_DEPLOYMENT`. The PRO `test-integration` runs besides

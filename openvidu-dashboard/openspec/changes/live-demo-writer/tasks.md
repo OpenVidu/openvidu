@@ -27,16 +27,16 @@
   "Nothing written ahead of time", "Live stats per mode", "No live stats while muted or after leaving", "Live rollups
   match the entities", "Live active peaks", "Live unique identities at day close", "Live writing after a deletion" and
   "Same live data at any tick cadence" in `dashboard-ce/backend/test/integration/data-generator-live.test.ts`, verified
-  by `./dashboard.sh test-integration`.
+  by `./dashboard.sh test-live`.
 - [x] 2.2 Add the live planner (decision 4): arrivals per UTC hour from (seed, world start, hour) on the daily curve,
   the floor of 10 rooms in progress with its 10-minute exceptions, room names after the highest stored one, and the
   live egress and ingress shares (0.5 and 0.1, with the generation keeping 0.3 and 0.02). Cover "Live room floor",
   "Live daily curve" and "Live egress and ingress shares" (24 hours at 60 s ticks) in `data-generator-live.test.ts`,
-  and log the time per tick. Verify with `./dashboard.sh test-integration`.
+  and log the time per tick. Verify with `./dashboard.sh test-live`.
 - [x] 2.3 Add the short-lived states and the reconciler timing of decision 5 to the lives of live rooms: slow
   connections, egress `starting` and `ending`, ingress buffering, one stale room per UTC hour, and every reconciler
   closure written 3 to 4 minutes after its last signal. Cover "Live connecting participants", "Live egress and ingress
-  transitions" and "Live stale room" in `data-generator-live.test.ts`. Verify with `./dashboard.sh test-integration`.
+  transitions" and "Live stale room" in `data-generator-live.test.ts`. Verify with `./dashboard.sh test-live`.
 
 ## 3. Rolling server operations (implementer)
 
@@ -45,7 +45,7 @@
   (`-3`, `-4`, `-5`, `-7`), and the single node's 04:00 UTC restart. Make `LiveWriter` write `drainingAt`, `stoppedAt`,
   new `nodes` documents and heartbeats from it, with rooms hosted and ended by the existing rules. Cover "Live rolling
   restart", "Live lost server", "Live single node restart" and "Live servers of the generation instant" in
-  `data-generator-live.test.ts`. Verify with `./dashboard.sh test-integration`.
+  `data-generator-live.test.ts`. Verify with `./dashboard.sh test-live`.
 
 ## 4. Restart on kept data, demo modes and documentation (implementer)
 
@@ -53,13 +53,13 @@
   closes the open entities as the reconciler does at their last signal with `node-dead`, leaves the alive servers lost,
   starts a new server per machine, draws the world from the restart instant and ticks. Cover "Live restart after a stop"
   (both the `live` and the `frozen` previous run) in `data-generator-live.test.ts`. Verify with
-  `./dashboard.sh test-integration`.
+  `./dashboard.sh test-live`.
 - [x] 4.2 Add `demo_data_mode` to `dashboard-ce/tools/demo-lib.sh` (decision 8). It reads `DASHBOARD_DEMO_DATA`,
   default `frozen`, and fails on other values before Docker. `prepare_data` runs `generate` and `keep-alive` in
   `frozen`; in `live` it runs `generate --live`, or `live` with kept data, passing `STATS_MODE` and `GENERATOR_ARGS` in
   every mode. Cover "Demo data mode selection" and "Unknown demo data mode" in `test/demo-data-mode.test.mjs`. Cover
   "Frozen keep-alive writes nothing new" and "Frozen restart on kept live data" in `data-generator-live.test.ts`.
-  Verify with `./dashboard.sh check` and `./dashboard.sh test-integration`.
+  Verify with `./dashboard.sh check` and `./dashboard.sh test-live`.
 - [x] 4.3 Document `DASHBOARD_DEMO_DATA` and the live writer:
   - the header of `demo-lib.sh` and the comment of `demo.sh`;
   - the `demo` line of `./dashboard.sh help`;
@@ -70,8 +70,11 @@
     measured documents and storage of a simulated live day in both stats modes (decision 11).
 
   Verify by reading that each matches the specs of this change. No CHANGELOG line: this is tooling.
-- [x] 4.4 Run `./dashboard.sh check`, `./dashboard.sh test-integration` and
-  `./dashboard.sh scenarios live-demo-writer`. Every scenario of the change has a passing test.
+- [x] 4.4 Run `./dashboard.sh check`, `./dashboard.sh test-integration`, `./dashboard.sh test-live` and
+  `./dashboard.sh scenarios live-demo-writer`. Every scenario of the change has a passing test. The live scenarios run
+  in their own vitest project `integration-live` (`./dashboard.sh test-live`), outside `test-integration` and CI; the
+  root `AGENTS.md` Definition of Done, the implementer and verifier agent definitions and the verifier guard name it
+  for data generator changes.
 - [x] 4.5 Run `./dashboard.sh demo ce` with `DASHBOARD_DEMO_DATA=live` for 15 minutes. Check that rooms end and start,
   charts move and nothing fails in the log. Check that the default `frozen` run behaves as before.
 - [x] 4.6 Review for refactors:

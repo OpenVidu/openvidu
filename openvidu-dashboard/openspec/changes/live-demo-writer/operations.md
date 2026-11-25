@@ -1,0 +1,24 @@
+# Operations of live-demo-writer
+
+What only the orchestrator knows: the owner's decisions, the rebase onto other work and, later, the push and its CI.
+
+## Owner's decisions
+
+- Track: full.
+- Proposal approved as summarised, with rolling server operations, the Single Node restart at 04:00 UTC, common
+  short-lived states and the restart on kept data treated as an outage. `frozen` is the default of
+  `DASHBOARD_DEMO_DATA` and means today's keep-alive.
+- Live egress and ingress shares: 50 % and 10 % of the rooms created after the generation instant; the generation keeps
+  30 % and 2 %.
+- A frozen run restarted live on kept data closes the rooms it kept open as an outage at its last heartbeat.
+- A track still published and muted at the generation instant may have one more `TRACK_MUTED` than `TRACK_UNMUTED`
+  (generator test adjusted).
+- Slow connections: half of the live STANDARD sessions, about one room in eleven in progress holding a connecting
+  session, instead of the one in seven first planned.
+- The live writer tests run in their own suite, `./dashboard.sh test-live`, out of `test-integration` and out of CI.
+
+## Rebase
+
+- The change's commits were rebased, without conflicts, onto `origin/master` `fc0ffeff4` (shorter 3.10 changelog, with
+  the internal changes apart). The change adds no CHANGELOG line: the demo data generator is internal and already has
+  its Internal line.

@@ -61,8 +61,9 @@ SHALL end on their own.
 
 ### Requirement: Live room floor
 Edition: CE and PRO. In `live` mode at least 10 rooms SHALL be in progress at every minute, except in the 10 minutes
-after the live writer starts on kept data and after a single-node server starts, and more rooms SHALL be created around
-14:00 UTC, following the generator's daily curve at the pace of the scenario.
+after the live writer starts on kept data and, for a single node, from its daily drain until 10 minutes after its new
+server starts, and more rooms SHALL be created around 14:00 UTC, following the generator's daily curve at the pace of
+the scenario.
 
 #### Scenario: Live room floor
 - **GIVEN** a live database of scenario S, with and without `--media-nodes`
@@ -85,8 +86,9 @@ and the rollups and move their `lastStatsAt` to it.
   an unmuted camera and microphone
 - **WHEN** two minutes of ticks run
 - **THEN** the `track` one has four new upstream documents per track, 30 s apart, each with `meta.trackSid` and
-  `mimeType`, the `participant` one four per participant without them, and in both the session's and the room's
-  `bytes.up` grew by the sum of those documents' bytes and their `lastStatsAt` is the latest flush
+  `mimeType`, the `participant` one four per participant without them, and in both the room's `bytes.up` grew by the
+  sum of those documents' bytes, the session's by that sum plus the signal channel's bytes of each flush, and their
+  `lastStatsAt` is the latest flush
 
 #### Scenario: No live stats while muted or after leaving
 - **GIVEN** a live session that mutes its camera at M, unmutes it at U and leaves at L
@@ -131,8 +133,8 @@ an egress and 2 % with an ingress.
   between 45 % and 55 % of the rooms created after T have an egress and between 7 % and 13 % an ingress
 
 ### Requirement: Live short-lived states
-Edition: CE and PRO. In `live` mode about one room in seven in progress SHALL hold a participant still connecting, for 1
-to 3 minutes before it becomes active or aborts; egresses SHALL spend 20 to 60 s starting and ending; ingress sessions
+Edition: CE and PRO. In `live` mode half of the STANDARD sessions SHALL take 1 to 3 minutes to connect before they
+become active or abort; egresses SHALL spend 20 to 60 s starting and ending; ingress sessions
 SHALL buffer 1 to 2 minutes; and at least one room per UTC hour SHALL stop reporting and be closed by the reconciler 3 to
 4 minutes after its last signal, dated at it.
 
@@ -207,11 +209,12 @@ ingress session after the tick that wrote its end, so a deletion from Settings a
 deployment's.
 
 #### Scenario: Live writing after a deletion
-- **GIVEN** a live database from which a Total deletion removed the closed rooms ended over 5 minutes before with their
-  data, and the rollups up to its cutoff
+- **GIVEN** a live database on which the dashboard's Total deletion ran, removing the closed rooms ended over 5 minutes
+  before its cutoff with their data and the rollup buckets before the previous one, and from which the rollup
+  documents of the buckets at or before the cutoff were then removed as well
 - **WHEN** ticks run for 30 more minutes
 - **THEN** none of the removed rooms or sessions is stored again, the rooms in progress at the cutoff keep all their
-  data, and the hourly document of the current hour holds only what was written after the deletion
+  data, and the hourly document of the current hour holds only what was written after its removal
 
 ### Requirement: Live data is deterministic
 Edition: CE and PRO. Given the seed, the generator options and the instant the world starts (the generation, or the
