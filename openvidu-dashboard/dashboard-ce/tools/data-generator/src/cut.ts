@@ -20,7 +20,7 @@ export interface RoomLife {
 	engine: Engine;
 	/** One `track_stats` document per participant and direction, or per track. */
 	statsMode: StatsMode;
-	/** The last instant anything of the room happens: an end, an API call, an ingress deletion. */
+	/** The last instant anything of the room happens: an end, an API call, an ingress deletion, a closure written. */
 	end: number;
 }
 
@@ -37,7 +37,9 @@ export function roomLife(bundle: RoomBundle, engine: Engine, statsMode: StatsMod
  * that instant (a session `joining` until it is active, an egress status from its history, an ingress session
  * `buffering` until it publishes, an ingress the status of its latest session), only the mutes and resumes up to `t`,
  * and the bytes, quality and `lastStatsAt` of the stats flushed up to `t`. The room's derived fields come from the
- * entities cut. After the end of its life, a room is its life.
+ * entities cut. Until the reconciler writes its closure (`closureAt`), a room it closes is as it was at its last
+ * signal: in progress, with what it closes still open and no stats after that signal. After the end of its life, a
+ * room is its life.
  */
 export function cutRoom(life: RoomLife, t: number): RoomBundle | undefined {
 	const { bundle } = life;
@@ -50,6 +52,26 @@ export function cutRoom(life: RoomLife, t: number): RoomBundle | undefined {
 		return bundle;
 	}
 
+	const reported = reportedUntil(life, t);
+
+	// Just before the last signal: what the reconciler closes at it is still open.
+	return reported < t ? cut(life, reported - 1, reported) : cut(life, t, t);
+}
+
+/**
+ * The instant up to which a room has reported at `t`: `t`, or the last signal of a room the reconciler has found
+ * silent and not closed yet.
+ */
+export function reportedUntil(life: RoomLife, t: number): number {
+	const { closureAt, room } = life.bundle;
+	const endedAt = room.endedAt?.getTime();
+
+	return closureAt !== undefined && endedAt !== undefined && endedAt <= t && t < closureAt ? endedAt : t;
+}
+
+/** The entities as they are at `t`, with the stats flushed up to `statsAt`. */
+function cut(life: RoomLife, t: number, statsAt: number): RoomBundle {
+	const { bundle } = life;
 	const by = (at: Date | null): at is Date => at !== null && at.getTime() <= t;
 	const subscriptions = bundle.subscriptions.filter((s) => by(s.subscribedAt)).map((s) => cutSubscription(s, by));
 	const tracks = bundle.tracks.filter((tr) => by(tr.publishedAt)).map((tr) => cutTrack(tr, subscriptions, by));
@@ -61,7 +83,7 @@ export function cutRoom(life: RoomLife, t: number): RoomBundle | undefined {
 	const ingresses = bundle.ingresses.filter((i) => by(i.createdAt)).map((i) => cutIngress(i, ingressSessions, by));
 	const { room } = bundle;
 	const open = !by(room.endedAt);
-	const cut: RoomBundle = {
+	const result: RoomBundle = {
 		room: deriveRoom(
 			open
 				? {
@@ -87,9 +109,23 @@ export function cutRoom(life: RoomLife, t: number): RoomBundle | undefined {
 		apiCalls: bundle.apiCalls.filter((call) => by(call.at))
 	};
 
-	applyStats(cut, life.engine, t, life.statsMode);
+	// The final stats of what has closed are those of its life, whatever the instant of the cut.
+	const published = new Map(tracks.filter((tr) => tr.publishStats !== null).map((tr) => [tr, tr.publishStats]));
+	const subscribed = new Map(
+		subscriptions.filter((sub) => sub.subscribeStats !== null).map((sub) => [sub, sub.subscribeStats])
+	);
 
-	return cut;
+	applyStats(result, life.engine, statsAt, life.statsMode);
+
+	for (const [tr, stats] of published) {
+		tr.publishStats = stats;
+	}
+
+	for (const [sub, stats] of subscribed) {
+		sub.subscribeStats = stats;
+	}
+
+	return result;
 }
 
 type Happened = (at: Date | null) => at is Date;
@@ -272,5 +308,8 @@ function lastInstant(bundle: RoomBundle): number {
 		...bundle.apiCalls.map((call) => call.at)
 	];
 
-	return Math.max(...instants.map((at) => at?.getTime() ?? Number.POSITIVE_INFINITY));
+	return Math.max(
+		bundle.closureAt ?? Number.NEGATIVE_INFINITY,
+		...instants.map((at) => at?.getTime() ?? Number.POSITIVE_INFINITY)
+	);
 }

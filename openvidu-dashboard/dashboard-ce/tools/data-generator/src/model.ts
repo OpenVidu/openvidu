@@ -310,8 +310,14 @@ export interface RoomBundle {
 	/** Mean MOS of each participant session, used by the stats and rollup derivation. */
 	meanScores: Map<string, number>;
 	/** Server API calls about the room, counted in the hourly and daily rollups; the writer never stores them raw. */
-	apiCalls: ApiCall[]; /** What each participant flushed, period by period, once the stats are applied (`applyStats`). */
+	apiCalls: ApiCall[];
+	/** What each participant flushed, period by period, once the stats are applied (`applyStats`). */
 	traffic?: Map<string, FlushTraffic[]>;
+	/**
+	 * When the reconciler's closure of the room is written, 3 to 4 minutes after the last signal it is dated at, in a
+	 * live room; absent when the closure is written at that signal.
+	 */
+	closureAt?: number;
 }
 
 export interface ApiCall {
@@ -362,6 +368,20 @@ export interface RoomPlan {
 	hosts: readonly RoomHost[];
 	/** Kept open until its server ends: the room of a lost server that the reconciler closes. */
 	heldOpen?: boolean;
+	/** A room the live writer creates after the generation instant (`live.ts`). */
+	live?: LiveRoomPlan;
+}
+
+/**
+ * What sets a room the live writer creates apart: its egress and ingress shares, and the short-lived states of a live
+ * room (slow connections, egresses 20 to 60 s starting and ending, ingress sessions buffering 1 to 2 minutes, every
+ * reconciler closure dated at a last signal and written 3 to 4 minutes after it). A `stale` room stops reporting 5 to
+ * 25 minutes after its creation and is closed by the reconciler.
+ */
+export interface LiveRoomPlan {
+	egressShare: number;
+	ingressShare: number;
+	stale: boolean;
 }
 
 const MINUTE = 60_000;
@@ -373,6 +393,11 @@ const FLUSH_MS = 30_000;
 const POOR_SCORE = 2.06;
 const LOST_SCORE = 1.25;
 const AUDIO_BITRATE = 32_000;
+/**
+ * Share of the STANDARD sessions of a live room that connect slowly, 60 to 180 s, so that about one room in seven in
+ * progress holds a session still connecting.
+ */
+const SLOW_CONNECTIONS = 0.5;
 /** End and disconnect reason of a reconciler closure. */
 const RECONCILED = 'RECONCILED';
 
@@ -487,13 +512,19 @@ export function generateRoom(ctx: GeneratorContext, plan: RoomPlan): RoomBundle 
 	const host = rng.pick(plan.hosts);
 	const { nodeId, mediaNode } = host;
 	// Rooms created and never joined, as an application that prepares its rooms ahead does.
-	const empty = !plan.active && ctx.shapeRng.chance(0.03) && plan.heldOpen !== true;
-	const hasEgress = rng.chance(0.3) && !empty;
-	const hasIngress = rng.chance(0.02) && !empty;
+	const { live } = plan;
+	const empty = !plan.active && ctx.shapeRng.chance(0.03) && plan.heldOpen !== true && live?.stale !== true;
+	const hasEgress = rng.chance(live?.egressShare ?? 0.3) && !empty;
+	const hasIngress = rng.chance(live?.ingressShare ?? 0.02) && !empty;
 	const hasAgent = rng.chance(0.05) && !empty;
 	const hasSip = rng.chance(0.01) && !empty;
 	// A room in progress ends on its own, the departure timeout after its last participant leaves.
 	let endReason = plan.active ? 'IDLE_TIMEOUT' : pickEndReason(rng);
+
+	if (live?.stale === true) {
+		endReason = RECONCILED;
+	}
+
 	let closedBy: 'event' | 'reconciler' = endReason === RECONCILED ? 'reconciler' : 'event';
 	// A room the reconciler closes while its server runs is no longer listed by it; one of a lost server, dead.
 	let reconcilerReason = closedBy === 'reconciler' ? 'absent-live' : null;
@@ -533,7 +564,19 @@ export function generateRoom(ctx: GeneratorContext, plan: RoomPlan): RoomBundle 
 			}
 
 			remaining = last ? 0 : remaining - length + rng.int(0, 5 * MINUTE);
-			const session = standardSession(ctx, base, identity, joinedAt, length, last ? null : 'DUPLICATE_IDENTITY');
+			const slow =
+				live !== undefined && rng.chance(SLOW_CONNECTIONS)
+					? { connectMs: rng.int(MINUTE, 179_000), aborts: rng.chance(1 / 3) }
+					: undefined;
+			const session = standardSession(
+				ctx,
+				base,
+				identity,
+				joinedAt,
+				length,
+				last ? null : 'DUPLICATE_IDENTITY',
+				slow
+			);
 			sessions.push(session);
 			joinedAt = session.leftAt + rng.int(1_000, 3_000);
 		}
@@ -590,18 +633,20 @@ export function generateRoom(ctx: GeneratorContext, plan: RoomPlan): RoomBundle 
 		);
 	}
 
-	const ingressPlan = hasIngress ? planIngress(ctx, base, plan.active) : undefined;
+	const ingressPlan = hasIngress ? planIngress(ctx, base, plan.active, live !== undefined) : undefined;
 	const ingressParticipants: Session[] = [];
 
 	for (const [index, planned] of (ingressPlan?.sessions ?? []).entries()) {
+		// Its INGRESS participant joins as it publishes, once it has buffered.
+		const joinedAt = planned.startedAt + planned.bufferMs + 500;
 		const participant = serviceSession(
 			// The first session draws from the room's stream, as it always did; the later ones from the ingress stream.
 			index === 0 ? ctx : { ...ctx, rng: ctx.ingressRng },
 			base,
 			'INGRESS',
 			ingressPlan?.identity ?? '',
-			planned.startedAt + 1_000,
-			(planned.endedAt ?? openUntil) - planned.startedAt - 1_000,
+			joinedAt,
+			(planned.endedAt ?? openUntil) - joinedAt,
 			true
 		);
 		ingressParticipants.push(participant);
@@ -615,7 +660,8 @@ export function generateRoom(ctx: GeneratorContext, plan: RoomPlan): RoomBundle 
 	let endedAt: number;
 
 	if (plan.active) {
-		endedAt = Math.max(naturalEnd, openUntil) + departureTimeoutMs;
+		// Its last participant stays until `openUntil`, unless it aborted: the room then empties at the instant.
+		endedAt = Math.max(naturalEnd, now) + departureTimeoutMs;
 	} else {
 		endedAt = naturalEnd + departureTimeoutMs;
 
@@ -625,6 +671,13 @@ export function generateRoom(ctx: GeneratorContext, plan: RoomPlan): RoomBundle 
 			// The room and the sessions still in it stopped reporting without their closing events, and the server no
 			// longer lists them: the reconciler closes them at their last signal.
 			endedAt = plan.createdAt + Math.round((naturalEnd - plan.createdAt) * ctx.mediaRng.float(0.5, 0.95));
+
+			if (live !== undefined) {
+				const stop = live.stale
+					? Math.min(naturalEnd, plan.createdAt + rng.int(5 * MINUTE, 25 * MINUTE))
+					: endedAt;
+				endedAt = lastFlush(sessions, stop) ?? endedAt;
+			}
 		}
 
 		endedAt = Math.min(endedAt, now - MINUTE);
@@ -658,22 +711,24 @@ export function generateRoom(ctx: GeneratorContext, plan: RoomPlan): RoomBundle 
 		ingressSessions.push(...built.sessions);
 	}
 
-	const extra = extraIngresses(ctx, base, plan.active, roomEnd, closeReason, closedBy);
+	const extra = extraIngresses(ctx, base, plan.active, roomEnd, closeReason, closedBy, live !== undefined);
 	ingresses.push(...extra.ingresses);
 	ingressSessions.push(...extra.sessions);
 	sessions.push(...extra.participants);
 
 	if (hasEgress) {
 		const egressCtx: GeneratorContext = { ...ctx, rng: ctx.egressRng };
-		egresses = [buildEgress(ctx, base, plan.active, roomEnd, closedBy, sessions)];
+		egresses = [buildEgress(ctx, base, plan.active, roomEnd, closedBy, sessions, live !== undefined)];
 
 		// A second egress beside the first, a recording and a stream or the other way round.
 		if (ctx.egressRng.chance(0.15)) {
-			egresses.push(buildEgress(egressCtx, base, plan.active, roomEnd, closedBy, sessions));
+			egresses.push(buildEgress(egressCtx, base, plan.active, roomEnd, closedBy, sessions, live !== undefined));
 		}
 
-		// An egress requested once the room had ended never starts.
-		egresses = egresses.filter((e) => e.startedAt.getTime() < roomEnd - 10_000);
+		// An egress requested once the room had ended never starts; in a live room, one requested too late to record
+		// and stop before the room ends.
+		const latest = roomEnd - (live === undefined ? 10_000 : 2 * MINUTE);
+		egresses = egresses.filter((e) => e.startedAt.getTime() < latest);
 
 		for (const [index, egress] of egresses.entries()) {
 			const participant = egressParticipant(index === 0 ? ctx : egressCtx, base, egress);
@@ -748,7 +803,28 @@ export function generateRoom(ctx: GeneratorContext, plan: RoomPlan): RoomBundle 
 	};
 	bundle.apiCalls = apiCalls(ctx, bundle);
 
+	// The reconciler finds a live room silent after 90 s, confirms it on its next run and writes the closure.
+	if (live !== undefined && closedBy === 'reconciler') {
+		bundle.closureAt = roomEnd + rng.int(3 * MINUTE, 4 * MINUTE);
+	}
+
 	return bundle;
+}
+
+/**
+ * The last stats flush of a STANDARD session at or before `at`: the last signal of a room that stops reporting at
+ * `at`. Undefined when none has flushed by then.
+ */
+function lastFlush(sessions: readonly Session[], at: number): number | undefined {
+	const flushes = sessions.flatMap((s) => {
+		const until = Math.min(at, s.leftAt);
+
+		return s.doc.kind === 'STANDARD' && !neverActive(s) && s.activeAt + FLUSH_MS <= until
+			? [s.activeAt + Math.floor((until - s.activeAt) / FLUSH_MS) * FLUSH_MS]
+			: [];
+	});
+
+	return flushes.length === 0 ? undefined : Math.max(...flushes);
 }
 
 /** The fields of a room that `deriveRoom()` computes from the entities in it. */
@@ -1650,7 +1726,8 @@ function buildEgress(
 	roomActive: boolean,
 	roomEndedAt: number,
 	roomClosedBy: 'event' | 'reconciler',
-	sessions: readonly Session[]
+	sessions: readonly Session[],
+	live = false
 ): EgressDoc {
 	const { rng, now } = ctx;
 	const variety = ctx.egressRng;
@@ -1696,7 +1773,15 @@ function buildEgress(
 				: null;
 	}
 
-	let activeAt = startedAt + rng.int(2_000, 6_000);
+	// A live egress takes 20 to 60 s to start recording, and as long to finish once stopped.
+	let activeAt = startedAt + (live ? rng.int(20_000, 60_000) : rng.int(2_000, 6_000));
+	const endingMs = live ? rng.int(20_000, 60_000) : 1_000;
+
+	if (live && (status === 'failed' || status === 'aborted')) {
+		// It fails or is aborted once it records.
+		endedAt = Math.min(roomEndedAt, Math.max(endedAt, activeAt + 5_000));
+	}
+
 	const id = rng.id('EG_');
 	const source = egressSource(type, sessions, startedAt, rng.chance(0.3));
 	let endingAt: number | null;
@@ -1710,12 +1795,12 @@ function buildEgress(
 		} else if (status === 'complete' && variety.chance(0.05)) {
 			status = 'limit_reached';
 			endedAt = Math.max(
-				activeAt + 1_000,
+				activeAt + endingMs,
 				Math.round(startedAt + (endedAt - startedAt) * variety.float(0.5, 0.9))
 			);
 		}
 
-		endingAt = status === 'complete' || status === 'limit_reached' ? endedAt - 1_000 : null;
+		endingAt = status === 'complete' || status === 'limit_reached' ? endedAt - endingMs : null;
 	} else {
 		const draw = variety.next();
 		const stopAt = Math.round(activeAt + (now - MINUTE - activeAt) * variety.float(0.2, 0.9));
@@ -1903,14 +1988,14 @@ interface IngressPlan {
 	identity: string;
 	name: string;
 	roomName: string;
-	sessions: { startedAt: number; endedAt: number | null; failed: boolean }[];
+	sessions: { startedAt: number; endedAt: number | null; failed: boolean; bufferMs: number }[];
 }
 
 /**
  * The ingress of a room and the sessions it publishes: one, or for a reusable ingress up to three in a row, as a
  * publisher that stops and starts again does. The first session takes the room's draws.
  */
-function planIngress(ctx: GeneratorContext, base: RoomBase, roomActive: boolean): IngressPlan {
+function planIngress(ctx: GeneratorContext, base: RoomBase, roomActive: boolean, live: boolean): IngressPlan {
 	const { rng, now } = ctx;
 	const more = ctx.ingressRng;
 	const id = rng.id('IN_');
@@ -1919,7 +2004,9 @@ function planIngress(ctx: GeneratorContext, base: RoomBase, roomActive: boolean)
 		['whip', 30],
 		['url', 10]
 	]);
-	const createdAt = base.createdAt - rng.int(60_000, 600_000);
+	const ahead = rng.int(60_000, 600_000);
+	// A live room's application creates the ingress with the room, so that nothing of it is dated before the room.
+	const createdAt = live ? base.createdAt : base.createdAt - ahead;
 	const startedAt = base.createdAt + rng.int(5_000, 60_000);
 	const failed = !roomActive && rng.chance(0.05);
 	let endedAt = roomActive ? null : Math.min(now - MINUTE, startedAt + sessionDuration(rng));
@@ -1932,7 +2019,9 @@ function planIngress(ctx: GeneratorContext, base: RoomBase, roomActive: boolean)
 		endedAt = startedAt + firstLength;
 	}
 
-	const sessions: IngressPlan['sessions'] = [{ startedAt, endedAt, failed }];
+	// A live ingress session buffers 1 to 2 minutes before it publishes, any other for half a second.
+	const bufferMs = () => (live ? more.int(MINUTE, 2 * MINUTE) : 500);
+	const sessions: IngressPlan['sessions'] = [{ startedAt, endedAt, failed, bufferMs: bufferMs() }];
 
 	for (let i = 0; i < extra; i += 1) {
 		const previous = sessions[sessions.length - 1];
@@ -1946,7 +2035,7 @@ function planIngress(ctx: GeneratorContext, base: RoomBase, roomActive: boolean)
 
 		const start = previous.endedAt + gap;
 		const end = start + length >= now - MINUTE ? (roomActive ? null : now - MINUTE) : start + length;
-		sessions.push({ startedAt: start, endedAt: end, failed: end !== null && sessionFailed });
+		sessions.push({ startedAt: start, endedAt: end, failed: end !== null && sessionFailed, bufferMs: bufferMs() });
 	}
 
 	return {
@@ -1984,7 +2073,7 @@ function finishIngress(
 				base,
 				plan,
 				index === 0 ? plan.firstSessionId : ctx.ingressRng.id(INGRESS_SESSION_PREFIXES[plan.inputType]),
-				{ startedAt, publishedAt: startedAt + 500, participant },
+				{ startedAt, publishedAt: startedAt + planned.bufferMs, participant },
 				planned.failed
 			)
 		);
@@ -2092,7 +2181,8 @@ function extraIngresses(
 	roomActive: boolean,
 	roomEnd: number,
 	closeReason: string,
-	closedBy: 'event' | 'reconciler'
+	closedBy: 'event' | 'reconciler',
+	live: boolean
 ): { ingresses: IngressDoc[]; sessions: IngressSessionDoc[]; participants: Session[] } {
 	const { now } = ctx;
 	const rng = ctx.ingressRng;
@@ -2103,7 +2193,9 @@ function extraIngresses(
 	const participants: Session[] = [];
 
 	if (unused) {
-		const createdAt = Math.max(ctx.windowStart, base.createdAt - rng.int(10 * MINUTE, 3 * 24 * 60 * MINUTE));
+		const ahead = rng.int(10 * MINUTE, 3 * 24 * 60 * MINUTE);
+		// Created with the room in a live room, so that nothing of it is dated before the room.
+		const createdAt = live ? base.createdAt : Math.max(ctx.windowStart, base.createdAt - ahead);
 		const plan: IngressPlan = {
 			id: rng.id('IN_'),
 			firstSessionId: '',
