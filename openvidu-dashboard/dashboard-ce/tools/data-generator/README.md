@@ -233,7 +233,8 @@ interval between ticks, and a tick of scenario S takes about 60 ms on a single n
 - Rooms: drawn a UTC hour at a time, from the seed, the generation instant and the hour, on the daily curve at the
   pace of the scenario, and rooms added in any minute that would hold fewer than 10 rooms in progress. Their names
   continue after the generated ones; half of them have an egress and one in ten an ingress (the generation keeps 30 %
-  and 2 %).
+  and 2 %). Each draws from streams keyed by the seed, the world start and its number (`KeyedRng` in `src/random.ts`),
+  whose ids come from SHA-256 (`hashId()`), so no two rooms share an id however long the writer runs.
 - Short-lived states: half of the STANDARD sessions of a live room connect in 60 to 180 s, a third of those aborting,
   so about one room in eleven in progress holds a session still connecting; egresses take 20 to 60 s to start and as
   long to end once stopped; ingress sessions buffer 1 to 2 minutes; ingresses are created with their room.
@@ -250,15 +251,20 @@ interval between ticks, and a tick of scenario S takes about 60 ms on a single n
   with the engine and heartbeat interval of the machine's previous server. Rooms open at a stop end with
   `SERVER_SHUTDOWN`; those of a lost server are closed by the reconciler (`node-dead`).
 - Restart on kept data (`pnpm live`, `restartLive()` in `src/restart.ts`): the time since the last heartbeat (the
-  freshest `lastSeenAt` of a running server) is an outage. Every room, session, track, subscription, egress and ingress
+  freshest `lastSeenAt` of any server, running or not) is an outage, and the restart starts at the later of the
+  requested instant and the minute after that heartbeat. Every room, session, track, subscription, egress and ingress
   session still open is closed as the reconciler does after a `node-dead` confirmation, at the room's last signal and
   never after that heartbeat, with its synthetic events, `rooms.reconciled` on its server and the rollups of each
-  closure; the servers alive then stay lost and each of their machines gets a new server at the restart; a new world
-  is drawn from the seed and the restart, with no room floor for the 10 minutes after it. Nothing is dated in the gap.
+  closure (an ingress session closed while buffering counts as ended, not started). The servers alive then stay lost
+  and each of their machines gets a new server at the restart; the server timeline goes on from the heartbeat, so a
+  machine lost in the 6 hours before it returns at the later of its loss + 6 hours and the restart, one lost earlier
+  stays silent, and a single node stopped in its daily restart gets a new server at the restart. A new world is drawn
+  from the seed and the restart, with no room floor for the 10 minutes after it. Nothing is dated in the gap.
 - Frozen and live demos: `./dashboard.sh demo` takes `DASHBOARD_DEMO_DATA`, `frozen` by default or `live`. `frozen`
   runs the keep-alive after the generation, which moves only the heartbeats of the alive servers and the stats times of
   the active rooms and sessions, whatever wrote the data; `live` runs `generate --live`, or `pnpm live` with
-  `DASHBOARD_DEMO_KEEP_DATA=true`.
+  `DASHBOARD_DEMO_KEEP_DATA=true`. A live writer that fails, at the generation or at any later tick, stops the demo
+  after printing the end of its log.
 - Growth: the writer sets `expiresAt` as the OpenVidu writer does and the TTL monitor removes what expires, so stats,
   events, tracks and 5-minute rollups stay within 7 days, entities grow up to their 90-day retention and hourly rollups
   add 24 documents a day. A live day of the CE demo's options (scenario S, five-minute rollups and room sums, a single
@@ -302,5 +308,5 @@ interval between ticks, and a tick of scenario S takes about 60 ms on a single n
 | `src/cli.ts`        | Options of both scripts and the 10 s tick loop                                               |
 | `src/context.ts`    | `queryContext(db)`: data range and sample identifiers for query plan tests                   |
 | `src/plan.ts`       | Explain summaries: plan stages, indexes, documents examined                                  |
-| `src/random.ts`     | mulberry32 generator and sampling helpers                                                    |
+| `src/random.ts`     | mulberry32 generator and sampling helpers, `hashRng()`, `KeyedRng` and `hashId()`            |
 | `src/args.ts`       | CLI argument parsing                                                                         |
