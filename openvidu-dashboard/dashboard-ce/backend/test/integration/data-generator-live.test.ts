@@ -569,6 +569,7 @@ describe.skipIf(mongoUri === '')('live data generator', () => {
 				'payload.track.source': 'CAMERA'
 			});
 			let checked = 0;
+			let bounded = 0;
 
 			for (const muted of toggled) {
 				const unmuted = await db()
@@ -595,6 +596,54 @@ describe.skipIf(mongoUri === '')('live data generator', () => {
 					}),
 					muted._id
 				).toBe(0);
+
+				// The first flush after M, while still muted, carries only what the camera sent before M: upstream bytes
+				// are the track's constant bitrate over the time sent, times 0.85 to 1.15, so at most the previous full
+				// flush's bytes scaled to the time between that flush and M. Checked where the previous flush covered
+				// 30 s of sending; a flush dated after U also carries what was sent after the unmute.
+				const up = { 'meta.trackSid': muted.trackSid, 'meta.kind': 'up' };
+				const first = await stats.findOne(
+					{
+						...up,
+						ts: {
+							$gt: muted.ts,
+							$lte: new Date(Math.min(time(muted.ts) + 30 * SECOND, time(unmuted.ts as Date)))
+						}
+					},
+					{ sort: { ts: 1 } }
+				);
+				const [previous, beforePrevious] = await stats
+					.find({ ...up, ts: { $lte: muted.ts } })
+					.sort({ ts: -1 })
+					.limit(2)
+					.toArray();
+				const sendingSince = await db()
+					.collection<Keyed>('events')
+					.findOne(
+						{
+							type: { $in: ['TRACK_PUBLISHED', 'TRACK_UNMUTED'] },
+							trackSid: muted.trackSid,
+							ts: { $lt: muted.ts }
+						},
+						{ sort: { ts: -1 } }
+					);
+				const at = (doc: Document | undefined | null) => time(doc?.ts as Date | undefined);
+
+				if (
+					first !== null &&
+					previous !== undefined &&
+					beforePrevious !== undefined &&
+					at(previous) - at(beforePrevious) === 30 * SECOND &&
+					at(sendingSince) <= at(beforePrevious)
+				) {
+					const sentBeforeMute = (time(muted.ts) - at(previous)) / (30 * SECOND);
+
+					expect(Number(first.bytes), muted._id).toBeLessThanOrEqual(
+						Number(previous.bytes) * sentBeforeMute * (1.15 / 0.85) + 1
+					);
+					bounded += 1;
+				}
+
 				expect(
 					await stats.countDocuments({ 'meta.participantSid': session._id, ts: { $gt: session.leftAt } }),
 					session._id
@@ -604,6 +653,7 @@ describe.skipIf(mongoUri === '')('live data generator', () => {
 			}
 
 			expect(checked).toBeGreaterThan(0);
+			expect(bounded).toBeGreaterThan(0);
 		});
 	});
 
