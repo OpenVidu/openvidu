@@ -56,19 +56,48 @@ demo_data_mode() {
 	esac
 }
 
+# run_live_writer <log, or "" for the terminal> <data generator script and options...>: runs that script of the data
+# generator in the background, in LIVE_WRITER_PID. When it fails, at generation or at any later tick, it prints the
+# end of the log and stops the demo, which would otherwise go on serving data that no longer moves.
+run_live_writer() {
+	local log="$1"
+	local demo=$$
+
+	shift
+	(
+		status=0
+
+		if [ -n "$log" ]; then
+			pnpm --silent --dir "$TOOLS_DIR/data-generator" run "$@" >"$log" 2>&1 || status=$?
+		else
+			pnpm --silent --dir "$TOOLS_DIR/data-generator" run "$@" || status=$?
+		fi
+
+		# From 128 on, a signal stopped it: the demo is stopping.
+		if [ "$status" -ne 0 ] && [ "$status" -lt 128 ]; then
+			echo "The live writer of the data generator failed (exit code $status); stopping the demo" >&2
+
+			if [ -n "$log" ]; then
+				tail -n 20 "$log" >&2
+			fi
+
+			kill -TERM "$demo"
+		fi
+	) &
+	LIVE_WRITER_PID=$!
+	PIDS+=("$LIVE_WRITER_PID")
+}
+
 # start_live_generation <generator options...>: the generation, then its live writer in the background; returns once
 # the generation is written.
 start_live_generation() {
 	local log="$WORK_DIR/generate.log"
-	local pid
 
-	pnpm --silent --dir "$TOOLS_DIR/data-generator" run generate "$@" --live >"$log" 2>&1 &
-	pid=$!
-	PIDS+=("$pid")
+	run_live_writer "$log" generate "$@" --live
 
-	until grep -q '^Writing live' "$log"; do
-		if ! kill -0 "$pid" 2>/dev/null; then
-			cat "$log" >&2
+	until grep -qs '^Writing live' "$log"; do
+		# run_live_writer has printed why and stops the demo.
+		if ! kill -0 "$LIVE_WRITER_PID" 2>/dev/null; then
 			exit 1
 		fi
 
@@ -115,8 +144,7 @@ prepare_data() {
 			pnpm --silent --dir "$TOOLS_DIR/data-generator" run generate "${world[@]}" "${generation[@]}" | tail -2
 		fi
 	elif [ "$DEMO_DATA" = live ]; then
-		pnpm --silent --dir "$TOOLS_DIR/data-generator" run live "${world[@]}" &
-		PIDS+=("$!")
+		run_live_writer "" live "${world[@]}"
 	fi
 
 	if [ "$DEMO_DATA" = frozen ]; then

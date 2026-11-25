@@ -80,5 +80,8 @@ start_frontend() {
 		proxy=(--proxy-config "$WORK_DIR/proxy-$2.json")
 	fi
 
-	pnpm --silent --dir "$1" run dev --port "$2" "${proxy[@]}"
+	# In the background, so the cleanup stops it too when something else stops the session.
+	pnpm --silent --dir "$1" run dev --port "$2" "${proxy[@]}" &
+	PIDS+=("$!")
+	wait "$!"
 }

@@ -11,14 +11,24 @@ const stubs = mkdtempSync(join(tmpdir(), 'demo-data-mode-'));
 const calls = join(stubs, 'calls.log');
 
 // pnpm and docker stand-ins that record their calls: Docker reports a running MongoDB, the generator writes its summary
-// and the long-running scripts (the live writer, the keep-alive) wait to be stopped.
+// and the long-running scripts (the live writer, the keep-alive, the frontend) wait to be stopped. STUB_LIVE_FAILS makes the live
+// writer fail at the generation or at its first tick.
 writeFileSync(
 	join(stubs, 'pnpm'),
 	`#!/usr/bin/env bash
 echo "pnpm $*" >>"${calls}"
+fail_tick() {
+	if [ "\${STUB_LIVE_FAILS:-}" = tick ]; then sleep 1; echo 'E11000 duplicate key error' >&2; exit 1; fi
+}
 case " $* " in
-	*" --live "*) echo '  total 1'; echo 'Writing live every 10 s'; exec sleep 30 ;;
-	*" run live "* | *" run keep-alive "*) exec sleep 30 ;;
+	*" --live "*)
+		echo '  total 1'
+		if [ "\${STUB_LIVE_FAILS:-}" = generation ]; then echo 'Document failed validation' >&2; exit 1; fi
+		echo 'Writing live every 10 s'
+		fail_tick
+		exec sleep 30 ;;
+	*" run live "*) fail_tick; exec sleep 30 ;;
+	*" run keep-alive "* | *" run dev "*) exec sleep 30 ;;
 	*) echo '  total 1'; echo 'Elapsed 1 s' ;;
 esac
 `
@@ -101,6 +111,42 @@ describe('demo data modes', () => {
 			assert.ok(pnpm(kept)[0].includes(' run live '));
 			assert.ok(withOptions(pnpm(kept)[0]));
 			assert.ok(!pnpm(kept)[0].includes('--drop'));
+		});
+	}
+
+	for (const [when, env, error] of [
+		['at the generation', { STUB_LIVE_FAILS: 'generation' }, /Document failed validation/],
+		['at a tick', { STUB_LIVE_FAILS: 'tick' }, /E11000 duplicate key error/],
+		['at a tick on kept data', { STUB_LIVE_FAILS: 'tick', DASHBOARD_DEMO_KEEP_DATA: 'true' }, /E11000/]
+	]) {
+		test(`Demo data mode selection: a live writer that fails ${when} stops the demo with its error`, () => {
+			// The frontend would serve for 30 s after the data is prepared.
+			const script = [
+				'set -euo pipefail',
+				'DATABASE=demo_test',
+				'STATS_MODE=participant',
+				'source dashboard-ce/tools/demo-lib.sh',
+				'prepare_data',
+				'start_frontend dashboard-ce/frontend 4200 5000'
+			].join('\n');
+			const started = Date.now();
+			const result = spawnSync('bash', ['-c', script], {
+				cwd: root,
+				encoding: 'utf8',
+				timeout: 15_000,
+				env: {
+					...process.env,
+					PATH: `${stubs}:${process.env.PATH ?? ''}`,
+					DASHBOARD_DEMO_DATA: 'live',
+					...env
+				}
+			});
+
+			assert.equal(result.error, undefined, 'the demo went on after its live writer failed');
+			assert.notEqual(result.status, 0);
+			assert.ok(Date.now() - started < 10_000);
+			assert.match(result.stderr, /live writer of the data generator failed \(exit code 1\)/);
+			assert.match(result.stderr, error);
 		});
 	}
 
