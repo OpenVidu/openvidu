@@ -49,12 +49,12 @@
 
 ## 4. Restart on kept data, demo modes and documentation (implementer)
 
-- [ ] 4.1 Add the `live` script (`src/live-cli.ts`, `pnpm live`) for the restart on kept data (design decision 7). It
+- [x] 4.1 Add the `live` script (`src/live-cli.ts`, `pnpm live`) for the restart on kept data (design decision 7). It
   closes the open entities as the reconciler does at their last signal with `node-dead`, leaves the alive servers lost,
   starts a new server per machine, draws the world from the restart instant and ticks. Cover "Live restart after a stop"
   (both the `live` and the `frozen` previous run) in `data-generator-live.test.ts`. Verify with
   `./dashboard.sh test-integration`.
-- [ ] 4.2 Add `demo_data_mode` to `dashboard-ce/tools/demo-lib.sh` (decision 8). It reads `DASHBOARD_DEMO_DATA`,
+- [x] 4.2 Add `demo_data_mode` to `dashboard-ce/tools/demo-lib.sh` (decision 8). It reads `DASHBOARD_DEMO_DATA`,
   default `frozen`, and fails on other values before Docker. `prepare_data` runs `generate` and `keep-alive` in
   `frozen`; in `live` it runs `generate --live`, or `live` with kept data, passing `STATS_MODE` and `GENERATOR_ARGS` in
   every mode. Cover "Demo data mode selection" and "Unknown demo data mode" in `test/demo-data-mode.test.mjs`. Cover
