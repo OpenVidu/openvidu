@@ -215,7 +215,7 @@ at an instant (`cutRoom(life, t)` in `src/cut.ts`): what starts after `t` is lef
 state (no end, closer, final stats or expiry; a session `joining` until active, an egress status from its history, an
 ingress session `buffering` until it publishes), the mutes and resumes are those up to `t`, and the bytes, quality and
 `lastStatsAt` come from the stats flushed up to `t`. The generation writes every room cut at the generation instant: a
-room that ended before it is its whole life. A room planned active goes on 10 minutes to 5 hours after the generation
+room that ended before it is its whole life. A room planned active goes on 10 to 30 minutes after the generation
 instant, or less when its server stops or is lost first. Event `_id` values are a hash of the event's type, the ids it
 carries, its instant and its layer, so an event keeps its `_id` at any cut.
 

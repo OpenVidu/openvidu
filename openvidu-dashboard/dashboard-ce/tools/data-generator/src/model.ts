@@ -318,6 +318,11 @@ export interface RoomBundle {
 	 * live room; absent when the closure is written at that signal.
 	 */
 	closureAt?: number;
+	/**
+	 * Model only, never stored: the length drawn for each STANDARD session, by id, before the stretch that keeps a room
+	 * in progress at the generation instant; the session lasts less when it aborts or its room ends first.
+	 */
+	drawnLengths?: Map<string, number>;
 }
 
 export interface ApiCall {
@@ -385,7 +390,6 @@ export interface LiveRoomPlan {
 }
 
 const MINUTE = 60_000;
-const HOUR = 3_600_000;
 const DEPARTURE_TIMEOUT_MS = 20_000;
 const EMPTY_TIMEOUT_MS = 300_000;
 const FLUSH_MS = 30_000;
@@ -501,7 +505,7 @@ interface Session {
 
 /**
  * Draws the whole life of a room, from its creation to its end, with every entity closed; `cutRoom()` gives its state
- * at any instant. A room planned active is in progress at the generation instant and goes on for 10 minutes to 5 hours
+ * at any instant. A room planned active is in progress at the generation instant and goes on for 10 to 30 minutes
  * after it, unless its server ends it earlier, with the short-lived states of a room in progress around that instant:
  * a participant connecting, an egress starting or ending, an ingress buffering.
  */
@@ -528,11 +532,13 @@ export function generateRoom(ctx: GeneratorContext, plan: RoomPlan): RoomBundle 
 	let closedBy: 'event' | 'reconciler' = endReason === RECONCILED ? 'reconciler' : 'event';
 	// A room the reconciler closes while its server runs is no longer listed by it; one of a lost server, dead.
 	let reconcilerReason = closedBy === 'reconciler' ? 'absent-live' : null;
-	// Until when what is open at the generation instant goes on: 10 minutes to 5 hours more in a room in progress.
-	const openUntil = plan.active ? now + rng.int(10 * MINUTE, 5 * HOUR) : now;
+	// Until when what is open at the generation instant goes on: 10 to 30 minutes more in a room in progress, about what
+	// the history's rooms last.
+	const openUntil = plan.active ? now + rng.int(10 * MINUTE, 30 * MINUTE) : now;
 
 	const base: RoomBase = { roomSid, roomName: name, nodeId, mediaNode, createdAt: plan.createdAt };
 	const sessions: Session[] = [];
+	const drawnLengths = new Map<string, number>();
 	const drawnIdentities = Math.min(60, Math.max(1, rng.poisson(ctx.scenario.avgRoomSize)));
 	const identityCount = empty ? 0 : drawnIdentities;
 	const reconnects = rng.poisson(
@@ -555,6 +561,7 @@ export function generateRoom(ctx: GeneratorContext, plan: RoomPlan): RoomBundle 
 		for (let hop = 0; hop <= chain; hop += 1) {
 			const last = hop === chain;
 			let length = last ? remaining : Math.round(remaining * rng.float(0.2, 0.8));
+			const drawn = length;
 
 			// A room in progress keeps its last participant until it ends, a held one its first until its server ends.
 			if (plan.active && last && i === identityCount - 1) {
@@ -578,6 +585,7 @@ export function generateRoom(ctx: GeneratorContext, plan: RoomPlan): RoomBundle 
 				slow
 			);
 			sessions.push(session);
+			drawnLengths.set(session.doc._id, drawn);
 			joinedAt = session.leftAt + rng.int(1_000, 3_000);
 		}
 	}
@@ -586,7 +594,9 @@ export function generateRoom(ctx: GeneratorContext, plan: RoomPlan): RoomBundle 
 
 	// A participant of a room in progress who started connecting less than a minute before the generation instant.
 	if (plan.active && identityCount > 0 && ctx.mediaRng.chance(0.15)) {
-		sessions.push(slowJoiner(mediaCtx, base));
+		const joiner = slowJoiner(mediaCtx, base);
+		sessions.push(joiner.session);
+		drawnLengths.set(joiner.session.doc._id, joiner.length);
 	}
 
 	// Most applications keep the server's timeouts; some set their own.
@@ -801,7 +811,8 @@ export function generateRoom(ctx: GeneratorContext, plan: RoomPlan): RoomBundle 
 		ingresses,
 		ingressSessions,
 		meanScores: new Map(sessions.map((s) => [s.doc._id, s.meanScore])),
-		apiCalls: []
+		apiCalls: [],
+		drawnLengths
 	};
 	bundle.apiCalls = apiCalls(ctx, bundle);
 
@@ -2278,17 +2289,15 @@ function ingressDeletion(ctx: GeneratorContext, sessionEndedAt: number | null): 
  * A STANDARD participant of a room in progress who started connecting less than a minute before the generation
  * instant, over a slow connection: 60 to 180 s after joining it becomes active, or one time in three aborts.
  */
-function slowJoiner(ctx: GeneratorContext, base: RoomBase): Session {
+function slowJoiner(ctx: GeneratorContext, base: RoomBase): { session: Session; length: number } {
 	const { rng, now } = ctx;
 	const identity = `${rng.pick(FIRST_NAMES)}-${String(rng.int(1, 99_999)).padStart(5, '0')}`;
 	const joinedAt = now - rng.int(5_000, 59_000);
 	const connectMs = rng.int(60_000, 179_000);
 	const aborts = rng.chance(1 / 3);
+	const length = connectMs + sessionDuration(rng);
 
-	return standardSession(ctx, base, identity, joinedAt, connectMs + sessionDuration(rng), null, {
-		connectMs,
-		aborts
-	});
+	return { session: standardSession(ctx, base, identity, joinedAt, length, null, { connectMs, aborts }), length };
 }
 
 /** Never active: aborted before connecting, or still connecting. */

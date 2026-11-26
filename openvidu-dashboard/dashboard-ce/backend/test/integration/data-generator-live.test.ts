@@ -1039,6 +1039,49 @@ describe.skipIf(mongoUri === '')('live data generator', () => {
 		}, 600_000);
 	});
 
+	describe('the rooms in progress at the generation instant', () => {
+		const db = () => client.db('dashboard_test_live_generated_rooms');
+
+		afterAll(async () => {
+			await db().dropDatabase();
+		});
+
+		it('Generated rooms in progress stretched 30 minutes at most', async () => {
+			await db().dropDatabase();
+			const summary = await generate(db(), options({ days: 1 }));
+			const drawn = new Map(summary.world.lives.flatMap((life) => [...(life.bundle.drawnLengths ?? [])]));
+			const inProgress = await docs<RoomDocument>(db(), 'rooms', { status: 'active' });
+
+			expect(inProgress.length).toBeGreaterThanOrEqual(10);
+
+			await tickUntil(new LiveWriter(db(), summary.world), T, T + 100 * MINUTE, MINUTE);
+
+			for (const before of inProgress) {
+				const room = (await db()
+					.collection<Keyed>('rooms')
+					.findOne({ _id: before._id })) as RoomDocument | null;
+				const sessions = await docs<ParticipantDocument>(db(), 'participants', { roomSid: before._id });
+
+				for (const p of sessions.filter((s) => s.kind === 'STANDARD' && time(s.joinedAt) < T)) {
+					const length = drawn.get(p._id);
+					const bound = Math.max(T + 30 * MINUTE, time(p.joinedAt) + (length ?? Number.NaN));
+
+					expect([length !== undefined, time(p.leftAt) <= bound], p._id).toEqual([true, true]);
+				}
+
+				const lastLeave = Math.max(
+					T,
+					...sessions.filter((s) => s.kind !== 'EGRESS').map((s) => time(s.leftAt))
+				);
+
+				expect(
+					[room?.status, time(room?.endedAt) <= lastLeave + (before.config?.departureTimeoutMs ?? 0)],
+					before.name
+				).toEqual(['closed', true]);
+			}
+		}, 600_000);
+	});
+
 	describe('a live start on kept data at the edges of the server timeline', () => {
 		const db = () => client.db('dashboard_test_live_restart_edges');
 		const ingressCounters = async (bucket: number) => {
