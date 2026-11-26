@@ -108,12 +108,12 @@
 
 ## 7. PRO follow-up (orchestrator)
 
-- [ ] 7.1 In `/home/sergio/Escritorio/openvidu/openvidu-pro/openvidu-dashboard`:
+- [x] 7.1 In `/home/sergio/Escritorio/openvidu/openvidu-pro/openvidu-dashboard`:
   - set `ce.ref` to the pushed CE commit and run `./dashboard.sh ce-checkout` and `pnpm install`;
   - add the `DASHBOARD_DEMO_DATA=live` line next to `DASHBOARD_DEMO_DEPLOYMENT` in the PRO `README.md` command block;
   - add `DASHBOARD_DEMO_DATA` (`frozen` or `live`) to the demo description of the PRO `AGENTS.md` and of
     `dashboard-pro/AGENTS.md`;
   - run `./dashboard.sh check`, `./dashboard.sh test-integration` (the PRO query-plan suites generate the changed
     data) and `./dashboard.sh e2e`.
-- [ ] 7.2 The owner reviews `DASHBOARD_DEMO_DATA=live ./dashboard.sh demo pro|both`, with `DASHBOARD_DEMO_DEPLOYMENT`
+- [x] 7.2 The owner reviews `DASHBOARD_DEMO_DATA=live ./dashboard.sh demo pro|both`, with `DASHBOARD_DEMO_DEPLOYMENT`
   `single`, `elastic` and `ha`. Then push to `master` of `openvidu-pro` and wait for its CI to be green.

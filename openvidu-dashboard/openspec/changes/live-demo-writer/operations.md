@@ -49,3 +49,17 @@ What only the orchestrator knows: the owner's decisions, the rebase onto other w
 - Rebased without conflicts onto `origin/master` `eb61adfbf` (third-party versions in `openvidu-deployment` only) and
   pushed as `c6b963cbaeff03cdc982e57ca8f274c83d7503ff`.
 - OpenVidu Dashboard CI run 45845146799 is green: checks, unit, integration, contract and e2e.
+
+## PRO follow-up
+
+- `openvidu-pro` `566d89a7` moves `ce.ref` to `c6b963cba`, with the derived files and the lockfile. The PRO README,
+  both `AGENTS.md` and the PRO demo usage name `DASHBOARD_DEMO_DATA`.
+- Local runs: `check`, `ce-check` and `test-integration` (153 tests) pass. `e2e` was left to CI, because Playwright has
+  no Chromium for this Ubuntu 20.04.
+- The owner handed the PRO demo review to the orchestrator, which ran it live, touring every sidebar section and a
+  room and media node detail with no console or API error:
+  - elastic: the server draining at generation stopped 20 minutes after it and its machine returned with a 3.10.1
+    server 10 minutes later;
+  - single: three successive servers and no media nodes section;
+  - ha: the 16:00 UTC drain came on time.
+- OpenVidu Dashboard PRO CI run 45854783103 is green: checks, unit, integration and e2e.
