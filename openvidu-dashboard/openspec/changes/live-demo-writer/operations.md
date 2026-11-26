@@ -31,3 +31,15 @@ What only the orchestrator knows: the owner's decisions, the rebase onto other w
 - The verifier's guard comes from the PRO workspace's `ce.ref`, which predates `./dashboard.sh test-live`, so the
   verifier cannot run that suite. The implementer ran it at `b7acfd554`, the last code commit: 30 tests passed in
   16 min. `./dashboard.sh check` passed at that commit, run by the orchestrator.
+
+## Demo review (5.1)
+
+- The owner handed the review to the orchestrator, which toured every sidebar section of the CE demo with no console
+  or API error.
+- The first live run, from 08:58 to 12:17 UTC, showed the rooms in progress at generation going on for hours with one
+  participant. That led to task 1.4.
+- Live, at `dc1b052e5`, from 14:12 UTC:
+  - the 14 rooms in progress at generation closed 4 to 32 minutes after it;
+  - 45 minutes later, 10 rooms were active and 17 new ones had been created;
+  - stats, egress, ingress and agents moved.
+- Frozen, at the same commit: 14 rooms in progress, no room created after generation, and stats kept fresh.

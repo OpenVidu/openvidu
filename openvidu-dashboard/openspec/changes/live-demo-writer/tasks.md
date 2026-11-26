@@ -98,7 +98,7 @@
 
 ## 5. Review on the CE demo (owner)
 
-- [ ] 5.1 Run `DASHBOARD_DEMO_DATA=live ./dashboard.sh demo ce`, ideally for a few hours, and the default `frozen` demo.
+- [x] 5.1 Run `DASHBOARD_DEMO_DATA=live ./dashboard.sh demo ce`, ideally for a few hours, and the default `frozen` demo.
   Accept them or send findings.
 
 ## 6. CE push (orchestrator)
