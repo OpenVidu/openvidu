@@ -109,7 +109,9 @@ function cut(life: RoomLife, t: number, pending: boolean): RoomBundle {
 		ingresses,
 		ingressSessions,
 		meanScores: bundle.meanScores,
-		apiCalls: bundle.apiCalls.filter((call) => by(call.at))
+		apiCalls: bundle.apiCalls.filter((call) => by(call.at)),
+		// Model only, like the mean scores: what was drawn for the life, whatever the cut.
+		...(bundle.drawnLengths === undefined ? {} : { drawnLengths: bundle.drawnLengths })
 	};
 
 	// The final stats of what has closed are those of its life, whatever the instant of the cut.
