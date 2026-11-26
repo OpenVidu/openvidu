@@ -16,6 +16,9 @@ What only the orchestrator knows: the owner's decisions, the rebase onto other w
 - Slow connections: half of the live STANDARD sessions, about one room in eleven in progress holding a connecting
   session, instead of the one in seven first planned.
 - The live writer tests run in their own suite, `./dashboard.sh test-live`, out of `test-integration` and out of CI.
+- In the owner review of the live demo, rooms in progress at the generation instant went on for hours with one
+  participant, as decision 1 drew 10 minutes to 5 hours. They now go on 10 to 30 minutes after the instant, close to how
+  long the generated rooms last.
 
 ## Rebase
 
