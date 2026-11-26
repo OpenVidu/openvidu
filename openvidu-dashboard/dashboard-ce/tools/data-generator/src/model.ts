@@ -505,9 +505,11 @@ interface Session {
 
 /**
  * Draws the whole life of a room, from its creation to its end, with every entity closed; `cutRoom()` gives its state
- * at any instant. A room planned active is in progress at the generation instant and goes on for 10 to 30 minutes
- * after it, unless its server ends it earlier, with the short-lived states of a room in progress around that instant:
- * a participant connecting, an egress starting or ending, an ingress buffering.
+ * at any instant. A room planned active is in progress at the generation instant: its last identity's last session is
+ * stretched to 10 to 30 minutes after it when its drawn length ends earlier, every other session keeps its drawn
+ * length, and the room ends once its last session leaves, unless its server ends it earlier. It has the short-lived
+ * states of a room in progress around that instant: a participant connecting, an egress starting or ending, an ingress
+ * buffering.
  */
 export function generateRoom(ctx: GeneratorContext, plan: RoomPlan): RoomBundle {
 	const { rng, now } = ctx;
