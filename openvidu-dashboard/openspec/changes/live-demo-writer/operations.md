@@ -17,8 +17,8 @@ What only the orchestrator knows: the owner's decisions, the rebase onto other w
   session, instead of the one in seven first planned.
 - The live writer tests run in their own suite, `./dashboard.sh test-live`, out of `test-integration` and out of CI.
 - In the owner review of the live demo, rooms in progress at the generation instant went on for hours with one
-  participant, as decision 1 drew 10 minutes to 5 hours. They now go on 10 to 30 minutes after the instant, close to how
-  long the generated rooms last.
+  participant, as decision 1 drew 10 minutes to 5 hours. Their last participant now stays 10 to 30 minutes after the
+  instant; the other sessions keep their drawn lengths, so such a room closes when its last session leaves, as any room.
 
 ## Rebase
 
