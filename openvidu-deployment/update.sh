@@ -34,6 +34,16 @@ export LOKI_IMAGE="${LOKI_IMAGE:-docker.io/openvidu/grafana-loki:3.7.10-r0}"
 export MIMIR_IMAGE="${MIMIR_IMAGE:-docker.io/openvidu/grafana-mimir:3.2.6-r0}"
 export GRAFANA_IMAGE="${GRAFANA_IMAGE:-docker.io/grafana/grafana:12.4.15}"
 
+# Release lines. From 3.10.0 on, every minor X.Y is a release line: its patches X.Y.Z are cut from the release/X.Y
+# branches, and ${UPDATE_BASE_URL}/X.Y/update.sh always holds the update script of its latest patch. An upgrade moves
+# one release line at a time, always to the latest patch of each line, instead of through every published version.
+# A script accepts any older patch of its own line and any patch of the previous line.
+# Prepare Release appends every new minor to RELEASE_LINES; patches never change it.
+RELEASE_LINES="3.10"
+# The last minor before the release lines: its versions continue to the first release line.
+LEGACY_LAST_MINOR="3.9"
+
+# Exact upgrade path of the versions before the release lines. Frozen: it is not extended any more.
 get_next_version() {
   case "$1" in
     "3.0.0") echo "3.1.0" ;;
@@ -105,6 +115,240 @@ wait_for_docker() {
     done
 }
 
+# Release line (X.Y) of a version X.Y.Z
+minor_of() {
+  echo "$1" | cut -d. -f1,2
+}
+
+# True when version $1 is strictly lower than version $2
+version_lt() {
+  [ "$1" != "$2" ] && [ "$(printf '%s\n%s\n' "$1" "$2" | sort -V | head -n1)" = "$1" ]
+}
+
+first_release_line() {
+  set -- $RELEASE_LINES
+  echo "$1"
+}
+
+# True for versions handled by the release lines (>= first line .0)
+is_release_line_version() {
+  case "$1" in
+    [0-9]*.[0-9]*.[0-9]*) ! version_lt "$1" "$(first_release_line).0" ;;
+    *) return 1 ;;
+  esac
+}
+
+# Release line after $1, or nothing
+next_release_line() {
+  _found=""
+  for _line in $RELEASE_LINES; do
+    if [ -n "$_found" ]; then
+      echo "$_line"
+      return 0
+    fi
+    [ "$_line" = "$1" ] && _found="yes"
+  done
+  echo ""
+}
+
+# Minor before release line $1: the previous release line, or LEGACY_LAST_MINOR for the first one
+previous_minor() {
+  _prev="$LEGACY_LAST_MINOR"
+  for _line in $RELEASE_LINES; do
+    if [ "$_line" = "$1" ]; then
+      echo "$_prev"
+      return 0
+    fi
+    _prev="$_line"
+  done
+  echo ""
+}
+
+# True when the script of release-line version $2 can update $1 itself: an older patch of the same line, or any
+# version of the previous minor
+can_update_directly() {
+  _target_minor="$(minor_of "$2")"
+  if [ "$(minor_of "$1")" = "$_target_minor" ] && version_lt "$1" "$2"; then
+    return 0
+  fi
+  [ "$(minor_of "$1")" = "$(previous_minor "$_target_minor")" ]
+}
+
+# URL of the next intermediate update script on the way up from version $1, or nothing
+next_hop_url() {
+  if is_release_line_version "$1"; then
+    _next_line="$(next_release_line "$(minor_of "$1")")"
+    [ -n "$_next_line" ] && echo "${UPDATE_BASE_URL}/${_next_line}/update.sh"
+    return 0
+  fi
+  _next="$(get_next_version "$1")"
+  if [ -n "$_next" ]; then
+    echo "${UPDATE_BASE_URL}/${_next}/$(get_update_script "$_next")"
+  elif [ "$(minor_of "$1")" = "$LEGACY_LAST_MINOR" ]; then
+    echo "${UPDATE_BASE_URL}/$(first_release_line)/update.sh"
+  fi
+}
+
+# Version an update script installs (its default OPENVIDU_VERSION)
+update_script_version() {
+  # shellcheck disable=SC2016 # the ${...} is literal text of the script being read
+  sed -n 's/^export OPENVIDU_VERSION="${OPENVIDU_VERSION:-\(.*\)}"$/\1/p' "$1" | head -n1
+}
+
+installed_version() {
+  grep version "${INSTALL_PREFIX}/deployment-info.yaml" | cut -d':' -f2 | sed 's/^ *"//;s/"$//'
+}
+
+# Download update script $1 into a new temporary file and print its path
+fetch_update_script() {
+  _tmp="$(mktemp /tmp/ov_update.XXXXXX)"
+  if ! curl -fsSL "$1" -o "$_tmp"; then
+    rm -f "$_tmp"
+    echo "ERROR: Failed to download update script $1" >&2
+    return 1
+  fi
+  echo "$_tmp"
+}
+
+# Run downloaded update script $1 with its own versions (none of the image variables of this script leak into it),
+# passing it the rest of the arguments
+run_update_script() {
+  _script="$1"
+  shift
+  env \
+    -u OPENVIDU_VERSION \
+    -u DOCKER_VERSION \
+    -u DOCKER_COMPOSE_VERSION \
+    -u UPDATER_IMAGE \
+    -u MINIO_SERVER_IMAGE \
+    -u MINIO_CLIENT_IMAGE \
+    -u MONGO_SERVER_IMAGE \
+    -u REDIS_SERVER_IMAGE \
+    -u BUSYBOX_IMAGE \
+    -u CADDY_SERVER_IMAGE \
+    -u CADDY_SERVER_PRO_IMAGE \
+    -u OPENVIDU_OPERATOR_IMAGE \
+    -u OPENVIDU_SERVER_PRO_IMAGE \
+    -u OPENVIDU_SERVER_IMAGE \
+    -u OPENVIDU_MEET_SERVER_IMAGE \
+    -u OPENVIDU_DASHBOARD_PRO_IMAGE \
+    -u OPENVIDU_DASHBOARD_IMAGE \
+    -u OPENVIDU_V2COMPATIBILITY_IMAGE \
+    -u OPENVIDU_AGENT_SPEECH_PROCESSING_IMAGE \
+    -u OPENVIDU_AGENT_PRO_SPEECH_PROCESSING_IMAGE \
+    -u LIVEKIT_INGRESS_SERVER_IMAGE \
+    -u LIVEKIT_EGRESS_SERVER_IMAGE \
+    -u LIVEKIT_EGRESS_SERVER_PRO_IMAGE \
+    -u PROMETHEUS_IMAGE \
+    -u PROMTAIL_IMAGE \
+    -u ALLOY_IMAGE \
+    -u LOKI_IMAGE \
+    -u MIMIR_IMAGE \
+    -u GRAFANA_IMAGE \
+    sh "$_script" "$@"
+}
+
+# Ask whether to go through an intermediate version, unless --no-tty
+confirm_intermediate() {
+  if [ "$NO_TTY_REQUESTED" = "yes" ]; then
+    return 0
+  fi
+  echo "Upgrading to $1 before the target version."
+  while true; do
+    printf "Proceed with upgrading to $1? [y/N]: "
+    read -r response
+    if [ "$response" = "y" ] || [ "$response" = "Y" ]; then
+      return 0
+    elif [ "$response" = "n" ] || [ "$response" = "N" ]; then
+      rm -f "${TMP_UPDATE:-}"
+      echo "Update cancelled"
+      exit 1
+    else
+      echo "Please answer 'y' or 'n'."
+    fi
+  done
+}
+
+# Run every intermediate update until the script of version $2 can update the installation itself
+upgrade_through_release_lines() {
+  current="$1"
+  target="$2"
+  while ! can_update_directly "$current" "$target"; do
+    hop_url="$(next_hop_url "$current")"
+    if [ -z "$hop_url" ]; then
+      echo "ERROR: No upgrade path defined from version $current to $target"
+      exit 1
+    fi
+    TMP_UPDATE="$(fetch_update_script "$hop_url")" || exit 1
+    hop_version="$(update_script_version "$TMP_UPDATE")"
+    if [ -z "$hop_version" ]; then
+      rm -f "$TMP_UPDATE"
+      echo "ERROR: Cannot tell which version $hop_url installs"
+      exit 1
+    fi
+    if ! version_lt "$hop_version" "$target"; then
+      rm -f "$TMP_UPDATE"
+      echo "ERROR: The upgrade path from $current to $target goes through $hop_version, which is not older than $target"
+      exit 1
+    fi
+    confirm_intermediate "$hop_version"
+    echo "Upgrading from $current to $hop_version first..."
+    if ! run_update_script "$TMP_UPDATE" $NO_TTY_FLAG; then
+      rm -f "$TMP_UPDATE"
+      echo "ERROR: Intermediate upgrade from $current to $hop_version failed"
+      exit 1
+    fi
+    rm -f "$TMP_UPDATE"
+    previous="$current"
+    current="$(installed_version)"
+    if [ "$current" = "$previous" ]; then
+      echo "ERROR: The intermediate upgrade to $hop_version did not change the installed version ($current)"
+      exit 1
+    fi
+  done
+}
+
+# --latest-patch: update to the latest patch of the installed release line, with the script published for it. The
+# other arguments (e.g. --no-tty) go to that script.
+update_to_latest_patch() {
+  _forward=""
+  for _arg in "$@"; do
+    [ "$_arg" = "--latest-patch" ] || _forward="${_forward} ${_arg}"
+  done
+  current="$(installed_version)"
+  if ! is_release_line_version "$current"; then
+    echo "ERROR: --latest-patch is available from OpenVidu $(first_release_line).0 on (installed: $current)"
+    exit 1
+  fi
+  line="$(minor_of "$current")"
+  TMP_UPDATE="$(fetch_update_script "${UPDATE_BASE_URL}/${line}/update.sh")" || exit 1
+  latest="$(update_script_version "$TMP_UPDATE")"
+  if [ -z "$latest" ]; then
+    rm -f "$TMP_UPDATE"
+    echo "ERROR: Cannot tell the latest patch of OpenVidu $line"
+    exit 1
+  fi
+  if [ "$latest" = "$current" ]; then
+    rm -f "$TMP_UPDATE"
+    echo "OpenVidu $current is already the latest patch of $line"
+    exit 0
+  fi
+  if version_lt "$latest" "$current"; then
+    rm -f "$TMP_UPDATE"
+    echo "ERROR: The installed version $current is newer than the latest published patch of $line ($latest)"
+    exit 1
+  fi
+  echo "Updating OpenVidu $current to $latest, the latest patch of $line..."
+  # shellcheck disable=SC2086 # the updater's flags never contain spaces
+  if ! run_update_script "$TMP_UPDATE" $_forward; then
+    rm -f "$TMP_UPDATE"
+    echo "ERROR: Update from $current to $latest failed"
+    exit 1
+  fi
+  rm -f "$TMP_UPDATE"
+  exit 0
+}
+
 # Validate upgrade path
 validate_upgrade() {
   current="$1"
@@ -150,6 +394,15 @@ validate_upgrade() {
       echo "Update cancelled"
       exit 1
     fi
+    return 0
+  fi
+
+  if is_release_line_version "$target"; then
+    if is_release_line_version "$current" && version_lt "$target" "$current"; then
+      echo "ERROR: The installed version $current is newer than $target"
+      exit 1
+    fi
+    upgrade_through_release_lines "$current" "$target"
     return 0
   fi
 
@@ -261,6 +514,13 @@ if [ "$NO_TTY_REQUESTED" = "yes" ]; then
   NO_TTY_FLAG="--no-tty"
 fi
 
+# --latest-patch: update to the latest patch of the installed release line and stop
+for arg in "$@"; do
+  if [ "$arg" = "--latest-patch" ]; then
+    update_to_latest_patch "$@"
+  fi
+done
+
 # Ensure docker-compose shim exists
 if ! command -v docker-compose > /dev/null 2>&1; then
   if docker compose version > /dev/null 2>&1; then
@@ -333,10 +593,6 @@ fi
 CURRENT_VERSION="$(grep version "${INSTALL_PREFIX}/deployment-info.yaml" | cut -d':' -f2 | sed 's/^ *"//;s/"$//')"
 validate_upgrade "$CURRENT_VERSION" "$OPENVIDU_VERSION"
 
-# Stop OpenVidu service
-echo "Stopping OpenVidu service..."
-systemctl stop openvidu
-
 # Check if docker is running with docker info
 if ! docker info >/dev/null 2>&1; then
   echo "Docker is not running. Starting Docker..."
@@ -345,8 +601,13 @@ if ! docker info >/dev/null 2>&1; then
   wait_for_docker
 fi
 
-# Pull updater image
+# Pull updater image before stopping anything: if it cannot be pulled (e.g. a release whose images are still being
+# published), OpenVidu keeps running
 docker pull "${UPDATER_IMAGE}"
+
+# Stop OpenVidu service
+echo "Stopping OpenVidu service..."
+systemctl stop openvidu
 
 # Temporary directory for post-update script
 TMP_DIR=$(mktemp -d)
