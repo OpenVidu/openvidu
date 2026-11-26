@@ -103,7 +103,7 @@
 
 ## 6. CE push (orchestrator)
 
-- [ ] 6.1 Push to `master` of `OpenVidu/openvidu` and wait for its CI run (`checks`, `unit`, `integration`, `contract`,
+- [x] 6.1 Push to `master` of `OpenVidu/openvidu` and wait for its CI run (`checks`, `unit`, `integration`, `contract`,
   `e2e`) to be green.
 
 ## 7. PRO follow-up (orchestrator)

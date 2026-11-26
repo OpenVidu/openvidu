@@ -43,3 +43,9 @@ What only the orchestrator knows: the owner's decisions, the rebase onto other w
   - 45 minutes later, 10 rooms were active and 17 new ones had been created;
   - stats, egress, ingress and agents moved.
 - Frozen, at the same commit: 14 rooms in progress, no room created after generation, and stats kept fresh.
+
+## CE push
+
+- Rebased without conflicts onto `origin/master` `eb61adfbf` (third-party versions in `openvidu-deployment` only) and
+  pushed as `c6b963cbaeff03cdc982e57ca8f274c83d7503ff`.
+- OpenVidu Dashboard CI run 45845146799 is green: checks, unit, integration, contract and e2e.
