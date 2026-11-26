@@ -218,7 +218,7 @@ var stringInterpolationParamsMaster = {
 var installScriptTemplateMaster = '''
 #!/bin/bash
 set -e
-OPENVIDU_VERSION=3.10.0
+OPENVIDU_VERSION=main
 DOMAIN=
 
 # Assume azure cli is installed
