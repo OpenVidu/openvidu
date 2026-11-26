@@ -20,8 +20,8 @@ writer or a room going stale cannot be tried.
 - **One world per seed**: the data generator draws each room's whole life once and writes its state at an instant. The
   generated 30 days are that world at the generation instant; the live writer keeps writing it as time passes.
 - **Live rooms and sessions** (`live`): rooms keep arriving and end, the rooms in progress at generation end on their
-  own, sessions join, publish, mute, resume and leave, egresses and ingress sessions run their course, each with its
-  events. At least 10 rooms are in progress at any minute, more around 14:00 UTC following the daily curve. Half of the
+  own within 10 to 30 minutes, sessions join, publish, mute, resume and leave, egresses and ingress sessions run their
+  course, each with its events. At least 10 rooms are in progress at any minute, more around 14:00 UTC following the daily curve. Half of the
   live rooms have an egress and one in ten an ingress (the generation keeps 30 % and 2 %), so live egress and ingress
   figures sit above the history.
 - **Live stats and rollups** (`live`): `track_stats` every 30 s per track (track mode) or per participant (participant
@@ -74,5 +74,5 @@ None.
   gain the `DASHBOARD_DEMO_DATA` line next to `DASHBOARD_DEMO_DEPLOYMENT`. The PRO `test-integration` runs besides
   `check` and `e2e`, because the generated data of rooms open at the end changes.
 - Track: full. One capability, but a new architecture in the generator (complete room lives cut at an instant), a long-
-  running writer and about 25 scenarios.
+  running writer and about 26 scenarios.
 - CHANGELOG: none. The demo and the data generator are tooling, which has never had CHANGELOG lines.
