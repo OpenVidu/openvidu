@@ -16,7 +16,7 @@
 - [x] 1.3 Unit tests of `cutRoom` in `dashboard-ce/backend/test/unit/`: a closed room cut after its end equals its life;
   cut inside it, open sessions, tracks, egresses and ingress sessions take their state at the instant, with mutes,
   resumes, bytes and `lastStatsAt` up to it, and nothing after it. Verify with `./dashboard.sh check`.
-- [ ] 1.4 Shorten the stretch of a room in progress at the generation instant, as the owner decided (design decision 1).
+- [x] 1.4 Shorten the stretch of a room in progress at the generation instant, as the owner decided (design decision 1).
   Draw it with `rng.int(10 * MINUTE, 30 * MINUTE)` instead of `rng.int(10 * MINUTE, 5 * HOUR)`, keeping the number of
   draws. It stretches only the last identity's last session; every other session keeps its drawn length. Change the
   code and comments at `dashboard-ce/tools/data-generator/src/model.ts:504` (doc comment) and `:531-532` (comment and
