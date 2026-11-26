@@ -16,14 +16,18 @@
 - [x] 1.3 Unit tests of `cutRoom` in `dashboard-ce/backend/test/unit/`: a closed room cut after its end equals its life;
   cut inside it, open sessions, tracks, egresses and ingress sessions take their state at the instant, with mutes,
   resumes, bytes and `lastStatsAt` up to it, and nothing after it. Verify with `./dashboard.sh check`.
-- [ ] 1.4 Shorten what a room in progress at the generation instant has left, as the owner decided (design decision 1):
-  draw it with `rng.int(10 * MINUTE, 30 * MINUTE)` instead of `rng.int(10 * MINUTE, 5 * HOUR)`, keeping the number of
-  draws. Change the code and comments at `dashboard-ce/tools/data-generator/src/model.ts:504` (doc comment) and
-  `:531-532` (comment and draw), and line 218 of `dashboard-ce/tools/data-generator/README.md`. Cover "Generated rooms
-  in progress end within 30 minutes" in `dashboard-ce/backend/test/integration/data-generator-live.test.ts`: every
-  room in progress at T closed by T + 30 minutes plus its departure timeout, and no STANDARD session of those rooms
-  that joined before T outliving that. Verify with `./dashboard.sh check`, `./dashboard.sh test-integration`,
-  `./dashboard.sh test-live` and `./dashboard.sh scenarios live-demo-writer`.
+- [ ] 1.4 Shorten the stretch of a room in progress at the generation instant, as the owner decided (design decision 1).
+  Draw it with `rng.int(10 * MINUTE, 30 * MINUTE)` instead of `rng.int(10 * MINUTE, 5 * HOUR)`, keeping the number of
+  draws. It stretches only the last identity's last session; every other session keeps its drawn length. Change the
+  code and comments at `dashboard-ce/tools/data-generator/src/model.ts:504` (doc comment) and `:531-532` (comment and
+  draw), and line 218 of `dashboard-ce/tools/data-generator/README.md`. Cover "Generated rooms in progress stretched 30
+  minutes at most" in `dashboard-ce/backend/test/integration/data-generator-live.test.ts`, ticking until T + 100
+  minutes and reading each session's drawn length from the generated world:
+  - every STANDARD session that joined before T left by the later of T + 30 minutes and the end of its drawn length;
+  - each room closed by its departure timeout after the later of T and the last leave of its non-EGRESS sessions.
+
+  Verify with `./dashboard.sh check`, `./dashboard.sh test-integration`, `./dashboard.sh test-live` and
+  `./dashboard.sh scenarios live-demo-writer`.
 
 ## 2. Live writer: rooms, stats, rollups and short-lived states (implementer)
 

@@ -19,11 +19,12 @@ writer or a room going stale cannot be tried.
     rollups), writing what the OpenVidu writer, aggregator and reconciler would write, every 10 s.
 - **One world per seed**: the data generator draws each room's whole life once and writes its state at an instant. The
   generated 30 days are that world at the generation instant; the live writer keeps writing it as time passes.
-- **Live rooms and sessions** (`live`): rooms keep arriving and end, the rooms in progress at generation end on their
-  own within 10 to 30 minutes, sessions join, publish, mute, resume and leave, egresses and ingress sessions run their
-  course, each with its events. At least 10 rooms are in progress at any minute, more around 14:00 UTC following the daily curve. Half of the
-  live rooms have an egress and one in ten an ingress (the generation keeps 30 % and 2 %), so live egress and ingress
-  figures sit above the history.
+- **Live rooms and sessions** (`live`): rooms keep arriving and end. The rooms in progress at generation end on their
+  own: the participant who keeps one open stays 10 to 30 minutes more, and the others keep their own lengths. Sessions
+  join, publish, mute, resume and leave, and egresses and ingress sessions run their course, each with its events. At
+  least 10 rooms are in progress at any minute, more around 14:00 UTC following the daily curve. Half of the live rooms
+  have an egress and one in ten an ingress (the generation keeps 30 % and 2 %), so live egress and ingress figures sit
+  above the history.
 - **Live stats and rollups** (`live`): `track_stats` every 30 s per track (track mode) or per participant (participant
   mode), the bytes, quality and `lastStatsAt` of sessions and rooms, the 5-minute, hourly, daily and media node rollups,
   the active peaks every minute and the daily unique identities after the day closes, all as increments, so a deletion

@@ -66,16 +66,21 @@ Rules the model now follows:
 - A closed ingress session that never left `buffering` keeps that status when the rollups count it. It counts as ended,
   not as started, and gets no `INGRESS_STARTED`.
 
-**Rooms planned active at the generation instant.** Their natural end is 10 to 30 minutes after the instant
-(`rng.int(10 * MINUTE, 30 * MINUTE)`), earlier at a server stop or loss. This is close to the 29-minute median life of
-the generated rooms. An owner decision replaced the earlier 10 minutes to 5 hours, which in `live` left those rooms
-with one lone participant for 2.6 hours on average, filling the floor.
+**Rooms planned active at the generation instant.** Such a room stays in progress through its last identity's last
+session. That session is stretched to 10 to 30 minutes after the instant (`rng.int(10 * MINUTE, 30 * MINUTE)`) when
+its drawn length ends earlier. This is close to the 29-minute median life of the generated rooms.
+- An owner decision replaced the earlier 10 minutes to 5 hours, which in `live` left those rooms with one lone
+  participant for 2.6 hours on average, filling the floor.
+- A second owner decision keeps every other session's drawn length (at most 90 minutes): no session is forced out. A
+  room whose other session drew a longer life stays open until that session leaves, as any room does.
 
 The draw count is unchanged, so no other draw moves. `frozen` keeps the same rooms and sessions in progress at the
 instant. Only values the cut hides change, plus possibly the `endedAt` of an egress that stopped before the instant in
-such a room, since it is drawn as a fraction of the room's life. They end with `IDLE_TIMEOUT`, a departure timeout after the later of their last
-participant's leave and the drawn end; when that last participant aborted, a departure timeout after the instant.
-Their lives keep the earlier snapshot shares at the instant: 15 % with a participant connecting for the last minute,
+such a room, since it is drawn as a fraction of the room's life.
+
+They end with `IDLE_TIMEOUT`, a departure timeout after their sessions' last leave; when their last participant
+aborted, a departure timeout after the instant; earlier at a server stop or loss. Their lives keep the earlier
+snapshot shares at the instant: 15 % with a participant connecting for the last minute,
 egresses `starting`, `ending` or stopped, the buffering ingress. A track still published and muted at the instant may
 have one `TRACK_MUTED` more than `TRACK_UNMUTED` (owner decision O1).
 

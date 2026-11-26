@@ -52,11 +52,13 @@ SHALL end on their own.
 - **WHEN** ticks run until T + 6 hours
 - **THEN** each of those rooms is closed, none of its sessions is still open and none joined after the room's end
 
-#### Scenario: Generated rooms in progress end within 30 minutes
-- **GIVEN** a database generated at T with ten or more rooms in progress
-- **WHEN** ticks run until T + 35 minutes
-- **THEN** each of those rooms is closed with an `endedAt` at or before T + 30 minutes plus its departure timeout, and
-  no STANDARD session of them that joined before T left after that instant
+#### Scenario: Generated rooms in progress stretched 30 minutes at most
+- **GIVEN** a database generated at T with ten or more rooms in progress, and the length drawn for each of their
+  sessions
+- **WHEN** ticks run until T + 100 minutes
+- **THEN** every STANDARD session of those rooms that joined before T left at or before the later of T + 30 minutes
+  and the end of its drawn length, and each of those rooms closed at or before its departure timeout after the later
+  of T and the last leave of its sessions other than EGRESS ones
 
 #### Scenario: Nothing written ahead of time
 - **GIVEN** a live database ticked at instant t
