@@ -1173,6 +1173,8 @@ describe.skipIf(mongoUri === '')('live data generator', () => {
 				.distinct('_id', { status: { $in: ['buffering', 'publishing'] } });
 			const rooms = await db().collection<Keyed>('rooms').distinct('_id');
 			const world = await restartLive(db(), generation, Math.floor(heartbeat / MINUTE) * MINUTE);
+			// The closures' counters, before the new world's rooms add theirs.
+			const after = await ingressCounters(bucket);
 			const writer = new LiveWriter(db(), world);
 			await tickUntil(writer, world.start, world.start + 10 * MINUTE, MINUTE);
 
@@ -1191,7 +1193,6 @@ describe.skipIf(mongoUri === '')('live data generator', () => {
 			const closed = (await db()
 				.collection<Keyed>('ingress_sessions')
 				.findOne({ _id: 'IS_buffering01' })) as IngressSessionDocument | null;
-			const after = await ingressCounters(bucket);
 
 			expect([closed?.status, closed?.closedBy]).toEqual(['error', 'reconciler']);
 			expect(
