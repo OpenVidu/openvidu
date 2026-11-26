@@ -1,6 +1,6 @@
 {
 	"name": "openvidu-dashboard-workspace",
-	"version": "3.10.0-dev",
+	"version": "3.10.0",
 	"private": true,
 	"description": "OpenVidu Dashboard workspace (Community edition)",
 	"packageManager": "pnpm@12.11.2",

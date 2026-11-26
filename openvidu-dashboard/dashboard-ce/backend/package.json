@@ -1,6 +1,6 @@
 {
 	"name": "@openvidu-dashboard/backend",
-	"version": "3.10.0-dev",
+	"version": "3.10.0",
 	"private": true,
 	"description": "OpenVidu Dashboard REST API (CE)",
 	"type": "module",

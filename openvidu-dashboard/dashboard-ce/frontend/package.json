@@ -1,6 +1,6 @@
 {
 	"name": "@openvidu-dashboard/frontend",
-	"version": "3.10.0-dev",
+	"version": "3.10.0",
 	"private": true,
 	"description": "OpenVidu Dashboard Angular application (CE): the shell that composes the dashboard-ui library",
 	"scripts": {

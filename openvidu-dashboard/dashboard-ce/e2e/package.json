@@ -1,6 +1,6 @@
 {
 	"name": "@openvidu-dashboard/e2e",
-	"version": "3.10.0-dev",
+	"version": "3.10.0",
 	"private": true,
 	"description": "End-to-end tests of the OpenVidu Dashboard (CE) with Playwright",
 	"type": "module",
