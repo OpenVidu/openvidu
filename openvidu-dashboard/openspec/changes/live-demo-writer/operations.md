@@ -29,5 +29,5 @@ What only the orchestrator knows: the owner's decisions, the rebase onto other w
 ## Live writer suite
 
 - The verifier's guard comes from the PRO workspace's `ce.ref`, which predates `./dashboard.sh test-live`, so the
-  verifier cannot run that suite. The implementer ran it at `b7efee9d5`, the last code commit: 29 tests passed in
-  15 min.
+  verifier cannot run that suite. The implementer ran it at `b7acfd554`, the last code commit: 30 tests passed in
+  16 min. `./dashboard.sh check` passed at that commit, run by the orchestrator.
