@@ -5,7 +5,7 @@ set -eu
 export INSTALL_PREFIX="${INSTALL_PREFIX:-/opt/openvidu}"
 export DOCKER_VERSION="${DOCKER_VERSION:-29.10.0}"
 export DOCKER_COMPOSE_VERSION="${DOCKER_COMPOSE_VERSION:-v5.8.0}"
-export OPENVIDU_VERSION="${OPENVIDU_VERSION:-main}"
+export OPENVIDU_VERSION="${OPENVIDU_VERSION:-3.10.0}"
 export UPDATE_BASE_URL="${UPDATE_BASE_URL:-https://get.openvidu.io/update}"
 export UPDATER_IMAGE="${UPDATER_IMAGE:-docker.io/openvidu/openvidu-updater:${OPENVIDU_VERSION}}"
 export MINIO_SERVER_IMAGE="${MINIO_SERVER_IMAGE:-docker.io/openvidu/minio:RELEASE.2026-11-16T00-11-40Z-r1}"

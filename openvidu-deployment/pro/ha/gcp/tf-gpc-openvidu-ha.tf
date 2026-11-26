@@ -1183,7 +1183,7 @@ locals {
 #!/bin/bash -x
 set -e
 
-OPENVIDU_VERSION=main
+OPENVIDU_VERSION=3.10.0
 DOMAIN=
 YQ_VERSION=v4.54.3
 
