@@ -238,14 +238,17 @@ public class AbstractOpenViduTestappE2eTest extends OpenViduTestE2e {
 
 	@AfterEach
 	protected void dispose() {
-		// Dispose all testapp users
+		// Dispose all testapp users. A browser that fails to quit must not skip
+		// super.dispose(), which stops the browser containers
+		List<RuntimeException> failures = new ArrayList<>();
 		Iterator<OpenViduTestappUser> it2 = testappUsers.iterator();
 		while (it2.hasNext()) {
 			OpenViduTestappUser u = it2.next();
-			u.dispose();
+			runCleanupStep(failures, "testapp user", u::dispose);
 			it2.remove();
 		}
-		super.dispose();
+		runCleanupStep(failures, "browsers and containers", super::dispose);
+		throwCleanupFailures(failures);
 	}
 
 	protected static final long WAIT_UNTIL_MAX_MILLIS = 20000;

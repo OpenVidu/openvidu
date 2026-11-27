@@ -1459,15 +1459,17 @@ public class OpenViduTestE2e {
 
 	@AfterEach
 	protected void dispose() {
+		List<RuntimeException> failures = new ArrayList<>();
 
 		// Close all remaining Rooms
 		this.closeAllRooms(LK);
 
-		// Dispose all browsers users
+		// Dispose all browsers users. A browser that fails to quit must not stop the
+		// cleanup: its container would stay up and the next test would reuse it
 		Iterator<BrowserUser> it1 = browserUsers.iterator();
 		while (it1.hasNext()) {
 			BrowserUser u = it1.next();
-			u.dispose();
+			runCleanupStep(failures, "browser user", u::dispose);
 			it1.remove();
 		}
 
@@ -1475,8 +1477,10 @@ public class OpenViduTestE2e {
 		Iterator<GenericContainer<?>> it2 = containers.iterator();
 		while (it2.hasNext()) {
 			GenericContainer<?> c = it2.next();
-			c.stop();
-			c.close();
+			runCleanupStep(failures, "container " + c.getDockerImageName(), () -> {
+				c.stop();
+				c.close();
+			});
 			it2.remove();
 		}
 
@@ -1494,6 +1498,33 @@ public class OpenViduTestE2e {
 			itNet.remove();
 		}
 		this.netemContainerNames.clear();
+
+		throwCleanupFailures(failures);
+	}
+
+	/**
+	 * Runs one step of a dispose, recording its failure instead of throwing it so
+	 * that the remaining steps still run
+	 */
+	protected static void runCleanupStep(List<RuntimeException> failures, String what, Runnable step) {
+		try {
+			step.run();
+		} catch (RuntimeException e) {
+			log.error("Error disposing {}: {}", what, e.getMessage());
+			failures.add(e);
+		}
+	}
+
+	/**
+	 * Once the whole dispose has run, reports its failures: the first one is
+	 * thrown with the others suppressed
+	 */
+	protected static void throwCleanupFailures(List<RuntimeException> failures) {
+		if (!failures.isEmpty()) {
+			RuntimeException first = failures.get(0);
+			failures.subList(1, failures.size()).forEach(first::addSuppressed);
+			throw first;
+		}
 	}
 
 	protected void closeAllRooms(RoomServiceClient client) {
