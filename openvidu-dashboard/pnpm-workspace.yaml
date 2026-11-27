@@ -9,32 +9,32 @@ packages:
 # Shared versions are declared once here and referenced as "catalog:" in each package.json, so every package (and
 # every workspace built on these packages) resolves the same version.
 catalog:
-  '@angular/build': 22.2.7
-  '@angular/cdk': 22.2.7
-  '@angular/cli': 22.2.7
-  '@angular/common': 22.2.6
-  '@angular/compiler': 22.2.6
-  '@angular/compiler-cli': 22.2.6
-  '@angular/core': 22.2.6
-  '@angular/forms': 22.2.6
-  '@angular/material': 22.2.7
-  '@angular/material-date-fns-adapter': 22.2.7
-  '@angular/platform-browser': 22.2.6
-  '@angular/router': 22.2.6
-  '@axe-core/playwright': 4.14.0
+  '@angular/build': 22.3.0
+  '@angular/cdk': 22.3.0
+  '@angular/cli': 22.3.0
+  '@angular/common': 22.3.0
+  '@angular/compiler': 22.3.0
+  '@angular/compiler-cli': 22.3.0
+  '@angular/core': 22.3.0
+  '@angular/forms': 22.3.0
+  '@angular/material': 22.3.0
+  '@angular/material-date-fns-adapter': 22.3.0
+  '@angular/platform-browser': 22.3.0
+  '@angular/router': 22.3.0
+  '@axe-core/playwright': 4.14.1
   '@date-fns/tz': 1.5.0
   '@eslint/js': 10.0.1
   '@fontsource-variable/inter': 5.3.0
   '@fontsource-variable/jetbrains-mono': 5.3.0
   '@material-symbols/svg-400': 0.49.0
   '@playwright/test': 1.65.1
-  '@fission-ai/openspec': 2.1.0
+  '@fission-ai/openspec': 2.2.0
   '@types/cookie-parser': 1.4.10
   '@types/express': 5.0.6
-  '@types/node': 26.6.6
+  '@types/node': 26.6.7
   '@types/supertest': 7.2.1
   ajv: 8.20.0
-  angular-eslint: 22.7.0
+  angular-eslint: 22.8.0
   bson: 7.3.4
   cookie-parser: 1.4.7
   date-fns: 4.4.0
@@ -42,23 +42,23 @@ catalog:
   eslint: 10.15.0
   eslint-config-prettier: 10.1.8
   express: 5.3.0
-  express-rate-limit: 8.7.4
+  express-rate-limit: 8.7.5
   globals: 17.14.0
   inversify: 8.3.0
-  jose: 6.2.17
+  jose: 6.2.18
   jsdom: 31.0.1
-  mongodb: 7.9.0
-  ng-packagr: 22.2.6
+  mongodb: 7.9.1
+  ng-packagr: 22.3.0
   ngx-echarts: 22.0.0
   prettier: 3.10.1
   rxjs: 7.8.2
   supertest: 7.3.2
-  testcontainers: 12.2.1
+  testcontainers: 12.2.2
   tslib: 2.9.1
   tsx: 4.23.15
   typescript: 6.0.3
-  typescript-eslint: 8.73.0
-  vitest: 5.1.0
+  typescript-eslint: 8.74.0
+  vitest: 5.1.1
   winston: 3.19.0
   write-excel-file: 4.1.1
   zod: 4.6.7
